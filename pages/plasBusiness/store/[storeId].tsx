@@ -672,7 +672,10 @@ export default function StoreDetailsPage() {
                           style={{ color: "#ffffff" }}
                           title="Edit product"
                         >
-                          <Edit className="h-4 w-4" style={{ color: "#ffffff" }} />
+                          <Edit
+                            className="h-4 w-4"
+                            style={{ color: "#ffffff" }}
+                          />
                         </button>
                       </div>
                     )}
@@ -685,7 +688,10 @@ export default function StoreDetailsPage() {
                           style={{ color: "#ffffff" }}
                           title="Edit product"
                         >
-                          <Edit className="h-4 w-4" style={{ color: "#ffffff" }} />
+                          <Edit
+                            className="h-4 w-4"
+                            style={{ color: "#ffffff" }}
+                          />
                         </button>
                       </div>
                     )}
@@ -719,9 +725,11 @@ export default function StoreDetailsPage() {
 
                       {/* Description */}
                       {product.Description && (
-                        <div 
+                        <div
                           className="line-clamp-2 text-[10px] text-gray-600 dark:text-gray-400 sm:text-xs"
-                          dangerouslySetInnerHTML={{ __html: product.Description }}
+                          dangerouslySetInnerHTML={{
+                            __html: product.Description,
+                          }}
                         />
                       )}
 
@@ -864,7 +872,11 @@ export default function StoreDetailsPage() {
                                     ? "bg-green-600 text-white"
                                     : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                                 }`}
-                                style={currentPage === page ? { color: "#ffffff" } : undefined}
+                                style={
+                                  currentPage === page
+                                    ? { color: "#ffffff" }
+                                    : undefined
+                                }
                               >
                                 {page}
                               </button>

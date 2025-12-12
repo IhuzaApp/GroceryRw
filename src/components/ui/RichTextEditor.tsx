@@ -38,29 +38,29 @@ export function RichTextEditor({
     e.preventDefault();
     const text = e.clipboardData.getData("text/plain");
     const selection = window.getSelection();
-    
+
     if (selection && selection.rangeCount > 0) {
       const range = selection.getRangeAt(0);
       range.deleteContents();
-      
+
       // Preserve line breaks by converting them to <br>
       const lines = text.split("\n");
       lines.forEach((line, index) => {
         const textNode = document.createTextNode(line);
         range.insertNode(textNode);
-        
+
         if (index < lines.length - 1) {
           const br = document.createElement("br");
           range.insertNode(br);
         }
       });
-      
+
       // Move cursor after inserted content
       range.collapse(false);
       selection.removeAllRanges();
       selection.addRange(range);
     }
-    
+
     handleInput();
   };
 
@@ -91,17 +91,17 @@ export function RichTextEditor({
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
         const range = selection.getRangeAt(0);
-        
+
         // Create a range from start of editor to cursor
         const textRange = document.createRange();
         textRange.selectNodeContents(editorRef.current);
         textRange.setEnd(range.startContainer, range.startOffset);
-        
+
         // Clone the contents up to cursor
         const fragment = textRange.cloneContents();
         const tempDiv = document.createElement("div");
         tempDiv.appendChild(fragment);
-        
+
         // Get text content, replacing <br> with newlines
         let textWithBreaks = "";
         const walker = document.createTreeWalker(
@@ -109,7 +109,7 @@ export function RichTextEditor({
           NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
           null
         );
-        
+
         let node: Node | null;
         while ((node = walker.nextNode())) {
           if (node.nodeType === Node.TEXT_NODE) {
@@ -118,14 +118,14 @@ export function RichTextEditor({
             textWithBreaks += "\n";
           }
         }
-        
+
         // Split by line breaks and get the last line
         const lines = textWithBreaks.split(/\r?\n/);
         const currentLine = lines[lines.length - 1] || "";
-        
+
         // Check for numbered pattern (1. , 2. , etc.)
         const numberedMatch = currentLine.match(/^(\d+)\.\s?/);
-        
+
         // Check for bullet pattern (- , * , etc.) - with or without space
         const bulletMatch = currentLine.match(/^([-*])\s?/);
 
@@ -133,103 +133,109 @@ export function RichTextEditor({
           e.preventDefault();
           const currentNumber = parseInt(numberedMatch[1]);
           const nextNumber = currentNumber + 1;
-          
+
           // Delete any selected content first
           range.deleteContents();
-          
+
           // If cursor is in the middle of a text node, split it
           if (range.startContainer.nodeType === Node.TEXT_NODE) {
             const textNode = range.startContainer as Text;
             const offset = range.startOffset;
             const text = textNode.textContent || "";
-            
+
             if (offset < text.length) {
               // Split the text node
               const afterText = text.substring(offset);
               const beforeText = text.substring(0, offset);
-              
+
               // Update current node with text before cursor
               textNode.textContent = beforeText;
-              
+
               // Create new text node for text after cursor
               const afterNode = document.createTextNode(afterText);
-              textNode.parentNode?.insertBefore(afterNode, textNode.nextSibling);
-              
+              textNode.parentNode?.insertBefore(
+                afterNode,
+                textNode.nextSibling
+              );
+
               // Update range to point to the new node
               range.setStart(afterNode, 0);
               range.collapse(true);
             }
           }
-          
+
           // Insert line break
           const br = document.createElement("br");
           range.insertNode(br);
-          
+
           // Move range to after the line break
           range.setStartAfter(br);
           range.collapse(true);
-          
+
           // Insert the next number
           const nextNumberText = document.createTextNode(`${nextNumber}. `);
           range.insertNode(nextNumberText);
-          
+
           // Move cursor to after the number
           range.setStartAfter(nextNumberText);
           range.collapse(true);
           selection.removeAllRanges();
           selection.addRange(range);
-          
+
           handleInput();
           return;
         } else if (bulletMatch) {
           e.preventDefault();
-          
+
           // Delete any selected content first
           range.deleteContents();
-          
+
           // If cursor is in the middle of a text node, split it
           if (range.startContainer.nodeType === Node.TEXT_NODE) {
             const textNode = range.startContainer as Text;
             const offset = range.startOffset;
             const text = textNode.textContent || "";
-            
+
             if (offset < text.length) {
               // Split the text node
               const afterText = text.substring(offset);
               const beforeText = text.substring(0, offset);
-              
+
               // Update current node with text before cursor
               textNode.textContent = beforeText;
-              
+
               // Create new text node for text after cursor
               const afterNode = document.createTextNode(afterText);
-              textNode.parentNode?.insertBefore(afterNode, textNode.nextSibling);
-              
+              textNode.parentNode?.insertBefore(
+                afterNode,
+                textNode.nextSibling
+              );
+
               // Update range to point to the new node
               range.setStart(afterNode, 0);
               range.collapse(true);
             }
           }
-          
+
           // Insert line break
           const br = document.createElement("br");
           range.insertNode(br);
-          
+
           // Move range to after the line break
           range.setStartAfter(br);
           range.collapse(true);
-          
+
           // Insert the bullet with space (use the matched bullet character)
           const bulletChar = bulletMatch[1]; // Get the matched character (- or *)
           const bulletText = document.createTextNode(`${bulletChar} `);
           range.insertNode(bulletText);
-          
+
           // Move cursor to after the bullet
           range.setStartAfter(bulletText);
           range.collapse(true);
           selection.removeAllRanges();
           selection.addRange(range);
-          
+
           handleInput();
           return;
         }
@@ -308,19 +314,23 @@ export function RichTextEditor({
         data-placeholder={placeholder}
         suppressContentEditableWarning
       />
-      
-      <style dangerouslySetInnerHTML={{ __html: `
+
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         [contenteditable][data-placeholder]:empty:before {
           content: attr(data-placeholder);
           color: #9ca3af;
           pointer-events: none;
         }
-      `}} />
+      `,
+        }}
+      />
 
       <p className="text-xs text-gray-500 dark:text-gray-400">
-        Use toolbar buttons or keyboard shortcuts (Ctrl+B for bold, Ctrl+I for italic, Ctrl+U for underline)
+        Use toolbar buttons or keyboard shortcuts (Ctrl+B for bold, Ctrl+I for
+        italic, Ctrl+U for underline)
       </p>
     </div>
   );
 }
-

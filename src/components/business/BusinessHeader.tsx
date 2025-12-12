@@ -46,16 +46,25 @@ export function BusinessHeader({
           <div className="flex-1">
             {businessName ? (
               <>
-                <h1 className="mb-1 text-xl font-bold leading-tight sm:text-2xl md:text-3xl lg:text-4xl" style={{ color: "#ffffff" }}>
+                <h1
+                  className="mb-1 text-xl font-bold leading-tight sm:text-2xl md:text-3xl lg:text-4xl"
+                  style={{ color: "#ffffff" }}
+                >
                   {businessName}
                 </h1>
-                <p className="mb-2 text-xs font-medium text-green-200 sm:text-sm" style={{ color: "#ffffff" }}>
+                <p
+                  className="mb-2 text-xs font-medium text-green-200 sm:text-sm"
+                  style={{ color: "#ffffff" }}
+                >
                   Business Marketplace
                 </p>
               </>
             ) : (
               <>
-                <h1 className="mb-1 text-xl font-bold leading-tight sm:text-2xl md:text-3xl lg:text-4xl" style={{ color: "#ffffff" }}>
+                <h1
+                  className="mb-1 text-xl font-bold leading-tight sm:text-2xl md:text-3xl lg:text-4xl"
+                  style={{ color: "#ffffff" }}
+                >
                   Business Marketplace
                 </h1>
                 <p className="mb-2 text-xs font-medium text-green-200 opacity-0 sm:text-sm">
@@ -63,7 +72,10 @@ export function BusinessHeader({
                 </p>
               </>
             )}
-            <p className="text-xs leading-relaxed text-green-100 sm:text-sm md:text-base lg:text-lg" style={{ color: "#ffffff" }}>
+            <p
+              className="text-xs leading-relaxed text-green-100 sm:text-sm md:text-base lg:text-lg"
+              style={{ color: "#ffffff" }}
+            >
               Discover suppliers, manage orders, and streamline procurement
             </p>
           </div>
@@ -73,7 +85,10 @@ export function BusinessHeader({
               className="flex flex-1 items-center justify-center rounded-lg border border-white/30 bg-white/20 px-2 py-2 text-xs font-medium text-white backdrop-blur-sm transition-all duration-300 hover:bg-white/30 sm:flex-none sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm md:px-6 md:py-3 md:text-base"
               style={{ color: "#ffffff" }}
             >
-              <Plus className="mr-1 inline h-3 w-3 sm:mr-1.5 sm:h-4 sm:w-4 md:mr-2 md:h-5 md:w-5" style={{ color: "#ffffff" }} />
+              <Plus
+                className="mr-1 inline h-3 w-3 sm:mr-1.5 sm:h-4 sm:w-4 md:mr-2 md:h-5 md:w-5"
+                style={{ color: "#ffffff" }}
+              />
               <span style={{ color: "#ffffff" }}>Create RFQ</span>
             </button>
             <button

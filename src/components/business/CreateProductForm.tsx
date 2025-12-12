@@ -68,7 +68,9 @@ const getSteps = (isService: boolean) => [
   {
     id: 1,
     title: "Basic Information",
-    description: isService ? "Service name and description" : "Product name and description",
+    description: isService
+      ? "Service name and description"
+      : "Product name and description",
   },
   {
     id: 2,
@@ -126,7 +128,9 @@ export function CreateProductForm({
         maxOrder: editingProduct.maxOrders || "",
         deliveryArea: editingProduct.delveryArea || "",
         specialties: editingProduct.speciality
-          ? editingProduct.speciality.split(", ").filter((s: string) => s.trim())
+          ? editingProduct.speciality
+              .split(", ")
+              .filter((s: string) => s.trim())
           : [""],
         image: null,
       });
@@ -246,7 +250,12 @@ export function CreateProductForm({
       });
       setCurrentStep(1);
     } catch (error) {
-      console.error(`Error ${editingProduct ? "updating" : "creating"} ${isService ? "service" : "product"}:`, error);
+      console.error(
+        `Error ${editingProduct ? "updating" : "creating"} ${
+          isService ? "service" : "product"
+        }:`,
+        error
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -279,8 +288,12 @@ export function CreateProductForm({
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
               {editingProduct
-                ? `Edit ${isService ? "service" : "product"} details - Step ${currentStep} of`
-                : `Add a new ${isService ? "service" : "product"} - Step ${currentStep} of`}{" "}
+                ? `Edit ${
+                    isService ? "service" : "product"
+                  } details - Step ${currentStep} of`
+                : `Add a new ${
+                    isService ? "service" : "product"
+                  } - Step ${currentStep} of`}{" "}
               {steps.length}
             </p>
           </div>
@@ -303,7 +316,9 @@ export function CreateProductForm({
                       ? "bg-green-500 text-white"
                       : "bg-gray-200 text-gray-600 dark:bg-gray-600 dark:text-gray-400"
                   }`}
-                  style={currentStep >= step.id ? { color: "#ffffff" } : undefined}
+                  style={
+                    currentStep >= step.id ? { color: "#ffffff" } : undefined
+                  }
                 >
                   {step.id}
                 </div>
@@ -352,7 +367,11 @@ export function CreateProductForm({
                   value={formData.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                  placeholder={isService ? "e.g., Corporate Catering Service" : "e.g., Corporate Catering Package"}
+                  placeholder={
+                    isService
+                      ? "e.g., Corporate Catering Service"
+                      : "e.g., Corporate Catering Package"
+                  }
                   required
                 />
               </div>
@@ -365,7 +384,11 @@ export function CreateProductForm({
                   value={formData.description}
                   onChange={(value) => handleInputChange("description", value)}
                   rows={8}
-                  placeholder={isService ? "Provide a detailed description of your service. You can use:\n- Bullet points\n- Sub headers\n- Line breaks\n- Bold, italic, underline\n- Any formatting you need" : "Provide a detailed description of your product or service. You can use:\n- Bullet points\n- Sub headers\n- Line breaks\n- Bold, italic, underline\n- Any formatting you need"}
+                  placeholder={
+                    isService
+                      ? "Provide a detailed description of your service. You can use:\n- Bullet points\n- Sub headers\n- Line breaks\n- Bold, italic, underline\n- Any formatting you need"
+                      : "Provide a detailed description of your product or service. You can use:\n- Bullet points\n- Sub headers\n- Line breaks\n- Bold, italic, underline\n- Any formatting you need"
+                  }
                 />
               </div>
 
@@ -394,7 +417,11 @@ export function CreateProductForm({
                     <>
                       <input
                         type="file"
-                        accept={isService ? ".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png" : "image/*"}
+                        accept={
+                          isService
+                            ? ".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                            : "image/*"
+                        }
                         onChange={handleImageUpload}
                         className="hidden"
                         id="image-upload"
@@ -615,7 +642,8 @@ export function CreateProductForm({
                   Specialties
                 </label>
                 <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
-                  Add tags that describe your {isService ? "service's" : "product's"} specialties or key
+                  Add tags that describe your{" "}
+                  {isService ? "service's" : "product's"} specialties or key
                   features
                 </p>
                 <div className="space-y-3">
@@ -672,9 +700,11 @@ export function CreateProductForm({
                     <span className="font-medium text-gray-700 dark:text-gray-300">
                       Description:
                     </span>
-                    <div 
+                    <div
                       className="mt-2 text-sm text-gray-900 dark:text-white"
-                      dangerouslySetInnerHTML={{ __html: formData.description || "Not specified" }}
+                      dangerouslySetInnerHTML={{
+                        __html: formData.description || "Not specified",
+                      }}
                     />
                   </div>
                   <div className="flex justify-between">
