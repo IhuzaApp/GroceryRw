@@ -101,6 +101,15 @@ export default async function handler(
       });
     }
 
+    // Ensure delivered_time and timeRange are strings, not null
+    const deliveredTimeValue = delivered_time && delivered_time.trim() !== "" 
+      ? delivered_time 
+      : new Date(Date.now() + 60 * 60000).toISOString(); // Default: 1 hour from now
+    
+    const timeRangeValue = timeRange && timeRange.trim() !== "" 
+      ? timeRange 
+      : "Within 1-2 hours"; // Default time range
+
     const result = await hasuraClient.request<{
       insert_businessProductOrders: {
         affected_rows: number;
@@ -117,8 +126,8 @@ export default async function handler(
       longitude: longitude || "",
       deliveryAddress: deliveryAddress || "",
       comment: comment || null,
-      delivered_time: delivered_time || null,
-      timeRange: timeRange || null,
+      delivered_time: deliveredTimeValue,
+      timeRange: timeRangeValue,
     });
 
     if (result.insert_businessProductOrders.affected_rows === 0) {

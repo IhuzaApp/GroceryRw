@@ -192,13 +192,62 @@ export default function StoreCheckoutPage() {
       const baseTime = 60;
       const travelTime = Math.ceil(distKm);
       const totalMinutes = baseTime + travelTime;
+      
+      let deliveryTimeDisplay = "";
+      let deliveredTimeValue = "";
+      let timeRangeValue = "";
+      
       if (totalMinutes >= 60) {
         const hours = Math.floor(totalMinutes / 60);
         const mins = totalMinutes % 60;
-        setDeliveryTime(mins > 0 ? `${hours}h ${mins}m` : `${hours}h`);
+        deliveryTimeDisplay = mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+        
+        // Set delivered_time and timeRange for API
+        const now = new Date();
+        const deliveryDate = new Date(now.getTime() + totalMinutes * 60000);
+        
+        // Format delivered_time as ISO string
+        deliveredTimeValue = deliveryDate.toISOString();
+        
+        // Format timeRange (e.g., "1h 30m - 2h")
+        const bufferMinutes = 30; // 30 minute buffer
+        const minDeliveryDate = new Date(now.getTime() + (totalMinutes - bufferMinutes) * 60000);
+        const maxDeliveryDate = new Date(now.getTime() + (totalMinutes + bufferMinutes) * 60000);
+        
+        const formatTime = (date: Date) => {
+          return date.toLocaleTimeString('en-US', { 
+            hour: 'numeric', 
+            minute: '2-digit',
+            hour12: true 
+          });
+        };
+        
+        timeRangeValue = `${formatTime(minDeliveryDate)} - ${formatTime(maxDeliveryDate)}`;
       } else {
-        setDeliveryTime(`${totalMinutes} mins`);
+        deliveryTimeDisplay = `${totalMinutes} mins`;
+        
+        const now = new Date();
+        const deliveryDate = new Date(now.getTime() + totalMinutes * 60000);
+        deliveredTimeValue = deliveryDate.toISOString();
+        
+        const bufferMinutes = 15;
+        const minDeliveryDate = new Date(now.getTime() + (totalMinutes - bufferMinutes) * 60000);
+        const maxDeliveryDate = new Date(now.getTime() + (totalMinutes + bufferMinutes) * 60000);
+        
+        const formatTime = (date: Date) => {
+          return date.toLocaleTimeString('en-US', { 
+            hour: 'numeric', 
+            minute: '2-digit',
+            hour12: true 
+          });
+        };
+        
+        timeRangeValue = `${formatTime(minDeliveryDate)} - ${formatTime(maxDeliveryDate)}`;
       }
+      
+      setDeliveryTime(deliveryTimeDisplay);
+      setDeliveredTime(deliveredTimeValue);
+      setTimeRange(timeRangeValue);
 
       // Calculate transportation fee
       const transportFee =
@@ -289,8 +338,8 @@ export default function StoreCheckoutPage() {
             longitude: userAddress.longitude || "",
             deliveryAddress: addressInput || "Current Location",
             comment: comment || "",
-            delivered_time: deliveredTime || "",
-            timeRange: timeRange || "",
+            delivered_time: deliveredTime || new Date(Date.now() + 60 * 60000).toISOString(), // Default: 1 hour from now
+            timeRange: timeRange || "Within 1-2 hours",
             payment_method: paymentMethodString,
             payment_method_id: selectedPaymentMethod.id || null,
           }),
