@@ -19,7 +19,6 @@ import { useAuth } from "../../src/context/AuthContext";
 import QuoteDetailsModal from "./quote-details-modal";
 import { BusinessHeader } from "../../src/components/business/BusinessHeader";
 import { StatsCards } from "../../src/components/business/StatsCards";
-import { SuppliersSection } from "../../src/components/business/SuppliersSection";
 import { MyRFQsSection } from "../../src/components/business/MyRFQsSection";
 import { QuotesSection } from "../../src/components/business/QuotesSection";
 import { OrdersSection } from "../../src/components/business/OrdersSection";
@@ -31,6 +30,7 @@ import { ContractsManagement } from "../../src/components/business/ContractsMana
 import PlasBusinessOnboarding from "../../src/components/business/PlasBusinessOnboarding";
 import { BusinessOverview } from "../../src/components/business/BusinessOverview";
 import { ServicesSection } from "../../src/components/business/ServicesSection";
+import BusinessChatDrawer from "../../src/components/business/BusinessChatDrawer";
 import toast from "react-hot-toast";
 
 // Data moved to individual components
@@ -47,6 +47,7 @@ export default function PlasBusinessPage() {
   const [checkingAccount, setCheckingAccount] = useState(true);
   const [businessAccount, setBusinessAccount] = useState<any>(null);
   const [rfqCreated, setRfqCreated] = useState(false);
+  const [isChatDrawerOpen, setIsChatDrawerOpen] = useState(false);
 
   // Redirect shoppers away from this page
   useEffect(() => {
@@ -137,6 +138,8 @@ export default function PlasBusinessPage() {
             businessAccount={businessAccount}
             rfqCreated={rfqCreated}
             setRfqCreated={setRfqCreated}
+            isChatDrawerOpen={isChatDrawerOpen}
+            setIsChatDrawerOpen={setIsChatDrawerOpen}
           />
         </div>
       </div>
@@ -155,6 +158,8 @@ function BuyerDashboardContent({
   businessAccount,
   rfqCreated,
   setRfqCreated,
+  isChatDrawerOpen,
+  setIsChatDrawerOpen,
 }: {
   selectedQuote: any;
   setSelectedQuote: (quote: any) => void;
@@ -166,6 +171,8 @@ function BuyerDashboardContent({
   businessAccount?: any;
   rfqCreated: boolean;
   setRfqCreated: (value: boolean | ((prev: boolean) => boolean)) => void;
+  isChatDrawerOpen: boolean;
+  setIsChatDrawerOpen: (open: boolean) => void;
 }) {
   // Log business account data when component receives it
   useEffect(() => {
@@ -244,7 +251,7 @@ function BuyerDashboardContent({
       {/* Header */}
       <BusinessHeader
         onCreateRFQ={handleCreateRFQ}
-        onFindSuppliers={() => console.log("Finding suppliers")}
+        onBusinessChat={() => setIsChatDrawerOpen(true)}
         businessName={(() => {
           const name = businessAccount?.businessName;
           console.log("🎨 BusinessHeader - Business Name:", name);
@@ -289,12 +296,6 @@ function BuyerDashboardContent({
                       shortLabel: "Orders",
                       icon: Truck,
                     },
-                    {
-                      id: "business-chats",
-                      label: "Business Chats",
-                      shortLabel: "Chats",
-                      icon: MessageSquare,
-                    },
                   ]
                 : []),
               // Personal account tabs (only for personal accounts)
@@ -312,21 +313,9 @@ function BuyerDashboardContent({
                       shortLabel: "Services",
                       icon: Package,
                     },
-                    {
-                      id: "business-chats",
-                      label: "Business Chats",
-                      shortLabel: "Chats",
-                      icon: MessageSquare,
-                    },
                   ]
                 : []),
               // Regular buyer tabs (for all account types)
-              {
-                id: "suppliers",
-                label: "Suppliers",
-                shortLabel: "Suppliers",
-                icon: Package,
-              },
               {
                 id: "rfqs",
                 label: "My RFQs",
@@ -349,10 +338,6 @@ function BuyerDashboardContent({
               <button
                 key={tab.id}
                 onClick={() => {
-                  if (tab.id === "business-chats") {
-                    window.location.href = "/plasBusiness/BusinessChats";
-                    return;
-                  }
                   setActiveTab(tab.id);
                 }}
                 className={`flex min-w-fit flex-shrink-0 touch-manipulation snap-start items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium transition-all duration-300 sm:gap-2 sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm md:px-6 md:py-3 ${
@@ -423,8 +408,6 @@ function BuyerDashboardContent({
         )}
 
         {/* Regular Buyer Tabs */}
-        {activeTab === "suppliers" && <SuppliersSection />}
-
         {activeTab === "rfqs" && (
           <MyRFQsSection
             onCreateRFQ={handleCreateRFQ}
@@ -462,6 +445,12 @@ function BuyerDashboardContent({
         isOpen={isCreateRFQOpen}
         onClose={() => setIsCreateRFQOpen(false)}
         onSubmit={handleRFQSubmit}
+      />
+
+      {/* Business Chat Drawer */}
+      <BusinessChatDrawer
+        isOpen={isChatDrawerOpen}
+        onClose={() => setIsChatDrawerOpen(false)}
       />
     </div>
   );
