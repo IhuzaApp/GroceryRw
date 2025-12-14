@@ -128,6 +128,7 @@ export default function BottomBar() {
   const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
   const moreRef = useRef<HTMLDivElement>(null);
+  const [marketplaceNotificationCount, setMarketplaceNotificationCount] = useState(0);
 
   const handleThemeToggle = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
@@ -172,6 +173,30 @@ export default function BottomBar() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [moreOpen]);
+
+  // Fetch marketplace notifications (RFQ responses + incomplete orders)
+  useEffect(() => {
+    if (!session?.user?.id) {
+      setMarketplaceNotificationCount(0);
+      return;
+    }
+
+    const fetchMarketplaceNotifications = async () => {
+      try {
+        const response = await fetch("/api/queries/marketplace-notifications");
+        const data = await response.json();
+        setMarketplaceNotificationCount(data.totalCount || 0);
+      } catch (error) {
+        console.error("Error fetching marketplace notifications:", error);
+      }
+    };
+
+    fetchMarketplaceNotifications();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchMarketplaceNotifications, 30000);
+
+    return () => clearInterval(interval);
+  }, [session?.user?.id]);
 
   return (
     <>
@@ -442,33 +467,41 @@ export default function BottomBar() {
       {/* Bottom Navigation Bar */}
       <nav className="fixed bottom-0 left-0 z-[9999] flex w-full items-center justify-around border-t border-gray-200 bg-white py-4 shadow-lg transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800 md:hidden">
         <NavItem
-          href="/Messages"
+          href="/"
           icon={
-            <svg
-              width="30px"
-              height="30px"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="text-gray-600 transition-colors duration-200 dark:text-white"
-            >
-              <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-              <g
-                id="SVGRepo_tracerCarrier"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              ></g>
-              <g id="SVGRepo_iconCarrier">
-                <path
-                  d="M8 10.5H16M8 14H13.5M17 3.33782C15.5291 2.48697 13.8214 2 12 2C6.47715 2 2 6.47715 2 12C2 13.5997 2.37562 15.1116 3.04346 16.4525C3.22094 16.8088 3.28001 17.2161 3.17712 17.6006L2.58151 19.8267C2.32295 20.793 3.20701 21.677 4.17335 21.4185L6.39939 20.8229C6.78393 20.72 7.19121 20.7791 7.54753 20.9565C8.88837 21.6244 10.4003 22 12 22C17.5228 22 22 17.5228 22 12C22 10.1786 21.513 8.47087 20.6622 7"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
+            <div className="relative">
+              <svg
+                width="30px"
+                height="30px"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="text-gray-600 transition-colors duration-200 dark:text-white"
+              >
+                <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                <g
+                  id="SVGRepo_tracerCarrier"
                   strokeLinecap="round"
-                ></path>
-              </g>
-            </svg>
+                  strokeLinejoin="round"
+                ></g>
+                <g id="SVGRepo_iconCarrier">
+                  <path
+                    d="M4 9V7.2C4 6.0799 4 5.51984 4.21799 5.09202C4.40973 4.71569 4.71569 4.40973 5.09202 4.21799C5.51984 4 6.07989 4 7.2 4H16.8C17.9201 4 18.4802 4 18.908 4.21799C19.2843 4.40973 19.5903 4.71569 19.782 5.09202C20 5.51984 20 6.0799 20 7.2V16.8C20 17.9201 20 18.4802 19.782 18.908C19.5903 19.2843 19.2843 19.5903 18.908 19.782C18.4802 20 17.9201 20 16.8 20H10.5M11 16H17M8 11L11 9V12L17 7M17 7H14M17 7V10M7 14.5C6.5 14.376 5.68509 14.3714 5 14.376C4.77091 14.3775 4.90941 14.3678 4.6 14.376C3.79258 14.4012 3.00165 14.7368 3 15.6875C2.99825 16.7004 4 17 5 17C6 17 7 17.2312 7 18.3125C7 19.1251 6.1925 19.4812 5.1861 19.5991C4.3861 19.5991 4 19.625 3 19.5M5 20V21M5 13V14"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  ></path>
+                </g>
+              </svg>
+              {marketplaceNotificationCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-lg">
+                  {marketplaceNotificationCount > 9 ? "9+" : marketplaceNotificationCount}
+                </span>
+              )}
+            </div>
           }
-          label="Messages"
+          label="Marketplace"
         />
         <NavItem
           href="/CurrentPendingOrders"
