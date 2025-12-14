@@ -18,6 +18,9 @@ const CREATE_BUSINESS_PRODUCT_ORDER = gql`
     $comment: String
     $delivered_time: String
     $timeRange: String
+    $ordered_by: uuid
+    $status: String
+    $shopper_id: uuid
   ) {
     insert_businessProductOrders(
       objects: {
@@ -33,6 +36,9 @@ const CREATE_BUSINESS_PRODUCT_ORDER = gql`
         comment: $comment
         delivered_time: $delivered_time
         timeRange: $timeRange
+        ordered_by: $ordered_by
+        status: $status
+        shopper_id: $shopper_id
       }
     ) {
       affected_rows
@@ -92,6 +98,8 @@ export default async function handler(
       comment,
       delivered_time,
       timeRange,
+      ordered_by,
+      status,
     } = req.body;
 
     if (!store_id || !allProducts || !total) {
@@ -110,12 +118,8 @@ export default async function handler(
       ? timeRange 
       : "Within 1-2 hours"; // Default time range
 
-    const result = await hasuraClient.request<{
-      insert_businessProductOrders: {
-        affected_rows: number;
-        returning: Array<{ id: string }>;
-      };
-    }>(CREATE_BUSINESS_PRODUCT_ORDER, {
+    // Prepare mutation variables
+    const mutationVariables: any = {
       store_id,
       allProducts: Array.isArray(allProducts) ? allProducts : [],
       total: total.toString(),
@@ -128,7 +132,21 @@ export default async function handler(
       comment: comment || null,
       delivered_time: deliveredTimeValue,
       timeRange: timeRangeValue,
-    });
+      status: status || "Pending",
+      shopper_id: null, // Explicitly set shopper_id to null as per requirement
+    };
+
+    // Only add ordered_by if it's provided
+    if (ordered_by && ordered_by.trim() !== "") {
+      mutationVariables.ordered_by = ordered_by;
+    }
+
+    const result = await hasuraClient.request<{
+      insert_businessProductOrders: {
+        affected_rows: number;
+        returning: Array<{ id: string }>;
+      };
+    }>(CREATE_BUSINESS_PRODUCT_ORDER, mutationVariables);
 
     if (result.insert_businessProductOrders.affected_rows === 0) {
       return res.status(500).json({ error: "Failed to create order" });
