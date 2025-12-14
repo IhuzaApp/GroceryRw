@@ -63,7 +63,7 @@ export default function ProdCategories({
 }
 
 const categories = [
-  { icon: "/assets/icons/shop.png", name: "Super Market", bgColor: "#E6F7FF" },
+  { icon: "/assets/icons/shop.png", name: "Markets", bgColor: "#E6F7FF" },
   { icon: "/assets/icons/bakery.png", name: "Bakery", bgColor: "#FFFAE6" },
   {
     icon: "/assets/icons/vegitables.png",

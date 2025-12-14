@@ -225,6 +225,21 @@ export function useUserDashboardLogic(initialData: Data) {
         return restaurantsAsShops;
       } else if (selectedCategory === "store-category") {
         return storesAsShops;
+      } else if (selectedCategory === "markets-category") {
+        // Find category IDs for Super Market and Public Markets
+        const superMarketCategory = data.categories?.find(cat => cat.name === "Super Market");
+        const publicMarketsCategory = data.categories?.find(cat => cat.name === "Public Markets");
+        const marketCategoryIds = [
+          superMarketCategory?.id,
+          publicMarketsCategory?.id
+        ].filter(Boolean) as string[];
+        
+        // Filter shops that belong to either Super Market or Public Markets
+        shops = shops.filter((shop) => marketCategoryIds.includes(shop.category_id));
+        const categoryStores = storesAsShops.filter(
+          (store) => marketCategoryIds.includes(store.category_id)
+        );
+        return [...shops, ...categoryStores];
       } else {
         shops = shops.filter((shop) => shop.category_id === selectedCategory);
         const categoryStores = storesAsShops.filter(
@@ -340,6 +355,21 @@ export function useUserDashboardLogic(initialData: Data) {
         return restaurantsAsShops;
       } else if (selectedCategory === "store-category") {
         return storesAsShops;
+      } else if (selectedCategory === "markets-category") {
+        // Find category IDs for Super Market and Public Markets
+        const superMarketCategory = data.categories?.find(cat => cat.name === "Super Market");
+        const publicMarketsCategory = data.categories?.find(cat => cat.name === "Public Markets");
+        const marketCategoryIds = [
+          superMarketCategory?.id,
+          publicMarketsCategory?.id
+        ].filter(Boolean) as string[];
+        
+        // Filter shops that belong to either Super Market or Public Markets
+        shops = shops.filter((shop) => marketCategoryIds.includes(shop.category_id));
+        const categoryStores = storesAsShops.filter(
+          (store) => marketCategoryIds.includes(store.category_id)
+        );
+        return [...shops, ...categoryStores];
       } else {
         shops = shops.filter((shop) => shop.category_id === selectedCategory);
         const categoryStores = storesAsShops.filter(
