@@ -28,6 +28,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
   const [showDetailedStats, setShowDetailedStats] = useState(false);
   const [userStores, setUserStores] = useState<any[]>([]);
   const [loadingStores, setLoadingStores] = useState(false);
+  const [loadingStats, setLoadingStats] = useState(true);
 
   // Google Maps Autocomplete refs
   const addressInputRef = useRef<HTMLInputElement>(null);
@@ -42,8 +43,328 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
   useEffect(() => {
     if (businessAccount?.id) {
       fetchUserStores();
+      fetchStats();
     }
   }, [businessAccount]);
+
+  const fetchStats = async () => {
+    try {
+      setLoadingStats(true);
+      const now = new Date();
+      const lastMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const twoMonthsAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+      const thisYearStart = new Date(now.getFullYear(), 0, 1);
+
+      console.log("BusinessOverview: Fetching stats...");
+
+      // Fetch all data in parallel
+      const [ordersRes, rfqsRes] = await Promise.all([
+        fetch("/api/queries/business-product-orders").catch((err) => {
+          console.error("Error fetching orders:", err);
+          return null;
+        }),
+        fetch("/api/queries/business-rfqs").catch((err) => {
+          console.error("Error fetching RFQs:", err);
+          return null;
+        }),
+      ]);
+
+      console.log("BusinessOverview: Orders response:", ordersRes?.ok, ordersRes?.status);
+      console.log("BusinessOverview: RFQs response:", rfqsRes?.ok, rfqsRes?.status);
+
+      // Process Total Revenue
+      let totalRevenue = 0;
+      let thisMonthRevenue = 0;
+      let lastMonthRevenue = 0;
+      let thisYearRevenue = 0;
+      let revenueChange = "0";
+
+      if (ordersRes?.ok) {
+        try {
+          const ordersData = await ordersRes.json();
+          console.log("BusinessOverview: Orders data:", ordersData);
+          const allOrders = ordersData.orders || [];
+          console.log("BusinessOverview: Total orders:", allOrders.length);
+
+        // Calculate revenue from completed/delivered orders
+        const completedOrders = allOrders.filter(
+          (order: any) =>
+            order.status?.toLowerCase() === "delivered" ||
+            order.status?.toLowerCase() === "completed" ||
+            (order.delivered_time && new Date(order.delivered_time) <= now)
+        );
+
+        totalRevenue = completedOrders.reduce(
+          (sum: number, order: any) => sum + (order.value || 0),
+          0
+        );
+
+        // This month revenue
+        thisMonthRevenue = completedOrders
+          .filter((order: any) => {
+            const created = new Date(order.created_at);
+            return created >= lastMonth && created <= now;
+          })
+          .reduce((sum: number, order: any) => sum + (order.value || 0), 0);
+
+        // Last month revenue
+        lastMonthRevenue = completedOrders
+          .filter((order: any) => {
+            const created = new Date(order.created_at);
+            return created >= twoMonthsAgo && created < lastMonth;
+          })
+          .reduce((sum: number, order: any) => sum + (order.value || 0), 0);
+
+        // This year revenue
+        thisYearRevenue = completedOrders
+          .filter((order: any) => {
+            const created = new Date(order.created_at);
+            return created >= thisYearStart && created <= now;
+          })
+          .reduce((sum: number, order: any) => sum + (order.value || 0), 0);
+
+          // Calculate percentage change
+          if (lastMonthRevenue > 0) {
+            const percentChange =
+              ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100;
+            revenueChange =
+              percentChange >= 0
+                ? `+${percentChange.toFixed(1)}%`
+                : `${percentChange.toFixed(1)}%`;
+          } else if (thisMonthRevenue > 0) {
+            revenueChange = "+100%";
+          } else {
+            revenueChange = "0%";
+          }
+          console.log("BusinessOverview: Total revenue:", totalRevenue);
+          console.log("BusinessOverview: Revenue change:", revenueChange);
+        } catch (err) {
+          console.error("BusinessOverview: Error processing orders data:", err);
+        }
+      } else {
+        console.warn("BusinessOverview: Orders API response not OK:", ordersRes?.status);
+      }
+
+      // Process Active Orders
+      let activeOrders = 0;
+      let pendingOrders = 0;
+      let inProgressOrders = 0;
+      let completedOrdersCount = 0;
+      let ordersChange = "0";
+
+      if (ordersRes?.ok) {
+        try {
+          const ordersData = await ordersRes.json();
+          const allOrders = ordersData.orders || [];
+          console.log("BusinessOverview: Processing active orders from", allOrders.length, "total orders");
+
+        pendingOrders = allOrders.filter(
+          (order: any) =>
+            order.status?.toLowerCase() === "pending" ||
+            order.status === null ||
+            (!order.delivered_time || new Date(order.delivered_time) > now)
+        ).length;
+
+        inProgressOrders = allOrders.filter(
+          (order: any) =>
+            order.status?.toLowerCase() === "in progress" ||
+            order.status?.toLowerCase() === "processing"
+        ).length;
+
+        completedOrdersCount = allOrders.filter(
+          (order: any) =>
+            order.status?.toLowerCase() === "delivered" ||
+            order.status?.toLowerCase() === "completed"
+        ).length;
+
+        activeOrders = pendingOrders + inProgressOrders;
+
+        // Calculate change from last month
+        const thisMonthActive = allOrders.filter((order: any) => {
+          const created = new Date(order.created_at);
+          return (
+            created >= lastMonth &&
+            created <= now &&
+            (order.status?.toLowerCase() === "pending" ||
+              order.status?.toLowerCase() === "in progress" ||
+              order.status === null ||
+              !order.delivered_time ||
+              new Date(order.delivered_time) > now)
+          );
+        }).length;
+
+        const prevMonthActive = allOrders.filter((order: any) => {
+          const created = new Date(order.created_at);
+          return (
+            created >= twoMonthsAgo &&
+            created < lastMonth &&
+            (order.status?.toLowerCase() === "pending" ||
+              order.status?.toLowerCase() === "in progress" ||
+              order.status === null ||
+              !order.delivered_time ||
+              new Date(order.delivered_time) > now)
+          );
+        }).length;
+
+          if (prevMonthActive > 0) {
+            const diff = thisMonthActive - prevMonthActive;
+            ordersChange = diff >= 0 ? `+${diff}` : `${diff}`;
+          } else if (thisMonthActive > 0) {
+            ordersChange = `+${thisMonthActive}`;
+          } else {
+            ordersChange = "0";
+          }
+          console.log("BusinessOverview: Active orders:", activeOrders);
+          console.log("BusinessOverview: Orders change:", ordersChange);
+        } catch (err) {
+          console.error("BusinessOverview: Error processing active orders:", err);
+        }
+      }
+
+      // Process RFQ Responses
+      let totalRFQResponses = 0;
+      let pendingReview = 0;
+      let accepted = 0;
+      let rejected = 0;
+      let rfqResponsesChange = "0";
+
+      if (rfqsRes?.ok) {
+        try {
+          const rfqsData = await rfqsRes.json();
+          console.log("BusinessOverview: RFQs data:", rfqsData);
+          const allRFQs = rfqsData.rfqs || [];
+          console.log("BusinessOverview: Total RFQs:", allRFQs.length);
+
+        // Fetch responses for each RFQ
+        const responsePromises = allRFQs.map(async (rfq: any) => {
+          try {
+            const response = await fetch(
+              `/api/queries/rfq-details-and-responses?rfq_id=${rfq.id}`
+            );
+            if (response.ok) {
+              const data = await response.json();
+              return data.responses || [];
+            }
+            return [];
+          } catch {
+            return [];
+          }
+        });
+
+        const allResponses = (await Promise.all(responsePromises)).flat();
+
+        totalRFQResponses = allResponses.length;
+        pendingReview = allResponses.filter(
+          (r: any) => !r.status || r.status === "pending"
+        ).length;
+        accepted = allResponses.filter(
+          (r: any) => r.status?.toLowerCase() === "accepted"
+        ).length;
+        rejected = allResponses.filter(
+          (r: any) => r.status?.toLowerCase() === "rejected"
+        ).length;
+
+        // Calculate change from last month
+        const thisMonthResponses = allResponses.filter((r: any) => {
+          const created = new Date(r.created_at);
+          return created >= lastMonth && created <= now;
+        }).length;
+
+        const prevMonthResponses = allResponses.filter((r: any) => {
+          const created = new Date(r.created_at);
+          return created >= twoMonthsAgo && created < lastMonth;
+        }).length;
+
+          if (prevMonthResponses > 0) {
+            const diff = thisMonthResponses - prevMonthResponses;
+            rfqResponsesChange = diff >= 0 ? `+${diff}` : `${diff}`;
+          } else if (thisMonthResponses > 0) {
+            rfqResponsesChange = `+${thisMonthResponses}`;
+          } else {
+            rfqResponsesChange = "0";
+          }
+          console.log("BusinessOverview: Total RFQ responses:", totalRFQResponses);
+          console.log("BusinessOverview: RFQ responses change:", rfqResponsesChange);
+        } catch (err) {
+          console.error("BusinessOverview: Error processing RFQ responses:", err);
+        }
+      } else {
+        console.warn("BusinessOverview: RFQs API response not OK:", rfqsRes?.status);
+      }
+
+      // Average Rating - For now, set to N/A as we don't have a ratings system for businesses
+      const averageRating = "N/A";
+      const ratingChange = "N/A";
+
+      console.log("BusinessOverview: Setting stats with values:", {
+        totalRevenue,
+        activeOrders,
+        totalRFQResponses,
+        revenueChange,
+        ordersChange,
+        rfqResponsesChange,
+      });
+
+      setStats([
+        {
+          title: "Total Revenue",
+          value: formatCurrencySync(totalRevenue),
+          change: revenueChange,
+          icon: DollarSign,
+          color: "text-green-600",
+          bgColor: "from-green-100 to-green-200",
+          detailed: [
+            { label: "This Month", value: formatCurrencySync(thisMonthRevenue) },
+            { label: "Last Month", value: formatCurrencySync(lastMonthRevenue) },
+            { label: "This Year", value: formatCurrencySync(thisYearRevenue) },
+          ],
+        },
+        {
+          title: "Active Orders",
+          value: activeOrders.toString(),
+          change: ordersChange,
+          icon: ShoppingCart,
+          color: "text-blue-600",
+          bgColor: "from-blue-100 to-blue-200",
+          detailed: [
+            { label: "Pending", value: pendingOrders.toString() },
+            { label: "In Progress", value: inProgressOrders.toString() },
+            { label: "Completed", value: completedOrdersCount.toString() },
+          ],
+        },
+        {
+          title: "RFQ Responses",
+          value: totalRFQResponses.toString(),
+          change: rfqResponsesChange,
+          icon: MessageSquare,
+          color: "text-purple-600",
+          bgColor: "from-purple-100 to-purple-200",
+          detailed: [
+            { label: "Pending Review", value: pendingReview.toString() },
+            { label: "Accepted", value: accepted.toString() },
+            { label: "Rejected", value: rejected.toString() },
+          ],
+        },
+        {
+          title: "Average Rating",
+          value: averageRating,
+          change: ratingChange,
+          icon: Star,
+          color: "text-yellow-600",
+          bgColor: "from-yellow-100 to-yellow-200",
+          detailed: [
+            { label: "5 Stars", value: "N/A" },
+            { label: "4 Stars", value: "N/A" },
+            { label: "3 Stars", value: "N/A" },
+          ],
+        },
+      ]);
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
 
   const fetchUserStores = async () => {
     if (!businessAccount?.id) {
@@ -82,6 +403,60 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
     operating_hours: "",
     category_id: "",
   });
+  const [stats, setStats] = useState([
+    {
+      title: "Total Revenue",
+      value: "0",
+      change: "0%",
+      icon: DollarSign,
+      color: "text-green-600",
+      bgColor: "from-green-100 to-green-200",
+      detailed: [
+        { label: "This Month", value: "0" },
+        { label: "Last Month", value: "0" },
+        { label: "This Year", value: "0" },
+      ],
+    },
+    {
+      title: "Active Orders",
+      value: "0",
+      change: "0",
+      icon: ShoppingCart,
+      color: "text-blue-600",
+      bgColor: "from-blue-100 to-blue-200",
+      detailed: [
+        { label: "Pending", value: "0" },
+        { label: "In Progress", value: "0" },
+        { label: "Completed", value: "0" },
+      ],
+    },
+    {
+      title: "RFQ Responses",
+      value: "0",
+      change: "0",
+      icon: MessageSquare,
+      color: "text-purple-600",
+      bgColor: "from-purple-100 to-purple-200",
+      detailed: [
+        { label: "Pending Review", value: "0" },
+        { label: "Accepted", value: "0" },
+        { label: "Rejected", value: "0" },
+      ],
+    },
+    {
+      title: "Average Rating",
+      value: "N/A",
+      change: "N/A",
+      icon: Star,
+      color: "text-yellow-600",
+      bgColor: "from-yellow-100 to-yellow-200",
+      detailed: [
+        { label: "5 Stars", value: "0%" },
+        { label: "4 Stars", value: "0%" },
+        { label: "3 Stars", value: "0%" },
+      ],
+    },
+  ]);
 
   // Operating hours state
   const [operatingHours, setOperatingHours] = useState<{
@@ -485,61 +860,6 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
     router.push(`/plasBusiness/store/${storeId}`);
   };
 
-  const stats = [
-    {
-      title: "Total Revenue",
-      value: formatCurrencySync(45230),
-      change: "+12.5%",
-      icon: DollarSign,
-      color: "text-green-600",
-      bgColor: "from-green-100 to-green-200",
-      detailed: [
-        { label: "This Month", value: formatCurrencySync(12450) },
-        { label: "Last Month", value: formatCurrencySync(10850) },
-        { label: "This Year", value: formatCurrencySync(45230) },
-      ],
-    },
-    {
-      title: "Active Orders",
-      value: "23",
-      change: "+5",
-      icon: ShoppingCart,
-      color: "text-blue-600",
-      bgColor: "from-blue-100 to-blue-200",
-      detailed: [
-        { label: "Pending", value: "8" },
-        { label: "In Progress", value: "12" },
-        { label: "Completed", value: "3" },
-      ],
-    },
-    {
-      title: "RFQ Responses",
-      value: "18",
-      change: "+8",
-      icon: MessageSquare,
-      color: "text-purple-600",
-      bgColor: "from-purple-100 to-purple-200",
-      detailed: [
-        { label: "Pending Review", value: "5" },
-        { label: "Accepted", value: "10" },
-        { label: "Rejected", value: "3" },
-      ],
-    },
-    {
-      title: "Average Rating",
-      value: "4.8",
-      change: "+0.2",
-      icon: Star,
-      color: "text-yellow-600",
-      bgColor: "from-yellow-100 to-yellow-200",
-      detailed: [
-        { label: "5 Stars", value: "85%" },
-        { label: "4 Stars", value: "12%" },
-        { label: "3 Stars", value: "3%" },
-      ],
-    },
-  ];
-
   return (
     <div className="space-y-6">
       {/* Header with Toggle - Hidden on mobile */}
@@ -578,12 +898,16 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
                   {stat.title}
                 </p>
                 <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
-                  {stat.value}
+                  {loadingStats ? "..." : stat.value}
                 </p>
                 <p
                   className={`mt-1 text-xs font-medium sm:text-sm ${stat.color}`}
                 >
-                  {stat.change} from last month
+                  {stat.change === "N/A"
+                    ? "No previous data"
+                    : stat.change === "0" || stat.change === "0%"
+                    ? "No change from last month"
+                    : `${stat.change} from last month`}
                 </p>
               </div>
               <div
