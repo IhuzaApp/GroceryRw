@@ -273,8 +273,8 @@ function BuyerDashboardContent({
                     },
                     {
                       id: "products-bids",
-                      label: "Products/Bids",
-                      shortLabel: "Products",
+                      label: "Services/Bids",
+                      shortLabel: "Services",
                       icon: Briefcase,
                     },
                     {
