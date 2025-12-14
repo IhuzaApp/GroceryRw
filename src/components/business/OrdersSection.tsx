@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CheckCircle, AlertCircle, Truck, Loader2, MapPin, X, Eye, Package } from "lucide-react";
+import { CheckCircle, AlertCircle, Truck, Loader2, MapPin, X, Eye, Package, Search, ChevronLeft, ChevronRight, User } from "lucide-react";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import Image from "next/image";
 import toast from "react-hot-toast";
@@ -36,6 +36,21 @@ interface Order {
   latitude: string;
   longitude: string;
   allProducts: Product[];
+  shopper?: {
+    id: string;
+    name: string;
+    profile_picture: string;
+    phone: string;
+    email: string;
+  } | null;
+  shopper_id?: string | null;
+  orderedBy?: {
+    id: string;
+    name: string;
+    profile_picture: string;
+    phone: string;
+    email: string;
+  } | null;
 }
 
 interface OrdersSectionProps {
@@ -44,11 +59,15 @@ interface OrdersSectionProps {
 
 export function OrdersSection({ className = "" }: OrdersSectionProps) {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ordersPerPage = 12;
 
   useEffect(() => {
     fetchOrders();
@@ -62,7 +81,9 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
       const data = await response.json();
       
       if (response.ok) {
-        setOrders(data.orders || []);
+        const fetchedOrders = data.orders || [];
+        setOrders(fetchedOrders);
+        setFilteredOrders(fetchedOrders);
       } else {
         setError(data.error || "Failed to fetch orders");
       }
@@ -77,8 +98,49 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
     // Handle export logic
   };
 
-  const handleFilter = () => {
-    // Handle filter logic
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1); // Reset to first page when searching
+    if (!query.trim()) {
+      setFilteredOrders(orders);
+      return;
+    }
+    
+    const filtered = orders.filter((order) => {
+      const searchLower = query.toLowerCase();
+      
+      // Search by order ID (query ID)
+      if (order.orderId.toLowerCase().includes(searchLower)) {
+        return true;
+      }
+      
+      // Search by product names from allProducts
+      if (Array.isArray(order.allProducts) && order.allProducts.length > 0) {
+        const productMatches = order.allProducts.some((product: Product) => 
+          product.name?.toLowerCase().includes(searchLower)
+        );
+        if (productMatches) {
+          return true;
+        }
+      }
+      
+      return false;
+    });
+    setFilteredOrders(filtered);
+  };
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
+  const startIndex = (currentPage - 1) * ordersPerPage;
+  const endIndex = startIndex + ordersPerPage;
+  const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
+
+  const handlePreviousPage = () => {
+    setCurrentPage((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
   };
 
   const handleViewOrder = (order: Order) => {
@@ -188,42 +250,53 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
   return (
     <div className={`space-y-4 md:space-y-8 ${className}`}>
       <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 md:rounded-2xl">
-        <div className="flex flex-col gap-3 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white p-4 dark:border-gray-700 dark:from-gray-700 dark:to-gray-800 sm:flex-row sm:items-center sm:justify-between sm:p-6 md:p-8">
+        <div className="flex flex-col gap-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white p-4 dark:border-gray-700 dark:from-gray-700 dark:to-gray-800 sm:p-6 md:p-8">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white md:text-2xl">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white md:text-2xl">
               Order History
             </h2>
-            <p className="mt-1 text-xs text-gray-600 dark:text-gray-400 md:text-sm">
+              <p className="mt-1 text-xs text-gray-600 dark:text-gray-400 md:text-sm">
               Track and manage your orders
             </p>
+            </div>
           </div>
-          <div className="flex gap-2 sm:gap-3">
+          <div className="flex items-center gap-3">
+            {/* Search Input */}
+            <div className="relative flex-1">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search orders..."
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="w-full rounded-lg border-2 border-gray-200 bg-white py-2 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 transition-all duration-300 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-400 md:rounded-xl md:py-2.5"
+              />
+            </div>
+            {/* Export Button */}
             <button
               onClick={handleExport}
-              className="rounded-lg border-2 border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 transition-all duration-300 hover:border-green-500 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 md:rounded-xl md:px-4 md:py-2 md:text-sm"
+              className="flex-shrink-0 rounded-lg border-2 border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 transition-all duration-300 hover:border-green-500 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 md:rounded-xl md:px-4 md:py-2.5 md:text-sm"
             >
               Export
-            </button>
-            <button
-              onClick={handleFilter}
-              className="rounded-lg border-2 border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 transition-all duration-300 hover:border-green-500 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 md:rounded-xl md:px-4 md:py-2 md:text-sm"
-            >
-              Filter
             </button>
           </div>
         </div>
         <div className="p-4 md:p-8">
-          {orders.length === 0 ? (
+          {filteredOrders.length === 0 ? (
             <div className="py-12 text-center">
               <p className="text-sm text-gray-500 dark:text-gray-400 md:text-base">
-                No orders found
+                {searchQuery ? "No orders match your search" : "No orders found"}
               </p>
             </div>
           ) : (
-            <div className="space-y-3 md:space-y-6">
-              {orders.map((order) => (
-                <div
-                  key={order.id}
+            <>
+              <div className="space-y-3 md:space-y-6">
+                {paginatedOrders.map((order) => (
+              <div
+                key={order.id}
                   className="group rounded-xl border-2 border-gray-100 bg-gradient-to-r from-white to-gray-50 p-3 transition-all duration-300 hover:border-green-200 hover:shadow-lg dark:border-gray-700 dark:from-gray-800 dark:to-gray-700 dark:hover:border-green-800 md:rounded-2xl md:p-6"
                 >
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -231,8 +304,8 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
                       <div className="flex flex-wrap items-center gap-2 md:gap-3">
                         <span className="text-sm font-bold text-gray-900 dark:text-white md:text-lg">
                           {order.orderId}
-                        </span>
-                        <span
+                      </span>
+                      <span
                           className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold md:px-3 md:py-1 md:text-xs ${getStatusBadgeStyles(
                             order.status
                           )}`}
@@ -240,11 +313,11 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
                           {getStatusIcon(order.status)}
                           <span className="hidden sm:inline">{order.status}</span>
                           <span className="sm:hidden">{order.status.split(" ")[0]}</span>
-                        </span>
-                      </div>
+                      </span>
+                    </div>
                       <p className="text-xs font-semibold text-gray-900 dark:text-white line-clamp-2 md:text-base md:line-clamp-none">
-                        {order.items}
-                      </p>
+                      {order.items}
+                    </p>
                       <p className="text-[10px] text-gray-600 dark:text-gray-400 md:text-sm">
                         Store:{" "}
                         <span className="font-semibold">{order.store}</span>{" "}
@@ -252,9 +325,9 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
                         <span className="md:hidden">{" "}</span>
                         <span className="hidden md:inline">Tracking: </span>
                         <span className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[9px] dark:bg-gray-700 md:px-2 md:py-1 md:text-xs">
-                          {order.tracking}
-                        </span>
-                      </p>
+                        {order.tracking}
+                      </span>
+                    </p>
                       <div className="md:hidden">
                         <p className="text-xs font-semibold text-gray-900 dark:text-white">
                           {formatCurrencySync(order.value)}
@@ -263,28 +336,28 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
                           Delivery: {order.deliveryDate}
                         </p>
                       </div>
-                    </div>
+                  </div>
                     <div className="hidden space-y-4 text-right md:block">
-                      <div>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    <div>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
                           {formatCurrencySync(order.value)}
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Order Value
-                        </p>
-                      </div>
-                      <div className="space-y-2">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Delivery:{" "}
-                          <span className="font-semibold">
-                            {order.deliveryDate}
-                          </span>
-                        </p>
-                        <button
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Order Value
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Delivery:{" "}
+                        <span className="font-semibold">
+                          {order.deliveryDate}
+                        </span>
+                      </p>
+                      <button
                           onClick={() => handleViewOrder(order)}
-                          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 text-sm font-medium text-white shadow-lg transition-all duration-300 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl"
+                          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 text-sm font-medium !text-white shadow-lg transition-all duration-300 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl"
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-4 w-4 !text-white" />
                           View
                         </button>
                       </div>
@@ -293,15 +366,46 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
                   <div className="mt-3 md:hidden">
                     <button
                       onClick={() => handleViewOrder(order)}
-                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-3 py-2 text-xs font-medium text-white shadow-md transition-all duration-300 hover:from-green-600 hover:to-emerald-600"
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-3 py-2 text-xs font-medium !text-white shadow-md transition-all duration-300 hover:from-green-600 hover:to-emerald-600"
                     >
-                      <Eye className="h-3 w-3" />
+                      <Eye className="h-3 w-3 !text-white" />
                       View Details
                     </button>
                   </div>
                 </div>
               ))}
-            </div>
+              </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="mt-6 flex flex-col gap-4 border-t border-gray-200 pt-4 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="text-xs text-gray-600 dark:text-gray-400 sm:text-sm">
+                    Showing {startIndex + 1} to {Math.min(endIndex, filteredOrders.length)} of {filteredOrders.length} orders
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    <button
+                      onClick={handlePreviousPage}
+                      disabled={currentPage === 1}
+                      className="flex items-center gap-1 rounded-lg border-2 border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 transition-all duration-300 hover:border-green-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 md:px-4 md:text-sm"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </button>
+                    <span className="px-3 text-xs font-medium text-gray-700 dark:text-gray-300 sm:text-sm">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages}
+                      className="flex items-center gap-1 rounded-lg border-2 border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 transition-all duration-300 hover:border-green-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 md:px-4 md:text-sm"
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -313,7 +417,7 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
           onClick={() => setShowOrderDetails(false)}
         >
           <div 
-            className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-t-3xl border-t border-l border-r border-gray-200 bg-white shadow-2xl animate-slide-up dark:border-gray-700 dark:bg-gray-800 md:rounded-2xl md:animate-none md:border"
+            className="w-full h-full max-h-screen max-w-2xl overflow-y-auto rounded-t-3xl border-t border-l border-r border-gray-200 bg-white shadow-2xl animate-slide-up dark:border-gray-700 dark:bg-gray-800 md:h-auto md:max-h-[90vh] md:rounded-2xl md:animate-none md:border"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50 p-6 dark:border-gray-700 dark:from-gray-700 dark:to-gray-800">
@@ -329,6 +433,43 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
             </div>
 
             <div className="p-6 space-y-6">
+              {/* Shopper Information Section */}
+              {selectedOrder.shopper_id && selectedOrder.shopper && (
+                <div className="rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 p-4 dark:border-blue-800 dark:from-blue-900/20 dark:to-cyan-900/20">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-blue-500 bg-blue-100 dark:bg-blue-900/30">
+                      {selectedOrder.shopper.profile_picture ? (
+                        <Image
+                          src={selectedOrder.shopper.profile_picture}
+                          alt={selectedOrder.shopper.name || "Shopper"}
+                          width={64}
+                          height={64}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <Truck className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="mb-1 flex items-center gap-2">
+                        <Truck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                          Assigned Shopper
+                        </h3>
+                      </div>
+                      <p className="text-base font-semibold text-gray-900 dark:text-white">
+                        {selectedOrder.shopper.name || "Unknown Shopper"}
+                      </p>
+                      {selectedOrder.shopper.phone && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {selectedOrder.shopper.phone}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Status Badge */}
               <div className="flex items-center gap-3">
                 <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-bold ${getStatusBadgeStyles(selectedOrder.status)}`}>
@@ -480,7 +621,7 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
                         Confirm Items Available for Pickup
                       </span>
                     )}
-                  </button>
+                      </button>
                 </div>
               )}
 

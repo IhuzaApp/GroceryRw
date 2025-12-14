@@ -31,6 +31,7 @@ const GET_BUSINESS_PRODUCT_ORDERS = gql`
       timeRange
       comment
       status
+      shopper_id
       created_at
       business_store {
         id
@@ -44,6 +45,20 @@ const GET_BUSINESS_PRODUCT_ORDERS = gql`
         is_active
         business_id
         created_at
+      }
+      shopper {
+        id
+        name
+        profile_picture
+        phone
+        email
+      }
+      orderedBy {
+        id
+        name
+        profile_picture
+        phone
+        email
       }
     }
   }
@@ -127,6 +142,7 @@ export default async function handler(
         timeRange: string;
         comment: string | null;
         status: string | null;
+        shopper_id: string | null;
         created_at: string;
         business_store: {
           id: string;
@@ -141,6 +157,20 @@ export default async function handler(
           business_id: string;
           created_at: string;
         };
+        shopper: {
+          id: string;
+          name: string;
+          profile_picture: string;
+          phone: string;
+          email: string;
+        } | null;
+        orderedBy: {
+          id: string;
+          name: string;
+          profile_picture: string;
+          phone: string;
+          email: string;
+        } | null;
       }>;
     }>(GET_BUSINESS_PRODUCT_ORDERS, {
       businessAccount_id,
@@ -189,6 +219,9 @@ export default async function handler(
         latitude: order.latitude,
         longitude: order.longitude,
         allProducts: order.allProducts,
+        shopper: order.shopper,
+        shopper_id: order.shopper_id,
+        orderedBy: order.orderedBy,
       };
     });
 
