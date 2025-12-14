@@ -203,18 +203,20 @@ export default function BusinessChatDrawer({
 
   return (
     <>
-      {/* Backdrop - Only show on desktop (lg+) */}
+      {/* Backdrop - Hidden on mobile, shown on desktop */}
       <div
-        className="hidden fixed inset-0 z-[9998] bg-black/50 transition-opacity lg:block"
+        className="hidden md:block fixed inset-0 z-[10000] bg-black/50 transition-opacity"
         onClick={onClose}
       />
 
-      {/* Drawer */}
-      <div
-        className={`fixed right-0 top-0 bottom-0 z-[9999] flex h-screen w-full transform bg-white shadow-2xl transition-transform duration-300 ease-in-out dark:bg-gray-800 lg:h-screen lg:w-[36rem] lg:max-w-[36rem] xl:w-[44rem] xl:max-w-[44rem] ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
+      {/* Modal */}
+      <div className="fixed inset-0 z-[10001] flex items-center justify-center md:p-4">
+        <div
+          className={`relative flex h-screen w-screen md:h-[90vh] md:w-full md:max-w-4xl transform bg-white shadow-2xl transition-all duration-300 ease-in-out dark:bg-gray-800 md:rounded-lg overflow-hidden ${
+            isOpen ? "scale-100 opacity-100" : "scale-95 opacity-0"
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
         {!showChatBody ? (
           /* Conversations List */
           <div className="flex h-full w-full flex-col overflow-hidden">
@@ -305,7 +307,8 @@ export default function BusinessChatDrawer({
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <button
                   onClick={handleBackToList}
-                  className="lg:hidden flex-shrink-0 rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                  className="flex-shrink-0 rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                  title="Back to conversations"
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
@@ -342,7 +345,7 @@ export default function BusinessChatDrawer({
             </div>
 
             {/* Messages Container */}
-            <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-4 dark:bg-gray-900">
+            <div className="flex-1 overflow-y-auto bg-gray-50 px-4 pt-4 pb-0 dark:bg-gray-900">
               {currentMessages.length === 0 ? (
                 <div className="flex h-full items-center justify-center">
                   <div className="text-center">
@@ -411,7 +414,7 @@ export default function BusinessChatDrawer({
             </div>
 
             {/* Professional Message Input */}
-            <div className="flex-shrink-0 border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+            <div className="flex-shrink-0 border-t border-gray-200 bg-white px-6 py-6 dark:border-gray-700 dark:bg-gray-800">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -419,7 +422,7 @@ export default function BusinessChatDrawer({
                 }}
                 className="flex items-end space-x-3"
               >
-                <div className="flex-1">
+                <div className="flex-1 ">
                   <input
                     type="text"
                     placeholder="Type your message..."
@@ -446,6 +449,7 @@ export default function BusinessChatDrawer({
             </div>
           </div>
         )}
+        </div>
       </div>
     </>
   );
