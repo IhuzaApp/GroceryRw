@@ -1,12 +1,13 @@
 "use client";
 
-import { Search, Plus } from "lucide-react";
+import { MessageSquare, Plus } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 
 interface BusinessHeaderProps {
   className?: string;
   onCreateRFQ?: () => void;
   onFindSuppliers?: () => void;
+  onBusinessChat?: () => void;
   businessName?: string | null;
 }
 
@@ -14,6 +15,7 @@ export function BusinessHeader({
   className = "",
   onCreateRFQ,
   onFindSuppliers,
+  onBusinessChat,
   businessName,
 }: BusinessHeaderProps) {
   const { theme } = useTheme();
@@ -27,12 +29,11 @@ export function BusinessHeader({
     }
   };
 
-  const handleFindSuppliers = () => {
-    if (onFindSuppliers) {
-      onFindSuppliers();
+  const handleBusinessChat = () => {
+    if (onBusinessChat) {
+      onBusinessChat();
     } else {
-      console.log("Finding suppliers");
-      // Default action if no handler provided
+      console.log("Opening business chat");
     }
   };
 
@@ -92,15 +93,15 @@ export function BusinessHeader({
               <span style={{ color: "#ffffff" }}>Create RFQ</span>
             </button>
             <button
-              onClick={handleFindSuppliers}
+              onClick={handleBusinessChat}
               className={`flex flex-1 items-center justify-center rounded-lg px-2 py-2 text-xs font-medium shadow-lg transition-all duration-300 sm:flex-none sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm md:px-6 md:py-3 md:text-base ${
                 theme === "dark"
                   ? "border border-gray-700 bg-gray-800 text-green-400 hover:bg-gray-700"
                   : "bg-white text-green-600 hover:bg-green-50"
               }`}
             >
-              <Search className="mr-1 inline h-3 w-3 sm:mr-1.5 sm:h-4 sm:w-4 md:mr-2 md:h-5 md:w-5" />
-              <span>Find Suppliers</span>
+              <MessageSquare className="mr-1 inline h-3 w-3 sm:mr-1.5 sm:h-4 sm:w-4 md:mr-2 md:h-5 md:w-5" />
+              <span>Business Chat</span>
             </button>
           </div>
         </div>

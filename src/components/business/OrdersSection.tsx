@@ -148,8 +148,9 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
     setShowOrderDetails(true);
   };
 
-  const handleViewLocation = (latitude: string, longitude: string) => {
-    const url = `https://www.google.com/maps?q=${latitude},${longitude}`;
+  const handleViewLocation = (deliveryAddress: string) => {
+    const encodedAddress = encodeURIComponent(deliveryAddress);
+    const url = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
     window.open(url, "_blank");
   };
 
@@ -567,9 +568,9 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
                     <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Delivery Time:</p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">{selectedOrder.deliveryTime}</p>
                   </div>
-                  {selectedOrder.latitude && selectedOrder.longitude && (
+                  {selectedOrder.deliveryAddress && (
                     <button
-                      onClick={() => handleViewLocation(selectedOrder.latitude, selectedOrder.longitude)}
+                      onClick={() => handleViewLocation(selectedOrder.deliveryAddress)}
                       className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 text-sm font-medium !text-white shadow-md transition-all duration-300 hover:from-green-600 hover:to-emerald-600"
                     >
                       <MapPin className="h-4 w-4" />
