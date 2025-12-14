@@ -110,11 +110,6 @@ export default async function handler(
 
     const businessAccount_id = businessAccountResult.business_accounts[0].id;
 
-    console.log("🔍 Fetching orders with:", {
-      businessAccount_id,
-      user_id,
-    });
-
     // Get orders directly by filtering business_store.business_id
     const ordersResult = await hasuraClient.request<{
       businessProductOrders: Array<{
@@ -150,11 +145,6 @@ export default async function handler(
     }>(GET_BUSINESS_PRODUCT_ORDERS, {
       businessAccount_id,
       user_id,
-    });
-
-    console.log("📦 Orders result:", {
-      count: ordersResult.businessProductOrders?.length || 0,
-      orders: ordersResult.businessProductOrders,
     });
 
     // Transform orders for frontend
@@ -196,18 +186,14 @@ export default async function handler(
         comment: order.comment,
         created_at: order.created_at,
         store_image: order.business_store?.image || null,
+        latitude: order.latitude,
+        longitude: order.longitude,
+        allProducts: order.allProducts,
       };
     });
 
-    console.log("✅ Returning orders:", { count: orders.length });
     return res.status(200).json({ orders });
   } catch (error: any) {
-    console.error("❌ Error fetching business product orders:", error);
-    console.error("Error details:", {
-      message: error.message,
-      response: error.response,
-      request: error.request,
-    });
     return res.status(500).json({
       error: "Failed to fetch orders",
       message: error.message,

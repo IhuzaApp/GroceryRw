@@ -1,8 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CheckCircle, AlertCircle, Truck, Loader2 } from "lucide-react";
+import { CheckCircle, AlertCircle, Truck, Loader2, MapPin, X, Eye, Package } from "lucide-react";
 import { formatCurrencySync } from "../../utils/formatCurrency";
+import Image from "next/image";
+import toast from "react-hot-toast";
+
+interface Product {
+  id: string;
+  name: string;
+  price_per_item: number;
+  quantity: number;
+  unit: string;
+  measurement_type?: string;
+}
 
 interface Order {
   id: string;
@@ -22,6 +33,9 @@ interface Order {
   comment: string | null;
   created_at: string;
   store_image: string | null;
+  latitude: string;
+  longitude: string;
+  allProducts: Product[];
 }
 
 interface OrdersSectionProps {
@@ -32,6 +46,9 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showOrderDetails, setShowOrderDetails] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -43,23 +60,13 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
       setError(null);
       const response = await fetch("/api/queries/business-product-orders");
       const data = await response.json();
-      console.log("📦 Orders API response:", {
-        status: response.status,
-        ok: response.ok,
-        data,
-      });
       
       if (response.ok) {
         setOrders(data.orders || []);
-        if (!data.orders || data.orders.length === 0) {
-          console.log("⚠️ No orders found in response");
-        }
       } else {
-        console.error("❌ API error:", data);
         setError(data.error || "Failed to fetch orders");
       }
     } catch (err) {
-      console.error("❌ Error fetching orders:", err);
       setError("Failed to fetch orders");
     } finally {
       setLoading(false);
@@ -67,30 +74,73 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
   };
 
   const handleExport = () => {
-    console.log("Exporting orders");
     // Handle export logic
   };
 
   const handleFilter = () => {
-    console.log("Filtering orders");
     // Handle filter logic
   };
 
-  const handleTrackOrder = (orderId: string) => {
-    console.log("Tracking order:", orderId);
-    // Handle track order logic
+  const handleViewOrder = (order: Order) => {
+    setSelectedOrder(order);
+    setShowOrderDetails(true);
+  };
+
+  const handleViewLocation = (latitude: string, longitude: string) => {
+    const url = `https://www.google.com/maps?q=${latitude},${longitude}`;
+    window.open(url, "_blank");
+  };
+
+  const handleConfirmAvailability = async (orderId: string) => {
+    if (!selectedOrder) return;
+    
+    setUpdatingStatus(true);
+    try {
+      const response = await fetch("/api/mutations/update-business-product-order-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId,
+          status: "Ready for Pickup",
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Update the order in the local state
+        setOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            order.id === orderId
+              ? { ...order, status: "Ready for Pickup" }
+              : order
+          )
+        );
+        // Update selected order
+        setSelectedOrder({ ...selectedOrder, status: "Ready for Pickup" });
+        toast.success("Order confirmed as ready for pickup!");
+      } else {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update order status");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to confirm availability");
+    } finally {
+      setUpdatingStatus(false);
+    }
   };
 
   const getStatusBadgeStyles = (status: string) => {
     const normalizedStatus = status?.toLowerCase() || "";
     if (normalizedStatus.includes("delivered") || normalizedStatus === "completed") {
       return "bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 dark:from-green-900 dark:to-emerald-900 dark:text-green-200";
+    } else if (normalizedStatus.includes("ready for pickup") || normalizedStatus.includes("ready")) {
+      return "bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 dark:from-blue-900 dark:to-cyan-900 dark:text-blue-200";
     } else if (
       normalizedStatus.includes("transit") ||
       normalizedStatus.includes("on the way") ||
       normalizedStatus === "in_progress"
     ) {
-      return "bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 dark:from-blue-900 dark:to-cyan-900 dark:text-blue-200";
+      return "bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-800 dark:from-purple-900 dark:to-indigo-900 dark:text-purple-200";
     } else if (normalizedStatus === "pending" || normalizedStatus === "processing") {
       return "bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 dark:from-yellow-900 dark:to-orange-900 dark:text-yellow-200";
     } else if (normalizedStatus === "cancelled" || normalizedStatus === "rejected") {
@@ -103,6 +153,8 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
     const normalizedStatus = status?.toLowerCase() || "";
     if (normalizedStatus.includes("delivered") || normalizedStatus === "completed") {
       return <CheckCircle className="mr-1 h-3 w-3 md:h-3.5 md:w-3.5" />;
+    } else if (normalizedStatus.includes("ready for pickup") || normalizedStatus.includes("ready")) {
+      return <Package className="mr-1 h-3 w-3 md:h-3.5 md:w-3.5" />;
     } else if (
       normalizedStatus.includes("transit") ||
       normalizedStatus.includes("on the way") ||
@@ -229,20 +281,22 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
                           </span>
                         </p>
                         <button
-                          onClick={() => handleTrackOrder(order.id)}
-                          className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 text-sm font-medium text-white shadow-lg transition-all duration-300 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl"
+                          onClick={() => handleViewOrder(order)}
+                          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 text-sm font-medium text-white shadow-lg transition-all duration-300 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl"
                         >
-                          Track Order
+                          <Eye className="h-4 w-4" />
+                          View
                         </button>
                       </div>
                     </div>
                   </div>
                   <div className="mt-3 md:hidden">
                     <button
-                      onClick={() => handleTrackOrder(order.id)}
-                      className="w-full rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-3 py-2 text-xs font-medium text-white shadow-md transition-all duration-300 hover:from-green-600 hover:to-emerald-600"
+                      onClick={() => handleViewOrder(order)}
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-3 py-2 text-xs font-medium text-white shadow-md transition-all duration-300 hover:from-green-600 hover:to-emerald-600"
                     >
-                      Track Order
+                      <Eye className="h-3 w-3" />
+                      View Details
                     </button>
                   </div>
                 </div>
@@ -251,6 +305,243 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
           )}
         </div>
       </div>
+
+      {/* Order Details Modal */}
+      {showOrderDetails && selectedOrder && (
+        <div 
+          className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/60 backdrop-blur-sm md:items-center md:px-4 md:pb-4"
+          onClick={() => setShowOrderDetails(false)}
+        >
+          <div 
+            className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-t-3xl border-t border-l border-r border-gray-200 bg-white shadow-2xl animate-slide-up dark:border-gray-700 dark:bg-gray-800 md:rounded-2xl md:animate-none md:border"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50 p-6 dark:border-gray-700 dark:from-gray-700 dark:to-gray-800">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white md:text-2xl">
+                Order Details - {selectedOrder.orderId}
+              </h2>
+              <button
+                onClick={() => setShowOrderDetails(false)}
+                className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Status Badge */}
+              <div className="flex items-center gap-3">
+                <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-bold ${getStatusBadgeStyles(selectedOrder.status)}`}>
+                  {getStatusIcon(selectedOrder.status)}
+                  {selectedOrder.status}
+                </span>
+              </div>
+
+              {/* Products Section */}
+              <div>
+                <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
+                  Products Ordered
+                </h3>
+                <div className="space-y-3">
+                  {Array.isArray(selectedOrder.allProducts) && selectedOrder.allProducts.length > 0 ? (
+                    selectedOrder.allProducts.map((product: Product, index: number) => (
+                      <div
+                        key={product.id || index}
+                        className="rounded-xl border border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 p-4 dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-gray-900 dark:text-white">
+                              {product.name}
+                            </h4>
+                            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                              Quantity: {product.quantity} {product.unit || product.measurement_type || ""}
+                            </p>
+                            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                              Price per item: {formatCurrencySync(product.price_per_item)}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                              {formatCurrencySync(product.price_per_item * product.quantity)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">No product details available</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Order Summary */}
+              <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-4 dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50">
+                <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
+                  Order Summary
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Subtotal:</span>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                      {formatCurrencySync(selectedOrder.value - selectedOrder.transportation_fee - selectedOrder.service_fee)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Transportation Fee:</span>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                      {formatCurrencySync(selectedOrder.transportation_fee)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Service Fee:</span>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                      {formatCurrencySync(selectedOrder.service_fee)}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex justify-between border-t border-gray-300 pt-2 dark:border-gray-600">
+                    <span className="text-base font-bold text-gray-900 dark:text-white">Total:</span>
+                    <span className="text-base font-bold text-green-600 dark:text-green-400">
+                      {formatCurrencySync(selectedOrder.value)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Delivery Information */}
+              <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-4 dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50">
+                <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
+                  Delivery Information
+                </h3>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Delivery Address:</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{selectedOrder.deliveryAddress}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Delivery Date:</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{selectedOrder.deliveryDate}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Delivery Time:</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{selectedOrder.deliveryTime}</p>
+                  </div>
+                  {selectedOrder.latitude && selectedOrder.longitude && (
+                    <button
+                      onClick={() => handleViewLocation(selectedOrder.latitude, selectedOrder.longitude)}
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 text-sm font-medium !text-white shadow-md transition-all duration-300 hover:from-green-600 hover:to-emerald-600"
+                    >
+                      <MapPin className="h-4 w-4" />
+                      View Location on Map
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Comment Section */}
+              {selectedOrder.comment && (
+                <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-4 dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50">
+                  <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
+                    Order Comment
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{selectedOrder.comment}</p>
+                </div>
+              )}
+
+              {/* Availability Confirmation Section */}
+              {(selectedOrder.status === "Pending" || selectedOrder.status === "Processing") && (
+                <div className="rounded-xl border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50 p-4 dark:border-orange-800 dark:from-orange-900/20 dark:to-yellow-900/20">
+                  <div className="mb-4 flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/10">
+                      <Package className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                        Confirm Availability
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Confirm that all items in this order are available and ready for pickup
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleConfirmAvailability(selectedOrder.id)}
+                    disabled={updatingStatus}
+                    className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-yellow-500 px-6 py-3 text-base font-semibold !text-white shadow-md transition-all duration-300 hover:from-orange-600 hover:to-yellow-600 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {updatingStatus ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Confirming...
+                      </span>
+                    ) : (
+                      <span className="flex items-center justify-center gap-2">
+                        <CheckCircle className="h-5 w-5" />
+                        Confirm Items Available for Pickup
+                      </span>
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {/* Availability Status (if already confirmed) */}
+              {(selectedOrder.status === "Ready for Pickup" || selectedOrder.status === "In Transit" || selectedOrder.status === "Delivered") && (
+                <div className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-4 dark:border-green-800 dark:from-green-900/20 dark:to-emerald-900/20">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/10">
+                      <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                        Availability Confirmed
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Items have been confirmed as available for pickup
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Additional Info */}
+              <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-4 dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50">
+                <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
+                  Additional Information
+                </h3>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="font-semibold text-gray-700 dark:text-gray-300">Store:</p>
+                    <p className="text-gray-600 dark:text-gray-400">{selectedOrder.store}</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-700 dark:text-gray-300">Total Units:</p>
+                    <p className="text-gray-600 dark:text-gray-400">{selectedOrder.units}</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-700 dark:text-gray-300">Tracking ID:</p>
+                    <p className="font-mono text-gray-600 dark:text-gray-400">{selectedOrder.tracking}</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-700 dark:text-gray-300">Order Date:</p>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      {new Date(selectedOrder.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 border-t border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+              <button
+                onClick={() => setShowOrderDetails(false)}
+                className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-3 text-base font-semibold !text-white shadow-lg transition-all duration-300 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

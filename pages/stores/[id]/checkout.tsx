@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import RootLayout from "../../../src/components/ui/layout";
 import { ArrowLeft, MapPin, Clock, CreditCard, X } from "lucide-react";
@@ -56,6 +57,7 @@ function getDistanceFromLatLonInKm(
 
 export default function StoreCheckoutPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [checkoutData, setCheckoutData] = useState<CheckoutData | null>(null);
   const [storeLocation, setStoreLocation] = useState<{
     lat: number;
@@ -295,7 +297,7 @@ export default function StoreCheckoutPage() {
     setIsProcessing(true);
 
     try {
-      // Prepare products as JSONB
+      // Prepare products as JSONB (without image field)
       const productsJsonb = checkoutData.products.map((p) => ({
         id: p.id,
         name: p.name,
@@ -303,7 +305,6 @@ export default function StoreCheckoutPage() {
         quantity: p.quantity,
         unit: p.unit,
         measurement_type: p.measurement_unit || p.unit,
-        image: p.image || null,
       }));
 
       // Calculate units (total quantity of all items)
@@ -320,6 +321,13 @@ export default function StoreCheckoutPage() {
         paymentMethodString = "card";
       } else if (selectedPaymentMethod.type === "momo") {
         paymentMethodString = "mobile_money";
+      }
+
+      const userId = (session?.user as any)?.id;
+      if (!userId) {
+        toast.error("Please log in to place an order");
+        setIsProcessing(false);
+        return;
       }
 
       const response = await fetch(
@@ -340,6 +348,8 @@ export default function StoreCheckoutPage() {
             comment: comment || "",
             delivered_time: deliveredTime || new Date(Date.now() + 60 * 60000).toISOString(), // Default: 1 hour from now
             timeRange: timeRange || "Within 1-2 hours",
+            ordered_by: userId,
+            status: "Pending",
             payment_method: paymentMethodString,
             payment_method_id: selectedPaymentMethod.id || null,
           }),
