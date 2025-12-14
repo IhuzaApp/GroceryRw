@@ -32,6 +32,7 @@ import LoadingScreen from "@components/ui/LoadingScreen";
 // Add this new component for category icons
 const CategoryIcon = ({ category }: { category: string }) => {
   const icons: { [key: string]: string } = {
+    Markets: "🛒",
     "Super Market": "🛒",
     "Public Markets": "🏪",
     Bakeries: "🥖",
@@ -40,6 +41,7 @@ const CategoryIcon = ({ category }: { category: string }) => {
     "Organic Shops": "🌿",
     "Specialty Foods": "🍱",
     Restaurant: "🍽️",
+    Stores: "🏬",
   };
 
   return (
