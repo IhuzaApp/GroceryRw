@@ -299,7 +299,7 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
               <div
                 key={order.id}
                   className="group rounded-xl border-2 border-gray-100 bg-gradient-to-r from-white to-gray-50 p-3 transition-all duration-300 hover:border-green-200 hover:shadow-lg dark:border-gray-700 dark:from-gray-800 dark:to-gray-700 dark:hover:border-green-800 md:rounded-2xl md:p-6"
-                >
+              >
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div className="flex-1 space-y-2 md:space-y-4">
                       <div className="flex flex-wrap items-center gap-2 md:gap-3">
@@ -310,7 +310,7 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
                           className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold md:px-3 md:py-1 md:text-xs ${getStatusBadgeStyles(
                             order.status
                           )}`}
-                        >
+                      >
                           {getStatusIcon(order.status)}
                           <span className="hidden sm:inline">{order.status}</span>
                           <span className="sm:hidden">{order.status.split(" ")[0]}</span>
