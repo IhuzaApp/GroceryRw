@@ -14,6 +14,8 @@ import {
   ChevronLeft,
   ChevronRight,
   User,
+  ZoomIn,
+  Image as LucideImageIcon,
 } from "lucide-react";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import Image from "next/image";
@@ -26,6 +28,7 @@ interface Product {
   quantity: number;
   unit: string;
   measurement_type?: string;
+  image?: string;
 }
 
 interface Order {
@@ -81,6 +84,7 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 12;
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchOrders();
@@ -371,7 +375,11 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
                         </p>
                         <div className="md:hidden">
                           <p className="text-xs font-semibold text-gray-900 dark:text-white">
-                            {formatCurrencySync(order.value)}
+                            {formatCurrencySync(
+                              order.value -
+                                order.transportation_fee -
+                                order.service_fee
+                            )}
                           </p>
                           <p className="text-[10px] text-gray-500 dark:text-gray-400">
                             Delivery: {order.deliveryDate}
@@ -381,7 +389,11 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
                       <div className="hidden space-y-4 text-right md:block">
                         <div>
                           <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                            {formatCurrencySync(order.value)}
+                            {formatCurrencySync(
+                              order.value -
+                                order.transportation_fee -
+                                order.service_fee
+                            )}
                           </p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
                             Order Value
@@ -539,26 +551,51 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
                           key={product.id || index}
                           className="rounded-xl border border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 p-4 dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50"
                         >
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-gray-900 dark:text-white">
-                                {product.name}
-                              </h4>
-                              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                Quantity: {product.quantity}{" "}
-                                {product.unit || product.measurement_type || ""}
-                              </p>
-                              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                Price per item:{" "}
-                                {formatCurrencySync(product.price_per_item)}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-lg font-bold text-green-600 dark:text-green-400">
-                                {formatCurrencySync(
-                                  product.price_per_item * product.quantity
-                                )}
-                              </p>
+                          <div className="flex items-start gap-4">
+                            {/* Product Image */}
+                            {product.image ? (
+                              <div className="flex-shrink-0">
+                                <div
+                                  className="group relative h-20 w-20 cursor-pointer overflow-hidden rounded-lg border-2 border-gray-200 transition-all duration-300 hover:border-green-500 hover:shadow-lg dark:border-gray-600 md:h-24 md:w-24"
+                                  onClick={() => setExpandedImage(product.image!)}
+                                >
+                                  <Image
+                                    src={product.image}
+                                    alt={product.name}
+                                    fill
+                                    className="object-cover transition-transform duration-300 group-hover:scale-110"
+                                  />
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all duration-300 group-hover:bg-black/20">
+                                    <ZoomIn className="h-6 w-6 text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-lg border-2 border-gray-200 bg-gray-100 dark:border-gray-600 dark:bg-gray-700 md:h-24 md:w-24">
+                                <LucideImageIcon className="h-8 w-8 text-gray-400" />
+                              </div>
+                            )}
+                            <div className="flex flex-1 items-center justify-between">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-gray-900 dark:text-white">
+                                  {product.name}
+                                </h4>
+                                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                  Quantity: {product.quantity}{" "}
+                                  {product.unit || product.measurement_type || ""}
+                                </p>
+                                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                  Price per item:{" "}
+                                  {formatCurrencySync(product.price_per_item)}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                                  {formatCurrencySync(
+                                    product.price_per_item * product.quantity
+                                  )}
+                                </p>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -574,44 +611,18 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
 
               {/* Order Summary */}
               <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-4 dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50">
-                <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
-                  Order Summary
-                </h3>
+           
                 <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Subtotal:
+                  <div className="flex justify-between pt-2 ">
+                    <span className="text-base font-bold text-gray-900 dark:text-white">
+                      Total:
                     </span>
-                    <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                    <span className="text-base font-bold text-green-600 dark:text-green-400">
                       {formatCurrencySync(
                         selectedOrder.value -
                           selectedOrder.transportation_fee -
                           selectedOrder.service_fee
                       )}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Transportation Fee:
-                    </span>
-                    <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                      {formatCurrencySync(selectedOrder.transportation_fee)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Service Fee:
-                    </span>
-                    <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                      {formatCurrencySync(selectedOrder.service_fee)}
-                    </span>
-                  </div>
-                  <div className="mt-3 flex justify-between border-t border-gray-300 pt-2 dark:border-gray-600">
-                    <span className="text-base font-bold text-gray-900 dark:text-white">
-                      Total:
-                    </span>
-                    <span className="text-base font-bold text-green-600 dark:text-green-400">
-                      {formatCurrencySync(selectedOrder.value)}
                     </span>
                   </div>
                 </div>
@@ -781,6 +792,33 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
               >
                 Close
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Expanded Image Modal */}
+      {expandedImage && (
+        <div
+          className="fixed inset-0 z-[10001] flex items-center justify-center bg-black/90 backdrop-blur-sm"
+          onClick={() => setExpandedImage(null)}
+        >
+          <div className="relative max-h-[90vh] max-w-[90vw] p-4">
+            <button
+              onClick={() => setExpandedImage(null)}
+              className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <div className="relative h-full w-full">
+              <Image
+                src={expandedImage}
+                alt="Expanded product image"
+                width={1200}
+                height={1200}
+                className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
+                onClick={(e) => e.stopPropagation()}
+              />
             </div>
           </div>
         </div>
