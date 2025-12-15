@@ -128,7 +128,8 @@ export default function BottomBar() {
   const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
   const moreRef = useRef<HTMLDivElement>(null);
-  const [marketplaceNotificationCount, setMarketplaceNotificationCount] = useState(0);
+  const [marketplaceNotificationCount, setMarketplaceNotificationCount] =
+    useState(0);
 
   const handleThemeToggle = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
@@ -496,7 +497,9 @@ export default function BottomBar() {
               </svg>
               {marketplaceNotificationCount > 0 && (
                 <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-lg">
-                  {marketplaceNotificationCount > 9 ? "9+" : marketplaceNotificationCount}
+                  {marketplaceNotificationCount > 9
+                    ? "9+"
+                    : marketplaceNotificationCount}
                 </span>
               )}
             </div>

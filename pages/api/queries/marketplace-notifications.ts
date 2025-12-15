@@ -7,9 +7,9 @@ import { gql } from "graphql-request";
 const GET_RFQ_RESPONSES_COUNT = gql`
   query GetRFQResponsesCount($user_id: uuid!, $seven_days_ago: timestamptz!) {
     bussines_RFQ(
-      where: { 
-        user_id: { _eq: $user_id }, 
-        open: { _eq: true },
+      where: {
+        user_id: { _eq: $user_id }
+        open: { _eq: true }
         created_at: { _gte: $seven_days_ago }
       }
     ) {
@@ -35,10 +35,7 @@ const GET_RFQ_RESPONSES = gql`
 const GET_NEW_RFQS_COUNT = gql`
   query GetNewRFQsCount($seven_days_ago: timestamptz!) {
     bussines_RFQ(
-      where: {
-        open: { _eq: true }
-        created_at: { _gte: $seven_days_ago }
-      }
+      where: { open: { _eq: true }, created_at: { _gte: $seven_days_ago } }
     ) {
       id
     }
@@ -46,7 +43,10 @@ const GET_NEW_RFQS_COUNT = gql`
 `;
 
 const GET_INCOMPLETE_ORDERS_COUNT = gql`
-  query GetIncompleteOrdersCount($user_id: uuid!, $seven_days_ago: timestamptz!) {
+  query GetIncompleteOrdersCount(
+    $user_id: uuid!
+    $seven_days_ago: timestamptz!
+  ) {
     Orders(
       where: {
         user_id: { _eq: $user_id }
@@ -79,11 +79,7 @@ const GET_INCOMPLETE_ORDERS_COUNT = gql`
 
 const GET_NEW_BUSINESS_PRODUCT_ORDERS_COUNT = gql`
   query GetNewBusinessProductOrdersCount($seven_days_ago: timestamptz!) {
-    businessProductOrders(
-      where: {
-        created_at: { _gte: $seven_days_ago }
-      }
-    ) {
+    businessProductOrders(where: { created_at: { _gte: $seven_days_ago } }) {
       id
       created_at
     }
@@ -201,10 +197,15 @@ export default async function handler(
       seven_days_ago: sevenDaysAgoISO,
     });
 
-    const newBusinessOrdersCount = newBusinessOrdersResult.businessProductOrders?.length || 0;
+    const newBusinessOrdersCount =
+      newBusinessOrdersResult.businessProductOrders?.length || 0;
 
     // Total count: RFQ responses + incomplete orders + new RFQs + new business orders
-    const totalCount = rfqResponsesCount + incompleteOrdersCount + newRFQsCount + newBusinessOrdersCount;
+    const totalCount =
+      rfqResponsesCount +
+      incompleteOrdersCount +
+      newRFQsCount +
+      newBusinessOrdersCount;
 
     return res.status(200).json({
       rfqResponsesCount,
@@ -215,21 +216,22 @@ export default async function handler(
     });
   } catch (error: any) {
     console.error("Error fetching marketplace notifications:", error);
-    
+
     // Check if it's a 502 Bad Gateway error (Hasura server down)
-    const is502Error = error?.response?.status === 502 || 
-                      error?.message?.includes("502") ||
-                      error?.response?.statusCode === 502;
-    
+    const is502Error =
+      error?.response?.status === 502 ||
+      error?.message?.includes("502") ||
+      error?.response?.statusCode === 502;
+
     // For 502 errors, return 200 with default values (graceful degradation)
     // For other errors, return 500
     const statusCode = is502Error ? 200 : 500;
-    
+
     return res.status(statusCode).json({
-      error: is502Error ? "service_unavailable" : "Failed to fetch notifications",
-      message: is502Error 
-        ? "Service temporarily unavailable" 
-        : error.message,
+      error: is502Error
+        ? "service_unavailable"
+        : "Failed to fetch notifications",
+      message: is502Error ? "Service temporarily unavailable" : error.message,
       rfqResponsesCount: 0,
       incompleteOrdersCount: 0,
       newRFQsCount: 0,
@@ -238,4 +240,3 @@ export default async function handler(
     });
   }
 }
-

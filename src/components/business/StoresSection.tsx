@@ -56,7 +56,9 @@ export function StoresSection({
   };
 
   return (
-    <div className={`rounded-xl border border-gray-100 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl sm:p-6 ${className}`}>
+    <div
+      className={`rounded-xl border border-gray-100 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl sm:p-6 ${className}`}
+    >
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -145,4 +147,3 @@ export function StoresSection({
     </div>
   );
 }
-

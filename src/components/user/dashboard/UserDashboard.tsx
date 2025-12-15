@@ -335,34 +335,128 @@ const CategoryIcon = ({ category }: { category: string }) => {
         strokeLinejoin="round"
       ></g>
       <g id="SVGRepo_iconCarrier">
-        <path className="cls-1" d="M44,81.1H212a0,0,0,0,1,0,0V200a12,12,0,0,1-12,12H56a12,12,0,0,1-12-12V81.1A0,0,0,0,1,44,81.1Z"></path>
-        <path className="cls-2" d="M200,201.11H56a12,12,0,0,1-12-12l0-108H212l0,108A12,12,0,0,1,200,201.11Z"></path>
-        <path className="cls-1" d="M44,81.1v51.58l.8,0a30.68,30.68,0,0,0,20.8-8.11,30.74,30.74,0,0,0,41.6,0,30.73,30.73,0,0,0,41.6,0,30.74,30.74,0,0,0,41.6,0,30.68,30.68,0,0,0,20.8,8.11l.8,0V81.1Z"></path>
-        <path className="cls-3" d="M200,214H56a14,14,0,0,1-14-14V81.1a2,2,0,0,1,2-2H212a2,2,0,0,1,2,2V200A14,14,0,0,1,200,214ZM46,83.1V200a10,10,0,0,0,10,10H200a10,10,0,0,0,10-10V83.1Z"></path>
-        <path className="cls-4" d="M232,81.1H24l16.55-31A12,12,0,0,1,51,44H205a12,12,0,0,1,10.43,6.06Z"></path>
-        <path className="cls-5" d="M227.2,72.1l-11.75-22A12,12,0,0,0,205,44H51a12,12,0,0,0-10.43,6.06L28.8,72.1Z"></path>
-        <path className="cls-3" d="M232,83.1H24a2,2,0,0,1-1.76-2.94l16.55-31A14,14,0,0,1,51,42H205a14,14,0,0,1,12.16,7.07l16.58,31.09A2,2,0,0,1,232,83.1Zm-204.67-4H228.67l-15-28.1A10,10,0,0,0,205,46H51a10,10,0,0,0-8.69,5Z"></path>
-        <path className="cls-6" d="M24,81.1H65.6a0,0,0,0,1,0,0v20.8a20.8,20.8,0,0,1-20.8,20.8h0A20.8,20.8,0,0,1,24,101.9V81.1A0,0,0,0,1,24,81.1Z"></path>
-        <path className="cls-7" d="M27.32,81.1h35a3.32,3.32,0,0,1,3.32,3.32V94a20.8,20.8,0,0,1-20.8,20.8h0A20.8,20.8,0,0,1,24,94V84.42A3.32,3.32,0,0,1,27.32,81.1Z"></path>
-        <path className="cls-3" d="M44.8,124.7A22.83,22.83,0,0,1,22,101.9V81.1a2,2,0,0,1,2-2H65.6a2,2,0,0,1,2,2v20.8A22.83,22.83,0,0,1,44.8,124.7ZM26,83.1v18.8a18.8,18.8,0,1,0,37.6,0V83.1Z"></path>
-        <path className="cls-4" d="M65.6,81.1h41.6a0,0,0,0,1,0,0v20.8a20.8,20.8,0,0,1-20.8,20.8h0a20.8,20.8,0,0,1-20.8-20.8V81.1A0,0,0,0,1,65.6,81.1Z"></path>
-        <path className="cls-5" d="M68.92,81.1h35a3.32,3.32,0,0,1,3.32,3.32V94a20.8,20.8,0,0,1-20.8,20.8h0A20.8,20.8,0,0,1,65.6,94V84.42a3.32,3.32,0,0,1,3.32-3.32Z"></path>
-        <path className="cls-3" d="M86.4,124.7a22.83,22.83,0,0,1-22.8-22.8V81.1a2,2,0,0,1,2-2h41.6a2,2,0,0,1,2,2v20.8A22.83,22.83,0,0,1,86.4,124.7ZM67.6,83.1v18.8a18.8,18.8,0,0,0,37.6,0V83.1Z"></path>
-        <path className="cls-6" d="M107.2,81.1h41.6a0,0,0,0,1,0,0v20.8A20.8,20.8,0,0,1,128,122.7h0a20.8,20.8,0,0,1-20.8-20.8V81.1A0,0,0,0,1,107.2,81.1Z"></path>
-        <path className="cls-7" d="M110.52,81.1h35a3.32,3.32,0,0,1,3.32,3.32V94a20.8,20.8,0,0,1-20.8,20.8h0A20.8,20.8,0,0,1,107.2,94V84.42a3.32,3.32,0,0,1,3.32-3.32Z"></path>
-        <path className="cls-3" d="M128,124.7a22.83,22.83,0,0,1-22.8-22.8V81.1a2,2,0,0,1,2-2h41.6a2,2,0,0,1,2,2v20.8A22.83,22.83,0,0,1,128,124.7ZM109.2,83.1v18.8a18.8,18.8,0,0,0,37.6,0V83.1Z"></path>
-        <path className="cls-4" d="M148.8,81.1h41.6a0,0,0,0,1,0,0v20.8a20.8,20.8,0,0,1-20.8,20.8h0a20.8,20.8,0,0,1-20.8-20.8V81.1A0,0,0,0,1,148.8,81.1Z"></path>
-        <path className="cls-5" d="M152.12,81.1h35a3.32,3.32,0,0,1,3.32,3.32V94a20.8,20.8,0,0,1-20.8,20.8h0A20.8,20.8,0,0,1,148.8,94V84.42a3.32,3.32,0,0,1,3.32-3.32Z"></path>
-        <path className="cls-3" d="M169.6,124.7a22.83,22.83,0,0,1-22.8-22.8V81.1a2,2,0,0,1,2-2h41.6a2,2,0,0,1,2,2v20.8A22.83,22.83,0,0,1,169.6,124.7ZM150.8,83.1v18.8a18.8,18.8,0,0,0,37.6,0V83.1Z"></path>
-        <path className="cls-6" d="M190.4,81.1H232a0,0,0,0,1,0,0v20.8a20.8,20.8,0,0,1-20.8,20.8h0a20.8,20.8,0,0,1-20.8-20.8V81.1A0,0,0,0,1,190.4,81.1Z"></path>
-        <path className="cls-7" d="M193.72,81.1h35A3.32,3.32,0,0,1,232,84.42V94a20.8,20.8,0,0,1-20.8,20.8h0A20.8,20.8,0,0,1,190.4,94V84.42a3.32,3.32,0,0,1,3.32-3.32Z"></path>
-        <path className="cls-3" d="M211.2,124.7a22.83,22.83,0,0,1-22.8-22.8V81.1a2,2,0,0,1,2-2H232a2,2,0,0,1,2,2v20.8A22.83,22.83,0,0,1,211.2,124.7ZM192.4,83.1v18.8a18.8,18.8,0,0,0,37.6,0V83.1Z"></path>
-        <path className="cls-4" d="M67.07,147.55H99.63a6,6,0,0,1,6,6V212a0,0,0,0,1,0,0H61.07a0,0,0,0,1,0,0V153.55A6,6,0,0,1,67.07,147.55Z"></path>
-        <path className="cls-5" d="M67.07,154.55H99.63a6,6,0,0,1,6,6v40.57a0,0,0,0,1,0,0H61.07a0,0,0,0,1,0,0V160.55A6,6,0,0,1,67.07,154.55Z"></path>
-        <path className="cls-3" d="M105.63,214H61.07a2,2,0,0,1-2-2V153.55a8,8,0,0,1,8-8H99.63a8,8,0,0,1,8,8V212A2,2,0,0,1,105.63,214Zm-42.56-4h40.56V153.55a4,4,0,0,0-4-4H67.07a4,4,0,0,0-4,4Z"></path>
-        <rect className="cls-4" x="119.31" y="147.55" width="75.63" height="36.32" rx="6" ry="6"></rect>
-        <rect className="cls-5" x="119.31" y="154.77" width="75.63" height="29.1" rx="6" ry="6"></rect>
-        <path className="cls-3" d="M188.93,185.87H125.31a8,8,0,0,1-8-8V153.55a8,8,0,0,1,8-8h63.63a8,8,0,0,1,8,8v24.32A8,8,0,0,1,188.93,185.87Zm-63.63-36.32a4,4,0,0,0-4,4v24.32a4,4,0,0,0,4,4h63.63a4,4,0,0,0,4-4V153.55a4,4,0,0,0-4-4Z"></path>
+        <path
+          className="cls-1"
+          d="M44,81.1H212a0,0,0,0,1,0,0V200a12,12,0,0,1-12,12H56a12,12,0,0,1-12-12V81.1A0,0,0,0,1,44,81.1Z"
+        ></path>
+        <path
+          className="cls-2"
+          d="M200,201.11H56a12,12,0,0,1-12-12l0-108H212l0,108A12,12,0,0,1,200,201.11Z"
+        ></path>
+        <path
+          className="cls-1"
+          d="M44,81.1v51.58l.8,0a30.68,30.68,0,0,0,20.8-8.11,30.74,30.74,0,0,0,41.6,0,30.73,30.73,0,0,0,41.6,0,30.74,30.74,0,0,0,41.6,0,30.68,30.68,0,0,0,20.8,8.11l.8,0V81.1Z"
+        ></path>
+        <path
+          className="cls-3"
+          d="M200,214H56a14,14,0,0,1-14-14V81.1a2,2,0,0,1,2-2H212a2,2,0,0,1,2,2V200A14,14,0,0,1,200,214ZM46,83.1V200a10,10,0,0,0,10,10H200a10,10,0,0,0,10-10V83.1Z"
+        ></path>
+        <path
+          className="cls-4"
+          d="M232,81.1H24l16.55-31A12,12,0,0,1,51,44H205a12,12,0,0,1,10.43,6.06Z"
+        ></path>
+        <path
+          className="cls-5"
+          d="M227.2,72.1l-11.75-22A12,12,0,0,0,205,44H51a12,12,0,0,0-10.43,6.06L28.8,72.1Z"
+        ></path>
+        <path
+          className="cls-3"
+          d="M232,83.1H24a2,2,0,0,1-1.76-2.94l16.55-31A14,14,0,0,1,51,42H205a14,14,0,0,1,12.16,7.07l16.58,31.09A2,2,0,0,1,232,83.1Zm-204.67-4H228.67l-15-28.1A10,10,0,0,0,205,46H51a10,10,0,0,0-8.69,5Z"
+        ></path>
+        <path
+          className="cls-6"
+          d="M24,81.1H65.6a0,0,0,0,1,0,0v20.8a20.8,20.8,0,0,1-20.8,20.8h0A20.8,20.8,0,0,1,24,101.9V81.1A0,0,0,0,1,24,81.1Z"
+        ></path>
+        <path
+          className="cls-7"
+          d="M27.32,81.1h35a3.32,3.32,0,0,1,3.32,3.32V94a20.8,20.8,0,0,1-20.8,20.8h0A20.8,20.8,0,0,1,24,94V84.42A3.32,3.32,0,0,1,27.32,81.1Z"
+        ></path>
+        <path
+          className="cls-3"
+          d="M44.8,124.7A22.83,22.83,0,0,1,22,101.9V81.1a2,2,0,0,1,2-2H65.6a2,2,0,0,1,2,2v20.8A22.83,22.83,0,0,1,44.8,124.7ZM26,83.1v18.8a18.8,18.8,0,1,0,37.6,0V83.1Z"
+        ></path>
+        <path
+          className="cls-4"
+          d="M65.6,81.1h41.6a0,0,0,0,1,0,0v20.8a20.8,20.8,0,0,1-20.8,20.8h0a20.8,20.8,0,0,1-20.8-20.8V81.1A0,0,0,0,1,65.6,81.1Z"
+        ></path>
+        <path
+          className="cls-5"
+          d="M68.92,81.1h35a3.32,3.32,0,0,1,3.32,3.32V94a20.8,20.8,0,0,1-20.8,20.8h0A20.8,20.8,0,0,1,65.6,94V84.42a3.32,3.32,0,0,1,3.32-3.32Z"
+        ></path>
+        <path
+          className="cls-3"
+          d="M86.4,124.7a22.83,22.83,0,0,1-22.8-22.8V81.1a2,2,0,0,1,2-2h41.6a2,2,0,0,1,2,2v20.8A22.83,22.83,0,0,1,86.4,124.7ZM67.6,83.1v18.8a18.8,18.8,0,0,0,37.6,0V83.1Z"
+        ></path>
+        <path
+          className="cls-6"
+          d="M107.2,81.1h41.6a0,0,0,0,1,0,0v20.8A20.8,20.8,0,0,1,128,122.7h0a20.8,20.8,0,0,1-20.8-20.8V81.1A0,0,0,0,1,107.2,81.1Z"
+        ></path>
+        <path
+          className="cls-7"
+          d="M110.52,81.1h35a3.32,3.32,0,0,1,3.32,3.32V94a20.8,20.8,0,0,1-20.8,20.8h0A20.8,20.8,0,0,1,107.2,94V84.42a3.32,3.32,0,0,1,3.32-3.32Z"
+        ></path>
+        <path
+          className="cls-3"
+          d="M128,124.7a22.83,22.83,0,0,1-22.8-22.8V81.1a2,2,0,0,1,2-2h41.6a2,2,0,0,1,2,2v20.8A22.83,22.83,0,0,1,128,124.7ZM109.2,83.1v18.8a18.8,18.8,0,0,0,37.6,0V83.1Z"
+        ></path>
+        <path
+          className="cls-4"
+          d="M148.8,81.1h41.6a0,0,0,0,1,0,0v20.8a20.8,20.8,0,0,1-20.8,20.8h0a20.8,20.8,0,0,1-20.8-20.8V81.1A0,0,0,0,1,148.8,81.1Z"
+        ></path>
+        <path
+          className="cls-5"
+          d="M152.12,81.1h35a3.32,3.32,0,0,1,3.32,3.32V94a20.8,20.8,0,0,1-20.8,20.8h0A20.8,20.8,0,0,1,148.8,94V84.42a3.32,3.32,0,0,1,3.32-3.32Z"
+        ></path>
+        <path
+          className="cls-3"
+          d="M169.6,124.7a22.83,22.83,0,0,1-22.8-22.8V81.1a2,2,0,0,1,2-2h41.6a2,2,0,0,1,2,2v20.8A22.83,22.83,0,0,1,169.6,124.7ZM150.8,83.1v18.8a18.8,18.8,0,0,0,37.6,0V83.1Z"
+        ></path>
+        <path
+          className="cls-6"
+          d="M190.4,81.1H232a0,0,0,0,1,0,0v20.8a20.8,20.8,0,0,1-20.8,20.8h0a20.8,20.8,0,0,1-20.8-20.8V81.1A0,0,0,0,1,190.4,81.1Z"
+        ></path>
+        <path
+          className="cls-7"
+          d="M193.72,81.1h35A3.32,3.32,0,0,1,232,84.42V94a20.8,20.8,0,0,1-20.8,20.8h0A20.8,20.8,0,0,1,190.4,94V84.42a3.32,3.32,0,0,1,3.32-3.32Z"
+        ></path>
+        <path
+          className="cls-3"
+          d="M211.2,124.7a22.83,22.83,0,0,1-22.8-22.8V81.1a2,2,0,0,1,2-2H232a2,2,0,0,1,2,2v20.8A22.83,22.83,0,0,1,211.2,124.7ZM192.4,83.1v18.8a18.8,18.8,0,0,0,37.6,0V83.1Z"
+        ></path>
+        <path
+          className="cls-4"
+          d="M67.07,147.55H99.63a6,6,0,0,1,6,6V212a0,0,0,0,1,0,0H61.07a0,0,0,0,1,0,0V153.55A6,6,0,0,1,67.07,147.55Z"
+        ></path>
+        <path
+          className="cls-5"
+          d="M67.07,154.55H99.63a6,6,0,0,1,6,6v40.57a0,0,0,0,1,0,0H61.07a0,0,0,0,1,0,0V160.55A6,6,0,0,1,67.07,154.55Z"
+        ></path>
+        <path
+          className="cls-3"
+          d="M105.63,214H61.07a2,2,0,0,1-2-2V153.55a8,8,0,0,1,8-8H99.63a8,8,0,0,1,8,8V212A2,2,0,0,1,105.63,214Zm-42.56-4h40.56V153.55a4,4,0,0,0-4-4H67.07a4,4,0,0,0-4,4Z"
+        ></path>
+        <rect
+          className="cls-4"
+          x="119.31"
+          y="147.55"
+          width="75.63"
+          height="36.32"
+          rx="6"
+          ry="6"
+        ></rect>
+        <rect
+          className="cls-5"
+          x="119.31"
+          y="154.77"
+          width="75.63"
+          height="29.1"
+          rx="6"
+          ry="6"
+        ></rect>
+        <path
+          className="cls-3"
+          d="M188.93,185.87H125.31a8,8,0,0,1-8-8V153.55a8,8,0,0,1,8-8h63.63a8,8,0,0,1,8,8v24.32A8,8,0,0,1,188.93,185.87Zm-63.63-36.32a4,4,0,0,0-4,4v24.32a4,4,0,0,0,4,4h63.63a4,4,0,0,0,4-4V153.55a4,4,0,0,0-4-4Z"
+        ></path>
         <circle className="cls-8" cx="232" cy="134" r="5"></circle>
         <circle className="cls-8" cx="144" cy="29" r="4"></circle>
         <circle className="cls-8" cx="125" cy="224" r="3"></circle>
@@ -809,15 +903,21 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
         return restaurantsAsShops;
       } else if (selectedCategory === "markets-category") {
         // Find category IDs for Super Market and Public Markets
-        const superMarketCategory = data.categories?.find(cat => cat.name === "Super Market");
-        const publicMarketsCategory = data.categories?.find(cat => cat.name === "Public Markets");
+        const superMarketCategory = data.categories?.find(
+          (cat) => cat.name === "Super Market"
+        );
+        const publicMarketsCategory = data.categories?.find(
+          (cat) => cat.name === "Public Markets"
+        );
         const marketCategoryIds = [
           superMarketCategory?.id,
-          publicMarketsCategory?.id
+          publicMarketsCategory?.id,
         ].filter(Boolean) as string[];
-        
+
         // Filter shops that belong to either Super Market or Public Markets
-        shops = shops.filter((shop) => marketCategoryIds.includes(shop.category_id));
+        shops = shops.filter((shop) =>
+          marketCategoryIds.includes(shop.category_id)
+        );
         return shops;
       } else {
         // Filter shops by category
@@ -943,17 +1043,23 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
         return storesAsShops;
       } else if (selectedCategory === "markets-category") {
         // Find category IDs for Super Market and Public Markets
-        const superMarketCategory = data.categories?.find(cat => cat.name === "Super Market");
-        const publicMarketsCategory = data.categories?.find(cat => cat.name === "Public Markets");
+        const superMarketCategory = data.categories?.find(
+          (cat) => cat.name === "Super Market"
+        );
+        const publicMarketsCategory = data.categories?.find(
+          (cat) => cat.name === "Public Markets"
+        );
         const marketCategoryIds = [
           superMarketCategory?.id,
-          publicMarketsCategory?.id
+          publicMarketsCategory?.id,
         ].filter(Boolean) as string[];
-        
+
         // Filter shops that belong to either Super Market or Public Markets
-        shops = shops.filter((shop) => marketCategoryIds.includes(shop.category_id));
-        const categoryStores = storesAsShops.filter(
-          (store) => marketCategoryIds.includes(store.category_id)
+        shops = shops.filter((shop) =>
+          marketCategoryIds.includes(shop.category_id)
+        );
+        const categoryStores = storesAsShops.filter((store) =>
+          marketCategoryIds.includes(store.category_id)
         );
         return [...shops, ...categoryStores];
       } else {

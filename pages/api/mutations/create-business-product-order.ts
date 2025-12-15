@@ -110,13 +110,13 @@ export default async function handler(
     }
 
     // Ensure delivered_time and timeRange are strings, not null
-    const deliveredTimeValue = delivered_time && delivered_time.trim() !== "" 
-      ? delivered_time 
-      : new Date(Date.now() + 60 * 60000).toISOString(); // Default: 1 hour from now
-    
-    const timeRangeValue = timeRange && timeRange.trim() !== "" 
-      ? timeRange 
-      : "Within 1-2 hours"; // Default time range
+    const deliveredTimeValue =
+      delivered_time && delivered_time.trim() !== ""
+        ? delivered_time
+        : new Date(Date.now() + 60 * 60000).toISOString(); // Default: 1 hour from now
+
+    const timeRangeValue =
+      timeRange && timeRange.trim() !== "" ? timeRange : "Within 1-2 hours"; // Default time range
 
     // Prepare mutation variables
     const mutationVariables: any = {

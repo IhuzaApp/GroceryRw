@@ -12,17 +12,28 @@ import {
   ArrowUpRight,
   TrendingUp,
 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 
 // Helper function to format currency with abbreviations
-const formatCurrencyAbbreviated = (amount: number, threshold: number = 10000) => {
+const formatCurrencyAbbreviated = (
+  amount: number,
+  threshold: number = 10000
+) => {
   // If below threshold, use normal formatting
   if (amount < threshold) {
     return formatCurrencySync(amount);
   }
-  
+
   // Format with abbreviations
   if (amount >= 1000000) {
     const millions = amount / 1000000;
@@ -32,7 +43,7 @@ const formatCurrencyAbbreviated = (amount: number, threshold: number = 10000) =>
     // Show 1 decimal if less than 100k, otherwise no decimal
     return `RF ${thousands.toFixed(thousands >= 100 ? 0 : 1)}k`;
   }
-  
+
   return formatCurrencySync(amount);
 };
 
@@ -80,7 +91,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       // IMPORTANT: Parse JSON once and reuse the data (can't read response body twice)
       let ordersData: any = null;
       let allOrders: any[] = [];
-      
+
       if (ordersRes?.ok) {
         try {
           ordersData = await ordersRes.json();
@@ -99,63 +110,66 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
 
       if (allOrders.length > 0) {
         try {
+          // Calculate revenue from completed/delivered orders
+          // Check for various status values and also include orders that have been delivered
+          const completedOrders = allOrders.filter((order: any) => {
+            const status = (order.status || "").toLowerCase();
+            const isDelivered =
+              status === "delivered" ||
+              status === "completed" ||
+              status === "ready for pickup";
+            const hasDeliveredTime =
+              order.delivered_time && new Date(order.delivered_time) <= now;
+            return isDelivered || hasDeliveredTime;
+          });
 
-        // Calculate revenue from completed/delivered orders
-        // Check for various status values and also include orders that have been delivered
-        const completedOrders = allOrders.filter((order: any) => {
-          const status = (order.status || "").toLowerCase();
-          const isDelivered = status === "delivered" || status === "completed" || status === "ready for pickup";
-          const hasDeliveredTime = order.delivered_time && new Date(order.delivered_time) <= now;
-          return isDelivered || hasDeliveredTime;
-        });
-
-        // Calculate net revenue (excluding service fee and transportation fee)
-        totalRevenue = completedOrders.reduce((sum: number, order: any) => {
-          const total = parseFloat(order.value || 0);
-          const serviceFee = parseFloat(order.service_fee || 0);
-          const transportationFee = parseFloat(order.transportation_fee || 0);
-          const netAmount = total - serviceFee - transportationFee;
-          return sum + netAmount;
-        }, 0);
-
-        // This month revenue (excluding fees)
-        thisMonthRevenue = completedOrders
-          .filter((order: any) => {
-            const created = new Date(order.created_at);
-            return created >= lastMonth && created <= now;
-          })
-          .reduce((sum: number, order: any) => {
-            const total = order.value || 0;
-            const serviceFee = order.service_fee || 0;
-            const transportationFee = order.transportation_fee || 0;
-            return sum + (total - serviceFee - transportationFee);
+          // Calculate net revenue (excluding service fee and transportation fee)
+          totalRevenue = completedOrders.reduce((sum: number, order: any) => {
+            const total = parseFloat(order.value || 0);
+            const serviceFee = parseFloat(order.service_fee || 0);
+            const transportationFee = parseFloat(order.transportation_fee || 0);
+            const netAmount = total - serviceFee - transportationFee;
+            return sum + netAmount;
           }, 0);
 
-        // Last month revenue (excluding fees)
-        lastMonthRevenue = completedOrders
-          .filter((order: any) => {
-            const created = new Date(order.created_at);
-            return created >= twoMonthsAgo && created < lastMonth;
-          })
-          .reduce((sum: number, order: any) => {
-            const total = order.value || 0;
-            const serviceFee = order.service_fee || 0;
-            const transportationFee = order.transportation_fee || 0;
-            return sum + (total - serviceFee - transportationFee);
-          }, 0);
+          // This month revenue (excluding fees)
+          thisMonthRevenue = completedOrders
+            .filter((order: any) => {
+              const created = new Date(order.created_at);
+              return created >= lastMonth && created <= now;
+            })
+            .reduce((sum: number, order: any) => {
+              const total = order.value || 0;
+              const serviceFee = order.service_fee || 0;
+              const transportationFee = order.transportation_fee || 0;
+              return sum + (total - serviceFee - transportationFee);
+            }, 0);
 
-        // This year revenue (excluding fees)
-        thisYearRevenue = completedOrders
-          .filter((order: any) => {
-            const created = new Date(order.created_at);
-            return created >= thisYearStart && created <= now;
-          })
-          .reduce((sum: number, order: any) => {
-            const total = order.value || 0;
-            const serviceFee = order.service_fee || 0;
-            const transportationFee = order.transportation_fee || 0;
-            return sum + (total - serviceFee - transportationFee);
-          }, 0);
+          // Last month revenue (excluding fees)
+          lastMonthRevenue = completedOrders
+            .filter((order: any) => {
+              const created = new Date(order.created_at);
+              return created >= twoMonthsAgo && created < lastMonth;
+            })
+            .reduce((sum: number, order: any) => {
+              const total = order.value || 0;
+              const serviceFee = order.service_fee || 0;
+              const transportationFee = order.transportation_fee || 0;
+              return sum + (total - serviceFee - transportationFee);
+            }, 0);
+
+          // This year revenue (excluding fees)
+          thisYearRevenue = completedOrders
+            .filter((order: any) => {
+              const created = new Date(order.created_at);
+              return created >= thisYearStart && created <= now;
+            })
+            .reduce((sum: number, order: any) => {
+              const total = order.value || 0;
+              const serviceFee = order.service_fee || 0;
+              const transportationFee = order.transportation_fee || 0;
+              return sum + (total - serviceFee - transportationFee);
+            }, 0);
 
           // Calculate percentage change
           if (lastMonthRevenue > 0) {
@@ -187,92 +201,88 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
 
       if (allOrders.length > 0) {
         try {
+          pendingOrders = allOrders.filter((order: any) => {
+            const status = (order.status || "").toLowerCase();
+            return (
+              status === "pending" ||
+              status === "ready for pickup" ||
+              order.status === null ||
+              !order.delivered_time ||
+              new Date(order.delivered_time) > now
+            );
+          }).length;
 
-        pendingOrders = allOrders.filter((order: any) => {
-          const status = (order.status || "").toLowerCase();
-          return (
-            status === "pending" ||
-            status === "ready for pickup" ||
-            order.status === null ||
-            (!order.delivered_time || new Date(order.delivered_time) > now)
-          );
-        }).length;
+          inProgressOrders = allOrders.filter((order: any) => {
+            const status = (order.status || "").toLowerCase();
+            return (
+              status === "in progress" ||
+              status === "processing" ||
+              status === "shopping" ||
+              status === "on the way"
+            );
+          }).length;
 
-        inProgressOrders = allOrders.filter((order: any) => {
-          const status = (order.status || "").toLowerCase();
-          return (
-            status === "in progress" ||
-            status === "processing" ||
-            status === "shopping" ||
-            status === "on the way"
-          );
-        }).length;
+          // Count only "delivered" orders (not "completed")
+          completedOrdersCount = allOrders.filter((order: any) => {
+            const status = (order.status || "").toLowerCase().trim();
+            return status === "delivered";
+          }).length;
 
-        // Count only "delivered" orders (not "completed")
-        completedOrdersCount = allOrders.filter((order: any) => {
-          const status = (order.status || "").toLowerCase().trim();
-          return status === "delivered";
-        }).length;
-        
-        // Calculate month-over-month change for delivered orders
-        thisMonthDelivered = allOrders.filter((order: any) => {
-          const created = new Date(order.created_at);
-          const status = (order.status || "").toLowerCase().trim();
-          return (
-            created >= lastMonth &&
-            created <= now &&
-            status === "delivered"
-          );
-        }).length;
+          // Calculate month-over-month change for delivered orders
+          thisMonthDelivered = allOrders.filter((order: any) => {
+            const created = new Date(order.created_at);
+            const status = (order.status || "").toLowerCase().trim();
+            return (
+              created >= lastMonth && created <= now && status === "delivered"
+            );
+          }).length;
 
-        prevMonthDelivered = allOrders.filter((order: any) => {
-          const created = new Date(order.created_at);
-          const status = (order.status || "").toLowerCase().trim();
-          return (
-            created >= twoMonthsAgo &&
-            created < lastMonth &&
-            status === "delivered"
-          );
-        }).length;
-        
-        if (prevMonthDelivered > 0) {
-          const diff = thisMonthDelivered - prevMonthDelivered;
-          deliveredOrdersChange = diff >= 0 ? `+${diff}` : `${diff}`;
-        } else if (thisMonthDelivered > 0) {
-          deliveredOrdersChange = `+${thisMonthDelivered}`;
-        } else {
-          deliveredOrdersChange = "0";
-        }
-        
-        // Active Orders = All orders that are NOT delivered (includes pending, in progress, ready for pickup, etc.)
-        activeOrders = allOrders.filter((order: any) => {
-          const status = (order.status || "").toLowerCase().trim();
-          // Exclude only "delivered" orders
-          return status !== "delivered";
-        }).length;
+          prevMonthDelivered = allOrders.filter((order: any) => {
+            const created = new Date(order.created_at);
+            const status = (order.status || "").toLowerCase().trim();
+            return (
+              created >= twoMonthsAgo &&
+              created < lastMonth &&
+              status === "delivered"
+            );
+          }).length;
 
-        // Calculate change from last month (all non-delivered orders)
-        const thisMonthActive = allOrders.filter((order: any) => {
-          const created = new Date(order.created_at);
-          const status = (order.status || "").toLowerCase().trim();
-          // Count all orders that are not delivered
-          return (
-            created >= lastMonth &&
-            created <= now &&
-            status !== "delivered"
-          );
-        }).length;
+          if (prevMonthDelivered > 0) {
+            const diff = thisMonthDelivered - prevMonthDelivered;
+            deliveredOrdersChange = diff >= 0 ? `+${diff}` : `${diff}`;
+          } else if (thisMonthDelivered > 0) {
+            deliveredOrdersChange = `+${thisMonthDelivered}`;
+          } else {
+            deliveredOrdersChange = "0";
+          }
 
-        const prevMonthActive = allOrders.filter((order: any) => {
-          const created = new Date(order.created_at);
-          const status = (order.status || "").toLowerCase().trim();
-          // Count all orders that are not delivered
-          return (
-            created >= twoMonthsAgo &&
-            created < lastMonth &&
-            status !== "delivered"
-          );
-        }).length;
+          // Active Orders = All orders that are NOT delivered (includes pending, in progress, ready for pickup, etc.)
+          activeOrders = allOrders.filter((order: any) => {
+            const status = (order.status || "").toLowerCase().trim();
+            // Exclude only "delivered" orders
+            return status !== "delivered";
+          }).length;
+
+          // Calculate change from last month (all non-delivered orders)
+          const thisMonthActive = allOrders.filter((order: any) => {
+            const created = new Date(order.created_at);
+            const status = (order.status || "").toLowerCase().trim();
+            // Count all orders that are not delivered
+            return (
+              created >= lastMonth && created <= now && status !== "delivered"
+            );
+          }).length;
+
+          const prevMonthActive = allOrders.filter((order: any) => {
+            const created = new Date(order.created_at);
+            const status = (order.status || "").toLowerCase().trim();
+            // Count all orders that are not delivered
+            return (
+              created >= twoMonthsAgo &&
+              created < lastMonth &&
+              status !== "delivered"
+            );
+          }).length;
 
           if (prevMonthActive > 0) {
             const diff = thisMonthActive - prevMonthActive;
@@ -299,45 +309,45 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
           const rfqsData = await rfqsRes.json();
           const allRFQs = rfqsData.rfqs || [];
 
-        // Fetch responses for each RFQ
-        const responsePromises = allRFQs.map(async (rfq: any) => {
-          try {
-            const response = await fetch(
-              `/api/queries/rfq-details-and-responses?rfq_id=${rfq.id}`
-            );
-            if (response.ok) {
-              const data = await response.json();
-              return data.responses || [];
+          // Fetch responses for each RFQ
+          const responsePromises = allRFQs.map(async (rfq: any) => {
+            try {
+              const response = await fetch(
+                `/api/queries/rfq-details-and-responses?rfq_id=${rfq.id}`
+              );
+              if (response.ok) {
+                const data = await response.json();
+                return data.responses || [];
+              }
+              return [];
+            } catch {
+              return [];
             }
-            return [];
-          } catch {
-            return [];
-          }
-        });
+          });
 
-        const allResponses = (await Promise.all(responsePromises)).flat();
+          const allResponses = (await Promise.all(responsePromises)).flat();
 
-        totalRFQResponses = allResponses.length;
-        pendingReview = allResponses.filter(
-          (r: any) => !r.status || r.status === "pending"
-        ).length;
-        accepted = allResponses.filter(
-          (r: any) => r.status?.toLowerCase() === "accepted"
-        ).length;
-        rejected = allResponses.filter(
-          (r: any) => r.status?.toLowerCase() === "rejected"
-        ).length;
+          totalRFQResponses = allResponses.length;
+          pendingReview = allResponses.filter(
+            (r: any) => !r.status || r.status === "pending"
+          ).length;
+          accepted = allResponses.filter(
+            (r: any) => r.status?.toLowerCase() === "accepted"
+          ).length;
+          rejected = allResponses.filter(
+            (r: any) => r.status?.toLowerCase() === "rejected"
+          ).length;
 
-        // Calculate change from last month
-        const thisMonthResponses = allResponses.filter((r: any) => {
-          const created = new Date(r.created_at);
-          return created >= lastMonth && created <= now;
-        }).length;
+          // Calculate change from last month
+          const thisMonthResponses = allResponses.filter((r: any) => {
+            const created = new Date(r.created_at);
+            return created >= lastMonth && created <= now;
+          }).length;
 
-        const prevMonthResponses = allResponses.filter((r: any) => {
-          const created = new Date(r.created_at);
-          return created >= twoMonthsAgo && created < lastMonth;
-        }).length;
+          const prevMonthResponses = allResponses.filter((r: any) => {
+            const created = new Date(r.created_at);
+            return created >= twoMonthsAgo && created < lastMonth;
+          }).length;
 
           if (prevMonthResponses > 0) {
             const diff = thisMonthResponses - prevMonthResponses;
@@ -361,9 +371,27 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
           color: "text-green-600",
           bgColor: "from-green-100 to-green-200",
           detailed: [
-            { label: "This Month", value: typeof thisMonthRevenue === "number" ? formatCurrencyAbbreviated(thisMonthRevenue, 10000) : formatCurrencySync(thisMonthRevenue) },
-            { label: "Last Month", value: typeof lastMonthRevenue === "number" ? formatCurrencyAbbreviated(lastMonthRevenue, 10000) : formatCurrencySync(lastMonthRevenue) },
-            { label: "This Year", value: typeof thisYearRevenue === "number" ? formatCurrencyAbbreviated(thisYearRevenue, 10000) : formatCurrencySync(thisYearRevenue) },
+            {
+              label: "This Month",
+              value:
+                typeof thisMonthRevenue === "number"
+                  ? formatCurrencyAbbreviated(thisMonthRevenue, 10000)
+                  : formatCurrencySync(thisMonthRevenue),
+            },
+            {
+              label: "Last Month",
+              value:
+                typeof lastMonthRevenue === "number"
+                  ? formatCurrencyAbbreviated(lastMonthRevenue, 10000)
+                  : formatCurrencySync(lastMonthRevenue),
+            },
+            {
+              label: "This Year",
+              value:
+                typeof thisYearRevenue === "number"
+                  ? formatCurrencyAbbreviated(thisYearRevenue, 10000)
+                  : formatCurrencySync(thisYearRevenue),
+            },
           ],
         },
         {
@@ -402,7 +430,10 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
           detailed: [
             { label: "This Month", value: thisMonthDelivered.toString() },
             { label: "Last Month", value: prevMonthDelivered.toString() },
-            { label: "Total Delivered", value: completedOrdersCount.toString() },
+            {
+              label: "Total Delivered",
+              value: completedOrdersCount.toString(),
+            },
           ],
         },
       ]);
@@ -415,7 +446,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
 
   const fetchWalletData = async () => {
     if (!businessAccount?.id) return;
-    
+
     setLoadingWallet(true);
     try {
       const response = await fetch(
@@ -436,7 +467,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
 
   const fetchTransactions = async () => {
     if (!businessAccount?.id) return;
-    
+
     setLoadingTransactions(true);
     try {
       // Fetch orders to show as transactions
@@ -444,7 +475,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       if (ordersRes.ok) {
         const ordersData = await ordersRes.json();
         const allOrders = ordersData.orders || [];
-        
+
         // Transform orders into transactions
         // Calculate net amount: total minus service fee and transportation fee
         const transactionList = allOrders.map((order: any) => {
@@ -452,22 +483,28 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
           const serviceFee = order.service_fee || 0;
           const transportationFee = order.transportation_fee || 0;
           const netAmount = total - serviceFee - transportationFee;
-          
+
           return {
             id: order.id,
             type: "payment_received",
             amount: netAmount,
-            description: `Payment for order ${order.orderId || order.id.substring(0, 8)}`,
+            description: `Payment for order ${
+              order.orderId || order.id.substring(0, 8)
+            }`,
             date: new Date(order.created_at).toLocaleDateString(),
             time: new Date(order.created_at).toLocaleTimeString(),
             status: order.status || "completed",
             orderId: order.id,
           };
         });
-        
-        setTransactions(transactionList.sort((a: any, b: any) => 
-          new Date(b.date + " " + b.time).getTime() - new Date(a.date + " " + a.time).getTime()
-        ));
+
+        setTransactions(
+          transactionList.sort(
+            (a: any, b: any) =>
+              new Date(b.date + " " + b.time).getTime() -
+              new Date(a.date + " " + a.time).getTime()
+          )
+        );
       }
     } catch (error) {
       // Error fetching transactions
@@ -478,46 +515,53 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
 
   const fetchMonthlyRevenue = async () => {
     if (!businessAccount?.id) return;
-    
+
     try {
       const ordersRes = await fetch("/api/queries/business-product-orders");
       if (ordersRes.ok) {
         const ordersData = await ordersRes.json();
         const allOrders = ordersData.orders || [];
-        
+
         // Filter only "delivered" orders (excluding fees)
         const deliveredOrders = allOrders.filter((order: any) => {
           const status = (order.status || "").toLowerCase().trim();
           return status === "delivered";
         });
-        
+
         // Group by month and calculate revenue (excluding transportation and service fees)
         const monthlyData: { [key: string]: number } = {};
-        
+
         deliveredOrders.forEach((order: any) => {
           const date = new Date(order.created_at);
-          const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-          
+          const monthKey = `${date.getFullYear()}-${String(
+            date.getMonth() + 1
+          ).padStart(2, "0")}`;
+
           // Calculate net revenue: total minus transportation and service fees
           const total = parseFloat(order.value || 0);
           const serviceFee = parseFloat(order.service_fee || 0);
           const transportationFee = parseFloat(order.transportation_fee || 0);
           const netRevenue = total - serviceFee - transportationFee;
-          
+
           if (!monthlyData[monthKey]) {
             monthlyData[monthKey] = 0;
           }
           monthlyData[monthKey] += netRevenue;
         });
-        
+
         // Convert to array format for chart
         const chartData = Object.entries(monthlyData)
           .map(([key, value]) => ({
-            month: new Date(key + "-01").toLocaleDateString("en-US", { month: "short", year: "numeric" }),
+            month: new Date(key + "-01").toLocaleDateString("en-US", {
+              month: "short",
+              year: "numeric",
+            }),
             revenue: value,
           }))
-          .sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime());
-        
+          .sort(
+            (a, b) => new Date(a.month).getTime() - new Date(b.month).getTime()
+          );
+
         setMonthlyRevenue(chartData);
       }
     } catch (error) {
@@ -530,12 +574,12 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       toast.error("Business account not found");
       return;
     }
-    
+
     if (walletBalance <= 0) {
       toast.error("No funds available to withdraw");
       return;
     }
-    
+
     // TODO: Implement withdraw API call
     toast.success("Withdrawal request submitted successfully");
   };
@@ -696,30 +740,40 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       {/* Wallet & Revenue Section */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Wallet Balance Card - VIP Credit Card Design */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-black p-6 shadow-2xl" style={{ backgroundColor: '#000000' }}>
+        <div
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-black p-6 shadow-2xl"
+          style={{ backgroundColor: "#000000" }}
+        >
           {/* Decorative background elements */}
           <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-gradient-to-br from-yellow-400/20 to-transparent blur-2xl"></div>
           <div className="absolute bottom-0 left-0 h-24 w-24 rounded-full bg-gradient-to-tr from-emerald-500/20 to-transparent blur-xl"></div>
-          
+
           {/* Card Content */}
           <div className="relative z-10">
             {/* Card Header */}
             <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="h-8 w-12 rounded bg-gradient-to-br from-yellow-400 to-yellow-600"></div>
-                <span className="text-xs font-semibold tracking-wider" style={{ color: '#facc15' }}>VIP</span>
+                <span
+                  className="text-xs font-semibold tracking-wider"
+                  style={{ color: "#facc15" }}
+                >
+                  VIP
+                </span>
               </div>
-              <Wallet className="h-6 w-6" style={{ color: '#facc15' }} />
+              <Wallet className="h-6 w-6" style={{ color: "#facc15" }} />
             </div>
 
             {/* Chip */}
             <div className="mb-6 flex items-center gap-3">
-              <div className="h-10 w-14 rounded-md bg-gradient-to-br from-yellow-300/30 to-yellow-500/30 backdrop-blur-sm border border-yellow-400/30"></div>
+              <div className="h-10 w-14 rounded-md border border-yellow-400/30 bg-gradient-to-br from-yellow-300/30 to-yellow-500/30 backdrop-blur-sm"></div>
               <div className="flex-1">
-                <p className="text-xs" style={{ color: '#ffffff' }}>Available Balance</p>
-                <p className="text-2xl font-bold" style={{ color: '#ffffff' }}>
+                <p className="text-xs" style={{ color: "#ffffff" }}>
+                  Available Balance
+                </p>
+                <p className="text-2xl font-bold" style={{ color: "#ffffff" }}>
                   {loadingWallet ? (
-                    <span style={{ color: '#ffffff' }}>Loading...</span>
+                    <span style={{ color: "#ffffff" }}>Loading...</span>
                   ) : (
                     formatCurrencySync(walletBalance)
                   )}
@@ -733,22 +787,50 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
               <div className="h-1 w-1 rounded-full bg-yellow-400"></div>
               <div className="h-1 w-1 rounded-full bg-yellow-400"></div>
               <div className="h-1 w-1 rounded-full bg-yellow-400"></div>
-              <span className="mx-2" style={{ color: '#ffffff' }}>•</span>
-              <span className="mx-2" style={{ color: '#ffffff' }}>•</span>
-              <span className="mx-2" style={{ color: '#ffffff' }}>•</span>
-              <span className="mx-2" style={{ color: '#ffffff' }}>•</span>
-              <span className="mx-2" style={{ color: '#ffffff' }}>•</span>
-              <span className="mx-2" style={{ color: '#ffffff' }}>•</span>
-              <span className="mx-2" style={{ color: '#ffffff' }}>•</span>
-              <span className="mx-2" style={{ color: '#ffffff' }}>•</span>
-              <span className="ml-auto text-xs font-mono" style={{ color: '#ffffff' }}>BUSINESS</span>
+              <span className="mx-2" style={{ color: "#ffffff" }}>
+                •
+              </span>
+              <span className="mx-2" style={{ color: "#ffffff" }}>
+                •
+              </span>
+              <span className="mx-2" style={{ color: "#ffffff" }}>
+                •
+              </span>
+              <span className="mx-2" style={{ color: "#ffffff" }}>
+                •
+              </span>
+              <span className="mx-2" style={{ color: "#ffffff" }}>
+                •
+              </span>
+              <span className="mx-2" style={{ color: "#ffffff" }}>
+                •
+              </span>
+              <span className="mx-2" style={{ color: "#ffffff" }}>
+                •
+              </span>
+              <span className="mx-2" style={{ color: "#ffffff" }}>
+                •
+              </span>
+              <span
+                className="ml-auto font-mono text-xs"
+                style={{ color: "#ffffff" }}
+              >
+                BUSINESS
+              </span>
             </div>
 
             {/* Card Footer */}
             <div className="mt-6 flex items-end justify-between">
               <div>
-                <p className="text-xs" style={{ color: '#ffffff' }}>Card Holder</p>
-                <p className="text-sm font-semibold" style={{ color: '#ffffff' }}>Business Account</p>
+                <p className="text-xs" style={{ color: "#ffffff" }}>
+                  Card Holder
+                </p>
+                <p
+                  className="text-sm font-semibold"
+                  style={{ color: "#ffffff" }}
+                >
+                  Business Account
+                </p>
               </div>
               <button
                 onClick={handleRequestWithdraw}
@@ -779,24 +861,30 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={monthlyRevenue}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis 
-                  dataKey="month" 
+                <XAxis
+                  dataKey="month"
                   stroke="#6b7280"
                   style={{ fontSize: "12px" }}
                 />
-                <YAxis 
+                <YAxis
                   stroke="#6b7280"
                   style={{ fontSize: "12px" }}
-                  tickFormatter={(value) => formatCurrencySync(value).replace(/[^\d.]/g, "")}
+                  tickFormatter={(value) =>
+                    formatCurrencySync(value).replace(/[^\d.]/g, "")
+                  }
                 />
-                <Tooltip 
+                <Tooltip
                   formatter={(value: any) => formatCurrencySync(value)}
-                  contentStyle={{ backgroundColor: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px" }}
+                  contentStyle={{
+                    backgroundColor: "#fff",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "8px",
+                  }}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="revenue" 
-                  stroke="#10b981" 
+                <Line
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#10b981"
                   strokeWidth={2}
                   dot={{ fill: "#10b981", r: 4 }}
                 />

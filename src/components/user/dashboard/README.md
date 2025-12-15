@@ -65,6 +65,7 @@ Stores are business entities that sell products directly to customers through th
 ### Store Data Structure
 
 Stores are fetched from the `business_stores` table with the following key fields:
+
 - `id`: Unique store identifier
 - `name`: Store name
 - `description`: Store description
@@ -82,11 +83,13 @@ Stores are fetched from the `business_stores` table with the following key field
 ### Store Data Fetching
 
 1. **Initial Fetch (`pages/index.tsx`)**
+
    - Stores are fetched via `/api/queries/all-stores`
    - Only active stores (`is_active: true`) are retrieved
    - Stores are added to the `Data` interface as `stores: []`
 
 2. **Data Transformation (`UserDashboardLogic.tsx`)**
+
    - Stores are transformed into a shop-like format for consistent rendering:
      ```typescript
      const storesAsShops = stores.map((store) => ({
@@ -106,6 +109,7 @@ Stores are fetched from the `business_stores` table with the following key field
      ```
 
 3. **Category Filtering**
+
    - Stores can be filtered by category like shops
    - Special "store-category" exists for store-only filtering
    - When a category is selected, stores matching that category are included
@@ -120,6 +124,7 @@ Stores are fetched from the `business_stores` table with the following key field
 ### Store Display in Dashboard
 
 1. **ShopCard Component (`ShopCard.tsx`)**
+
    - Stores are rendered using the same `ShopCard` component as shops
    - Stores are identified by the `is_store: true` flag
    - Stores display with a "Store" badge to differentiate from shops
@@ -127,6 +132,7 @@ Stores are fetched from the `business_stores` table with the following key field
    - Stores use a default placeholder image if no image is provided
 
 2. **Search Integration (`SearchBar.tsx`)**
+
    - Stores are included in the main navbar search
    - Search query searches store names via `business_stores` table
    - Search results show stores with a "Store" badge
@@ -143,12 +149,14 @@ Stores are fetched from the `business_stores` table with the following key field
 The store page provides a dedicated product browsing and ordering experience:
 
 1. **Page Structure (`pages/stores/[id].tsx`)**
+
    - Server-side rendered with `getServerSideProps`
    - Fetches store details including business account and owner info
    - Fetches all active products for the store from `PlasBusinessProductsOrSerive`
    - Passes data to `StorePage` component
 
 2. **StorePage Component (`src/components/items/StorePage.tsx`)**
+
    - **Mobile Banner**: Full-width cover image with circular logo, store info, and status badge
    - **Desktop Header**: Traditional header with store name, description, and details
    - **Store Information Display**:
@@ -157,7 +165,7 @@ The store page provides a dedicated product browsing and ordering experience:
      - Distance from user location
      - Owner information (for personal businesses)
      - Product count
-   - **Product Grid**: 
+   - **Product Grid**:
      - Responsive grid layout (up to 6 columns on desktop, 2 on mobile)
      - Product cards with images, names, prices, and units
      - "Add" button opens quantity selection modal
@@ -184,6 +192,7 @@ The store page provides a dedicated product browsing and ordering experience:
 The checkout process handles order creation with delivery and payment:
 
 1. **Checkout Data Storage**
+
    - Selected products are stored in `localStorage` as `storeCheckoutData`
    - Data structure:
      ```typescript
@@ -198,6 +207,7 @@ The checkout process handles order creation with delivery and payment:
      ```
 
 2. **Checkout Page Features**
+
    - **Mobile Banner**: Matches store page design with circular logo
    - **Products Display** (mobile): Shows order items above expandable card
    - **Desktop Layout**: Two-column layout with order summary and payment summary
@@ -206,13 +216,14 @@ The checkout process handles order creation with delivery and payment:
      - Transportation fee: 1000 RWF for first 3km, then 300 RWF per additional km
      - Service fee: 5% of subtotal
    - **Address Management**: Users can select or change delivery address
-   - **Payment Method Selection**: 
+   - **Payment Method Selection**:
      - Integration with `PaymentMethodSelector` component
      - Supports wallet balance (refund balance)
      - Supports saved payment methods (cards, MTN MoMo)
    - **Order Comment**: Optional text field for special instructions
 
 3. **Mobile Expandable Card**
+
    - Fixed at bottom of screen (above navbar)
    - Expandable/collapsible functionality
    - Shows cost breakdown, delivery details, payment method, and comment
@@ -249,14 +260,14 @@ The checkout process handles order creation with delivery and payment:
 
 ### Store vs Shop Differences
 
-| Feature | Stores | Shops |
-|---------|--------|-------|
-| **Navigation** | `/stores/[id]` | `/shops/[id]` |
-| **Product Display** | Dedicated product grid with quantity selection | Menu items (restaurants) or services |
-| **Order Type** | Product-based orders with quantities | Service requests or restaurant orders |
-| **Checkout Flow** | Custom checkout with product details in JSONB | Different order structure |
-| **Badge** | "Store" badge in dashboard | "Shop" or "Restaurant" badge |
-| **Order Table** | `businessProductOrders` | Various order tables depending on type |
+| Feature             | Stores                                         | Shops                                  |
+| ------------------- | ---------------------------------------------- | -------------------------------------- |
+| **Navigation**      | `/stores/[id]`                                 | `/shops/[id]`                          |
+| **Product Display** | Dedicated product grid with quantity selection | Menu items (restaurants) or services   |
+| **Order Type**      | Product-based orders with quantities           | Service requests or restaurant orders  |
+| **Checkout Flow**   | Custom checkout with product details in JSONB  | Different order structure              |
+| **Badge**           | "Store" badge in dashboard                     | "Shop" or "Restaurant" badge           |
+| **Order Table**     | `businessProductOrders`                        | Various order tables depending on type |
 
 ### Key API Endpoints
 
@@ -268,6 +279,7 @@ The checkout process handles order creation with delivery and payment:
 ### Store Order Data Model
 
 Orders are stored in `businessProductOrders` table with:
+
 - `id`: UUID primary key
 - `store_id`: Foreign key to business_stores
 - `allProducts`: JSONB containing array of product objects

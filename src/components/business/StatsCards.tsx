@@ -87,7 +87,7 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
             console.log("RFQs data:", rfqsData);
             const allRFQs = rfqsData.rfqs || [];
             console.log("Total RFQs found:", allRFQs.length);
-            
+
             // Filter for active RFQs - those with response_date in the future or open field is true
             activeRFQs = allRFQs.filter((rfq: any) => {
               if (rfq.open === true) return true;
@@ -100,20 +100,20 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
               // If no response_date, consider it active
               return true;
             }).length;
-            
+
             console.log("Active RFQs:", activeRFQs);
-            
+
             // Calculate change from last month (RFQs created in last 30 days vs previous 30 days)
             const thisMonth = allRFQs.filter((rfq: any) => {
               const created = new Date(rfq.created_at);
               return created >= lastMonth && created <= now;
             }).length;
-            
+
             const prevMonth = allRFQs.filter((rfq: any) => {
               const created = new Date(rfq.created_at);
               return created >= twoMonthsAgo && created < lastMonth;
             }).length;
-            
+
             if (prevMonth > 0) {
               const diff = thisMonth - prevMonth;
               rfqsChange = diff >= 0 ? `+${diff}` : `${diff}`;
@@ -126,7 +126,11 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
             console.error("Error processing RFQs data:", err);
           }
         } else {
-          console.warn("RFQs API response not OK:", rfqsRes?.status, rfqsRes?.statusText);
+          console.warn(
+            "RFQs API response not OK:",
+            rfqsRes?.status,
+            rfqsRes?.statusText
+          );
         }
 
         // Process Pending Orders
@@ -138,7 +142,7 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
             console.log("Orders data:", ordersData);
             const allOrders = ordersData.orders || [];
             console.log("Total orders found:", allOrders.length);
-            
+
             // Filter for pending orders
             pendingOrders = allOrders.filter(
               (order: any) =>
@@ -147,9 +151,9 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
                 !order.delivered_time ||
                 new Date(order.delivered_time) > now
             ).length;
-            
+
             console.log("Pending orders:", pendingOrders);
-            
+
             // Calculate change from last month
             const thisMonthPending = allOrders.filter((order: any) => {
               const created = new Date(order.created_at);
@@ -162,7 +166,7 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
                   new Date(order.delivered_time) > now)
               );
             }).length;
-            
+
             const prevMonthPending = allOrders.filter((order: any) => {
               const created = new Date(order.created_at);
               return (
@@ -174,7 +178,7 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
                   new Date(order.delivered_time) > now)
               );
             }).length;
-            
+
             if (prevMonthPending > 0) {
               const diff = thisMonthPending - prevMonthPending;
               ordersChange = diff >= 0 ? `+${diff}` : `${diff}`;
@@ -187,7 +191,11 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
             console.error("Error processing orders data:", err);
           }
         } else {
-          console.warn("Orders API response not OK:", ordersRes?.status, ordersRes?.statusText);
+          console.warn(
+            "Orders API response not OK:",
+            ordersRes?.status,
+            ordersRes?.statusText
+          );
         }
 
         // Process Total Stores
@@ -199,18 +207,22 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
             console.log("Stores data:", storesData);
             totalStores = (storesData.stores || []).length;
             console.log("Total stores:", totalStores);
-            
+
             // Calculate change from last month
-            const thisMonthStores = (storesData.stores || []).filter((store: any) => {
-              const created = new Date(store.created_at);
-              return created >= lastMonth && created <= now;
-            }).length;
-            
-            const prevMonthStores = (storesData.stores || []).filter((store: any) => {
-              const created = new Date(store.created_at);
-              return created >= twoMonthsAgo && created < lastMonth;
-            }).length;
-            
+            const thisMonthStores = (storesData.stores || []).filter(
+              (store: any) => {
+                const created = new Date(store.created_at);
+                return created >= lastMonth && created <= now;
+              }
+            ).length;
+
+            const prevMonthStores = (storesData.stores || []).filter(
+              (store: any) => {
+                const created = new Date(store.created_at);
+                return created >= twoMonthsAgo && created < lastMonth;
+              }
+            ).length;
+
             if (prevMonthStores > 0) {
               const diff = thisMonthStores - prevMonthStores;
               storesChange = diff >= 0 ? `+${diff}` : `${diff}`;
@@ -223,7 +235,11 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
             console.error("Error processing stores data:", err);
           }
         } else {
-          console.warn("Stores API response not OK:", storesRes?.status, storesRes?.statusText);
+          console.warn(
+            "Stores API response not OK:",
+            storesRes?.status,
+            storesRes?.statusText
+          );
         }
 
         // Process Services
@@ -235,7 +251,7 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
             console.log("Services data:", servicesData);
             servicesCount = (servicesData.services || []).length;
             console.log("Total services:", servicesCount);
-            
+
             // Calculate change from last month
             const thisMonthServices = (servicesData.services || []).filter(
               (service: any) => {
@@ -243,14 +259,14 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
                 return created >= lastMonth && created <= now;
               }
             ).length;
-            
+
             const prevMonthServices = (servicesData.services || []).filter(
               (service: any) => {
                 const created = new Date(service.created_at);
                 return created >= twoMonthsAgo && created < lastMonth;
               }
             ).length;
-            
+
             if (prevMonthServices > 0) {
               const diff = thisMonthServices - prevMonthServices;
               servicesChange = diff >= 0 ? `+${diff}` : `${diff}`;
@@ -263,7 +279,11 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
             console.error("Error processing services data:", err);
           }
         } else {
-          console.warn("Services API response not OK:", servicesRes?.status, servicesRes?.statusText);
+          console.warn(
+            "Services API response not OK:",
+            servicesRes?.status,
+            servicesRes?.statusText
+          );
         }
 
         setStats([
