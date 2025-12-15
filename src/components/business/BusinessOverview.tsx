@@ -46,22 +46,15 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       const twoMonthsAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
       const thisYearStart = new Date(now.getFullYear(), 0, 1);
 
-      console.log("BusinessOverview: Fetching stats...");
-
       // Fetch all data in parallel
       const [ordersRes, rfqsRes] = await Promise.all([
-        fetch("/api/queries/business-product-orders").catch((err) => {
-          console.error("Error fetching orders:", err);
+        fetch("/api/queries/business-product-orders").catch(() => {
           return null;
         }),
-        fetch("/api/queries/business-rfqs").catch((err) => {
-          console.error("Error fetching RFQs:", err);
+        fetch("/api/queries/business-rfqs").catch(() => {
           return null;
         }),
       ]);
-
-      console.log("BusinessOverview: Orders response:", ordersRes?.ok, ordersRes?.status);
-      console.log("BusinessOverview: RFQs response:", rfqsRes?.ok, rfqsRes?.status);
 
       // Process Total Revenue and Active Orders
       // IMPORTANT: Parse JSON once and reuse the data (can't read response body twice)
@@ -71,14 +64,10 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       if (ordersRes?.ok) {
         try {
           ordersData = await ordersRes.json();
-          console.log("BusinessOverview: Orders data:", ordersData);
           allOrders = ordersData.orders || [];
-          console.log("BusinessOverview: Total orders:", allOrders.length);
         } catch (err) {
-          console.error("BusinessOverview: Error parsing orders JSON:", err);
+          // Error parsing orders JSON
         }
-      } else {
-        console.warn("BusinessOverview: Orders API response not OK:", ordersRes?.status);
       }
 
       // Process Total Revenue
@@ -100,16 +89,12 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
           return isDelivered || hasDeliveredTime;
         });
 
-        console.log("BusinessOverview: Completed orders count:", completedOrders.length);
-        console.log("BusinessOverview: Sample order:", completedOrders[0]);
-
         // Calculate net revenue (excluding service fee and transportation fee)
         totalRevenue = completedOrders.reduce((sum: number, order: any) => {
           const total = parseFloat(order.value || 0);
           const serviceFee = parseFloat(order.service_fee || 0);
           const transportationFee = parseFloat(order.transportation_fee || 0);
           const netAmount = total - serviceFee - transportationFee;
-          console.log(`BusinessOverview: Order ${order.id} - Total: ${total}, Service: ${serviceFee}, Transport: ${transportationFee}, Net: ${netAmount}`);
           return sum + netAmount;
         }, 0);
 
@@ -165,17 +150,9 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
           } else {
             revenueChange = "0%";
           }
-          console.log("BusinessOverview: Total revenue:", totalRevenue);
-          console.log("BusinessOverview: This month revenue:", thisMonthRevenue);
-          console.log("BusinessOverview: Last month revenue:", lastMonthRevenue);
-          console.log("BusinessOverview: This year revenue:", thisYearRevenue);
-          console.log("BusinessOverview: Revenue change:", revenueChange);
-          console.log("BusinessOverview: Completed orders for revenue:", completedOrders.length);
         } catch (err) {
-          console.error("BusinessOverview: Error processing orders data:", err);
+          // Error processing orders data
         }
-      } else {
-        console.warn("BusinessOverview: Orders API response not OK:", ordersRes?.status);
       }
 
       // Process Active Orders (using the same allOrders array from above)
@@ -190,11 +167,6 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
 
       if (allOrders.length > 0) {
         try {
-          console.log("BusinessOverview: Processing active orders from", allOrders.length, "total orders");
-
-        // Get all order statuses for debugging
-        const allStatuses = allOrders.map((o: any) => o.status);
-        console.log("BusinessOverview: All order statuses:", [...new Set(allStatuses)]);
 
         pendingOrders = allOrders.filter((order: any) => {
           const status = (order.status || "").toLowerCase();
@@ -252,18 +224,12 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
           deliveredOrdersChange = "0";
         }
         
-        console.log("BusinessOverview: Delivered orders - This month:", thisMonthDelivered, "Prev month:", prevMonthDelivered, "Change:", deliveredOrdersChange);
-
-        console.log("BusinessOverview: Active orders breakdown - Pending:", pendingOrders, "In Progress:", inProgressOrders, "Completed:", completedOrdersCount);
-
         // Active Orders = All orders that are NOT delivered (includes pending, in progress, ready for pickup, etc.)
         activeOrders = allOrders.filter((order: any) => {
           const status = (order.status || "").toLowerCase().trim();
           // Exclude only "delivered" orders
           return status !== "delivered";
         }).length;
-
-        console.log("BusinessOverview: Total active orders (non-delivered):", activeOrders);
 
         // Calculate change from last month (all non-delivered orders)
         const thisMonthActive = allOrders.filter((order: any) => {
@@ -287,8 +253,6 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
             status !== "delivered"
           );
         }).length;
-        
-        console.log("BusinessOverview: This month active:", thisMonthActive, "Prev month active:", prevMonthActive);
 
           if (prevMonthActive > 0) {
             const diff = thisMonthActive - prevMonthActive;
@@ -298,10 +262,8 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
           } else {
             ordersChange = "0";
           }
-          console.log("BusinessOverview: Active orders:", activeOrders);
-          console.log("BusinessOverview: Orders change:", ordersChange);
         } catch (err) {
-          console.error("BusinessOverview: Error processing active orders:", err);
+          // Error processing active orders
         }
       }
 
@@ -315,9 +277,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       if (rfqsRes?.ok) {
         try {
           const rfqsData = await rfqsRes.json();
-          console.log("BusinessOverview: RFQs data:", rfqsData);
           const allRFQs = rfqsData.rfqs || [];
-          console.log("BusinessOverview: Total RFQs:", allRFQs.length);
 
         // Fetch responses for each RFQ
         const responsePromises = allRFQs.map(async (rfq: any) => {
@@ -367,33 +327,10 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
           } else {
             rfqResponsesChange = "0";
           }
-          console.log("BusinessOverview: Total RFQ responses:", totalRFQResponses);
-          console.log("BusinessOverview: RFQ responses change:", rfqResponsesChange);
         } catch (err) {
-          console.error("BusinessOverview: Error processing RFQ responses:", err);
+          // Error processing RFQ responses
         }
-      } else {
-        console.warn("BusinessOverview: RFQs API response not OK:", rfqsRes?.status);
       }
-
-      // Average Rating - For now, set to N/A as we don't have a ratings system for businesses
-      const averageRating = "N/A";
-      const ratingChange = "N/A";
-
-      console.log("BusinessOverview: Setting stats with values:", {
-        totalRevenue,
-        activeOrders,
-        totalRFQResponses,
-        revenueChange,
-        ordersChange,
-        rfqResponsesChange,
-        thisMonthRevenue,
-        lastMonthRevenue,
-        thisYearRevenue,
-        pendingOrders,
-        inProgressOrders,
-        completedOrdersCount,
-      });
 
       setStats([
         {
@@ -450,7 +387,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
         },
       ]);
     } catch (error) {
-      console.error("Error fetching stats:", error);
+      // Error fetching stats
     } finally {
       setLoadingStats(false);
     }
@@ -471,7 +408,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
         }
       }
     } catch (error) {
-      console.error("Error fetching wallet:", error);
+      // Error fetching wallet
     } finally {
       setLoadingWallet(false);
     }
@@ -513,7 +450,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
         ));
       }
     } catch (error) {
-      console.error("Error fetching transactions:", error);
+      // Error fetching transactions
     } finally {
       setLoadingTransactions(false);
     }
@@ -564,7 +501,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
         setMonthlyRevenue(chartData);
       }
     } catch (error) {
-      console.error("Error fetching monthly revenue:", error);
+      // Error fetching monthly revenue
     }
   };
 
