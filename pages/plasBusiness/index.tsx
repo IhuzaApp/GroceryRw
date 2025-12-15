@@ -67,23 +67,16 @@ export default function PlasBusinessPage() {
 
   const checkBusinessAccount = async () => {
     try {
-      console.log("🔍 Checking business account...");
       const response = await fetch("/api/queries/check-business-account");
       if (response.ok) {
         const data = await response.json();
-        console.log("✅ Business account response:", data);
-        console.log("📊 Has account:", data.hasAccount);
-        console.log("🏢 Business account data:", data.account);
-        console.log("📝 Business name:", data.account?.businessName);
         setHasBusinessAccount(data.hasAccount);
         setBusinessAccount(data.account);
       } else {
-        console.warn("⚠️ Failed to fetch business account:", response.status);
         setHasBusinessAccount(false);
         setBusinessAccount(null);
       }
     } catch (error) {
-      console.error("❌ Error checking business account:", error);
       setHasBusinessAccount(false);
       setBusinessAccount(null);
     } finally {
@@ -176,15 +169,6 @@ function BuyerDashboardContent({
   isChatDrawerOpen: boolean;
   setIsChatDrawerOpen: (open: boolean) => void;
 }) {
-  // Log business account data when component receives it
-  useEffect(() => {
-    console.log(
-      "🏢 BuyerDashboardContent - Business Account:",
-      businessAccount
-    );
-    console.log("📝 Business Name:", businessAccount?.businessName);
-    console.log("📋 Account Type:", businessAccount?.accountType);
-  }, [businessAccount]);
 
   const [activeTab, setActiveTab] = useState("overview");
   const isPersonalAccount = businessAccount?.accountType === "personal";
@@ -204,22 +188,18 @@ function BuyerDashboardContent({
   };
 
   const handleAcceptQuote = (quoteId: string) => {
-    console.log("Accepting quote:", quoteId);
     setIsQuoteModalOpen(false);
   };
 
   const handleRejectQuote = (quoteId: string) => {
-    console.log("Rejecting quote:", quoteId);
     setIsQuoteModalOpen(false);
   };
 
   const handleMessageQuoteSupplier = (supplierId: string) => {
-    console.log("Messaging quote supplier:", supplierId);
     router.push(`/plasBusiness/BusinessChats?supplier=${supplierId}`);
   };
 
   const handleMessageContractSupplier = (supplierId: string) => {
-    console.log("Messaging contract supplier:", supplierId);
     router.push(`/plasBusiness/BusinessChats?supplier=${supplierId}`);
   };
 
@@ -228,23 +208,19 @@ function BuyerDashboardContent({
   };
 
   const handleRFQSubmit = async (rfqData: any) => {
-    console.log("RFQ created:", rfqData);
     // Trigger refresh of RFQs list
     setRfqCreated((prev: boolean) => !prev);
   };
 
   const handleAssignContract = (contractData: any) => {
-    console.log("Contract assigned:", contractData);
     // Here you would typically send the contract data to your API
   };
 
   const handleViewContract = (contractId: string) => {
-    console.log("Viewing contract:", contractId);
     // Handle view contract logic
   };
 
   const handleEditContract = (contractId: string) => {
-    console.log("Editing contract:", contractId);
     // Handle edit contract logic
   };
 
@@ -254,11 +230,7 @@ function BuyerDashboardContent({
       <BusinessHeader
         onCreateRFQ={handleCreateRFQ}
         onBusinessChat={() => setIsChatDrawerOpen(true)}
-        businessName={(() => {
-          const name = businessAccount?.businessName;
-          console.log("🎨 BusinessHeader - Business Name:", name);
-          return name;
-        })()}
+        businessName={businessAccount?.businessName}
       />
 
       {/* Stats Cards - Hidden on mobile */}
@@ -417,7 +389,6 @@ function BuyerDashboardContent({
         {isPersonalAccount && activeTab === "services" && (
           <ServicesSection
             onRequestQuotation={(serviceId) => {
-              console.log("Requesting quotation for service:", serviceId);
               toast.success(
                 "Quotation request sent! The service provider will contact you soon."
               );

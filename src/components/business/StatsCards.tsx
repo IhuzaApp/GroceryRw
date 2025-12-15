@@ -55,22 +55,10 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
 
         // Fetch all data in parallel
         const [rfqsRes, ordersRes, storesRes, servicesRes] = await Promise.all([
-          fetch("/api/queries/business-rfqs").catch((err) => {
-            console.error("Error fetching RFQs:", err);
-            return null;
-          }),
-          fetch("/api/queries/business-product-orders").catch((err) => {
-            console.error("Error fetching orders:", err);
-            return null;
-          }),
-          fetch("/api/queries/business-stores").catch((err) => {
-            console.error("Error fetching stores:", err);
-            return null;
-          }),
-          fetch("/api/queries/business-services").catch((err) => {
-            console.error("Error fetching services:", err);
-            return null;
-          }),
+          fetch("/api/queries/business-rfqs").catch(() => null),
+          fetch("/api/queries/business-product-orders").catch(() => null),
+          fetch("/api/queries/business-stores").catch(() => null),
+          fetch("/api/queries/business-services").catch(() => null),
         ]);
 
         // Get current time once for all calculations
@@ -84,9 +72,7 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
         if (rfqsRes?.ok) {
           try {
             const rfqsData = await rfqsRes.json();
-            console.log("RFQs data:", rfqsData);
             const allRFQs = rfqsData.rfqs || [];
-            console.log("Total RFQs found:", allRFQs.length);
 
             // Filter for active RFQs - those with response_date in the future or open field is true
             activeRFQs = allRFQs.filter((rfq: any) => {
@@ -100,8 +86,6 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
               // If no response_date, consider it active
               return true;
             }).length;
-
-            console.log("Active RFQs:", activeRFQs);
 
             // Calculate change from last month (RFQs created in last 30 days vs previous 30 days)
             const thisMonth = allRFQs.filter((rfq: any) => {
@@ -123,14 +107,8 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
               rfqsChange = "0";
             }
           } catch (err) {
-            console.error("Error processing RFQs data:", err);
+            // Error processing RFQs data
           }
-        } else {
-          console.warn(
-            "RFQs API response not OK:",
-            rfqsRes?.status,
-            rfqsRes?.statusText
-          );
         }
 
         // Process Pending Orders
@@ -139,9 +117,7 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
         if (ordersRes?.ok) {
           try {
             const ordersData = await ordersRes.json();
-            console.log("Orders data:", ordersData);
             const allOrders = ordersData.orders || [];
-            console.log("Total orders found:", allOrders.length);
 
             // Filter for pending orders
             pendingOrders = allOrders.filter(
@@ -151,8 +127,6 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
                 !order.delivered_time ||
                 new Date(order.delivered_time) > now
             ).length;
-
-            console.log("Pending orders:", pendingOrders);
 
             // Calculate change from last month
             const thisMonthPending = allOrders.filter((order: any) => {
@@ -188,14 +162,8 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
               ordersChange = "0";
             }
           } catch (err) {
-            console.error("Error processing orders data:", err);
+            // Error processing orders data
           }
-        } else {
-          console.warn(
-            "Orders API response not OK:",
-            ordersRes?.status,
-            ordersRes?.statusText
-          );
         }
 
         // Process Total Stores
@@ -204,9 +172,7 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
         if (storesRes?.ok) {
           try {
             const storesData = await storesRes.json();
-            console.log("Stores data:", storesData);
             totalStores = (storesData.stores || []).length;
-            console.log("Total stores:", totalStores);
 
             // Calculate change from last month
             const thisMonthStores = (storesData.stores || []).filter(
@@ -232,14 +198,8 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
               storesChange = "0";
             }
           } catch (err) {
-            console.error("Error processing stores data:", err);
+            // Error processing stores data
           }
-        } else {
-          console.warn(
-            "Stores API response not OK:",
-            storesRes?.status,
-            storesRes?.statusText
-          );
         }
 
         // Process Services
@@ -248,9 +208,7 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
         if (servicesRes?.ok) {
           try {
             const servicesData = await servicesRes.json();
-            console.log("Services data:", servicesData);
             servicesCount = (servicesData.services || []).length;
-            console.log("Total services:", servicesCount);
 
             // Calculate change from last month
             const thisMonthServices = (servicesData.services || []).filter(
@@ -276,14 +234,8 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
               servicesChange = "0";
             }
           } catch (err) {
-            console.error("Error processing services data:", err);
+            // Error processing services data
           }
-        } else {
-          console.warn(
-            "Services API response not OK:",
-            servicesRes?.status,
-            servicesRes?.statusText
-          );
         }
 
         setStats([
@@ -317,7 +269,7 @@ export function StatsCards({ className = "" }: StatsCardsProps) {
           },
         ]);
       } catch (error) {
-        console.error("Error fetching stats:", error);
+        // Error fetching stats
       } finally {
         setLoading(false);
       }
