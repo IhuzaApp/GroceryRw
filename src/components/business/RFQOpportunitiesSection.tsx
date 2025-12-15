@@ -245,11 +245,11 @@ export function RFQOpportunitiesSection({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
           RFQ Opportunities
         </h3>
-        <div className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
           {filteredRFQs.length}{" "}
           {filteredRFQs.length === 1 ? "opportunity" : "opportunities"} found
         </div>
@@ -303,16 +303,16 @@ export function RFQOpportunitiesSection({
           filteredRFQs.map((rfq) => (
             <div
               key={rfq.id}
-              className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800"
+              className="rounded-xl border border-gray-100 bg-white p-4 shadow-lg transition-all duration-300 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 sm:p-6"
             >
-              <div className="mb-4 flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="mb-2 flex items-center gap-2">
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <h4 className="text-base font-semibold text-gray-900 dark:text-white sm:text-lg">
                       {rfq.title}
                     </h4>
                     <span
-                      className={`rounded-full px-2 py-1 text-xs ${
+                      className={`flex-shrink-0 rounded-full px-2 py-1 text-[10px] font-medium sm:text-xs ${
                         rfq.status === "Urgent"
                           ? "bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300"
                           : "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300"
@@ -321,53 +321,55 @@ export function RFQOpportunitiesSection({
                       {rfq.status}
                     </span>
                   </div>
-                  <p className="mb-3 text-gray-600 dark:text-gray-400">
+                  <p className="mb-3 line-clamp-2 text-sm text-gray-600 dark:text-gray-400 sm:line-clamp-none">
                     {rfq.description}
                   </p>
 
-                  <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
-                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                      <DollarSign className="h-4 w-4" />
-                      <span className="font-medium">{rfq.budget}</span>
+                  <div className="grid grid-cols-1 gap-2.5 text-xs sm:grid-cols-3 sm:gap-4 sm:text-sm">
+                    <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+                      <DollarSign className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
+                      <span className="truncate font-medium">{rfq.budget}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                      <MapPin className="h-4 w-4" />
-                      <span>{rfq.location}</span>
+                    <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+                      <MapPin className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
+                      <span className="truncate">{rfq.location}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                      <User className="h-4 w-4" />
-                      <span>{rfq.postedBy}</span>
+                    <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+                      <User className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
+                      <span className="truncate">{rfq.postedBy}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="text-right">
-                  <div className="mb-1 text-2xl font-bold text-gray-900 dark:text-white">
-                    {rfq.budget}
-                  </div>
-                  <div className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                    {rfq.responses} responses
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    Posted {rfq.postedAt}
+                <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50 sm:flex-col sm:items-end sm:justify-start sm:bg-transparent sm:p-0 dark:sm:bg-transparent">
+                  <div className="text-left sm:text-right">
+                    <div className="text-lg font-bold text-gray-900 dark:text-white sm:mb-1 sm:text-2xl">
+                      {rfq.budget}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">
+                      {rfq.responses} responses
+                    </div>
+                    <div className="text-[10px] text-gray-500 dark:text-gray-400 sm:text-xs">
+                      Posted {rfq.postedAt}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+              <div className="mb-4 flex flex-col gap-3 border-t border-gray-200 pt-4 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between sm:border-0 sm:pt-0">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400 sm:gap-4 sm:text-sm">
                   <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    <span>Deadline: {rfq.deadline}</span>
+                    <Calendar className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
+                    <span className="whitespace-nowrap">Deadline: {rfq.deadline}</span>
                   </div>
-                  <span className="rounded-full bg-gray-100 px-2 py-1 dark:bg-gray-700">
+                  <span className="rounded-full bg-gray-100 px-2 py-1 text-[10px] dark:bg-gray-700 sm:text-xs">
                     {rfq.category}
                   </span>
                 </div>
 
                 <button
                   onClick={() => handleToggleInterest(rfq.id)}
-                  className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  className={`w-full rounded-full px-3 py-1.5 text-xs font-medium transition-colors active:scale-95 sm:w-auto sm:py-1 ${
                     rfq.isInterested
                       ? "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300"
                       : "bg-gray-100 text-gray-600 hover:bg-green-100 hover:text-green-600 dark:bg-gray-700 dark:text-gray-300"
@@ -377,17 +379,18 @@ export function RFQOpportunitiesSection({
                 </button>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:gap-2">
                 <button
                   onClick={() => handleViewRFQ(rfq)}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-500 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-600"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-500 px-3 py-2.5 text-xs font-medium text-white transition-colors hover:bg-blue-600 active:scale-95 sm:px-4 sm:py-2 sm:text-sm"
                 >
-                  <Eye className="h-4 w-4" />
-                  View Details
+                  <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">View Details</span>
+                  <span className="sm:hidden">View</span>
                 </button>
                 <button
                   onClick={() => handleShareQuote(rfq)}
-                  className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 font-medium text-white transition-colors ${
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-xs font-medium text-white transition-colors active:scale-95 sm:px-4 sm:py-2 sm:text-sm ${
                     submittedQuotes[rfq.id]
                       ? "bg-blue-500 hover:bg-blue-600"
                       : "bg-green-500 hover:bg-green-600"
@@ -395,18 +398,28 @@ export function RFQOpportunitiesSection({
                   style={{ color: "#ffffff" }}
                 >
                   <CheckCircle
-                    className="h-4 w-4"
+                    className="h-3.5 w-3.5 sm:h-4 sm:w-4"
                     style={{ color: "#ffffff" }}
                   />
                   <span style={{ color: "#ffffff" }}>
-                    {submittedQuotes[rfq.id] ? "View Quote" : "Submit Quote"}
+                    {submittedQuotes[rfq.id] ? (
+                      <>
+                        <span className="hidden sm:inline">View Quote</span>
+                        <span className="sm:hidden">View Quote</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="hidden sm:inline">Submit Quote</span>
+                        <span className="sm:hidden">Submit</span>
+                      </>
+                    )}
                   </span>
                 </button>
                 <button
                   onClick={() => handleMessageCustomer(rfq.id)}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-purple-500 px-4 py-2 font-medium text-white transition-colors hover:bg-purple-600"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-purple-500 px-3 py-2.5 text-xs font-medium text-white transition-colors hover:bg-purple-600 active:scale-95 sm:px-4 sm:py-2 sm:text-sm"
                 >
-                  <MessageSquare className="h-4 w-4" />
+                  <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   Message
                 </button>
               </div>

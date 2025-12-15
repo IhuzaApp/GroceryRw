@@ -158,25 +158,28 @@ export function MyRFQsSection({
   return (
     <div className={`space-y-8 ${className}`}>
       <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
-        <div className="flex items-center justify-between border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white p-8 dark:border-gray-700 dark:from-gray-700 dark:to-gray-800">
+        <div className="flex flex-col gap-3 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white p-4 dark:border-gray-700 dark:from-gray-700 dark:to-gray-800 sm:flex-row sm:items-center sm:justify-between sm:p-6 md:p-8">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white sm:text-xl md:text-2xl">
               My RFQs
             </h2>
-            <p className="mt-1 text-gray-600 dark:text-gray-400">
+            <p className="mt-1 text-xs text-gray-600 dark:text-gray-400 sm:text-sm">
               Manage your request for quotes
             </p>
           </div>
           <button
             onClick={handleCreateRFQ}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-3 font-medium text-white shadow-lg transition-all duration-300 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl"
+            className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-3 py-2 text-xs font-medium text-white shadow-lg transition-all duration-300 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl active:scale-95 sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm md:px-6 md:py-3"
             style={{ color: "#ffffff" }}
           >
-            <Plus className="h-5 w-5" style={{ color: "#ffffff" }} />
-            <span style={{ color: "#ffffff" }}>Create New RFQ</span>
+            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5" style={{ color: "#ffffff" }} />
+            <span style={{ color: "#ffffff" }}>
+              <span className="hidden sm:inline">Create New RFQ</span>
+              <span className="sm:hidden">Create RFQ</span>
+            </span>
           </button>
         </div>
-        <div className="p-8">
+        <div className="p-4 sm:p-6 md:p-8">
           <div className="space-y-6">
             {displayRFQs.length === 0 ? (
               <div className="py-12 text-center">
@@ -202,16 +205,16 @@ export function MyRFQsSection({
               displayRFQs.map((rfq) => (
                 <div
                   key={rfq.id}
-                  className="group rounded-2xl border-2 border-gray-100 bg-gradient-to-r from-white to-gray-50 p-6 transition-all duration-300 hover:border-green-200 hover:shadow-lg dark:border-gray-700 dark:from-gray-800 dark:to-gray-700 dark:hover:border-green-800"
+                  className="group rounded-xl border-2 border-gray-100 bg-gradient-to-r from-white to-gray-50 p-4 transition-all duration-300 hover:border-green-200 hover:shadow-lg dark:border-gray-700 dark:from-gray-800 dark:to-gray-700 dark:hover:border-green-800 sm:rounded-2xl sm:p-6"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 space-y-4">
-                      <div className="flex items-center gap-3">
-                        <h3 className="text-lg font-bold text-gray-900 transition-colors group-hover:text-green-600 dark:text-white">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex-1 space-y-3 sm:space-y-4">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                        <h3 className="text-base font-bold text-gray-900 transition-colors group-hover:text-green-600 dark:text-white sm:text-lg">
                           {rfq.title}
                         </h3>
                         <span
-                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ${
+                          className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold sm:px-3 sm:text-xs ${
                             rfq.status === "Open"
                               ? "bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 dark:from-green-900 dark:to-emerald-900 dark:text-green-200"
                               : "bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 dark:from-blue-900 dark:to-cyan-900 dark:text-blue-200"
@@ -220,38 +223,39 @@ export function MyRFQsSection({
                           {rfq.status}
                         </span>
                       </div>
-                      <p className="text-gray-600 dark:text-gray-400">
+                      <p className="line-clamp-2 text-sm text-gray-600 dark:text-gray-400 sm:line-clamp-none">
                         {rfq.description}
                       </p>
-                      <div className="flex items-center gap-6 text-sm">
-                        <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                          <DollarSign className="h-4 w-4 text-green-500" />
+                      <div className="flex flex-col gap-2 text-xs sm:flex-row sm:items-center sm:gap-6 sm:text-sm">
+                        <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+                          <DollarSign className="h-3.5 w-3.5 flex-shrink-0 text-green-500 sm:h-4 sm:w-4" />
                           <span className="font-semibold">{rfq.budget}</span>
                         </span>
-                        <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                          <FileText className="h-4 w-4 text-blue-500" />
+                        <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+                          <FileText className="h-3.5 w-3.5 flex-shrink-0 text-blue-500 sm:h-4 sm:w-4" />
                           <span className="font-semibold">
                             {rfq.responses} responses
                           </span>
                         </span>
-                        <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                          <Clock className="h-4 w-4 text-orange-500" />
+                        <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+                          <Clock className="h-3.5 w-3.5 flex-shrink-0 text-orange-500 sm:h-4 sm:w-4" />
                           <span className="font-semibold">
                             Due: {rfq.deadline}
                           </span>
                         </span>
                       </div>
                     </div>
-                    <div className="ml-6 flex gap-3">
+                    <div className="flex flex-col gap-2 border-t border-gray-200 pt-4 dark:border-gray-700 sm:ml-6 sm:flex-row sm:border-0 sm:pt-0">
                       <button
                         onClick={() => handleViewResponses(rfq.id)}
-                        className="rounded-xl border-2 border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-all duration-300 hover:border-green-500 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                        className="flex-1 rounded-xl border-2 border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 transition-all duration-300 hover:border-green-500 hover:bg-gray-50 active:scale-95 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 sm:flex-none sm:px-4 sm:py-2 sm:text-sm"
                       >
-                        View Responses
+                        <span className="hidden sm:inline">View Responses</span>
+                        <span className="sm:hidden">View Responses</span>
                       </button>
                       <button
                         onClick={() => handleEditRFQ(rfq.id)}
-                        className="rounded-xl border-2 border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-all duration-300 hover:border-green-500 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                        className="flex-1 rounded-xl border-2 border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 transition-all duration-300 hover:border-green-500 hover:bg-gray-50 active:scale-95 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 sm:flex-none sm:px-4 sm:py-2 sm:text-sm"
                       >
                         Edit
                       </button>
