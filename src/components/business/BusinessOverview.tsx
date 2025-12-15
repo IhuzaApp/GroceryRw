@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/router";
+import { useState, useEffect } from "react";
 import {
   DollarSign,
   ShoppingCart,
@@ -9,13 +8,12 @@ import {
   Star,
   ChevronDown,
   ChevronUp,
-  Store,
-  Plus,
-  ExternalLink,
-  X,
+  Wallet,
+  ArrowUpRight,
+  TrendingUp,
 } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import toast from "react-hot-toast";
-import { useGoogleMap } from "../../context/GoogleMapProvider";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 
 interface BusinessOverviewProps {
@@ -23,27 +21,20 @@ interface BusinessOverviewProps {
 }
 
 export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
-  const router = useRouter();
-  const { isLoaded: isGoogleMapsLoaded } = useGoogleMap();
   const [showDetailedStats, setShowDetailedStats] = useState(false);
-  const [userStores, setUserStores] = useState<any[]>([]);
-  const [loadingStores, setLoadingStores] = useState(false);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [monthlyRevenue, setMonthlyRevenue] = useState<any[]>([]);
+  const [loadingWallet, setLoadingWallet] = useState(false);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
   const [loadingStats, setLoadingStats] = useState(true);
-
-  // Google Maps Autocomplete refs
-  const addressInputRef = useRef<HTMLInputElement>(null);
-  const autocompleteServiceRef =
-    useRef<google.maps.places.AutocompleteService | null>(null);
-  const geocoderRef = useRef<google.maps.Geocoder | null>(null);
-  const [suggestions, setSuggestions] = useState<
-    google.maps.places.AutocompletePrediction[]
-  >([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
     if (businessAccount?.id) {
-      fetchUserStores();
       fetchStats();
+      fetchWalletData();
+      fetchTransactions();
+      fetchMonthlyRevenue();
     }
   }, [businessAccount]);
 
@@ -87,41 +78,65 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
           console.log("BusinessOverview: Total orders:", allOrders.length);
 
         // Calculate revenue from completed/delivered orders
-        const completedOrders = allOrders.filter(
-          (order: any) =>
-            order.status?.toLowerCase() === "delivered" ||
-            order.status?.toLowerCase() === "completed" ||
-            (order.delivered_time && new Date(order.delivered_time) <= now)
-        );
+        // Check for various status values and also include orders that have been delivered
+        const completedOrders = allOrders.filter((order: any) => {
+          const status = (order.status || "").toLowerCase();
+          const isDelivered = status === "delivered" || status === "completed" || status === "ready for pickup";
+          const hasDeliveredTime = order.delivered_time && new Date(order.delivered_time) <= now;
+          return isDelivered || hasDeliveredTime;
+        });
 
-        totalRevenue = completedOrders.reduce(
-          (sum: number, order: any) => sum + (order.value || 0),
-          0
-        );
+        console.log("BusinessOverview: Completed orders count:", completedOrders.length);
+        console.log("BusinessOverview: Sample order:", completedOrders[0]);
 
-        // This month revenue
+        // Calculate net revenue (excluding service fee and transportation fee)
+        totalRevenue = completedOrders.reduce((sum: number, order: any) => {
+          const total = parseFloat(order.value || 0);
+          const serviceFee = parseFloat(order.service_fee || 0);
+          const transportationFee = parseFloat(order.transportation_fee || 0);
+          const netAmount = total - serviceFee - transportationFee;
+          console.log(`BusinessOverview: Order ${order.id} - Total: ${total}, Service: ${serviceFee}, Transport: ${transportationFee}, Net: ${netAmount}`);
+          return sum + netAmount;
+        }, 0);
+
+        // This month revenue (excluding fees)
         thisMonthRevenue = completedOrders
           .filter((order: any) => {
             const created = new Date(order.created_at);
             return created >= lastMonth && created <= now;
           })
-          .reduce((sum: number, order: any) => sum + (order.value || 0), 0);
+          .reduce((sum: number, order: any) => {
+            const total = order.value || 0;
+            const serviceFee = order.service_fee || 0;
+            const transportationFee = order.transportation_fee || 0;
+            return sum + (total - serviceFee - transportationFee);
+          }, 0);
 
-        // Last month revenue
+        // Last month revenue (excluding fees)
         lastMonthRevenue = completedOrders
           .filter((order: any) => {
             const created = new Date(order.created_at);
             return created >= twoMonthsAgo && created < lastMonth;
           })
-          .reduce((sum: number, order: any) => sum + (order.value || 0), 0);
+          .reduce((sum: number, order: any) => {
+            const total = order.value || 0;
+            const serviceFee = order.service_fee || 0;
+            const transportationFee = order.transportation_fee || 0;
+            return sum + (total - serviceFee - transportationFee);
+          }, 0);
 
-        // This year revenue
+        // This year revenue (excluding fees)
         thisYearRevenue = completedOrders
           .filter((order: any) => {
             const created = new Date(order.created_at);
             return created >= thisYearStart && created <= now;
           })
-          .reduce((sum: number, order: any) => sum + (order.value || 0), 0);
+          .reduce((sum: number, order: any) => {
+            const total = order.value || 0;
+            const serviceFee = order.service_fee || 0;
+            const transportationFee = order.transportation_fee || 0;
+            return sum + (total - serviceFee - transportationFee);
+          }, 0);
 
           // Calculate percentage change
           if (lastMonthRevenue > 0) {
@@ -137,7 +152,11 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
             revenueChange = "0%";
           }
           console.log("BusinessOverview: Total revenue:", totalRevenue);
+          console.log("BusinessOverview: This month revenue:", thisMonthRevenue);
+          console.log("BusinessOverview: Last month revenue:", lastMonthRevenue);
+          console.log("BusinessOverview: This year revenue:", thisYearRevenue);
           console.log("BusinessOverview: Revenue change:", revenueChange);
+          console.log("BusinessOverview: Completed orders for revenue:", completedOrders.length);
         } catch (err) {
           console.error("BusinessOverview: Error processing orders data:", err);
         }
@@ -158,53 +177,73 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
           const allOrders = ordersData.orders || [];
           console.log("BusinessOverview: Processing active orders from", allOrders.length, "total orders");
 
-        pendingOrders = allOrders.filter(
-          (order: any) =>
-            order.status?.toLowerCase() === "pending" ||
+        // Get all order statuses for debugging
+        const allStatuses = allOrders.map((o: any) => o.status);
+        console.log("BusinessOverview: All order statuses:", [...new Set(allStatuses)]);
+
+        pendingOrders = allOrders.filter((order: any) => {
+          const status = (order.status || "").toLowerCase();
+          return (
+            status === "pending" ||
+            status === "ready for pickup" ||
             order.status === null ||
             (!order.delivered_time || new Date(order.delivered_time) > now)
-        ).length;
+          );
+        }).length;
 
-        inProgressOrders = allOrders.filter(
-          (order: any) =>
-            order.status?.toLowerCase() === "in progress" ||
-            order.status?.toLowerCase() === "processing"
-        ).length;
+        inProgressOrders = allOrders.filter((order: any) => {
+          const status = (order.status || "").toLowerCase();
+          return (
+            status === "in progress" ||
+            status === "processing" ||
+            status === "shopping" ||
+            status === "on the way"
+          );
+        }).length;
 
-        completedOrdersCount = allOrders.filter(
-          (order: any) =>
-            order.status?.toLowerCase() === "delivered" ||
-            order.status?.toLowerCase() === "completed"
-        ).length;
+        completedOrdersCount = allOrders.filter((order: any) => {
+          const status = (order.status || "").toLowerCase();
+          return (
+            status === "delivered" ||
+            status === "completed" ||
+            (order.delivered_time && new Date(order.delivered_time) <= now)
+          );
+        }).length;
+
+        console.log("BusinessOverview: Active orders breakdown - Pending:", pendingOrders, "In Progress:", inProgressOrders, "Completed:", completedOrdersCount);
 
         activeOrders = pendingOrders + inProgressOrders;
 
         // Calculate change from last month
         const thisMonthActive = allOrders.filter((order: any) => {
           const created = new Date(order.created_at);
+          const status = (order.status || "").toLowerCase().trim();
+          const isDelivered = status === "delivered" || status === "completed";
+          const hasDeliveredTime = order.delivered_time && new Date(order.delivered_time) <= now;
+          
           return (
             created >= lastMonth &&
             created <= now &&
-            (order.status?.toLowerCase() === "pending" ||
-              order.status?.toLowerCase() === "in progress" ||
-              order.status === null ||
-              !order.delivered_time ||
-              new Date(order.delivered_time) > now)
+            !isDelivered &&
+            !hasDeliveredTime
           );
         }).length;
 
         const prevMonthActive = allOrders.filter((order: any) => {
           const created = new Date(order.created_at);
+          const status = (order.status || "").toLowerCase().trim();
+          const isDelivered = status === "delivered" || status === "completed";
+          const hasDeliveredTime = order.delivered_time && new Date(order.delivered_time) <= now;
+          
           return (
             created >= twoMonthsAgo &&
             created < lastMonth &&
-            (order.status?.toLowerCase() === "pending" ||
-              order.status?.toLowerCase() === "in progress" ||
-              order.status === null ||
-              !order.delivered_time ||
-              new Date(order.delivered_time) > now)
+            !isDelivered &&
+            !hasDeliveredTime
           );
         }).length;
+        
+        console.log("BusinessOverview: This month active:", thisMonthActive, "Prev month active:", prevMonthActive);
 
           if (prevMonthActive > 0) {
             const diff = thisMonthActive - prevMonthActive;
@@ -303,6 +342,12 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
         revenueChange,
         ordersChange,
         rfqResponsesChange,
+        thisMonthRevenue,
+        lastMonthRevenue,
+        thisYearRevenue,
+        pendingOrders,
+        inProgressOrders,
+        completedOrdersCount,
       });
 
       setStats([
@@ -366,43 +411,133 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
     }
   };
 
-  const fetchUserStores = async () => {
-    if (!businessAccount?.id) {
-      setUserStores([]);
-      return;
-    }
-
-    setLoadingStores(true);
+  const fetchWalletData = async () => {
+    if (!businessAccount?.id) return;
+    
+    setLoadingWallet(true);
     try {
-      const response = await fetch("/api/queries/business-stores");
+      const response = await fetch(
+        `/api/queries/check-business-wallet?business_id=${businessAccount.id}`
+      );
       if (response.ok) {
         const data = await response.json();
-        setUserStores(data.stores || []);
-      } else {
-        setUserStores([]);
+        if (data.wallet) {
+          setWalletBalance(parseFloat(data.wallet.amount || "0"));
+        }
       }
     } catch (error) {
-      toast.error("Failed to load stores");
-      setUserStores([]);
+      console.error("Error fetching wallet:", error);
     } finally {
-      setLoadingStores(false);
+      setLoadingWallet(false);
     }
   };
 
-  const [showCreateStoreModal, setShowCreateStoreModal] = useState(false);
-  const [isCreatingStore, setIsCreatingStore] = useState(false);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(false);
-  const [storeImage, setStoreImage] = useState<string>("");
-  const [newStoreData, setNewStoreData] = useState({
-    name: "",
-    description: "",
-    address: "",
-    latitude: "",
-    longitude: "",
-    operating_hours: "",
-    category_id: "",
-  });
+  const fetchTransactions = async () => {
+    if (!businessAccount?.id) return;
+    
+    setLoadingTransactions(true);
+    try {
+      // Fetch orders to show as transactions
+      const ordersRes = await fetch("/api/queries/business-product-orders");
+      if (ordersRes.ok) {
+        const ordersData = await ordersRes.json();
+        const allOrders = ordersData.orders || [];
+        
+        // Transform orders into transactions
+        // Calculate net amount: total minus service fee and transportation fee
+        const transactionList = allOrders.map((order: any) => {
+          const total = order.value || 0;
+          const serviceFee = order.service_fee || 0;
+          const transportationFee = order.transportation_fee || 0;
+          const netAmount = total - serviceFee - transportationFee;
+          
+          return {
+            id: order.id,
+            type: "payment_received",
+            amount: netAmount,
+            description: `Payment for order ${order.orderId || order.id.substring(0, 8)}`,
+            date: new Date(order.created_at).toLocaleDateString(),
+            time: new Date(order.created_at).toLocaleTimeString(),
+            status: order.status || "completed",
+            orderId: order.id,
+          };
+        });
+        
+        setTransactions(transactionList.sort((a: any, b: any) => 
+          new Date(b.date + " " + b.time).getTime() - new Date(a.date + " " + a.time).getTime()
+        ));
+      }
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+    } finally {
+      setLoadingTransactions(false);
+    }
+  };
+
+  const fetchMonthlyRevenue = async () => {
+    if (!businessAccount?.id) return;
+    
+    try {
+      const ordersRes = await fetch("/api/queries/business-product-orders");
+      if (ordersRes.ok) {
+        const ordersData = await ordersRes.json();
+        const allOrders = ordersData.orders || [];
+        
+        // Filter completed/delivered orders and exclude transportation/service fees
+        const completedOrders = allOrders.filter(
+          (order: any) =>
+            order.status?.toLowerCase() === "delivered" ||
+            order.status?.toLowerCase() === "completed" ||
+            (order.delivered_time && new Date(order.delivered_time) <= new Date())
+        );
+        
+        // Group by month and calculate revenue (excluding transportation and service fees)
+        const monthlyData: { [key: string]: number } = {};
+        
+        completedOrders.forEach((order: any) => {
+          const date = new Date(order.created_at);
+          const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+          const monthName = date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+          
+          // Revenue is the order total minus transportation and service fees
+          const revenue = (order.value || 0) - (order.transportation_fee || 0) - (order.service_fee || 0);
+          
+          if (!monthlyData[monthKey]) {
+            monthlyData[monthKey] = 0;
+          }
+          monthlyData[monthKey] += revenue;
+        });
+        
+        // Convert to array format for chart
+        const chartData = Object.entries(monthlyData)
+          .map(([key, value]) => ({
+            month: new Date(key + "-01").toLocaleDateString("en-US", { month: "short", year: "numeric" }),
+            revenue: value,
+          }))
+          .sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime());
+        
+        setMonthlyRevenue(chartData);
+      }
+    } catch (error) {
+      console.error("Error fetching monthly revenue:", error);
+    }
+  };
+
+  const handleRequestWithdraw = async () => {
+    if (!businessAccount?.id) {
+      toast.error("Business account not found");
+      return;
+    }
+    
+    if (walletBalance <= 0) {
+      toast.error("No funds available to withdraw");
+      return;
+    }
+    
+    // TODO: Implement withdraw API call
+    toast.success("Withdrawal request submitted successfully");
+  };
+
   const [stats, setStats] = useState([
     {
       title: "Total Revenue",
@@ -457,408 +592,6 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       ],
     },
   ]);
-
-  // Operating hours state
-  const [operatingHours, setOperatingHours] = useState<{
-    [key: string]: { open: boolean; from: string; to: string };
-  }>({
-    monday: { open: true, from: "09:00", to: "17:00" },
-    tuesday: { open: true, from: "09:00", to: "17:00" },
-    wednesday: { open: true, from: "09:00", to: "17:00" },
-    thursday: { open: true, from: "09:00", to: "17:00" },
-    friday: { open: true, from: "09:00", to: "17:00" },
-    saturday: { open: false, from: "09:00", to: "17:00" },
-    sunday: { open: false, from: "09:00", to: "17:00" },
-  });
-
-  const days = [
-    { key: "monday", label: "Monday" },
-    { key: "tuesday", label: "Tuesday" },
-    { key: "wednesday", label: "Wednesday" },
-    { key: "thursday", label: "Thursday" },
-    { key: "friday", label: "Friday" },
-    { key: "saturday", label: "Saturday" },
-    { key: "sunday", label: "Sunday" },
-  ];
-
-  // Initialize Google Maps services
-  useEffect(() => {
-    if (isGoogleMapsLoaded && !autocompleteServiceRef.current) {
-      try {
-        autocompleteServiceRef.current =
-          new google.maps.places.AutocompleteService();
-        geocoderRef.current = new google.maps.Geocoder();
-      } catch (error) {
-        // Error initializing Google Maps services
-      }
-    }
-  }, [isGoogleMapsLoaded]);
-
-  // Close suggestions when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        addressInputRef.current &&
-        !addressInputRef.current.contains(event.target as Node) &&
-        !(event.target as HTMLElement).closest(".suggestions-dropdown")
-      ) {
-        setShowSuggestions(false);
-      }
-    };
-
-    if (showSuggestions) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
-  }, [showSuggestions]);
-
-  // Handle address input change for autocomplete
-  const handleAddressChange = (value: string) => {
-    setNewStoreData({ ...newStoreData, address: value });
-    if (value && autocompleteServiceRef.current) {
-      try {
-        autocompleteServiceRef.current.getPlacePredictions(
-          { input: value, componentRestrictions: { country: ["rw"] } },
-          (preds, status) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK && preds) {
-              setSuggestions(preds);
-              setShowSuggestions(true);
-            } else {
-              setSuggestions([]);
-              setShowSuggestions(false);
-            }
-          }
-        );
-      } catch (error) {
-        setSuggestions([]);
-        setShowSuggestions(false);
-      }
-    } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
-  };
-
-  // On selecting an autocomplete suggestion
-  const handleSelectSuggestion = (
-    suggestion: google.maps.places.AutocompletePrediction
-  ) => {
-    setNewStoreData({ ...newStoreData, address: suggestion.description });
-    setSuggestions([]);
-    setShowSuggestions(false);
-
-    // Geocode to get lat/lng
-    if (geocoderRef.current) {
-      geocoderRef.current.geocode(
-        { address: suggestion.description },
-        (results, status) => {
-          if (status === "OK" && results && results[0]) {
-            const lat = results[0].geometry.location.lat();
-            const lng = results[0].geometry.location.lng();
-            setNewStoreData((prev) => ({
-              ...prev,
-              latitude: lat.toString(),
-              longitude: lng.toString(),
-            }));
-          }
-        }
-      );
-    }
-  };
-
-  const handleCreateStore = async () => {
-    setShowCreateStoreModal(true);
-    // Fetch categories when modal opens
-    if (categories.length === 0) {
-      setLoadingCategories(true);
-      try {
-        const response = await fetch("/api/queries/categories");
-        if (response.ok) {
-          const data = await response.json();
-          setCategories(data.categories || []);
-        }
-      } catch (error) {
-        toast.error("Failed to load categories");
-      } finally {
-        setLoadingCategories(false);
-      }
-    }
-  };
-
-  const handleCloseCreateModal = () => {
-    setShowCreateStoreModal(false);
-    setNewStoreData({
-      name: "",
-      description: "",
-      address: "",
-      latitude: "",
-      longitude: "",
-      operating_hours: "",
-      category_id: "",
-    });
-    setStoreImage("");
-    // Reset operating hours to default
-    setOperatingHours({
-      monday: { open: true, from: "09:00", to: "17:00" },
-      tuesday: { open: true, from: "09:00", to: "17:00" },
-      wednesday: { open: true, from: "09:00", to: "17:00" },
-      thursday: { open: true, from: "09:00", to: "17:00" },
-      friday: { open: true, from: "09:00", to: "17:00" },
-      saturday: { open: false, from: "09:00", to: "17:00" },
-      sunday: { open: false, from: "09:00", to: "17:00" },
-    });
-    setSuggestions([]);
-    setShowSuggestions(false);
-  };
-
-  // Image compression function
-  const compressImage = (base64: string, maxSizeKB = 200): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          reject(new Error("Could not get canvas context"));
-          return;
-        }
-
-        // Calculate new dimensions while maintaining aspect ratio
-        let width = img.width;
-        let height = img.height;
-        const maxDimension = 1200;
-
-        if (width > height && width > maxDimension) {
-          height = Math.round((height * maxDimension) / width);
-          width = maxDimension;
-        } else if (height > maxDimension) {
-          width = Math.round((width * maxDimension) / height);
-          height = maxDimension;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        ctx.drawImage(img, 0, 0, width, height);
-
-        // Compress with quality adjustment
-        let quality = 0.9;
-        let compressedBase64 = canvas.toDataURL("image/jpeg", quality);
-        const maxSize = maxSizeKB * 1024;
-
-        while (compressedBase64.length > maxSize && quality > 0.1) {
-          quality -= 0.1;
-          compressedBase64 = canvas.toDataURL("image/jpeg", quality);
-        }
-
-        resolve(compressedBase64);
-      };
-      img.onerror = () => reject(new Error("Failed to load image"));
-      img.src = base64;
-    });
-  };
-
-  const handleImageUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select a valid image file");
-      return;
-    }
-
-    // Validate file size (max 5MB before compression)
-    const maxSizeMB = 5;
-    if (file.size > maxSizeMB * 1024 * 1024) {
-      toast.error(`File size must be less than ${maxSizeMB}MB`);
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const result = e.target?.result as string;
-      if (result) {
-        try {
-          // Compress the image
-          const compressed = await compressImage(result, 200);
-          setStoreImage(compressed);
-          toast.success("Image uploaded successfully!");
-        } catch (error) {
-          setStoreImage(result); // Use original if compression fails
-          toast.success("Image uploaded successfully!");
-        }
-      }
-    };
-    reader.onerror = () => {
-      toast.error("Failed to read file. Please try again.");
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleOperatingHoursChange = (
-    day: string,
-    field: "open" | "from" | "to",
-    value: boolean | string
-  ) => {
-    setOperatingHours((prev) => ({
-      ...prev,
-      [day]: {
-        ...prev[day],
-        [field]: value,
-      },
-    }));
-  };
-
-  const applyToAllDays = (from: string, to: string) => {
-    const updatedHours: typeof operatingHours = {};
-    days.forEach((day) => {
-      updatedHours[day.key] = {
-        open: operatingHours[day.key].open,
-        from,
-        to,
-      };
-    });
-    setOperatingHours(updatedHours);
-  };
-
-  const applyToDayRange = (
-    startDay: string,
-    endDay: string,
-    from: string,
-    to: string
-  ) => {
-    const startIndex = days.findIndex((d) => d.key === startDay);
-    const endIndex = days.findIndex((d) => d.key === endDay);
-
-    if (startIndex === -1 || endIndex === -1) return;
-
-    const updatedHours = { ...operatingHours };
-    const range =
-      startIndex <= endIndex
-        ? days.slice(startIndex, endIndex + 1)
-        : [...days.slice(startIndex), ...days.slice(0, endIndex + 1)];
-
-    range.forEach((day) => {
-      updatedHours[day.key] = {
-        open: true,
-        from,
-        to,
-      };
-    });
-
-    setOperatingHours(updatedHours);
-  };
-
-  const formatOperatingHoursForAPI = () => {
-    const formatted: { [key: string]: string } = {};
-    days.forEach((day) => {
-      const hours = operatingHours[day.key];
-      if (hours.open) {
-        // Format time from 24h to 12h format
-        const formatTime = (time: string) => {
-          const [hours, minutes] = time.split(":");
-          const hour = parseInt(hours);
-          const ampm = hour >= 12 ? "PM" : "AM";
-          const displayHour = hour % 12 || 12;
-          return `${displayHour}:${minutes} ${ampm}`;
-        };
-        formatted[day.key] = `${formatTime(hours.from)} - ${formatTime(
-          hours.to
-        )}`;
-      } else {
-        formatted[day.key] = "closed";
-      }
-    });
-    return formatted;
-  };
-
-  const handleSubmitCreateStore = async () => {
-    if (!newStoreData.name.trim()) {
-      toast.error("Store name is required");
-      return;
-    }
-
-    if (!newStoreData.address.trim()) {
-      toast.error("Store location is required");
-      return;
-    }
-
-    if (!newStoreData.latitude || !newStoreData.longitude) {
-      toast.error("Please select a valid address from the suggestions");
-      return;
-    }
-
-    // Format operating hours from state
-    const operatingHoursJson = formatOperatingHoursForAPI();
-
-    await createBusinessStore({
-      name: newStoreData.name.trim(),
-      description: newStoreData.description.trim() || undefined,
-      latitude: newStoreData.latitude.trim(),
-      longitude: newStoreData.longitude.trim(),
-      operating_hours: operatingHoursJson,
-      category_id: newStoreData.category_id || undefined,
-      image: storeImage || undefined,
-    });
-
-    handleCloseCreateModal();
-  };
-
-  const createBusinessStore = async (storeData: {
-    name: string;
-    description?: string;
-    category_id?: string;
-    image?: string;
-    latitude?: string;
-    longitude?: string;
-    operating_hours?: any;
-  }) => {
-    setIsCreatingStore(true);
-    try {
-      const response = await fetch("/api/mutations/create-business-store", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(storeData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        toast.success("Store created successfully!");
-        handleCloseCreateModal();
-        // Refresh stores list
-        fetchUserStores();
-      } else {
-        // Show more detailed error message
-        const errorMsg = data.message || data.error || "Failed to create store";
-        toast.error(errorMsg);
-        // Log full error details for debugging
-        console.error("Store creation error details:", {
-          message: data.message,
-          error: data.error,
-          code: data.code,
-          details: data.details,
-          hint: data.hint,
-          requestBody: data.requestBody,
-        });
-      }
-    } catch (error: any) {
-      toast.error("Failed to create store. Please try again.");
-      console.error("Store creation error:", error);
-    } finally {
-      setIsCreatingStore(false);
-    }
-  };
-
-  const handleViewStore = (storeId: string) => {
-    router.push(`/plasBusiness/store/${storeId}`);
-  };
 
   return (
     <div className="space-y-6">
@@ -941,484 +674,171 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
         ))}
       </div>
 
-      {/* User Stores Section */}
-      <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl sm:p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-              My Stores
-            </h4>
-            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-              Manage your stores and view their performance
-            </p>
+      {/* Wallet & Revenue Section */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Wallet Balance Card - VIP Credit Card Design */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 via-gray-800 to-black p-6 shadow-2xl" style={{ backgroundColor: '#000000' }}>
+          {/* Decorative background elements */}
+          <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-gradient-to-br from-yellow-400/20 to-transparent blur-2xl"></div>
+          <div className="absolute bottom-0 left-0 h-24 w-24 rounded-full bg-gradient-to-tr from-emerald-500/20 to-transparent blur-xl"></div>
+          
+          {/* Card Content */}
+          <div className="relative z-10">
+            {/* Card Header */}
+            <div className="mb-6 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-12 rounded bg-gradient-to-br from-yellow-400 to-yellow-600"></div>
+                <span className="text-xs font-semibold tracking-wider" style={{ color: '#facc15' }}>VIP</span>
+              </div>
+              <Wallet className="h-6 w-6" style={{ color: '#facc15' }} />
+            </div>
+
+            {/* Chip */}
+            <div className="mb-6 flex items-center gap-3">
+              <div className="h-10 w-14 rounded-md bg-gradient-to-br from-yellow-300/30 to-yellow-500/30 backdrop-blur-sm border border-yellow-400/30"></div>
+              <div className="flex-1">
+                <p className="text-xs" style={{ color: '#ffffff' }}>Available Balance</p>
+                <p className="text-2xl font-bold" style={{ color: '#ffffff' }}>
+                  {loadingWallet ? (
+                    <span style={{ color: '#ffffff' }}>Loading...</span>
+                  ) : (
+                    formatCurrencySync(walletBalance)
+                  )}
+                </p>
+              </div>
+            </div>
+
+            {/* Card Number Pattern */}
+            <div className="mb-4 flex items-center gap-2">
+              <div className="h-1 w-1 rounded-full bg-yellow-400"></div>
+              <div className="h-1 w-1 rounded-full bg-yellow-400"></div>
+              <div className="h-1 w-1 rounded-full bg-yellow-400"></div>
+              <div className="h-1 w-1 rounded-full bg-yellow-400"></div>
+              <span className="mx-2" style={{ color: '#ffffff' }}>•</span>
+              <span className="mx-2" style={{ color: '#ffffff' }}>•</span>
+              <span className="mx-2" style={{ color: '#ffffff' }}>•</span>
+              <span className="mx-2" style={{ color: '#ffffff' }}>•</span>
+              <span className="mx-2" style={{ color: '#ffffff' }}>•</span>
+              <span className="mx-2" style={{ color: '#ffffff' }}>•</span>
+              <span className="mx-2" style={{ color: '#ffffff' }}>•</span>
+              <span className="mx-2" style={{ color: '#ffffff' }}>•</span>
+              <span className="ml-auto text-xs font-mono" style={{ color: '#ffffff' }}>BUSINESS</span>
+            </div>
+
+            {/* Card Footer */}
+            <div className="mt-6 flex items-end justify-between">
+              <div>
+                <p className="text-xs" style={{ color: '#ffffff' }}>Card Holder</p>
+                <p className="text-sm font-semibold" style={{ color: '#ffffff' }}>Business Account</p>
+              </div>
+              <button
+                onClick={handleRequestWithdraw}
+                disabled={walletBalance <= 0 || loadingWallet}
+                className="rounded-lg bg-gradient-to-r from-yellow-500 to-yellow-600 px-4 py-2 text-xs font-semibold text-black transition-all hover:from-yellow-400 hover:to-yellow-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:from-yellow-500 disabled:hover:to-yellow-600"
+              >
+                <ArrowUpRight className="mr-1 inline h-3 w-3" />
+                Withdraw
+              </button>
+            </div>
           </div>
-          <button
-            onClick={handleCreateStore}
-            className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 text-sm font-medium text-white transition-all hover:from-green-600 hover:to-emerald-600"
-            style={{ color: "#ffffff" }}
-          >
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Create Store</span>
-            <span className="sm:hidden">Create</span>
-          </button>
         </div>
 
-        {loadingStores ? (
+        {/* Monthly Revenue Chart */}
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Monthly Revenue
+              </h4>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                Revenue by month (excluding fees)
+              </p>
+            </div>
+            <TrendingUp className="h-8 w-8 text-green-600" />
+          </div>
+          {monthlyRevenue.length > 0 ? (
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={monthlyRevenue}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis 
+                  dataKey="month" 
+                  stroke="#6b7280"
+                  style={{ fontSize: "12px" }}
+                />
+                <YAxis 
+                  stroke="#6b7280"
+                  style={{ fontSize: "12px" }}
+                  tickFormatter={(value) => formatCurrencySync(value).replace(/[^\d.]/g, "")}
+                />
+                <Tooltip 
+                  formatter={(value: any) => formatCurrencySync(value)}
+                  contentStyle={{ backgroundColor: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px" }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="revenue" 
+                  stroke="#10b981" 
+                  strokeWidth={2}
+                  dot={{ fill: "#10b981", r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-[200px] items-center justify-center text-gray-500 dark:text-gray-400">
+              No revenue data available
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Transaction History */}
+      <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+        <div className="mb-4">
+          <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Transaction History
+          </h4>
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            Payments received and products bought from your stores
+          </p>
+        </div>
+        {loadingTransactions ? (
           <div className="flex items-center justify-center py-8">
             <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-green-600"></div>
           </div>
-        ) : userStores.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {userStores.map((store) => (
+        ) : transactions.length > 0 ? (
+          <div className="space-y-3">
+            {transactions.slice(0, 10).map((transaction) => (
               <div
-                key={store.id}
-                className="group cursor-pointer rounded-lg border border-gray-200 bg-gray-50 p-4 transition-all hover:border-green-500 hover:shadow-md dark:border-gray-700 dark:bg-gray-900"
-                onClick={() => handleViewStore(store.id)}
+                key={transaction.id}
+                className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="mb-2 flex items-center gap-2">
-                      <Store className="h-5 w-5 text-green-600" />
-                      <h5 className="font-semibold text-gray-900 dark:text-white">
-                        {store.name}
-                      </h5>
-                    </div>
-                    {store.description && (
-                      <p className="mb-2 line-clamp-2 text-xs text-gray-600 dark:text-gray-400">
-                        {store.description}
-                      </p>
-                    )}
-                    {store.latitude && store.longitude && (
-                      <p className="text-xs text-gray-500 dark:text-gray-500">
-                        📍 Location: {store.latitude}, {store.longitude}
-                      </p>
-                    )}
-                    <div className="mt-2 flex items-center gap-2">
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                          store.is_active
-                            ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                            : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400"
-                        }`}
-                      >
-                        {store.is_active ? "Active" : "Inactive"}
-                      </span>
-                    </div>
-                  </div>
-                  <ExternalLink className="h-4 w-4 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100" />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {transaction.description}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {transaction.date} at {transaction.time}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold text-green-600 dark:text-green-400">
+                    +{formatCurrencySync(transaction.amount)}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {transaction.status}
+                  </p>
                 </div>
               </div>
             ))}
           </div>
         ) : (
           <div className="py-8 text-center">
-            <Store className="mx-auto h-12 w-12 text-gray-400" />
-            <p className="mt-4 text-sm font-medium text-gray-900 dark:text-white">
-              No stores yet
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              No transactions yet
             </p>
-            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-              Create your first store to start selling
-            </p>
-            <button
-              onClick={handleCreateStore}
-              className="mt-4 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-2 text-sm font-medium text-white transition-all hover:from-green-600 hover:to-emerald-600"
-              style={{ color: "#ffffff" }}
-            >
-              <span style={{ color: "#ffffff" }}>Create Your First Store</span>
-            </button>
           </div>
         )}
       </div>
-
-      {/* Create Store Modal */}
-      {showCreateStoreModal && (
-        <div
-          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4"
-          style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
-        >
-          <div className="relative flex max-h-[95vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl dark:bg-gray-800 sm:max-h-[90vh]">
-            <div className="flex-shrink-0 border-b border-gray-200 bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3 dark:border-gray-700 sm:px-6 sm:py-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-white sm:text-xl">
-                  Create New Store
-                </h3>
-                <button
-                  onClick={handleCloseCreateModal}
-                  className="rounded-full p-1.5 text-white transition-colors hover:bg-white/20 active:bg-white/30 sm:p-1"
-                >
-                  <X className="h-5 w-5 sm:h-5 sm:w-5" />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:space-y-6 sm:p-6">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-900 dark:text-white">
-                  Store Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={newStoreData.name}
-                  onChange={(e) =>
-                    setNewStoreData({ ...newStoreData, name: e.target.value })
-                  }
-                  placeholder="Enter store name"
-                  disabled={isCreatingStore}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-900 dark:text-white">
-                  Description
-                </label>
-                <textarea
-                  value={newStoreData.description}
-                  onChange={(e) =>
-                    setNewStoreData({
-                      ...newStoreData,
-                      description: e.target.value,
-                    })
-                  }
-                  placeholder="Enter store description (optional)"
-                  rows={3}
-                  disabled={isCreatingStore}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-900 dark:text-white">
-                  Category{" "}
-                  <span className="text-xs text-gray-500">(Optional)</span>
-                </label>
-                {loadingCategories ? (
-                  <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-green-500"></div>
-                    <span>Loading categories...</span>
-                  </div>
-                ) : (
-                  <select
-                    value={newStoreData.category_id}
-                    onChange={(e) =>
-                      setNewStoreData({
-                        ...newStoreData,
-                        category_id: e.target.value,
-                      })
-                    }
-                    disabled={isCreatingStore}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                  >
-                    <option value="">Select a category (optional)</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-900 dark:text-white">
-                  Store Image{" "}
-                  <span className="text-xs text-gray-500">(Optional)</span>
-                </label>
-                {storeImage ? (
-                  <div className="space-y-2">
-                    <div className="relative h-48 w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-600 sm:h-64">
-                      <img
-                        src={storeImage}
-                        alt="Store preview"
-                        className="h-full w-full object-cover"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setStoreImage("")}
-                        disabled={isCreatingStore}
-                        className="absolute right-2 top-2 rounded-full bg-red-500 p-1.5 text-white transition-colors hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <label className="block">
-                      <span className="sr-only">Change image</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        disabled={isCreatingStore}
-                        className="block w-full cursor-pointer text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-green-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-green-700 hover:file:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-400 dark:file:bg-gray-700 dark:file:text-gray-300"
-                      />
-                    </label>
-                  </div>
-                ) : (
-                  <label className="flex h-32 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 sm:h-40">
-                    <div className="flex flex-col items-center justify-center pb-6 pt-5">
-                      <svg
-                        className="mb-2 h-8 w-8 text-gray-500 dark:text-gray-400"
-                        aria-hidden="true"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 20 16"
-                      >
-                        <path
-                          stroke="currentColor"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
-                        />
-                      </svg>
-                      <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                        <span className="font-semibold">Click to upload</span>{" "}
-                        or drag and drop
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        PNG, JPG, GIF up to 5MB
-                      </p>
-                    </div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      disabled={isCreatingStore}
-                      className="hidden"
-                    />
-                  </label>
-                )}
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-900 dark:text-white">
-                  Store Location <span className="text-red-500">*</span>
-                </label>
-                <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
-                  Start typing an address and select from suggestions
-                </p>
-                <div className="relative">
-                  <input
-                    ref={addressInputRef}
-                    type="text"
-                    value={newStoreData.address}
-                    onChange={(e) => handleAddressChange(e.target.value)}
-                    onFocus={() => {
-                      if (suggestions.length > 0) {
-                        setShowSuggestions(true);
-                      }
-                    }}
-                    placeholder="Enter store address (e.g., Kigali, Rwanda)"
-                    disabled={!isGoogleMapsLoaded || isCreatingStore}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                  />
-                  {!isGoogleMapsLoaded && (
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      Loading Google Maps...
-                    </p>
-                  )}
-
-                  {/* Suggestions dropdown */}
-                  {showSuggestions && suggestions.length > 0 && (
-                    <div className="suggestions-dropdown absolute z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                      {suggestions.map((suggestion, index) => (
-                        <button
-                          key={index}
-                          type="button"
-                          onClick={() => handleSelectSuggestion(suggestion)}
-                          className="w-full px-4 py-2 text-left text-sm text-gray-900 transition-colors hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700"
-                        >
-                          <div className="flex items-start gap-2">
-                            <span className="text-gray-400">📍</span>
-                            <div>
-                              <div className="font-medium">
-                                {suggestion.structured_formatting.main_text}
-                              </div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400">
-                                {
-                                  suggestion.structured_formatting
-                                    .secondary_text
-                                }
-                              </div>
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                {newStoreData.latitude && newStoreData.longitude && (
-                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                    Coordinates: {newStoreData.latitude},{" "}
-                    {newStoreData.longitude}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="mb-3 block text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
-                  Operating Hours{" "}
-                  <span className="text-xs font-normal text-gray-500">
-                    (Optional)
-                  </span>
-                </label>
-
-                {/* Quick Actions */}
-                <div className="mb-4 flex flex-wrap gap-2 sm:gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const defaultFrom = "09:00";
-                      const defaultTo = "17:00";
-                      applyToAllDays(defaultFrom, defaultTo);
-                    }}
-                    disabled={isCreatingStore}
-                    className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-all hover:border-green-500 hover:bg-green-50 hover:text-green-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-gray-600 sm:flex-none sm:px-4 sm:text-sm"
-                  >
-                    <span className="hidden sm:inline">
-                      Apply 9 AM - 5 PM to All
-                    </span>
-                    <span className="sm:hidden">9 AM - 5 PM All</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const updatedHours: typeof operatingHours = {};
-                      days.forEach((day) => {
-                        updatedHours[day.key] = {
-                          ...operatingHours[day.key],
-                          open: [
-                            "monday",
-                            "tuesday",
-                            "wednesday",
-                            "thursday",
-                            "friday",
-                          ].includes(day.key),
-                        };
-                      });
-                      setOperatingHours(updatedHours);
-                    }}
-                    disabled={isCreatingStore}
-                    className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-all hover:border-green-500 hover:bg-green-50 hover:text-green-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-gray-600 sm:flex-none sm:px-4 sm:text-sm"
-                  >
-                    Weekdays Only
-                  </button>
-                </div>
-
-                {/* Days List */}
-                <div className="scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 max-h-[280px] space-y-2.5 overflow-y-auto pr-1 sm:max-h-64 sm:space-y-3 sm:pr-2">
-                  {days.map((day) => {
-                    const hours = operatingHours[day.key];
-                    return (
-                      <div
-                        key={day.key}
-                        className="flex flex-col gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3 transition-all hover:border-green-300 hover:shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:hover:border-gray-600 sm:flex-row sm:items-center sm:gap-3 sm:p-3.5"
-                      >
-                        {/* Day Label and Toggle */}
-                        <div className="flex items-center gap-2.5 sm:min-w-[110px] sm:max-w-[110px]">
-                          <input
-                            type="checkbox"
-                            checked={hours.open}
-                            onChange={(e) =>
-                              handleOperatingHoursChange(
-                                day.key,
-                                "open",
-                                e.target.checked
-                              )
-                            }
-                            disabled={isCreatingStore}
-                            className="h-4 w-4 cursor-pointer rounded border-gray-300 text-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 sm:h-5 sm:w-5"
-                          />
-                          <label className="flex-1 cursor-pointer text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
-                            {day.label}
-                          </label>
-                        </div>
-
-                        {/* Time Inputs or Closed Status */}
-                        {hours.open ? (
-                          <div className="flex flex-1 items-center gap-2 pl-6 sm:gap-3 sm:pl-0">
-                            <div className="flex flex-1 items-center gap-1.5 sm:gap-2">
-                              <label className="whitespace-nowrap text-xs font-medium text-gray-600 dark:text-gray-400 sm:text-sm">
-                                From:
-                              </label>
-                              <input
-                                type="time"
-                                value={hours.from}
-                                onChange={(e) =>
-                                  handleOperatingHoursChange(
-                                    day.key,
-                                    "from",
-                                    e.target.value
-                                  )
-                                }
-                                disabled={isCreatingStore}
-                                className="w-full flex-1 rounded-lg border border-gray-300 px-2.5 py-2 text-xs focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500 sm:w-auto sm:flex-none sm:px-3 sm:py-1.5 sm:text-sm"
-                              />
-                            </div>
-                            <span className="font-medium text-gray-400">-</span>
-                            <div className="flex flex-1 items-center gap-1.5 sm:gap-2">
-                              <label className="whitespace-nowrap text-xs font-medium text-gray-600 dark:text-gray-400 sm:text-sm">
-                                To:
-                              </label>
-                              <input
-                                type="time"
-                                value={hours.to}
-                                onChange={(e) =>
-                                  handleOperatingHoursChange(
-                                    day.key,
-                                    "to",
-                                    e.target.value
-                                  )
-                                }
-                                disabled={isCreatingStore}
-                                className="w-full flex-1 rounded-lg border border-gray-300 px-2.5 py-2 text-xs focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500 sm:w-auto sm:flex-none sm:px-3 sm:py-1.5 sm:text-sm"
-                              />
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="pl-6 sm:pl-0">
-                            <span className="inline-flex items-center rounded-full bg-gray-200 px-3 py-1 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400 sm:text-sm">
-                              Closed
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="flex flex-col justify-end gap-2 border-t border-gray-200 pt-4 dark:border-gray-700 sm:flex-row sm:gap-3 sm:pt-6">
-                <button
-                  onClick={handleCloseCreateModal}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:w-auto sm:px-6 sm:py-2"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSubmitCreateStore}
-                  disabled={
-                    !newStoreData.name.trim() ||
-                    !newStoreData.address.trim() ||
-                    !isGoogleMapsLoaded ||
-                    isCreatingStore
-                  }
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:from-green-600 hover:to-emerald-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-6 sm:py-2"
-                  style={{ color: "#ffffff" }}
-                >
-                  {isCreatingStore ? (
-                    <>
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                      <span>Creating...</span>
-                    </>
-                  ) : (
-                    "Create Store"
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
   DollarSign,
   MessageSquare,
   Star,
+  Store,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
@@ -30,6 +31,7 @@ import { ContractsManagement } from "../../src/components/business/ContractsMana
 import PlasBusinessOnboarding from "../../src/components/business/PlasBusinessOnboarding";
 import { BusinessOverview } from "../../src/components/business/BusinessOverview";
 import { ServicesSection } from "../../src/components/business/ServicesSection";
+import { StoresSection } from "../../src/components/business/StoresSection";
 import BusinessChatDrawer from "../../src/components/business/BusinessChatDrawer";
 import toast from "react-hot-toast";
 
@@ -296,6 +298,12 @@ function BuyerDashboardContent({
                       shortLabel: "Orders",
                       icon: Truck,
                     },
+                    {
+                      id: "stores",
+                      label: "Stores",
+                      shortLabel: "Stores",
+                      icon: Store,
+                    },
                   ]
                 : []),
               // Personal account tabs (only for personal accounts)
@@ -312,6 +320,12 @@ function BuyerDashboardContent({
                       label: "Services",
                       shortLabel: "Services",
                       icon: Package,
+                    },
+                    {
+                      id: "stores",
+                      label: "Stores",
+                      shortLabel: "Stores",
+                      icon: Store,
                     },
                   ]
                 : []),
@@ -391,6 +405,12 @@ function BuyerDashboardContent({
             />
           )}
 
+        {isServiceProvider &&
+          isBusinessAccount &&
+          activeTab === "stores" && (
+            <StoresSection businessAccount={businessAccount} />
+          )}
+
         {/* Personal Account Tabs */}
         {isPersonalAccount && activeTab === "overview" && (
           <BusinessOverview businessAccount={businessAccount} />
@@ -405,6 +425,10 @@ function BuyerDashboardContent({
               );
             }}
           />
+        )}
+
+        {isPersonalAccount && activeTab === "stores" && (
+          <StoresSection businessAccount={businessAccount} />
         )}
 
         {/* Regular Buyer Tabs */}
