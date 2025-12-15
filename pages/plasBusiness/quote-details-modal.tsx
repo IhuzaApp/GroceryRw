@@ -62,55 +62,56 @@ export default function QuoteDetailsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="flex h-full max-h-screen w-full flex-col overflow-hidden rounded-t-3xl border-l border-r border-t border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900 sm:h-auto sm:max-h-[90vh] sm:w-full sm:max-w-6xl sm:rounded-3xl sm:border">
         {/* Header */}
-        <div className="relative flex-shrink-0 bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 p-8 text-white">
+        <div className="relative flex-shrink-0 bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 p-4 text-white sm:p-6 md:p-8">
           <div className="absolute inset-0 bg-black/10"></div>
-          <div className="relative z-10 flex items-center justify-between">
-            <div>
-              <h2 className="mb-2 text-3xl font-bold">{quote.title}</h2>
-              <p className="text-lg text-green-100">
-                RFQ from: {quote.rfqRequester?.name || "Unknown Business"}
+          <div className="relative z-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex-1 min-w-0">
+              <h2 className="mb-1 text-xl font-bold truncate sm:mb-2 sm:text-2xl md:text-3xl">{quote.title}</h2>
+              <p className="text-sm text-green-100 sm:text-base md:text-lg">
+                RFQ from: <span className="truncate inline-block max-w-full">{quote.rfqRequester?.name || "Unknown Business"}</span>
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <button
                 onClick={handleMessage}
-                className="rounded-xl border border-white/30 bg-white/20 px-4 py-2 font-medium text-white backdrop-blur-sm transition-all duration-300 hover:bg-white/30"
+                className="rounded-lg border border-white/30 bg-white/20 px-2.5 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-all duration-300 hover:bg-white/30 sm:rounded-xl sm:px-4 sm:py-2 sm:text-sm"
               >
-                <MessageSquare className="mr-2 inline h-4 w-4" />
-                Message Supplier
+                <MessageSquare className="mr-1.5 inline h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Message Supplier</span>
+                <span className="sm:hidden">Message</span>
               </button>
               <button
                 onClick={onClose}
-                className="rounded-xl border border-white/30 bg-white/20 p-2 text-white backdrop-blur-sm transition-all duration-300 hover:bg-white/30"
+                className="rounded-lg border border-white/30 bg-white/20 p-1.5 text-white backdrop-blur-sm transition-all duration-300 hover:bg-white/30 sm:rounded-xl sm:p-2"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
             </div>
           </div>
-          {/* Decorative elements */}
-          <div className="absolute right-0 top-0 h-32 w-32 -translate-y-16 translate-x-16 rounded-full bg-white/5"></div>
-          <div className="absolute bottom-0 left-0 h-24 w-24 -translate-x-12 translate-y-12 rounded-full bg-white/5"></div>
+          {/* Decorative elements - Hidden on mobile */}
+          <div className="absolute right-0 top-0 hidden h-32 w-32 -translate-y-16 translate-x-16 rounded-full bg-white/5 sm:block"></div>
+          <div className="absolute bottom-0 left-0 hidden h-24 w-24 -translate-x-12 translate-y-12 rounded-full bg-white/5 sm:block"></div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-8">
-          <div className="space-y-8">
-            <div className="rounded-2xl border border-gray-100 bg-white p-2 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-              <div className="flex space-x-2">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
+          <div className="space-y-4 sm:space-y-6 md:space-y-8">
+            <div className="rounded-xl border border-gray-100 bg-white p-1.5 shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl sm:p-2">
+              <div className="flex space-x-1 overflow-x-auto pb-1 sm:space-x-2">
                 {[
-                  { id: "overview", label: "Overview", icon: FileText },
-                  { id: "rfq", label: "RFQ Details", icon: FileText },
-                  { id: "requester", label: "RFQ Requester", icon: Building },
-                  { id: "quote", label: "My Quote", icon: DollarSign },
-                  { id: "terms", label: "Terms & Conditions", icon: FileText },
+                  { id: "overview", label: "Overview", icon: FileText, shortLabel: "Overview" },
+                  { id: "rfq", label: "RFQ Details", icon: FileText, shortLabel: "RFQ" },
+                  { id: "requester", label: "RFQ Requester", icon: Building, shortLabel: "Requester" },
+                  { id: "quote", label: "My Quote", icon: DollarSign, shortLabel: "Quote" },
+                  { id: "terms", label: "Terms & Conditions", icon: FileText, shortLabel: "Terms" },
                 ].map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-medium transition-all duration-300 ${
+                    className={`flex flex-shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-all duration-300 sm:gap-2 sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm ${
                       activeTab === tab.id
                         ? "scale-105 transform bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
                         : "text-gray-500 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
@@ -120,17 +121,26 @@ export default function QuoteDetailsModal({
                     }
                   >
                     <tab.icon
-                      className="h-4 w-4"
+                      className="h-3.5 w-3.5 sm:h-4 sm:w-4"
                       style={
                         activeTab === tab.id ? { color: "#ffffff" } : undefined
                       }
                     />
                     <span
+                      className="hidden sm:inline"
                       style={
                         activeTab === tab.id ? { color: "#ffffff" } : undefined
                       }
                     >
                       {tab.label}
+                    </span>
+                    <span
+                      className="sm:hidden"
+                      style={
+                        activeTab === tab.id ? { color: "#ffffff" } : undefined
+                      }
+                    >
+                      {tab.shortLabel}
                     </span>
                   </button>
                 ))}
@@ -138,11 +148,11 @@ export default function QuoteDetailsModal({
             </div>
 
             {activeTab === "overview" && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <div className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
                   {/* Quote Summary */}
-                  <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                    <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-white">
+                  <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl sm:p-6 md:p-8">
+                    <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white sm:mb-6 sm:text-xl">
                       Quote Summary
                     </h3>
                     <div className="space-y-4">
@@ -209,8 +219,8 @@ export default function QuoteDetailsModal({
                   </div>
 
                   {/* RFQ Requester Quick Info */}
-                  <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                    <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-white">
+                  <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl sm:p-6 md:p-8">
+                    <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white sm:mb-6 sm:text-xl">
                       RFQ Requester
                     </h3>
                     <div className="space-y-4">
@@ -247,8 +257,8 @@ export default function QuoteDetailsModal({
 
                 {/* Quote Message */}
                 {quote.quoteMessage && (
-                  <div className="rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
-                    <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+                  <div className="rounded-lg bg-white p-4 shadow-md dark:bg-gray-800 sm:p-6">
+                    <h3 className="mb-3 text-base font-semibold text-gray-900 dark:text-white sm:mb-4 sm:text-lg">
                       Quote Message
                     </h3>
                     <p className="whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-400">
@@ -259,8 +269,8 @@ export default function QuoteDetailsModal({
 
                 {/* Attachments */}
                 {quote.attachments && quote.attachments.length > 0 && (
-                  <div className="rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
-                    <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+                  <div className="rounded-lg bg-white p-4 shadow-md dark:bg-gray-800 sm:p-6">
+                    <h3 className="mb-3 text-base font-semibold text-gray-900 dark:text-white sm:mb-4 sm:text-lg">
                       Attachments ({quote.attachments.length})
                     </h3>
                     <div className="space-y-2">
@@ -323,9 +333,9 @@ export default function QuoteDetailsModal({
             )}
 
             {activeTab === "rfq" && (
-              <div className="space-y-6">
-                <div className="rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
-                  <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-white">
+              <div className="space-y-4 sm:space-y-6">
+                <div className="rounded-lg bg-white p-4 shadow-md dark:bg-gray-800 sm:p-6">
+                  <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white sm:mb-6 sm:text-xl">
                     RFQ Details
                   </h3>
                   <div className="space-y-6">
@@ -469,9 +479,9 @@ export default function QuoteDetailsModal({
             )}
 
             {activeTab === "requester" && (
-              <div className="space-y-6">
-                <div className="rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
-                  <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-white">
+              <div className="space-y-4 sm:space-y-6">
+                <div className="rounded-lg bg-white p-4 shadow-md dark:bg-gray-800 sm:p-6">
+                  <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white sm:mb-6 sm:text-xl">
                     RFQ Requester Company Information
                   </h3>
                   <div className="space-y-6">
@@ -562,9 +572,9 @@ export default function QuoteDetailsModal({
             )}
 
             {activeTab === "quote" && (
-              <div className="space-y-6">
-                <div className="rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
-                  <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-white">
+              <div className="space-y-4 sm:space-y-6">
+                <div className="rounded-lg bg-white p-4 shadow-md dark:bg-gray-800 sm:p-6">
+                  <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white sm:mb-6 sm:text-xl">
                     My Quote Details
                   </h3>
                   <div className="space-y-6">
@@ -736,9 +746,9 @@ export default function QuoteDetailsModal({
             )}
 
             {activeTab === "terms" && (
-              <div className="space-y-6">
-                <div className="rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
-                  <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-white">
+              <div className="space-y-4 sm:space-y-6">
+                <div className="rounded-lg bg-white p-4 shadow-md dark:bg-gray-800 sm:p-6">
+                  <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white sm:mb-6 sm:text-xl">
                     Terms & Conditions
                   </h3>
                   <div className="space-y-6">
@@ -788,16 +798,16 @@ export default function QuoteDetailsModal({
         </div>
 
         {/* Footer */}
-        <div className="flex flex-shrink-0 items-center justify-between border-t border-gray-200 bg-gradient-to-r from-gray-50 to-white p-8 dark:border-gray-700 dark:from-gray-800 dark:to-gray-700">
-          <div className="flex items-center gap-4">
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="flex flex-shrink-0 flex-col gap-3 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-white p-4 dark:border-gray-700 dark:from-gray-800 dark:to-gray-700 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-6 md:p-8">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+            <div className="text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
               Submitted on{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
                 {quote.submittedDate}
               </span>
             </div>
-            <div className="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+            <div className="hidden h-6 w-px bg-gray-300 dark:bg-gray-600 sm:block"></div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
               Quote ID:{" "}
               <span className="font-mono text-gray-900 dark:text-white">
                 {quote.id}
@@ -806,7 +816,7 @@ export default function QuoteDetailsModal({
           </div>
           <button
             onClick={onClose}
-            className="rounded-xl bg-gray-200 px-6 py-3 font-medium text-gray-700 transition-all duration-300 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+            className="w-full rounded-lg bg-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 transition-all duration-300 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 sm:w-auto sm:rounded-xl sm:px-6 sm:py-3"
           >
             Close
           </button>

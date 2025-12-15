@@ -219,31 +219,31 @@ export function QuotesSection({
   }
 
   return (
-    <div className={`space-y-8 ${className}`}>
-      <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
-        <div className="flex items-center justify-between border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white p-8 dark:border-gray-700 dark:from-gray-700 dark:to-gray-800">
+    <div className={`space-y-4 sm:space-y-8 ${className}`}>
+      <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl">
+        <div className="flex items-center justify-between border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white p-4 dark:border-gray-700 dark:from-gray-700 dark:to-gray-800 sm:p-6 md:p-8">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
               Submitted Quotes
             </h2>
-            <p className="mt-1 text-gray-600 dark:text-gray-400">
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 sm:text-base">
               Quotes you've submitted as a supplier
             </p>
           </div>
         </div>
-        <div className="p-8">
+        <div className="p-4 sm:p-6 md:p-8">
           {quotes.length === 0 ? (
-            <div className="rounded-xl border border-gray-100 bg-white p-12 text-center shadow-sm dark:border-gray-700 dark:bg-gray-800">
-              <Truck className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-              <p className="mb-2 text-lg text-gray-500 dark:text-gray-400">
+            <div className="rounded-xl border border-gray-100 bg-white p-8 text-center shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:p-12">
+              <Truck className="mx-auto mb-4 h-10 w-10 text-gray-400 sm:h-12 sm:w-12" />
+              <p className="mb-2 text-base text-gray-500 dark:text-gray-400 sm:text-lg">
                 No submitted quotes found
               </p>
-              <p className="text-sm text-gray-400 dark:text-gray-500">
+              <p className="text-xs text-gray-400 dark:text-gray-500 sm:text-sm">
                 Submit quotes to RFQ opportunities to see them here
               </p>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-3 sm:space-y-4 md:space-y-6">
               {quotes.map((quote) => {
                 const statusBadge = getStatusBadge(quote.status);
                 const StatusIcon = statusBadge.icon;
@@ -256,81 +256,95 @@ export function QuotesSection({
                 return (
                   <div
                     key={quote.id}
-                    className="group rounded-2xl border-2 border-gray-100 bg-gradient-to-r from-white to-gray-50 p-6 transition-all duration-300 hover:border-green-200 hover:shadow-lg dark:border-gray-700 dark:from-gray-800 dark:to-gray-700 dark:hover:border-green-800"
+                    className="group rounded-xl border-2 border-gray-100 bg-gradient-to-r from-white to-gray-50 p-4 transition-all duration-300 hover:border-green-200 hover:shadow-lg dark:border-gray-700 dark:from-gray-800 dark:to-gray-700 dark:hover:border-green-800 sm:rounded-2xl sm:p-6"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 space-y-4">
-                        <div className="flex items-center gap-3">
-                          <h3 className="text-lg font-bold text-gray-900 transition-colors group-hover:text-green-600 dark:text-white">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex-1 space-y-3 sm:space-y-4">
+                        {/* Title and Badges - Stack on mobile */}
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                          <h3 className="text-base font-bold text-gray-900 transition-colors group-hover:text-green-600 dark:text-white sm:text-lg">
                             {quote.bussines_RFQ?.title || "RFQ Quote"}
                           </h3>
-                          <span
-                            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${statusBadge.className}`}
-                          >
-                            <StatusIcon className="h-3.5 w-3.5" />
-                            {statusBadge.text}
-                          </span>
-                          {attachments.length > 0 && (
-                            <span className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-100 to-cyan-100 px-3 py-1 text-xs font-bold text-blue-800 dark:from-blue-900 dark:to-cyan-900 dark:text-blue-200">
-                              {attachments.length} attachment
-                              {attachments.length > 1 ? "s" : ""}
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span
+                              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium sm:px-3 sm:text-xs ${statusBadge.className}`}
+                            >
+                              <StatusIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                              {statusBadge.text}
                             </span>
-                          )}
+                            {attachments.length > 0 && (
+                              <span className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-100 to-cyan-100 px-2.5 py-1 text-[10px] font-bold text-blue-800 dark:from-blue-900 dark:to-cyan-900 dark:text-blue-200 sm:px-3 sm:text-xs">
+                                {attachments.length} attachment
+                                {attachments.length > 1 ? "s" : ""}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <p className="text-gray-600 dark:text-gray-400">
-                          RFQ from:{" "}
+                        
+                        {/* RFQ Info - Show on mobile but simplified */}
+                        <p className="text-sm text-gray-600 dark:text-gray-400 sm:text-base">
+                          <span className="hidden sm:inline">RFQ from: </span>
                           <span className="font-semibold text-gray-900 dark:text-white">
                             {quote.bussines_RFQ?.business_account
                               ?.business_name || "Unknown Business"}
                           </span>
                         </p>
+                        
+                        {/* Category - Hidden on mobile */}
                         {quote.bussines_RFQ?.category && (
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                          <p className="hidden text-xs text-gray-500 dark:text-gray-400 sm:block sm:text-sm">
                             Category: {quote.bussines_RFQ.category}
                           </p>
                         )}
-                        <div className="flex items-center gap-6 text-sm">
+                        
+                        {/* Details - Hidden on mobile, shown on desktop */}
+                        <div className="hidden flex-col gap-2 text-xs sm:flex sm:flex-row sm:items-center sm:gap-4 sm:gap-6 sm:text-sm">
                           <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                            <Truck className="h-4 w-4 text-green-500" />
+                            <Truck className="h-3.5 w-3.5 flex-shrink-0 text-green-500 sm:h-4 sm:w-4" />
                             <span className="font-semibold">
                               {quote.delivery_time || "Not specified"}
                             </span>
                           </span>
                           <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                            <Clock className="h-4 w-4 text-orange-500" />
+                            <Clock className="h-3.5 w-3.5 flex-shrink-0 text-orange-500 sm:h-4 sm:w-4" />
                             <span className="font-semibold">
                               Valid until:{" "}
                               {quote.quote_validity || "Not specified"}
                             </span>
                           </span>
                           {quote.bussines_RFQ?.location && (
-                            <span className="text-gray-600 dark:text-gray-400">
-                              📍 {quote.bussines_RFQ.location}
+                            <span className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                              <span>📍</span>
+                              <span className="truncate">{quote.bussines_RFQ.location}</span>
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                        
+                        {/* Submitted Date - Hidden on mobile */}
+                        <div className="hidden text-[10px] text-gray-500 dark:text-gray-400 sm:block sm:text-xs">
                           Submitted: {formatDate(quote.created_at)}
                         </div>
                       </div>
-                      <div className="ml-6 space-y-4 text-right">
-                        <div>
-                          <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                      
+                      {/* Price and Button - Stack on mobile */}
+                      <div className="flex items-center justify-between border-t border-gray-200 pt-4 dark:border-gray-700 sm:ml-6 sm:flex-col sm:items-end sm:justify-start sm:space-y-4 sm:border-0 sm:pt-0">
+                        <div className="text-left sm:text-right">
+                          <p className="text-xl font-bold text-gray-900 dark:text-white sm:text-3xl">
                             {formatCurrency(quote.qouteAmount, quote.currency)}
                           </p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {/* Quote Amount label - Hidden on mobile */}
+                          <p className="hidden text-xs text-gray-500 dark:text-gray-400 sm:block sm:text-sm">
                             Quote Amount
                           </p>
                         </div>
-                        <div className="flex gap-3">
-                          <button
-                            onClick={() => handleViewDetails(quote)}
-                            className="flex items-center gap-2 rounded-xl border-2 border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-all duration-300 hover:border-green-500 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                          >
-                            <Eye className="h-4 w-4" />
-                            View Details
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => handleViewDetails(quote)}
+                          className="flex items-center gap-2 rounded-lg border-2 border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 transition-all duration-300 hover:border-green-500 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 sm:rounded-xl sm:px-4 sm:text-sm"
+                        >
+                          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          <span className="hidden sm:inline">View Details</span>
+                          <span className="sm:hidden">View</span>
+                        </button>
                       </div>
                     </div>
                   </div>
