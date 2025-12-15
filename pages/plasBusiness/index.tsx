@@ -405,11 +405,9 @@ function BuyerDashboardContent({
             />
           )}
 
-        {isServiceProvider &&
-          isBusinessAccount &&
-          activeTab === "stores" && (
-            <StoresSection businessAccount={businessAccount} />
-          )}
+        {isServiceProvider && isBusinessAccount && activeTab === "stores" && (
+          <StoresSection businessAccount={businessAccount} />
+        )}
 
         {/* Personal Account Tabs */}
         {isPersonalAccount && activeTab === "overview" && (

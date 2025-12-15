@@ -5,10 +5,7 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
 const UPDATE_BUSINESS_PRODUCT_ORDER_STATUS = gql`
-  mutation UpdateBusinessProductOrderStatus(
-    $id: uuid!
-    $status: String!
-  ) {
+  mutation UpdateBusinessProductOrderStatus($id: uuid!, $status: String!) {
     update_businessProductOrders_by_pk(
       pk_columns: { id: $id }
       _set: { status: $status }
@@ -89,4 +86,3 @@ export default async function handler(
     });
   }
 }
-

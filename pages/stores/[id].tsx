@@ -93,7 +93,8 @@ export default function StoreByIdPage({
             Service Temporarily Unavailable
           </h1>
           <p className="mb-4 text-gray-600">
-            {message || "The database service is temporarily unavailable. Please try again later."}
+            {message ||
+              "The database service is temporarily unavailable. Please try again later."}
           </p>
           <button
             onClick={() => window.location.reload()}
@@ -110,8 +111,12 @@ export default function StoreByIdPage({
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="text-center">
-          <h1 className="mb-2 text-2xl font-bold text-gray-900">Store Not Found</h1>
-          <p className="text-gray-600">The store you're looking for doesn't exist.</p>
+          <h1 className="mb-2 text-2xl font-bold text-gray-900">
+            Store Not Found
+          </h1>
+          <p className="text-gray-600">
+            The store you're looking for doesn't exist.
+          </p>
         </div>
       </div>
     );
@@ -251,24 +256,26 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     };
   } catch (error: any) {
     console.error("Error fetching store data:", error);
-    
+
     // Check if it's a 502 Bad Gateway error (Hasura server down)
-    const is502Error = error?.response?.status === 502 || 
-                      error?.message?.includes("502") ||
-                      error?.response?.statusCode === 502;
-    
+    const is502Error =
+      error?.response?.status === 502 ||
+      error?.message?.includes("502") ||
+      error?.response?.statusCode === 502;
+
     if (is502Error) {
       // Return a more helpful error page instead of 404
       return {
         props: {
           error: "service_unavailable",
-          message: "The database service is temporarily unavailable. Please try again later.",
+          message:
+            "The database service is temporarily unavailable. Please try again later.",
           store: null,
           products: [],
         },
       };
     }
-    
+
     // For other errors, return 404
     return {
       notFound: true,

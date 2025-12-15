@@ -15,7 +15,8 @@ export default function SideBar() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
   const [pendingOrders, setPendingOrders] = useState([]);
-  const [marketplaceNotificationCount, setMarketplaceNotificationCount] = useState(0);
+  const [marketplaceNotificationCount, setMarketplaceNotificationCount] =
+    useState(0);
 
   // Listen for unread messages
   useEffect(() => {
@@ -141,7 +142,9 @@ export default function SideBar() {
             </svg>
             {marketplaceNotificationCount > 0 && (
               <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-lg">
-                {marketplaceNotificationCount > 9 ? "9+" : marketplaceNotificationCount}
+                {marketplaceNotificationCount > 9
+                  ? "9+"
+                  : marketplaceNotificationCount}
               </span>
             )}
           </Link>

@@ -227,17 +227,23 @@ export function useUserDashboardLogic(initialData: Data) {
         return storesAsShops;
       } else if (selectedCategory === "markets-category") {
         // Find category IDs for Super Market and Public Markets
-        const superMarketCategory = data.categories?.find(cat => cat.name === "Super Market");
-        const publicMarketsCategory = data.categories?.find(cat => cat.name === "Public Markets");
+        const superMarketCategory = data.categories?.find(
+          (cat) => cat.name === "Super Market"
+        );
+        const publicMarketsCategory = data.categories?.find(
+          (cat) => cat.name === "Public Markets"
+        );
         const marketCategoryIds = [
           superMarketCategory?.id,
-          publicMarketsCategory?.id
+          publicMarketsCategory?.id,
         ].filter(Boolean) as string[];
-        
+
         // Filter shops that belong to either Super Market or Public Markets
-        shops = shops.filter((shop) => marketCategoryIds.includes(shop.category_id));
-        const categoryStores = storesAsShops.filter(
-          (store) => marketCategoryIds.includes(store.category_id)
+        shops = shops.filter((shop) =>
+          marketCategoryIds.includes(shop.category_id)
+        );
+        const categoryStores = storesAsShops.filter((store) =>
+          marketCategoryIds.includes(store.category_id)
         );
         return [...shops, ...categoryStores];
       } else {
@@ -357,17 +363,23 @@ export function useUserDashboardLogic(initialData: Data) {
         return storesAsShops;
       } else if (selectedCategory === "markets-category") {
         // Find category IDs for Super Market and Public Markets
-        const superMarketCategory = data.categories?.find(cat => cat.name === "Super Market");
-        const publicMarketsCategory = data.categories?.find(cat => cat.name === "Public Markets");
+        const superMarketCategory = data.categories?.find(
+          (cat) => cat.name === "Super Market"
+        );
+        const publicMarketsCategory = data.categories?.find(
+          (cat) => cat.name === "Public Markets"
+        );
         const marketCategoryIds = [
           superMarketCategory?.id,
-          publicMarketsCategory?.id
+          publicMarketsCategory?.id,
         ].filter(Boolean) as string[];
-        
+
         // Filter shops that belong to either Super Market or Public Markets
-        shops = shops.filter((shop) => marketCategoryIds.includes(shop.category_id));
-        const categoryStores = storesAsShops.filter(
-          (store) => marketCategoryIds.includes(store.category_id)
+        shops = shops.filter((shop) =>
+          marketCategoryIds.includes(shop.category_id)
+        );
+        const categoryStores = storesAsShops.filter((store) =>
+          marketCategoryIds.includes(store.category_id)
         );
         return [...shops, ...categoryStores];
       } else {
