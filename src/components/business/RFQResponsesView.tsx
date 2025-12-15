@@ -23,6 +23,7 @@ import {
   Search,
   SortAsc,
   Loader2,
+  ArrowUpDown,
 } from "lucide-react";
 import { ContractAssignmentModal } from "./ContractAssignmentModal";
 import { formatCurrencySync } from "../../utils/formatCurrency";
@@ -249,6 +250,7 @@ export function RFQResponsesView({
     "all" | "pending" | "accepted" | "rejected"
   >("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [showSortMenu, setShowSortMenu] = useState(false);
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
   const [contractResponse, setContractResponse] = useState<RFQResponse | null>(
     null
@@ -260,6 +262,22 @@ export function RFQResponsesView({
   useEffect(() => {
     fetchRFQData();
   }, [rfqId]);
+
+  // Close sort menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showSortMenu && !target.closest('.sort-menu-container')) {
+        setShowSortMenu(false);
+      }
+    };
+    if (showSortMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSortMenu]);
 
   const fetchRFQData = async () => {
     try {
@@ -492,42 +510,134 @@ export function RFQResponsesView({
     );
   }
 
+  const getSortLabel = () => {
+    switch (sortBy) {
+      case "price":
+        return "Price";
+      case "rating":
+        return "Rating";
+      default:
+        return "Date";
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3 sm:gap-4">
           <button
             onClick={onBack}
-            className="rounded-lg p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 sm:p-2"
+            className="flex-shrink-0 rounded-lg bg-gray-100 p-2 transition-colors hover:bg-gray-200 active:scale-95 dark:bg-gray-800 dark:hover:bg-gray-700 sm:p-2"
           >
-            <ArrowLeft className="h-4 w-4 text-gray-600 dark:text-gray-400 sm:h-5 sm:w-5" />
+            <ArrowLeft className="h-4 w-4 text-gray-700 dark:text-gray-300 sm:h-5 sm:w-5" />
           </button>
           <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white sm:text-xl md:text-2xl">
+            <h2 className="text-base font-bold text-gray-900 dark:text-white sm:text-xl md:text-2xl">
               RFQ Responses
             </h2>
-            <p className="truncate text-xs text-gray-600 dark:text-gray-400 sm:text-sm">
+            <p className="mt-0.5 truncate text-xs text-gray-600 dark:text-gray-400 sm:text-sm">
               {rfqDetails.title}
             </p>
           </div>
         </div>
-        <div className="text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
-          {filteredResponses.length} responses
+        <div className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400 sm:bg-transparent sm:px-0 sm:py-0 sm:text-sm dark:sm:bg-transparent">
+          <span className="sm:hidden">Total:</span>
+          <span className="font-semibold">{filteredResponses.length} {filteredResponses.length === 1 ? "response" : "responses"}</span>
+        </div>
+      </div>
+
+      {/* Filters and Search - Moved to top on mobile */}
+      <div className="order-first rounded-xl border border-gray-100 bg-white p-3 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:order-none sm:p-4">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400 sm:left-3" />
+            <input
+              type="text"
+              placeholder="Search suppliers..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:pl-10 sm:pr-4"
+            />
+          </div>
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value as any)}
+            className="flex-shrink-0 rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-xs font-medium focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:px-3 sm:text-sm"
+          >
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="accepted">Accepted</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <div className="relative flex-shrink-0 sort-menu-container">
+            <button
+              onClick={() => setShowSortMenu(!showSortMenu)}
+              className="flex items-center justify-center rounded-lg border border-gray-200 bg-white p-2 transition-colors hover:bg-gray-50 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600"
+              title={`Sort by ${getSortLabel()}`}
+            >
+              <ArrowUpDown className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+            </button>
+            {showSortMenu && (
+              <div className="absolute right-0 top-full z-10 mt-1 w-40 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800">
+                <button
+                  onClick={() => {
+                    setSortBy("submitted");
+                    setShowSortMenu(false);
+                  }}
+                  className={`w-full px-3 py-2 text-left text-xs transition-colors sm:text-sm ${
+                    sortBy === "submitted"
+                      ? "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white"
+                      : "text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  Sort by Date
+                </button>
+                <button
+                  onClick={() => {
+                    setSortBy("price");
+                    setShowSortMenu(false);
+                  }}
+                  className={`w-full px-3 py-2 text-left text-xs transition-colors sm:text-sm ${
+                    sortBy === "price"
+                      ? "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white"
+                      : "text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  Sort by Price
+                </button>
+                <button
+                  onClick={() => {
+                    setSortBy("rating");
+                    setShowSortMenu(false);
+                  }}
+                  className={`w-full px-3 py-2 text-left text-xs transition-colors sm:text-sm ${
+                    sortBy === "rating"
+                      ? "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white"
+                      : "text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  Sort by Rating
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* RFQ Details Summary */}
-      <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-        <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-          RFQ Details
-        </h3>
-        <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
-          <div>
-            <span className="font-medium text-gray-700 dark:text-gray-300">
+      <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:rounded-xl">
+        <div className="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white px-4 py-3 dark:border-gray-700 dark:from-gray-800 dark:to-gray-700 sm:border-0 sm:bg-transparent sm:px-6 sm:py-0 dark:sm:bg-transparent">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white sm:mb-4 sm:text-lg">
+            RFQ Details
+          </h3>
+        </div>
+        <div className="grid grid-cols-1 gap-3 p-4 text-xs sm:grid-cols-3 sm:gap-4 sm:p-6 sm:text-sm">
+          <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50 sm:bg-transparent sm:p-0 dark:sm:bg-transparent">
+            <span className="block text-[10px] font-semibold text-gray-500 dark:text-gray-400 sm:mb-1 sm:text-xs">
               Budget:
             </span>
-            <p className="text-gray-900 dark:text-white">
+            <p className="text-sm font-bold text-gray-900 dark:text-white sm:text-base">
               {rfqDetails.budget.min > 0 && rfqDetails.budget.max > 0
                 ? `${formatCurrencySync(
                     rfqDetails.budget.min
@@ -539,60 +649,23 @@ export function RFQResponsesView({
                 : "Not specified"}
             </p>
           </div>
-          <div>
-            <span className="font-medium text-gray-700 dark:text-gray-300">
+          <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50 sm:bg-transparent sm:p-0 dark:sm:bg-transparent">
+            <span className="block text-[10px] font-semibold text-gray-500 dark:text-gray-400 sm:mb-1 sm:text-xs">
               Location:
             </span>
-            <p className="text-gray-900 dark:text-white">
+            <p className="text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
               {rfqDetails.location}
             </p>
           </div>
-          <div>
-            <span className="font-medium text-gray-700 dark:text-gray-300">
+          <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50 sm:bg-transparent sm:p-0 dark:sm:bg-transparent">
+            <span className="block text-[10px] font-semibold text-gray-500 dark:text-gray-400 sm:mb-1 sm:text-xs">
               Deadline:
             </span>
-            <p className="text-gray-900 dark:text-white">
+            <p className="text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
               {rfqDetails.deadline
                 ? new Date(rfqDetails.deadline).toLocaleDateString()
                 : "Not specified"}
             </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Filters and Search */}
-      <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-        <div className="flex flex-col gap-4 md:flex-row">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search suppliers..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 py-2 pl-10 pr-4 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-            />
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value as any)}
-              className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:px-3 sm:py-2 sm:text-sm"
-            >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="accepted">Accepted</option>
-              <option value="rejected">Rejected</option>
-            </select>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:px-3 sm:py-2 sm:text-sm"
-            >
-              <option value="submitted">Sort by Date</option>
-              <option value="price">Sort by Price</option>
-              <option value="rating">Sort by Rating</option>
-            </select>
           </div>
         </div>
       </div>
@@ -602,96 +675,102 @@ export function RFQResponsesView({
         {filteredResponses.map((response) => (
           <div
             key={response.id}
-            className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-shadow hover:shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:p-6"
+            className="overflow-hidden rounded-2xl border-2 border-gray-100 bg-white shadow-md transition-all duration-200 hover:border-gray-200 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600 sm:rounded-xl sm:shadow-sm"
           >
-            <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div className="flex items-start gap-3 sm:gap-4">
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700 sm:h-12 sm:w-12">
-                  <User className="h-5 w-5 text-gray-500 sm:h-6 sm:w-6" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="mb-1 flex flex-wrap items-center gap-2">
-                    <h4 className="text-base font-semibold text-gray-900 dark:text-white sm:text-lg">
-                      {response.supplierCompany}
-                    </h4>
-                    <span
-                      className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-medium sm:text-xs ${getStatusColor(
-                        response.status
-                      )}`}
-                    >
-                      {getStatusIcon(response.status)}
-                      {response.status.charAt(0).toUpperCase() +
-                        response.status.slice(1)}
-                    </span>
+            {/* Header Section */}
+            <div className="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white p-4 dark:border-gray-700 dark:from-gray-800 dark:to-gray-700 sm:border-0 sm:bg-transparent sm:p-6">
+              <div className="mb-3 flex items-start gap-3 sm:mb-0 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex items-start gap-3 flex-1 min-w-0 sm:gap-4">
+                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 shadow-sm dark:from-gray-700 dark:to-gray-600 sm:h-12 sm:w-12">
+                    <User className="h-6 w-6 text-gray-600 dark:text-gray-400" />
                   </div>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 sm:text-sm">
-                    by {response.supplierName}
-                  </p>
-                  <div className="mt-2 flex flex-col gap-1.5 text-xs text-gray-500 dark:text-gray-400 sm:flex-row sm:items-center sm:gap-4 sm:text-sm">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-3.5 w-3.5 flex-shrink-0 text-yellow-500 sm:h-4 sm:w-4" />
-                      <span>{response.supplierRating}</span>
-                      <span>({response.supplierReviews} reviews)</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
-                      <span className="truncate">{response.supplierLocation}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
-                      <span>
-                        {new Date(response.submittedAt).toLocaleDateString()}
+                  <div className="flex-1 min-w-0">
+                    <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                      <h4 className="text-base font-bold text-gray-900 dark:text-white sm:text-lg">
+                        {response.supplierCompany}
+                      </h4>
+                      <span
+                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold shadow-sm sm:text-xs ${getStatusColor(
+                          response.status
+                        )}`}
+                      >
+                        {getStatusIcon(response.status)}
+                        {response.status.charAt(0).toUpperCase() +
+                          response.status.slice(1)}
                       </span>
                     </div>
+                    <p className="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+                      by {response.supplierName}
+                    </p>
+                    <div className="flex flex-col gap-1.5 text-xs text-gray-600 dark:text-gray-400 sm:flex-row sm:items-center sm:gap-3">
+                      <div className="flex items-center gap-1">
+                        <Star className="h-3.5 w-3.5 flex-shrink-0 text-yellow-500 sm:h-4 sm:w-4" />
+                        <span className="font-medium">{response.supplierRating}</span>
+                        <span>({response.supplierReviews})</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
+                        <span className="truncate">{response.supplierLocation}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
+                        <span>
+                          {new Date(response.submittedAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50 sm:flex-col sm:items-end sm:justify-start sm:bg-transparent sm:p-0 dark:sm:bg-transparent">
-                <div className="text-left sm:text-right">
-                  <div className="text-lg font-bold text-gray-900 dark:text-white sm:mb-1 sm:text-xl md:text-2xl">
-                    ${response.quoteAmount.toLocaleString()}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
-                    {response.deliveryTime}
-                  </div>
+                <div className="flex-shrink-0 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 p-3 shadow-sm dark:from-green-900/20 dark:to-emerald-900/20 sm:bg-transparent sm:p-0 sm:shadow-none dark:sm:bg-transparent">
+                    <div className="text-left sm:text-right">
+                      <div className="text-xl font-bold text-gray-900 dark:text-white sm:mb-1 sm:text-xl md:text-2xl">
+                        ${response.quoteAmount.toLocaleString()}
+                      </div>
+                      <div className="text-xs font-medium text-gray-600 dark:text-gray-400 sm:text-sm">
+                        {response.deliveryTime}
+                      </div>
+                    </div>
                 </div>
               </div>
             </div>
 
-            <div className="mb-4">
-              <p className="line-clamp-2 text-xs leading-relaxed text-gray-700 dark:text-gray-300 sm:line-clamp-none sm:text-sm">
-                {response.message}
-              </p>
-            </div>
+            {/* Content Section */}
+            <div className="p-4 sm:p-6">
+              <div className="mb-4">
+                <p className="line-clamp-2 text-sm leading-relaxed text-gray-700 dark:text-gray-300 sm:line-clamp-none">
+                  {response.message}
+                </p>
+              </div>
 
-            <div className="flex flex-col gap-3 border-t border-gray-200 pt-4 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between sm:border-0 sm:pt-0">
-              <div className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 sm:gap-2 sm:text-sm">
-                <span>{response.attachments.length} attachments</span>
+              <div className="mb-4 flex flex-wrap items-center gap-1.5 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600 dark:bg-gray-700/50 dark:text-gray-400 sm:gap-2 sm:bg-transparent sm:px-0 sm:py-0 dark:sm:bg-transparent">
+                <span className="font-medium">{response.attachments.length} attachments</span>
                 <span className="hidden sm:inline">•</span>
                 <span>{response.certifications.length} certifications</span>
                 <span className="hidden sm:inline">•</span>
                 <span>{response.experience} experience</span>
               </div>
-              <div className="flex flex-wrap gap-2">
+
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-2 sm:flex-row sm:gap-2">
                 <button
                   onClick={() => setSelectedResponse(response)}
-                  className="flex-1 rounded-lg border border-blue-300 px-2.5 py-1.5 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700 active:scale-95 dark:border-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 sm:flex-none sm:px-3 sm:py-2 sm:text-sm"
+                  className="flex-1 rounded-xl border-2 border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 active:scale-95 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-blue-600 dark:hover:bg-blue-900/20 sm:flex-none sm:px-4 sm:py-2"
                 >
                   <span className="hidden sm:inline">View Details</span>
-                  <span className="sm:hidden">View</span>
+                  <span className="sm:hidden">View Details</span>
                 </button>
                 {response.status === "pending" && (
                   <>
                     <button
                       onClick={() => handleAcceptResponse(response.id)}
-                      className="flex-1 rounded-lg bg-green-500 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-green-600 active:scale-95 sm:flex-none sm:px-3 sm:py-2 sm:text-sm"
+                      className="flex-1 rounded-xl bg-green-500 px-3 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:bg-green-600 hover:shadow-lg active:scale-95 sm:flex-none sm:px-4 sm:py-2"
                       style={{ color: "#ffffff" }}
                     >
                       Accept
                     </button>
                     <button
                       onClick={() => handleRejectResponse(response.id)}
-                      className="flex-1 rounded-lg bg-red-500 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-600 active:scale-95 sm:flex-none sm:px-3 sm:py-2 sm:text-sm"
+                      className="flex-1 rounded-xl bg-red-500 px-3 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:bg-red-600 hover:shadow-lg active:scale-95 sm:flex-none sm:px-4 sm:py-2"
                     >
                       Reject
                     </button>
@@ -699,7 +778,7 @@ export function RFQResponsesView({
                 )}
                 <button
                   onClick={() => onMessageSupplier(response.supplierId)}
-                  className="flex-1 rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800 active:scale-95 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200 sm:flex-none sm:px-3 sm:py-2 sm:text-sm"
+                  className="flex-1 rounded-xl border-2 border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 active:scale-95 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:flex-none sm:px-4 sm:py-2"
                 >
                   Message
                 </button>
