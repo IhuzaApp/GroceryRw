@@ -16,6 +16,26 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 
+// Helper function to format currency with abbreviations
+const formatCurrencyAbbreviated = (amount: number, threshold: number = 10000) => {
+  // If below threshold, use normal formatting
+  if (amount < threshold) {
+    return formatCurrencySync(amount);
+  }
+  
+  // Format with abbreviations
+  if (amount >= 1000000) {
+    const millions = amount / 1000000;
+    return `RF ${millions.toFixed(millions >= 10 ? 0 : 1)}M`;
+  } else if (amount >= 1000) {
+    const thousands = amount / 1000;
+    // Show 1 decimal if less than 100k, otherwise no decimal
+    return `RF ${thousands.toFixed(thousands >= 100 ? 0 : 1)}k`;
+  }
+  
+  return formatCurrencySync(amount);
+};
+
 interface BusinessOverviewProps {
   businessAccount?: any;
 }
@@ -335,15 +355,15 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       setStats([
         {
           title: "Total Revenue",
-          value: formatCurrencySync(totalRevenue),
+          value: totalRevenue, // Store as number for responsive formatting
           change: revenueChange,
           icon: DollarSign,
           color: "text-green-600",
           bgColor: "from-green-100 to-green-200",
           detailed: [
-            { label: "This Month", value: formatCurrencySync(thisMonthRevenue) },
-            { label: "Last Month", value: formatCurrencySync(lastMonthRevenue) },
-            { label: "This Year", value: formatCurrencySync(thisYearRevenue) },
+            { label: "This Month", value: typeof thisMonthRevenue === "number" ? formatCurrencyAbbreviated(thisMonthRevenue, 10000) : formatCurrencySync(thisMonthRevenue) },
+            { label: "Last Month", value: typeof lastMonthRevenue === "number" ? formatCurrencyAbbreviated(lastMonthRevenue, 10000) : formatCurrencySync(lastMonthRevenue) },
+            { label: "This Year", value: typeof thisYearRevenue === "number" ? formatCurrencyAbbreviated(thisYearRevenue, 10000) : formatCurrencySync(thisYearRevenue) },
           ],
         },
         {
@@ -373,7 +393,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
           ],
         },
         {
-          title: "Total Orders Completed",
+          title: "Total Orders",
           value: completedOrdersCount.toString(),
           change: deliveredOrdersChange,
           icon: ShoppingCart,
@@ -523,7 +543,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
   const [stats, setStats] = useState([
     {
       title: "Total Revenue",
-      value: "0",
+      value: 0, // Store as number for responsive formatting
       change: "0%",
       icon: DollarSign,
       color: "text-green-600",
@@ -561,7 +581,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       ],
     },
     {
-      title: "Total Orders Completed",
+      title: "Total Orders",
       value: "0",
       change: "0",
       icon: ShoppingCart,
@@ -600,8 +620,8 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
         </button>
       </div>
 
-      {/* Stats Cards - Hidden on mobile */}
-      <div className="hidden grid-cols-1 gap-4 sm:gap-6 md:grid md:grid-cols-2 lg:grid-cols-4">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, index) => (
           <div
             key={index}
@@ -613,7 +633,24 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
                   {stat.title}
                 </p>
                 <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
-                  {loadingStats ? "..." : stat.value}
+                  {loadingStats ? (
+                    "..."
+                  ) : stat.title === "Total Revenue" ? (
+                    <>
+                      <span className="md:hidden">
+                        {typeof stat.value === "number"
+                          ? formatCurrencyAbbreviated(stat.value, 10000)
+                          : stat.value}
+                      </span>
+                      <span className="hidden md:inline">
+                        {typeof stat.value === "number"
+                          ? formatCurrencyAbbreviated(stat.value, 100000)
+                          : stat.value}
+                      </span>
+                    </>
+                  ) : (
+                    stat.value
+                  )}
                 </p>
                 <p
                   className={`mt-1 text-xs font-medium sm:text-sm ${stat.color}`}
