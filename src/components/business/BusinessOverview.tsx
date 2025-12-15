@@ -465,29 +465,29 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
         const ordersData = await ordersRes.json();
         const allOrders = ordersData.orders || [];
         
-        // Filter completed/delivered orders and exclude transportation/service fees
-        const completedOrders = allOrders.filter(
-          (order: any) =>
-            order.status?.toLowerCase() === "delivered" ||
-            order.status?.toLowerCase() === "completed" ||
-            (order.delivered_time && new Date(order.delivered_time) <= new Date())
-        );
+        // Filter only "delivered" orders (excluding fees)
+        const deliveredOrders = allOrders.filter((order: any) => {
+          const status = (order.status || "").toLowerCase().trim();
+          return status === "delivered";
+        });
         
         // Group by month and calculate revenue (excluding transportation and service fees)
         const monthlyData: { [key: string]: number } = {};
         
-        completedOrders.forEach((order: any) => {
+        deliveredOrders.forEach((order: any) => {
           const date = new Date(order.created_at);
           const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-          const monthName = date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
           
-          // Revenue is the order total minus transportation and service fees
-          const revenue = (order.value || 0) - (order.transportation_fee || 0) - (order.service_fee || 0);
+          // Calculate net revenue: total minus transportation and service fees
+          const total = parseFloat(order.value || 0);
+          const serviceFee = parseFloat(order.service_fee || 0);
+          const transportationFee = parseFloat(order.transportation_fee || 0);
+          const netRevenue = total - serviceFee - transportationFee;
           
           if (!monthlyData[monthKey]) {
             monthlyData[monthKey] = 0;
           }
-          monthlyData[monthKey] += revenue;
+          monthlyData[monthKey] += netRevenue;
         });
         
         // Convert to array format for chart
