@@ -63,6 +63,24 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       console.log("BusinessOverview: Orders response:", ordersRes?.ok, ordersRes?.status);
       console.log("BusinessOverview: RFQs response:", rfqsRes?.ok, rfqsRes?.status);
 
+      // Process Total Revenue and Active Orders
+      // IMPORTANT: Parse JSON once and reuse the data (can't read response body twice)
+      let ordersData: any = null;
+      let allOrders: any[] = [];
+      
+      if (ordersRes?.ok) {
+        try {
+          ordersData = await ordersRes.json();
+          console.log("BusinessOverview: Orders data:", ordersData);
+          allOrders = ordersData.orders || [];
+          console.log("BusinessOverview: Total orders:", allOrders.length);
+        } catch (err) {
+          console.error("BusinessOverview: Error parsing orders JSON:", err);
+        }
+      } else {
+        console.warn("BusinessOverview: Orders API response not OK:", ordersRes?.status);
+      }
+
       // Process Total Revenue
       let totalRevenue = 0;
       let thisMonthRevenue = 0;
@@ -70,12 +88,8 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       let thisYearRevenue = 0;
       let revenueChange = "0";
 
-      if (ordersRes?.ok) {
+      if (allOrders.length > 0) {
         try {
-          const ordersData = await ordersRes.json();
-          console.log("BusinessOverview: Orders data:", ordersData);
-          const allOrders = ordersData.orders || [];
-          console.log("BusinessOverview: Total orders:", allOrders.length);
 
         // Calculate revenue from completed/delivered orders
         // Check for various status values and also include orders that have been delivered
@@ -164,17 +178,18 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
         console.warn("BusinessOverview: Orders API response not OK:", ordersRes?.status);
       }
 
-      // Process Active Orders
+      // Process Active Orders (using the same allOrders array from above)
       let activeOrders = 0;
       let pendingOrders = 0;
       let inProgressOrders = 0;
       let completedOrdersCount = 0;
       let ordersChange = "0";
+      let thisMonthDelivered = 0;
+      let prevMonthDelivered = 0;
+      let deliveredOrdersChange = "0";
 
-      if (ordersRes?.ok) {
+      if (allOrders.length > 0) {
         try {
-          const ordersData = await ordersRes.json();
-          const allOrders = ordersData.orders || [];
           console.log("BusinessOverview: Processing active orders from", allOrders.length, "total orders");
 
         // Get all order statuses for debugging
@@ -201,45 +216,75 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
           );
         }).length;
 
+        // Count only "delivered" orders (not "completed")
         completedOrdersCount = allOrders.filter((order: any) => {
-          const status = (order.status || "").toLowerCase();
-          return (
-            status === "delivered" ||
-            status === "completed" ||
-            (order.delivered_time && new Date(order.delivered_time) <= now)
-          );
+          const status = (order.status || "").toLowerCase().trim();
+          return status === "delivered";
         }).length;
-
-        console.log("BusinessOverview: Active orders breakdown - Pending:", pendingOrders, "In Progress:", inProgressOrders, "Completed:", completedOrdersCount);
-
-        activeOrders = pendingOrders + inProgressOrders;
-
-        // Calculate change from last month
-        const thisMonthActive = allOrders.filter((order: any) => {
+        
+        // Calculate month-over-month change for delivered orders
+        thisMonthDelivered = allOrders.filter((order: any) => {
           const created = new Date(order.created_at);
           const status = (order.status || "").toLowerCase().trim();
-          const isDelivered = status === "delivered" || status === "completed";
-          const hasDeliveredTime = order.delivered_time && new Date(order.delivered_time) <= now;
-          
           return (
             created >= lastMonth &&
             created <= now &&
-            !isDelivered &&
-            !hasDeliveredTime
+            status === "delivered"
+          );
+        }).length;
+
+        prevMonthDelivered = allOrders.filter((order: any) => {
+          const created = new Date(order.created_at);
+          const status = (order.status || "").toLowerCase().trim();
+          return (
+            created >= twoMonthsAgo &&
+            created < lastMonth &&
+            status === "delivered"
+          );
+        }).length;
+        
+        if (prevMonthDelivered > 0) {
+          const diff = thisMonthDelivered - prevMonthDelivered;
+          deliveredOrdersChange = diff >= 0 ? `+${diff}` : `${diff}`;
+        } else if (thisMonthDelivered > 0) {
+          deliveredOrdersChange = `+${thisMonthDelivered}`;
+        } else {
+          deliveredOrdersChange = "0";
+        }
+        
+        console.log("BusinessOverview: Delivered orders - This month:", thisMonthDelivered, "Prev month:", prevMonthDelivered, "Change:", deliveredOrdersChange);
+
+        console.log("BusinessOverview: Active orders breakdown - Pending:", pendingOrders, "In Progress:", inProgressOrders, "Completed:", completedOrdersCount);
+
+        // Active Orders = All orders that are NOT delivered (includes pending, in progress, ready for pickup, etc.)
+        activeOrders = allOrders.filter((order: any) => {
+          const status = (order.status || "").toLowerCase().trim();
+          // Exclude only "delivered" orders
+          return status !== "delivered";
+        }).length;
+
+        console.log("BusinessOverview: Total active orders (non-delivered):", activeOrders);
+
+        // Calculate change from last month (all non-delivered orders)
+        const thisMonthActive = allOrders.filter((order: any) => {
+          const created = new Date(order.created_at);
+          const status = (order.status || "").toLowerCase().trim();
+          // Count all orders that are not delivered
+          return (
+            created >= lastMonth &&
+            created <= now &&
+            status !== "delivered"
           );
         }).length;
 
         const prevMonthActive = allOrders.filter((order: any) => {
           const created = new Date(order.created_at);
           const status = (order.status || "").toLowerCase().trim();
-          const isDelivered = status === "delivered" || status === "completed";
-          const hasDeliveredTime = order.delivered_time && new Date(order.delivered_time) <= now;
-          
+          // Count all orders that are not delivered
           return (
             created >= twoMonthsAgo &&
             created < lastMonth &&
-            !isDelivered &&
-            !hasDeliveredTime
+            status !== "delivered"
           );
         }).length;
         
@@ -391,16 +436,16 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
           ],
         },
         {
-          title: "Average Rating",
-          value: averageRating,
-          change: ratingChange,
-          icon: Star,
+          title: "Total Orders Completed",
+          value: completedOrdersCount.toString(),
+          change: deliveredOrdersChange,
+          icon: ShoppingCart,
           color: "text-yellow-600",
           bgColor: "from-yellow-100 to-yellow-200",
           detailed: [
-            { label: "5 Stars", value: "N/A" },
-            { label: "4 Stars", value: "N/A" },
-            { label: "3 Stars", value: "N/A" },
+            { label: "This Month", value: thisMonthDelivered.toString() },
+            { label: "Last Month", value: prevMonthDelivered.toString() },
+            { label: "Total Delivered", value: completedOrdersCount.toString() },
           ],
         },
       ]);
@@ -579,16 +624,16 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       ],
     },
     {
-      title: "Average Rating",
-      value: "N/A",
-      change: "N/A",
-      icon: Star,
+      title: "Total Orders Completed",
+      value: "0",
+      change: "0",
+      icon: ShoppingCart,
       color: "text-yellow-600",
       bgColor: "from-yellow-100 to-yellow-200",
       detailed: [
-        { label: "5 Stars", value: "0%" },
-        { label: "4 Stars", value: "0%" },
-        { label: "3 Stars", value: "0%" },
+        { label: "This Month", value: "0" },
+        { label: "Last Month", value: "0" },
+        { label: "Total Delivered", value: "0" },
       ],
     },
   ]);
