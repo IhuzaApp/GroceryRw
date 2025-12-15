@@ -107,7 +107,7 @@ export default function SideBar() {
         <div className="flex flex-col items-center gap-6 p-4">
           {/* Home */}
           <Link
-            className="relative rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
+            className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
             href={"/"}
             passHref
           >
@@ -140,13 +140,6 @@ export default function SideBar() {
                 ></path>
               </g>
             </svg>
-            {marketplaceNotificationCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-lg">
-                {marketplaceNotificationCount > 9
-                  ? "9+"
-                  : marketplaceNotificationCount}
-              </span>
-            )}
           </Link>
 
           {/* Profile - Only show if user is signed in */}
@@ -334,7 +327,7 @@ export default function SideBar() {
           {/* Business - Only show for users (not shoppers) */}
           {session?.user && (
             <Link
-              className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
+              className="relative rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
               href={"/plasBusiness"}
               passHref
               title="Business Marketplace"
@@ -383,6 +376,13 @@ export default function SideBar() {
                   ></path>
                 </g>
               </svg>
+              {marketplaceNotificationCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-lg">
+                  {marketplaceNotificationCount > 9
+                    ? "9+"
+                    : marketplaceNotificationCount}
+                </span>
+              )}
             </Link>
           )}
 

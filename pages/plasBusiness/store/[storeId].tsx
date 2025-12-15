@@ -53,7 +53,8 @@ export default function StoreDetailsPage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [allProducts, setAllProducts] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set());
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [showProductModal, setShowProductModal] = useState(false);
   const itemsPerPage = 18;
 
   const [newProduct, setNewProduct] = useState({
@@ -586,19 +587,20 @@ export default function StoreDetailsPage() {
               <button
                 onClick={handleAddProduct}
                 disabled={isGeneratingQueryId}
-                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-green-500/25 transition-all duration-200 hover:scale-105 hover:from-green-600 hover:to-emerald-600 hover:shadow-green-500/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 sm:px-5 sm:py-3 sm:text-base"
+                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2.5 text-sm font-semibold shadow-lg shadow-green-500/25 transition-all duration-200 hover:scale-105 hover:from-green-600 hover:to-emerald-600 hover:shadow-green-500/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 sm:px-5 sm:py-3 sm:text-base"
+                style={{ color: '#ffffff' }}
               >
                 {isGeneratingQueryId ? (
                   <>
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent sm:h-5 sm:w-5" />
-                    <span className="hidden sm:inline">Loading...</span>
-                    <span className="sm:hidden">Loading...</span>
+                    <span className="hidden sm:inline" style={{ color: '#ffffff' }}>Loading...</span>
+                    <span className="sm:hidden" style={{ color: '#ffffff' }}>Loading...</span>
                   </>
                 ) : (
                   <>
-                    <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
-                    <span className="hidden sm:inline">Add Product</span>
-                    <span className="sm:hidden">Add</span>
+                    <Plus className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: '#ffffff' }} />
+                    <span className="hidden sm:inline" style={{ color: '#ffffff' }}>Add Product</span>
+                    <span className="sm:hidden" style={{ color: '#ffffff' }}>Add</span>
                   </>
                 )}
               </button>
@@ -641,9 +643,8 @@ export default function StoreDetailsPage() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
                 {currentProducts.map((product) => {
-                  const isExpanded = expandedProducts.has(product.id);
                   return (
                     <div
                       key={product.id}
@@ -669,10 +670,10 @@ export default function StoreDetailsPage() {
                             e.stopPropagation();
                             handleEditProduct(product);
                           }}
-                          className="absolute right-2 top-2 hidden rounded-lg bg-white/90 p-1.5 text-green-600 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-white hover:scale-110 hover:text-green-700 sm:right-3 sm:top-3 sm:block dark:bg-gray-800/90 dark:text-green-400 dark:hover:bg-gray-800"
+                          className="absolute right-2 top-2 hidden rounded-lg bg-white/90 p-1.5 text-green-600 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-white hover:scale-110 hover:text-green-700 sm:right-3 sm:top-3 sm:block lg:right-2 lg:top-2 lg:p-1 dark:bg-gray-800/90 dark:text-green-400 dark:hover:bg-gray-800"
                           title="Edit product"
                         >
-                          <Edit className="h-3.5 w-3.5" />
+                          <Edit className="h-3.5 w-3.5 lg:h-3 lg:w-3" />
                         </button>
                         
                         {/* Status Badge on Image - Mobile */}
@@ -680,208 +681,79 @@ export default function StoreDetailsPage() {
                           <span
                             className={`absolute left-2 top-2 flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold shadow-sm sm:hidden ${
                               product.status === "active"
-                                ? "bg-green-500 text-white"
-                                : "bg-gray-500 text-white"
+                                ? "bg-green-500"
+                                : "bg-gray-500"
                             }`}
+                            style={{ color: '#ffffff' }}
                           >
                             {product.status === "active" ? (
-                              <CheckCircle className="h-2 w-2" />
+                              <CheckCircle className="h-2 w-2" style={{ color: '#ffffff' }} />
                             ) : (
-                              <XCircle className="h-2 w-2" />
+                              <XCircle className="h-2 w-2" style={{ color: '#ffffff' }} />
                             )}
-                            <span className="capitalize">{product.status === "active" ? "Active" : "Inactive"}</span>
+                            <span className="capitalize" style={{ color: '#ffffff' }}>{product.status === "active" ? "Active" : "Inactive"}</span>
                           </span>
                         )}
                       </div>
 
                       {/* Content Section */}
-                      <div className="flex flex-1 flex-col p-2.5 sm:p-4">
+                      <div className="flex flex-1 flex-col p-2.5 sm:p-3 lg:p-2.5">
                         {/* Product Name */}
-                        <h3 className="mb-1.5 line-clamp-2 flex-1 text-xs font-semibold leading-tight text-gray-900 dark:text-white sm:text-sm sm:font-bold sm:text-base">
+                        <h3 className="mb-1.5 line-clamp-2 flex-1 text-xs font-semibold leading-tight text-gray-900 dark:text-white sm:text-sm lg:text-xs xl:mb-1">
                           {product.name}
                         </h3>
 
                         {/* Price and Unit */}
-                        <div className="mb-1.5 flex items-baseline gap-1 sm:mb-2 sm:gap-1.5">
-                          <span className="text-sm font-bold text-green-600 sm:text-lg dark:text-green-500">
+                        <div className="mb-1.5 flex items-baseline gap-1 sm:mb-2 lg:mb-1.5 xl:mb-1">
+                          <span className="text-sm font-bold text-green-600 sm:text-lg lg:text-sm dark:text-green-500">
                             {formatCurrencySync(parseFloat(product.price))}
                           </span>
-                          <span className="text-[10px] text-gray-500 dark:text-gray-400 sm:text-xs">
+                          <span className="text-[10px] text-gray-500 dark:text-gray-400 sm:text-xs lg:text-[10px]">
                             / {product.unit}
                           </span>
                         </div>
 
-                        {/* Status Badge - Desktop */}
+                        {/* Status Badge - Mobile only, hidden on desktop for compact view */}
                         {product.status && (
-                          <div className="mb-2 hidden sm:block">
+                          <div className="mb-2 sm:hidden">
                             <span
                               className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
                                 product.status === "active"
-                                  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                                  ? "bg-green-500"
                                   : product.status === "inactive"
                                   ? "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
                                   : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
                               }`}
+                              style={product.status === "active" ? { color: '#ffffff' } : {}}
                             >
                               {product.status === "active" ? (
-                                <CheckCircle className="h-3 w-3" />
+                                <CheckCircle className="h-3 w-3" style={{ color: '#ffffff' }} />
                               ) : (
                                 <XCircle className="h-3 w-3" />
                               )}
-                              <span className="capitalize">{product.status}</span>
+                              <span className="capitalize" style={product.status === "active" ? { color: '#ffffff' } : {}}>{product.status}</span>
                             </span>
                           </div>
                         )}
 
-                        {/* Description - Desktop only */}
-                        {product.Description && (
-                          <div
-                            className="mb-3 hidden line-clamp-2 text-xs leading-relaxed text-gray-600 dark:text-gray-400 sm:block sm:text-sm"
-                            dangerouslySetInnerHTML={{
-                              __html: product.Description,
+                        {/* Description - Hidden on card, shown in modal */}
+
+                        {/* View Details Button */}
+                        <div className="mt-auto">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedProduct(product);
+                              setShowProductModal(true);
                             }}
-                          />
-                        )}
-
-                        {/* Expandable Details - Mobile Only */}
-                        <div className="mt-auto sm:hidden">
-                          {isExpanded ? (
-                            <div className="space-y-1.5 border-t border-gray-200 pt-2 dark:border-gray-700">
-                              {/* Description - Mobile expanded */}
-                              {product.Description && (
-                                <div
-                                  className="text-xs leading-relaxed text-gray-600 dark:text-gray-400"
-                                  dangerouslySetInnerHTML={{
-                                    __html: product.Description,
-                                  }}
-                                />
-                              )}
-
-                              {/* Verification ID */}
-                              {product.query_id && (
-                                <div className="flex items-center gap-2 rounded-lg bg-gray-50 p-2 dark:bg-gray-700/50">
-                                  <Tag className="h-3.5 w-3.5 flex-shrink-0 text-gray-400" />
-                                  <div className="min-w-0 flex-1">
-                                    <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
-                                      Verification ID
-                                    </p>
-                                    <p className="truncate font-mono text-xs font-bold text-gray-900 dark:text-gray-100">
-                                      {product.query_id}
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* Minimum Orders */}
-                              {product.minimumOrders &&
-                                parseFloat(product.minimumOrders) > 0 && (
-                                  <div className="flex items-center gap-2 rounded-lg bg-blue-50 p-2 dark:bg-blue-900/20">
-                                    <ShoppingCart className="h-3.5 w-3.5 flex-shrink-0 text-blue-500 dark:text-blue-400" />
-                                    <div className="min-w-0 flex-1">
-                                      <p className="text-[10px] font-medium text-blue-600 dark:text-blue-400">
-                                        Min. Order
-                                      </p>
-                                      <p className="text-xs font-semibold text-blue-900 dark:text-blue-200">
-                                        {product.minimumOrders} {product.unit}
-                                      </p>
-                                    </div>
-                                  </div>
-                                )}
-
-                              {/* Maximum Orders */}
-                              {product.maxOrders &&
-                                product.maxOrders.trim() !== "" &&
-                                parseFloat(product.maxOrders) > 0 && (
-                                  <div className="flex items-center gap-2 rounded-lg bg-purple-50 p-2 dark:bg-purple-900/20">
-                                    <ShoppingCart className="h-3.5 w-3.5 flex-shrink-0 text-purple-500 dark:text-purple-400" />
-                                    <div className="min-w-0 flex-1">
-                                      <p className="text-[10px] font-medium text-purple-600 dark:text-purple-400">
-                                        Max. Order
-                                      </p>
-                                      <p className="text-xs font-semibold text-purple-900 dark:text-purple-200">
-                                        {product.maxOrders} {product.unit}
-                                      </p>
-                                    </div>
-                                  </div>
-                                )}
-
-                              {/* Delivery Area */}
-                              {product.delveryArea &&
-                                product.delveryArea.trim() !== "" && (
-                                  <div className="flex items-center gap-2 rounded-lg bg-orange-50 p-2 dark:bg-orange-900/20">
-                                    <Truck className="h-3.5 w-3.5 flex-shrink-0 text-orange-500 dark:text-orange-400" />
-                                    <div className="min-w-0 flex-1">
-                                      <p className="text-[10px] font-medium text-orange-600 dark:text-orange-400">
-                                        Delivery Area
-                                      </p>
-                                      <p className="line-clamp-1 text-xs font-semibold text-orange-900 dark:text-orange-200">
-                                        {product.delveryArea}
-                                      </p>
-                                    </div>
-                                  </div>
-                                )}
-
-                              {/* Speciality */}
-                              {product.speciality &&
-                                product.speciality.trim() !== "" && (
-                                  <div className="flex items-center gap-2 rounded-lg bg-indigo-50 p-2 dark:bg-indigo-900/20">
-                                    <Tag className="h-3.5 w-3.5 flex-shrink-0 text-indigo-500 dark:text-indigo-400" />
-                                    <div className="min-w-0 flex-1">
-                                      <p className="text-[10px] font-medium text-indigo-600 dark:text-indigo-400">
-                                        Speciality
-                                      </p>
-                                      <p className="line-clamp-1 text-xs font-semibold text-indigo-900 dark:text-indigo-200">
-                                        {product.speciality}
-                                      </p>
-                                    </div>
-                                  </div>
-                                )}
-
-                              {/* Edit Button - Mobile expanded */}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditProduct(product);
-                                }}
-                                className="mt-1.5 w-full rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-2.5 py-1.5 text-[10px] font-semibold text-white shadow-sm transition-all hover:from-green-600 hover:to-emerald-600"
-                              >
-                                Edit
-                              </button>
-
-                              {/* Collapse Button */}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setExpandedProducts((prev) => {
-                                    const newSet = new Set(prev);
-                                    newSet.delete(product.id);
-                                    return newSet;
-                                  });
-                                }}
-                                className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-[10px] font-medium text-gray-700 transition-all hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                              >
-                                Less
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setExpandedProducts((prev) => {
-                                  const newSet = new Set(prev);
-                                  newSet.add(product.id);
-                                  return newSet;
-                                });
-                              }}
-                              className="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-[10px] font-medium text-gray-700 transition-all hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                            >
-                              Details
-                            </button>
-                          )}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-[10px] font-medium text-gray-700 transition-all hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 sm:px-3 sm:py-2 sm:text-xs lg:px-2 lg:py-1.5 lg:text-[10px]"
+                          >
+                            View Details
+                          </button>
                         </div>
 
-                        {/* Full Details - Desktop Only */}
-                        <div className="hidden space-y-2.5 border-t border-gray-200 pt-3 dark:border-gray-700 sm:block">
+                        {/* Full Details - Hidden on card, shown in modal */}
+                        <div className="hidden">
                           {/* Verification ID */}
                           {product.query_id && (
                             <div className="flex items-center gap-2 rounded-lg bg-gray-50 p-2 dark:bg-gray-700/50">
@@ -1084,17 +956,17 @@ export default function StoreDetailsPage() {
 
             <div className="space-y-3 p-3 sm:space-y-4 sm:p-4 md:space-y-6 md:p-6">
               {queryId && !editingProduct && (
-                <div className="rounded-xl border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-5 shadow-lg dark:border-green-800 dark:from-green-900/30 dark:to-emerald-900/20 sm:p-6 md:p-8">
+                <div className="rounded-xl border-2 border-green-200 bg-gradient-to-br from-green-500 to-emerald-500 p-5 shadow-lg dark:border-green-800 sm:p-6 md:p-8" style={{ backgroundColor: '#10b981' }}>
                   <div className="mb-3 flex items-center justify-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 sm:h-6 sm:w-6" />
-                    <p className="text-base font-bold text-green-800 dark:text-green-200 sm:text-lg">
+                    <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6" style={{ color: '#ffffff' }} />
+                    <p className="text-base font-bold sm:text-lg" style={{ color: '#ffffff' }}>
                       Verification ID Generated
                     </p>
                   </div>
-                  <p className="mb-4 text-center font-mono text-3xl font-bold tracking-wider text-green-700 dark:text-green-300 sm:mb-5 sm:text-4xl md:text-5xl">
+                  <p className="mb-4 text-center font-mono text-3xl font-bold tracking-wider sm:mb-5 sm:text-4xl md:text-5xl" style={{ color: '#ffffff' }}>
                     {queryId}
                   </p>
-                  <p className="text-center text-sm font-medium text-green-700 dark:text-green-300 sm:text-base">
+                  <p className="text-center text-sm font-medium sm:text-base" style={{ color: '#ffffff' }}>
                     Use this ID when taking the product photo for verification.
                   </p>
                 </div>
@@ -1315,7 +1187,8 @@ export default function StoreDetailsPage() {
                 <button
                   onClick={handleSubmitProduct}
                   disabled={isCreatingProduct}
-                  className="flex-1 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-green-500/25 transition-all duration-200 hover:scale-105 hover:from-green-600 hover:to-emerald-600 hover:shadow-green-500/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 sm:px-5 sm:text-base"
+                  className="flex-1 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3 text-sm font-semibold shadow-lg shadow-green-500/25 transition-all duration-200 hover:scale-105 hover:from-green-600 hover:to-emerald-600 hover:shadow-green-500/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 sm:px-5 sm:text-base"
+                  style={{ color: '#ffffff' }}
                 >
                   {isCreatingProduct
                     ? editingProduct
@@ -1339,6 +1212,198 @@ export default function StoreDetailsPage() {
         cameraType="environment"
         title="Capture Product Image"
       />
+
+      {/* Product Details Modal */}
+      {showProductModal && selectedProduct && (
+        <div
+          className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-4"
+          onClick={() => {
+            setShowProductModal(false);
+            setSelectedProduct(null);
+          }}
+        >
+          <div
+            className="h-full max-h-[90vh] w-full max-w-2xl animate-slide-up overflow-y-auto rounded-t-3xl border-l border-r border-t border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800 sm:h-auto sm:max-h-[85vh] sm:animate-none sm:rounded-2xl sm:border"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-green-500 to-emerald-500 p-4 dark:border-gray-700 sm:p-6" style={{ backgroundColor: '#10b981' }}>
+              <h2 className="text-lg font-bold sm:text-xl" style={{ color: '#ffffff' }}>
+                Product Details
+              </h2>
+              <button
+                onClick={() => {
+                  setShowProductModal(false);
+                  setSelectedProduct(null);
+                }}
+                className="rounded-lg p-2 transition-colors hover:bg-white/20" style={{ color: '#ffffff' }}
+              >
+                <X className="h-5 w-5 sm:h-6 sm:w-6" style={{ color: '#ffffff' }} />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="space-y-4 p-4 sm:space-y-6 sm:p-6">
+              {/* Product Image */}
+              {selectedProduct.Image && (
+                <div className="relative h-64 w-full overflow-hidden rounded-xl bg-gray-100 sm:h-80 dark:bg-gray-700">
+                  <img
+                    src={selectedProduct.Image}
+                    alt={selectedProduct.name}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              )}
+
+              {/* Product Name and Status */}
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="flex-1 text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
+                  {selectedProduct.name}
+                </h3>
+                {selectedProduct.status && (
+                  <span
+                    className={`flex flex-shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                      selectedProduct.status === "active"
+                        ? "bg-green-500"
+                        : selectedProduct.status === "inactive"
+                        ? "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                        : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
+                    }`}
+                    style={selectedProduct.status === "active" ? { color: '#ffffff' } : {}}
+                  >
+                    {selectedProduct.status === "active" ? (
+                      <CheckCircle className="h-3.5 w-3.5" style={{ color: '#ffffff' }} />
+                    ) : (
+                      <XCircle className="h-3.5 w-3.5" />
+                    )}
+                    <span className="capitalize" style={selectedProduct.status === "active" ? { color: '#ffffff' } : {}}>{selectedProduct.status}</span>
+                  </span>
+                )}
+              </div>
+
+              {/* Price and Unit */}
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold text-green-600 dark:text-green-500 sm:text-3xl">
+                  {formatCurrencySync(parseFloat(selectedProduct.price))}
+                </span>
+                <span className="text-sm text-gray-500 dark:text-gray-400 sm:text-base">
+                  / {selectedProduct.unit}
+                </span>
+              </div>
+
+              {/* Description */}
+              {selectedProduct.Description && (
+                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
+                  <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
+                    Description
+                  </h4>
+                  <div
+                    className="text-sm leading-relaxed text-gray-600 dark:text-gray-400"
+                    dangerouslySetInnerHTML={{
+                      __html: selectedProduct.Description,
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Product Details Grid */}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {/* Verification ID */}
+                {selectedProduct.query_id && (
+                  <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-700/50">
+                    <Tag className="h-5 w-5 flex-shrink-0 text-gray-400" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        Verification ID
+                      </p>
+                      <p className="truncate font-mono text-sm font-bold text-gray-900 dark:text-gray-100">
+                        {selectedProduct.query_id}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Minimum Orders */}
+                {selectedProduct.minimumOrders &&
+                  parseFloat(selectedProduct.minimumOrders) > 0 && (
+                    <div className="flex items-center gap-3 rounded-xl bg-blue-50 p-3 dark:bg-blue-900/20">
+                      <ShoppingCart className="h-5 w-5 flex-shrink-0 text-blue-500 dark:text-blue-400" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                          Min. Order
+                        </p>
+                        <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">
+                          {selectedProduct.minimumOrders} {selectedProduct.unit}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                {/* Maximum Orders */}
+                {selectedProduct.maxOrders &&
+                  selectedProduct.maxOrders.trim() !== "" &&
+                  parseFloat(selectedProduct.maxOrders) > 0 && (
+                    <div className="flex items-center gap-3 rounded-xl bg-purple-50 p-3 dark:bg-purple-900/20">
+                      <ShoppingCart className="h-5 w-5 flex-shrink-0 text-purple-500 dark:text-purple-400" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium text-purple-600 dark:text-purple-400">
+                          Max. Order
+                        </p>
+                        <p className="text-sm font-semibold text-purple-900 dark:text-purple-200">
+                          {selectedProduct.maxOrders} {selectedProduct.unit}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                {/* Delivery Area */}
+                {selectedProduct.delveryArea &&
+                  selectedProduct.delveryArea.trim() !== "" && (
+                    <div className="flex items-center gap-3 rounded-xl bg-orange-50 p-3 dark:bg-orange-900/20">
+                      <Truck className="h-5 w-5 flex-shrink-0 text-orange-500 dark:text-orange-400" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium text-orange-600 dark:text-orange-400">
+                          Delivery Area
+                        </p>
+                        <p className="line-clamp-1 text-sm font-semibold text-orange-900 dark:text-orange-200">
+                          {selectedProduct.delveryArea}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                {/* Speciality */}
+                {selectedProduct.speciality &&
+                  selectedProduct.speciality.trim() !== "" && (
+                    <div className="flex items-center gap-3 rounded-xl bg-indigo-50 p-3 dark:bg-indigo-900/20">
+                      <Tag className="h-5 w-5 flex-shrink-0 text-indigo-500 dark:text-indigo-400" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400">
+                          Speciality
+                        </p>
+                        <p className="line-clamp-1 text-sm font-semibold text-indigo-900 dark:text-indigo-200">
+                          {selectedProduct.speciality}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+              </div>
+
+              {/* Edit Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowProductModal(false);
+                  handleEditProduct(selectedProduct);
+                }}
+                className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all hover:from-green-600 hover:to-emerald-600 hover:shadow-xl"
+              >
+                Edit Product
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </RootLayout>
   );
 }
