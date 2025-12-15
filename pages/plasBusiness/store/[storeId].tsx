@@ -53,6 +53,7 @@ export default function StoreDetailsPage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [allProducts, setAllProducts] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set());
   const itemsPerPage = 18;
 
   const [newProduct, setNewProduct] = useState({
@@ -640,174 +641,331 @@ export default function StoreDetailsPage() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {currentProducts.map((product) => (
-                  <div
-                    key={product.id}
-                    className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg ring-1 ring-gray-200/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:ring-gray-300/50 dark:border-gray-700 dark:bg-gray-800 dark:ring-gray-700/50 dark:hover:ring-gray-600/50"
-                  >
-                    {product.Image && (
-                      <div className="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-700">
-                        <img
-                          src={product.Image}
-                          alt={product.name}
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+                {currentProducts.map((product) => {
+                  const isExpanded = expandedProducts.has(product.id);
+                  return (
+                    <div
+                      key={product.id}
+                      className="group relative flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:border-green-400 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-600"
+                    >
+                      {/* Image Section */}
+                      <div className="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-700">
+                        {product.Image ? (
+                          <img
+                            src={product.Image}
+                            alt={product.name}
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
+                            <Package className="h-10 w-10 text-gray-300 sm:h-16 sm:w-16" />
+                          </div>
+                        )}
+                        
+                        {/* Edit Button - Desktop only */}
                         <button
-                          onClick={() => handleEditProduct(product)}
-                          className="absolute right-3 top-3 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 p-2.5 text-white opacity-0 shadow-lg shadow-green-500/25 transition-all duration-200 hover:scale-110 hover:from-green-600 hover:to-emerald-600 hover:shadow-green-500/40 group-hover:opacity-100"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditProduct(product);
+                          }}
+                          className="absolute right-2 top-2 hidden rounded-lg bg-white/90 p-1.5 text-green-600 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-white hover:scale-110 hover:text-green-700 sm:right-3 sm:top-3 sm:block dark:bg-gray-800/90 dark:text-green-400 dark:hover:bg-gray-800"
                           title="Edit product"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-3.5 w-3.5" />
                         </button>
-                      </div>
-                    )}
-                    {!product.Image && (
-                      <div className="relative flex h-48 items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
-                        <Package className="h-16 w-16 text-gray-400" />
-                        <button
-                          onClick={() => handleEditProduct(product)}
-                          className="absolute right-3 top-3 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 p-2.5 text-white opacity-0 shadow-lg shadow-green-500/25 transition-all duration-200 hover:scale-110 hover:from-green-600 hover:to-emerald-600 hover:shadow-green-500/40 group-hover:opacity-100"
-                          title="Edit product"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                      </div>
-                    )}
-                    <div className="space-y-3 p-4 sm:space-y-4 sm:p-5">
-                      {/* Product Name and Status */}
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="line-clamp-2 flex-1 text-sm font-bold text-gray-900 dark:text-white sm:text-base">
-                          {product.name}
-                        </h3>
+                        
+                        {/* Status Badge on Image - Mobile */}
                         {product.status && (
                           <span
-                            className={`flex flex-shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                            className={`absolute left-2 top-2 flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold shadow-sm sm:hidden ${
                               product.status === "active"
-                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                                : product.status === "inactive"
-                                ? "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-                                : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
+                                ? "bg-green-500 text-white"
+                                : "bg-gray-500 text-white"
                             }`}
                           >
                             {product.status === "active" ? (
-                              <CheckCircle className="h-3 w-3" />
+                              <CheckCircle className="h-2 w-2" />
                             ) : (
-                              <XCircle className="h-3 w-3" />
+                              <XCircle className="h-2 w-2" />
                             )}
-                            <span className="hidden capitalize sm:inline">
-                              {product.status}
-                            </span>
+                            <span className="capitalize">{product.status === "active" ? "Active" : "Inactive"}</span>
                           </span>
                         )}
                       </div>
 
-                      {/* Description */}
-                      {product.Description && (
-                        <div
-                          className="line-clamp-2 text-xs leading-relaxed text-gray-600 dark:text-gray-400 sm:text-sm"
-                          dangerouslySetInnerHTML={{
-                            __html: product.Description,
-                          }}
-                        />
-                      )}
+                      {/* Content Section */}
+                      <div className="flex flex-1 flex-col p-2.5 sm:p-4">
+                        {/* Product Name */}
+                        <h3 className="mb-1.5 line-clamp-2 flex-1 text-xs font-semibold leading-tight text-gray-900 dark:text-white sm:text-sm sm:font-bold sm:text-base">
+                          {product.name}
+                        </h3>
 
-                      {/* Price and Unit */}
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-xl font-bold text-green-600 sm:text-2xl">
-                          {formatCurrencySync(parseFloat(product.price))}
-                        </span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          / {product.unit}
-                        </span>
-                      </div>
+                        {/* Price and Unit */}
+                        <div className="mb-1.5 flex items-baseline gap-1 sm:mb-2 sm:gap-1.5">
+                          <span className="text-sm font-bold text-green-600 sm:text-lg dark:text-green-500">
+                            {formatCurrencySync(parseFloat(product.price))}
+                          </span>
+                          <span className="text-[10px] text-gray-500 dark:text-gray-400 sm:text-xs">
+                            / {product.unit}
+                          </span>
+                        </div>
 
-                      {/* Divider */}
-                      <div className="space-y-2.5 border-t border-gray-200 pt-3 dark:border-gray-700 sm:space-y-3 sm:pt-4">
-                        {/* Verification ID */}
-                        {product.query_id && (
-                          <div className="flex items-center gap-2 rounded-lg bg-gray-50 p-2 dark:bg-gray-700/50 sm:gap-2.5 sm:p-2.5">
-                            <Tag className="h-4 w-4 flex-shrink-0 text-gray-400 sm:h-4 sm:w-4" />
-                            <div className="min-w-0 flex-1">
-                              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 sm:text-xs">
-                                Verification ID
-                              </p>
-                              <p className="truncate font-mono text-xs font-bold text-gray-900 dark:text-gray-100 sm:text-sm">
-                                {product.query_id}
-                              </p>
-                            </div>
+                        {/* Status Badge - Desktop */}
+                        {product.status && (
+                          <div className="mb-2 hidden sm:block">
+                            <span
+                              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                product.status === "active"
+                                  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                                  : product.status === "inactive"
+                                  ? "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                                  : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
+                              }`}
+                            >
+                              {product.status === "active" ? (
+                                <CheckCircle className="h-3 w-3" />
+                              ) : (
+                                <XCircle className="h-3 w-3" />
+                              )}
+                              <span className="capitalize">{product.status}</span>
+                            </span>
                           </div>
                         )}
 
-                        {/* Minimum Orders */}
-                        {product.minimumOrders &&
-                          parseFloat(product.minimumOrders) > 0 && (
-                            <div className="flex items-center gap-2 rounded-lg bg-blue-50 p-2 dark:bg-blue-900/20 sm:gap-2.5 sm:p-2.5">
-                              <ShoppingCart className="h-4 w-4 flex-shrink-0 text-blue-500 dark:text-blue-400" />
+                        {/* Description - Desktop only */}
+                        {product.Description && (
+                          <div
+                            className="mb-3 hidden line-clamp-2 text-xs leading-relaxed text-gray-600 dark:text-gray-400 sm:block sm:text-sm"
+                            dangerouslySetInnerHTML={{
+                              __html: product.Description,
+                            }}
+                          />
+                        )}
+
+                        {/* Expandable Details - Mobile Only */}
+                        <div className="mt-auto sm:hidden">
+                          {isExpanded ? (
+                            <div className="space-y-1.5 border-t border-gray-200 pt-2 dark:border-gray-700">
+                              {/* Description - Mobile expanded */}
+                              {product.Description && (
+                                <div
+                                  className="text-xs leading-relaxed text-gray-600 dark:text-gray-400"
+                                  dangerouslySetInnerHTML={{
+                                    __html: product.Description,
+                                  }}
+                                />
+                              )}
+
+                              {/* Verification ID */}
+                              {product.query_id && (
+                                <div className="flex items-center gap-2 rounded-lg bg-gray-50 p-2 dark:bg-gray-700/50">
+                                  <Tag className="h-3.5 w-3.5 flex-shrink-0 text-gray-400" />
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
+                                      Verification ID
+                                    </p>
+                                    <p className="truncate font-mono text-xs font-bold text-gray-900 dark:text-gray-100">
+                                      {product.query_id}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Minimum Orders */}
+                              {product.minimumOrders &&
+                                parseFloat(product.minimumOrders) > 0 && (
+                                  <div className="flex items-center gap-2 rounded-lg bg-blue-50 p-2 dark:bg-blue-900/20">
+                                    <ShoppingCart className="h-3.5 w-3.5 flex-shrink-0 text-blue-500 dark:text-blue-400" />
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-[10px] font-medium text-blue-600 dark:text-blue-400">
+                                        Min. Order
+                                      </p>
+                                      <p className="text-xs font-semibold text-blue-900 dark:text-blue-200">
+                                        {product.minimumOrders} {product.unit}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+
+                              {/* Maximum Orders */}
+                              {product.maxOrders &&
+                                product.maxOrders.trim() !== "" &&
+                                parseFloat(product.maxOrders) > 0 && (
+                                  <div className="flex items-center gap-2 rounded-lg bg-purple-50 p-2 dark:bg-purple-900/20">
+                                    <ShoppingCart className="h-3.5 w-3.5 flex-shrink-0 text-purple-500 dark:text-purple-400" />
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-[10px] font-medium text-purple-600 dark:text-purple-400">
+                                        Max. Order
+                                      </p>
+                                      <p className="text-xs font-semibold text-purple-900 dark:text-purple-200">
+                                        {product.maxOrders} {product.unit}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+
+                              {/* Delivery Area */}
+                              {product.delveryArea &&
+                                product.delveryArea.trim() !== "" && (
+                                  <div className="flex items-center gap-2 rounded-lg bg-orange-50 p-2 dark:bg-orange-900/20">
+                                    <Truck className="h-3.5 w-3.5 flex-shrink-0 text-orange-500 dark:text-orange-400" />
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-[10px] font-medium text-orange-600 dark:text-orange-400">
+                                        Delivery Area
+                                      </p>
+                                      <p className="line-clamp-1 text-xs font-semibold text-orange-900 dark:text-orange-200">
+                                        {product.delveryArea}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+
+                              {/* Speciality */}
+                              {product.speciality &&
+                                product.speciality.trim() !== "" && (
+                                  <div className="flex items-center gap-2 rounded-lg bg-indigo-50 p-2 dark:bg-indigo-900/20">
+                                    <Tag className="h-3.5 w-3.5 flex-shrink-0 text-indigo-500 dark:text-indigo-400" />
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-[10px] font-medium text-indigo-600 dark:text-indigo-400">
+                                        Speciality
+                                      </p>
+                                      <p className="line-clamp-1 text-xs font-semibold text-indigo-900 dark:text-indigo-200">
+                                        {product.speciality}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+
+                              {/* Edit Button - Mobile expanded */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditProduct(product);
+                                }}
+                                className="mt-1.5 w-full rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-2.5 py-1.5 text-[10px] font-semibold text-white shadow-sm transition-all hover:from-green-600 hover:to-emerald-600"
+                              >
+                                Edit
+                              </button>
+
+                              {/* Collapse Button */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExpandedProducts((prev) => {
+                                    const newSet = new Set(prev);
+                                    newSet.delete(product.id);
+                                    return newSet;
+                                  });
+                                }}
+                                className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-[10px] font-medium text-gray-700 transition-all hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                              >
+                                Less
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExpandedProducts((prev) => {
+                                  const newSet = new Set(prev);
+                                  newSet.add(product.id);
+                                  return newSet;
+                                });
+                              }}
+                              className="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-[10px] font-medium text-gray-700 transition-all hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                            >
+                              Details
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Full Details - Desktop Only */}
+                        <div className="hidden space-y-2.5 border-t border-gray-200 pt-3 dark:border-gray-700 sm:block">
+                          {/* Verification ID */}
+                          {product.query_id && (
+                            <div className="flex items-center gap-2 rounded-lg bg-gray-50 p-2 dark:bg-gray-700/50">
+                              <Tag className="h-4 w-4 flex-shrink-0 text-gray-400" />
                               <div className="min-w-0 flex-1">
-                                <p className="text-xs font-medium text-blue-600 dark:text-blue-400">
-                                  Min. Order
+                                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                                  Verification ID
                                 </p>
-                                <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">
-                                  {product.minimumOrders} {product.unit}
+                                <p className="truncate font-mono text-xs font-bold text-gray-900 dark:text-gray-100">
+                                  {product.query_id}
                                 </p>
                               </div>
                             </div>
                           )}
 
-                        {/* Maximum Orders */}
-                        {product.maxOrders &&
-                          product.maxOrders.trim() !== "" &&
-                          parseFloat(product.maxOrders) > 0 && (
-                            <div className="flex items-center gap-2 rounded-lg bg-purple-50 p-2 dark:bg-purple-900/20 sm:gap-2.5 sm:p-2.5">
-                              <ShoppingCart className="h-4 w-4 flex-shrink-0 text-purple-500 dark:text-purple-400" />
-                              <div className="min-w-0 flex-1">
-                                <p className="text-xs font-medium text-purple-600 dark:text-purple-400">
-                                  Max. Order
-                                </p>
-                                <p className="text-sm font-semibold text-purple-900 dark:text-purple-200">
-                                  {product.maxOrders} {product.unit}
-                                </p>
+                          {/* Minimum Orders */}
+                          {product.minimumOrders &&
+                            parseFloat(product.minimumOrders) > 0 && (
+                              <div className="flex items-center gap-2 rounded-lg bg-blue-50 p-2 dark:bg-blue-900/20">
+                                <ShoppingCart className="h-4 w-4 flex-shrink-0 text-blue-500 dark:text-blue-400" />
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                                    Min. Order
+                                  </p>
+                                  <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">
+                                    {product.minimumOrders} {product.unit}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
 
-                        {/* Delivery Area */}
-                        {product.delveryArea &&
-                          product.delveryArea.trim() !== "" && (
-                            <div className="flex items-center gap-2 rounded-lg bg-orange-50 p-2 dark:bg-orange-900/20 sm:gap-2.5 sm:p-2.5">
-                              <Truck className="h-4 w-4 flex-shrink-0 text-orange-500 dark:text-orange-400" />
-                              <div className="min-w-0 flex-1">
-                                <p className="text-xs font-medium text-orange-600 dark:text-orange-400">
-                                  Delivery Area
-                                </p>
-                                <p className="line-clamp-1 text-sm font-semibold text-orange-900 dark:text-orange-200">
-                                  {product.delveryArea}
-                                </p>
+                          {/* Maximum Orders */}
+                          {product.maxOrders &&
+                            product.maxOrders.trim() !== "" &&
+                            parseFloat(product.maxOrders) > 0 && (
+                              <div className="flex items-center gap-2 rounded-lg bg-purple-50 p-2 dark:bg-purple-900/20">
+                                <ShoppingCart className="h-4 w-4 flex-shrink-0 text-purple-500 dark:text-purple-400" />
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs font-medium text-purple-600 dark:text-purple-400">
+                                    Max. Order
+                                  </p>
+                                  <p className="text-sm font-semibold text-purple-900 dark:text-purple-200">
+                                    {product.maxOrders} {product.unit}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
 
-                        {/* Speciality */}
-                        {product.speciality &&
-                          product.speciality.trim() !== "" && (
-                            <div className="flex items-center gap-2 rounded-lg bg-indigo-50 p-2 dark:bg-indigo-900/20 sm:gap-2.5 sm:p-2.5">
-                              <Tag className="h-4 w-4 flex-shrink-0 text-indigo-500 dark:text-indigo-400" />
-                              <div className="min-w-0 flex-1">
-                                <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400">
-                                  Speciality
-                                </p>
-                                <p className="line-clamp-1 text-sm font-semibold text-indigo-900 dark:text-indigo-200">
-                                  {product.speciality}
-                                </p>
+                          {/* Delivery Area */}
+                          {product.delveryArea &&
+                            product.delveryArea.trim() !== "" && (
+                              <div className="flex items-center gap-2 rounded-lg bg-orange-50 p-2 dark:bg-orange-900/20">
+                                <Truck className="h-4 w-4 flex-shrink-0 text-orange-500 dark:text-orange-400" />
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs font-medium text-orange-600 dark:text-orange-400">
+                                    Delivery Area
+                                  </p>
+                                  <p className="line-clamp-1 text-sm font-semibold text-orange-900 dark:text-orange-200">
+                                    {product.delveryArea}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
+
+                          {/* Speciality */}
+                          {product.speciality &&
+                            product.speciality.trim() !== "" && (
+                              <div className="flex items-center gap-2 rounded-lg bg-indigo-50 p-2 dark:bg-indigo-900/20">
+                                <Tag className="h-4 w-4 flex-shrink-0 text-indigo-500 dark:text-indigo-400" />
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400">
+                                    Speciality
+                                  </p>
+                                  <p className="line-clamp-1 text-sm font-semibold text-indigo-900 dark:text-indigo-200">
+                                    {product.speciality}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Pagination */}
