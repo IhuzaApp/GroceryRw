@@ -73,6 +73,16 @@ const GET_BUSINESS_ACCOUNT = gql`
   }
 `;
 
+const GET_BUSINESS_PRODUCTS_BY_IDS = gql`
+  query GetBusinessProductsByIds($product_ids: [uuid!]!) {
+    PlasBusinessProductsOrSerive(where: { id: { _in: $product_ids } }) {
+      id
+      Image
+      name
+    }
+  }
+`;
+
 interface SessionUser {
   id: string;
   name?: string;
@@ -177,14 +187,64 @@ export default async function handler(
       user_id,
     });
 
-    // Transform orders for frontend
+    // Collect all unique product IDs from all orders
+    const productIdsSet = new Set<string>();
+    ordersResult.businessProductOrders.forEach((order) => {
+      const products = Array.isArray(order.allProducts)
+        ? order.allProducts
+        : [];
+      products.forEach((p: any) => {
+        // Check for both 'id' and 'product_id' fields
+        const productId = p.id || p.product_id;
+        if (productId && typeof productId === "string") {
+          productIdsSet.add(productId);
+        }
+      });
+    });
+
+    // Fetch product images from business products table
+    let productImageMap: { [key: string]: string | null } = {};
+    if (productIdsSet.size > 0) {
+      try {
+        const productIds = Array.from(productIdsSet);
+        const productsResult = await hasuraClient.request<{
+          PlasBusinessProductsOrSerive: Array<{
+            id: string;
+            Image: string | null;
+            name: string;
+          }>;
+        }>(GET_BUSINESS_PRODUCTS_BY_IDS, {
+          product_ids: productIds,
+        });
+
+        // Create a map of product ID to image
+        productsResult.PlasBusinessProductsOrSerive.forEach((product) => {
+          productImageMap[product.id] = product.Image || null;
+        });
+      } catch (error) {
+        // If fetching product images fails, continue without them
+      }
+    }
+
+    // Transform orders for frontend and enrich products with images
     const orders = ordersResult.businessProductOrders.map((order) => {
       const products = Array.isArray(order.allProducts)
         ? order.allProducts
         : [];
+      
+      // Enrich products with images
+      const enrichedProducts = products.map((p: any) => {
+        // Check for both 'id' and 'product_id' fields
+        const productId = p.id || p.product_id;
+        return {
+          ...p,
+          image: productId ? productImageMap[productId] || null : null,
+        };
+      });
+
       const itemsSummary =
-        products.length > 0
-          ? products
+        enrichedProducts.length > 0
+          ? enrichedProducts
               .map((p: any) => `${p.name || "Item"} (${p.quantity || 0})`)
               .join(", ")
           : "No items";
@@ -194,7 +254,7 @@ export default async function handler(
         orderId: order.id.substring(0, 8).toUpperCase(),
         store: order.business_store?.name || "Unknown Store",
         items: itemsSummary,
-        itemsCount: products.reduce(
+        itemsCount: enrichedProducts.reduce(
           (sum: number, p: any) => sum + (p.quantity || 0),
           0
         ),
@@ -218,7 +278,7 @@ export default async function handler(
         store_image: order.business_store?.image || null,
         latitude: order.latitude,
         longitude: order.longitude,
-        allProducts: order.allProducts,
+        allProducts: enrichedProducts, // Use enriched products with images
         shopper: order.shopper,
         shopper_id: order.shopper_id,
         orderedBy: order.orderedBy,
