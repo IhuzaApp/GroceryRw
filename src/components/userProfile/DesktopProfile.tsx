@@ -299,7 +299,7 @@ export default function DesktopProfile({
             <div className="h-10 w-full animate-pulse rounded bg-gray-200" />
           ) : shopperStatus?.active ? (
             <button
-              className="flex w-full items-center justify-center rounded-md bg-green-500 px-4 py-2 text-sm text-white transition-colors duration-200 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
+              className="flex w-full items-center justify-center rounded-md bg-green-500 px-4 py-2 text-sm !text-white transition-colors duration-200 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
               onClick={async () => {
                 const nextRole = role === "user" ? "shopper" : "user";
                 setIsSwitchingRole(true);
@@ -337,7 +337,7 @@ export default function DesktopProfile({
             </button>
           ) : (
             <button
-              className={`flex w-full items-center justify-center rounded-md px-4 py-2 text-sm text-white transition-colors duration-200 ${
+              className={`flex w-full items-center justify-center rounded-md px-4 py-2 text-sm !text-white transition-colors duration-200 ${
                 shopperStatus?.needCollection
                   ? "bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700"
                   : shopperStatus?.status === "pending" ||
@@ -396,7 +396,7 @@ export default function DesktopProfile({
 
           {/* Logout Button */}
           <button
-            className="flex w-full items-center justify-center rounded-md bg-red-500 px-4 py-2 text-sm text-white transition-colors duration-200 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700"
+            className="flex w-full items-center justify-center rounded-md bg-red-500 px-4 py-2 text-sm !text-white transition-colors duration-200 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700"
             onClick={async () => {
               try {
                 // Call our custom logout API
@@ -453,11 +453,113 @@ export default function DesktopProfile({
             className="flex min-w-max gap-2"
           >
             {[
-              { key: "account", label: "Account" },
-              { key: "orders", label: "Orders" },
-              { key: "addresses", label: "Addresses" },
-              { key: "payment", label: "Payment Methods" },
-              { key: "preferences", label: "Preferences" },
+              {
+                key: "account",
+                label: "Account",
+                icon: (
+                  <svg
+                    className="mr-2 h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                ),
+              },
+              {
+                key: "orders",
+                label: "Orders",
+                icon: (
+                  <svg
+                    className="mr-2 h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
+                  </svg>
+                ),
+              },
+              {
+                key: "addresses",
+                label: "Addresses",
+                icon: (
+                  <svg
+                    className="mr-2 h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                ),
+              },
+              {
+                key: "payment",
+                label: "Payment Methods",
+                icon: (
+                  <svg
+                    className="mr-2 h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                    />
+                  </svg>
+                ),
+              },
+              {
+                key: "preferences",
+                label: "Preferences",
+                icon: (
+                  <svg
+                    className="mr-2 h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
+                    />
+                  </svg>
+                ),
+              },
             ].map((tab) => (
               <Nav.Item
                 key={tab.key}
@@ -468,7 +570,10 @@ export default function DesktopProfile({
                     : "!text-inherit hover:!text-green-500 dark:hover:!text-green-400"
                 }`}
               >
-                {tab.label}
+                <div className="flex items-center">
+                  {tab.icon}
+                  {tab.label}
+                </div>
               </Nav.Item>
             ))}
           </Nav>
