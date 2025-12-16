@@ -131,10 +131,10 @@ export default function UserPreference() {
                 />
               </svg>
             </div>
-            <div>
+      <div>
               <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                 {t("preferences.themeSettings")}
-              </h3>
+        </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {t("preferences.customizeAppearance")}
               </p>
@@ -170,10 +170,10 @@ export default function UserPreference() {
                 </span>
               </div>
             </div>
-            <Toggle
-              checked={theme === "dark"}
-              onChange={(checked) => setTheme(checked ? "dark" : "light")}
-            />
+          <Toggle
+            checked={theme === "dark"}
+            onChange={(checked) => setTheme(checked ? "dark" : "light")}
+          />
           </div>
         </div>
       </div>
@@ -197,10 +197,10 @@ export default function UserPreference() {
                 />
               </svg>
             </div>
-            <div>
+      <div>
               <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                 {t("preferences.notificationPreferences")}
-              </h3>
+        </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {t("preferences.manageUpdates")}
               </p>
@@ -231,7 +231,7 @@ export default function UserPreference() {
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
                   {t("preferences.receiveNotifications")}
-                </span>
+            </span>
               </div>
             </div>
             <Toggle
@@ -265,7 +265,7 @@ export default function UserPreference() {
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
                   {t("preferences.getUpdatesViaEmail")}
-                </span>
+            </span>
               </div>
             </div>
             <Toggle
@@ -299,7 +299,7 @@ export default function UserPreference() {
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
                   {t("preferences.receiveTextMessages")}
-                </span>
+            </span>
               </div>
             </div>
             <Toggle
@@ -331,10 +331,10 @@ export default function UserPreference() {
                 />
               </svg>
             </div>
-            <div>
+      <div>
               <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                 {t("preferences.languageCurrency")}
-              </h3>
+        </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {t("preferences.setPreferredLanguage")}
               </p>
@@ -342,11 +342,11 @@ export default function UserPreference() {
           </div>
         </div>
         <div className="p-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div>
               <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                 {t("preferences.language")} *
-              </label>
+            </label>
               <select
                 value={language}
                 onChange={(e) =>
@@ -360,8 +360,8 @@ export default function UserPreference() {
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 {t("preferences.changesApplyImmediately")}
               </p>
-            </div>
-            <div>
+          </div>
+          <div>
               <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                 {t("preferences.currency")}
                 {loadingCurrency ? (
@@ -373,7 +373,7 @@ export default function UserPreference() {
                     {t("preferences.systemManaged")}
                   </span>
                 )}
-              </label>
+            </label>
               <select
                 value={systemCurrency}
                 disabled={true}
