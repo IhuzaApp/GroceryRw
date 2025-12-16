@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useGoogleMap } from "../../context/GoogleMapProvider";
 import Cookies from "js-cookie";
 import { authenticatedFetch } from "../../lib/authenticatedFetch";
+import { useLanguage } from "../../context/LanguageContext";
 
 // Skeleton loader for address cards
 function AddressSkeleton() {
@@ -26,6 +27,7 @@ interface UserAddressProps {
 // Update component signature to accept props
 export default function UserAddress({ onSelect }: UserAddressProps) {
   const { isLoaded } = useGoogleMap();
+  const { t } = useLanguage();
   // Autocomplete service and geocoder refs
   const autocompleteServiceRef =
     useRef<google.maps.places.AutocompleteService | null>(null);
@@ -238,7 +240,7 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
               d="M12 4v16m8-8H4"
             />
           </svg>
-          <span className="!text-white">Add New Address</span>
+          <span className="!text-white">{t("nav.addNewAddress")}</span>
         </button>
       </div>
 
@@ -276,7 +278,7 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
                         clipRule="evenodd"
                       />
                     </svg>
-                    <span className="!text-white">Default</span>
+                    <span className="!text-white">{t("address.default")}</span>
                   </span>
                 </div>
               )}
@@ -436,10 +438,10 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
               />
             </svg>
             <p className="mt-4 text-lg font-semibold text-gray-600 dark:text-gray-400">
-              No saved addresses
+              {t("address.noAddresses")}
             </p>
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-500">
-              Add your first address to get started
+              {t("address.addFirstAddress")}
             </p>
           </div>
         )}
@@ -453,10 +455,10 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white px-4 py-4 dark:border-gray-700 dark:from-gray-800 dark:to-gray-800 sm:px-6 sm:py-5 md:px-8">
               <div>
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white sm:text-xl md:text-2xl">
-                  Add New Address
+                  {t("nav.addNewAddress")}
                 </h3>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Enter your delivery address details
+                  {t("address.enterDetails")}
                 </p>
               </div>
               <button
@@ -527,33 +529,33 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
               </div>
 
               {/* City and Postal Code */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    City *
-                  </label>
-                  <input
-                    type="text"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="Enter city"
-                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Postal Code *
-                  </label>
-                  <input
-                    type="text"
-                    value={postalCode}
-                    onChange={(e) => setPostalCode(e.target.value)}
-                    placeholder="Enter postal code"
-                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
-                  />
-                </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  {t("address.city")} *
+                </label>
+                <input
+                  type="text"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  placeholder={t("address.enterCity")}
+                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
+                />
               </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  {t("address.postalCode")} *
+                </label>
+                <input
+                  type="text"
+                  value={postalCode}
+                  onChange={(e) => setPostalCode(e.target.value)}
+                  placeholder={t("address.enterPostalCode")}
+                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
+                />
+              </div>
+            </div>
 
               {/* Default Address Checkbox */}
               <div className="flex items-center space-x-3 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
@@ -568,11 +570,11 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
                   htmlFor="default-address"
                   className="flex-1 text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
-                  Set as default address
+                  {t("address.setAsDefault")}
                 </label>
                 {isDefault && (
                   <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                    Default
+                    {t("address.default")}
                   </span>
                 )}
               </div>
@@ -594,7 +596,7 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
                 }}
                 className="rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 onClick={handleSave}
@@ -622,7 +624,7 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       />
                     </svg>
-                    <span className="!text-white">Saving...</span>
+                    <span className="!text-white">{t("address.saving")}</span>
                   </>
                 ) : (
                   <>
@@ -639,7 +641,7 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
                         d="M5 13l4 4L19 7"
                       />
                     </svg>
-                    <span className="!text-white">Save Address</span>
+                    <span className="!text-white">{t("address.saveAddress")}</span>
                   </>
                 )}
               </button>

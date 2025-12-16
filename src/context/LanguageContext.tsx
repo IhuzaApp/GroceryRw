@@ -42,14 +42,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const handleLanguageChange = (newLanguage: Language) => {
     setLanguage(newLanguage);
     updateLanguage(newLanguage);
-    
-    // Reload the page to apply language changes throughout the app
-    // This ensures all components re-render with the new language
-    if (typeof window !== "undefined") {
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
-    }
+    // Language change will trigger re-renders in components using useLanguage hook
+    // No need to reload the page - React will handle the updates
   };
 
   // Translation function

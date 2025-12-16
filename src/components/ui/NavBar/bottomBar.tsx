@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useCart } from "../../../context/CartContext";
 import { useTheme } from "../../../context/ThemeContext";
+import { useLanguage } from "../../../context/LanguageContext";
 import { Input, Modal, Button, Loader } from "rsuite";
 import { useSession, signOut } from "next-auth/react";
 import { Briefcase } from "lucide-react";
@@ -127,6 +128,7 @@ export default function BottomBar() {
   const router = useRouter();
   const { count } = useCart();
   const { theme, setTheme } = useTheme();
+  const { t } = useLanguage();
   const { data: session } = useSession();
   const moreRef = useRef<HTMLDivElement>(null);
   const [marketplaceNotificationCount, setMarketplaceNotificationCount] =
@@ -526,7 +528,7 @@ export default function BottomBar() {
               )}
             </div>
           }
-          label="Marketplace"
+          label={t("nav.marketplace") || "Marketplace"}
         />
         <NavItem
           href="/CurrentPendingOrders"

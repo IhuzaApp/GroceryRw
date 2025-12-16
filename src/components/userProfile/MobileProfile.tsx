@@ -14,6 +14,7 @@ import { useRouter } from "next/router";
 import { useAuth } from "../../context/AuthContext";
 import { initiateRoleSwitch } from "../../lib/sessionRefresh";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
+import { useLanguage } from "../../context/LanguageContext";
 
 interface MobileProfileProps {
   user: {
@@ -406,7 +407,7 @@ export default function MobileProfile({
               </div>
               <div className="text-left">
                 <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Orders
+                  {t("nav.orders")}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   View your order history
@@ -519,7 +520,7 @@ export default function MobileProfile({
               </div>
               <div className="text-left">
                 <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Account
+                  {t("nav.account")}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   Manage your account settings
@@ -613,7 +614,7 @@ export default function MobileProfile({
               </div>
               <div className="text-left">
                 <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Preferences
+                  {t("nav.preferences")}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   Customize your experience
@@ -850,7 +851,7 @@ export default function MobileProfile({
                 />
               </svg>
             </div>
-            <span className="!text-white">Logout</span>
+            <span className="!text-white">{t("nav.logout")}</span>
           </div>
         </button>
       </div>
