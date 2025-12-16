@@ -168,115 +168,338 @@ export default function UserPayment() {
     <>
       {/* Payment Methods Section */}
       <div className="mb-8">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-bold">Payment Methods</h3>
-          <Button
-            appearance="primary"
-            color="green"
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+              Payment Methods
+            </h3>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Manage your payment methods
+            </p>
+          </div>
+          <button
             onClick={handleAdd}
-            size="sm"
-            className="dark:!bg-green-600 dark:!text-white dark:hover:!bg-green-700"
+            className="inline-flex items-center rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-5 py-2.5 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 active:scale-95"
           >
+            <svg
+              className="mr-2 h-5 w-5 !text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
             Add Payment Method
-          </Button>
+          </button>
         </div>
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {paymentMethods.map((pm) => (
-            <Panel bordered className="relative" key={pm.id}>
+            <div
+              key={pm.id}
+              className={`group relative overflow-hidden rounded-xl border-2 p-5 shadow-md transition-all duration-300 hover:shadow-xl ${
+                pm.is_default
+                  ? "border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 dark:border-green-600"
+                  : "border-gray-200 bg-white hover:border-green-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-600"
+              }`}
+            >
+              {/* Default Badge */}
               {pm.is_default && (
-                <Tag className="absolute right-2 top-2 border-green-200 bg-green-100 text-green-600">
-                  Default
-                </Tag>
+                <div className="absolute right-3 top-3">
+                  <span className="inline-flex items-center rounded-full bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-1 text-xs font-semibold !text-white shadow-lg">
+                    <svg
+                      className="mr-1 h-3 w-3 !text-white"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span className="!text-white">Default</span>
+                  </span>
+                </div>
               )}
-              <div className="flex items-center">
-                <div
-                  className={`mr-3 flex h-8 w-12 items-center justify-center rounded ${getMethodBg(
-                    pm.method
-                  )}`}
-                >
-                  {pm.method}
-                </div>
-                <div>
-                  <h4 className="font-bold">
-                    {`${pm.method} ending in ${pm.number.slice(-4)}`}
-                  </h4>
-                  <p className="text-sm text-gray-600">Expires {pm.validity}</p>
-                </div>
-              </div>
-              <div className="mt-4 flex gap-2">
-                <Button appearance="ghost" size="sm">
-                  Edit
-                </Button>
-                <Button appearance="ghost" color="red" size="sm">
-                  Delete
-                </Button>
-                {!pm.is_default && (
-                  <Button
-                    appearance="ghost"
-                    color="green"
-                    size="sm"
-                    onClick={() => handleSetDefault(pm.id)}
-                  >
-                    Set as Default
-                  </Button>
+
+              {/* Payment Method Icon */}
+              <div
+                className={`mb-4 flex h-14 w-14 items-center justify-center rounded-xl text-sm font-bold !text-white shadow-lg transition-transform duration-300 group-hover:scale-110 ${getMethodBg(
+                  pm.method
+                )}`}
+              >
+                {pm.method === "Visa" ? (
+                  <span className="text-lg">VISA</span>
+                ) : pm.method === "Mastercard" || pm.method === "MC" ? (
+                  <span className="text-lg">MC</span>
+                ) : (
+                  <span className="text-xs">MTN</span>
                 )}
               </div>
-            </Panel>
+
+              {/* Card Details */}
+              <div className="mb-4">
+                <h4 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
+                  {pm.method}
+                </h4>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    Ending in {pm.number.slice(-4)}
+                  </p>
+                  {pm.validity && (
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      Expires {pm.validity}
+                    </p>
+                  )}
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {pm.names}
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-2">
+                {!pm.is_default && (
+                  <button
+                    className="group flex flex-1 items-center justify-center rounded-lg border-2 border-green-500 bg-white px-3 py-2 text-xs font-semibold text-green-600 transition-all duration-200 hover:bg-green-500 hover:!text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-green-400 dark:bg-gray-800 dark:text-green-400 dark:hover:bg-green-500 dark:hover:!text-white"
+                    onClick={() => handleSetDefault(pm.id)}
+                  >
+                    <svg
+                      className="mr-1.5 h-3.5 w-3.5 group-hover:!text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span className="group-hover:!text-white">Set Default</span>
+                  </button>
+                )}
+                <button
+                  className="flex flex-1 items-center justify-center rounded-lg border-2 border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-gray-700 transition-all duration-200 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                >
+                  <svg
+                    className="mr-1.5 h-3.5 w-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  </svg>
+                  Edit
+                </button>
+                <button
+                  className="flex flex-1 items-center justify-center rounded-lg border-2 border-red-300 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition-all duration-200 hover:bg-red-50 dark:border-red-600 dark:bg-gray-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                >
+                  <svg
+                    className="mr-1.5 h-3.5 w-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                  Delete
+                </button>
+              </div>
+
+              {/* Decorative Elements */}
+              <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gradient-to-br from-green-200/30 to-emerald-200/30 blur-xl dark:from-green-800/20 dark:to-emerald-800/20" />
+              <div className="absolute -bottom-6 -left-6 h-20 w-20 rounded-full bg-gradient-to-br from-blue-200/30 to-cyan-200/30 blur-xl dark:from-blue-800/20 dark:to-cyan-800/20" />
+            </div>
           ))}
         </div>
+        {paymentMethods.length === 0 && (
+          <div className="rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-12 text-center dark:border-gray-700 dark:bg-gray-800/50">
+            <svg
+              className="mx-auto h-16 w-16 text-gray-400 dark:text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+              />
+            </svg>
+            <p className="mt-4 text-lg font-semibold text-gray-600 dark:text-gray-400">
+              No payment methods
+            </p>
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-500">
+              Add your first payment method to get started
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Payment Cards Section */}
       <div className="mb-8">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-bold">Payment Cards</h3>
+        <div className="mb-6">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+            Payment Cards
+          </h3>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Your saved payment cards
+          </p>
         </div>
-        <div className="space-y-4">
-          {paymentCards.map((card) => (
-            <Panel bordered className="relative" key={card.id}>
-              <div className="flex items-center">
-                <div
-                  className={`mr-3 flex h-8 w-12 items-center justify-center rounded ${
-                    card.number.startsWith("4")
-                      ? "bg-blue-600"
-                      : card.number.startsWith("5")
-                      ? "bg-orange-500"
-                      : "bg-gray-500"
-                  } text-white`}
-                >
-                  {card.number.startsWith("4")
-                    ? "VISA"
-                    : card.number.startsWith("5")
-                    ? "MC"
-                    : "CARD"}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {paymentCards.map((card) => {
+            const isVisa = card.number.startsWith("4");
+            const isMastercard = card.number.startsWith("5");
+            return (
+              <div
+                key={card.id}
+                className="group relative overflow-hidden rounded-xl border-2 border-gray-200 bg-white p-5 shadow-md transition-all duration-300 hover:border-green-300 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-600"
+              >
+                {/* Card Type Badge */}
+                <div className="absolute right-3 top-3">
+                  <div
+                    className={`flex h-8 w-12 items-center justify-center rounded-lg text-xs font-bold !text-white shadow-lg ${
+                      isVisa
+                        ? "bg-gradient-to-br from-blue-600 to-blue-700"
+                        : isMastercard
+                        ? "bg-gradient-to-br from-orange-500 to-red-600"
+                        : "bg-gradient-to-br from-gray-500 to-gray-600"
+                    }`}
+                  >
+                    {isVisa ? "VISA" : isMastercard ? "MC" : "CARD"}
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-bold">
-                    {`${card.name} - ${formatCardNumber(card.number)}`}
-                  </h4>
-                  <p className="text-sm text-gray-600">
-                    Expires {card.expiry_date}
-                  </p>
-                </div>
-                {card.image && (
-                  <img
-                    src={card.image}
-                    alt="Card"
-                    className="ml-auto h-10 w-10 rounded-full border border-gray-200 object-cover"
-                  />
+
+                {/* Card Image or Icon */}
+                {card.image ? (
+                  <div className="mb-4 flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl border-2 border-gray-200 shadow-md dark:border-gray-700">
+                    <img
+                      src={card.image}
+                      alt="Card"
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-gray-400 to-gray-500 shadow-lg">
+                    <svg
+                      className="h-8 w-8 !text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                      />
+                    </svg>
+                  </div>
                 )}
+
+                {/* Card Details */}
+                <div className="mb-4">
+                  <h4 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
+                    {card.name}
+                  </h4>
+                  <div className="space-y-1">
+                    <p className="font-mono text-sm text-gray-600 dark:text-gray-300">
+                      {formatCardNumber(card.number)}
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      Expires {card.expiry_date}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    className="flex flex-1 items-center justify-center rounded-lg border-2 border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-gray-700 transition-all duration-200 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                  >
+                    <svg
+                      className="mr-1.5 h-3.5 w-3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      />
+                    </svg>
+                    Edit
+                  </button>
+                  <button
+                    className="flex flex-1 items-center justify-center rounded-lg border-2 border-red-300 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition-all duration-200 hover:bg-red-50 dark:border-red-600 dark:bg-gray-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                  >
+                    <svg
+                      className="mr-1.5 h-3.5 w-3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+
+                {/* Decorative Elements */}
+                <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gradient-to-br from-green-200/30 to-emerald-200/30 blur-xl dark:from-green-800/20 dark:to-emerald-800/20" />
+                <div className="absolute -bottom-6 -left-6 h-20 w-20 rounded-full bg-gradient-to-br from-blue-200/30 to-cyan-200/30 blur-xl dark:from-blue-800/20 dark:to-cyan-800/20" />
               </div>
-              <div className="mt-4 flex gap-2">
-                <Button appearance="ghost" size="sm">
-                  Edit
-                </Button>
-                <Button appearance="ghost" color="red" size="sm">
-                  Delete
-                </Button>
-              </div>
-            </Panel>
-          ))}
+            );
+          })}
         </div>
+        {paymentCards.length === 0 && (
+          <div className="rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-12 text-center dark:border-gray-700 dark:bg-gray-800/50">
+            <svg
+              className="mx-auto h-16 w-16 text-gray-400 dark:text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+              />
+            </svg>
+            <p className="mt-4 text-lg font-semibold text-gray-600 dark:text-gray-400">
+              No payment cards
+            </p>
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-500">
+              Add your first payment card to get started
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Add Payment Method Modal */}
