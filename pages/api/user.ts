@@ -30,16 +30,11 @@ const GET_ORDER_COUNT = gql`
   }
 `;
 
-// Query to get shopper ID and wallet balance
-const GET_SHOPPER_AND_WALLET = gql`
-  query GetShopperAndWallet($user_id: uuid!) {
-    # First get the shopper ID for this user
-    shoppers(where: { user_id: { _eq: $user_id }, active: { _eq: true } }) {
-      id
-    }
-    # Get wallet for this user
-    Wallets(where: { shopper_id: { _eq: $user_id } }) {
-      available_balance
+// Query to get personal wallet balance
+const GET_PERSONAL_WALLET = gql`
+  query GetPersonalWallet($user_id: uuid!) {
+    personalWallet(where: { user_id: { _eq: $user_id } }) {
+      balance
     }
   }
 `;
@@ -85,16 +80,15 @@ export default async function handler(
     }>(GET_ORDER_COUNT, { user_id });
     const orderCount = orderData.Orders_aggregate.aggregate.count;
 
-    // Fetch shopper and wallet data
-    const shopperData = await hasuraClient.request<{
-      shoppers: Array<{ id: string }>;
-      Wallets: Array<{ available_balance: string }>;
-    }>(GET_SHOPPER_AND_WALLET, { user_id });
+    // Fetch personal wallet data
+    const walletData = await hasuraClient.request<{
+      personalWallet: Array<{ balance: string }>;
+    }>(GET_PERSONAL_WALLET, { user_id });
 
     // Get wallet balance
     const walletBalance =
-      shopperData.Wallets.length > 0
-        ? parseFloat(shopperData.Wallets[0].available_balance)
+      walletData.personalWallet.length > 0
+        ? parseFloat(walletData.personalWallet[0].balance || "0")
         : 0;
 
     return res.status(200).json({ user, orderCount, walletBalance });

@@ -256,7 +256,6 @@ export default function MobileProfile({
                 </span>
               ) : null}
             </div>
-
           </div>
         </div>
 
