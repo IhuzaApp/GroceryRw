@@ -24,6 +24,7 @@ import {
   clearRoleSwitchFlag,
 } from "../src/lib/sessionRefresh";
 import { ThemeProvider } from "../src/context/ThemeContext";
+import { LanguageProvider } from "../src/context/LanguageContext";
 import InstallPrompt from "../src/components/ui/InstallPrompt";
 import Head from "next/head";
 
@@ -276,7 +277,8 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <ThemeProvider>
-      <Head>
+      <LanguageProvider>
+        <Head>
         <title>{pageTitle}</title>
         <link rel="manifest" href="/manifest.json" />
         <meta name="application-name" content="Plas" />
@@ -359,6 +361,7 @@ export default function App({ Component, pageProps }: AppProps) {
           </AuthProvider>
         </ApolloProvider>
       </SessionProvider>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

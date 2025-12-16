@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useTheme } from "../../context/ThemeContext";
+import { useLanguage } from "../../context/LanguageContext";
 import toast from "react-hot-toast";
 
 export default function UserPreference() {
   const { theme, setTheme } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
   const [preferences, setPreferences] = useState({
     notifications: true,
     emailUpdates: true,
     smsUpdates: false,
-    language: "en",
     currency: "RWF",
   });
   const [loading, setLoading] = useState(false);
@@ -61,14 +62,22 @@ export default function UserPreference() {
     }));
   };
 
+  const handleLanguageChange = (newLanguage: "en" | "rw") => {
+    setLanguage(newLanguage);
+    // Language is automatically saved in LanguageContext
+    const languageName =
+      newLanguage === "en" ? t("preferences.english") : t("preferences.kinyarwanda");
+    toast.success(`${t("preferences.languageChanged")} ${languageName}`);
+  };
+
   const handleSave = async () => {
     setLoading(true);
     try {
       // Add API call to save preferences
       // await fetch('/api/user/preferences', { ... });
-      toast.success("Preferences saved successfully!");
+      toast.success(t("preferences.preferencesSaved"));
     } catch (error) {
-      toast.error("Failed to save preferences");
+      toast.error(t("preferences.failedToSave"));
     } finally {
       setLoading(false);
     }
@@ -124,10 +133,10 @@ export default function UserPreference() {
             </div>
             <div>
               <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                Theme Settings
+                {t("preferences.themeSettings")}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Customize your app appearance
+                {t("preferences.customizeAppearance")}
               </p>
             </div>
           </div>
@@ -152,10 +161,12 @@ export default function UserPreference() {
               </div>
               <div>
                 <span className="block text-sm font-semibold text-gray-900 dark:text-white">
-                  Dark Mode
+                  {t("preferences.darkMode")}
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {theme === "dark" ? "Enabled" : "Disabled"}
+                  {theme === "dark"
+                    ? t("preferences.enabled")
+                    : t("preferences.disabled")}
                 </span>
               </div>
             </div>
@@ -188,10 +199,10 @@ export default function UserPreference() {
             </div>
             <div>
               <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                Notification Preferences
+                {t("preferences.notificationPreferences")}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Manage how you receive updates
+                {t("preferences.manageUpdates")}
               </p>
             </div>
           </div>
@@ -216,10 +227,10 @@ export default function UserPreference() {
               </div>
               <div>
                 <span className="block text-sm font-semibold text-gray-900 dark:text-white">
-                  Push Notifications
+                  {t("preferences.pushNotifications")}
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                  Receive notifications on your device
+                  {t("preferences.receiveNotifications")}
                 </span>
               </div>
             </div>
@@ -250,10 +261,10 @@ export default function UserPreference() {
               </div>
               <div>
                 <span className="block text-sm font-semibold text-gray-900 dark:text-white">
-                  Email Updates
+                  {t("preferences.emailUpdates")}
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                  Get updates via email
+                  {t("preferences.getUpdatesViaEmail")}
                 </span>
               </div>
             </div>
@@ -284,10 +295,10 @@ export default function UserPreference() {
               </div>
               <div>
                 <span className="block text-sm font-semibold text-gray-900 dark:text-white">
-                  SMS Updates
+                  {t("preferences.smsUpdates")}
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                  Receive text message updates
+                  {t("preferences.receiveTextMessages")}
                 </span>
               </div>
             </div>
@@ -322,10 +333,10 @@ export default function UserPreference() {
             </div>
             <div>
               <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                Language & Currency
+                {t("preferences.languageCurrency")}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Set your preferred language and currency
+                {t("preferences.setPreferredLanguage")}
               </p>
             </div>
           </div>
@@ -334,31 +345,32 @@ export default function UserPreference() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Language
+                {t("preferences.language")} *
               </label>
               <select
-                value={preferences.language}
+                value={language}
                 onChange={(e) =>
-                  handlePreferenceChange("language", e.target.value)
+                  handleLanguageChange(e.target.value as "en" | "rw")
                 }
                 className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
               >
-                <option value="en">English</option>
-                <option value="es">Spanish</option>
-                <option value="fr">French</option>
-                <option value="rw">Kinyarwanda</option>
+                <option value="en">{t("preferences.english")}</option>
+                <option value="rw">{t("preferences.kinyarwanda")}</option>
               </select>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                {t("preferences.changesApplyImmediately")}
+              </p>
             </div>
             <div>
               <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Currency
+                {t("preferences.currency")}
                 {loadingCurrency ? (
                   <span className="ml-2 text-xs text-gray-400">
-                    (Loading...)
+                    ({t("common.loading")})
                   </span>
                 ) : (
                   <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400">
-                    System Managed
+                    {t("preferences.systemManaged")}
                   </span>
                 )}
               </label>
@@ -376,7 +388,7 @@ export default function UserPreference() {
               </select>
               {!loadingCurrency && (
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  Currency is managed by Company and cannot be changed
+                  {t("preferences.currencyManagedByCompany")}
                 </p>
               )}
             </div>
@@ -412,7 +424,7 @@ export default function UserPreference() {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              <span className="!text-white">Saving...</span>
+              <span className="!text-white">{t("preferences.saving")}</span>
             </>
           ) : (
             <>
@@ -429,7 +441,7 @@ export default function UserPreference() {
                   d="M5 13l4 4L19 7"
                 />
               </svg>
-              <span className="!text-white">Save Preferences</span>
+              <span className="!text-white">{t("preferences.savePreferences")}</span>
             </>
           )}
         </button>
