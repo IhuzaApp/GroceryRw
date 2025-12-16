@@ -23,7 +23,13 @@ interface Contract {
   supplierName: string;
   supplierCompany: string;
   contractType: string;
-  status: "draft" | "pending" | "active" | "completed" | "terminated" | "expired";
+  status:
+    | "draft"
+    | "pending"
+    | "active"
+    | "completed"
+    | "terminated"
+    | "expired";
   startDate: string;
   endDate: string;
   totalValue: number;
@@ -76,31 +82,36 @@ export function ContractsSection({
       case "active":
         return {
           icon: CheckCircle,
-          className: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
+          className:
+            "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
           text: "Active",
         };
       case "completed":
         return {
           icon: CheckCircle,
-          className: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
+          className:
+            "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
           text: "Completed",
         };
       case "terminated":
         return {
           icon: XCircle,
-          className: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+          className:
+            "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
           text: "Terminated",
         };
       case "expired":
         return {
           icon: AlertCircle,
-          className: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
+          className:
+            "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
           text: "Expired",
         };
       default:
         return {
           icon: Clock,
-          className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
+          className:
+            "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
           text: "Pending",
         };
     }
@@ -152,7 +163,9 @@ export function ContractsSection({
                   <FileText className="h-8 w-8 text-gray-400 sm:h-10 sm:w-10 md:h-12 md:w-12" />
                 </div>
                 <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 sm:-right-2 sm:-top-2 sm:h-6 sm:w-6">
-                  <span className="text-[10px] font-bold text-white sm:text-xs">0</span>
+                  <span className="text-[10px] font-bold text-white sm:text-xs">
+                    0
+                  </span>
                 </div>
               </div>
               <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white sm:text-xl">
@@ -183,7 +196,7 @@ export function ContractsSection({
                     <div className="p-4 sm:p-6">
                       {/* Header Section */}
                       <div className="mb-4 flex flex-col gap-3 sm:mb-4 sm:flex-row sm:items-start sm:justify-between">
-                        <div className="flex-1 min-w-0">
+                        <div className="min-w-0 flex-1">
                           <div className="mb-2 flex flex-wrap items-center gap-2">
                             <h3 className="text-base font-bold text-gray-900 dark:text-white sm:text-lg">
                               {contract.title}
@@ -202,12 +215,16 @@ export function ContractsSection({
                             <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
                               <Calendar className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
                               <span className="truncate">
-                                {formatDate(contract.startDate)} - {formatDate(contract.endDate)}
+                                {formatDate(contract.startDate)} -{" "}
+                                {formatDate(contract.endDate)}
                               </span>
                             </div>
                             <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
                               <DollarSign className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
-                              <span>{formatCurrencySync(contract.totalValue)} {contract.currency}</span>
+                              <span>
+                                {formatCurrencySync(contract.totalValue)}{" "}
+                                {contract.currency}
+                              </span>
                             </div>
                             <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
                               <Clock className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
@@ -221,8 +238,12 @@ export function ContractsSection({
                       {contract.progress !== undefined && (
                         <div className="mb-4 sm:mb-4">
                           <div className="mb-1.5 flex items-center justify-between text-xs sm:mb-2 sm:text-sm">
-                            <span className="font-medium text-gray-600 dark:text-gray-400">Progress</span>
-                            <span className="font-semibold text-gray-900 dark:text-white">{contract.progress}%</span>
+                            <span className="font-medium text-gray-600 dark:text-gray-400">
+                              Progress
+                            </span>
+                            <span className="font-semibold text-gray-900 dark:text-white">
+                              {contract.progress}%
+                            </span>
                           </div>
                           <div className="h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700 sm:h-2.5">
                             <div
@@ -244,16 +265,16 @@ export function ContractsSection({
                           <span className="sm:hidden">View</span>
                         </button>
                         <button
-                          onClick={() => onMessageSupplier?.(contract.supplierName)}
+                          onClick={() =>
+                            onMessageSupplier?.(contract.supplierName)
+                          }
                           className="flex items-center justify-center gap-2 rounded-lg border-2 border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-all duration-200 hover:border-green-500 hover:bg-gray-50 active:scale-95 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-gray-700 sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm"
                         >
                           <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           <span className="hidden sm:inline">Message</span>
                           <span className="sm:hidden">Msg</span>
                         </button>
-                        <button
-                          className="flex items-center justify-center gap-2 rounded-lg border-2 border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-all duration-200 hover:border-green-500 hover:bg-gray-50 active:scale-95 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-gray-700 sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm"
-                        >
+                        <button className="flex items-center justify-center gap-2 rounded-lg border-2 border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-all duration-200 hover:border-green-500 hover:bg-gray-50 active:scale-95 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-gray-700 sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm">
                           <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           <span className="hidden sm:inline">Download</span>
                           <span className="sm:hidden">Download</span>

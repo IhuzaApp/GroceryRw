@@ -196,7 +196,7 @@ export default function UserPayment() {
               key={pm.id}
               className={`group relative overflow-hidden rounded-xl border-2 p-5 shadow-md transition-all duration-300 hover:shadow-xl ${
                 pm.is_default
-                  ? "border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 dark:border-green-600"
+                  ? "border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 dark:border-green-600 dark:from-green-900/20 dark:to-emerald-900/20"
                   : "border-gray-200 bg-white hover:border-green-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-600"
               }`}
             >
@@ -223,9 +223,9 @@ export default function UserPayment() {
               {/* Payment Method Icon */}
               <div
                 className={`mb-4 flex h-14 w-14 items-center justify-center rounded-xl text-sm font-bold !text-white shadow-lg transition-transform duration-300 group-hover:scale-110 ${getMethodBg(
-                    pm.method
-                  )}`}
-                >
+                  pm.method
+                )}`}
+              >
                 {pm.method === "Visa" ? (
                   <span className="text-lg">VISA</span>
                 ) : pm.method === "Mastercard" || pm.method === "MC" ? (
@@ -239,7 +239,7 @@ export default function UserPayment() {
               <div className="mb-4">
                 <h4 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
                   {pm.method}
-                  </h4>
+                </h4>
                 <div className="space-y-1">
                   <p className="text-sm text-gray-600 dark:text-gray-300">
                     {t("payment.endingIn")} {pm.number.slice(-4)}
@@ -259,7 +259,7 @@ export default function UserPayment() {
               <div className="flex flex-wrap gap-2">
                 {!pm.is_default && (
                   <button
-                    className="group flex flex-1 items-center justify-center rounded-xl border-2 border-green-500 bg-white px-4 py-2.5 text-xs font-semibold text-green-600 shadow-sm transition-all duration-200 hover:scale-105 hover:border-green-600 hover:bg-gradient-to-r hover:from-green-500 hover:to-emerald-600 hover:shadow-md hover:!text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:border-green-400 dark:bg-gray-800 dark:text-green-400 dark:hover:border-green-500 dark:hover:from-green-600 dark:hover:to-emerald-600 dark:hover:!text-white"
+                    className="group flex flex-1 items-center justify-center rounded-xl border-2 border-green-500 bg-white px-4 py-2.5 text-xs font-semibold text-green-600 shadow-sm transition-all duration-200 hover:scale-105 hover:border-green-600 hover:bg-gradient-to-r hover:from-green-500 hover:to-emerald-600 hover:!text-white hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:border-green-400 dark:bg-gray-800 dark:text-green-400 dark:hover:border-green-500 dark:hover:from-green-600 dark:hover:to-emerald-600 dark:hover:!text-white"
                     onClick={() => handleSetDefault(pm.id)}
                   >
                     <svg
@@ -280,9 +280,7 @@ export default function UserPayment() {
                     </span>
                   </button>
                 )}
-                <button
-                  className="group flex flex-1 items-center justify-center rounded-xl border-2 border-gray-300 bg-white px-4 py-2.5 text-xs font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:scale-105 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md active:scale-95 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700"
-                >
+                <button className="group flex flex-1 items-center justify-center rounded-xl border-2 border-gray-300 bg-white px-4 py-2.5 text-xs font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:scale-105 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md active:scale-95 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700">
                   <svg
                     className="mr-2 h-4 w-4"
                     fill="none"
@@ -298,9 +296,7 @@ export default function UserPayment() {
                   </svg>
                   Edit
                 </button>
-                <button
-                  className="group flex flex-1 items-center justify-center rounded-xl border-2 border-red-300 bg-white px-4 py-2.5 text-xs font-semibold text-red-600 shadow-sm transition-all duration-200 hover:scale-105 hover:border-red-500 hover:bg-gradient-to-r hover:from-red-500 hover:to-red-600 hover:shadow-md hover:!text-white active:scale-95 dark:border-red-600 dark:bg-gray-800 dark:text-red-400 dark:hover:border-red-500 dark:hover:from-red-600 dark:hover:to-red-700 dark:hover:!text-white"
-                >
+                <button className="group flex flex-1 items-center justify-center rounded-xl border-2 border-red-300 bg-white px-4 py-2.5 text-xs font-semibold text-red-600 shadow-sm transition-all duration-200 hover:scale-105 hover:border-red-500 hover:bg-gradient-to-r hover:from-red-500 hover:to-red-600 hover:!text-white hover:shadow-md active:scale-95 dark:border-red-600 dark:bg-gray-800 dark:text-red-400 dark:hover:border-red-500 dark:hover:from-red-600 dark:hover:to-red-700 dark:hover:!text-white">
                   <svg
                     className="mr-2 h-4 w-4 transition-colors group-hover:!text-white"
                     fill="none"
@@ -382,15 +378,15 @@ export default function UserPayment() {
                     }`}
                   >
                     {isVisa ? "VISA" : isMastercard ? "MC" : "CARD"}
-                </div>
+                  </div>
                 </div>
 
                 {/* Card Image or Icon */}
                 {card.image ? (
                   <div className="mb-4 flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl border-2 border-gray-200 shadow-md dark:border-gray-700">
-                  <img
-                    src={card.image}
-                    alt="Card"
+                    <img
+                      src={card.image}
+                      alt="Card"
                       className="h-full w-full object-cover"
                     />
                   </div>
@@ -425,13 +421,11 @@ export default function UserPayment() {
                       {t("payment.expires")} {card.expiry_date}
                     </p>
                   </div>
-              </div>
+                </div>
 
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-2">
-                  <button
-                    className="group flex flex-1 items-center justify-center rounded-xl border-2 border-gray-300 bg-white px-4 py-2.5 text-xs font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:scale-105 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md active:scale-95 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700"
-                  >
+                  <button className="group flex flex-1 items-center justify-center rounded-xl border-2 border-gray-300 bg-white px-4 py-2.5 text-xs font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:scale-105 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md active:scale-95 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700">
                     <svg
                       className="mr-2 h-4 w-4"
                       fill="none"
@@ -447,9 +441,7 @@ export default function UserPayment() {
                     </svg>
                     Edit
                   </button>
-                  <button
-                    className="group flex flex-1 items-center justify-center rounded-xl border-2 border-red-300 bg-white px-4 py-2.5 text-xs font-semibold text-red-600 shadow-sm transition-all duration-200 hover:scale-105 hover:border-red-500 hover:bg-gradient-to-r hover:from-red-500 hover:to-red-600 hover:shadow-md hover:!text-white active:scale-95 dark:border-red-600 dark:bg-gray-800 dark:text-red-400 dark:hover:border-red-500 dark:hover:from-red-600 dark:hover:to-red-700 dark:hover:!text-white"
-                  >
+                  <button className="group flex flex-1 items-center justify-center rounded-xl border-2 border-red-300 bg-white px-4 py-2.5 text-xs font-semibold text-red-600 shadow-sm transition-all duration-200 hover:scale-105 hover:border-red-500 hover:bg-gradient-to-r hover:from-red-500 hover:to-red-600 hover:!text-white hover:shadow-md active:scale-95 dark:border-red-600 dark:bg-gray-800 dark:text-red-400 dark:hover:border-red-500 dark:hover:from-red-600 dark:hover:to-red-700 dark:hover:!text-white">
                     <svg
                       className="mr-2 h-4 w-4 transition-colors group-hover:!text-white"
                       fill="none"
@@ -552,25 +544,25 @@ export default function UserPayment() {
                 <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                   {t("payment.paymentMethod")} *
                 </label>
-              <select
-                name="method"
-                value={formValue.method}
-                onChange={(e) =>
-                  setFormValue({ ...formValue, method: e.target.value })
-                }
+                <select
+                  name="method"
+                  value={formValue.method}
+                  onChange={(e) =>
+                    setFormValue({ ...formValue, method: e.target.value })
+                  }
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
-              >
+                >
                   <option value="">{t("payment.selectPaymentMethod")}</option>
-                <option value="Visa">Visa</option>
-                <option value="Mastercard">Mastercard</option>
-                <option value="MTN Momo">MTN Momo</option>
-              </select>
+                  <option value="Visa">Visa</option>
+                  <option value="Mastercard">Mastercard</option>
+                  <option value="MTN Momo">MTN Momo</option>
+                </select>
               </div>
 
               {/* Name on Card/Number */}
               <div>
                 <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                {formValue.method === "MTN Momo"
+                  {formValue.method === "MTN Momo"
                     ? `${t("payment.nameOnNumber")} *`
                     : `${t("payment.nameOnCard")} *`}
                 </label>
@@ -592,7 +584,9 @@ export default function UserPayment() {
               {/* Card/Number */}
               <div>
                 <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  {formValue.method === "MTN Momo" ? `${t("payment.phoneNumber")} *` : `${t("payment.cardNumber")} *`}
+                  {formValue.method === "MTN Momo"
+                    ? `${t("payment.phoneNumber")} *`
+                    : `${t("payment.cardNumber")} *`}
                 </label>
                 <input
                   type="text"
@@ -610,7 +604,7 @@ export default function UserPayment() {
               </div>
 
               {/* CCV and Validity (only for cards) */}
-            {formValue.method !== "MTN Momo" && (
+              {formValue.method !== "MTN Momo" && (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -691,7 +685,7 @@ export default function UserPayment() {
                 {t("common.cancel")}
               </button>
               <button
-            onClick={handleSave}
+                onClick={handleSave}
                 disabled={
                   !formValue.method ||
                   !formValue.names ||
@@ -714,7 +708,9 @@ export default function UserPayment() {
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                <span className="!text-white">{t("payment.savePaymentMethod")}</span>
+                <span className="!text-white">
+                  {t("payment.savePaymentMethod")}
+                </span>
               </button>
             </div>
           </div>

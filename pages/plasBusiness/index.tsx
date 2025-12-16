@@ -169,7 +169,6 @@ function BuyerDashboardContent({
   isChatDrawerOpen: boolean;
   setIsChatDrawerOpen: (open: boolean) => void;
 }) {
-
   const [activeTab, setActiveTab] = useState("overview");
   const isPersonalAccount = businessAccount?.accountType === "personal";
   const isBusinessAccount = businessAccount?.accountType === "business";

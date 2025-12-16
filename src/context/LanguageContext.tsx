@@ -21,7 +21,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     if (typeof document !== "undefined") {
       document.documentElement.lang = newLanguage;
     }
-    
+
     // Save to localStorage
     if (typeof window !== "undefined") {
       localStorage.setItem("language", newLanguage);

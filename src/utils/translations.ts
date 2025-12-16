@@ -52,7 +52,8 @@ export const translations = {
       changesApplyImmediately: "Changes apply immediately to the app",
       currency: "Currency",
       systemManaged: "System Managed",
-      currencyManagedByCompany: "Currency is managed by Company and cannot be changed",
+      currencyManagedByCompany:
+        "Currency is managed by Company and cannot be changed",
       systemCurrency: "System currency",
       savePreferences: "Save Preferences",
       saving: "Saving...",
@@ -186,7 +187,8 @@ export const translations = {
       changesApplyImmediately: "Ihinduka bikora mu kanya k'urubuga",
       currency: "Ifaranga",
       systemManaged: "Bikoreshwa na Sisitemu",
-      currencyManagedByCompany: "Ifaranga ikoreshwa na Sisitemu kandi ntishobora guhindurwa",
+      currencyManagedByCompany:
+        "Ifaranga ikoreshwa na Sisitemu kandi ntishobora guhindurwa",
       systemCurrency: "Ifaranga ya Sisitemu",
       savePreferences: "Bika Ibyifuzo",
       saving: "Bikwa...",
@@ -274,10 +276,7 @@ export type TranslationKey = keyof typeof translations.en;
 export type Language = "en" | "rw";
 
 // Helper function to get translation
-export const getTranslation = (
-  language: Language,
-  key: string
-): string => {
+export const getTranslation = (language: Language, key: string): string => {
   const keys = key.split(".");
   let value: any = translations[language];
 

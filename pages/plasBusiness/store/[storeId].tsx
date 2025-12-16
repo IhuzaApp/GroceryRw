@@ -588,19 +588,36 @@ export default function StoreDetailsPage() {
                 onClick={handleAddProduct}
                 disabled={isGeneratingQueryId}
                 className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2.5 text-sm font-semibold shadow-lg shadow-green-500/25 transition-all duration-200 hover:scale-105 hover:from-green-600 hover:to-emerald-600 hover:shadow-green-500/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 sm:px-5 sm:py-3 sm:text-base"
-                style={{ color: '#ffffff' }}
+                style={{ color: "#ffffff" }}
               >
                 {isGeneratingQueryId ? (
                   <>
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent sm:h-5 sm:w-5" />
-                    <span className="hidden sm:inline" style={{ color: '#ffffff' }}>Loading...</span>
-                    <span className="sm:hidden" style={{ color: '#ffffff' }}>Loading...</span>
+                    <span
+                      className="hidden sm:inline"
+                      style={{ color: "#ffffff" }}
+                    >
+                      Loading...
+                    </span>
+                    <span className="sm:hidden" style={{ color: "#ffffff" }}>
+                      Loading...
+                    </span>
                   </>
                 ) : (
                   <>
-                    <Plus className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: '#ffffff' }} />
-                    <span className="hidden sm:inline" style={{ color: '#ffffff' }}>Add Product</span>
-                    <span className="sm:hidden" style={{ color: '#ffffff' }}>Add</span>
+                    <Plus
+                      className="h-4 w-4 sm:h-5 sm:w-5"
+                      style={{ color: "#ffffff" }}
+                    />
+                    <span
+                      className="hidden sm:inline"
+                      style={{ color: "#ffffff" }}
+                    >
+                      Add Product
+                    </span>
+                    <span className="sm:hidden" style={{ color: "#ffffff" }}>
+                      Add
+                    </span>
                   </>
                 )}
               </button>
@@ -663,19 +680,19 @@ export default function StoreDetailsPage() {
                             <Package className="h-10 w-10 text-gray-300 sm:h-16 sm:w-16" />
                           </div>
                         )}
-                        
+
                         {/* Edit Button - Desktop only */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleEditProduct(product);
                           }}
-                          className="absolute right-2 top-2 hidden rounded-lg bg-white/90 p-1.5 text-green-600 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-white hover:scale-110 hover:text-green-700 sm:right-3 sm:top-3 sm:block lg:right-2 lg:top-2 lg:p-1 dark:bg-gray-800/90 dark:text-green-400 dark:hover:bg-gray-800"
+                          className="absolute right-2 top-2 hidden rounded-lg bg-white/90 p-1.5 text-green-600 shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-110 hover:bg-white hover:text-green-700 dark:bg-gray-800/90 dark:text-green-400 dark:hover:bg-gray-800 sm:right-3 sm:top-3 sm:block lg:right-2 lg:top-2 lg:p-1"
                           title="Edit product"
                         >
                           <Edit className="h-3.5 w-3.5 lg:h-3 lg:w-3" />
                         </button>
-                        
+
                         {/* Status Badge on Image - Mobile */}
                         {product.status && (
                           <span
@@ -684,14 +701,27 @@ export default function StoreDetailsPage() {
                                 ? "bg-green-500"
                                 : "bg-gray-500"
                             }`}
-                            style={{ color: '#ffffff' }}
+                            style={{ color: "#ffffff" }}
                           >
                             {product.status === "active" ? (
-                              <CheckCircle className="h-2 w-2" style={{ color: '#ffffff' }} />
+                              <CheckCircle
+                                className="h-2 w-2"
+                                style={{ color: "#ffffff" }}
+                              />
                             ) : (
-                              <XCircle className="h-2 w-2" style={{ color: '#ffffff' }} />
+                              <XCircle
+                                className="h-2 w-2"
+                                style={{ color: "#ffffff" }}
+                              />
                             )}
-                            <span className="capitalize" style={{ color: '#ffffff' }}>{product.status === "active" ? "Active" : "Inactive"}</span>
+                            <span
+                              className="capitalize"
+                              style={{ color: "#ffffff" }}
+                            >
+                              {product.status === "active"
+                                ? "Active"
+                                : "Inactive"}
+                            </span>
                           </span>
                         )}
                       </div>
@@ -705,7 +735,7 @@ export default function StoreDetailsPage() {
 
                         {/* Price and Unit */}
                         <div className="mb-1.5 flex items-baseline gap-1 sm:mb-2 lg:mb-1.5 xl:mb-1">
-                          <span className="text-sm font-bold text-green-600 sm:text-lg lg:text-sm dark:text-green-500">
+                          <span className="text-sm font-bold text-green-600 dark:text-green-500 sm:text-lg lg:text-sm">
                             {formatCurrencySync(parseFloat(product.price))}
                           </span>
                           <span className="text-[10px] text-gray-500 dark:text-gray-400 sm:text-xs lg:text-[10px]">
@@ -724,14 +754,30 @@ export default function StoreDetailsPage() {
                                   ? "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
                                   : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
                               }`}
-                              style={product.status === "active" ? { color: '#ffffff' } : {}}
+                              style={
+                                product.status === "active"
+                                  ? { color: "#ffffff" }
+                                  : {}
+                              }
                             >
                               {product.status === "active" ? (
-                                <CheckCircle className="h-3 w-3" style={{ color: '#ffffff' }} />
+                                <CheckCircle
+                                  className="h-3 w-3"
+                                  style={{ color: "#ffffff" }}
+                                />
                               ) : (
                                 <XCircle className="h-3 w-3" />
                               )}
-                              <span className="capitalize" style={product.status === "active" ? { color: '#ffffff' } : {}}>{product.status}</span>
+                              <span
+                                className="capitalize"
+                                style={
+                                  product.status === "active"
+                                    ? { color: "#ffffff" }
+                                    : {}
+                                }
+                              >
+                                {product.status}
+                              </span>
                             </span>
                           </div>
                         )}
@@ -956,17 +1002,32 @@ export default function StoreDetailsPage() {
 
             <div className="space-y-3 p-3 sm:space-y-4 sm:p-4 md:space-y-6 md:p-6">
               {queryId && !editingProduct && (
-                <div className="rounded-xl border-2 border-green-200 bg-gradient-to-br from-green-500 to-emerald-500 p-5 shadow-lg dark:border-green-800 sm:p-6 md:p-8" style={{ backgroundColor: '#10b981' }}>
+                <div
+                  className="rounded-xl border-2 border-green-200 bg-gradient-to-br from-green-500 to-emerald-500 p-5 shadow-lg dark:border-green-800 sm:p-6 md:p-8"
+                  style={{ backgroundColor: "#10b981" }}
+                >
                   <div className="mb-3 flex items-center justify-center gap-2">
-                    <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6" style={{ color: '#ffffff' }} />
-                    <p className="text-base font-bold sm:text-lg" style={{ color: '#ffffff' }}>
+                    <CheckCircle
+                      className="h-5 w-5 sm:h-6 sm:w-6"
+                      style={{ color: "#ffffff" }}
+                    />
+                    <p
+                      className="text-base font-bold sm:text-lg"
+                      style={{ color: "#ffffff" }}
+                    >
                       Verification ID Generated
                     </p>
                   </div>
-                  <p className="mb-4 text-center font-mono text-3xl font-bold tracking-wider sm:mb-5 sm:text-4xl md:text-5xl" style={{ color: '#ffffff' }}>
+                  <p
+                    className="mb-4 text-center font-mono text-3xl font-bold tracking-wider sm:mb-5 sm:text-4xl md:text-5xl"
+                    style={{ color: "#ffffff" }}
+                  >
                     {queryId}
                   </p>
-                  <p className="text-center text-sm font-medium sm:text-base" style={{ color: '#ffffff' }}>
+                  <p
+                    className="text-center text-sm font-medium sm:text-base"
+                    style={{ color: "#ffffff" }}
+                  >
                     Use this ID when taking the product photo for verification.
                   </p>
                 </div>
@@ -1188,7 +1249,7 @@ export default function StoreDetailsPage() {
                   onClick={handleSubmitProduct}
                   disabled={isCreatingProduct}
                   className="flex-1 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3 text-sm font-semibold shadow-lg shadow-green-500/25 transition-all duration-200 hover:scale-105 hover:from-green-600 hover:to-emerald-600 hover:shadow-green-500/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 sm:px-5 sm:text-base"
-                  style={{ color: '#ffffff' }}
+                  style={{ color: "#ffffff" }}
                 >
                   {isCreatingProduct
                     ? editingProduct
@@ -1227,8 +1288,14 @@ export default function StoreDetailsPage() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-green-500 to-emerald-500 p-4 dark:border-gray-700 sm:p-6" style={{ backgroundColor: '#10b981' }}>
-              <h2 className="text-lg font-bold sm:text-xl" style={{ color: '#ffffff' }}>
+            <div
+              className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-green-500 to-emerald-500 p-4 dark:border-gray-700 sm:p-6"
+              style={{ backgroundColor: "#10b981" }}
+            >
+              <h2
+                className="text-lg font-bold sm:text-xl"
+                style={{ color: "#ffffff" }}
+              >
                 Product Details
               </h2>
               <button
@@ -1236,9 +1303,13 @@ export default function StoreDetailsPage() {
                   setShowProductModal(false);
                   setSelectedProduct(null);
                 }}
-                className="rounded-lg p-2 transition-colors hover:bg-white/20" style={{ color: '#ffffff' }}
+                className="rounded-lg p-2 transition-colors hover:bg-white/20"
+                style={{ color: "#ffffff" }}
               >
-                <X className="h-5 w-5 sm:h-6 sm:w-6" style={{ color: '#ffffff' }} />
+                <X
+                  className="h-5 w-5 sm:h-6 sm:w-6"
+                  style={{ color: "#ffffff" }}
+                />
               </button>
             </div>
 
@@ -1246,7 +1317,7 @@ export default function StoreDetailsPage() {
             <div className="space-y-4 p-4 sm:space-y-6 sm:p-6">
               {/* Product Image */}
               {selectedProduct.Image && (
-                <div className="relative h-64 w-full overflow-hidden rounded-xl bg-gray-100 sm:h-80 dark:bg-gray-700">
+                <div className="relative h-64 w-full overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-700 sm:h-80">
                   <img
                     src={selectedProduct.Image}
                     alt={selectedProduct.name}
@@ -1269,14 +1340,30 @@ export default function StoreDetailsPage() {
                         ? "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
                         : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
                     }`}
-                    style={selectedProduct.status === "active" ? { color: '#ffffff' } : {}}
+                    style={
+                      selectedProduct.status === "active"
+                        ? { color: "#ffffff" }
+                        : {}
+                    }
                   >
                     {selectedProduct.status === "active" ? (
-                      <CheckCircle className="h-3.5 w-3.5" style={{ color: '#ffffff' }} />
+                      <CheckCircle
+                        className="h-3.5 w-3.5"
+                        style={{ color: "#ffffff" }}
+                      />
                     ) : (
                       <XCircle className="h-3.5 w-3.5" />
                     )}
-                    <span className="capitalize" style={selectedProduct.status === "active" ? { color: '#ffffff' } : {}}>{selectedProduct.status}</span>
+                    <span
+                      className="capitalize"
+                      style={
+                        selectedProduct.status === "active"
+                          ? { color: "#ffffff" }
+                          : {}
+                      }
+                    >
+                      {selectedProduct.status}
+                    </span>
                   </span>
                 )}
               </div>
