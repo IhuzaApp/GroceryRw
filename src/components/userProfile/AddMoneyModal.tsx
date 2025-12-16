@@ -1,21 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { authenticatedFetch } from "../../lib/authenticatedFetch";
 import toast from "react-hot-toast";
 import { useLanguage } from "../../context/LanguageContext";
-import CryptoJS from "crypto-js";
-
-// Encryption key - should match the one in UserPaymentCards
-const ENCRYPTION_KEY =
-  process.env.NEXT_PUBLIC_ENCRYPTION_KEY || "your-secret-key";
-
-interface PaymentCardType {
-  id: string;
-  number: string;
-  name: string;
-  expiry_date: string;
-  image: string | null;
-  created_at: string;
-}
 
 interface AddMoneyModalProps {
   isOpen: boolean;
@@ -23,28 +9,6 @@ interface AddMoneyModalProps {
   onSuccess: () => void;
   currentBalance?: number;
 }
-
-// Helper function to decrypt card number
-const decryptData = (encryptedText: string) => {
-  try {
-    const bytes = CryptoJS.AES.decrypt(encryptedText, ENCRYPTION_KEY);
-    return bytes.toString(CryptoJS.enc.Utf8);
-  } catch (error) {
-    console.error("Decryption error:", error);
-    return "****";
-  }
-};
-
-// Format card number to show only last 4 digits
-const formatCardNumber = (encryptedNumber: string) => {
-  try {
-    const decrypted = decryptData(encryptedNumber);
-    const lastFour = decrypted.slice(-4);
-    return `**** **** **** ${lastFour}`;
-  } catch (error) {
-    return "**** **** **** ****";
-  }
-};
 
 export default function AddMoneyModal({
   isOpen,
@@ -54,40 +18,24 @@ export default function AddMoneyModal({
 }: AddMoneyModalProps) {
   const { t } = useLanguage();
   const [amount, setAmount] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
-  const [selectedCardId, setSelectedCardId] = useState<string>("");
-  const [paymentCards, setPaymentCards] = useState<PaymentCardType[]>([]);
-  const [loadingCards, setLoadingCards] = useState<boolean>(false);
+  const [cardNumber, setCardNumber] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
   // Predefined amount options
   const quickAmounts = [5000, 10000, 20000, 50000, 100000];
 
-  // Fetch payment cards when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setLoadingCards(true);
-      authenticatedFetch("/api/queries/payment-cards", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          const cards = data.paymentCards || [];
-          setPaymentCards(cards);
-          if (cards.length > 0 && !selectedCardId) {
-            setSelectedCardId(cards[0].id);
-          }
-        })
-        .catch((err) => {
-          console.error("Error fetching payment cards:", err);
-          toast.error("Failed to load payment cards");
-        })
-        .finally(() => setLoadingCards(false));
-    }
-  }, [isOpen]);
+  // Format card number input (add spaces every 4 digits)
+  const formatCardNumberInput = (value: string) => {
+    const cleaned = value.replace(/\s/g, "").replace(/\D/g, "");
+    const formatted = cleaned.match(/.{1,4}/g)?.join(" ") || cleaned;
+    return formatted.slice(0, 19); // Max 16 digits + 3 spaces
+  };
+
+  // Handle card number input
+  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCardNumberInput(e.target.value);
+    setCardNumber(formatted);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,10 +51,16 @@ export default function AddMoneyModal({
       return;
     }
 
-    if (!selectedCardId) {
-      toast.error("Please select a payment card");
+    // Validate card number (should be at least 13 digits, max 19 characters with spaces)
+    const cleanedCardNumber = cardNumber.replace(/\s/g, "");
+    if (!cardNumber || cleanedCardNumber.length < 13 || cleanedCardNumber.length > 16) {
+      toast.error("Please enter a valid card number (13-16 digits)");
       return;
     }
+
+    // Generate description automatically
+    const lastFour = cleanedCardNumber.slice(-4);
+    const autoDescription = `Added ${amountNum.toFixed(2)} RWF to wallet from card ending in ${lastFour}`;
 
     setLoading(true);
     try {
@@ -117,8 +71,8 @@ export default function AddMoneyModal({
         },
         body: JSON.stringify({
           amount: amountNum,
-          description: description || undefined,
-          payment_card_id: selectedCardId,
+          description: autoDescription,
+          card_number: cleanedCardNumber,
         }),
       });
 
@@ -130,8 +84,7 @@ export default function AddMoneyModal({
 
       toast.success(data.message || "Money added successfully!");
       setAmount("");
-      setDescription("");
-      setSelectedCardId("");
+      setCardNumber("");
       onSuccess();
       onClose();
     } catch (error: any) {
@@ -252,73 +205,40 @@ export default function AddMoneyModal({
             </div>
           </div>
 
-          {/* Payment Card Selection */}
+          {/* Card Number Input */}
           <div>
             <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Payment Card <span className="text-red-500">*</span>
+              Card Number <span className="text-red-500">*</span>
             </label>
-            {loadingCards ? (
-              <div className="flex items-center justify-center rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 dark:border-gray-600 dark:bg-gray-700">
+            <div className="relative">
+              <input
+                type="text"
+                value={cardNumber}
+                onChange={handleCardNumberChange}
+                placeholder="1234 5678 9012 3456"
+                maxLength={19}
+                required
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 pl-12 text-sm font-medium text-gray-900 placeholder-gray-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
+              />
+              <div className="absolute left-4 top-1/2 -translate-y-1/2">
                 <svg
-                  className="h-5 w-5 animate-spin text-gray-400"
+                  className="h-5 w-5 text-gray-400"
                   fill="none"
+                  stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
                   <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
                   />
                 </svg>
-                <span className="ml-2 text-sm text-gray-500">Loading cards...</span>
               </div>
-            ) : paymentCards.length === 0 ? (
-              <div className="rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-center dark:border-gray-600 dark:bg-gray-700">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  No payment cards found. Please add a payment card first.
-                </p>
-              </div>
-            ) : (
-              <select
-                value={selectedCardId}
-                onChange={(e) => setSelectedCardId(e.target.value)}
-                required
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
-              >
-                {paymentCards.map((card) => (
-                  <option key={card.id} value={card.id}>
-                    {formatCardNumber(card.number)} - {card.name} (Expires: {card.expiry_date})
-                  </option>
-                ))}
-              </select>
-            )}
-            {paymentCards.length > 0 && (
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Select the card to charge for adding money
-              </p>
-            )}
-          </div>
-
-          {/* Description (Optional) */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Description (Optional)
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Add a note for this transaction..."
-              rows={2}
-              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
-            />
+            </div>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Enter the card number to charge for adding money
+            </p>
           </div>
 
           {/* Action Buttons */}
@@ -333,7 +253,7 @@ export default function AddMoneyModal({
             </button>
             <button
               type="submit"
-              disabled={loading || !amount || !selectedCardId || paymentCards.length === 0}
+              disabled={loading || !amount || !cardNumber}
               className="flex-1 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-3 font-semibold !text-white shadow-md transition-all hover:scale-105 hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
