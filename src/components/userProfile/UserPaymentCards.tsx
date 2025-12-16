@@ -411,7 +411,7 @@ export default function UserPaymentCards({
         {balances.paymentCards.length > 0 && (
           <button
             onClick={() => setShowAddCard(true)}
-            className="inline-flex items-center rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 active:scale-[0.98]"
+            className="inline-flex items-center rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-2 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 active:scale-[0.98]"
           >
             <svg
               className="mr-2 h-4 w-4 !text-white"
@@ -685,7 +685,7 @@ export default function UserPaymentCards({
                 Add your card for contactless NFC payments
               </p>
               <button
-                className="mt-4 inline-flex items-center rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 active:scale-[0.98]"
+                className="mt-4 inline-flex items-center rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-2 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 active:scale-[0.98]"
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowAddCard(true);
