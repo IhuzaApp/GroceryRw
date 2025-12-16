@@ -13,6 +13,7 @@ import { useRouter } from "next/router";
 import { useAuth } from "../../context/AuthContext";
 import { initiateRoleSwitch } from "../../lib/sessionRefresh";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
+import { useLanguage } from "../../context/LanguageContext";
 
 interface DesktopProfileProps {
   user: {
@@ -67,6 +68,7 @@ export default function DesktopProfile({
 }: DesktopProfileProps) {
   const router = useRouter();
   const { role, toggleRole } = useAuth();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("account");
 
   // Handle click on "Become a Plasa" button
@@ -332,8 +334,10 @@ export default function DesktopProfile({
                 />
               </svg>
               {isSwitchingRole
-                ? "Switching..."
-                : `Switch to ${role === "user" ? "Shopper" : "User"}`}
+                ? t("common.loading")
+                : role === "user"
+                ? t("nav.switchToShopper")
+                : t("nav.switchToUser")}
             </button>
           ) : (
             <button
@@ -438,7 +442,7 @@ export default function DesktopProfile({
                 d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
               />
             </svg>
-            Logout
+            {t("nav.logout")}
           </button>
         </div>
       </div>
@@ -455,7 +459,7 @@ export default function DesktopProfile({
             {[
               {
                 key: "account",
-                label: "Account",
+                label: t("nav.account"),
                 icon: (
                   <svg
                     className="mr-2 h-4 w-4"
@@ -499,7 +503,7 @@ export default function DesktopProfile({
               },
               {
                 key: "addresses",
-                label: "Addresses",
+                label: t("nav.addresses"),
                 icon: (
                   <svg
                     className="mr-2 h-4 w-4"
@@ -524,7 +528,7 @@ export default function DesktopProfile({
               },
               {
                 key: "payment",
-                label: "Payment Methods",
+                label: t("nav.payment"),
                 icon: (
                   <svg
                     className="mr-2 h-4 w-4"

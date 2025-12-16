@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import CryptoJS from "crypto-js";
+import { useLanguage } from "../../context/LanguageContext";
 
 // Encryption key - in production, this should be in environment variables
 const ENCRYPTION_KEY =
@@ -54,6 +55,7 @@ interface PaymentCard {
 }
 
 export default function UserPayment() {
+  const { t } = useLanguage();
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [paymentCards, setPaymentCards] = useState<PaymentCard[]>([]);
   const [showModal, setShowModal] = useState(false);
@@ -162,10 +164,10 @@ export default function UserPayment() {
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-              Payment Methods
+              {t("nav.paymentMethods")}
             </h3>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Manage your payment methods
+              {t("nav.managePaymentMethods")}
             </p>
           </div>
           <button
@@ -185,7 +187,7 @@ export default function UserPayment() {
                 d="M12 4v16m8-8H4"
               />
             </svg>
-            Add Payment Method
+            {t("payment.addPaymentMethod")}
           </button>
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -213,7 +215,7 @@ export default function UserPayment() {
                         clipRule="evenodd"
                       />
                     </svg>
-                    <span className="!text-white">Default</span>
+                    <span className="!text-white">{t("address.default")}</span>
                   </span>
                 </div>
               )}
@@ -240,11 +242,11 @@ export default function UserPayment() {
                 </h4>
                 <div className="space-y-1">
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Ending in {pm.number.slice(-4)}
+                    {t("payment.endingIn")} {pm.number.slice(-4)}
                   </p>
                   {pm.validity && (
                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                      Expires {pm.validity}
+                      {t("payment.expires")} {pm.validity}
                     </p>
                   )}
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -340,10 +342,10 @@ export default function UserPayment() {
               />
             </svg>
             <p className="mt-4 text-lg font-semibold text-gray-600 dark:text-gray-400">
-              No payment methods
+              {t("payment.noPaymentMethods")}
             </p>
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-500">
-              Add your first payment method to get started
+              {t("payment.addFirstMethod")}
             </p>
           </div>
         )}
@@ -353,10 +355,10 @@ export default function UserPayment() {
       <div className="mb-8">
         <div className="mb-6">
           <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-            Payment Cards
+            {t("nav.paymentCards")}
           </h3>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Your saved payment cards
+            {t("nav.yourSavedCards")}
           </p>
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -420,7 +422,7 @@ export default function UserPayment() {
                       {formatCardNumber(card.number)}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                      Expires {card.expiry_date}
+                      {t("payment.expires")} {card.expiry_date}
                     </p>
                   </div>
                 </div>
@@ -462,7 +464,7 @@ export default function UserPayment() {
                       />
                     </svg>
                     <span className="transition-colors group-hover:!text-white">
-                      Delete
+                      {t("common.delete")}
                     </span>
                   </button>
                 </div>
@@ -490,10 +492,10 @@ export default function UserPayment() {
               />
             </svg>
             <p className="mt-4 text-lg font-semibold text-gray-600 dark:text-gray-400">
-              No payment cards
+              {t("payment.noPaymentCards")}
             </p>
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-500">
-              Add your first payment card to get started
+              {t("payment.addFirstCard")}
             </p>
           </div>
         )}
@@ -507,10 +509,10 @@ export default function UserPayment() {
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white px-4 py-4 dark:border-gray-700 dark:from-gray-800 dark:to-gray-800 sm:px-6 sm:py-5 md:px-8">
               <div>
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white sm:text-xl md:text-2xl">
-                  Add Payment Method
+                  {t("payment.addPaymentMethod")}
                 </h3>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Enter your payment method details
+                  {t("payment.enterPaymentDetails")}
                 </p>
               </div>
               <button
@@ -548,7 +550,7 @@ export default function UserPayment() {
               {/* Payment Method Selection */}
               <div>
                 <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  Payment Method *
+                  {t("payment.paymentMethod")} *
                 </label>
                 <select
                   name="method"
@@ -558,7 +560,7 @@ export default function UserPayment() {
                   }
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
                 >
-                  <option value="">Select Payment Method</option>
+                  <option value="">{t("payment.selectPaymentMethod")}</option>
                   <option value="Visa">Visa</option>
                   <option value="Mastercard">Mastercard</option>
                   <option value="MTN Momo">MTN Momo</option>
@@ -569,8 +571,8 @@ export default function UserPayment() {
               <div>
                 <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                   {formValue.method === "MTN Momo"
-                    ? "Name on the number *"
-                    : "Name on Card *"}
+                    ? `${t("payment.nameOnNumber")} *`
+                    : `${t("payment.nameOnCard")} *`}
                 </label>
                 <input
                   type="text"
@@ -580,8 +582,8 @@ export default function UserPayment() {
                   }
                   placeholder={
                     formValue.method === "MTN Momo"
-                      ? "Enter name on the number"
-                      : "Enter name on card"
+                      ? t("payment.nameOnNumber")
+                      : t("payment.nameOnCard")
                   }
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
                 />
@@ -590,7 +592,7 @@ export default function UserPayment() {
               {/* Card/Number */}
               <div>
                 <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  {formValue.method === "MTN Momo" ? "Phone Number *" : "Card Number *"}
+                  {formValue.method === "MTN Momo" ? `${t("payment.phoneNumber")} *` : `${t("payment.cardNumber")} *`}
                 </label>
                 <input
                   type="text"
@@ -600,8 +602,8 @@ export default function UserPayment() {
                   }
                   placeholder={
                     formValue.method === "MTN Momo"
-                      ? "Enter phone number"
-                      : "Enter card number"
+                      ? t("payment.enterPhoneNumber")
+                      : t("payment.enterCardNumber")
                   }
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
                 />
@@ -612,7 +614,7 @@ export default function UserPayment() {
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      CCV *
+                      {t("payment.ccv")} *
                     </label>
                     <input
                       type="text"
@@ -620,14 +622,14 @@ export default function UserPayment() {
                       onChange={(e) =>
                         setFormValue({ ...formValue, CCV: e.target.value })
                       }
-                      placeholder="Enter CCV"
+                      placeholder={t("payment.enterCCV")}
                       maxLength={4}
                       className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
                     />
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      Validity (MM/YYYY) *
+                      {t("payment.validity")} *
                     </label>
                     <input
                       type="text"
@@ -660,11 +662,11 @@ export default function UserPayment() {
                   htmlFor="default-payment"
                   className="flex-1 text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
-                  Set as default payment method
+                  {t("payment.setAsDefaultPayment")}
                 </label>
                 {formValue.is_default && (
                   <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                    Default
+                    {t("address.default")}
                   </span>
                 )}
               </div>
@@ -686,7 +688,7 @@ export default function UserPayment() {
                 }}
                 className="rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 onClick={handleSave}
@@ -712,7 +714,7 @@ export default function UserPayment() {
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                <span className="!text-white">Save Payment Method</span>
+                <span className="!text-white">{t("payment.savePaymentMethod")}</span>
               </button>
             </div>
           </div>
