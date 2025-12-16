@@ -223,9 +223,9 @@ export default function UserPayment() {
               {/* Payment Method Icon */}
               <div
                 className={`mb-4 flex h-14 w-14 items-center justify-center rounded-xl text-sm font-bold !text-white shadow-lg transition-transform duration-300 group-hover:scale-110 ${getMethodBg(
-                  pm.method
-                )}`}
-              >
+                    pm.method
+                  )}`}
+                >
                 {pm.method === "Visa" ? (
                   <span className="text-lg">VISA</span>
                 ) : pm.method === "Mastercard" || pm.method === "MC" ? (
@@ -239,7 +239,7 @@ export default function UserPayment() {
               <div className="mb-4">
                 <h4 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
                   {pm.method}
-                </h4>
+                  </h4>
                 <div className="space-y-1">
                   <p className="text-sm text-gray-600 dark:text-gray-300">
                     {t("payment.endingIn")} {pm.number.slice(-4)}
@@ -382,15 +382,15 @@ export default function UserPayment() {
                     }`}
                   >
                     {isVisa ? "VISA" : isMastercard ? "MC" : "CARD"}
-                  </div>
+                </div>
                 </div>
 
                 {/* Card Image or Icon */}
                 {card.image ? (
                   <div className="mb-4 flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl border-2 border-gray-200 shadow-md dark:border-gray-700">
-                    <img
-                      src={card.image}
-                      alt="Card"
+                  <img
+                    src={card.image}
+                    alt="Card"
                       className="h-full w-full object-cover"
                     />
                   </div>
@@ -425,7 +425,7 @@ export default function UserPayment() {
                       {t("payment.expires")} {card.expiry_date}
                     </p>
                   </div>
-                </div>
+              </div>
 
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-2">
@@ -552,25 +552,25 @@ export default function UserPayment() {
                 <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                   {t("payment.paymentMethod")} *
                 </label>
-                <select
-                  name="method"
-                  value={formValue.method}
-                  onChange={(e) =>
-                    setFormValue({ ...formValue, method: e.target.value })
-                  }
+              <select
+                name="method"
+                value={formValue.method}
+                onChange={(e) =>
+                  setFormValue({ ...formValue, method: e.target.value })
+                }
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
-                >
+              >
                   <option value="">{t("payment.selectPaymentMethod")}</option>
-                  <option value="Visa">Visa</option>
-                  <option value="Mastercard">Mastercard</option>
-                  <option value="MTN Momo">MTN Momo</option>
-                </select>
+                <option value="Visa">Visa</option>
+                <option value="Mastercard">Mastercard</option>
+                <option value="MTN Momo">MTN Momo</option>
+              </select>
               </div>
 
               {/* Name on Card/Number */}
               <div>
                 <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  {formValue.method === "MTN Momo"
+                {formValue.method === "MTN Momo"
                     ? `${t("payment.nameOnNumber")} *`
                     : `${t("payment.nameOnCard")} *`}
                 </label>
@@ -610,7 +610,7 @@ export default function UserPayment() {
               </div>
 
               {/* CCV and Validity (only for cards) */}
-              {formValue.method !== "MTN Momo" && (
+            {formValue.method !== "MTN Momo" && (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -691,7 +691,7 @@ export default function UserPayment() {
                 {t("common.cancel")}
               </button>
               <button
-                onClick={handleSave}
+            onClick={handleSave}
                 disabled={
                   !formValue.method ||
                   !formValue.names ||

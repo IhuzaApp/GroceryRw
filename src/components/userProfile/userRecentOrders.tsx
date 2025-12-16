@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Tag, Button } from "rsuite";
 import Link from "next/link";
 import { formatCurrency } from "../../lib/formatCurrency";
 import { useRouter } from "next/router";
@@ -145,15 +144,22 @@ export default function UserRecentOrders({
 }: UserRecentOrdersProps) {
   const { pathname } = useRouter();
   const isPendingOrdersPage = pathname === "/CurrentPendingOrders";
-  // Pagination state: show initial 10 orders, then load more in increments of 10
-  const [visibleCount, setVisibleCount] = useState(10);
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const ordersPerPage = 10;
+  
   // Apply filter once, then slice for pagination
   const filteredOrders = orders.filter((order: Order) =>
     filter === "pending"
       ? order.status !== "delivered"
       : order.status === "delivered"
   );
-  const visibleOrders = filteredOrders.slice(0, visibleCount);
+  
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
+  const startIndex = (currentPage - 1) * ordersPerPage;
+  const endIndex = startIndex + ordersPerPage;
+  const visibleOrders = filteredOrders.slice(startIndex, endIndex);
 
   return (
     <>
@@ -162,15 +168,13 @@ export default function UserRecentOrders({
           Orders
         </h3>
         {onRefresh && (
-          <Button
-            appearance="link"
-            size="sm"
+          <button
             onClick={onRefresh}
             disabled={loading}
-            className="text-green-500 hover:text-green-600 dark:text-green-400 dark:hover:text-green-500"
+            className="text-sm font-medium text-green-500 transition-colors hover:text-green-600 disabled:cursor-not-allowed disabled:opacity-50 dark:text-green-400 dark:hover:text-green-500"
           >
-            Refresh
-          </Button>
+            {loading ? "Refreshing..." : "Refresh"}
+          </button>
         )}
       </div>
       {loading ? (
@@ -193,12 +197,12 @@ export default function UserRecentOrders({
         visibleOrders.map((order: Order) => (
           <div
             key={order.id}
-            className="group mb-4 overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-300 hover:border-green-200 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-700"
+            className="group mb-3 overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-300 hover:border-green-200 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-700"
           >
             {/* Shop Profile for Regular Orders */}
             {order.shop && order.orderType === "regular" ? (
-              <div className="mb-5 flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100 dark:bg-green-900/30">
+              <div className="mb-3 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30">
                   <svg
                     className="h-6 w-6 text-green-600 dark:text-green-400"
                     viewBox="0 0 0.6 0.6"
@@ -212,10 +216,10 @@ export default function UserRecentOrders({
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <div className="text-lg font-bold text-gray-900 dark:text-white">
+                  <div className="text-base font-bold text-gray-900 dark:text-white">
                     {order?.shop?.name}
                   </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
                     {order?.shop?.address}
                   </div>
                 </div>
@@ -224,8 +228,8 @@ export default function UserRecentOrders({
 
             {/* Restaurant Profile for Restaurant Orders */}
             {order.shop && order.orderType === "restaurant" ? (
-              <div className="mb-5 flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-100 dark:bg-orange-900/30">
+              <div className="mb-3 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/30">
                   <svg
                     className="h-6 w-6 text-orange-600 dark:text-orange-400"
                     viewBox="0 0 24 24"
@@ -238,14 +242,14 @@ export default function UserRecentOrders({
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <div className="text-lg font-bold text-gray-900 dark:text-white">
+                  <div className="text-base font-bold text-gray-900 dark:text-white">
                     {order?.shop?.name}
                   </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
                     {order?.shop?.address}
                   </div>
                   {order.delivery_note && (
-                    <div className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                    <div className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
                       Note: {order.delivery_note}
                     </div>
                   )}
@@ -255,8 +259,8 @@ export default function UserRecentOrders({
 
             {/* Reel Profile for Reel Orders */}
             {order.orderType === "reel" && order.reel ? (
-              <div className="mb-5 flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 dark:bg-purple-900/30">
+              <div className="mb-3 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/30">
                   <svg
                     className="h-6 w-6 text-purple-600 dark:text-purple-400"
                     viewBox="0 0 24 24"
@@ -268,14 +272,14 @@ export default function UserRecentOrders({
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <div className="text-lg font-bold text-gray-900 dark:text-white">
+                  <div className="text-base font-bold text-gray-900 dark:text-white">
                     {order.reel.title}
                   </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
                     {order.reel.description}
                   </div>
                   {order.delivery_note && (
-                    <div className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                    <div className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
                       Note: {order.delivery_note}
                     </div>
                   )}
@@ -284,12 +288,12 @@ export default function UserRecentOrders({
             ) : null}
 
             {/* Order Info */}
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-3 flex items-center justify-between">
               <div className="flex flex-col">
-                <span className="text-lg font-bold text-gray-900 dark:text-white">
+                <span className="text-base font-bold text-gray-900 dark:text-white">
                   Order #{formatOrderID(order?.OrderID)}
                 </span>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
+                <span className="text-xs text-gray-500 dark:text-gray-400">
                   {timeAgo(order?.created_at)}
                 </span>
               </div>
@@ -328,12 +332,12 @@ export default function UserRecentOrders({
               })()}
             </div>
 
-            <div className="mb-4 rounded-lg bg-gray-50 p-4 dark:bg-gray-700/50">
+            <div className="mb-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30">
                     <svg
-                      className="h-4 w-4 text-green-600 dark:text-green-400"
+                      className="h-3.5 w-3.5 text-green-600 dark:text-green-400"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -347,7 +351,7 @@ export default function UserRecentOrders({
                     </svg>
                   </div>
                   <div>
-                    <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                    <div className="text-xs font-semibold text-gray-900 dark:text-white">
                       {order.orderType === "reel"
                         ? `${order.quantity || 1} quantity`
                         : order.orderType === "restaurant"
@@ -364,7 +368,7 @@ export default function UserRecentOrders({
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-bold text-gray-900 dark:text-white">
+                  <div className="text-base font-bold text-gray-900 dark:text-white">
                     {formatCurrency(order.total)}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -376,7 +380,7 @@ export default function UserRecentOrders({
 
             {/* Estimated Delivery Time */}
             {order.delivery_time && (
-              <div className="mb-3">
+              <div className="mb-2">
                 <EstimatedDelivery
                   deliveryTime={order.delivery_time}
                   status={order.status}
@@ -384,19 +388,19 @@ export default function UserRecentOrders({
               </div>
             )}
 
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <Link
                 href={`/CurrentPendingOrders/viewOrderDetails/${order.id}`}
-                className={`group flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold !text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
+                className={`group flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold !text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
                   order.orderType === "reel"
-                    ? "bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg hover:from-purple-600 hover:to-purple-700 hover:shadow-purple-200 focus:ring-purple-500 dark:shadow-purple-900/50"
+                    ? "bg-gradient-to-r from-purple-500 to-purple-600 shadow-md hover:from-purple-600 hover:to-purple-700 hover:shadow-purple-200 focus:ring-purple-500 dark:shadow-purple-900/50"
                     : order.orderType === "restaurant"
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 shadow-lg hover:from-orange-600 hover:to-orange-700 hover:shadow-orange-200 focus:ring-orange-500 dark:shadow-orange-900/50"
-                    : "bg-gradient-to-r from-green-500 to-green-600 shadow-lg hover:from-green-600 hover:to-green-700 hover:shadow-green-200 focus:ring-green-500 dark:shadow-green-900/50"
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 shadow-md hover:from-orange-600 hover:to-orange-700 hover:shadow-orange-200 focus:ring-orange-500 dark:shadow-orange-900/50"
+                    : "bg-gradient-to-r from-green-500 to-green-600 shadow-md hover:from-green-600 hover:to-green-700 hover:shadow-green-200 focus:ring-green-500 dark:shadow-green-900/50"
                 }`}
               >
                 <svg
-                  className="h-4 w-4 !text-white transition-transform group-hover:scale-110"
+                  className="h-3.5 w-3.5 !text-white transition-transform group-hover:scale-110"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -418,9 +422,9 @@ export default function UserRecentOrders({
               </Link>
 
               {!isPendingOrdersPage && (
-                <button className="flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-3 text-sm font-semibold text-gray-700 transition-all duration-200 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700">
+                <button className="flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 transition-all duration-200 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700">
                   <svg
-                    className="h-4 w-4"
+                    className="h-3.5 w-3.5"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -439,16 +443,86 @@ export default function UserRecentOrders({
           </div>
         ))
       )}
-      {/* Load more button for pagination */}
-      {filteredOrders.length > visibleCount && (
-        <div className="mt-4 text-center">
-          <Button
-            appearance="ghost"
-            onClick={() => setVisibleCount((prev) => prev + 10)}
-            className="text-green-500 hover:text-green-600 dark:text-green-400 dark:hover:text-green-500"
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-2">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
           >
-            Load More
-          </Button>
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+            // Show first page, last page, current page, and pages around current
+            if (
+              page === 1 ||
+              page === totalPages ||
+              (page >= currentPage - 1 && page <= currentPage + 1)
+            ) {
+              return (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`h-9 w-9 rounded-lg border text-sm font-medium transition-colors ${
+                    currentPage === page
+                      ? "border-green-500 bg-green-500 text-white"
+                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            } else if (
+              page === currentPage - 2 ||
+              page === currentPage + 2
+            ) {
+              return (
+                <span
+                  key={page}
+                  className="h-9 w-9 flex items-center justify-center text-gray-500"
+                >
+                  ...
+                </span>
+              );
+            }
+            return null;
+          })}
+
+          <button
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+            }
+            disabled={currentPage === totalPages}
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
         </div>
       )}
     </>
