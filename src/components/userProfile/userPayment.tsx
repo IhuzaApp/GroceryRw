@@ -266,11 +266,11 @@ export default function UserPayment() {
               <div className="flex flex-wrap gap-2">
                 {!pm.is_default && (
                   <button
-                    className="group flex flex-1 items-center justify-center rounded-lg border-2 border-green-500 bg-white px-3 py-2 text-xs font-semibold text-green-600 transition-all duration-200 hover:bg-green-500 hover:!text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-green-400 dark:bg-gray-800 dark:text-green-400 dark:hover:bg-green-500 dark:hover:!text-white"
+                    className="group flex flex-1 items-center justify-center rounded-xl border-2 border-green-500 bg-white px-4 py-2.5 text-xs font-semibold text-green-600 shadow-sm transition-all duration-200 hover:scale-105 hover:border-green-600 hover:bg-gradient-to-r hover:from-green-500 hover:to-emerald-600 hover:shadow-md hover:!text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:border-green-400 dark:bg-gray-800 dark:text-green-400 dark:hover:border-green-500 dark:hover:from-green-600 dark:hover:to-emerald-600 dark:hover:!text-white"
                     onClick={() => handleSetDefault(pm.id)}
                   >
                     <svg
-                      className="mr-1.5 h-3.5 w-3.5 group-hover:!text-white"
+                      className="mr-2 h-4 w-4 transition-colors group-hover:!text-white"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -282,14 +282,16 @@ export default function UserPayment() {
                         d="M5 13l4 4L19 7"
                       />
                     </svg>
-                    <span className="group-hover:!text-white">Set Default</span>
+                    <span className="transition-colors group-hover:!text-white">
+                      Set Default
+                    </span>
                   </button>
                 )}
                 <button
-                  className="flex flex-1 items-center justify-center rounded-lg border-2 border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-gray-700 transition-all duration-200 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                  className="group flex flex-1 items-center justify-center rounded-xl border-2 border-gray-300 bg-white px-4 py-2.5 text-xs font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:scale-105 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md active:scale-95 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700"
                 >
                   <svg
-                    className="mr-1.5 h-3.5 w-3.5"
+                    className="mr-2 h-4 w-4"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -304,10 +306,10 @@ export default function UserPayment() {
                   Edit
                 </button>
                 <button
-                  className="flex flex-1 items-center justify-center rounded-lg border-2 border-red-300 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition-all duration-200 hover:bg-red-50 dark:border-red-600 dark:bg-gray-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                  className="group flex flex-1 items-center justify-center rounded-xl border-2 border-red-300 bg-white px-4 py-2.5 text-xs font-semibold text-red-600 shadow-sm transition-all duration-200 hover:scale-105 hover:border-red-500 hover:bg-gradient-to-r hover:from-red-500 hover:to-red-600 hover:shadow-md hover:!text-white active:scale-95 dark:border-red-600 dark:bg-gray-800 dark:text-red-400 dark:hover:border-red-500 dark:hover:from-red-600 dark:hover:to-red-700 dark:hover:!text-white"
                 >
                   <svg
-                    className="mr-1.5 h-3.5 w-3.5"
+                    className="mr-2 h-4 w-4 transition-colors group-hover:!text-white"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -319,7 +321,9 @@ export default function UserPayment() {
                       d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                     />
                   </svg>
-                  Delete
+                  <span className="transition-colors group-hover:!text-white">
+                    Delete
+                  </span>
                 </button>
               </div>
 
@@ -433,10 +437,10 @@ export default function UserPayment() {
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-2">
                   <button
-                    className="flex flex-1 items-center justify-center rounded-lg border-2 border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-gray-700 transition-all duration-200 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                    className="group flex flex-1 items-center justify-center rounded-xl border-2 border-gray-300 bg-white px-4 py-2.5 text-xs font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:scale-105 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md active:scale-95 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700"
                   >
                     <svg
-                      className="mr-1.5 h-3.5 w-3.5"
+                      className="mr-2 h-4 w-4"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -451,10 +455,10 @@ export default function UserPayment() {
                     Edit
                   </button>
                   <button
-                    className="flex flex-1 items-center justify-center rounded-lg border-2 border-red-300 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition-all duration-200 hover:bg-red-50 dark:border-red-600 dark:bg-gray-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                    className="group flex flex-1 items-center justify-center rounded-xl border-2 border-red-300 bg-white px-4 py-2.5 text-xs font-semibold text-red-600 shadow-sm transition-all duration-200 hover:scale-105 hover:border-red-500 hover:bg-gradient-to-r hover:from-red-500 hover:to-red-600 hover:shadow-md hover:!text-white active:scale-95 dark:border-red-600 dark:bg-gray-800 dark:text-red-400 dark:hover:border-red-500 dark:hover:from-red-600 dark:hover:to-red-700 dark:hover:!text-white"
                   >
                     <svg
-                      className="mr-1.5 h-3.5 w-3.5"
+                      className="mr-2 h-4 w-4 transition-colors group-hover:!text-white"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -466,7 +470,9 @@ export default function UserPayment() {
                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                       />
                     </svg>
-                    Delete
+                    <span className="transition-colors group-hover:!text-white">
+                      Delete
+                    </span>
                   </button>
                 </div>
 
