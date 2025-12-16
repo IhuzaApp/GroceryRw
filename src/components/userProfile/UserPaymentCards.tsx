@@ -438,8 +438,8 @@ export default function UserPaymentCards({
 
           <div className="mb-8 flex items-start justify-between">
             <div>
-              <p className="mb-1 text-xs opacity-80">Refund Balance</p>
-              <h4 className="font-bold">PENDING REFUNDS</h4>
+              <p className="mb-1 text-xs opacity-80">Wallet Balance</p>
+              <h4 className="font-bold">My Wallet</h4>
             </div>
             <div className="flex items-center">
               <div className="mr-1 h-5 w-8 rounded-sm bg-yellow-400"></div>
