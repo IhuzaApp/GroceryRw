@@ -59,7 +59,7 @@ const UPDATE_PERSONAL_WALLET_BALANCE = gql`
 interface AddMoneyRequest {
   amount: number;
   description?: string;
-  payment_card_id?: string;
+  card_number?: string;
 }
 
 export default async function handler(
@@ -78,16 +78,16 @@ export default async function handler(
     }
 
     const user_id = session.user.id;
-    const { amount, description, payment_card_id }: AddMoneyRequest = req.body;
+    const { amount, description, card_number }: AddMoneyRequest = req.body;
 
     // Validate amount
     if (!amount || amount <= 0) {
       return res.status(400).json({ error: "Invalid amount" });
     }
 
-    // Validate payment card
-    if (!payment_card_id) {
-      return res.status(400).json({ error: "Payment card is required" });
+    // Validate card number
+    if (!card_number || card_number.length < 13 || card_number.length > 16) {
+      return res.status(400).json({ error: "Valid card number is required (13-16 digits)" });
     }
 
     if (!hasuraClient) {
