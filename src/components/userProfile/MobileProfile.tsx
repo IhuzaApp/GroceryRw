@@ -260,256 +260,54 @@ export default function MobileProfile({
           </div>
         </div>
 
-        {/* Account Summary Section */}
-        <div className="mb-4 rounded-xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-2.5 shadow-sm dark:border-gray-700 dark:from-gray-800 dark:to-gray-800/50">
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50/50 p-2 dark:from-green-900/20 dark:to-emerald-900/10">
-              <svg
-                className="h-3.5 w-3.5 text-green-600 dark:text-green-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
-              <div className="min-w-0">
-                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                  Orders
-                </p>
-                <p className="text-xs font-bold text-gray-900 dark:text-white">
-                  {orderCount}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50/50 p-2 dark:from-blue-900/20 dark:to-indigo-900/10">
-              <svg
-                className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <div className="min-w-0">
-                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                  Wallet
-                </p>
-                <p className="text-xs font-bold text-gray-900 dark:text-white">
-                  {formatCurrency(walletBalance)}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons Section */}
-        <div className="space-y-2">
-          {/* Action Buttons Row */}
-          <div className="grid grid-cols-2 gap-2">
-            {/* Switch to Shopper / Become Shopper Button */}
-            {loadingShopper ? (
-              <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200" />
-            ) : shopperStatus?.active ? (
-              <button
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-2.5 text-xs font-semibold !text-white shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-                onClick={async () => {
-                  const nextRole = role === "user" ? "shopper" : "user";
-                  setIsSwitchingRole(true);
-                  try {
-                    await initiateRoleSwitch(nextRole as "user" | "shopper");
-                    toggleRole();
-                    toast.success(
-                      `Switched to ${nextRole === "user" ? "User" : "Shopper"}`
-                    );
-                  } catch (error) {
-                    console.error("Error updating role:", error);
-                    toast.error("Failed to switch account");
-                  } finally {
-                    setIsSwitchingRole(false);
-                  }
-                }}
-                disabled={isSwitchingRole}
-              >
-                <svg
-                  className="h-3.5 w-3.5 !text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-                  />
-                </svg>
-                <span className="!text-white text-xs">
-                  {isSwitchingRole
-                    ? t("common.loading")
-                    : role === "user"
-                    ? t("nav.switchToShopper")
-                    : t("nav.switchToUser")}
-                </span>
-              </button>
-            ) : (
-              <button
-                className={`flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-xs font-semibold !text-white shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
-                  shopperStatus?.needCollection
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600"
-                    : shopperStatus?.status === "pending" ||
-                      shopperStatus?.status === "under_review"
-                    ? "bg-gradient-to-r from-blue-500 to-blue-600"
-                    : "bg-gradient-to-r from-green-500 to-emerald-600"
-                }`}
-                onClick={handleBecomePlasa}
-                disabled={
-                  shopperStatus?.status === "pending" ||
-                  shopperStatus?.status === "under_review"
-                }
-              >
-                <svg
-                  className="h-3.5 w-3.5 !text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  {shopperStatus?.needCollection ? (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                    />
-                  ) : shopperStatus?.status === "pending" ||
-                    shopperStatus?.status === "under_review" ? (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  ) : (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  )}
-                </svg>
-                <span className="!text-white text-xs">
-                  {shopperStatus?.needCollection
-                    ? "Update"
-                    : shopperStatus?.status === "pending" ||
-                      shopperStatus?.status === "under_review"
-                    ? "Pending"
-                    : "Become Shopper"}
-                </span>
-              </button>
-            )}
-
-            {/* Logout Button */}
-            <button
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-red-500 to-red-600 px-3 py-2.5 text-xs font-semibold !text-white shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
-              onClick={async () => {
-                try {
-                  const response = await authenticatedFetch("/api/logout", {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
-                  });
-
-                  if (response.ok) {
-                    localStorage.clear();
-                    sessionStorage.clear();
-                    toast.success("Logged out successfully");
-                    router.push("/");
-                  } else {
-                    throw new Error("Logout failed");
-                  }
-                } catch (error) {
-                  console.error("Logout error:", error);
-                  toast.error("Failed to logout");
-                }
-              }}
+        {/* Default Address Section */}
+        <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-2.5 shadow-sm dark:border-gray-700 dark:from-gray-800 dark:to-gray-800/50">
+          <div className="flex items-start gap-2">
+            <svg
+              className="h-3.5 w-3.5 shrink-0 text-purple-600 dark:text-purple-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg
-                className="h-3.5 w-3.5 !text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                />
-              </svg>
-              <span className="!text-white text-xs">{t("nav.logout")}</span>
-            </button>
-          </div>
-
-          {/* Default Address Section */}
-          <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-2.5 shadow-sm dark:border-gray-700 dark:from-gray-800 dark:to-gray-800/50">
-            <div className="flex items-start gap-2">
-              <svg
-                className="h-3.5 w-3.5 shrink-0 text-purple-600 dark:text-purple-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-              <div className="flex-1 min-w-0">
-                <div className="mb-0.5 flex items-center gap-1.5">
-                  <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                    Default Address
-                  </h3>
-                </div>
-                {loadingAddr ? (
-                  <div className="h-2.5 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-600" />
-                ) : selectedAddr || defaultAddr ? (
-                  <p className="text-xs leading-relaxed text-gray-600 dark:text-gray-300">
-                    {(selectedAddr || defaultAddr).street},{" "}
-                    {(selectedAddr || defaultAddr).city}{" "}
-                    {(selectedAddr || defaultAddr).postal_code}
-                  </p>
-                ) : (
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    No address selected
-                  </p>
-                )}
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            <div className="flex-1 min-w-0">
+              <div className="mb-0.5 flex items-center gap-1.5">
+                <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  Default Address
+                </h3>
               </div>
-              <button
-                onClick={() => setShowAddrModal(true)}
-                className="ml-1 shrink-0 rounded-md bg-gradient-to-r from-green-500 to-emerald-600 px-2 py-1 text-xs font-medium !text-white shadow-sm transition-all hover:scale-105 hover:shadow-md active:scale-95 dark:from-green-600 dark:to-emerald-700"
-              >
-                {selectedAddr || defaultAddr ? "Change" : "Select"}
-              </button>
+              {loadingAddr ? (
+                <div className="h-2.5 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-600" />
+              ) : selectedAddr || defaultAddr ? (
+                <p className="text-xs leading-relaxed text-gray-600 dark:text-gray-300">
+                  {(selectedAddr || defaultAddr).street},{" "}
+                  {(selectedAddr || defaultAddr).city}{" "}
+                  {(selectedAddr || defaultAddr).postal_code}
+                </p>
+              ) : (
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  No address selected
+                </p>
+              )}
             </div>
+            <button
+              onClick={() => setShowAddrModal(true)}
+              className="ml-1 shrink-0 rounded-md bg-gradient-to-r from-green-500 to-emerald-600 px-2 py-1 text-xs font-medium !text-white shadow-sm transition-all hover:scale-105 hover:shadow-md active:scale-95 dark:from-green-600 dark:to-emerald-700"
+            >
+              {selectedAddr || defaultAddr ? "Change" : "Select"}
+            </button>
           </div>
         </div>
       </div>
