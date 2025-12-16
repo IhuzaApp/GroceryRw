@@ -278,89 +278,95 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <ThemeProvider>
       <LanguageProvider>
-      <Head>
-        <title>{pageTitle}</title>
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="application-name" content="Plas" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Pla" />
-        <meta
-          name="description"
-          content="Your convenient grocery shopping app"
-        />
-        <meta name="format-detection" content="telephone=no" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="msapplication-config" content="/icons/browserconfig.xml" />
-        <meta name="msapplication-TileColor" content="#10b981" />
-        <meta name="msapplication-tap-highlight" content="no" />
-        <meta name="theme-color" content="#10b981" />
+        <Head>
+          <title>{pageTitle}</title>
+          <link rel="manifest" href="/manifest.json" />
+          <meta name="application-name" content="Plas" />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta
+            name="apple-mobile-web-app-status-bar-style"
+            content="default"
+          />
+          <meta name="apple-mobile-web-app-title" content="Pla" />
+          <meta
+            name="description"
+            content="Your convenient grocery shopping app"
+          />
+          <meta name="format-detection" content="telephone=no" />
+          <meta name="mobile-web-app-capable" content="yes" />
+          <meta
+            name="msapplication-config"
+            content="/icons/browserconfig.xml"
+          />
+          <meta name="msapplication-TileColor" content="#10b981" />
+          <meta name="msapplication-tap-highlight" content="no" />
+          <meta name="theme-color" content="#10b981" />
 
-        <link rel="apple-touch-icon" href="/assets/logos/PlasIcon.png" />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="32x32"
-          href="/assets/logos/PlasIcon.png"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="16x16"
-          href="/assets/logos/PlasIcon.png"
-        />
-        <link rel="manifest" href="/manifest.json" />
-        <link
-          rel="mask-icon"
-          href="/assets/logos/PlasIcon.png"
-          color="#10b981"
-        />
-        <link rel="shortcut icon" href="/assets/logos/PlasIcon.png" />
+          <link rel="apple-touch-icon" href="/assets/logos/PlasIcon.png" />
+          <link
+            rel="icon"
+            type="image/png"
+            sizes="32x32"
+            href="/assets/logos/PlasIcon.png"
+          />
+          <link
+            rel="icon"
+            type="image/png"
+            sizes="16x16"
+            href="/assets/logos/PlasIcon.png"
+          />
+          <link rel="manifest" href="/manifest.json" />
+          <link
+            rel="mask-icon"
+            href="/assets/logos/PlasIcon.png"
+            color="#10b981"
+          />
+          <link rel="shortcut icon" href="/assets/logos/PlasIcon.png" />
 
-        <meta name="twitter:card" content="summary" />
-        <meta name="twitter:url" content="https://your-app-domain.com" />
-        <meta name="twitter:title" content={pageTitle} />
-        <meta
-          name="twitter:description"
-          content="Your convenient grocery shopping app"
-        />
-        <meta name="twitter:image" content="/assets/logos/PlasIcon.png" />
-        <meta name="twitter:creator" content="@yourusername" />
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content={pageTitle} />
-        <meta
-          property="og:description"
-          content="Your convenient grocery shopping app"
-        />
-        <meta property="og:site_name" content="Plas" />
-        <meta property="og:url" content="https://plas.rw" />
-        <meta property="og:image" content="/assets/logos/PlasIcon.png" />
-      </Head>
-      <SessionProvider
-        session={(pageProps as any).session}
-        basePath="/api/auth"
-        refetchInterval={5 * 60} // Refetch every 5 minutes
-        refetchOnWindowFocus={true} // Refetch when window gains focus
-        refetchWhenOffline={false}
-      >
-        <ApolloProvider client={apolloClient}>
-          <AuthProvider>
-            <CartProvider>
-              <FoodCartProvider>
-                <ChatProvider>
-                  <GoogleMapProvider>
-                    <SessionRefreshHandler>
-                      <Toaster position="top-right" />
-                      <Component {...pageProps} />
-                      <InstallPrompt />
-                    </SessionRefreshHandler>
-                  </GoogleMapProvider>
-                </ChatProvider>
-              </FoodCartProvider>
-            </CartProvider>
-          </AuthProvider>
-        </ApolloProvider>
-      </SessionProvider>
+          <meta name="twitter:card" content="summary" />
+          <meta name="twitter:url" content="https://your-app-domain.com" />
+          <meta name="twitter:title" content={pageTitle} />
+          <meta
+            name="twitter:description"
+            content="Your convenient grocery shopping app"
+          />
+          <meta name="twitter:image" content="/assets/logos/PlasIcon.png" />
+          <meta name="twitter:creator" content="@yourusername" />
+          <meta property="og:type" content="website" />
+          <meta property="og:title" content={pageTitle} />
+          <meta
+            property="og:description"
+            content="Your convenient grocery shopping app"
+          />
+          <meta property="og:site_name" content="Plas" />
+          <meta property="og:url" content="https://plas.rw" />
+          <meta property="og:image" content="/assets/logos/PlasIcon.png" />
+        </Head>
+        <SessionProvider
+          session={(pageProps as any).session}
+          basePath="/api/auth"
+          refetchInterval={5 * 60} // Refetch every 5 minutes
+          refetchOnWindowFocus={true} // Refetch when window gains focus
+          refetchWhenOffline={false}
+        >
+          <ApolloProvider client={apolloClient}>
+            <AuthProvider>
+              <CartProvider>
+                <FoodCartProvider>
+                  <ChatProvider>
+                    <GoogleMapProvider>
+                      <SessionRefreshHandler>
+                        <Toaster position="top-right" />
+                        <Component {...pageProps} />
+                        <InstallPrompt />
+                      </SessionRefreshHandler>
+                    </GoogleMapProvider>
+                  </ChatProvider>
+                </FoodCartProvider>
+              </CartProvider>
+            </AuthProvider>
+          </ApolloProvider>
+        </SessionProvider>
       </LanguageProvider>
     </ThemeProvider>
   );

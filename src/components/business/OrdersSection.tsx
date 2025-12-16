@@ -557,7 +557,9 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
                               <div className="flex-shrink-0">
                                 <div
                                   className="group relative h-20 w-20 cursor-pointer overflow-hidden rounded-lg border-2 border-gray-200 transition-all duration-300 hover:border-green-500 hover:shadow-lg dark:border-gray-600 md:h-24 md:w-24"
-                                  onClick={() => setExpandedImage(product.image!)}
+                                  onClick={() =>
+                                    setExpandedImage(product.image!)
+                                  }
                                 >
                                   <Image
                                     src={product.image}
@@ -582,7 +584,9 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
                                 </h4>
                                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                                   Quantity: {product.quantity}{" "}
-                                  {product.unit || product.measurement_type || ""}
+                                  {product.unit ||
+                                    product.measurement_type ||
+                                    ""}
                                 </p>
                                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                                   Price per item:{" "}
@@ -611,7 +615,6 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
 
               {/* Order Summary */}
               <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-4 dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50">
-           
                 <div className="space-y-2">
                   <div className="flex justify-between pt-2 ">
                     <span className="text-base font-bold text-gray-900 dark:text-white">

@@ -267,15 +267,15 @@ export function RFQResponsesView({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (showSortMenu && !target.closest('.sort-menu-container')) {
+      if (showSortMenu && !target.closest(".sort-menu-container")) {
         setShowSortMenu(false);
       }
     };
     if (showSortMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showSortMenu]);
 
@@ -543,7 +543,10 @@ export function RFQResponsesView({
         </div>
         <div className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400 sm:bg-transparent sm:px-0 sm:py-0 sm:text-sm dark:sm:bg-transparent">
           <span className="sm:hidden">Total:</span>
-          <span className="font-semibold">{filteredResponses.length} {filteredResponses.length === 1 ? "response" : "responses"}</span>
+          <span className="font-semibold">
+            {filteredResponses.length}{" "}
+            {filteredResponses.length === 1 ? "response" : "responses"}
+          </span>
         </div>
       </div>
 
@@ -570,7 +573,7 @@ export function RFQResponsesView({
             <option value="accepted">Accepted</option>
             <option value="rejected">Rejected</option>
           </select>
-          <div className="relative flex-shrink-0 sort-menu-container">
+          <div className="sort-menu-container relative flex-shrink-0">
             <button
               onClick={() => setShowSortMenu(!showSortMenu)}
               className="flex items-center justify-center rounded-lg border border-gray-200 bg-white p-2 transition-colors hover:bg-gray-50 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600"
@@ -680,11 +683,11 @@ export function RFQResponsesView({
             {/* Header Section */}
             <div className="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white p-4 dark:border-gray-700 dark:from-gray-800 dark:to-gray-700 sm:border-0 sm:bg-transparent sm:p-6">
               <div className="mb-3 flex items-start gap-3 sm:mb-0 sm:flex-row sm:items-start sm:justify-between">
-                <div className="flex items-start gap-3 flex-1 min-w-0 sm:gap-4">
+                <div className="flex min-w-0 flex-1 items-start gap-3 sm:gap-4">
                   <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 shadow-sm dark:from-gray-700 dark:to-gray-600 sm:h-12 sm:w-12">
                     <User className="h-6 w-6 text-gray-600 dark:text-gray-400" />
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="mb-1.5 flex flex-wrap items-center gap-2">
                       <h4 className="text-base font-bold text-gray-900 dark:text-white sm:text-lg">
                         {response.supplierCompany}
@@ -705,12 +708,16 @@ export function RFQResponsesView({
                     <div className="flex flex-col gap-1.5 text-xs text-gray-600 dark:text-gray-400 sm:flex-row sm:items-center sm:gap-3">
                       <div className="flex items-center gap-1">
                         <Star className="h-3.5 w-3.5 flex-shrink-0 text-yellow-500 sm:h-4 sm:w-4" />
-                        <span className="font-medium">{response.supplierRating}</span>
+                        <span className="font-medium">
+                          {response.supplierRating}
+                        </span>
                         <span>({response.supplierReviews})</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <MapPin className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
-                        <span className="truncate">{response.supplierLocation}</span>
+                        <span className="truncate">
+                          {response.supplierLocation}
+                        </span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
@@ -722,14 +729,14 @@ export function RFQResponsesView({
                   </div>
                 </div>
                 <div className="flex-shrink-0 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 p-3 shadow-sm dark:from-green-900/20 dark:to-emerald-900/20 sm:bg-transparent sm:p-0 sm:shadow-none dark:sm:bg-transparent">
-                    <div className="text-left sm:text-right">
-                      <div className="text-xl font-bold text-gray-900 dark:text-white sm:mb-1 sm:text-xl md:text-2xl">
-                        ${response.quoteAmount.toLocaleString()}
-                      </div>
-                      <div className="text-xs font-medium text-gray-600 dark:text-gray-400 sm:text-sm">
-                        {response.deliveryTime}
-                      </div>
+                  <div className="text-left sm:text-right">
+                    <div className="text-xl font-bold text-gray-900 dark:text-white sm:mb-1 sm:text-xl md:text-2xl">
+                      ${response.quoteAmount.toLocaleString()}
                     </div>
+                    <div className="text-xs font-medium text-gray-600 dark:text-gray-400 sm:text-sm">
+                      {response.deliveryTime}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -743,7 +750,9 @@ export function RFQResponsesView({
               </div>
 
               <div className="mb-4 flex flex-wrap items-center gap-1.5 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600 dark:bg-gray-700/50 dark:text-gray-400 sm:gap-2 sm:bg-transparent sm:px-0 sm:py-0 dark:sm:bg-transparent">
-                <span className="font-medium">{response.attachments.length} attachments</span>
+                <span className="font-medium">
+                  {response.attachments.length} attachments
+                </span>
                 <span className="hidden sm:inline">•</span>
                 <span>{response.certifications.length} certifications</span>
                 <span className="hidden sm:inline">•</span>

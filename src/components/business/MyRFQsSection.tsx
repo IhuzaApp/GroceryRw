@@ -172,7 +172,10 @@ export function MyRFQsSection({
             className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-3 py-2 text-xs font-medium text-white shadow-lg transition-all duration-300 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl active:scale-95 sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm md:px-6 md:py-3"
             style={{ color: "#ffffff" }}
           >
-            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5" style={{ color: "#ffffff" }} />
+            <Plus
+              className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5"
+              style={{ color: "#ffffff" }}
+            />
             <span style={{ color: "#ffffff" }}>
               <span className="hidden sm:inline">Create New RFQ</span>
               <span className="sm:hidden">Create RFQ</span>

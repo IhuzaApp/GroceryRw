@@ -465,7 +465,9 @@ export function ContractsManagement({
             {/* Actions */}
             <div className="flex flex-col gap-3 border-t border-gray-200 pt-4 dark:border-gray-600 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
               <div className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 sm:gap-2 sm:text-sm">
-                <span className="whitespace-nowrap">Last activity: {contract.lastActivity}</span>
+                <span className="whitespace-nowrap">
+                  Last activity: {contract.lastActivity}
+                </span>
                 <span className="hidden sm:inline">•</span>
                 <div className="flex items-center gap-1">
                   <span>Client:</span>

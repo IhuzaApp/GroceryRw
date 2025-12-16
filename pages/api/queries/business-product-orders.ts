@@ -231,7 +231,7 @@ export default async function handler(
       const products = Array.isArray(order.allProducts)
         ? order.allProducts
         : [];
-      
+
       // Enrich products with images
       const enrichedProducts = products.map((p: any) => {
         // Check for both 'id' and 'product_id' fields

@@ -259,7 +259,7 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
               key={addr.id}
               className={`group relative overflow-hidden rounded-xl border-2 p-5 shadow-md transition-all duration-300 hover:shadow-xl ${
                 addr.is_default
-                  ? "border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 dark:border-green-600"
+                  ? "border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 dark:border-green-600 dark:from-green-900/20 dark:to-emerald-900/20"
                   : "border-gray-200 bg-white hover:border-green-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-600"
               }`}
             >
@@ -366,7 +366,9 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                           />
                         </svg>
-                        <span className="group-hover:!text-white">Setting...</span>
+                        <span className="group-hover:!text-white">
+                          Setting...
+                        </span>
                       </>
                     ) : (
                       <>
@@ -383,7 +385,9 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
                             d="M5 13l4 4L19 7"
                           />
                         </svg>
-                        <span className="group-hover:!text-white">Set as Default</span>
+                        <span className="group-hover:!text-white">
+                          Set as Default
+                        </span>
                       </>
                     )}
                   </button>
@@ -529,33 +533,33 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
               </div>
 
               {/* City and Postal Code */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  {t("address.city")} *
-                </label>
-                <input
-                  type="text"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder={t("address.enterCity")}
-                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
-                />
-              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    {t("address.city")} *
+                  </label>
+                  <input
+                    type="text"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder={t("address.enterCity")}
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
+                  />
+                </div>
 
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  {t("address.postalCode")} *
-                </label>
-                <input
-                  type="text"
-                  value={postalCode}
-                  onChange={(e) => setPostalCode(e.target.value)}
-                  placeholder={t("address.enterPostalCode")}
-                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
-                />
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    {t("address.postalCode")} *
+                  </label>
+                  <input
+                    type="text"
+                    value={postalCode}
+                    onChange={(e) => setPostalCode(e.target.value)}
+                    placeholder={t("address.enterPostalCode")}
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
+                  />
+                </div>
               </div>
-            </div>
 
               {/* Default Address Checkbox */}
               <div className="flex items-center space-x-3 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
@@ -641,7 +645,9 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
                         d="M5 13l4 4L19 7"
                       />
                     </svg>
-                    <span className="!text-white">{t("address.saveAddress")}</span>
+                    <span className="!text-white">
+                      {t("address.saveAddress")}
+                    </span>
                   </>
                 )}
               </button>

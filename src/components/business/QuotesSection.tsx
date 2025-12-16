@@ -280,7 +280,7 @@ export function QuotesSection({
                             )}
                           </div>
                         </div>
-                        
+
                         {/* RFQ Info - Show on mobile but simplified */}
                         <p className="text-sm text-gray-600 dark:text-gray-400 sm:text-base">
                           <span className="hidden sm:inline">RFQ from: </span>
@@ -289,14 +289,14 @@ export function QuotesSection({
                               ?.business_name || "Unknown Business"}
                           </span>
                         </p>
-                        
+
                         {/* Category - Hidden on mobile */}
                         {quote.bussines_RFQ?.category && (
                           <p className="hidden text-xs text-gray-500 dark:text-gray-400 sm:block sm:text-sm">
                             Category: {quote.bussines_RFQ.category}
                           </p>
                         )}
-                        
+
                         {/* Details - Hidden on mobile, shown on desktop */}
                         <div className="hidden flex-col gap-2 text-xs sm:flex sm:flex-row sm:items-center sm:gap-4 sm:gap-6 sm:text-sm">
                           <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
@@ -315,17 +315,19 @@ export function QuotesSection({
                           {quote.bussines_RFQ?.location && (
                             <span className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                               <span>📍</span>
-                              <span className="truncate">{quote.bussines_RFQ.location}</span>
+                              <span className="truncate">
+                                {quote.bussines_RFQ.location}
+                              </span>
                             </span>
                           )}
                         </div>
-                        
+
                         {/* Submitted Date - Hidden on mobile */}
                         <div className="hidden text-[10px] text-gray-500 dark:text-gray-400 sm:block sm:text-xs">
                           Submitted: {formatDate(quote.created_at)}
                         </div>
                       </div>
-                      
+
                       {/* Price and Button - Stack on mobile */}
                       <div className="flex items-center justify-between border-t border-gray-200 pt-4 dark:border-gray-700 sm:ml-6 sm:flex-col sm:items-end sm:justify-start sm:space-y-4 sm:border-0 sm:pt-0">
                         <div className="text-left sm:text-right">
