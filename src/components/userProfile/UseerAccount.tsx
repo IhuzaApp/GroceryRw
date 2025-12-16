@@ -14,6 +14,8 @@ export default function UserAccount() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isAccountInfoExpanded, setIsAccountInfoExpanded] = useState(false);
+  const [isPasswordExpanded, setIsPasswordExpanded] = useState(false);
 
   // Load user data on component mount
   useEffect(() => {
@@ -161,11 +163,42 @@ export default function UserAccount() {
 
       <div className="block">
         {/* Account Information Card */}
-        <div className="mb-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-          <div className="mb-6 flex items-center">
-            <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-emerald-600">
+        <div className="mb-3 mt-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-emerald-600">
+                <svg
+                  className="h-5 w-5 !text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  Account Information
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Update your personal information
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsAccountInfoExpanded(!isAccountInfoExpanded)}
+              className="ml-4 rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+              aria-label={isAccountInfoExpanded ? "Minimize" : "Expand"}
+            >
               <svg
-                className="h-5 w-5 !text-white"
+                className={`h-5 w-5 transition-transform duration-200 ${
+                  isAccountInfoExpanded ? "rotate-180" : ""
+                }`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -174,31 +207,25 @@ export default function UserAccount() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  d="M19 9l-7 7-7-7"
                 />
               </svg>
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                Account Information
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Update your personal information
-              </p>
-            </div>
+            </button>
           </div>
 
-          {loading ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="h-20 animate-pulse rounded-xl bg-gray-200 dark:bg-gray-700"
-                />
-              ))}
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit}>
+          {isAccountInfoExpanded && (
+            <>
+              {loading ? (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className="h-20 animate-pulse rounded-xl bg-gray-200 dark:bg-gray-700"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -395,15 +422,48 @@ export default function UserAccount() {
                 )}
               </button>
             </form>
+              )}
+            </>
           )}
         </div>
 
         {/* Change Password Card */}
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-          <div className="mb-6 flex items-center">
-            <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600">
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600">
+                <svg
+                  className="h-5 w-5 !text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  Change Password
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Update your account password
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsPasswordExpanded(!isPasswordExpanded)}
+              className="ml-4 rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+              aria-label={isPasswordExpanded ? "Minimize" : "Expand"}
+            >
               <svg
-                className="h-5 w-5 !text-white"
+                className={`h-5 w-5 transition-transform duration-200 ${
+                  isPasswordExpanded ? "rotate-180" : ""
+                }`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -412,27 +472,21 @@ export default function UserAccount() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  d="M19 9l-7 7-7-7"
                 />
               </svg>
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                Change Password
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Update your account password
-              </p>
-            </div>
+            </button>
           </div>
 
-          {loading ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="h-20 animate-pulse rounded-xl bg-gray-200 dark:bg-gray-700" />
-              <div className="h-20 animate-pulse rounded-xl bg-gray-200 dark:bg-gray-700" />
-            </div>
-          ) : (
-            <form onSubmit={handlePasswordSubmit}>
+          {isPasswordExpanded && (
+            <>
+              {loading ? (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="h-20 animate-pulse rounded-xl bg-gray-200 dark:bg-gray-700" />
+                  <div className="h-20 animate-pulse rounded-xl bg-gray-200 dark:bg-gray-700" />
+                </div>
+              ) : (
+                <form onSubmit={handlePasswordSubmit}>
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -547,6 +601,8 @@ export default function UserAccount() {
                 )}
               </button>
             </form>
+              )}
+            </>
           )}
         </div>
       </div>
