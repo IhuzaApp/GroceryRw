@@ -69,6 +69,7 @@ export default function MobileProfile({
 }: MobileProfileProps) {
   const router = useRouter();
   const { role, toggleRole } = useAuth();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("");
 
   // Handle navigation to different sections
@@ -205,62 +206,295 @@ export default function MobileProfile({
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Mobile Header with Background Image */}
-      <div
-        className="relative mb-6 h-40 overflow-hidden rounded-b-3xl"
-        style={{
-          marginTop: "-44px",
-          marginLeft: "-16px",
-          marginRight: "-16px",
-        }}
-      >
-        {/* Background Image */}
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: "url(/assets/images/mobileheaderbg.jpg)",
-          }}
-        >
-          {/* Overlay for better text readability */}
-          <div className="absolute inset-0 bg-black/20"></div>
+    <div className="space-y-4">
+      {/* Top Section - User Profile & Account Manager */}
+      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        {/* User Profile Section */}
+        <div className="mb-4 flex items-center gap-3">
+          <div className="relative">
+            <div className="h-16 w-16 overflow-hidden rounded-full border-2 border-green-100 bg-white shadow-md dark:border-green-900/30">
+              <Image
+                src={
+                  user?.profile_picture ||
+                  (role === "shopper"
+                    ? "/images/userProfile.png"
+                    : "/images/userProfile.png")
+                }
+                alt="Profile"
+                width={64}
+                height={64}
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-white bg-green-500 dark:border-gray-800"></div>
+          </div>
+          <div className="flex-1">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+              {user?.name || "Loading..."}
+            </h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {user?.email || "Loading..."}
+            </p>
+            <div className="mt-1 flex flex-wrap gap-1.5">
+              <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                Premium
+              </span>
+              <span className="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
+                {orderCount} Orders
+              </span>
+              {loadingShopper ? (
+                <div className="h-5 w-16 animate-pulse rounded-full bg-gray-200" />
+              ) : shopperStatus?.active ? (
+                <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                  Active Plasa
+                </span>
+              ) : shopperStatus ? (
+                <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                  {shopperStatus.status === "pending"
+                    ? "Pending Plasa"
+                    : shopperStatus.status}
+                </span>
+              ) : null}
+            </div>
+
+          </div>
         </div>
 
-        {/* Header Content - Profile Info */}
-        <div className="relative z-10 flex h-full items-center px-6">
-          {/* Profile Header */}
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <div className="h-20 w-20 overflow-hidden rounded-full border-4 border-white/20 bg-white/10 shadow-xl backdrop-blur-sm">
-                <Image
-                  src={
-                    user?.profile_picture ||
-                    (role === "shopper"
-                      ? "/images/userProfile.png"
-                      : "/images/userProfile.png")
-                  }
-                  alt="Profile"
-                  width={80}
-                  height={80}
-                  className="h-full w-full object-cover"
-                />
+        {/* Account Summary Section */}
+        <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-700/50">
+          <h3 className="mb-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
+            Account Summary
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30">
+                <svg
+                  className="h-3.5 w-3.5 text-green-600 dark:text-green-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                </svg>
               </div>
-              {/* Online indicator */}
-              <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full border-2 border-white bg-green-500"></div>
+              <div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Orders
+                </p>
+                <p className="text-sm font-bold text-gray-900 dark:text-white">
+                  {orderCount}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <h1 className="truncate text-2xl font-bold !text-white drop-shadow-sm">
-                {user?.name || "Loading..."}
-              </h1>
-              <p className="truncate text-sm !text-white">
-                {user?.email || "Loading..."}
-              </p>
-              <div className="mt-1 flex items-center">
-                <div className="flex items-center space-x-1">
-                  <div className="h-2 w-2 rounded-full bg-green-400"></div>
-                  <span className="text-xs !text-white">Active</span>
-                </div>
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                <svg
+                  className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                  />
+                </svg>
               </div>
+              <div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Wallet
+                </p>
+                <p className="text-sm font-bold text-gray-900 dark:text-white">
+                  {formatCurrency(walletBalance)}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons Section */}
+        <div className="space-y-2">
+          {/* Action Buttons Row */}
+          <div className="grid grid-cols-2 gap-2">
+            {/* Switch to Shopper / Become Shopper Button */}
+            {loadingShopper ? (
+              <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200" />
+            ) : shopperStatus?.active ? (
+              <button
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-2.5 text-xs font-semibold !text-white shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={async () => {
+                  const nextRole = role === "user" ? "shopper" : "user";
+                  setIsSwitchingRole(true);
+                  try {
+                    await initiateRoleSwitch(nextRole as "user" | "shopper");
+                    toggleRole();
+                    toast.success(
+                      `Switched to ${nextRole === "user" ? "User" : "Shopper"}`
+                    );
+                  } catch (error) {
+                    console.error("Error updating role:", error);
+                    toast.error("Failed to switch account");
+                  } finally {
+                    setIsSwitchingRole(false);
+                  }
+                }}
+                disabled={isSwitchingRole}
+              >
+                <svg
+                  className="h-3.5 w-3.5 !text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                  />
+                </svg>
+                <span className="!text-white text-xs">
+                  {isSwitchingRole
+                    ? t("common.loading")
+                    : role === "user"
+                    ? t("nav.switchToShopper")
+                    : t("nav.switchToUser")}
+                </span>
+              </button>
+            ) : (
+              <button
+                className={`flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-xs font-semibold !text-white shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+                  shopperStatus?.needCollection
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600"
+                    : shopperStatus?.status === "pending" ||
+                      shopperStatus?.status === "under_review"
+                    ? "bg-gradient-to-r from-blue-500 to-blue-600"
+                    : "bg-gradient-to-r from-green-500 to-emerald-600"
+                }`}
+                onClick={handleBecomePlasa}
+                disabled={
+                  shopperStatus?.status === "pending" ||
+                  shopperStatus?.status === "under_review"
+                }
+              >
+                <svg
+                  className="h-3.5 w-3.5 !text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  {shopperStatus?.needCollection ? (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  ) : shopperStatus?.status === "pending" ||
+                    shopperStatus?.status === "under_review" ? (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  ) : (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  )}
+                </svg>
+                <span className="!text-white text-xs">
+                  {shopperStatus?.needCollection
+                    ? "Update"
+                    : shopperStatus?.status === "pending" ||
+                      shopperStatus?.status === "under_review"
+                    ? "Pending"
+                    : "Become Shopper"}
+                </span>
+              </button>
+            )}
+
+            {/* Logout Button */}
+            <button
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-red-500 to-red-600 px-3 py-2.5 text-xs font-semibold !text-white shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
+              onClick={async () => {
+                try {
+                  const response = await authenticatedFetch("/api/logout", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                  });
+
+                  if (response.ok) {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    toast.success("Logged out successfully");
+                    router.push("/");
+                  } else {
+                    throw new Error("Logout failed");
+                  }
+                } catch (error) {
+                  console.error("Logout error:", error);
+                  toast.error("Failed to logout");
+                }
+              }}
+            >
+              <svg
+                className="h-3.5 w-3.5 !text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
+              </svg>
+              <span className="!text-white text-xs">{t("nav.logout")}</span>
+            </button>
+          </div>
+
+          {/* Default Address Section */}
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-2.5 dark:border-gray-700 dark:bg-gray-700/50">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h3 className="mb-1 text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  Default Address
+                </h3>
+                {loadingAddr ? (
+                  <div className="h-3 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-600" />
+                ) : selectedAddr || defaultAddr ? (
+                  <p className="text-xs text-gray-600 dark:text-gray-300">
+                    {(selectedAddr || defaultAddr).street},{" "}
+                    {(selectedAddr || defaultAddr).city}{" "}
+                    {(selectedAddr || defaultAddr).postal_code}
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    No address selected
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={() => setShowAddrModal(true)}
+                className="ml-2 rounded-md px-2 py-1 text-xs font-medium text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-900/30 dark:hover:text-green-300"
+              >
+                {selectedAddr || defaultAddr ? "Change" : "Select"}
+              </button>
             </div>
           </div>
         </div>
@@ -320,66 +554,6 @@ export default function MobileProfile({
           </div>
         </div>
       )}
-
-      {/* Stats Cards */}
-      <div className="-mt-12 mb-4 px-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl border border-white/20 bg-white/90 p-4 shadow-lg backdrop-blur-sm dark:bg-gray-800/90">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {orderCount}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Total Orders
-                </p>
-              </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
-                <svg
-                  className="h-6 w-6 text-blue-600 dark:text-blue-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-          <div className="rounded-2xl border border-white/20 bg-white/90 p-4 shadow-lg backdrop-blur-sm dark:bg-gray-800/90">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {formatCurrency(walletBalance)}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Wallet Balance
-                </p>
-              </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-                <svg
-                  className="h-6 w-6 text-green-600 dark:text-green-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Navigation List */}
       <div className="space-y-0">
