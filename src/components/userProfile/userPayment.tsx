@@ -1,13 +1,4 @@
 import React, { useState, useEffect } from "react";
-import {
-  Panel,
-  Tag,
-  Button,
-  Modal,
-  Form,
-  Checkbox,
-  SelectPicker,
-} from "rsuite";
 import toast from "react-hot-toast";
 import CryptoJS from "crypto-js";
 
@@ -509,72 +500,224 @@ export default function UserPayment() {
       </div>
 
       {/* Add Payment Method Modal */}
-      <Modal size="sm" open={showModal} onClose={() => setShowModal(false)}>
-        <Modal.Header>
-          <Modal.Title>Add Payment Method</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form fluid formValue={formValue} onChange={setFormValue}>
-            <Form.Group>
-              <Form.ControlLabel>Method</Form.ControlLabel>
-              <select
-                name="method"
-                value={formValue.method}
-                onChange={(e) =>
-                  setFormValue({ ...formValue, method: e.target.value })
-                }
-                className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
+      {showModal && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm sm:p-6">
+          <div className="max-h-[95vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800 sm:max-h-[90vh]">
+            {/* Header */}
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white px-4 py-4 dark:border-gray-700 dark:from-gray-800 dark:to-gray-800 sm:px-6 sm:py-5 md:px-8">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white sm:text-xl md:text-2xl">
+                  Add Payment Method
+                </h3>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Enter your payment method details
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  setFormValue({
+                    method: "",
+                    names: "",
+                    number: "",
+                    CCV: "",
+                    validity: "",
+                    is_default: false,
+                  });
+                }}
+                className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
               >
-                <option value="">Select Payment Method</option>
-                <option value="Visa">Visa</option>
-                <option value="Mastercard">Mastercard</option>
-                <option value="MTN Momo">MTN Momo</option>
-              </select>
-            </Form.Group>
-            <Form.Group>
-              <Form.ControlLabel>
-                {formValue.method === "MTN Momo"
-                  ? "Name on the number"
-                  : "Name on Card"}
-              </Form.ControlLabel>
-              <Form.Control name="names" />
-            </Form.Group>
-            <Form.Group>
-              <Form.ControlLabel>Number</Form.ControlLabel>
-              <Form.Control name="number" />
-            </Form.Group>
-            {formValue.method !== "MTN Momo" && (
-              <>
-                <Form.Group>
-                  <Form.ControlLabel>CCV</Form.ControlLabel>
-                  <Form.Control name="CCV" />
-                </Form.Group>
-                <Form.Group>
-                  <Form.ControlLabel>Validity (MM/YYYY)</Form.ControlLabel>
-                  <Form.Control name="validity" />
-                </Form.Group>
-              </>
-            )}
-            <Form.Group>
-              <Form.ControlLabel>Set as Default</Form.ControlLabel>
-              <Form.Control name="is_default" accepter={Checkbox} />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button onClick={() => setShowModal(false)} appearance="subtle">
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            appearance="primary"
-            color="green"
-            className="dark:!bg-green-600 dark:!text-white dark:hover:!bg-green-700"
-          >
-            Save
-          </Button>
-        </Modal.Footer>
-      </Modal>
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="space-y-4 p-4 sm:space-y-5 sm:p-6 md:space-y-6 md:p-8">
+              {/* Payment Method Selection */}
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Payment Method *
+                </label>
+                <select
+                  name="method"
+                  value={formValue.method}
+                  onChange={(e) =>
+                    setFormValue({ ...formValue, method: e.target.value })
+                  }
+                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
+                >
+                  <option value="">Select Payment Method</option>
+                  <option value="Visa">Visa</option>
+                  <option value="Mastercard">Mastercard</option>
+                  <option value="MTN Momo">MTN Momo</option>
+                </select>
+              </div>
+
+              {/* Name on Card/Number */}
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  {formValue.method === "MTN Momo"
+                    ? "Name on the number *"
+                    : "Name on Card *"}
+                </label>
+                <input
+                  type="text"
+                  value={formValue.names}
+                  onChange={(e) =>
+                    setFormValue({ ...formValue, names: e.target.value })
+                  }
+                  placeholder={
+                    formValue.method === "MTN Momo"
+                      ? "Enter name on the number"
+                      : "Enter name on card"
+                  }
+                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
+                />
+              </div>
+
+              {/* Card/Number */}
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  {formValue.method === "MTN Momo" ? "Phone Number *" : "Card Number *"}
+                </label>
+                <input
+                  type="text"
+                  value={formValue.number}
+                  onChange={(e) =>
+                    setFormValue({ ...formValue, number: e.target.value })
+                  }
+                  placeholder={
+                    formValue.method === "MTN Momo"
+                      ? "Enter phone number"
+                      : "Enter card number"
+                  }
+                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
+                />
+              </div>
+
+              {/* CCV and Validity (only for cards) */}
+              {formValue.method !== "MTN Momo" && (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      CCV *
+                    </label>
+                    <input
+                      type="text"
+                      value={formValue.CCV}
+                      onChange={(e) =>
+                        setFormValue({ ...formValue, CCV: e.target.value })
+                      }
+                      placeholder="Enter CCV"
+                      maxLength={4}
+                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Validity (MM/YYYY) *
+                    </label>
+                    <input
+                      type="text"
+                      value={formValue.validity}
+                      onChange={(e) =>
+                        setFormValue({ ...formValue, validity: e.target.value })
+                      }
+                      placeholder="MM/YYYY"
+                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Set as Default Checkbox */}
+              <div className="flex items-center space-x-3 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
+                <input
+                  type="checkbox"
+                  id="default-payment"
+                  checked={formValue.is_default}
+                  onChange={(e) =>
+                    setFormValue({
+                      ...formValue,
+                      is_default: e.target.checked,
+                    })
+                  }
+                  className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700"
+                />
+                <label
+                  htmlFor="default-payment"
+                  className="flex-1 text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Set as default payment method
+                </label>
+                {formValue.is_default && (
+                  <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                    Default
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="sticky bottom-0 flex flex-shrink-0 items-center justify-end gap-3 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:px-6 sm:py-5 md:px-8">
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  setFormValue({
+                    method: "",
+                    names: "",
+                    number: "",
+                    CCV: "",
+                    validity: "",
+                    is_default: false,
+                  });
+                }}
+                className="rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={
+                  !formValue.method ||
+                  !formValue.names ||
+                  !formValue.number ||
+                  (formValue.method !== "MTN Momo" &&
+                    (!formValue.CCV || !formValue.validity))
+                }
+                className="inline-flex items-center rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold !text-white shadow-sm transition-all duration-200 hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <svg
+                  className="mr-2 h-4 w-4 !text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                <span className="!text-white">Save Payment Method</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
