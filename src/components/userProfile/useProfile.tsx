@@ -56,6 +56,13 @@ export default function UserProfile() {
   const [loadingShopper, setLoadingShopper] = useState<boolean>(true);
   // Role switching state
   const [isSwitchingRole, setIsSwitchingRole] = useState<boolean>(false);
+  // Referral program status
+  const [referralStatus, setReferralStatus] = useState<{
+    registered: boolean;
+    approved: boolean;
+    status?: string;
+  } | null>(null);
+  const [loadingReferral, setLoadingReferral] = useState<boolean>(true);
 
   // On mount, load any previously selected delivery address from cookie
   useEffect(() => {
@@ -85,6 +92,30 @@ export default function UserProfile() {
       .catch((err) => console.error("Failed to load user profile:", err))
       .finally(() => setLoading(false));
   }, []);
+
+  // Check referral program status
+  useEffect(() => {
+    if (!user?.id) return;
+
+    setLoadingReferral(true);
+    fetch("/api/referrals/check-status")
+      .then((res) => res.json())
+      .then((data) => {
+        setReferralStatus({
+          registered: data.registered || false,
+          approved: data.approved || false,
+          status: data.status,
+        });
+      })
+      .catch((err) => {
+        console.error("Failed to check referral status:", err);
+        setReferralStatus({
+          registered: false,
+          approved: false,
+        });
+      })
+      .finally(() => setLoadingReferral(false));
+  }, [user?.id]);
 
   // Check if user is a shopper and get status
   useEffect(() => {
@@ -292,6 +323,8 @@ export default function UserProfile() {
       isSwitchingRole={isSwitchingRole}
       setIsSwitchingRole={setIsSwitchingRole}
       refreshOrders={refreshOrders}
+      referralStatus={referralStatus}
+      loadingReferral={loadingReferral}
     />
   );
 }
