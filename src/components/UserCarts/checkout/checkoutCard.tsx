@@ -1159,6 +1159,31 @@ export default function CheckoutItems({
 
   return (
     <>
+      {/* Custom styles for green SelectPicker */}
+      <style jsx global>{`
+        .checkout-select-picker .rs-picker-toggle {
+          border-color: #22c55e !important;
+        }
+        .checkout-select-picker .rs-picker-toggle:hover {
+          border-color: #16a34a !important;
+        }
+        .checkout-select-picker .rs-picker-toggle:focus,
+        .checkout-select-picker .rs-picker-toggle.rs-picker-toggle-active {
+          border-color: #16a34a !important;
+          box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2) !important;
+        }
+        .dark .checkout-select-picker .rs-picker-toggle {
+          border-color: #22c55e !important;
+        }
+        .dark .checkout-select-picker .rs-picker-toggle:hover {
+          border-color: #16a34a !important;
+        }
+        .dark .checkout-select-picker .rs-picker-toggle:focus,
+        .dark .checkout-select-picker .rs-picker-toggle.rs-picker-toggle-active {
+          border-color: #16a34a !important;
+          box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2) !important;
+        }
+      `}</style>
       {/* Global Loading Overlay - Shows during checkout process */}
       {isCheckoutLoading && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -1449,7 +1474,7 @@ export default function CheckoutItems({
                 placeholder="Select delivery address"
                 searchable={false}
                 block
-                className="w-full"
+                className="w-full checkout-select-picker"
                 renderMenuItem={(label, item) => {
                   return <div className="py-1">{label}</div>;
                 }}
@@ -1480,7 +1505,7 @@ export default function CheckoutItems({
                 placeholder="Select payment method"
                 searchable={false}
                 block
-                className="w-full"
+                className="w-full checkout-select-picker"
                 renderMenuItem={(label, item) => {
                   return <div className="py-1">{label}</div>;
                 }}
@@ -1647,7 +1672,7 @@ export default function CheckoutItems({
                 placeholder="Select delivery address"
                 searchable={false}
                 block
-                className="w-full"
+                className="w-full checkout-select-picker"
                 renderMenuItem={(label, item) => {
                   return <div className="py-1">{label}</div>;
                 }}
@@ -1675,7 +1700,7 @@ export default function CheckoutItems({
                 placeholder="Select payment method"
                 searchable={false}
                 block
-                className="w-full"
+                className="w-full checkout-select-picker"
                 renderMenuItem={(label, item) => {
                   return <div className="py-1">{label}</div>;
                 }}
