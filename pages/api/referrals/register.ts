@@ -71,16 +71,16 @@ const CHECK_REFERRAL_CODE = gql`
  * Generate a memorable, pronounceable referral code based on user's name
  * Format: [FirstInitial][LastInitial][PronounceableSyllable]R
  * Example: "Tony James" -> "TJABOR", "David Olin" -> "DOKALR"
- * 
+ *
  * Uses consonant-vowel patterns to make it easy to remember and speak
  */
 function generateReferralCodeFromName(name: string): string {
   // Split name into parts
   const nameParts = name.trim().split(/\s+/);
-  
+
   // Get first letter of first name
   const firstInitial = nameParts[0]?.[0]?.toUpperCase() || "U";
-  
+
   // Get first letter of last name (or second part if exists)
   let lastInitial = "U";
   if (nameParts.length > 1) {
@@ -89,31 +89,35 @@ function generateReferralCodeFromName(name: string): string {
     // If only one name part, use second character
     lastInitial = nameParts[0][1]?.toUpperCase() || "U";
   }
-  
+
   // Generate pronounceable syllable (2-3 letters)
   // Pattern: Consonant-Vowel-Consonant (CVC) or Consonant-Vowel (CV)
   const consonants = "BCDFGHJKLMNPQSTVWXYZ"; // Removed R to avoid double R
   const vowels = "AEIOU";
-  
+
   // Generate 2-3 letter pronounceable syllable
   const syllableLength = Math.floor(Math.random() * 2) + 2; // 2 or 3 characters
   let syllable = "";
-  
+
   for (let i = 0; i < syllableLength; i++) {
     if (i % 2 === 0) {
       // Even positions: consonants
-      syllable += consonants.charAt(Math.floor(Math.random() * consonants.length));
+      syllable += consonants.charAt(
+        Math.floor(Math.random() * consonants.length)
+      );
     } else {
       // Odd positions: vowels
       syllable += vowels.charAt(Math.floor(Math.random() * vowels.length));
     }
   }
-  
+
   // If syllable length is 3, ensure it ends with consonant for better pronunciation
   if (syllableLength === 3 && syllable.length === 2) {
-    syllable += consonants.charAt(Math.floor(Math.random() * consonants.length));
+    syllable += consonants.charAt(
+      Math.floor(Math.random() * consonants.length)
+    );
   }
-  
+
   // Combine: [FirstInitial][LastInitial][PronounceableSyllable]R
   return `${firstInitial}${lastInitial}${syllable.toUpperCase()}R`;
 }
@@ -127,27 +131,34 @@ async function generateUniqueReferralCode(
 ): Promise<string> {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const code = generateReferralCodeFromName(name);
-    
+
     // Check if code already exists
     const checkResult = await hasuraClient!.request<{
       Referral_window: Array<{ id: string; referralCode: string }>;
     }>(CHECK_REFERRAL_CODE, {
       referralCode: code,
     });
-    
+
     // If code doesn't exist, return it
-    if (!checkResult.Referral_window || checkResult.Referral_window.length === 0) {
+    if (
+      !checkResult.Referral_window ||
+      checkResult.Referral_window.length === 0
+    ) {
       return code;
     }
-    
+
     // If this is the last attempt, add more randomness
     if (attempt === maxAttempts - 1) {
       // Add timestamp-based suffix to ensure uniqueness
       const timestamp = Date.now().toString(36).substring(7).toUpperCase();
-      return generateReferralCodeFromName(name).slice(0, -1) + timestamp.slice(0, 2) + "R";
+      return (
+        generateReferralCodeFromName(name).slice(0, -1) +
+        timestamp.slice(0, 2) +
+        "R"
+      );
     }
   }
-  
+
   // Fallback (should never reach here)
   return generateReferralCodeFromName(name);
 }
@@ -171,7 +182,8 @@ export default async function handler(
     // Validation
     if (!name || !phone || !deviceFingerprint || !phoneVerified) {
       return res.status(400).json({
-        error: "Missing required fields: name, phone, deviceFingerprint, phoneVerified",
+        error:
+          "Missing required fields: name, phone, deviceFingerprint, phoneVerified",
       });
     }
 
@@ -193,7 +205,10 @@ export default async function handler(
       deviceFingerprint: deviceFingerprint,
     });
 
-    if (duplicateCheck.Referral_window && duplicateCheck.Referral_window.length > 0) {
+    if (
+      duplicateCheck.Referral_window &&
+      duplicateCheck.Referral_window.length > 0
+    ) {
       const duplicate = duplicateCheck.Referral_window[0];
       if (duplicate.user_id === session.user.id) {
         return res.status(400).json({

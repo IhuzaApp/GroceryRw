@@ -20,12 +20,7 @@ const GET_PERSONAL_WALLET = gql`
 // GraphQL mutation to create personal wallet if it doesn't exist
 const CREATE_PERSONAL_WALLET = gql`
   mutation CreatePersonalWallet($user_id: uuid!) {
-    insert_personalWallet_one(
-      object: {
-        user_id: $user_id
-        balance: "0"
-      }
-    ) {
+    insert_personalWallet_one(object: { user_id: $user_id, balance: "0" }) {
       id
       balance
       user_id
@@ -37,16 +32,10 @@ const CREATE_PERSONAL_WALLET = gql`
 
 // GraphQL mutation to update personal wallet balance
 const UPDATE_PERSONAL_WALLET_BALANCE = gql`
-  mutation UpdatePersonalWalletBalance(
-    $wallet_id: uuid!
-    $balance: String!
-  ) {
+  mutation UpdatePersonalWalletBalance($wallet_id: uuid!, $balance: String!) {
     update_personalWallet_by_pk(
       pk_columns: { id: $wallet_id }
-      _set: {
-        balance: $balance
-        updated_at: "now()"
-      }
+      _set: { balance: $balance, updated_at: "now()" }
     ) {
       id
       balance
@@ -87,7 +76,9 @@ export default async function handler(
 
     // Validate phone number (Rwanda format: 9-10 digits)
     if (!phone_number || phone_number.length < 9 || phone_number.length > 10) {
-      return res.status(400).json({ error: "Valid phone number is required (9-10 digits)" });
+      return res
+        .status(400)
+        .json({ error: "Valid phone number is required (9-10 digits)" });
     }
 
     if (!hasuraClient) {
@@ -149,7 +140,9 @@ export default async function handler(
     console.error("Error adding money to wallet:", error);
     return res.status(500).json({
       error:
-        error instanceof Error ? error.message : "Failed to add money to wallet",
+        error instanceof Error
+          ? error.message
+          : "Failed to add money to wallet",
     });
   }
 }

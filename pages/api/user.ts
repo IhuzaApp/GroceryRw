@@ -118,7 +118,7 @@ export default async function handler(
       if (shopperData.shoppers && shopperData.shoppers.length > 0) {
         // Wallets.shopper_id references Users.id, not shoppers.id
         // So we use user_id directly as the shopper_id
-        
+
         // Fetch the shopper wallet using user_id (which is what shopper_id references)
         let walletData = await hasuraClient.request<{
           Wallets: Array<{ available_balance: string }>;
@@ -130,10 +130,10 @@ export default async function handler(
             const newWallet = await hasuraClient.request<{
               insert_Wallets_one: { available_balance: string };
             }>(CREATE_SHOPPER_WALLET, { shopper_id: user_id });
-            
+
             if (newWallet.insert_Wallets_one) {
               walletData = {
-                Wallets: [newWallet.insert_Wallets_one]
+                Wallets: [newWallet.insert_Wallets_one],
               };
             }
           } catch (createError) {

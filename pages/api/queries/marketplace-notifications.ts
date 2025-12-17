@@ -216,7 +216,8 @@ export default async function handler(
     });
   } catch (error: any) {
     // Check if it's a server error (502, 520, 503, 504, etc.) - Hasura/Cloudflare issues
-    const serverErrorStatus = error?.response?.status || error?.response?.statusCode;
+    const serverErrorStatus =
+      error?.response?.status || error?.response?.statusCode;
     const isServerError =
       serverErrorStatus >= 500 ||
       serverErrorStatus === 520 ||
@@ -227,7 +228,10 @@ export default async function handler(
 
     // Only log non-server errors (client errors, etc.)
     if (!isServerError) {
-      console.error("Error fetching marketplace notifications:", error.message || error);
+      console.error(
+        "Error fetching marketplace notifications:",
+        error.message || error
+      );
     }
 
     // For server errors, return 200 with default values (graceful degradation)
@@ -238,7 +242,9 @@ export default async function handler(
       error: isServerError
         ? "service_unavailable"
         : "Failed to fetch notifications",
-      message: isServerError ? "Service temporarily unavailable" : error.message,
+      message: isServerError
+        ? "Service temporarily unavailable"
+        : error.message,
       rfqResponsesCount: 0,
       incompleteOrdersCount: 0,
       newRFQsCount: 0,

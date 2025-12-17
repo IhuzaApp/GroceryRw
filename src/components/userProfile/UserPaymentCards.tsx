@@ -98,7 +98,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     // Fetch personal wallet balance for all users
     let wallet = null;
     const walletRes = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL || ""}/api/queries/personal-wallet-balance`,
+      `${
+        process.env.NEXT_PUBLIC_API_URL || ""
+      }/api/queries/personal-wallet-balance`,
       {
         headers: {
           cookie: req.headers.cookie || "",
@@ -284,9 +286,10 @@ export default function UserPaymentCards({
   );
 
   // Get wallet balance
-  const walletBalance = balances.wallet && balances.wallet.balance
-    ? parseFloat(balances.wallet.balance)
-    : 0;
+  const walletBalance =
+    balances.wallet && balances.wallet.balance
+      ? parseFloat(balances.wallet.balance)
+      : 0;
 
   // Function to refresh wallet balance
   const refreshWalletBalance = async () => {
@@ -497,7 +500,7 @@ export default function UserPaymentCards({
           <div className="mt-4">
             <button
               onClick={() => setShowAddMoneyModal(true)}
-              className="w-full rounded-lg bg-white/20 px-4 py-2.5 text-sm font-semibold !text-white backdrop-blur-sm transition-all hover:bg-white/30 hover:scale-105 active:scale-95"
+              className="w-full rounded-lg bg-white/20 px-4 py-2.5 text-sm font-semibold !text-white backdrop-blur-sm transition-all hover:scale-105 hover:bg-white/30 active:scale-95"
             >
               <span className="flex items-center justify-center gap-2">
                 <svg
@@ -522,7 +525,6 @@ export default function UserPaymentCards({
             <p className="text-xs font-bold opacity-70">SHOPPING ONLY</p>
           </div>
         </div>
-
 
         {/* Add Money Modal */}
         <AddMoneyModal

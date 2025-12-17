@@ -53,28 +53,37 @@ export default function AddMoneyModal({
 
     // Validate card number (should be at least 13 digits, max 19 characters with spaces)
     const cleanedCardNumber = cardNumber.replace(/\s/g, "");
-    if (!cardNumber || cleanedCardNumber.length < 13 || cleanedCardNumber.length > 16) {
+    if (
+      !cardNumber ||
+      cleanedCardNumber.length < 13 ||
+      cleanedCardNumber.length > 16
+    ) {
       toast.error("Please enter a valid card number (13-16 digits)");
       return;
     }
 
     // Generate description automatically
     const lastFour = cleanedCardNumber.slice(-4);
-    const autoDescription = `Added ${amountNum.toFixed(2)} RWF to wallet from card ending in ${lastFour}`;
+    const autoDescription = `Added ${amountNum.toFixed(
+      2
+    )} RWF to wallet from card ending in ${lastFour}`;
 
     setLoading(true);
     try {
-      const response = await authenticatedFetch("/api/user/add-money-to-wallet", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          amount: amountNum,
-          description: autoDescription,
-          card_number: cleanedCardNumber,
-        }),
-      });
+      const response = await authenticatedFetch(
+        "/api/user/add-money-to-wallet",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            amount: amountNum,
+            description: autoDescription,
+            card_number: cleanedCardNumber,
+          }),
+        }
+      );
 
       const data = await response.json();
 
@@ -197,9 +206,7 @@ export default function AddMoneyModal({
                       : "border-gray-200 bg-white text-gray-700 hover:border-green-300 hover:bg-green-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-green-900/20"
                   }`}
                 >
-                  {quickAmount >= 1000
-                    ? `${quickAmount / 1000}k`
-                    : quickAmount}
+                  {quickAmount >= 1000 ? `${quickAmount / 1000}k` : quickAmount}
                 </button>
               ))}
             </div>

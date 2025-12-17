@@ -48,7 +48,9 @@ export default async function handler(
     const { phone, email, deviceFingerprint } = req.body;
 
     if (!phone || !deviceFingerprint) {
-      return res.status(400).json({ error: "Phone and device fingerprint are required" });
+      return res
+        .status(400)
+        .json({ error: "Phone and device fingerprint are required" });
     }
 
     if (!hasuraClient) {
@@ -71,30 +73,33 @@ export default async function handler(
       deviceFingerprint: deviceFingerprint,
     });
 
-    if (duplicateCheck.Referral_window && duplicateCheck.Referral_window.length > 0) {
+    if (
+      duplicateCheck.Referral_window &&
+      duplicateCheck.Referral_window.length > 0
+    ) {
       const duplicate = duplicateCheck.Referral_window[0];
-      
+
       if (duplicate.user_id === session.user.id) {
         return res.status(200).json({
           isDuplicate: true,
           reason: "You already have a referral account",
         });
       }
-      
+
       if (duplicate.phone === phone) {
         return res.status(200).json({
           isDuplicate: true,
           reason: "Phone number already registered for referral program",
         });
       }
-      
+
       if (email && duplicate.email === email) {
         return res.status(200).json({
           isDuplicate: true,
           reason: "Email already registered for referral program",
         });
       }
-      
+
       if (duplicate.deviceFingerprint === deviceFingerprint) {
         return res.status(200).json({
           isDuplicate: true,
