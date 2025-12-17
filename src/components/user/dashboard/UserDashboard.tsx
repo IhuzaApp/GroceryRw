@@ -1422,10 +1422,10 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
               <button
                 onClick={handleRefreshData}
                 disabled={isFetchingData}
-                className="hidden items-center gap-2 rounded-lg bg-blue-500 px-3 py-2 text-sm text-white transition-colors duration-200 hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50 md:flex"
+                className="group hidden items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-5 py-2.5 text-sm font-semibold !text-white shadow-lg shadow-green-500/30 transition-all duration-300 hover:from-green-600 hover:to-green-700 hover:shadow-xl hover:shadow-green-600/40 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100 disabled:hover:shadow-lg dark:from-green-600 dark:to-green-700 dark:!text-white dark:shadow-green-600/20 dark:hover:from-green-700 dark:hover:to-green-800 md:flex"
               >
                 <svg
-                  className={`h-4 w-4 ${isFetchingData ? "animate-spin" : ""}`}
+                  className={`h-4 w-4 !text-white transition-transform duration-300 ${isFetchingData ? "animate-spin" : "group-hover:rotate-180"}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -1433,11 +1433,11 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
+                    strokeWidth={2.5}
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                   />
                 </svg>
-                {isFetchingData ? "Refreshing..." : "Refresh"}
+                <span className="!text-white">{isFetchingData ? "Refreshing..." : "Refresh"}</span>
               </button>
 
               {/* Sort Dropdown */}
