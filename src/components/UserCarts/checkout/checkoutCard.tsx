@@ -20,7 +20,7 @@ const CACHE_EXPIRATION_HOURS = 24;
 const CACHE_REFRESH_MS = 12 * 60 * 60 * 1000;
 
 interface PaymentMethod {
-  type: "refund" | "card" | "momo";
+  type: "refund" | "card" | "momo" | "wallet";
   id?: string;
   number?: string;
 }
@@ -317,6 +317,8 @@ export default function CheckoutItems({
   const [savedPaymentMethods, setSavedPaymentMethods] = useState<SavedPaymentMethod[]>([]);
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [refundBalance, setRefundBalance] = useState(0);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [hasWallet, setHasWallet] = useState(false);
   const [oneTimePhoneNumber, setOneTimePhoneNumber] = useState<string>("");
   const [showOneTimePhoneInput, setShowOneTimePhoneInput] = useState(false);
   const [selectedPaymentValue, setSelectedPaymentValue] = useState<string | null>(null);
@@ -352,6 +354,20 @@ export default function CheckoutItems({
         const refundResponse = await fetch("/api/queries/refunds");
         const refundData = await refundResponse.json();
         setRefundBalance(parseFloat(refundData.totalAmount || "0"));
+
+        // Fetch wallet balance
+        try {
+          const walletResponse = await fetch("/api/queries/personal-wallet-balance");
+          const walletData = await walletResponse.json();
+          if (walletData.wallet) {
+            setWalletBalance(parseFloat(walletData.wallet.balance || "0"));
+          } else {
+            setWalletBalance(0);
+          }
+        } catch (walletError) {
+          console.error("Error fetching wallet balance:", walletError);
+          setWalletBalance(0);
+        }
       } catch (error) {
         console.error("Error fetching payment data:", error);
       } finally {
@@ -1010,6 +1026,8 @@ export default function CheckoutItems({
 
     if (value === "refund") {
       setSelectedPaymentMethod({ type: "refund" });
+    } else if (value === "wallet") {
+      setSelectedPaymentMethod({ type: "wallet" });
     } else if (value === "one-time-phone") {
       setShowOneTimePhoneInput(true);
       setSelectedPaymentMethod({ type: "momo", number: oneTimePhoneNumber });
@@ -1045,16 +1063,115 @@ export default function CheckoutItems({
     }
   };
 
+  // Helper function to get payment method icon
+  const getPaymentMethodIcon = (value: string, methodType?: string) => {
+    if (value === "refund") {
+      return (
+        <svg
+          className="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+          />
+        </svg>
+      );
+    }
+    if (value === "wallet") {
+      return (
+        <svg
+          className="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+          />
+        </svg>
+      );
+    }
+    if (value === "one-time-phone") {
+      return (
+        <svg
+          className="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+          />
+        </svg>
+      );
+    }
+    if (methodType?.toLowerCase() === "mtn momo" || methodType?.toLowerCase().includes("momo")) {
+      return (
+        <svg
+          className="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+          />
+        </svg>
+      );
+    }
+    // Default credit card icon
+    return (
+      <svg
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+        />
+      </svg>
+    );
+  };
+
   // Prepare payment method options for dropdown
   const getPaymentMethodOptions = () => {
-    const options: Array<{ label: string; value: string }> = [];
+    const options: Array<{ label: string; value: string; methodType?: string }> = [];
     const canUseRefund = refundBalance >= finalTotal;
+    const canUseWallet = walletBalance >= finalTotal;
 
     // Add refund option if balance is sufficient
     if (canUseRefund) {
       options.push({
         label: `Use Refund Balance (${formatCurrency(refundBalance)} available)`,
         value: "refund",
+      });
+    }
+
+    // Add wallet option (always show if wallet exists)
+    if (hasWallet) {
+      options.push({
+        label: canUseWallet
+          ? `Use Wallet (${formatCurrency(walletBalance)} available)`
+          : `Use Wallet (${formatCurrency(walletBalance)} available - Insufficient)`,
+        value: "wallet",
       });
     }
 
@@ -1067,6 +1184,7 @@ export default function CheckoutItems({
       options.push({
         label: `${method.method} ${displayNumber}${method.is_default ? " (Default)" : ""}`,
         value: method.id,
+        methodType: method.method,
       });
     });
 
@@ -1124,6 +1242,8 @@ export default function CheckoutItems({
         <div className="mr-2 flex items-center justify-center rounded bg-blue-600 p-2 text-xs text-white">
           {selectedPaymentMethod.type === "refund"
             ? "REFUND"
+            : selectedPaymentMethod.type === "wallet"
+            ? "WALLET"
             : selectedPaymentMethod.type === "momo"
             ? "MOMO"
             : "VISA"}
@@ -1131,6 +1251,8 @@ export default function CheckoutItems({
         <span className={theme === "dark" ? "text-gray-300" : "text-gray-700"}>
           {selectedPaymentMethod.type === "refund"
             ? "Using Refund Balance"
+            : selectedPaymentMethod.type === "wallet"
+            ? `Using Wallet (${formatCurrency(walletBalance)} available)`
             : selectedPaymentMethod.type === "momo"
             ? `•••• ${selectedPaymentMethod.number?.slice(-3)}`
             : `•••• ${selectedPaymentMethod.number?.slice(-4)}`}
@@ -1568,23 +1690,40 @@ export default function CheckoutItems({
                       onClick={() => setShowPaymentDropdown(false)}
                     />
                     <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                      {getPaymentMethodOptions().map((option) => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => {
-                            handlePaymentMethodChange(option.value);
-                            setShowPaymentDropdown(false);
-                          }}
-                          className={`w-full px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                            selectedPaymentValue === option.value
-                              ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                              : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
+                      {getPaymentMethodOptions().map((option) => {
+                        const isWalletInsufficient = option.value === "wallet" && walletBalance < finalTotal;
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => {
+                              if (!isWalletInsufficient) {
+                                handlePaymentMethodChange(option.value);
+                                setShowPaymentDropdown(false);
+                              }
+                            }}
+                            disabled={isWalletInsufficient}
+                            className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                              isWalletInsufficient
+                                ? "text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-900/20 cursor-not-allowed"
+                                : selectedPaymentValue === option.value
+                                ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                                : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+                            }`}
+                          >
+                            <span className={`flex-shrink-0 ${
+                              isWalletInsufficient
+                                ? "text-red-500 dark:text-red-400"
+                                : selectedPaymentValue === option.value
+                                ? "text-green-600 dark:text-green-400"
+                                : "text-gray-500 dark:text-gray-400"
+                            }`}>
+                              {getPaymentMethodIcon(option.value, option.methodType)}
+                            </span>
+                            <span className="flex-1">{option.label}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </>
                 )}
@@ -1861,23 +2000,40 @@ export default function CheckoutItems({
                       onClick={() => setShowPaymentDropdown(false)}
                     />
                     <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                      {getPaymentMethodOptions().map((option) => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => {
-                            handlePaymentMethodChange(option.value);
-                            setShowPaymentDropdown(false);
-                          }}
-                          className={`w-full px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                            selectedPaymentValue === option.value
-                              ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                              : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
+                      {getPaymentMethodOptions().map((option) => {
+                        const isWalletInsufficient = option.value === "wallet" && walletBalance < finalTotal;
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => {
+                              if (!isWalletInsufficient) {
+                                handlePaymentMethodChange(option.value);
+                                setShowPaymentDropdown(false);
+                              }
+                            }}
+                            disabled={isWalletInsufficient}
+                            className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                              isWalletInsufficient
+                                ? "text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-900/20 cursor-not-allowed"
+                                : selectedPaymentValue === option.value
+                                ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                                : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+                            }`}
+                          >
+                            <span className={`flex-shrink-0 ${
+                              isWalletInsufficient
+                                ? "text-red-500 dark:text-red-400"
+                                : selectedPaymentValue === option.value
+                                ? "text-green-600 dark:text-green-400"
+                                : "text-gray-500 dark:text-gray-400"
+                            }`}>
+                              {getPaymentMethodIcon(option.value, option.methodType)}
+                            </span>
+                            <span className="flex-1">{option.label}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </>
                 )}
