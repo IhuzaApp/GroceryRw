@@ -156,6 +156,10 @@ export default async function handler(
     delivery_fee,
     discount,
     voucher_code,
+    referral_code,
+    referral_discount,
+    service_fee_discount,
+    delivery_fee_discount,
     delivery_time,
     delivery_notes,
   } = req.body;

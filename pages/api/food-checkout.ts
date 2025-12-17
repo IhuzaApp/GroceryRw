@@ -78,6 +78,10 @@ interface FoodCheckoutRequest {
   delivery_fee: string;
   discount?: string | null;
   voucher_code?: string | null;
+  referral_code?: string | null;
+  referral_discount?: string | null;
+  service_fee_discount?: string | null;
+  delivery_fee_discount?: string | null;
   delivery_time: string;
   delivery_notes?: string | null;
   items: Array<{
@@ -110,6 +114,10 @@ export default async function handler(
       delivery_fee,
       discount,
       voucher_code,
+      referral_code,
+      referral_discount,
+      service_fee_discount,
+      delivery_fee_discount,
       delivery_time,
       delivery_notes,
       items,

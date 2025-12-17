@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Input, Button, Panel, Modal, toaster, Notification } from "rsuite";
 import Link from "next/link"; // Make sure you import Link if you use it
 import { formatCurrency } from "../../../lib/formatCurrency";
@@ -95,10 +95,28 @@ export default function CheckoutItems({
     null
   );
   const [configLoading, setConfigLoading] = useState(true);
+  // Separate state for discounts (always fetched fresh from server)
+  const [discountsEnabled, setDiscountsEnabled] = useState(false);
   // Address management modal state
   const [showAddressModal, setShowAddressModal] = useState(false);
   // Checkout loading state
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+
+  // Function to fetch fresh discounts from server (always called, never cached)
+  const fetchFreshDiscounts = useCallback(async () => {
+    try {
+      const response = await fetch("/api/queries/system-configuration");
+      const data = await response.json();
+
+      if (data.success && data.config && typeof data.config.discounts === "boolean") {
+        setDiscountsEnabled(data.config.discounts);
+      }
+    } catch (error) {
+      console.error("Error fetching fresh discounts:", error);
+      // Fallback to false if fetch fails
+      setDiscountsEnabled(false);
+    }
+  }, []);
 
   // Fetch system configuration with memoization
   useEffect(() => {
@@ -109,11 +127,22 @@ export default function CheckoutItems({
         const data = await response.json();
 
         if (data.success && data.config) {
-          setSystemConfig(data.config);
+          // Extract discounts before caching (don't cache discounts)
+          const { discounts, ...configWithoutDiscounts } = data.config;
+          setDiscountsEnabled(discounts || false);
+          
+          // Store config WITHOUT discounts in cookie
+          setSystemConfig({
+            ...configWithoutDiscounts,
+            discounts: false, // Set to false in cached config, we'll use fresh value
+          } as SystemConfiguration);
 
-          // Store in cookie with expiration and timestamp
+          // Store in cookie with expiration and timestamp (without discounts)
           const cacheData = {
-            config: data.config,
+            config: {
+              ...configWithoutDiscounts,
+              discounts: false, // Don't cache discounts value
+            },
             timestamp: Date.now(),
           };
 
@@ -138,11 +167,22 @@ export default function CheckoutItems({
         const data = await response.json();
 
         if (data.success && data.config) {
-          setSystemConfig(data.config);
+          // Extract discounts before caching (don't cache discounts)
+          const { discounts, ...configWithoutDiscounts } = data.config;
+          setDiscountsEnabled(discounts || false);
+          
+          // Update config WITHOUT discounts
+          setSystemConfig({
+            ...configWithoutDiscounts,
+            discounts: false, // Set to false in cached config
+          } as SystemConfiguration);
 
-          // Update cache with new data and timestamp
+          // Update cache with new data and timestamp (without discounts)
           const cacheData = {
-            config: data.config,
+            config: {
+              ...configWithoutDiscounts,
+              discounts: false, // Don't cache discounts value
+            },
             timestamp: Date.now(),
           };
 
@@ -173,8 +213,11 @@ export default function CheckoutItems({
 
             // Handle both old format (direct config object) and new format (with timestamp)
             if (parsedCache.config && parsedCache.timestamp) {
-              // New format with timestamp
+              // New format with timestamp - use cached config but fetch fresh discounts
               setSystemConfig(parsedCache.config);
+              
+              // Always fetch fresh discounts from server (don't use cached value)
+              fetchFreshDiscounts();
 
               // Check if cache is stale and needs background refresh
               const cacheAge = Date.now() - parsedCache.timestamp;
@@ -185,6 +228,9 @@ export default function CheckoutItems({
             } else {
               // Old format or unexpected structure - treat as config directly
               setSystemConfig(parsedCache);
+              
+              // Always fetch fresh discounts from server
+              fetchFreshDiscounts();
 
               // Always refresh old format in background to update to new format
               setTimeout(refreshConfigInBackground, 0);
@@ -218,9 +264,16 @@ export default function CheckoutItems({
     if (!systemConfig) {
       fetchSystemConfig();
     } else {
+      // Even if we have cached config, always fetch fresh discounts
+      fetchFreshDiscounts();
       setConfigLoading(false);
     }
-  }, [systemConfig]); // Add systemConfig as dependency to prevent unnecessary re-fetches
+  }, [systemConfig, fetchFreshDiscounts]); // Add systemConfig and fetchFreshDiscounts as dependencies
+
+  // Always fetch fresh discounts on component mount
+  useEffect(() => {
+    fetchFreshDiscounts();
+  }, [fetchFreshDiscounts]); // Run on mount and when fetchFreshDiscounts changes
 
   useEffect(() => {
     const handleAddressChange = () => setTick((t) => t + 1);
@@ -231,9 +284,14 @@ export default function CheckoutItems({
 
   // No router event listeners needed since we're not redirecting
 
-  const [promoCode, setPromoCode] = useState("");
+  const [discountCode, setDiscountCode] = useState("");
   const [discount, setDiscount] = useState(0);
-  const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
+  const [appliedCode, setAppliedCode] = useState<string | null>(null);
+  const [codeType, setCodeType] = useState<"promo" | "referral" | null>(null);
+  const [referralDiscount, setReferralDiscount] = useState(0);
+  const [serviceFeeDiscount, setServiceFeeDiscount] = useState(0);
+  const [deliveryFeeDiscount, setDeliveryFeeDiscount] = useState(0);
+  const [validatingCode, setValidatingCode] = useState(false);
   const [deliveryNotes, setDeliveryNotes] = useState<string>("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<PaymentMethod | null>(null);
@@ -482,11 +540,10 @@ export default function CheckoutItems({
     }
   }
 
-  // Check if discounts are enabled in system configuration
-  const discountsEnabled = systemConfig ? systemConfig.discounts : false;
+  // discountsEnabled is now a separate state that's always fetched fresh from server
 
-  const handleApplyPromo = () => {
-    // If discounts are disabled, don't apply promo codes
+  const handleApplyCode = async () => {
+    // If discounts are disabled, don't apply codes
     if (!discountsEnabled) {
       toaster.push(
         <Notification type="warning" header="Discounts Disabled">
@@ -497,30 +554,115 @@ export default function CheckoutItems({
       return;
     }
 
+    const code = discountCode.trim().toUpperCase();
+    if (!code) {
+      toaster.push(
+        <Notification type="error" header="Code Required">
+          Please enter a promo or referral code.
+        </Notification>,
+        { placement: "topEnd" }
+      );
+      return;
+    }
+
+    setValidatingCode(true);
+    
+    // First, check if it's a promo code
     const PROMO_CODES: { [code: string]: number } = {
       SAVE10: 0.1,
       SAVE20: 0.2,
     };
 
-    const code = promoCode.trim().toUpperCase();
-
     if (PROMO_CODES[code]) {
+      // It's a promo code
       setDiscount(Total * PROMO_CODES[code]);
-      setAppliedPromo(code);
-    } else {
-      setDiscount(0);
-      setAppliedPromo(null);
+      setAppliedCode(code);
+      setCodeType("promo");
+      // Clear referral discounts
+      setServiceFeeDiscount(0);
+      setDeliveryFeeDiscount(0);
+      setReferralDiscount(0);
+      
       toaster.push(
-        <Notification type="error" header="Invalid Promo Code">
-          Invalid promo code.
+        <Notification type="success" header="Promo Code Applied">
+          Discount applied successfully!
         </Notification>,
         { placement: "topEnd" }
       );
+      setValidatingCode(false);
+      return;
+    }
+
+    // If not a promo code, check if it's a referral code
+    try {
+      const response = await fetch("/api/referrals/validate-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ referralCode: code }),
+      });
+
+      const result = await response.json();
+
+      if (result.valid) {
+        // Calculate 17% discount from service fee and delivery fee
+        // Split: 8.5% from service fee, 8.5% from delivery fee
+        const serviceFeeDiscountAmount = serviceFee * 0.085;
+        const deliveryFeeDiscountAmount = deliveryFee * 0.085;
+        const totalReferralDiscount = serviceFeeDiscountAmount + deliveryFeeDiscountAmount;
+
+        setServiceFeeDiscount(serviceFeeDiscountAmount);
+        setDeliveryFeeDiscount(deliveryFeeDiscountAmount);
+        setReferralDiscount(totalReferralDiscount);
+        setAppliedCode(code);
+        setCodeType("referral");
+        // Clear promo discount
+        setDiscount(0);
+
+        toaster.push(
+          <Notification type="success" header="Referral Code Applied">
+            You've received a 17% discount on service and delivery fees!
+          </Notification>,
+          { placement: "topEnd" }
+        );
+      } else {
+        // Reset all discounts
+        setServiceFeeDiscount(0);
+        setDeliveryFeeDiscount(0);
+        setReferralDiscount(0);
+        setDiscount(0);
+        setAppliedCode(null);
+        setCodeType(null);
+        toaster.push(
+          <Notification type="error" header="Invalid Code">
+            {result.message || "Invalid code. Please check and try again."}
+          </Notification>,
+          { placement: "topEnd" }
+        );
+      }
+    } catch (error) {
+      console.error("Error validating code:", error);
+      // Reset all discounts
+      setServiceFeeDiscount(0);
+      setDeliveryFeeDiscount(0);
+      setReferralDiscount(0);
+      setDiscount(0);
+      setAppliedCode(null);
+      setCodeType(null);
+      toaster.push(
+        <Notification type="error" header="Error">
+          Failed to validate code. Please try again.
+        </Notification>,
+        { placement: "topEnd" }
+      );
+    } finally {
+      setValidatingCode(false);
     }
   };
 
-  // Compute numeric final total including service fee
-  const finalTotal = Total - discount + serviceFee + deliveryFee;
+  // Compute numeric final total including service fee and delivery fee, minus discounts
+  const finalServiceFee = serviceFee - serviceFeeDiscount;
+  const finalDeliveryFee = deliveryFee - deliveryFeeDiscount;
+  const finalTotal = Total - discount + finalServiceFee + finalDeliveryFee;
 
   const handleProceedToCheckout = async () => {
     // Validate cart has items
@@ -593,9 +735,13 @@ export default function CheckoutItems({
           restaurant_id: restaurant.id,
           delivery_address_id: deliveryAddressId,
           service_fee: "0", // No service fee for food orders
-          delivery_fee: deliveryFee.toString(),
+          delivery_fee: finalDeliveryFee.toString(),
           discount: discount > 0 ? discount.toString() : null,
-          voucher_code: appliedPromo,
+          voucher_code: codeType === "promo" ? appliedCode : null,
+          referral_code: codeType === "referral" ? appliedCode : null,
+          referral_discount: referralDiscount > 0 ? referralDiscount.toString() : null,
+          service_fee_discount: serviceFeeDiscount > 0 ? serviceFeeDiscount.toString() : null,
+          delivery_fee_discount: deliveryFeeDiscount > 0 ? deliveryFeeDiscount.toString() : null,
           delivery_time: deliveryTimestamp,
           delivery_notes: deliveryNotes || null,
           items: restaurant.items.map((item) => ({
@@ -611,10 +757,14 @@ export default function CheckoutItems({
         payload = {
           shop_id: shopId,
           delivery_address_id: deliveryAddressId,
-          service_fee: serviceFee.toString(),
-          delivery_fee: deliveryFee.toString(),
+          service_fee: finalServiceFee.toString(),
+          delivery_fee: finalDeliveryFee.toString(),
           discount: discount > 0 ? discount.toString() : null,
-          voucher_code: appliedPromo,
+          voucher_code: codeType === "promo" ? appliedCode : null,
+          referral_code: codeType === "referral" ? appliedCode : null,
+          referral_discount: referralDiscount > 0 ? referralDiscount.toString() : null,
+          service_fee_discount: serviceFeeDiscount > 0 ? serviceFeeDiscount.toString() : null,
+          delivery_fee_discount: deliveryFeeDiscount > 0 ? deliveryFeeDiscount.toString() : null,
           delivery_time: deliveryTimestamp,
           delivery_notes: deliveryNotes || null,
         };
@@ -950,20 +1100,21 @@ export default function CheckoutItems({
                   theme === "dark" ? "text-gray-300" : "text-gray-600"
                 }`}
               >
-                Do you have any promo code?
+                Promo or Referral Code
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex gap-2">
                 <Input
-                  value={promoCode}
-                  onChange={setPromoCode}
-                  placeholder="Enter promo code"
-                  className="max-w-md"
+                  value={discountCode}
+                  onChange={setDiscountCode}
+                  placeholder="Enter promo or referral code"
+                  className="flex-1"
                 />
                 <Button
                   appearance="primary"
                   color="green"
-                  className="bg-green-100 font-medium text-green-600 dark:bg-green-900/20 dark:text-green-300"
-                  onClick={handleApplyPromo}
+                  className="bg-green-100 font-medium text-green-600 dark:bg-green-900/20 dark:text-green-300 whitespace-nowrap"
+                  onClick={handleApplyCode}
+                  loading={validatingCode}
                 >
                   Apply
                 </Button>
@@ -994,10 +1145,16 @@ export default function CheckoutItems({
                 {formatCurrency(Total)}
               </span>
             </div>
-            {discount > 0 && (
+            {discount > 0 && codeType === "promo" && (
               <div className="flex justify-between text-green-600 dark:text-green-400">
-                <span className="text-sm">Discount ({appliedPromo})</span>
+                <span className="text-sm">Discount ({appliedCode})</span>
                 <span className="text-sm">-{formatCurrency(discount)}</span>
+              </div>
+            )}
+            {referralDiscount > 0 && codeType === "referral" && (
+              <div className="flex justify-between text-green-600 dark:text-green-400">
+                <span className="text-sm">Referral Discount ({appliedCode})</span>
+                <span className="text-sm">-{formatCurrency(referralDiscount)}</span>
               </div>
             )}
             <div className="flex justify-between">
@@ -1016,38 +1173,48 @@ export default function CheckoutItems({
                 {totalUnits}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span
-                className={`text-sm ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
-                Service Fee
-              </span>
-              <span
-                className={`text-sm ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                {formatCurrency(serviceFee)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span
-                className={`text-sm ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
-                Delivery Fee
-              </span>
-              <span
-                className={`text-sm ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                {formatCurrency(deliveryFee)}
-              </span>
-            </div>
+              <div className="flex justify-between">
+                <span
+                  className={`text-sm ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Service Fee
+                  {serviceFeeDiscount > 0 && (
+                    <span className="ml-1 text-xs text-green-600 dark:text-green-400">
+                      (-{formatCurrency(serviceFeeDiscount)})
+                    </span>
+                  )}
+                </span>
+                <span
+                  className={`text-sm ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  {formatCurrency(finalServiceFee)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span
+                  className={`text-sm ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Delivery Fee
+                  {deliveryFeeDiscount > 0 && (
+                    <span className="ml-1 text-xs text-green-600 dark:text-green-400">
+                      (-{formatCurrency(deliveryFeeDiscount)})
+                    </span>
+                  )}
+                </span>
+                <span
+                  className={`text-sm ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  {formatCurrency(finalDeliveryFee)}
+                </span>
+              </div>
             <div className="flex justify-between">
               <span
                 className={`text-sm ${
@@ -1209,10 +1376,16 @@ export default function CheckoutItems({
                 </span>
               </div>
 
-              {discount > 0 && (
+              {discount > 0 && codeType === "promo" && (
                 <div className="flex justify-between text-green-600 dark:text-green-400">
-                  <span>Discount ({appliedPromo})</span>
+                  <span>Discount ({appliedCode})</span>
                   <span>-{formatCurrency(discount)}</span>
+                </div>
+              )}
+              {referralDiscount > 0 && codeType === "referral" && (
+                <div className="flex justify-between text-green-600 dark:text-green-400">
+                  <span>Referral Discount ({appliedCode})</span>
+                  <span>-{formatCurrency(referralDiscount)}</span>
                 </div>
               )}
 
@@ -1372,19 +1545,21 @@ export default function CheckoutItems({
             {discountsEnabled && (
               <div className="mt-4">
                 <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
-                  Promo Code
+                  Promo or Referral Code
                 </h4>
                 <div className="flex gap-2">
                   <Input
-                    value={promoCode}
-                    onChange={setPromoCode}
-                    placeholder="Enter promo code"
+                    value={discountCode}
+                    onChange={setDiscountCode}
+                    placeholder="Enter promo or referral code"
+                    className="flex-1"
                   />
                   <Button
                     appearance="primary"
                     color="green"
-                    className="bg-green-100 font-medium text-green-600 dark:bg-green-900/20 dark:text-green-300"
-                    onClick={handleApplyPromo}
+                    className="bg-green-100 font-medium text-green-600 dark:bg-green-900/20 dark:text-green-300 whitespace-nowrap"
+                    onClick={handleApplyCode}
+                    loading={validatingCode}
                   >
                     Apply
                   </Button>
