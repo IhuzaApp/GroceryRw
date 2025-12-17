@@ -8,6 +8,7 @@ import UserAccount from "./UseerAccount";
 import UserPayment from "./userPayment";
 import UserPreference from "./userPreference";
 import UserPaymentCards from "./UserPaymentCards";
+import UserReferral from "./UserReferral";
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import { useRouter } from "next/router";
@@ -46,6 +47,12 @@ interface MobileProfileProps {
   isSwitchingRole: boolean;
   setIsSwitchingRole: (switching: boolean) => void;
   refreshOrders: () => void;
+  referralStatus: {
+    registered: boolean;
+    approved: boolean;
+    status?: string;
+  } | null;
+  loadingReferral: boolean;
 }
 
 export default function MobileProfile({
@@ -66,11 +73,25 @@ export default function MobileProfile({
   isSwitchingRole,
   setIsSwitchingRole,
   refreshOrders,
+  referralStatus,
+  loadingReferral,
 }: MobileProfileProps) {
   const router = useRouter();
   const { role, toggleRole } = useAuth();
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("");
+
+  // Reset tab if user tries to access referrals but is registered and pending
+  useEffect(() => {
+    if (
+      activeTab === "referrals" &&
+      !loadingReferral &&
+      referralStatus?.registered &&
+      !referralStatus?.approved
+    ) {
+      setActiveTab("");
+    }
+  }, [activeTab, referralStatus, loadingReferral]);
 
   // Handle navigation to different sections
   const handleNavigation = (section: string) => {
@@ -198,6 +219,10 @@ export default function MobileProfile({
             {activeTab === "addresses" && <UserAddress />}
             {activeTab === "payment" && <UserPayment />}
             {activeTab === "preferences" && <UserPreference />}
+            {activeTab === "referrals" &&
+              (referralStatus?.approved || !referralStatus?.registered) && (
+                <UserReferral />
+              )}
             {activeTab === "wallet" && <UserPaymentCards />}
           </div>
         </div>
@@ -622,6 +647,56 @@ export default function MobileProfile({
           </div>
         </button>
 
+        {/* Referrals - Show if approved OR not registered (so they can register) */}
+        {!loadingReferral &&
+          (referralStatus?.approved || !referralStatus?.registered) && (
+            <button
+              onClick={() => handleNavigation("referrals")}
+              className="w-full rounded-none border border-gray-100 bg-white p-3 shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] dark:border-gray-700 dark:bg-gray-800"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg">
+                    <svg
+                      className="h-6 w-6 !text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                      />
+                    </svg>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                      Referrals
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Invite friends & earn rewards
+                    </p>
+                  </div>
+                </div>
+                <svg
+                  className="h-5 w-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </div>
+            </button>
+          )}
+
         {/* Wallet */}
         <button
           onClick={() => handleNavigation("wallet")}
@@ -787,7 +862,7 @@ export default function MobileProfile({
               </span>
             </div>
           </button>
-        )}
+          )}
 
         {/* Logout Button */}
         <button

@@ -7,6 +7,7 @@ import UserAddress from "./userAddress";
 import UserAccount from "./UseerAccount";
 import UserPayment from "./userPayment";
 import UserPreference from "./userPreference";
+import UserReferral from "./UserReferral";
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import { useRouter } from "next/router";
@@ -45,6 +46,12 @@ interface DesktopProfileProps {
   isSwitchingRole: boolean;
   setIsSwitchingRole: (switching: boolean) => void;
   refreshOrders: () => void;
+  referralStatus: {
+    registered: boolean;
+    approved: boolean;
+    status?: string;
+  } | null;
+  loadingReferral: boolean;
 }
 
 export default function DesktopProfile({
@@ -65,11 +72,25 @@ export default function DesktopProfile({
   isSwitchingRole,
   setIsSwitchingRole,
   refreshOrders,
+  referralStatus,
+  loadingReferral,
 }: DesktopProfileProps) {
   const router = useRouter();
   const { role, toggleRole } = useAuth();
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("account");
+
+  // Reset tab if user tries to access referrals but is registered and pending
+  useEffect(() => {
+    if (
+      activeTab === "referrals" &&
+      !loadingReferral &&
+      referralStatus?.registered &&
+      !referralStatus?.approved
+    ) {
+      setActiveTab("account");
+    }
+  }, [activeTab, referralStatus, loadingReferral]);
 
   // Handle click on "Become a Plasa" button
   const handleBecomePlasa = (e: React.MouseEvent) => {
@@ -604,6 +625,31 @@ export default function DesktopProfile({
                   </svg>
                 ),
               },
+              // Show referrals tab if user is approved OR not registered (so they can register)
+              // Hide if registered but pending approval
+              ...(!loadingReferral && (referralStatus?.approved || !referralStatus?.registered)
+                ? [
+                    {
+                      key: "referrals",
+                      label: "Referrals",
+                      icon: (
+                        <svg
+                          className="mr-2 h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                          />
+                        </svg>
+                      ),
+                    },
+                  ]
+                : []),
             ].map((tab) => (
               <Nav.Item
                 key={tab.key}
@@ -658,6 +704,13 @@ export default function DesktopProfile({
               <UserPreference />
             </div>
           )}
+
+          {activeTab === "referrals" &&
+            (referralStatus?.approved || !referralStatus?.registered) && (
+              <div className="p-6">
+                <UserReferral />
+              </div>
+            )}
         </div>
 
         {/* Address selection modal */}
