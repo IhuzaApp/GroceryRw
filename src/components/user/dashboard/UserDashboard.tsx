@@ -1054,14 +1054,11 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
           publicMarketsCategory?.id,
         ].filter(Boolean) as string[];
 
-        // Filter shops that belong to either Super Market or Public Markets
+        // Filter shops that belong to either Super Market or Public Markets only (no stores)
         shops = shops.filter((shop) =>
           marketCategoryIds.includes(shop.category_id)
         );
-        const categoryStores = storesAsShops.filter((store) =>
-          marketCategoryIds.includes(store.category_id)
-        );
-        return [...shops, ...categoryStores];
+        return shops;
       } else {
         // Filter shops by category
         shops = shops.filter((shop) => shop.category_id === selectedCategory);
