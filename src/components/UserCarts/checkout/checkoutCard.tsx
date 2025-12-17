@@ -1001,13 +1001,9 @@ export default function CheckoutItems({
       )}
 
       <div
-        className={`fixed bottom-16 left-0 right-0 z-50 w-full transition-all duration-300 md:hidden ${
-          theme === "dark" ? "bg-gray-800" : "bg-white"
-        } ${
-          isExpanded
-            ? "border-2 border-white/10 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] ring-4 ring-white/20"
-            : "shadow-2xl"
-        }`}
+        className={`fixed bottom-16 left-0 right-0 z-50 w-full rounded-2xl transition-all duration-300 md:hidden ${
+          theme === "dark" ? "bg-gray-900" : "bg-white"
+        } ${isExpanded ? "shadow-2xl" : "shadow-xl"}`}
         style={{
           maxHeight: isExpanded ? "calc(90vh - 64px)" : "160px",
           overflow: "hidden",
@@ -1015,9 +1011,7 @@ export default function CheckoutItems({
       >
         {/* Header with toggle button */}
         <div
-          className={`flex items-center justify-between border-b p-4 ${
-            theme === "dark" ? "border-gray-700" : "border-gray-200"
-          }`}
+          className="flex items-center justify-between p-4 shadow-sm"
           onClick={toggleExpand} // Make the entire header clickable to toggle
         >
           <div className="flex items-center">
@@ -1082,6 +1076,7 @@ export default function CheckoutItems({
               size="lg"
               loading={isCheckoutLoading}
               onClick={handleProceedToCheckout}
+              className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
             >
               Proceed to Checkout
             </Button>
@@ -1103,16 +1098,17 @@ export default function CheckoutItems({
                 Promo or Referral Code
               </p>
               <div className="flex gap-2">
-                <Input
+                <input
+                  type="text"
                   value={discountCode}
-                  onChange={setDiscountCode}
+                  onChange={(e) => setDiscountCode(e.target.value)}
                   placeholder="Enter promo or referral code"
-                  className="flex-1"
+                  className="flex-1 border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20"
                 />
                 <Button
                   appearance="primary"
                   color="green"
-                  className="bg-green-100 font-medium text-green-600 dark:bg-green-900/20 dark:text-green-300 whitespace-nowrap"
+                  className="bg-green-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-green-600 hover:shadow-md whitespace-nowrap"
                   onClick={handleApplyCode}
                   loading={validatingCode}
                 >
@@ -1128,8 +1124,8 @@ export default function CheckoutItems({
             }`}
           />
 
-          <div className="mt-6 flex flex-col gap-2">
-            <div className="flex justify-between">
+          <div className="flex flex-col gap-3">
+            <div className="flex justify-between py-1">
               <span
                 className={`text-sm ${
                   theme === "dark" ? "text-gray-300" : "text-gray-600"
@@ -1138,7 +1134,7 @@ export default function CheckoutItems({
                 Subtotal
               </span>
               <span
-                className={`text-sm ${
+                className={`text-sm font-medium ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
@@ -1146,18 +1142,18 @@ export default function CheckoutItems({
               </span>
             </div>
             {discount > 0 && codeType === "promo" && (
-              <div className="flex justify-between text-green-600 dark:text-green-400">
+              <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
                 <span className="text-sm">Discount ({appliedCode})</span>
-                <span className="text-sm">-{formatCurrency(discount)}</span>
+                <span className="text-sm font-medium">-{formatCurrency(discount)}</span>
               </div>
             )}
             {referralDiscount > 0 && codeType === "referral" && (
-              <div className="flex justify-between text-green-600 dark:text-green-400">
+              <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
                 <span className="text-sm">Referral Discount ({appliedCode})</span>
-                <span className="text-sm">-{formatCurrency(referralDiscount)}</span>
+                <span className="text-sm font-medium">-{formatCurrency(referralDiscount)}</span>
               </div>
             )}
-            <div className="flex justify-between">
+            <div className="flex justify-between py-1">
               <span
                 className={`text-sm ${
                   theme === "dark" ? "text-gray-300" : "text-gray-600"
@@ -1166,59 +1162,72 @@ export default function CheckoutItems({
                 Units
               </span>
               <span
-                className={`text-sm ${
+                className={`text-sm font-medium ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
                 {totalUnits}
               </span>
             </div>
-              <div className="flex justify-between">
-                <span
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
-                  Service Fee
-                  {serviceFeeDiscount > 0 && (
-                    <span className="ml-1 text-xs text-green-600 dark:text-green-400">
-                      (-{formatCurrency(serviceFeeDiscount)})
-                    </span>
-                  )}
-                </span>
-                <span
-                  className={`text-sm ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  {formatCurrency(finalServiceFee)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
-                  Delivery Fee
-                  {deliveryFeeDiscount > 0 && (
-                    <span className="ml-1 text-xs text-green-600 dark:text-green-400">
-                      (-{formatCurrency(deliveryFeeDiscount)})
-                    </span>
-                  )}
-                </span>
-                <span
-                  className={`text-sm ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  {formatCurrency(finalDeliveryFee)}
-                </span>
-              </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between py-1">
               <span
                 className={`text-sm ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                }`}
+              >
+                Service Fee
+                {serviceFeeDiscount > 0 && (
+                  <span className="ml-1 text-xs text-green-600 dark:text-green-400">
+                    (-{formatCurrency(serviceFeeDiscount)})
+                  </span>
+                )}
+              </span>
+              <span
+                className={`text-sm font-medium ${
                   theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                {formatCurrency(finalServiceFee)}
+              </span>
+            </div>
+            <div className="flex justify-between py-1">
+              <span
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                }`}
+              >
+                Delivery Fee
+                {deliveryFeeDiscount > 0 && (
+                  <span className="ml-1 text-xs text-green-600 dark:text-green-400">
+                    (-{formatCurrency(deliveryFeeDiscount)})
+                  </span>
+                )}
+              </span>
+              <span
+                className={`text-sm font-medium ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                {formatCurrency(finalDeliveryFee)}
+              </span>
+            </div>
+            <div className="my-3 h-px bg-gray-200 dark:bg-gray-700"></div>
+            <div className="flex justify-between py-1">
+              <span
+                className={`text-lg font-bold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Total
+              </span>
+              <span className="text-lg font-bold text-green-500 dark:text-green-400">
+                {formatCurrency(finalTotal)}
+              </span>
+            </div>
+            <div className="flex justify-between py-1">
+              <span
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
                 }`}
               >
                 Delivery Time
@@ -1229,10 +1238,10 @@ export default function CheckoutItems({
                 {deliveryTime}
               </span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between py-1">
               <span
                 className={`text-sm ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
                 }`}
               >
                 Delivery Address
@@ -1282,7 +1291,7 @@ export default function CheckoutItems({
                 <Button
                   size="xs"
                   appearance="ghost"
-                  className="px-2 py-1 text-green-600 hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
+                  className="px-2 py-1 text-xs text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
                   onClick={() => {
                     setShowAddressModal(true);
                   }}
@@ -1291,38 +1300,26 @@ export default function CheckoutItems({
                 </Button>
               </div>
             </div>
-            <div className="mt-2 flex justify-between">
-              <span
-                className={`text-lg font-bold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                Total
-              </span>
-              <span className="text-lg font-bold text-green-500 dark:text-green-400">
-                {formatCurrency(finalTotal)}
-              </span>
-            </div>
             {/* Delivery Notes Input */}
-            <div className="mt-2">
+            <div className="mt-4">
               <h4
-                className={`mb-1 font-medium ${
+                className={`mb-2 text-sm font-semibold ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
                 Add a Note
               </h4>
-              <Input
-                as="textarea"
-                rows={2}
+              <textarea
+                rows={3}
                 value={deliveryNotes}
-                onChange={setDeliveryNotes}
+                onChange={(e) => setDeliveryNotes(e.target.value)}
                 placeholder="Enter any delivery instructions or notes"
                 onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on input
+                className="w-full border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-400 dark:focus:ring-green-400/20"
               />
             </div>
             {/* Proceed to Checkout Button */}
-            <div className="mt-2">
+            <div className="mt-4">
               <Button
                 appearance="primary"
                 color="green"
@@ -1330,6 +1327,7 @@ export default function CheckoutItems({
                 size="lg"
                 loading={isCheckoutLoading}
                 onClick={handleProceedToCheckout}
+                className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
               >
                 Proceed to Checkout
               </Button>
@@ -1367,68 +1365,77 @@ export default function CheckoutItems({
             </div>
 
             <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-300">
+              <div className="flex justify-between py-1">
+                <span className="text-sm text-gray-600 dark:text-gray-300">
                   Subtotal
                 </span>
-                <span className="font-medium text-gray-900 dark:text-white">
+                <span className="text-sm font-medium text-gray-900 dark:text-white">
                   {formatCurrency(Total)}
                 </span>
               </div>
 
               {discount > 0 && codeType === "promo" && (
-                <div className="flex justify-between text-green-600 dark:text-green-400">
-                  <span>Discount ({appliedCode})</span>
-                  <span>-{formatCurrency(discount)}</span>
+                <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
+                  <span className="text-sm">Discount ({appliedCode})</span>
+                  <span className="text-sm font-medium">-{formatCurrency(discount)}</span>
                 </div>
               )}
               {referralDiscount > 0 && codeType === "referral" && (
-                <div className="flex justify-between text-green-600 dark:text-green-400">
-                  <span>Referral Discount ({appliedCode})</span>
-                  <span>-{formatCurrency(referralDiscount)}</span>
+                <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
+                  <span className="text-sm">Referral Discount ({appliedCode})</span>
+                  <span className="text-sm font-medium">-{formatCurrency(referralDiscount)}</span>
                 </div>
               )}
 
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-300">Units</span>
-                <span className="font-medium text-gray-900 dark:text-white">
+              <div className="flex justify-between py-1">
+                <span className="text-sm text-gray-600 dark:text-gray-300">Units</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-white">
                   {totalUnits}
                 </span>
               </div>
 
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-300">
+              <div className="flex justify-between py-1">
+                <span className="text-sm text-gray-600 dark:text-gray-300">
                   Service Fee
+                  {serviceFeeDiscount > 0 && (
+                    <span className="ml-1 text-xs text-green-600 dark:text-green-400">
+                      (-{formatCurrency(serviceFeeDiscount)})
+                    </span>
+                  )}
                 </span>
-                <span className="font-medium text-gray-900 dark:text-white">
-                  {formatCurrency(serviceFee)}
+                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  {formatCurrency(finalServiceFee)}
                 </span>
               </div>
 
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-300">
+              <div className="flex justify-between py-1">
+                <span className="text-sm text-gray-600 dark:text-gray-300">
                   Delivery Fee
+                  {deliveryFeeDiscount > 0 && (
+                    <span className="ml-1 text-xs text-green-600 dark:text-green-400">
+                      (-{formatCurrency(deliveryFeeDiscount)})
+                    </span>
+                  )}
                 </span>
-                <span className="font-medium text-gray-900 dark:text-white">
-                  {formatCurrency(deliveryFee)}
+                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  {formatCurrency(finalDeliveryFee)}
                 </span>
               </div>
 
-              <div className="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
-                <div className="flex justify-between text-lg font-bold">
-                  <span className="text-gray-900 dark:text-white">Total</span>
-                  <span className="text-green-600 dark:text-green-400">
-                    {formatCurrency(finalTotal)}
-                  </span>
-                </div>
+              <div className="my-3 h-px bg-gray-200 dark:bg-gray-700"></div>
+              <div className="flex justify-between py-1">
+                <span className="text-lg font-bold text-gray-900 dark:text-white">Total</span>
+                <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                  {formatCurrency(finalTotal)}
+                </span>
               </div>
             </div>
 
             <div className="mt-6">
-              <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
+              <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
                 Delivery Time
               </h4>
-              <div className="flex items-center rounded-lg bg-gray-50 p-3 dark:bg-gray-700">
+              <div className="flex items-center rounded-xl bg-gray-50 p-3 shadow-sm dark:bg-gray-700/50">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -1439,17 +1446,17 @@ export default function CheckoutItems({
                   <circle cx="12" cy="12" r="10" />
                   <polyline points="12 6 12 12 16 14" />
                 </svg>
-                <span className="font-medium text-green-600 dark:text-green-400">
+                <span className="text-sm font-medium text-green-600 dark:text-green-400">
                   {deliveryTime}
                 </span>
               </div>
             </div>
 
             <div className="mt-6">
-              <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
+              <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
                 Delivery Address
               </h4>
-              <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-700">
+              <div className="rounded-xl bg-gray-50 p-3 shadow-sm dark:bg-gray-700/50">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-2">
                     <svg
@@ -1528,10 +1535,10 @@ export default function CheckoutItems({
             </div>
 
             <div className="mt-6">
-              <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
+              <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
                 Payment Method
               </h4>
-              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-700">
+              <div className="flex items-center justify-between rounded-xl bg-gray-50 p-3 shadow-sm dark:bg-gray-700/50">
                 {renderPaymentMethod()}
                 <PaymentMethodSelector
                   totalAmount={finalTotal}
@@ -1548,16 +1555,17 @@ export default function CheckoutItems({
                   Promo or Referral Code
                 </h4>
                 <div className="flex gap-2">
-                  <Input
+                  <input
+                    type="text"
                     value={discountCode}
-                    onChange={setDiscountCode}
+                    onChange={(e) => setDiscountCode(e.target.value)}
                     placeholder="Enter promo or referral code"
-                    className="flex-1"
+                    className="flex-1 border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20"
                   />
                   <Button
                     appearance="primary"
                     color="green"
-                    className="bg-green-100 font-medium text-green-600 dark:bg-green-900/20 dark:text-green-300 whitespace-nowrap"
+                    className="bg-green-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-green-600 hover:shadow-md whitespace-nowrap"
                     onClick={handleApplyCode}
                     loading={validatingCode}
                   >
@@ -1567,16 +1575,16 @@ export default function CheckoutItems({
               </div>
             )}
 
-            <div className="mt-4">
-              <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
+            <div className="mt-6">
+              <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
                 Add a Note
               </h4>
-              <Input
-                as="textarea"
+              <textarea
                 rows={3}
                 value={deliveryNotes}
-                onChange={setDeliveryNotes}
+                onChange={(e) => setDeliveryNotes(e.target.value)}
                 placeholder="Enter any delivery instructions or notes"
+                className="w-full border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-400 dark:focus:ring-green-400/20"
               />
             </div>
 
@@ -1585,7 +1593,7 @@ export default function CheckoutItems({
               appearance="primary"
               block
               size="lg"
-              className="mt-6 bg-green-500 font-medium text-white hover:bg-green-600"
+              className="mt-6 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
               onClick={handleProceedToCheckout}
               loading={isCheckoutLoading}
             >
