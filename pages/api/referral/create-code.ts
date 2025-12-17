@@ -47,10 +47,10 @@ function generateReferralCode(userId: string, phone: string): string {
     .createHash("sha256")
     .update(`${userId}-${phone}-${Date.now()}`)
     .digest("hex");
-  
+
   // Take first 8 characters and convert to uppercase
   const code = hash.substring(0, 8).toUpperCase();
-  
+
   // Add a prefix to make it more recognizable
   return `REF${code}`;
 }
@@ -102,7 +102,8 @@ export default async function handler(
 
     if (existingCode.referral_codes && existingCode.referral_codes.length > 0) {
       return res.status(400).json({
-        error: "A referral code already exists for this phone number. Each phone number can only have one referral code.",
+        error:
+          "A referral code already exists for this phone number. Each phone number can only have one referral code.",
         existingCode: existingCode.referral_codes[0].code,
       });
     }
@@ -122,7 +123,10 @@ export default async function handler(
       { user_id }
     );
 
-    if (userCodeCheck.referral_codes && userCodeCheck.referral_codes.length > 0) {
+    if (
+      userCodeCheck.referral_codes &&
+      userCodeCheck.referral_codes.length > 0
+    ) {
       return res.status(200).json({
         referralCode: userCodeCheck.referral_codes[0],
         message: "Referral code already exists",
@@ -189,7 +193,10 @@ export default async function handler(
   } catch (error) {
     console.error("Error creating referral code:", error);
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to create referral code",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to create referral code",
     });
   }
 }

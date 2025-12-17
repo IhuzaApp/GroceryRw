@@ -306,7 +306,7 @@ export default function MobileProfile({
                 d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
               />
             </svg>
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="mb-0.5 flex items-center gap-1.5">
                 <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300">
                   Default Address
@@ -862,7 +862,7 @@ export default function MobileProfile({
               </span>
             </div>
           </button>
-          )}
+        )}
 
         {/* Logout Button */}
         <button

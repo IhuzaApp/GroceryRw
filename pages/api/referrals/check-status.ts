@@ -56,7 +56,8 @@ export default async function handler(
     const registration = result.Referral_window[0];
 
     // Treat "active" or "approved" status as approved
-    const isApproved = registration.status === "approved" || registration.status === "active";
+    const isApproved =
+      registration.status === "approved" || registration.status === "active";
 
     return res.status(200).json({
       registered: true,

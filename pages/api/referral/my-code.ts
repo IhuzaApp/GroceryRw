@@ -80,7 +80,10 @@ export default async function handler(
   } catch (error) {
     console.error("Error fetching referral code:", error);
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to fetch referral code",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch referral code",
     });
   }
 }

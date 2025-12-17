@@ -100,7 +100,10 @@ export default function UserReferral() {
         const fallbackData = generateDummyReferrals(referralCode);
         setReferralData(fallbackData);
         localStorage.setItem("user_referral_code", referralCode);
-        localStorage.setItem("user_referral_data", JSON.stringify(fallbackData));
+        localStorage.setItem(
+          "user_referral_data",
+          JSON.stringify(fallbackData)
+        );
       }
     } catch (error) {
       console.error("Error fetching referral data:", error);
@@ -124,10 +127,10 @@ export default function UserReferral() {
           // User is registered and approved
           setIsRegistered(true);
           setShowRegistration(false);
-          
+
           // Use referral code from API
           const referralCode = result.referralCode;
-          
+
           if (referralCode) {
             // Fetch real data from API
             await fetchReferralData(referralCode);
@@ -179,7 +182,10 @@ export default function UserReferral() {
 
   const generateNewReferral = () => {
     // Generate a unique referral code (8 characters)
-    const code = `REF${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const code = `REF${Math.random()
+      .toString(36)
+      .substring(2, 8)
+      .toUpperCase()}`;
     const data = generateDummyReferrals(code);
 
     // Store in localStorage for security (one code per browser/device)
@@ -206,14 +212,16 @@ export default function UserReferral() {
     const shareText = `Join me on this amazing platform! Use my referral code: ${referralData.code}\n${referralLink}`;
 
     if (navigator.share) {
-      navigator.share({
-        title: "Referral Code",
-        text: shareText,
-        url: referralLink,
-      }).catch(() => {
-        // Fallback to copy if share fails
-        copyToClipboard();
-      });
+      navigator
+        .share({
+          title: "Referral Code",
+          text: shareText,
+          url: referralLink,
+        })
+        .catch(() => {
+          // Fallback to copy if share fails
+          copyToClipboard();
+        });
     } else {
       copyToClipboard();
     }
@@ -239,7 +247,7 @@ export default function UserReferral() {
             try {
               const response = await fetch("/api/referrals/check-status");
               const result = await response.json();
-              
+
               if (result.registered && result.approved) {
                 setIsRegistered(true);
                 // Fetch real data if approved
@@ -299,12 +307,14 @@ export default function UserReferral() {
   // This should rarely happen, but provide a fallback
   if (!referralData && isRegistered) {
     // Try to generate data one more time as fallback
-    const fallbackCode = localStorage.getItem("user_referral_code") || `REF${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const fallbackCode =
+      localStorage.getItem("user_referral_code") ||
+      `REF${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
     const fallbackData = generateDummyReferrals(fallbackCode);
     localStorage.setItem("user_referral_code", fallbackCode);
     localStorage.setItem("user_referral_data", JSON.stringify(fallbackData));
     setReferralData(fallbackData);
-    
+
     // Return loading state while data is being set
     return (
       <div className="flex items-center justify-center py-12">
@@ -315,7 +325,7 @@ export default function UserReferral() {
 
   if (!referralData) {
     return (
-      <div className="text-center py-12">
+      <div className="py-12 text-center">
         <p className="text-gray-600 dark:text-gray-400">
           Unable to load referral data
         </p>
@@ -569,7 +579,8 @@ export default function UserReferral() {
                       {referral.email}
                     </p>
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      Joined: {new Date(referral.joinedDate).toLocaleDateString()}
+                      Joined:{" "}
+                      {new Date(referral.joinedDate).toLocaleDateString()}
                     </p>
                   </div>
                 </div>

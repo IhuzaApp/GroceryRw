@@ -671,7 +671,7 @@ export default function CartMainPage() {
           <div className="relative z-10 flex h-full items-center justify-between px-6">
             <Link
               href="/"
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white transition-colors hover:bg-white/30"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-md transition-colors hover:bg-white/30"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -684,11 +684,10 @@ export default function CartMainPage() {
               </svg>
             </Link>
             <div className="text-center">
-              <h1 className="text-lg font-semibold !text-white">
-                My Cart
-              </h1>
+              <h1 className="text-lg font-semibold !text-white">My Cart</h1>
               <p className="text-xs !text-white/90">
-                {totalFoodItems + totalShopItems} item{(totalFoodItems + totalShopItems) !== 1 ? "s" : ""}
+                {totalFoodItems + totalShopItems} item
+                {totalFoodItems + totalShopItems !== 1 ? "s" : ""}
               </p>
             </div>
             <div className="w-10"></div> {/* Spacer for centering */}
@@ -724,16 +723,16 @@ export default function CartMainPage() {
               </h1>
             </div>
 
-          {/* Show loading skeleton while waiting for initial data */}
-          {isInitialLoading ? (
-            <CartLoadingSkeleton />
-          ) : (
-            <div className="flex flex-col gap-6 lg:flex-row">
-              {/* Cart Items Column - Restaurant/Shop Selection + Cart Table */}
-              <div className="w-full lg:w-2/3">
-                {/* Restaurant/Shop Selection - Custom Tailwind Tabs */}
-                <div className="mb-2 md:mb-6">
-                  <div className="flex gap-2 overflow-x-auto pb-2">
+            {/* Show loading skeleton while waiting for initial data */}
+            {isInitialLoading ? (
+              <CartLoadingSkeleton />
+            ) : (
+              <div className="flex flex-col gap-6 lg:flex-row">
+                {/* Cart Items Column - Restaurant/Shop Selection + Cart Table */}
+                <div className="w-full lg:w-2/3">
+                  {/* Restaurant/Shop Selection - Custom Tailwind Tabs */}
+                  <div className="mb-2 md:mb-6">
+                    <div className="flex gap-2 overflow-x-auto pb-2">
                       {hasAnyItems ? (
                         <>
                           {/* Food Restaurants */}
@@ -749,21 +748,21 @@ export default function CartMainPage() {
                                     handleTabSwitch("restaurant", restaurant.id)
                                   }
                                   disabled={isSwitchingTabs}
-                                  className={`group relative flex min-w-[56px] md:min-w-[140px] flex-shrink-0 items-center justify-center md:justify-start gap-2.5 rounded-xl md:rounded-lg p-1 md:px-3 md:py-2.5 transition-all duration-200 ${
+                                  className={`group relative flex min-w-[56px] flex-shrink-0 items-center justify-center gap-2.5 rounded-xl p-1 transition-all duration-200 md:min-w-[140px] md:justify-start md:rounded-lg md:px-3 md:py-2.5 ${
                                     isSelected
                                       ? "text-white shadow-lg md:bg-green-500 md:shadow-md"
                                       : isSwitchingTabs
                                       ? "cursor-not-allowed opacity-50"
-                                      : "bg-transparent md:bg-gray-100 hover:bg-gray-50 md:hover:bg-gray-200"
+                                      : "bg-transparent hover:bg-gray-50 md:bg-gray-100 md:hover:bg-gray-200"
                                   }`}
                                 >
                                   {/* Logo/Avatar */}
                                   <div className="relative flex-shrink-0">
                                     <div
-                                      className={`flex h-14 w-14 md:h-9 md:w-9 items-center justify-center overflow-hidden rounded-full transition-all ring-2 md:ring-0 ${
+                                      className={`flex h-14 w-14 items-center justify-center overflow-hidden rounded-full ring-2 transition-all md:h-9 md:w-9 md:ring-0 ${
                                         isSelected
-                                          ? "ring-white ring-offset-2 ring-offset-green-500 md:ring-0 md:ring-offset-0 bg-white/20"
-                                          : "ring-gray-300 md:ring-0 bg-gray-100 md:bg-gray-200"
+                                          ? "bg-white/20 ring-white ring-offset-2 ring-offset-green-500 md:ring-0 md:ring-offset-0"
+                                          : "bg-gray-100 ring-gray-300 md:bg-gray-200 md:ring-0"
                                       }`}
                                     >
                                       {restaurant.logo ? (
@@ -811,12 +810,12 @@ export default function CartMainPage() {
                                         />
                                       </svg>
                                     </div>
-                                    
+
                                     {/* Badge bubble - positioned outside the image container */}
                                     <div
-                                      className={`absolute -right-1 -top-1 z-10 flex min-w-[22px] h-6 items-center justify-center rounded-full px-1.5 text-xs font-bold leading-none shadow-lg ${
+                                      className={`absolute -right-1 -top-1 z-10 flex h-6 min-w-[22px] items-center justify-center rounded-full px-1.5 text-xs font-bold leading-none shadow-lg ${
                                         isSelected
-                                          ? "bg-white text-green-500 border-2 border-green-500"
+                                          ? "border-2 border-green-500 bg-white text-green-500"
                                           : "bg-green-500 text-white"
                                       }`}
                                     >
@@ -825,7 +824,7 @@ export default function CartMainPage() {
                                   </div>
 
                                   {/* Content - Hidden on mobile, shown on desktop */}
-                                  <div className="hidden md:flex min-w-0 flex-1 text-left">
+                                  <div className="hidden min-w-0 flex-1 text-left md:flex">
                                     <div className="min-w-0 flex-1">
                                       <div
                                         className={`truncate text-sm font-semibold leading-tight ${
@@ -855,7 +854,7 @@ export default function CartMainPage() {
 
                                   {/* Checkmark indicator - Desktop only */}
                                   {isSelected && (
-                                    <div className="hidden md:flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/30">
+                                    <div className="hidden h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/30 md:flex">
                                       <svg
                                         viewBox="0 0 24 24"
                                         fill="none"
@@ -883,21 +882,21 @@ export default function CartMainPage() {
                                     handleTabSwitch("shop", shop.id)
                                   }
                                   disabled={isSwitchingTabs}
-                                  className={`group relative flex min-w-[56px] md:min-w-[140px] flex-shrink-0 items-center justify-center md:justify-start gap-2.5 rounded-xl md:rounded-lg p-1 md:px-3 md:py-2.5 transition-all duration-200 ${
+                                  className={`group relative flex min-w-[56px] flex-shrink-0 items-center justify-center gap-2.5 rounded-xl p-1 transition-all duration-200 md:min-w-[140px] md:justify-start md:rounded-lg md:px-3 md:py-2.5 ${
                                     isSelected
                                       ? "text-white shadow-lg md:bg-green-500 md:shadow-md"
                                       : isSwitchingTabs
                                       ? "cursor-not-allowed opacity-50"
-                                      : "bg-transparent md:bg-gray-100 hover:bg-gray-50 md:hover:bg-gray-200"
+                                      : "bg-transparent hover:bg-gray-50 md:bg-gray-100 md:hover:bg-gray-200"
                                   }`}
                                 >
                                   {/* Logo/Avatar */}
                                   <div className="relative flex-shrink-0">
                                     <div
-                                      className={`flex h-14 w-14 md:h-9 md:w-9 items-center justify-center overflow-hidden rounded-full transition-all ring-2 md:ring-0 ${
+                                      className={`flex h-14 w-14 items-center justify-center overflow-hidden rounded-full ring-2 transition-all md:h-9 md:w-9 md:ring-0 ${
                                         isSelected
-                                          ? "ring-white ring-offset-2 ring-offset-green-500 md:ring-0 md:ring-offset-0 bg-white/20"
-                                          : "ring-gray-300 md:ring-0 bg-gray-100 md:bg-gray-200"
+                                          ? "bg-white/20 ring-white ring-offset-2 ring-offset-green-500 md:ring-0 md:ring-offset-0"
+                                          : "bg-gray-100 ring-gray-300 md:bg-gray-200 md:ring-0"
                                       }`}
                                     >
                                       {shop.logo ? (
@@ -945,12 +944,12 @@ export default function CartMainPage() {
                                         />
                                       </svg>
                                     </div>
-                                    
+
                                     {/* Badge bubble - positioned outside the image container */}
                                     <div
-                                      className={`absolute -right-1 -top-1 z-10 flex min-w-[22px] h-6 items-center justify-center rounded-full px-1.5 text-xs font-bold leading-none shadow-lg ${
+                                      className={`absolute -right-1 -top-1 z-10 flex h-6 min-w-[22px] items-center justify-center rounded-full px-1.5 text-xs font-bold leading-none shadow-lg ${
                                         isSelected
-                                          ? "bg-white text-green-500 border-2 border-green-500"
+                                          ? "border-2 border-green-500 bg-white text-green-500"
                                           : "bg-green-500 text-white"
                                       }`}
                                     >
@@ -959,7 +958,7 @@ export default function CartMainPage() {
                                   </div>
 
                                   {/* Content - Hidden on mobile, shown on desktop */}
-                                  <div className="hidden md:flex min-w-0 flex-1 text-left">
+                                  <div className="hidden min-w-0 flex-1 text-left md:flex">
                                     <div className="min-w-0 flex-1">
                                       <div
                                         className={`truncate text-sm font-semibold leading-tight ${
@@ -981,14 +980,15 @@ export default function CartMainPage() {
                                             : "text-gray-500"
                                         }`}
                                       >
-                                        {shop.count} item{shop.count !== 1 ? "s" : ""}
+                                        {shop.count} item
+                                        {shop.count !== 1 ? "s" : ""}
                                       </div>
                                     </div>
                                   </div>
 
                                   {/* Checkmark indicator - Desktop only */}
                                   {isSelected && (
-                                    <div className="hidden md:flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/30">
+                                    <div className="hidden h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/30 md:flex">
                                       <svg
                                         viewBox="0 0 24 24"
                                         fill="none"
@@ -1005,159 +1005,163 @@ export default function CartMainPage() {
                             })}
                         </>
                       ) : (
-                      // Empty state
-                      <div className="flex w-full flex-col items-center justify-center py-8">
-                        {/* Empty Cart Icon */}
-                        <div className="mb-4 flex justify-center">
-                          <svg
-                            className={`h-16 w-16 ${
-                              theme === "dark"
-                                ? "text-gray-600"
-                                : "text-gray-400"
-                            }`}
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="1.5"
-                              d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
-                            />
-                          </svg>
-                        </div>
+                        // Empty state
+                        <div className="flex w-full flex-col items-center justify-center py-8">
+                          {/* Empty Cart Icon */}
+                          <div className="mb-4 flex justify-center">
+                            <svg
+                              className={`h-16 w-16 ${
+                                theme === "dark"
+                                  ? "text-gray-600"
+                                  : "text-gray-400"
+                              }`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="1.5"
+                                d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
+                              />
+                            </svg>
+                          </div>
 
-                        {/* Empty Text */}
-                        <h3
-                          className={`text-lg font-semibold ${
+                          {/* Empty Text */}
+                          <h3
+                            className={`text-lg font-semibold ${
+                              theme === "dark"
+                                ? "text-gray-300"
+                                : "text-gray-600"
+                            }`}
+                          >
+                            Your cart is empty
+                          </h3>
+
+                          <p
+                            className={`mt-1 text-sm ${
+                              theme === "dark"
+                                ? "text-gray-500"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            Browse restaurants and shops to add items to your
+                            cart!
+                          </p>
+
+                          <Link
+                            href="/shops"
+                            className="mt-4 inline-flex items-center justify-center rounded-md bg-green-500 px-6 py-2.5 text-sm font-medium text-white transition duration-150 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-offset-gray-900"
+                          >
+                            Browse Shops
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Cart Table */}
+                  {isSwitchingTabs ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="flex items-center space-x-2">
+                        <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-green-500"></div>
+                        <span
+                          className={`text-sm ${
                             theme === "dark" ? "text-gray-300" : "text-gray-600"
                           }`}
                         >
-                          Your cart is empty
-                        </h3>
-
-                        <p
-                          className={`mt-1 text-sm ${
-                            theme === "dark" ? "text-gray-500" : "text-gray-500"
-                          }`}
-                        >
-                          Browse restaurants and shops to add items to your
-                          cart!
-                        </p>
-
-                        <Link
-                          href="/shops"
-                          className="mt-4 inline-flex items-center justify-center rounded-md bg-green-500 px-6 py-2.5 text-sm font-medium text-white transition duration-150 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-offset-gray-900"
-                        >
-                          Browse Shops
-                        </Link>
+                          Switching tab...
+                        </span>
                       </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Cart Table */}
-                {isSwitchingTabs ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="flex items-center space-x-2">
-                      <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-green-500"></div>
-                      <span
-                        className={`text-sm ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    </div>
+                  ) : selectedRestaurantId && selectedRestaurant ? (
+                    <>
+                      <h2
+                        className={`mb-4 text-xl font-semibold ${
+                          theme === "dark" ? "text-white" : "text-gray-900"
                         }`}
                       >
-                        Switching tab...
-                      </span>
+                        {selectedRestaurant.name}
+                      </h2>
+                      <ItemCartTable
+                        shopId={selectedRestaurantId}
+                        onTotalChange={() => {}} // No need to update cache for food carts
+                        onUnitsChange={() => {}} // No need to update cache for food carts
+                        onLoadingChange={setLoadingItems}
+                        isFoodCart={true}
+                        restaurant={selectedRestaurant}
+                      />
+                    </>
+                  ) : selectedShopId && selectedShop ? (
+                    <>
+                      <h2
+                        className={`mb-4 text-xl font-semibold ${
+                          theme === "dark" ? "text-white" : "text-gray-900"
+                        }`}
+                      >
+                        {selectedShop.name}
+                      </h2>
+                      <ItemCartTable
+                        shopId={selectedShopId}
+                        onTotalChange={handleTotalChange}
+                        onUnitsChange={handleUnitsChange}
+                        onLoadingChange={setLoadingItems}
+                        isFoodCart={false}
+                      />
+                    </>
+                  ) : hasAnyItems ? (
+                    <div
+                      className={`p-4 text-center ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
+                      Select a restaurant or shop to view items.
                     </div>
-                  </div>
-                ) : selectedRestaurantId && selectedRestaurant ? (
+                  ) : null}
+                </div>
+                {/* Order Summary Column */}
+                {((selectedRestaurantId && selectedRestaurant) ||
+                  (selectedShopId && selectedShop)) && (
                   <>
-                    <h2
-                      className={`mb-4 text-xl font-semibold ${
-                        theme === "dark" ? "text-white" : "text-gray-900"
-                      }`}
-                    >
-                      {selectedRestaurant.name}
-                    </h2>
-                    <ItemCartTable
-                      shopId={selectedRestaurantId}
-                      onTotalChange={() => {}} // No need to update cache for food carts
-                      onUnitsChange={() => {}} // No need to update cache for food carts
-                      onLoadingChange={setLoadingItems}
-                      isFoodCart={true}
-                      restaurant={selectedRestaurant}
-                    />
+                    {loadingItems ? (
+                      <CheckoutSkeleton />
+                    ) : (
+                      <AuthGuard requireAuth={true}>
+                        {selectedRestaurant ? (
+                          <CheckoutItems
+                            shopId={selectedRestaurantId!}
+                            Total={getCurrentCartTotal()}
+                            totalUnits={getCurrentCartUnits()}
+                            shopLat={parseFloat(selectedRestaurant.latitude)}
+                            shopLng={parseFloat(selectedRestaurant.longitude)}
+                            shopAlt={0}
+                            isFoodCart={true}
+                            restaurant={selectedRestaurant}
+                          />
+                        ) : selectedShop ? (
+                          (() => {
+                            const total = getCurrentCartTotal();
+                            const units = getCurrentCartUnits();
+                            return (
+                              <CheckoutItems
+                                shopId={selectedShopId!}
+                                Total={total}
+                                totalUnits={units}
+                                shopLat={0} // Will need to fetch shop coordinates from API
+                                shopLng={0} // Will need to fetch shop coordinates from API
+                                shopAlt={0}
+                                isFoodCart={false}
+                              />
+                            );
+                          })()
+                        ) : null}
+                      </AuthGuard>
+                    )}
                   </>
-                ) : selectedShopId && selectedShop ? (
-                  <>
-                    <h2
-                      className={`mb-4 text-xl font-semibold ${
-                        theme === "dark" ? "text-white" : "text-gray-900"
-                      }`}
-                    >
-                      {selectedShop.name}
-                    </h2>
-                    <ItemCartTable
-                      shopId={selectedShopId}
-                      onTotalChange={handleTotalChange}
-                      onUnitsChange={handleUnitsChange}
-                      onLoadingChange={setLoadingItems}
-                      isFoodCart={false}
-                    />
-                  </>
-                ) : hasAnyItems ? (
-                  <div
-                    className={`p-4 text-center ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-500"
-                    }`}
-                  >
-                    Select a restaurant or shop to view items.
-                  </div>
-                ) : null}
+                )}
               </div>
-              {/* Order Summary Column */}
-              {((selectedRestaurantId && selectedRestaurant) ||
-                (selectedShopId && selectedShop)) && (
-                <>
-                  {loadingItems ? (
-                    <CheckoutSkeleton />
-                  ) : (
-                    <AuthGuard requireAuth={true}>
-                      {selectedRestaurant ? (
-                        <CheckoutItems
-                          shopId={selectedRestaurantId!}
-                          Total={getCurrentCartTotal()}
-                          totalUnits={getCurrentCartUnits()}
-                          shopLat={parseFloat(selectedRestaurant.latitude)}
-                          shopLng={parseFloat(selectedRestaurant.longitude)}
-                          shopAlt={0}
-                          isFoodCart={true}
-                          restaurant={selectedRestaurant}
-                        />
-                      ) : selectedShop ? (
-                        (() => {
-                          const total = getCurrentCartTotal();
-                          const units = getCurrentCartUnits();
-                          return (
-                            <CheckoutItems
-                              shopId={selectedShopId!}
-                              Total={total}
-                              totalUnits={units}
-                              shopLat={0} // Will need to fetch shop coordinates from API
-                              shopLng={0} // Will need to fetch shop coordinates from API
-                              shopAlt={0}
-                              isFoodCart={false}
-                            />
-                          );
-                        })()
-                      ) : null}
-                    </AuthGuard>
-                  )}
-                </>
-              )}
-            </div>
-          )}
+            )}
           </div>
         </div>
       </div>

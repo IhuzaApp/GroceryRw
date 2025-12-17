@@ -159,8 +159,8 @@ export default function DesktopProfile({
               </h3>
               <div className="mt-2 text-sm text-orange-700 dark:text-orange-300">
                 <p>
-                  Your shopper application requires some changes. Please
-                  review the feedback below and update your application.
+                  Your shopper application requires some changes. Please review
+                  the feedback below and update your application.
                 </p>
                 {shopperStatus.collection_comment && (
                   <div className="mt-2 rounded-md bg-orange-100 p-3 dark:bg-orange-800/30">
@@ -308,30 +308,34 @@ export default function DesktopProfile({
             <div className="space-y-3">
               {/* Action Buttons Row */}
               <div className="grid grid-cols-2 gap-2">
-              {/* Switch to Shopper / Become Shopper Button */}
-              {loadingShopper ? (
-                <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200" />
-              ) : shopperStatus?.active ? (
-                <button
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-2.5 text-sm font-semibold !text-white shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-                  onClick={async () => {
-                    const nextRole = role === "user" ? "shopper" : "user";
-                    setIsSwitchingRole(true);
-                    try {
-                      await initiateRoleSwitch(nextRole as "user" | "shopper");
-                      toggleRole();
-                      toast.success(
-                        `Switched to ${nextRole === "user" ? "User" : "Shopper"}`
-                      );
-                    } catch (error) {
-                      console.error("Error updating role:", error);
-                      toast.error("Failed to switch account");
-                    } finally {
-                      setIsSwitchingRole(false);
-                    }
-                  }}
-                  disabled={isSwitchingRole}
-                >
+                {/* Switch to Shopper / Become Shopper Button */}
+                {loadingShopper ? (
+                  <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200" />
+                ) : shopperStatus?.active ? (
+                  <button
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-2.5 text-sm font-semibold !text-white shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                    onClick={async () => {
+                      const nextRole = role === "user" ? "shopper" : "user";
+                      setIsSwitchingRole(true);
+                      try {
+                        await initiateRoleSwitch(
+                          nextRole as "user" | "shopper"
+                        );
+                        toggleRole();
+                        toast.success(
+                          `Switched to ${
+                            nextRole === "user" ? "User" : "Shopper"
+                          }`
+                        );
+                      } catch (error) {
+                        console.error("Error updating role:", error);
+                        toast.error("Failed to switch account");
+                      } finally {
+                        setIsSwitchingRole(false);
+                      }
+                    }}
+                    disabled={isSwitchingRole}
+                  >
                     <svg
                       className="h-3.5 w-3.5 !text-white"
                       fill="none"
@@ -345,7 +349,7 @@ export default function DesktopProfile({
                         d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
                       />
                     </svg>
-                    <span className="!text-white text-xs">
+                    <span className="text-xs !text-white">
                       {isSwitchingRole
                         ? t("common.loading")
                         : role === "user"
@@ -356,19 +360,19 @@ export default function DesktopProfile({
                 ) : (
                   <button
                     className={`flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-xs font-semibold !text-white shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
-                    shopperStatus?.needCollection
-                      ? "bg-gradient-to-r from-orange-500 to-orange-600"
-                      : shopperStatus?.status === "pending" ||
-                        shopperStatus?.status === "under_review"
-                      ? "bg-gradient-to-r from-blue-500 to-blue-600"
-                      : "bg-gradient-to-r from-green-500 to-emerald-600"
-                  }`}
-                  onClick={handleBecomePlasa}
-                  disabled={
-                    shopperStatus?.status === "pending" ||
-                    shopperStatus?.status === "under_review"
-                  }
-                >
+                      shopperStatus?.needCollection
+                        ? "bg-gradient-to-r from-orange-500 to-orange-600"
+                        : shopperStatus?.status === "pending" ||
+                          shopperStatus?.status === "under_review"
+                        ? "bg-gradient-to-r from-blue-500 to-blue-600"
+                        : "bg-gradient-to-r from-green-500 to-emerald-600"
+                    }`}
+                    onClick={handleBecomePlasa}
+                    disabled={
+                      shopperStatus?.status === "pending" ||
+                      shopperStatus?.status === "under_review"
+                    }
+                  >
                     <svg
                       className="h-3.5 w-3.5 !text-white"
                       fill="none"
@@ -399,7 +403,7 @@ export default function DesktopProfile({
                         />
                       )}
                     </svg>
-                    <span className="!text-white text-xs">
+                    <span className="text-xs !text-white">
                       {shopperStatus?.needCollection
                         ? "Update"
                         : shopperStatus?.status === "pending" ||
@@ -413,44 +417,44 @@ export default function DesktopProfile({
                 {/* Logout Button */}
                 <button
                   className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-red-500 to-red-600 px-3 py-2.5 text-xs font-semibold !text-white shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
-                onClick={async () => {
-                  try {
-                    const response = await authenticatedFetch("/api/logout", {
-                      method: "POST",
-                      headers: {
-                        "Content-Type": "application/json",
-                      },
-                    });
+                  onClick={async () => {
+                    try {
+                      const response = await authenticatedFetch("/api/logout", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                      });
 
-                    if (response.ok) {
-                      localStorage.clear();
-                      sessionStorage.clear();
-                      toast.success("Logged out successfully");
-                      router.push("/");
-                    } else {
-                      throw new Error("Logout failed");
+                      if (response.ok) {
+                        localStorage.clear();
+                        sessionStorage.clear();
+                        toast.success("Logged out successfully");
+                        router.push("/");
+                      } else {
+                        throw new Error("Logout failed");
+                      }
+                    } catch (error) {
+                      console.error("Logout error:", error);
+                      toast.error("Failed to logout");
                     }
-                  } catch (error) {
-                    console.error("Logout error:", error);
-                    toast.error("Failed to logout");
-                  }
-                }}
-              >
-                <svg
-                  className="h-3.5 w-3.5 !text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+                  }}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                  />
-                </svg>
-                <span className="!text-white text-xs">{t("nav.logout")}</span>
-              </button>
+                  <svg
+                    className="h-3.5 w-3.5 !text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                    />
+                  </svg>
+                  <span className="text-xs !text-white">{t("nav.logout")}</span>
+                </button>
               </div>
 
               {/* Default Address Section */}
@@ -475,7 +479,7 @@ export default function DesktopProfile({
                       d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                     />
                   </svg>
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="mb-1 flex items-center gap-1.5">
                       <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300">
                         Default Address
@@ -627,7 +631,8 @@ export default function DesktopProfile({
               },
               // Show referrals tab if user is approved OR not registered (so they can register)
               // Hide if registered but pending approval
-              ...(!loadingReferral && (referralStatus?.approved || !referralStatus?.registered)
+              ...(!loadingReferral &&
+              (referralStatus?.approved || !referralStatus?.registered)
                 ? [
                     {
                       key: "referrals",

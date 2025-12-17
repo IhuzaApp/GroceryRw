@@ -7,7 +7,12 @@ import { gql } from "graphql-request";
 // Query to get referral data
 const GET_REFERRAL_DATA = gql`
   query GetReferralData($user_id: uuid!) {
-    Referral_window(where: { user_id: { _eq: $user_id }, status: { _in: ["approved", "active"] } }) {
+    Referral_window(
+      where: {
+        user_id: { _eq: $user_id }
+        status: { _in: ["approved", "active"] }
+      }
+    ) {
       id
       referralCode
       status

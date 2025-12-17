@@ -72,7 +72,10 @@ export default async function handler(
       referral_codes: Array<{ id: string; code: string }>;
     }>(GET_REFERRAL_CODE, { user_id });
 
-    if (!referralCodeData.referral_codes || referralCodeData.referral_codes.length === 0) {
+    if (
+      !referralCodeData.referral_codes ||
+      referralCodeData.referral_codes.length === 0
+    ) {
       return res.status(200).json({
         totalReferrals: 0,
         totalOrders: 0,
@@ -115,7 +118,7 @@ export default async function handler(
     // Calculate total orders and earnings
     const ordersWithReferrals = referrals.filter((r) => r.order_id && r.Order);
     const totalOrders = ordersWithReferrals.length;
-    
+
     // Calculate earnings (you can customize this based on your commission structure)
     // Example: 5% commission on each order
     const totalEarnings = ordersWithReferrals.reduce((sum, ref) => {
@@ -152,7 +155,10 @@ export default async function handler(
   } catch (error) {
     console.error("Error fetching referral stats:", error);
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to fetch referral statistics",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch referral statistics",
     });
   }
 }

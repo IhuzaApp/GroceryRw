@@ -125,7 +125,11 @@ export default function CheckoutItems({
       const response = await fetch("/api/queries/system-configuration");
       const data = await response.json();
 
-      if (data.success && data.config && typeof data.config.discounts === "boolean") {
+      if (
+        data.success &&
+        data.config &&
+        typeof data.config.discounts === "boolean"
+      ) {
         setDiscountsEnabled(data.config.discounts);
       }
     } catch (error) {
@@ -147,7 +151,7 @@ export default function CheckoutItems({
           // Extract discounts before caching (don't cache discounts)
           const { discounts, ...configWithoutDiscounts } = data.config;
           setDiscountsEnabled(discounts || false);
-          
+
           // Store config WITHOUT discounts in cookie
           setSystemConfig({
             ...configWithoutDiscounts,
@@ -187,7 +191,7 @@ export default function CheckoutItems({
           // Extract discounts before caching (don't cache discounts)
           const { discounts, ...configWithoutDiscounts } = data.config;
           setDiscountsEnabled(discounts || false);
-          
+
           // Update config WITHOUT discounts
           setSystemConfig({
             ...configWithoutDiscounts,
@@ -232,7 +236,7 @@ export default function CheckoutItems({
             if (parsedCache.config && parsedCache.timestamp) {
               // New format with timestamp - use cached config but fetch fresh discounts
               setSystemConfig(parsedCache.config);
-              
+
               // Always fetch fresh discounts from server (don't use cached value)
               fetchFreshDiscounts();
 
@@ -245,7 +249,7 @@ export default function CheckoutItems({
             } else {
               // Old format or unexpected structure - treat as config directly
               setSystemConfig(parsedCache);
-              
+
               // Always fetch fresh discounts from server
               fetchFreshDiscounts();
 
@@ -314,15 +318,21 @@ export default function CheckoutItems({
     useState<PaymentMethod | null>(null);
   const [loadingPayment, setLoadingPayment] = useState(true);
   // Payment methods and addresses state
-  const [savedPaymentMethods, setSavedPaymentMethods] = useState<SavedPaymentMethod[]>([]);
+  const [savedPaymentMethods, setSavedPaymentMethods] = useState<
+    SavedPaymentMethod[]
+  >([]);
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [refundBalance, setRefundBalance] = useState(0);
   const [walletBalance, setWalletBalance] = useState(0);
   const [hasWallet, setHasWallet] = useState(false);
   const [oneTimePhoneNumber, setOneTimePhoneNumber] = useState<string>("");
   const [showOneTimePhoneInput, setShowOneTimePhoneInput] = useState(false);
-  const [selectedPaymentValue, setSelectedPaymentValue] = useState<string | null>(null);
-  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [selectedPaymentValue, setSelectedPaymentValue] = useState<
+    string | null
+  >(null);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
+    null
+  );
   const [showPaymentDropdown, setShowPaymentDropdown] = useState(false);
   const [showAddressDropdown, setShowAddressDropdown] = useState(false);
 
@@ -337,7 +347,9 @@ export default function CheckoutItems({
         setSavedPaymentMethods(methods);
 
         // Find and select the default payment method
-        const defaultMethod = methods.find((m: SavedPaymentMethod) => m.is_default);
+        const defaultMethod = methods.find(
+          (m: SavedPaymentMethod) => m.is_default
+        );
         if (defaultMethod) {
           setSelectedPaymentValue(defaultMethod.id);
           setSelectedPaymentMethod({
@@ -357,7 +369,9 @@ export default function CheckoutItems({
 
         // Fetch wallet balance
         try {
-          const walletResponse = await fetch("/api/queries/personal-wallet-balance");
+          const walletResponse = await fetch(
+            "/api/queries/personal-wallet-balance"
+          );
           const walletData = await walletResponse.json();
           if (walletData.wallet) {
             setWalletBalance(parseFloat(walletData.wallet.balance || "0"));
@@ -396,7 +410,9 @@ export default function CheckoutItems({
               setSelectedAddressId(addressObj.id);
             } else {
               // If no ID in cookie, try to find default address
-              const defaultAddr = addresses.find((a: SavedAddress) => a.is_default);
+              const defaultAddr = addresses.find(
+                (a: SavedAddress) => a.is_default
+              );
               if (defaultAddr) {
                 setSelectedAddressId(defaultAddr.id);
                 Cookies.set("delivery_address", JSON.stringify(defaultAddr));
@@ -406,7 +422,9 @@ export default function CheckoutItems({
           } catch (err) {
             console.error("Error parsing address cookie:", err);
             // Try to find default address
-            const defaultAddr = addresses.find((a: SavedAddress) => a.is_default);
+            const defaultAddr = addresses.find(
+              (a: SavedAddress) => a.is_default
+            );
             if (defaultAddr) {
               setSelectedAddressId(defaultAddr.id);
               Cookies.set("delivery_address", JSON.stringify(defaultAddr));
@@ -454,17 +472,16 @@ export default function CheckoutItems({
   // Surcharge based on distance beyond 3km - uses selected address
   let distanceKm = 0;
   let userAlt = 0;
-  if (selectedAddress && selectedAddress.latitude && selectedAddress.longitude) {
+  if (
+    selectedAddress &&
+    selectedAddress.latitude &&
+    selectedAddress.longitude
+  ) {
     const userLat = parseFloat(selectedAddress.latitude.toString());
     const userLng = parseFloat(selectedAddress.longitude.toString());
     // Altitude is typically not stored in addresses, use 0 as default
     userAlt = 0;
-    distanceKm = getDistanceFromLatLonInKm(
-      userLat,
-      userLng,
-      shopLat,
-      shopLng
-    );
+    distanceKm = getDistanceFromLatLonInKm(userLat, userLng, shopLat, shopLng);
   } else {
     // Fallback to cookie if no address selected yet
     const cookie = Cookies.get("delivery_address");
@@ -507,7 +524,8 @@ export default function CheckoutItems({
       // Recalculate referral discount based on current delivery fee
       const serviceFeeDiscountAmount = serviceFee * 0.085;
       const deliveryFeeDiscountAmount = deliveryFee * 0.085;
-      const totalReferralDiscount = serviceFeeDiscountAmount + deliveryFeeDiscountAmount;
+      const totalReferralDiscount =
+        serviceFeeDiscountAmount + deliveryFeeDiscountAmount;
 
       setServiceFeeDiscount(serviceFeeDiscountAmount);
       setDeliveryFeeDiscount(deliveryFeeDiscountAmount);
@@ -646,9 +664,8 @@ export default function CheckoutItems({
   };
 
   // Format distance for display
-  const formattedDistance = distanceKm > 0 
-    ? `${distanceKm.toFixed(1)} km`
-    : "0 km";
+  const formattedDistance =
+    distanceKm > 0 ? `${distanceKm.toFixed(1)} km` : "0 km";
 
   // Create detailed delivery time message
   if (isFoodCart) {
@@ -709,7 +726,7 @@ export default function CheckoutItems({
     }
 
     setValidatingCode(true);
-    
+
     // First, check if it's a promo code
     const PROMO_CODES: { [code: string]: number } = {
       SAVE10: 0.1,
@@ -725,7 +742,7 @@ export default function CheckoutItems({
       setServiceFeeDiscount(0);
       setDeliveryFeeDiscount(0);
       setReferralDiscount(0);
-      
+
       toaster.push(
         <Notification type="success" header="Promo Code Applied">
           Discount applied successfully!
@@ -752,7 +769,8 @@ export default function CheckoutItems({
         // Note: These will be recalculated when delivery fee changes
         const serviceFeeDiscountAmount = serviceFee * 0.085;
         const deliveryFeeDiscountAmount = deliveryFee * 0.085;
-        const totalReferralDiscount = serviceFeeDiscountAmount + deliveryFeeDiscountAmount;
+        const totalReferralDiscount =
+          serviceFeeDiscountAmount + deliveryFeeDiscountAmount;
 
         setServiceFeeDiscount(serviceFeeDiscountAmount);
         setDeliveryFeeDiscount(deliveryFeeDiscountAmount);
@@ -883,9 +901,12 @@ export default function CheckoutItems({
           discount: discount > 0 ? discount.toString() : null,
           voucher_code: codeType === "promo" ? appliedCode : null,
           referral_code: codeType === "referral" ? appliedCode : null,
-          referral_discount: referralDiscount > 0 ? referralDiscount.toString() : null,
-          service_fee_discount: serviceFeeDiscount > 0 ? serviceFeeDiscount.toString() : null,
-          delivery_fee_discount: deliveryFeeDiscount > 0 ? deliveryFeeDiscount.toString() : null,
+          referral_discount:
+            referralDiscount > 0 ? referralDiscount.toString() : null,
+          service_fee_discount:
+            serviceFeeDiscount > 0 ? serviceFeeDiscount.toString() : null,
+          delivery_fee_discount:
+            deliveryFeeDiscount > 0 ? deliveryFeeDiscount.toString() : null,
           delivery_time: deliveryTimestamp,
           delivery_notes: deliveryNotes || null,
           items: restaurant.items.map((item) => ({
@@ -906,9 +927,12 @@ export default function CheckoutItems({
           discount: discount > 0 ? discount.toString() : null,
           voucher_code: codeType === "promo" ? appliedCode : null,
           referral_code: codeType === "referral" ? appliedCode : null,
-          referral_discount: referralDiscount > 0 ? referralDiscount.toString() : null,
-          service_fee_discount: serviceFeeDiscount > 0 ? serviceFeeDiscount.toString() : null,
-          delivery_fee_discount: deliveryFeeDiscount > 0 ? deliveryFeeDiscount.toString() : null,
+          referral_discount:
+            referralDiscount > 0 ? referralDiscount.toString() : null,
+          service_fee_discount:
+            serviceFeeDiscount > 0 ? serviceFeeDiscount.toString() : null,
+          delivery_fee_discount:
+            deliveryFeeDiscount > 0 ? deliveryFeeDiscount.toString() : null,
           delivery_time: deliveryTimestamp,
           delivery_notes: deliveryNotes || null,
         };
@@ -1044,7 +1068,10 @@ export default function CheckoutItems({
   };
 
   // Handle one-time phone number change
-  const handleOneTimePhoneChange = (value: string, event?: React.SyntheticEvent) => {
+  const handleOneTimePhoneChange = (
+    value: string,
+    event?: React.SyntheticEvent
+  ) => {
     setOneTimePhoneNumber(value);
     if (value) {
       setSelectedPaymentMethod({ type: "momo", number: value });
@@ -1116,7 +1143,10 @@ export default function CheckoutItems({
         </svg>
       );
     }
-    if (methodType?.toLowerCase() === "mtn momo" || methodType?.toLowerCase().includes("momo")) {
+    if (
+      methodType?.toLowerCase() === "mtn momo" ||
+      methodType?.toLowerCase().includes("momo")
+    ) {
       return (
         <svg
           className="h-5 w-5"
@@ -1153,14 +1183,20 @@ export default function CheckoutItems({
 
   // Prepare payment method options for dropdown
   const getPaymentMethodOptions = () => {
-    const options: Array<{ label: string; value: string; methodType?: string }> = [];
+    const options: Array<{
+      label: string;
+      value: string;
+      methodType?: string;
+    }> = [];
     const canUseRefund = refundBalance >= finalTotal;
     const canUseWallet = walletBalance >= finalTotal;
 
     // Add refund option if balance is sufficient
     if (canUseRefund) {
       options.push({
-        label: `Use Refund Balance (${formatCurrency(refundBalance)} available)`,
+        label: `Use Refund Balance (${formatCurrency(
+          refundBalance
+        )} available)`,
         value: "refund",
       });
     }
@@ -1170,7 +1206,9 @@ export default function CheckoutItems({
       options.push({
         label: canUseWallet
           ? `Use Wallet (${formatCurrency(walletBalance)} available)`
-          : `Use Wallet (${formatCurrency(walletBalance)} available - Insufficient)`,
+          : `Use Wallet (${formatCurrency(
+              walletBalance
+            )} available - Insufficient)`,
         value: "wallet",
       });
     }
@@ -1182,7 +1220,9 @@ export default function CheckoutItems({
           ? `•••• ${method.number.slice(-3)}`
           : `•••• ${method.number.slice(-4)}`;
       options.push({
-        label: `${method.method} ${displayNumber}${method.is_default ? " (Default)" : ""}`,
+        label: `${method.method} ${displayNumber}${
+          method.is_default ? " (Default)" : ""
+        }`,
         value: method.id,
         methodType: method.method,
       });
@@ -1200,7 +1240,9 @@ export default function CheckoutItems({
   // Prepare address options for dropdown
   const getAddressOptions = () => {
     return savedAddresses.map((address) => ({
-      label: `${address.street}, ${address.city}${address.is_default ? " (Default)" : ""}`,
+      label: `${address.street}, ${address.city}${
+        address.is_default ? " (Default)" : ""
+      }`,
       value: address.id,
     }));
   };
@@ -1447,7 +1489,7 @@ export default function CheckoutItems({
                 <Button
                   appearance="primary"
                   color="green"
-                  className="bg-green-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-green-600 hover:shadow-md whitespace-nowrap"
+                  className="whitespace-nowrap bg-green-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-green-600 hover:shadow-md"
                   onClick={handleApplyCode}
                   loading={validatingCode}
                 >
@@ -1479,12 +1521,16 @@ export default function CheckoutItems({
             {discount > 0 && codeType === "promo" && (
               <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
                 <span className="text-sm">Discount ({appliedCode})</span>
-                <span className="text-sm font-medium">-{formatCurrency(discount)}</span>
+                <span className="text-sm font-medium">
+                  -{formatCurrency(discount)}
+                </span>
               </div>
             )}
             {referralDiscount > 0 && codeType === "referral" && (
               <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
-                <span className="text-sm">Referral Discount ({appliedCode})</span>
+                <span className="text-sm">
+                  Referral Discount ({appliedCode})
+                </span>
                 <span className="text-sm font-medium">17% off</span>
               </div>
             )}
@@ -1585,8 +1631,9 @@ export default function CheckoutItems({
                   }`}
                 >
                   {selectedAddressId
-                    ? getAddressOptions().find((opt) => opt.value === selectedAddressId)?.label ||
-                      "Select delivery address"
+                    ? getAddressOptions().find(
+                        (opt) => opt.value === selectedAddressId
+                      )?.label || "Select delivery address"
                     : "Select delivery address"}
                   <svg
                     className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
@@ -1664,8 +1711,9 @@ export default function CheckoutItems({
                   }`}
                 >
                   {selectedPaymentValue
-                    ? getPaymentMethodOptions().find((opt) => opt.value === selectedPaymentValue)?.label ||
-                      "Select payment method"
+                    ? getPaymentMethodOptions().find(
+                        (opt) => opt.value === selectedPaymentValue
+                      )?.label || "Select payment method"
                     : "Select payment method"}
                   <svg
                     className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
@@ -1691,7 +1739,9 @@ export default function CheckoutItems({
                     />
                     <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
                       {getPaymentMethodOptions().map((option) => {
-                        const isWalletInsufficient = option.value === "wallet" && walletBalance < finalTotal;
+                        const isWalletInsufficient =
+                          option.value === "wallet" &&
+                          walletBalance < finalTotal;
                         return (
                           <button
                             key={option.value}
@@ -1705,20 +1755,25 @@ export default function CheckoutItems({
                             disabled={isWalletInsufficient}
                             className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
                               isWalletInsufficient
-                                ? "text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-900/20 cursor-not-allowed"
+                                ? "cursor-not-allowed bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
                                 : selectedPaymentValue === option.value
                                 ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
                                 : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
                             }`}
                           >
-                            <span className={`flex-shrink-0 ${
-                              isWalletInsufficient
-                                ? "text-red-500 dark:text-red-400"
-                                : selectedPaymentValue === option.value
-                                ? "text-green-600 dark:text-green-400"
-                                : "text-gray-500 dark:text-gray-400"
-                            }`}>
-                              {getPaymentMethodIcon(option.value, option.methodType)}
+                            <span
+                              className={`flex-shrink-0 ${
+                                isWalletInsufficient
+                                  ? "text-red-500 dark:text-red-400"
+                                  : selectedPaymentValue === option.value
+                                  ? "text-green-600 dark:text-green-400"
+                                  : "text-gray-500 dark:text-gray-400"
+                              }`}
+                            >
+                              {getPaymentMethodIcon(
+                                option.value,
+                                option.methodType
+                              )}
                             </span>
                             <span className="flex-1">{option.label}</span>
                           </button>
@@ -1814,19 +1869,29 @@ export default function CheckoutItems({
 
               {discount > 0 && codeType === "promo" && (
                 <div className="flex justify-between py-1">
-                  <span className="text-sm text-green-600 dark:text-green-400">Discount ({appliedCode})</span>
-                  <span className="text-sm font-bold text-green-600 dark:text-green-400">-{formatCurrency(discount)}</span>
+                  <span className="text-sm text-green-600 dark:text-green-400">
+                    Discount ({appliedCode})
+                  </span>
+                  <span className="text-sm font-bold text-green-600 dark:text-green-400">
+                    -{formatCurrency(discount)}
+                  </span>
                 </div>
               )}
               {referralDiscount > 0 && codeType === "referral" && (
                 <div className="flex justify-between py-1">
-                  <span className="text-sm text-green-600 dark:text-green-400">Referral Discount ({appliedCode})</span>
-                  <span className="text-sm font-bold text-green-600 dark:text-green-400">17% off</span>
+                  <span className="text-sm text-green-600 dark:text-green-400">
+                    Referral Discount ({appliedCode})
+                  </span>
+                  <span className="text-sm font-bold text-green-600 dark:text-green-400">
+                    17% off
+                  </span>
                 </div>
               )}
 
               <div className="flex justify-between py-1">
-                <span className="text-sm text-gray-600 dark:text-gray-300">Units</span>
+                <span className="text-sm text-gray-600 dark:text-gray-300">
+                  Units
+                </span>
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
                   {totalUnits}
                 </span>
@@ -1852,7 +1917,9 @@ export default function CheckoutItems({
 
               <div className="my-3 h-px bg-gray-200 dark:bg-gray-700"></div>
               <div className="flex justify-between py-1">
-                <span className="text-lg font-bold text-gray-900 dark:text-white">Total</span>
+                <span className="text-lg font-bold text-gray-900 dark:text-white">
+                  Total
+                </span>
                 <span className="text-lg font-bold text-green-600 dark:text-green-400">
                   {formatCurrency(finalTotal)}
                 </span>
@@ -1898,8 +1965,9 @@ export default function CheckoutItems({
                   }`}
                 >
                   {selectedAddressId
-                    ? getAddressOptions().find((opt) => opt.value === selectedAddressId)?.label ||
-                      "Select delivery address"
+                    ? getAddressOptions().find(
+                        (opt) => opt.value === selectedAddressId
+                      )?.label || "Select delivery address"
                     : "Select delivery address"}
                   <svg
                     className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
@@ -1974,8 +2042,9 @@ export default function CheckoutItems({
                   }`}
                 >
                   {selectedPaymentValue
-                    ? getPaymentMethodOptions().find((opt) => opt.value === selectedPaymentValue)?.label ||
-                      "Select payment method"
+                    ? getPaymentMethodOptions().find(
+                        (opt) => opt.value === selectedPaymentValue
+                      )?.label || "Select payment method"
                     : "Select payment method"}
                   <svg
                     className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
@@ -2001,7 +2070,9 @@ export default function CheckoutItems({
                     />
                     <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
                       {getPaymentMethodOptions().map((option) => {
-                        const isWalletInsufficient = option.value === "wallet" && walletBalance < finalTotal;
+                        const isWalletInsufficient =
+                          option.value === "wallet" &&
+                          walletBalance < finalTotal;
                         return (
                           <button
                             key={option.value}
@@ -2015,20 +2086,25 @@ export default function CheckoutItems({
                             disabled={isWalletInsufficient}
                             className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
                               isWalletInsufficient
-                                ? "text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-900/20 cursor-not-allowed"
+                                ? "cursor-not-allowed bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
                                 : selectedPaymentValue === option.value
                                 ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
                                 : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
                             }`}
                           >
-                            <span className={`flex-shrink-0 ${
-                              isWalletInsufficient
-                                ? "text-red-500 dark:text-red-400"
-                                : selectedPaymentValue === option.value
-                                ? "text-green-600 dark:text-green-400"
-                                : "text-gray-500 dark:text-gray-400"
-                            }`}>
-                              {getPaymentMethodIcon(option.value, option.methodType)}
+                            <span
+                              className={`flex-shrink-0 ${
+                                isWalletInsufficient
+                                  ? "text-red-500 dark:text-red-400"
+                                  : selectedPaymentValue === option.value
+                                  ? "text-green-600 dark:text-green-400"
+                                  : "text-gray-500 dark:text-gray-400"
+                              }`}
+                            >
+                              {getPaymentMethodIcon(
+                                option.value,
+                                option.methodType
+                              )}
                             </span>
                             <span className="flex-1">{option.label}</span>
                           </button>
@@ -2065,7 +2141,7 @@ export default function CheckoutItems({
                   <Button
                     appearance="primary"
                     color="green"
-                    className="bg-green-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-green-600 hover:shadow-md whitespace-nowrap"
+                    className="whitespace-nowrap bg-green-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-green-600 hover:shadow-md"
                     onClick={handleApplyCode}
                     loading={validatingCode}
                   >

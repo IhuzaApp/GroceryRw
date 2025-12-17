@@ -105,7 +105,7 @@ export default function ReferralRegistration({
     try {
       // Simulate OTP verification (replace with actual API call)
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      
+
       // For demo: accept any 6-digit code starting with 1
       if (otpCode.startsWith("1")) {
         setOtpVerified(true);
@@ -171,7 +171,7 @@ export default function ReferralRegistration({
       toast.success(
         "Registration submitted! Your application is under review."
       );
-      
+
       // Trigger a recheck of referral status after successful registration
       // This will cause the parent component to refresh and show pending status
       setTimeout(() => {
@@ -293,7 +293,9 @@ export default function ReferralRegistration({
                   <input
                     type="text"
                     value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    onChange={(e) =>
+                      setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                    }
                     placeholder="123456"
                     maxLength={6}
                     className="flex-1 rounded-lg border border-blue-300 bg-white px-4 py-2 text-center text-lg font-semibold tracking-widest text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-blue-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-400"
@@ -373,20 +375,26 @@ export default function ReferralRegistration({
               </h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Name:</span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Name:
+                  </span>
                   <span className="font-medium text-gray-900 dark:text-white">
                     {formData.name}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Phone:</span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Phone:
+                  </span>
                   <span className="font-medium text-gray-900 dark:text-white">
                     {formData.phone}
                   </span>
                 </div>
                 {formData.email && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Email:</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Email:
+                    </span>
                     <span className="font-medium text-gray-900 dark:text-white">
                       {formData.email}
                     </span>
@@ -401,7 +409,9 @@ export default function ReferralRegistration({
                 What happens next?
               </h4>
               <ul className="space-y-1 text-sm text-blue-800 dark:text-blue-300">
-                <li>• Your application will be reviewed (usually within 24 hours)</li>
+                <li>
+                  • Your application will be reviewed (usually within 24 hours)
+                </li>
                 <li>• You'll receive a notification once approved</li>
                 <li>• Your unique referral code will be generated</li>
                 <li>• Start earning 5% commission on referrals!</li>
