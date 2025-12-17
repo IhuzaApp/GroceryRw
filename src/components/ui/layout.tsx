@@ -5,6 +5,7 @@ import BottomBar from "./NavBar/bottomBar";
 import { useSession } from "next-auth/react";
 import { ThemeProvider } from "@context/ThemeContext";
 import { useRouter } from "next/router";
+import AIChatProvider from "../ai-chat/AIChatProvider";
 
 export default function RootLayout({
   children,
@@ -31,6 +32,8 @@ export default function RootLayout({
           <div className="[&_*]:text-inherit">{children}</div>
           {!isChatPage && <BottomBar />}
         </main>
+        {/* AI Chat - Available on all pages except chat pages */}
+        {!isChatPage && <AIChatProvider />}
       </div>
     </ThemeProvider>
   );
