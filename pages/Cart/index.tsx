@@ -700,102 +700,113 @@ export default function CartMainPage() {
                                     handleTabSwitch("restaurant", restaurant.id)
                                   }
                                   disabled={isSwitchingTabs}
-                                  className={`group relative flex min-w-[140px] flex-shrink-0 items-center gap-2.5 rounded-lg px-3 py-2.5 transition-all duration-200 ${
+                                  className={`group relative flex min-w-[56px] md:min-w-[140px] flex-shrink-0 items-center justify-center md:justify-start gap-2.5 rounded-xl md:rounded-lg p-1 md:px-3 md:py-2.5 transition-all duration-200 ${
                                     isSelected
-                                      ? "bg-green-500 text-white shadow-md"
+                                      ? "text-white shadow-lg md:bg-green-500 md:shadow-md"
                                       : isSwitchingTabs
                                       ? "cursor-not-allowed opacity-50"
-                                      : theme === "dark"
-                                      ? "bg-gray-700/50 text-gray-300 hover:bg-gray-700"
-                                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                      : "bg-transparent md:bg-gray-100 hover:bg-gray-50 md:hover:bg-gray-200"
                                   }`}
                                 >
                                   {/* Logo/Avatar */}
-                                  <div
-                                    className={`flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full transition-all ${
-                                      isSelected
-                                        ? "bg-white/20"
-                                        : theme === "dark"
-                                        ? "bg-gray-600"
-                                        : "bg-gray-200"
-                                    }`}
-                                  >
-                                    {restaurant.logo ? (
-                                      <img
-                                        src={restaurant.logo}
-                                        alt={`${restaurant.name} logo`}
-                                        className="h-full w-full object-cover"
-                                        onError={(e) => {
-                                          const target =
-                                            e.target as HTMLImageElement;
-                                          target.style.display = "none";
-                                          target.nextElementSibling?.classList.remove(
-                                            "hidden"
-                                          );
-                                        }}
-                                      />
-                                    ) : null}
-                                    <svg
-                                      width="20"
-                                      height="20"
-                                      viewBox="0 0 24 24"
-                                      fill="none"
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      className={`${
-                                        restaurant.logo ? "hidden" : ""
-                                      } ${
-                                        isSelected
-                                          ? "text-white"
-                                          : "text-gray-400"
-                                      }`}
-                                    >
-                                      <path
-                                        d="M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
-                                      <path
-                                        d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
-                                    </svg>
-                                  </div>
-
-                                  {/* Content */}
-                                  <div className="min-w-0 flex-1 text-left">
+                                  <div className="relative flex-shrink-0">
                                     <div
-                                      className={`truncate text-sm font-semibold leading-tight ${
+                                      className={`flex h-14 w-14 md:h-9 md:w-9 items-center justify-center overflow-hidden rounded-full transition-all ring-2 md:ring-0 ${
                                         isSelected
-                                          ? "text-white"
-                                          : theme === "dark"
-                                          ? "text-gray-200"
-                                          : "text-gray-800"
+                                          ? "ring-white ring-offset-2 ring-offset-green-500 md:ring-0 md:ring-offset-0 bg-white/20"
+                                          : "ring-gray-300 md:ring-0 bg-gray-100 md:bg-gray-200"
                                       }`}
                                     >
-                                      {restaurant.name}
+                                      {restaurant.logo ? (
+                                        <img
+                                          src={restaurant.logo}
+                                          alt={`${restaurant.name} logo`}
+                                          className="h-full w-full object-cover"
+                                          onError={(e) => {
+                                            const target =
+                                              e.target as HTMLImageElement;
+                                            target.style.display = "none";
+                                            target.nextElementSibling?.classList.remove(
+                                              "hidden"
+                                            );
+                                          }}
+                                        />
+                                      ) : null}
+                                      <svg
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className={`${
+                                          restaurant.logo ? "hidden" : ""
+                                        } ${
+                                          isSelected
+                                            ? "text-white"
+                                            : "text-gray-400"
+                                        }`}
+                                      >
+                                        <path
+                                          d="M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        />
+                                        <path
+                                          d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        />
+                                      </svg>
                                     </div>
+                                    
+                                    {/* Badge bubble - positioned outside the image container */}
                                     <div
-                                      className={`mt-0.5 text-xs leading-tight ${
+                                      className={`absolute -right-1 -top-1 z-10 flex min-w-[22px] h-6 items-center justify-center rounded-full px-1.5 text-xs font-bold leading-none shadow-lg ${
                                         isSelected
-                                          ? "text-white/80"
-                                          : theme === "dark"
-                                          ? "text-gray-400"
-                                          : "text-gray-500"
+                                          ? "bg-white text-green-500 border-2 border-green-500"
+                                          : "bg-green-500 text-white"
                                       }`}
                                     >
-                                      {restaurant.totalItems} item
-                                      {restaurant.totalItems !== 1 ? "s" : ""}
+                                      {restaurant.totalItems}
                                     </div>
                                   </div>
 
-                                  {/* Badge/Indicator */}
-                                  {isSelected ? (
-                                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/30">
+                                  {/* Content - Hidden on mobile, shown on desktop */}
+                                  <div className="hidden md:flex min-w-0 flex-1 text-left">
+                                    <div className="min-w-0 flex-1">
+                                      <div
+                                        className={`truncate text-sm font-semibold leading-tight ${
+                                          isSelected
+                                            ? "text-white"
+                                            : theme === "dark"
+                                            ? "text-gray-200"
+                                            : "text-gray-800"
+                                        }`}
+                                      >
+                                        {restaurant.name}
+                                      </div>
+                                      <div
+                                        className={`mt-0.5 text-xs leading-tight ${
+                                          isSelected
+                                            ? "text-white/80"
+                                            : theme === "dark"
+                                            ? "text-gray-400"
+                                            : "text-gray-500"
+                                        }`}
+                                      >
+                                        {restaurant.totalItems} item
+                                        {restaurant.totalItems !== 1 ? "s" : ""}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Checkmark indicator - Desktop only */}
+                                  {isSelected && (
+                                    <div className="hidden md:flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/30">
                                       <svg
                                         viewBox="0 0 24 24"
                                         fill="none"
@@ -805,16 +816,6 @@ export default function CartMainPage() {
                                       >
                                         <polyline points="20 6 9 17 4 12" />
                                       </svg>
-                                    </div>
-                                  ) : (
-                                    <div
-                                      className={`flex h-5 min-w-[1.25rem] flex-shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-bold leading-none ${
-                                        theme === "dark"
-                                          ? "bg-gray-600 text-white"
-                                          : "bg-gray-300 text-gray-700"
-                                      }`}
-                                    >
-                                      {restaurant.totalItems}
                                     </div>
                                   )}
                                 </button>
@@ -833,101 +834,112 @@ export default function CartMainPage() {
                                     handleTabSwitch("shop", shop.id)
                                   }
                                   disabled={isSwitchingTabs}
-                                  className={`group relative flex min-w-[140px] flex-shrink-0 items-center gap-2.5 rounded-lg px-3 py-2.5 transition-all duration-200 ${
+                                  className={`group relative flex min-w-[56px] md:min-w-[140px] flex-shrink-0 items-center justify-center md:justify-start gap-2.5 rounded-xl md:rounded-lg p-1 md:px-3 md:py-2.5 transition-all duration-200 ${
                                     isSelected
-                                      ? "bg-green-500 text-white shadow-md"
+                                      ? "text-white shadow-lg md:bg-green-500 md:shadow-md"
                                       : isSwitchingTabs
                                       ? "cursor-not-allowed opacity-50"
-                                      : theme === "dark"
-                                      ? "bg-gray-700/50 text-gray-300 hover:bg-gray-700"
-                                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                      : "bg-transparent md:bg-gray-100 hover:bg-gray-50 md:hover:bg-gray-200"
                                   }`}
                                 >
                                   {/* Logo/Avatar */}
-                                  <div
-                                    className={`flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full transition-all ${
-                                      isSelected
-                                        ? "bg-white/20"
-                                        : theme === "dark"
-                                        ? "bg-gray-600"
-                                        : "bg-gray-200"
-                                    }`}
-                                  >
-                                    {shop.logo ? (
-                                      <img
-                                        src={shop.logo}
-                                        alt={`${shop.name} logo`}
-                                        className="h-full w-full object-cover"
-                                        onError={(e) => {
-                                          const target =
-                                            e.target as HTMLImageElement;
-                                          target.style.display = "none";
-                                          target.nextElementSibling?.classList.remove(
-                                            "hidden"
-                                          );
-                                        }}
-                                      />
-                                    ) : null}
-                                    <svg
-                                      width="20"
-                                      height="20"
-                                      viewBox="0 0 24 24"
-                                      fill="none"
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      className={`${
-                                        shop.logo ? "hidden" : ""
-                                      } ${
-                                        isSelected
-                                          ? "text-white"
-                                          : "text-gray-400"
-                                      }`}
-                                    >
-                                      <path
-                                        d="M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
-                                      <path
-                                        d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
-                                    </svg>
-                                  </div>
-
-                                  {/* Content */}
-                                  <div className="min-w-0 flex-1 text-left">
+                                  <div className="relative flex-shrink-0">
                                     <div
-                                      className={`truncate text-sm font-semibold leading-tight ${
+                                      className={`flex h-14 w-14 md:h-9 md:w-9 items-center justify-center overflow-hidden rounded-full transition-all ring-2 md:ring-0 ${
                                         isSelected
-                                          ? "text-white"
-                                          : theme === "dark"
-                                          ? "text-gray-200"
-                                          : "text-gray-800"
+                                          ? "ring-white ring-offset-2 ring-offset-green-500 md:ring-0 md:ring-offset-0 bg-white/20"
+                                          : "ring-gray-300 md:ring-0 bg-gray-100 md:bg-gray-200"
                                       }`}
                                     >
-                                      {shop.name}
+                                      {shop.logo ? (
+                                        <img
+                                          src={shop.logo}
+                                          alt={`${shop.name} logo`}
+                                          className="h-full w-full object-cover"
+                                          onError={(e) => {
+                                            const target =
+                                              e.target as HTMLImageElement;
+                                            target.style.display = "none";
+                                            target.nextElementSibling?.classList.remove(
+                                              "hidden"
+                                            );
+                                          }}
+                                        />
+                                      ) : null}
+                                      <svg
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className={`${
+                                          shop.logo ? "hidden" : ""
+                                        } ${
+                                          isSelected
+                                            ? "text-white"
+                                            : "text-gray-400"
+                                        }`}
+                                      >
+                                        <path
+                                          d="M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        />
+                                        <path
+                                          d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        />
+                                      </svg>
                                     </div>
+                                    
+                                    {/* Badge bubble - positioned outside the image container */}
                                     <div
-                                      className={`mt-0.5 text-xs leading-tight ${
+                                      className={`absolute -right-1 -top-1 z-10 flex min-w-[22px] h-6 items-center justify-center rounded-full px-1.5 text-xs font-bold leading-none shadow-lg ${
                                         isSelected
-                                          ? "text-white/80"
-                                          : theme === "dark"
-                                          ? "text-gray-400"
-                                          : "text-gray-500"
+                                          ? "bg-white text-green-500 border-2 border-green-500"
+                                          : "bg-green-500 text-white"
                                       }`}
                                     >
-                                      {shop.count} item{shop.count !== 1 ? "s" : ""}
+                                      {shop.count}
                                     </div>
                                   </div>
 
-                                  {/* Badge/Indicator */}
-                                  {isSelected ? (
-                                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/30">
+                                  {/* Content - Hidden on mobile, shown on desktop */}
+                                  <div className="hidden md:flex min-w-0 flex-1 text-left">
+                                    <div className="min-w-0 flex-1">
+                                      <div
+                                        className={`truncate text-sm font-semibold leading-tight ${
+                                          isSelected
+                                            ? "text-white"
+                                            : theme === "dark"
+                                            ? "text-gray-200"
+                                            : "text-gray-800"
+                                        }`}
+                                      >
+                                        {shop.name}
+                                      </div>
+                                      <div
+                                        className={`mt-0.5 text-xs leading-tight ${
+                                          isSelected
+                                            ? "text-white/80"
+                                            : theme === "dark"
+                                            ? "text-gray-400"
+                                            : "text-gray-500"
+                                        }`}
+                                      >
+                                        {shop.count} item{shop.count !== 1 ? "s" : ""}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Checkmark indicator - Desktop only */}
+                                  {isSelected && (
+                                    <div className="hidden md:flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/30">
                                       <svg
                                         viewBox="0 0 24 24"
                                         fill="none"
@@ -937,16 +949,6 @@ export default function CartMainPage() {
                                       >
                                         <polyline points="20 6 9 17 4 12" />
                                       </svg>
-                                    </div>
-                                  ) : (
-                                    <div
-                                      className={`flex h-5 min-w-[1.25rem] flex-shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-bold leading-none ${
-                                        theme === "dark"
-                                          ? "bg-gray-600 text-white"
-                                          : "bg-gray-300 text-gray-700"
-                                      }`}
-                                    >
-                                      {shop.count}
                                     </div>
                                   )}
                                 </button>
