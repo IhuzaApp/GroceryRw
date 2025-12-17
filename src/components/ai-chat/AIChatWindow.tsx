@@ -82,7 +82,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
       />
 
       {/* Chat Window */}
-      <div className="fixed bottom-28 right-4 z-50 flex h-[calc(100vh-10rem)] w-[calc(100vw-2rem)] max-w-md flex-col rounded-2xl border border-gray-200 bg-white shadow-2xl transition-all duration-300 dark:border-gray-700 dark:bg-gray-800 md:bottom-16 md:right-4 md:h-[500px] md:w-full">
+      <div className="fixed bottom-36 right-4 z-50 flex h-[calc(100vh-10rem)] w-[calc(100vw-2rem)] max-w-md flex-col rounded-2xl border border-gray-200 bg-white shadow-2xl transition-all duration-300 dark:border-gray-700 dark:bg-gray-800 md:bottom-20 md:right-4 md:h-[500px] md:w-full">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-200 bg-[#115e59] px-6 py-4 dark:border-gray-700">
           <div className="flex items-center gap-3">
