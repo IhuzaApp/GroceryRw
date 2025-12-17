@@ -1,7 +1,5 @@
-"use client";
-
 import Image from "next/image";
-import { Input, InputGroup, Button, Checkbox, Badge, Panel } from "rsuite";
+import { Input, InputGroup, Button, Checkbox, Panel } from "rsuite";
 import Link from "next/link";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import RootLayout from "@components/ui/layout";
@@ -684,36 +682,42 @@ export default function CartMainPage() {
             <div className="flex flex-col gap-6 lg:flex-row">
               {/* Cart Items Column - Restaurant/Shop Selection + Cart Table */}
               <div className="w-full lg:w-2/3">
-                {/* Restaurant/Shop Selection */}
+                {/* Restaurant/Shop Selection - Custom Tailwind Tabs */}
                 <div className="mb-6">
-                  <div className="mb-4 flex gap-3 overflow-x-auto pb-2">
-                    {hasAnyItems ? (
-                      <>
-                        {/* Food Restaurants */}
-                        {restaurants.length > 0 &&
-                          restaurants.map((restaurant) => (
-                            <div
-                              key={restaurant.id}
-                              onClick={() =>
-                                handleTabSwitch("restaurant", restaurant.id)
-                              }
-                              className={`relative w-40 min-w-[10rem] flex-shrink-0 cursor-pointer rounded-lg border-2 p-2 transition-all duration-200 ${
-                                selectedRestaurantId === restaurant.id
-                                  ? "scale-105 border-green-500 bg-green-50 shadow-lg dark:bg-green-900/20"
-                                  : isSwitchingTabs
-                                  ? "cursor-not-allowed opacity-75"
-                                  : theme === "dark"
-                                  ? "hover:scale-102 border-gray-600 bg-gray-800 hover:border-green-400 hover:bg-gray-700"
-                                  : "hover:scale-102 border-gray-200 bg-white hover:border-green-200 hover:bg-gray-50"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2">
-                                <div className="flex-shrink-0">
+                  <div className="flex gap-2 overflow-x-auto pb-2">
+                      {hasAnyItems ? (
+                        <>
+                          {/* Food Restaurants */}
+                          {restaurants.length > 0 &&
+                            restaurants.map((restaurant) => {
+                              const isSelected =
+                                selectedRestaurantId === restaurant.id;
+                              return (
+                                <button
+                                  key={restaurant.id}
+                                  onClick={() =>
+                                    !isSwitchingTabs &&
+                                    handleTabSwitch("restaurant", restaurant.id)
+                                  }
+                                  disabled={isSwitchingTabs}
+                                  className={`group relative flex min-w-[140px] flex-shrink-0 items-center gap-2.5 rounded-lg px-3 py-2.5 transition-all duration-200 ${
+                                    isSelected
+                                      ? "bg-green-500 text-white shadow-md"
+                                      : isSwitchingTabs
+                                      ? "cursor-not-allowed opacity-50"
+                                      : theme === "dark"
+                                      ? "bg-gray-700/50 text-gray-300 hover:bg-gray-700"
+                                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                  }`}
+                                >
+                                  {/* Logo/Avatar */}
                                   <div
-                                    className={`flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border ${
-                                      theme === "dark"
-                                        ? "border-gray-600 bg-gray-700"
-                                        : "border-gray-300 bg-white"
+                                    className={`flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full transition-all ${
+                                      isSelected
+                                        ? "bg-white/20"
+                                        : theme === "dark"
+                                        ? "bg-gray-600"
+                                        : "bg-gray-200"
                                     }`}
                                   >
                                     {restaurant.logo ? (
@@ -732,14 +736,18 @@ export default function CartMainPage() {
                                       />
                                     ) : null}
                                     <svg
-                                      width="24"
-                                      height="24"
+                                      width="20"
+                                      height="20"
                                       viewBox="0 0 24 24"
                                       fill="none"
                                       xmlns="http://www.w3.org/2000/svg"
                                       className={`${
                                         restaurant.logo ? "hidden" : ""
-                                      } h-5 w-5 text-gray-500`}
+                                      } ${
+                                        isSelected
+                                          ? "text-white"
+                                          : "text-gray-400"
+                                      }`}
                                     >
                                       <path
                                         d="M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"
@@ -757,63 +765,92 @@ export default function CartMainPage() {
                                       />
                                     </svg>
                                   </div>
-                                </div>
-                                <div className="truncate">
-                                  <h3
-                                    className={`truncate text-sm font-medium ${
-                                      theme === "dark"
-                                        ? "text-white"
-                                        : "text-gray-900"
-                                    }`}
-                                  >
-                                    {restaurant.name}
-                                  </h3>
-                                </div>
-                              </div>
-                              {/* Show number of distinct items in this cart */}
-                              <Badge
-                                content={restaurant.totalItems}
-                                className="absolute -right-2 bg-green-500 text-white"
-                              />
-                              {selectedRestaurantId === restaurant.id && (
-                                <div className="absolute -right-2 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
-                                  <svg
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="white"
-                                    strokeWidth="3"
-                                    className="h-3 w-3"
-                                  >
-                                    <polyline points="20 6 9 17 4 12" />
-                                  </svg>
-                                </div>
-                              )}
-                            </div>
-                          ))}
 
-                        {/* Shop Carts */}
-                        {shopCarts.length > 0 &&
-                          shopCarts.map((shop) => (
-                            <div
-                              key={shop.id}
-                              onClick={() => handleTabSwitch("shop", shop.id)}
-                              className={`relative w-40 min-w-[10rem] flex-shrink-0 cursor-pointer rounded-lg border-2 p-2 transition-all duration-200 ${
-                                selectedShopId === shop.id
-                                  ? "scale-105 border-blue-500 bg-blue-50 shadow-lg dark:bg-blue-900/20"
-                                  : isSwitchingTabs
-                                  ? "cursor-not-allowed opacity-75"
-                                  : theme === "dark"
-                                  ? "hover:scale-102 border-gray-600 bg-gray-800 hover:border-blue-400 hover:bg-gray-700"
-                                  : "hover:scale-102 border-gray-200 bg-white hover:border-blue-200 hover:bg-gray-50"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2">
-                                <div className="flex-shrink-0">
+                                  {/* Content */}
+                                  <div className="min-w-0 flex-1 text-left">
+                                    <div
+                                      className={`truncate text-sm font-semibold leading-tight ${
+                                        isSelected
+                                          ? "text-white"
+                                          : theme === "dark"
+                                          ? "text-gray-200"
+                                          : "text-gray-800"
+                                      }`}
+                                    >
+                                      {restaurant.name}
+                                    </div>
+                                    <div
+                                      className={`mt-0.5 text-xs leading-tight ${
+                                        isSelected
+                                          ? "text-white/80"
+                                          : theme === "dark"
+                                          ? "text-gray-400"
+                                          : "text-gray-500"
+                                      }`}
+                                    >
+                                      {restaurant.totalItems} item
+                                      {restaurant.totalItems !== 1 ? "s" : ""}
+                                    </div>
+                                  </div>
+
+                                  {/* Badge/Indicator */}
+                                  {isSelected ? (
+                                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/30">
+                                      <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="white"
+                                        strokeWidth="3"
+                                        className="h-3 w-3"
+                                      >
+                                        <polyline points="20 6 9 17 4 12" />
+                                      </svg>
+                                    </div>
+                                  ) : (
+                                    <div
+                                      className={`flex h-5 min-w-[1.25rem] flex-shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-bold leading-none ${
+                                        theme === "dark"
+                                          ? "bg-gray-600 text-white"
+                                          : "bg-gray-300 text-gray-700"
+                                      }`}
+                                    >
+                                      {restaurant.totalItems}
+                                    </div>
+                                  )}
+                                </button>
+                              );
+                            })}
+
+                          {/* Shop Carts */}
+                          {shopCarts.length > 0 &&
+                            shopCarts.map((shop) => {
+                              const isSelected = selectedShopId === shop.id;
+                              return (
+                                <button
+                                  key={shop.id}
+                                  onClick={() =>
+                                    !isSwitchingTabs &&
+                                    handleTabSwitch("shop", shop.id)
+                                  }
+                                  disabled={isSwitchingTabs}
+                                  className={`group relative flex min-w-[140px] flex-shrink-0 items-center gap-2.5 rounded-lg px-3 py-2.5 transition-all duration-200 ${
+                                    isSelected
+                                      ? "bg-green-500 text-white shadow-md"
+                                      : isSwitchingTabs
+                                      ? "cursor-not-allowed opacity-50"
+                                      : theme === "dark"
+                                      ? "bg-gray-700/50 text-gray-300 hover:bg-gray-700"
+                                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                  }`}
+                                >
+                                  {/* Logo/Avatar */}
                                   <div
-                                    className={`flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border ${
-                                      theme === "dark"
-                                        ? "border-gray-600 bg-gray-700"
-                                        : "border-gray-300 bg-white"
+                                    className={`flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full transition-all ${
+                                      isSelected
+                                        ? "bg-white/20"
+                                        : theme === "dark"
+                                        ? "bg-gray-600"
+                                        : "bg-gray-200"
                                     }`}
                                   >
                                     {shop.logo ? (
@@ -832,14 +869,18 @@ export default function CartMainPage() {
                                       />
                                     ) : null}
                                     <svg
-                                      width="24"
-                                      height="24"
+                                      width="20"
+                                      height="20"
                                       viewBox="0 0 24 24"
                                       fill="none"
                                       xmlns="http://www.w3.org/2000/svg"
                                       className={`${
                                         shop.logo ? "hidden" : ""
-                                      } h-5 w-5 text-gray-500`}
+                                      } ${
+                                        isSelected
+                                          ? "text-white"
+                                          : "text-gray-400"
+                                      }`}
                                     >
                                       <path
                                         d="M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"
@@ -857,41 +898,62 @@ export default function CartMainPage() {
                                       />
                                     </svg>
                                   </div>
-                                </div>
-                                <div className="truncate">
-                                  <h3
-                                    className={`truncate text-sm font-medium ${
-                                      theme === "dark"
-                                        ? "text-white"
-                                        : "text-gray-900"
-                                    }`}
-                                  >
-                                    {shop.name}
-                                  </h3>
-                                </div>
-                              </div>
-                              {/* Show number of items in this shop cart */}
-                              <Badge
-                                content={shop.count}
-                                className="absolute -right-2 bg-blue-500 text-white"
-                              />
-                              {selectedShopId === shop.id && (
-                                <div className="absolute -right-2 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500">
-                                  <svg
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="white"
-                                    strokeWidth="3"
-                                    className="h-3 w-3"
-                                  >
-                                    <polyline points="20 6 9 17 4 12" />
-                                  </svg>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                      </>
-                    ) : (
+
+                                  {/* Content */}
+                                  <div className="min-w-0 flex-1 text-left">
+                                    <div
+                                      className={`truncate text-sm font-semibold leading-tight ${
+                                        isSelected
+                                          ? "text-white"
+                                          : theme === "dark"
+                                          ? "text-gray-200"
+                                          : "text-gray-800"
+                                      }`}
+                                    >
+                                      {shop.name}
+                                    </div>
+                                    <div
+                                      className={`mt-0.5 text-xs leading-tight ${
+                                        isSelected
+                                          ? "text-white/80"
+                                          : theme === "dark"
+                                          ? "text-gray-400"
+                                          : "text-gray-500"
+                                      }`}
+                                    >
+                                      {shop.count} item{shop.count !== 1 ? "s" : ""}
+                                    </div>
+                                  </div>
+
+                                  {/* Badge/Indicator */}
+                                  {isSelected ? (
+                                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/30">
+                                      <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="white"
+                                        strokeWidth="3"
+                                        className="h-3 w-3"
+                                      >
+                                        <polyline points="20 6 9 17 4 12" />
+                                      </svg>
+                                    </div>
+                                  ) : (
+                                    <div
+                                      className={`flex h-5 min-w-[1.25rem] flex-shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-bold leading-none ${
+                                        theme === "dark"
+                                          ? "bg-gray-600 text-white"
+                                          : "bg-gray-300 text-gray-700"
+                                      }`}
+                                    >
+                                      {shop.count}
+                                    </div>
+                                  )}
+                                </button>
+                              );
+                            })}
+                        </>
+                      ) : (
                       // Empty state
                       <div className="flex w-full flex-col items-center justify-center py-8">
                         {/* Empty Cart Icon */}
