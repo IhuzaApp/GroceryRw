@@ -190,9 +190,205 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
     return "/images/shop-placeholder.jpg";
   };
 
+  // Calculate if shop is open based on operating hours (same logic as MobileShopCard)
+  const calculateShopStatus = (): boolean => {
+    const hoursObj = shopData.operating_hours;
+    if (!hoursObj || typeof hoursObj !== "object") {
+      return false;
+    }
+
+    const now = new Date();
+    const dayKey = now
+      .toLocaleDateString("en-US", { weekday: "long" })
+      .toLowerCase();
+    const todaysHours = (hoursObj as any)[dayKey];
+
+    if (!todaysHours) {
+      return false;
+    }
+
+    if (todaysHours.toLowerCase() === "closed") {
+      return false;
+    }
+
+    // Parse time format like "9am - 5pm"
+    const parts = todaysHours.split("-").map((s: string) => s.trim());
+    if (parts.length !== 2) {
+      return false;
+    }
+
+    const parseTime = (tp: string): number | null => {
+      const m = tp.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i);
+      if (!m) return null;
+      let h = parseInt(m[1], 10);
+      const mm = m[2] ? parseInt(m[2], 10) : 0;
+      const ampm = m[3].toLowerCase();
+      if (h === 12) h = 0;
+      if (ampm === "pm") h += 12;
+      return h * 60 + mm;
+    };
+
+    const openMins = parseTime(parts[0]);
+    const closeMins = parseTime(parts[1]);
+
+    if (openMins === null || closeMins === null) {
+      return false;
+    }
+
+    const nowMins = now.getHours() * 60 + now.getMinutes();
+    let isOpen = false;
+
+    if (openMins < closeMins) {
+      // Normal case: shop opens and closes on the same day
+      isOpen = nowMins >= openMins && nowMins <= closeMins;
+    } else {
+      // Special case: shop opens one day and closes the next (e.g., 8pm - 2am)
+      isOpen = nowMins >= openMins || nowMins <= closeMins;
+    }
+
+    return isOpen;
+  };
+
+  // Use calculated status instead of simple time check
+  const isCurrentlyOpen = calculateShopStatus();
+
   return (
     <RootLayout>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-20">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-16">
+        {/* Mobile Header - Full width cover image with circular logo */}
+        <div
+          className="relative h-32 w-full sm:hidden"
+          style={{
+            marginTop: "-44px",
+            marginLeft: "-16px",
+            marginRight: "-16px",
+            width: "calc(100% + 32px)",
+          }}
+        >
+          {/* Shop Cover Image */}
+          <Image
+            src={sanitizeSrc(shopData.image)}
+            alt={shopData?.name}
+            fill
+            className="object-cover"
+            priority
+          />
+
+          {/* Gradient Overlay for better text readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/70" />
+
+          {/* Back Button */}
+          <button
+            onClick={() => router.back()}
+            className="absolute left-4 top-7 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/30"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="h-4 w-4 !text-white"
+            >
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          {/* Shop Status Badge */}
+          <div className="absolute right-4 top-7 z-20">
+            <div
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold backdrop-blur-md ${
+                isCurrentlyOpen
+                  ? "bg-green-500/90 !text-white"
+                  : "bg-red-500/90 !text-white"
+              }`}
+            >
+              {isCurrentlyOpen ? "Open" : "Closed"}
+            </div>
+          </div>
+
+          {/* Shop Logo - Circular at bottom left */}
+          <div className="absolute -bottom-4 left-3 z-50">
+            <div className="h-16 w-16 overflow-hidden rounded-full border-4 border-green-500 shadow-lg">
+              <Image
+                src={sanitizeSrc(shopData.logo)}
+                alt={`${shopData?.name} logo`}
+                width={64}
+                height={64}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          </div>
+
+          {/* Shop Info Overlay - Center */}
+          <div className="absolute bottom-2 left-1/2 z-20 -translate-x-1/2 text-center">
+            {/* Shop Name */}
+            <h1 className="mb-1 text-xl font-bold !text-white drop-shadow-lg">
+              {shopData?.name}
+            </h1>
+
+            {/* Shop Details */}
+            <div className="flex flex-wrap justify-center gap-2 text-xs !text-white/90">
+              {/* Distance */}
+              {isMounted && (
+                <div className="flex items-center gap-1">
+                  <svg
+                    className="h-3 w-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                  <span>{dynamicDistance}</span>
+                </div>
+              )}
+
+              {/* Delivery Time */}
+              {isMounted && (
+                <div className="flex items-center gap-1">
+                  <svg
+                    className="h-3 w-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span>{dynamicDeliveryTime}</span>
+                </div>
+              )}
+
+              {/* Rating */}
+              <div className="flex items-center gap-1">
+                <svg
+                  className="h-3 w-3 text-yellow-400"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+                <span>4.5</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Desktop Banner - Hidden on mobile */}
         <div className="relative hidden sm:block">
           {/* Hero Banner */}
@@ -433,41 +629,9 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Mobile Layout - Simple header with back button */}
-        <div className="sm:hidden">
-          {/* Mobile Header */}
-          <div className="sticky top-0 z-50 border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-            <div className="flex items-center justify-between p-4">
-              {/* Back Button */}
-              <Link
-                href="/"
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 transition-all duration-200 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="h-5 w-5"
-                >
-                  <path d="M19 12H5M12 19l-7-7 7-7" />
-                </svg>
-              </Link>
-
-              {/* Shop Name */}
-              <h1 className="text-lg font-bold text-gray-900 dark:text-white">
-                {shopData.name}
-              </h1>
-
-              {/* Placeholder for balance */}
-              <div className="h-10 w-10"></div>
-            </div>
-          </div>
 
           {/* Mobile Search */}
-          <div className="bg-white p-4 dark:bg-gray-800">
+          <div className="bg-white p-4 dark:bg-gray-800 sm:hidden">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3">
                 <svg
@@ -492,8 +656,39 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
             </div>
           </div>
 
-          {/* Mobile Categories */}
-          <div className="bg-white px-4 pb-4 dark:bg-gray-800">
+          {/* Mobile Categories - Sticky */}
+          <div className="sticky top-0 z-10 bg-white px-4 py-3 pt-12 shadow-sm dark:bg-gray-800 sm:hidden">
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              <button
+                onClick={() => setActiveCategory("all")}
+                className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                  activeCategory === "all"
+                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                }`}
+              >
+                All Products
+              </button>
+              {Array.from(
+                new Set(shopData.products.map((p: any) => p.category))
+              ).map((category: string) => (
+                <button
+                  key={category}
+                  onClick={() => setActiveCategory(category)}
+                  className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                    activeCategory === category
+                      ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                  }`}
+                >
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Desktop Categories */}
+          <div className="hidden bg-white px-4 pb-4 dark:bg-gray-800 sm:hidden">
             <div className="flex gap-2 overflow-x-auto pb-2">
               <button
                 onClick={() => setActiveCategory("all")}

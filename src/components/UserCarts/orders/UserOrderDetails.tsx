@@ -23,12 +23,15 @@ function formatOrderID(id?: string | number): string {
 
 interface UserOrderDetailsProps {
   order: any;
+  isMobile?: boolean;
 }
-export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
+export default function UserOrderDetails({
+  order,
+  isMobile = false,
+}: UserOrderDetailsProps) {
   const [feedbackModal, setFeedbackModal] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
-  const [isMobile, setIsMobile] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [hasExistingRating, setHasExistingRating] = useState(false);
@@ -53,22 +56,6 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
       checkExistingRating();
     }
   }, [order?.id]);
-
-  // Update the isMobile state based on window size
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 640);
-    };
-
-    // Initial check on mount
-    handleResize();
-
-    // Add event listener to handle resize
-    window.addEventListener("resize", handleResize);
-
-    // Cleanup the event listener when the component unmounts
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   const getStatusStep = (status: string, assignedTo: any) => {
     // If no shopper is assigned yet
@@ -137,56 +124,87 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
 
   return (
     <>
-      {/* Order Tracking Header */}
-      <div className="mb-6 flex items-center">
-        <Link
-          href="/CurrentPendingOrders"
-          className="flex items-center text-gray-700"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="mr-2 h-5 w-5"
+      {/* Order Tracking Header - Only show on desktop */}
+      {!isMobile && (
+        <div className="mb-6 flex items-center">
+          <Link
+            href="/CurrentPendingOrders"
+            className="flex items-center text-gray-700"
           >
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-        </Link>
-        <h1 className="text-2xl font-bold">
-          Order #{formatOrderID(order.OrderID)}
-        </h1>
-        <span className="ml-2 text-gray-500">Placed on {order.placedAt}</span>
-      </div>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="mr-2 h-5 w-5"
+            >
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+          </Link>
+          <h1 className="text-2xl font-bold">
+            Order #{formatOrderID(order.OrderID)}
+          </h1>
+          <span className="ml-2 text-gray-500">Placed on {order.placedAt}</span>
+        </div>
+      )}
 
       <Panel shaded bordered className="mb-6">
         <div className="mb-6">
           <h2 className="mb-4 text-xl font-bold">Order Status</h2>
-          <div className="custom-steps-wrapper">
-            <Steps
-              current={getStatusStep(order.status, order.assignedTo)}
-              className="custom-steps"
-              vertical={isMobile}
-            >
-              <Steps.Item
-                title="Awaiting Assignment"
-                description="Waiting for shopper assignment"
-              />
-              <Steps.Item title="Shopping" description="Picking your items" />
-              <Steps.Item
-                title="Packing"
-                description="Preparing for delivery"
-              />
-              <Steps.Item
-                title="On the way"
-                description="Heading to your location"
-              />
-              <Steps.Item
-                title="Delivered"
-                description="Enjoy your groceries!"
-              />
-            </Steps>
-          </div>
+          {isMobile ? (
+            // Mobile: Simple status display
+            <div className="py-4 text-center">
+              <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                {order.status === "delivered"
+                  ? "Delivered"
+                  : order.status === "on_the_way"
+                  ? "On the Way"
+                  : order.status === "packing"
+                  ? "Packing"
+                  : order.status === "shopping"
+                  ? "Shopping"
+                  : "Pending Assignment"}
+              </div>
+              <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                {order.status === "delivered"
+                  ? "Order completed successfully"
+                  : order.status === "on_the_way"
+                  ? "Heading to your location"
+                  : order.status === "packing"
+                  ? "Preparing for delivery"
+                  : order.status === "shopping"
+                  ? "Picking your items"
+                  : "Waiting for shopper assignment"}
+              </div>
+            </div>
+          ) : (
+            // Desktop: Full steps display
+            <div className="custom-steps-wrapper">
+              <Steps
+                current={getStatusStep(order.status, order.assignedTo)}
+                className="custom-steps"
+                vertical={false}
+              >
+                <Steps.Item
+                  title="Awaiting Assignment"
+                  description="Waiting for shopper assignment"
+                />
+                <Steps.Item title="Shopping" description="Picking your items" />
+                <Steps.Item
+                  title="Packing"
+                  description="Preparing for delivery"
+                />
+                <Steps.Item
+                  title="On the way"
+                  description="Heading to your location"
+                />
+                <Steps.Item
+                  title="Delivered"
+                  description="Enjoy your groceries!"
+                />
+              </Steps>
+            </div>
+          )}
         </div>
 
         <div className="mt-4 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">

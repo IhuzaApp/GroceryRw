@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Button, Modal, Radio } from "rsuite";
 import { formatCurrencySync } from "../../../utils/formatCurrency";
 
@@ -28,45 +28,55 @@ export default function PaymentMethodSelector({
   const [selectedMethod, setSelectedMethod] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [refundBalance, setRefundBalance] = useState(0);
+  const hasFetchedRef = useRef(false);
+  const onSelectRef = useRef(onSelect);
 
-  const fetchPaymentMethods = useCallback(async () => {
-    try {
-      const response = await fetch("/api/queries/payment-methods");
-      const data = await response.json();
-      setPaymentMethods(data.paymentMethods || []);
-
-      // Find and select the default payment method
-      const defaultMethod = data.paymentMethods?.find(
-        (m: PaymentMethod) => m.is_default
-      );
-      if (defaultMethod) {
-        setSelectedMethod(defaultMethod.id);
-        onSelect({
-          type:
-            defaultMethod.method.toLowerCase() === "mtn momo" ? "momo" : "card",
-          id: defaultMethod.id,
-          number: defaultMethod.number,
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching payment methods:", error);
-    }
+  // Keep onSelectRef updated
+  useEffect(() => {
+    onSelectRef.current = onSelect;
   }, [onSelect]);
 
-  const fetchRefundBalance = useCallback(async () => {
-    try {
-      const response = await fetch("/api/queries/refunds");
-      const data = await response.json();
-      setRefundBalance(parseFloat(data.totalAmount || "0"));
-    } catch (error) {
-      console.error("Error fetching refund balance:", error);
-    }
-  }, []);
-
   useEffect(() => {
-    fetchPaymentMethods();
-    fetchRefundBalance();
-  }, [fetchPaymentMethods, fetchRefundBalance]);
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
+    // Fetch payment methods
+    fetch("/api/queries/payment-methods")
+      .then((res) => res.json())
+      .then((data) => {
+        setPaymentMethods(data.paymentMethods || []);
+
+        // Find and select the default payment method
+        const defaultMethod = data.paymentMethods?.find(
+          (m: PaymentMethod) => m.is_default
+        );
+        if (defaultMethod) {
+          setSelectedMethod(defaultMethod.id);
+          onSelectRef.current({
+            type:
+              defaultMethod.method.toLowerCase() === "mtn momo"
+                ? "momo"
+                : "card",
+            id: defaultMethod.id,
+            number: defaultMethod.number,
+          });
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching payment methods:", error);
+        hasFetchedRef.current = false; // Reset on error
+      });
+
+    // Fetch refund balance
+    fetch("/api/queries/refunds")
+      .then((res) => res.json())
+      .then((data) => {
+        setRefundBalance(parseFloat(data.totalAmount || "0"));
+      })
+      .catch((error) => {
+        console.error("Error fetching refund balance:", error);
+      });
+  }, []); // Only run once on mount
 
   const handleOpen = () => setShow(true);
   const handleClose = () => setShow(false);

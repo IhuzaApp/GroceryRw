@@ -463,48 +463,50 @@ export function ContractsManagement({
             )}
 
             {/* Actions */}
-            <div className="flex items-center justify-between border-t border-gray-200 pt-4 dark:border-gray-600">
-              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                <span>Last activity: {contract.lastActivity}</span>
-                <span>•</span>
+            <div className="flex flex-col gap-3 border-t border-gray-200 pt-4 dark:border-gray-600 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
+              <div className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 sm:gap-2 sm:text-sm">
+                <span className="whitespace-nowrap">
+                  Last activity: {contract.lastActivity}
+                </span>
+                <span className="hidden sm:inline">•</span>
                 <div className="flex items-center gap-1">
                   <span>Client:</span>
                   {contract.signedByClient ? (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <CheckCircle className="h-3.5 w-3.5 text-green-500 sm:h-4 sm:w-4" />
                   ) : (
-                    <XCircle className="h-4 w-4 text-red-500" />
+                    <XCircle className="h-3.5 w-3.5 text-red-500 sm:h-4 sm:w-4" />
                   )}
                 </div>
-                <span>•</span>
+                <span className="hidden sm:inline">•</span>
                 <div className="flex items-center gap-1">
                   <span>Supplier:</span>
                   {contract.signedBySupplier ? (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <CheckCircle className="h-3.5 w-3.5 text-green-500 sm:h-4 sm:w-4" />
                   ) : (
-                    <XCircle className="h-4 w-4 text-red-500" />
+                    <XCircle className="h-3.5 w-3.5 text-red-500 sm:h-4 sm:w-4" />
                   )}
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2 sm:flex-nowrap">
                 <button
                   onClick={() => onViewContract(contract.id)}
-                  className="rounded-lg border border-blue-300 px-3 py-1 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700 dark:border-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400"
+                  className="flex-1 rounded-lg border border-blue-300 px-2.5 py-1.5 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700 active:scale-95 dark:border-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 sm:flex-none sm:px-3 sm:py-1 sm:text-sm"
                 >
-                  <Eye className="mr-1 inline h-4 w-4" />
+                  <Eye className="mr-1 inline h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   View
                 </button>
                 <button
                   onClick={() => onEditContract(contract.id)}
-                  className="rounded-lg border border-gray-300 px-3 py-1 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                  className="flex-1 rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800 active:scale-95 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200 sm:flex-none sm:px-3 sm:py-1 sm:text-sm"
                 >
-                  <Edit className="mr-1 inline h-4 w-4" />
+                  <Edit className="mr-1 inline h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   Edit
                 </button>
                 <button
                   onClick={() => onMessageSupplier(contract.supplierId)}
-                  className="rounded-lg border border-green-300 px-3 py-1 text-sm font-medium text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:border-green-600 dark:hover:bg-green-900/20 dark:hover:text-green-400"
+                  className="flex-1 rounded-lg border border-green-300 px-2.5 py-1.5 text-xs font-medium text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 active:scale-95 dark:border-green-600 dark:hover:bg-green-900/20 dark:hover:text-green-400 sm:flex-none sm:px-3 sm:py-1 sm:text-sm"
                 >
-                  <MessageSquare className="mr-1 inline h-4 w-4" />
+                  <MessageSquare className="mr-1 inline h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   Message
                 </button>
               </div>

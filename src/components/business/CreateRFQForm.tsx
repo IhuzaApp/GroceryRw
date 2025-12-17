@@ -12,6 +12,7 @@ import {
   Save,
   Send,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface CreateRFQFormProps {
   isOpen: boolean;
@@ -167,15 +168,82 @@ export function CreateRFQForm({
     }));
   };
 
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Remove data URL prefix (e.g., "data:image/png;base64,")
+        const base64 = result.split(",")[1] || result;
+        resolve(base64);
+      };
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      onSubmit(formData);
+      // Convert attachments to base64 (for now, we'll use the first attachment)
+      let attachmentBase64 = "";
+      if (formData.attachments.length > 0) {
+        try {
+          attachmentBase64 = await convertFileToBase64(formData.attachments[0]);
+        } catch (error) {
+          console.error("Error converting file to base64:", error);
+        }
+      }
+
+      // Prepare requirements array (filter out empty strings)
+      const requirementsArray = formData.requirements.filter(
+        (r) => r.trim() !== ""
+      );
+
+      // Call the API
+      const response = await fetch("/api/mutations/create-business-rfq", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          description: formData.description,
+          category: formData.category,
+          min_budget: formData.budget.min || "",
+          max_budget: formData.budget.max || "",
+          location: formData.location,
+          response_date: formData.deadline,
+          urgency_level: formData.urgency,
+          estimated_quantity: formData.estimatedQuantity || "",
+          expected_delivery_date: formData.deliveryDate || "",
+          payment_terms: formData.paymentTerms || "",
+          requirements: requirementsArray,
+          notes: formData.additionalNotes || "",
+          contact_name: formData.contactInfo.name,
+          email: formData.contactInfo.email,
+          phone: formData.contactInfo.phone || "",
+          attachment: attachmentBase64,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create RFQ");
+      }
+
+      const data = await response.json();
+
+      // Call the onSubmit callback with the created RFQ data
+      onSubmit(data.rfq || formData);
+
+      // Show success message
+      toast.success("RFQ created successfully!");
+
       onClose();
+
       // Reset form
       setFormData({
         title: "",
@@ -194,8 +262,9 @@ export function CreateRFQForm({
         additionalNotes: "",
       });
       setCurrentStep(1);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating RFQ:", error);
+      toast.error(error.message || "Failed to create RFQ. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -247,6 +316,9 @@ export function CreateRFQForm({
                       ? "bg-green-500 text-white"
                       : "bg-gray-200 text-gray-600 dark:bg-gray-600 dark:text-gray-400"
                   }`}
+                  style={
+                    currentStep >= step.id ? { color: "#ffffff" } : undefined
+                  }
                 >
                   {step.id}
                 </div>
@@ -767,6 +839,7 @@ export function CreateRFQForm({
                 type="submit"
                 disabled={isSubmitting}
                 className="flex items-center gap-2 rounded-lg bg-green-500 px-6 py-2 font-medium text-white transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50"
+                style={{ color: "#ffffff" }}
                 onClick={handleSubmit}
               >
                 {isSubmitting ? (

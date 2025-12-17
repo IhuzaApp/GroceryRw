@@ -1,17 +1,21 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Button, Panel, Tag, Modal, Form, Checkbox } from "rsuite";
 import { useGoogleMap } from "../../context/GoogleMapProvider";
 import Cookies from "js-cookie";
 import { authenticatedFetch } from "../../lib/authenticatedFetch";
+import { useLanguage } from "../../context/LanguageContext";
 
 // Skeleton loader for address cards
 function AddressSkeleton() {
   return (
-    <Panel bordered className="animate-pulse p-4">
-      <div className="mb-2 h-4 w-3/4 rounded bg-gray-200" />
-      <div className="mb-1 h-3 w-1/2 rounded bg-gray-200" />
-      <div className="mt-2 h-3 w-1/3 rounded bg-gray-200" />
-    </Panel>
+    <div className="animate-pulse overflow-hidden rounded-xl border-2 border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+      <div className="mb-4 flex h-12 w-12 rounded-xl bg-gray-200 dark:bg-gray-700" />
+      <div className="mb-2 h-5 w-3/4 rounded bg-gray-200 dark:bg-gray-700" />
+      <div className="mb-4 h-4 w-1/2 rounded bg-gray-200 dark:bg-gray-700" />
+      <div className="flex gap-2">
+        <div className="h-9 flex-1 rounded-lg bg-gray-200 dark:bg-gray-700" />
+        <div className="h-9 flex-1 rounded-lg bg-gray-200 dark:bg-gray-700" />
+      </div>
+    </div>
   );
 }
 
@@ -23,6 +27,7 @@ interface UserAddressProps {
 // Update component signature to accept props
 export default function UserAddress({ onSelect }: UserAddressProps) {
   const { isLoaded } = useGoogleMap();
+  const { t } = useLanguage();
   // Autocomplete service and geocoder refs
   const autocompleteServiceRef =
     useRef<google.maps.places.AutocompleteService | null>(null);
@@ -209,138 +214,447 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-bold">Saved Addresses</h3>
-        <Button
-          appearance="primary"
-          color="green"
-          className="bg-green-500 text-white"
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+            Saved Addresses
+          </h3>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Manage your delivery addresses
+          </p>
+        </div>
+        <button
           onClick={() => setShowModal(true)}
+          className="inline-flex items-center rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-5 py-2.5 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 active:scale-95"
         >
-          Add New Address
-        </Button>
+          <svg
+            className="mr-2 h-5 w-5 !text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          <span className="!text-white">{t("nav.addNewAddress")}</span>
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {loading ? (
-          Array(2)
+          Array(3)
             .fill(0)
             .map((_, idx) => <AddressSkeleton key={idx} />)
         ) : error ? (
-          <div className="col-span-full p-4 text-red-600">{error}</div>
+          <div className="col-span-full rounded-lg border border-red-200 bg-red-50 p-4 text-red-600 dark:border-red-800 dark:bg-red-900/20">
+            {error}
+          </div>
         ) : addresses.length ? (
           addresses.map((addr) => (
-            <Panel key={addr.id} bordered className="relative">
+            <div
+              key={addr.id}
+              className={`group relative overflow-hidden rounded-xl border-2 p-5 shadow-md transition-all duration-300 hover:shadow-xl ${
+                addr.is_default
+                  ? "border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 dark:border-green-600 dark:from-green-900/20 dark:to-emerald-900/20"
+                  : "border-gray-200 bg-white hover:border-green-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-600"
+              }`}
+            >
+              {/* Default Badge */}
               {addr.is_default && (
-                <Tag className="absolute right-2 top-2 border-green-200 bg-green-100 text-green-600">
-                  Default
-                </Tag>
+                <div className="absolute right-3 top-3">
+                  <span className="inline-flex items-center rounded-full bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-1 text-xs font-semibold !text-white shadow-lg">
+                    <svg
+                      className="mr-1 h-3 w-3 !text-white"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span className="!text-white">{t("address.default")}</span>
+                  </span>
+                </div>
               )}
-              <h4 className="font-bold">{addr.street}</h4>
-              <p className="mt-2 text-gray-600">
-                {addr.city}, {addr.postal_code}
-              </p>
-              <div className="mt-4 flex gap-2">
+
+              {/* Location Icon */}
+              <div
+                className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl ${
+                  addr.is_default
+                    ? "bg-gradient-to-br from-green-500 to-emerald-600"
+                    : "bg-gradient-to-br from-gray-400 to-gray-500"
+                } shadow-lg transition-transform duration-300 group-hover:scale-110`}
+              >
+                <svg
+                  className="h-6 w-6 !text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+              </div>
+
+              {/* Address Details */}
+              <div className="mb-4">
+                <h4 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
+                  {addr.street}
+                </h4>
+                <div className="flex items-start space-x-2 text-gray-600 dark:text-gray-300">
+                  <svg
+                    className="mt-0.5 h-4 w-4 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                    />
+                  </svg>
+                  <p className="text-sm">
+                    {addr.city}, {addr.postal_code}
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-2">
                 {!addr.is_default && (
                   <button
-                    className="rounded border border-green-700 px-3 py-1 text-sm text-green-700 hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="group flex flex-1 items-center justify-center rounded-lg border-2 border-green-500 bg-white px-4 py-2 text-sm font-semibold text-green-600 transition-all duration-200 hover:bg-green-500 hover:!text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-green-400 dark:bg-gray-800 dark:text-green-400 dark:hover:bg-green-500 dark:hover:!text-white"
                     onClick={() => handleSetDefault(addr.id)}
                     disabled={saving}
                   >
-                    {saving ? "Setting..." : "Set as Default"}
+                    {saving ? (
+                      <>
+                        <svg
+                          className="mr-2 h-4 w-4 animate-spin group-hover:!text-white"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        <span className="group-hover:!text-white">
+                          Setting...
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="mr-2 h-4 w-4 group-hover:!text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        <span className="group-hover:!text-white">
+                          Set as Default
+                        </span>
+                      </>
+                    )}
                   </button>
                 )}
                 {onSelect && (
                   <button
-                    className="rounded border border-blue-500 px-3 py-1 text-sm text-blue-500 hover:bg-blue-100"
+                    className="group flex flex-1 items-center justify-center rounded-lg border-2 border-blue-500 bg-white px-4 py-2 text-sm font-semibold text-blue-600 transition-all duration-200 hover:bg-blue-500 hover:!text-white dark:border-blue-400 dark:bg-gray-800 dark:text-blue-400 dark:hover:bg-blue-500 dark:hover:!text-white"
                     onClick={() => onSelect(addr)}
                   >
-                    Select
+                    <svg
+                      className="mr-2 h-4 w-4 group-hover:!text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span className="group-hover:!text-white">Select</span>
                   </button>
                 )}
               </div>
-            </Panel>
+
+              {/* Decorative Elements */}
+              <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gradient-to-br from-green-200/30 to-emerald-200/30 blur-xl dark:from-green-800/20 dark:to-emerald-800/20" />
+              <div className="absolute -bottom-6 -left-6 h-20 w-20 rounded-full bg-gradient-to-br from-blue-200/30 to-cyan-200/30 blur-xl dark:from-blue-800/20 dark:to-cyan-800/20" />
+            </div>
           ))
         ) : (
-          <div className="col-span-full p-4 text-gray-500">
-            No saved addresses.
+          <div className="col-span-full rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-12 text-center dark:border-gray-700 dark:bg-gray-800/50">
+            <svg
+              className="mx-auto h-16 w-16 text-gray-400 dark:text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            <p className="mt-4 text-lg font-semibold text-gray-600 dark:text-gray-400">
+              {t("address.noAddresses")}
+            </p>
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-500">
+              {t("address.addFirstAddress")}
+            </p>
           </div>
         )}
       </div>
 
       {/* Add New Address Modal */}
-      <Modal open={showModal} onClose={() => setShowModal(false)}>
-        <Modal.Header>
-          <Modal.Title>Add New Address</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form fluid>
-            <Form.Group className="relative">
-              <Form.ControlLabel>Street</Form.ControlLabel>
-              <Form.Control
-                disabled={!isLoaded}
-                name="street"
-                placeholder="Enter street"
-                value={street}
-                onChange={handleStreetChange}
-              />
-              {activeInput && suggestions.length > 0 && (
-                <div className="absolute z-10 mt-1 max-h-40 w-full overflow-auto border bg-white">
-                  {suggestions.map((s) => (
-                    <div
-                      key={s.place_id}
-                      className="cursor-pointer p-2 hover:bg-gray-100"
-                      onClick={() => handleSelect(s)}
-                    >
-                      {s.description}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Form.Group>
-            <Form.Group>
-              <Form.ControlLabel>City</Form.ControlLabel>
-              <Form.Control
-                name="city"
-                placeholder="Enter city"
-                value={city}
-                onChange={setCity}
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.ControlLabel>Postal Code</Form.ControlLabel>
-              <Form.Control
-                name="postal_code"
-                placeholder="Enter postal code"
-                value={postalCode}
-                onChange={setPostalCode}
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.ControlLabel>Default</Form.ControlLabel>
-              <Checkbox
-                checked={isDefault}
-                onChange={(value, checked) => setIsDefault(checked)}
+      {showModal && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm sm:p-6">
+          <div className="max-h-[95vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800 sm:max-h-[90vh]">
+            {/* Header */}
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white px-4 py-4 dark:border-gray-700 dark:from-gray-800 dark:to-gray-800 sm:px-6 sm:py-5 md:px-8">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white sm:text-xl md:text-2xl">
+                  {t("nav.addNewAddress")}
+                </h3>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  {t("address.enterDetails")}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  setStreet("");
+                  setCity("");
+                  setPostalCode("");
+                  setIsDefault(false);
+                  setLat(null);
+                  setLng(null);
+                  setSuggestions([]);
+                  setActiveInput(false);
+                }}
+                className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
               >
-                Yes
-              </Checkbox>
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button onClick={() => setShowModal(false)} appearance="subtle">
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            appearance="primary"
-            loading={saving}
-            disabled={!street || lat === null || lng === null}
-          >
-            Save
-          </Button>
-        </Modal.Footer>
-      </Modal>
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="space-y-4 p-4 sm:space-y-5 sm:p-6 md:space-y-6 md:p-8">
+              {/* Street Address */}
+              <div className="relative">
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Street Address *
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    disabled={!isLoaded}
+                    value={street}
+                    onChange={(e) => handleStreetChange(e.target.value)}
+                    placeholder="Start typing your street address..."
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
+                  />
+                  {!isLoaded && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <span className="text-xs text-gray-400">Loading...</span>
+                    </div>
+                  )}
+                </div>
+                {activeInput && suggestions.length > 0 && (
+                  <div className="absolute z-50 mt-2 max-h-60 w-full overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                    {suggestions.map((s) => (
+                      <div
+                        key={s.place_id}
+                        className="cursor-pointer border-b border-gray-100 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
+                        onClick={() => handleSelect(s)}
+                      >
+                        {s.description}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* City and Postal Code */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    {t("address.city")} *
+                  </label>
+                  <input
+                    type="text"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder={t("address.enterCity")}
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    {t("address.postalCode")} *
+                  </label>
+                  <input
+                    type="text"
+                    value={postalCode}
+                    onChange={(e) => setPostalCode(e.target.value)}
+                    placeholder={t("address.enterPostalCode")}
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
+                  />
+                </div>
+              </div>
+
+              {/* Default Address Checkbox */}
+              <div className="flex items-center space-x-3 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
+                <input
+                  type="checkbox"
+                  id="default-address"
+                  checked={isDefault}
+                  onChange={(e) => setIsDefault(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700"
+                />
+                <label
+                  htmlFor="default-address"
+                  className="flex-1 text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  {t("address.setAsDefault")}
+                </label>
+                {isDefault && (
+                  <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                    {t("address.default")}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="sticky bottom-0 flex flex-shrink-0 items-center justify-end gap-3 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:px-6 sm:py-5 md:px-8">
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  setStreet("");
+                  setCity("");
+                  setPostalCode("");
+                  setIsDefault(false);
+                  setLat(null);
+                  setLng(null);
+                  setSuggestions([]);
+                  setActiveInput(false);
+                }}
+                className="rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+              >
+                {t("common.cancel")}
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={!street || lat === null || lng === null || saving}
+                className="inline-flex items-center rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold !text-white shadow-sm transition-all duration-200 hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {saving ? (
+                  <>
+                    <svg
+                      className="mr-2 h-4 w-4 animate-spin !text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    <span className="!text-white">{t("address.saving")}</span>
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      className="mr-2 h-4 w-4 !text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span className="!text-white">
+                      {t("address.saveAddress")}
+                    </span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { Input, Button, Panel, Modal, toaster, Notification } from "rsuite";
+import React, { useState, useEffect, useCallback } from "react";
+import { Button, Panel, Modal, toaster, Notification } from "rsuite";
 import Link from "next/link"; // Make sure you import Link if you use it
 import { formatCurrency } from "../../../lib/formatCurrency";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
-import PaymentMethodSelector from "./PaymentMethodSelector";
 import { useTheme } from "../../../context/ThemeContext";
 import { useAuth } from "../../../context/AuthContext";
 import {
@@ -21,9 +20,27 @@ const CACHE_EXPIRATION_HOURS = 24;
 const CACHE_REFRESH_MS = 12 * 60 * 60 * 1000;
 
 interface PaymentMethod {
-  type: "refund" | "card" | "momo";
+  type: "refund" | "card" | "momo" | "wallet";
   id?: string;
   number?: string;
+}
+
+interface SavedPaymentMethod {
+  id: string;
+  method: string;
+  names: string;
+  number: string;
+  is_default: boolean;
+}
+
+interface SavedAddress {
+  id: string;
+  street: string;
+  city: string;
+  postal_code?: string;
+  latitude?: number;
+  longitude?: number;
+  is_default: boolean;
 }
 
 interface CheckoutItemsProps {
@@ -95,10 +112,32 @@ export default function CheckoutItems({
     null
   );
   const [configLoading, setConfigLoading] = useState(true);
+  // Separate state for discounts (always fetched fresh from server)
+  const [discountsEnabled, setDiscountsEnabled] = useState(false);
   // Address management modal state
   const [showAddressModal, setShowAddressModal] = useState(false);
   // Checkout loading state
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+
+  // Function to fetch fresh discounts from server (always called, never cached)
+  const fetchFreshDiscounts = useCallback(async () => {
+    try {
+      const response = await fetch("/api/queries/system-configuration");
+      const data = await response.json();
+
+      if (
+        data.success &&
+        data.config &&
+        typeof data.config.discounts === "boolean"
+      ) {
+        setDiscountsEnabled(data.config.discounts);
+      }
+    } catch (error) {
+      console.error("Error fetching fresh discounts:", error);
+      // Fallback to false if fetch fails
+      setDiscountsEnabled(false);
+    }
+  }, []);
 
   // Fetch system configuration with memoization
   useEffect(() => {
@@ -109,11 +148,22 @@ export default function CheckoutItems({
         const data = await response.json();
 
         if (data.success && data.config) {
-          setSystemConfig(data.config);
+          // Extract discounts before caching (don't cache discounts)
+          const { discounts, ...configWithoutDiscounts } = data.config;
+          setDiscountsEnabled(discounts || false);
 
-          // Store in cookie with expiration and timestamp
+          // Store config WITHOUT discounts in cookie
+          setSystemConfig({
+            ...configWithoutDiscounts,
+            discounts: false, // Set to false in cached config, we'll use fresh value
+          } as SystemConfiguration);
+
+          // Store in cookie with expiration and timestamp (without discounts)
           const cacheData = {
-            config: data.config,
+            config: {
+              ...configWithoutDiscounts,
+              discounts: false, // Don't cache discounts value
+            },
             timestamp: Date.now(),
           };
 
@@ -138,11 +188,22 @@ export default function CheckoutItems({
         const data = await response.json();
 
         if (data.success && data.config) {
-          setSystemConfig(data.config);
+          // Extract discounts before caching (don't cache discounts)
+          const { discounts, ...configWithoutDiscounts } = data.config;
+          setDiscountsEnabled(discounts || false);
 
-          // Update cache with new data and timestamp
+          // Update config WITHOUT discounts
+          setSystemConfig({
+            ...configWithoutDiscounts,
+            discounts: false, // Set to false in cached config
+          } as SystemConfiguration);
+
+          // Update cache with new data and timestamp (without discounts)
           const cacheData = {
-            config: data.config,
+            config: {
+              ...configWithoutDiscounts,
+              discounts: false, // Don't cache discounts value
+            },
             timestamp: Date.now(),
           };
 
@@ -173,8 +234,11 @@ export default function CheckoutItems({
 
             // Handle both old format (direct config object) and new format (with timestamp)
             if (parsedCache.config && parsedCache.timestamp) {
-              // New format with timestamp
+              // New format with timestamp - use cached config but fetch fresh discounts
               setSystemConfig(parsedCache.config);
+
+              // Always fetch fresh discounts from server (don't use cached value)
+              fetchFreshDiscounts();
 
               // Check if cache is stale and needs background refresh
               const cacheAge = Date.now() - parsedCache.timestamp;
@@ -185,6 +249,9 @@ export default function CheckoutItems({
             } else {
               // Old format or unexpected structure - treat as config directly
               setSystemConfig(parsedCache);
+
+              // Always fetch fresh discounts from server
+              fetchFreshDiscounts();
 
               // Always refresh old format in background to update to new format
               setTimeout(refreshConfigInBackground, 0);
@@ -218,9 +285,16 @@ export default function CheckoutItems({
     if (!systemConfig) {
       fetchSystemConfig();
     } else {
+      // Even if we have cached config, always fetch fresh discounts
+      fetchFreshDiscounts();
       setConfigLoading(false);
     }
-  }, [systemConfig]); // Add systemConfig as dependency to prevent unnecessary re-fetches
+  }, [systemConfig, fetchFreshDiscounts]); // Add systemConfig and fetchFreshDiscounts as dependencies
+
+  // Always fetch fresh discounts on component mount
+  useEffect(() => {
+    fetchFreshDiscounts();
+  }, [fetchFreshDiscounts]); // Run on mount and when fetchFreshDiscounts changes
 
   useEffect(() => {
     const handleAddressChange = () => setTick((t) => t + 1);
@@ -231,25 +305,53 @@ export default function CheckoutItems({
 
   // No router event listeners needed since we're not redirecting
 
-  const [promoCode, setPromoCode] = useState("");
+  const [discountCode, setDiscountCode] = useState("");
   const [discount, setDiscount] = useState(0);
-  const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
+  const [appliedCode, setAppliedCode] = useState<string | null>(null);
+  const [codeType, setCodeType] = useState<"promo" | "referral" | null>(null);
+  const [referralDiscount, setReferralDiscount] = useState(0);
+  const [serviceFeeDiscount, setServiceFeeDiscount] = useState(0);
+  const [deliveryFeeDiscount, setDeliveryFeeDiscount] = useState(0);
+  const [validatingCode, setValidatingCode] = useState(false);
   const [deliveryNotes, setDeliveryNotes] = useState<string>("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<PaymentMethod | null>(null);
   const [loadingPayment, setLoadingPayment] = useState(true);
+  // Payment methods and addresses state
+  const [savedPaymentMethods, setSavedPaymentMethods] = useState<
+    SavedPaymentMethod[]
+  >([]);
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [refundBalance, setRefundBalance] = useState(0);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [hasWallet, setHasWallet] = useState(false);
+  const [oneTimePhoneNumber, setOneTimePhoneNumber] = useState<string>("");
+  const [showOneTimePhoneInput, setShowOneTimePhoneInput] = useState(false);
+  const [selectedPaymentValue, setSelectedPaymentValue] = useState<
+    string | null
+  >(null);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
+    null
+  );
+  const [showPaymentDropdown, setShowPaymentDropdown] = useState(false);
+  const [showAddressDropdown, setShowAddressDropdown] = useState(false);
 
-  // Fetch default payment method on component mount
+  // Fetch payment methods, addresses, and refund balance on component mount
   useEffect(() => {
-    const fetchDefaultPaymentMethod = async () => {
+    const fetchPaymentData = async () => {
       try {
-        const response = await fetch("/api/queries/payment-methods");
-        const data = await response.json();
-        const defaultMethod = data.paymentMethods?.find(
-          (m: any) => m.is_default
-        );
+        // Fetch payment methods
+        const paymentResponse = await fetch("/api/queries/payment-methods");
+        const paymentData = await paymentResponse.json();
+        const methods = paymentData.paymentMethods || [];
+        setSavedPaymentMethods(methods);
 
+        // Find and select the default payment method
+        const defaultMethod = methods.find(
+          (m: SavedPaymentMethod) => m.is_default
+        );
         if (defaultMethod) {
+          setSelectedPaymentValue(defaultMethod.id);
           setSelectedPaymentMethod({
             type:
               defaultMethod.method.toLowerCase() === "mtn momo"
@@ -259,17 +361,99 @@ export default function CheckoutItems({
             number: defaultMethod.number,
           });
         }
+
+        // Fetch refund balance
+        const refundResponse = await fetch("/api/queries/refunds");
+        const refundData = await refundResponse.json();
+        setRefundBalance(parseFloat(refundData.totalAmount || "0"));
+
+        // Fetch wallet balance
+        try {
+          const walletResponse = await fetch(
+            "/api/queries/personal-wallet-balance"
+          );
+          const walletData = await walletResponse.json();
+          if (walletData.wallet) {
+            setWalletBalance(parseFloat(walletData.wallet.balance || "0"));
+          } else {
+            setWalletBalance(0);
+          }
+        } catch (walletError) {
+          console.error("Error fetching wallet balance:", walletError);
+          setWalletBalance(0);
+        }
       } catch (error) {
-        console.error("Error fetching default payment method:", error);
+        console.error("Error fetching payment data:", error);
       } finally {
         setLoadingPayment(false);
       }
     };
 
-    fetchDefaultPaymentMethod();
+    fetchPaymentData();
   }, []);
 
-  // Service and Delivery Fee calculations
+  // Fetch addresses on component mount
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      try {
+        const response = await fetch("/api/queries/addresses");
+        const data = await response.json();
+        const addresses = data.addresses || [];
+        setSavedAddresses(addresses);
+
+        // Check if there's a selected address in cookie
+        const cookieValue = Cookies.get("delivery_address");
+        if (cookieValue) {
+          try {
+            const addressObj = JSON.parse(cookieValue);
+            if (addressObj.id) {
+              setSelectedAddressId(addressObj.id);
+            } else {
+              // If no ID in cookie, try to find default address
+              const defaultAddr = addresses.find(
+                (a: SavedAddress) => a.is_default
+              );
+              if (defaultAddr) {
+                setSelectedAddressId(defaultAddr.id);
+                Cookies.set("delivery_address", JSON.stringify(defaultAddr));
+                setTick((t) => t + 1);
+              }
+            }
+          } catch (err) {
+            console.error("Error parsing address cookie:", err);
+            // Try to find default address
+            const defaultAddr = addresses.find(
+              (a: SavedAddress) => a.is_default
+            );
+            if (defaultAddr) {
+              setSelectedAddressId(defaultAddr.id);
+              Cookies.set("delivery_address", JSON.stringify(defaultAddr));
+              setTick((t) => t + 1);
+            }
+          }
+        } else {
+          // No address in cookie, try to find default address
+          const defaultAddr = addresses.find((a: SavedAddress) => a.is_default);
+          if (defaultAddr) {
+            setSelectedAddressId(defaultAddr.id);
+            Cookies.set("delivery_address", JSON.stringify(defaultAddr));
+            setTick((t) => t + 1);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching addresses:", error);
+      }
+    };
+
+    fetchAddresses();
+  }, []);
+
+  // Get selected address for delivery fee calculation
+  const selectedAddress = selectedAddressId
+    ? savedAddresses.find((a) => a.id === selectedAddressId)
+    : null;
+
+  // Service and Delivery Fee calculations - recalculates when selectedAddress changes
   const serviceFee = isFoodCart
     ? 0
     : systemConfig
@@ -285,24 +469,39 @@ export default function CheckoutItems({
   const extraUnits = Math.max(0, totalUnits - extraUnitsThreshold);
   const unitsSurcharge =
     extraUnits * (systemConfig ? parseInt(systemConfig.unitsSurcharge) : 0);
-  // Surcharge based on distance beyond 3km
+  // Surcharge based on distance beyond 3km - uses selected address
   let distanceKm = 0;
   let userAlt = 0;
-  const cookie = Cookies.get("delivery_address");
-  if (cookie) {
-    try {
-      const userAddr = JSON.parse(cookie);
-      const userLat = parseFloat(userAddr.latitude);
-      const userLng = parseFloat(userAddr.longitude);
-      userAlt = parseFloat(userAddr.altitude || "0");
-      distanceKm = getDistanceFromLatLonInKm(
-        userLat,
-        userLng,
-        shopLat,
-        shopLng
-      );
-    } catch (err) {
-      console.error("Error parsing delivery_address cookie:", err);
+  if (
+    selectedAddress &&
+    selectedAddress.latitude &&
+    selectedAddress.longitude
+  ) {
+    const userLat = parseFloat(selectedAddress.latitude.toString());
+    const userLng = parseFloat(selectedAddress.longitude.toString());
+    // Altitude is typically not stored in addresses, use 0 as default
+    userAlt = 0;
+    distanceKm = getDistanceFromLatLonInKm(userLat, userLng, shopLat, shopLng);
+  } else {
+    // Fallback to cookie if no address selected yet
+    const cookie = Cookies.get("delivery_address");
+    if (cookie) {
+      try {
+        const userAddr = JSON.parse(cookie);
+        if (userAddr.latitude && userAddr.longitude) {
+          const userLat = parseFloat(userAddr.latitude.toString());
+          const userLng = parseFloat(userAddr.longitude.toString());
+          userAlt = parseFloat((userAddr.altitude || "0").toString());
+          distanceKm = getDistanceFromLatLonInKm(
+            userLat,
+            userLng,
+            shopLat,
+            shopLng
+          );
+        }
+      } catch (err) {
+        console.error("Error parsing delivery_address cookie:", err);
+      }
     }
   }
   const extraDistance = Math.max(0, distanceKm - 3);
@@ -319,12 +518,27 @@ export default function CheckoutItems({
   // Final delivery fee includes unit surcharge
   const deliveryFee = finalDistanceFee + unitsSurcharge;
 
+  // Update referral discounts when delivery fee changes (if referral code is applied)
+  useEffect(() => {
+    if (codeType === "referral" && appliedCode) {
+      // Recalculate referral discount based on current delivery fee
+      const serviceFeeDiscountAmount = serviceFee * 0.085;
+      const deliveryFeeDiscountAmount = deliveryFee * 0.085;
+      const totalReferralDiscount =
+        serviceFeeDiscountAmount + deliveryFeeDiscountAmount;
+
+      setServiceFeeDiscount(serviceFeeDiscountAmount);
+      setDeliveryFeeDiscount(deliveryFeeDiscountAmount);
+      setReferralDiscount(totalReferralDiscount);
+    }
+  }, [deliveryFee, serviceFee, codeType, appliedCode]);
+
   // Compute total delivery time: travel time in 3D plus shopping time/preparation time
   const shoppingTime = systemConfig ? parseInt(systemConfig.shoppingTime) : 0;
   const altKm = (shopAlt - userAlt) / 1000;
   const distance3D = Math.sqrt(distanceKm * distanceKm + altKm * altKm);
-  // Cap travel time to reasonable maximum (2 hours = 120 minutes)
-  const travelTime = Math.min(Math.ceil(distance3D), 120); // assume 1 km ≈ 1 minute travel, max 2 hours
+  // Cap travel time to reasonable maximum (4 hours = 240 minutes)
+  const travelTime = Math.min(Math.ceil(distance3D), 240); // assume 1 km ≈ 1 minute travel, max 4 hours
 
   // Helper function to parse preparation time string from database
   const parsePreparationTimeString = (timeString?: string): number => {
@@ -449,9 +663,13 @@ export default function CheckoutItems({
     }
   };
 
+  // Format distance for display
+  const formattedDistance =
+    distanceKm > 0 ? `${distanceKm.toFixed(1)} km` : "0 km";
+
   // Create detailed delivery time message
   if (isFoodCart) {
-    // For food orders, show preparation + delivery time breakdown
+    // For food orders, show preparation + delivery time breakdown with distance
     const prepText =
       preparationTime === 0 ? "ready now" : formatTimeMinutes(preparationTime);
     const deliveryText = formatTimeMinutes(travelTime);
@@ -459,34 +677,33 @@ export default function CheckoutItems({
     if (days > 0) {
       deliveryTime = `${days} day${days > 1 ? "s" : ""}${
         hours > 0 ? ` ${hours}h` : ""
-      } (prep: ${prepText} + delivery: ${deliveryText})`;
+      } (${formattedDistance}, prep: ${prepText} + delivery: ${deliveryText})`;
     } else if (hours > 0) {
       deliveryTime = `${hours}h${
         mins > 0 ? ` ${mins}m` : ""
-      } (prep: ${prepText} + delivery: ${deliveryText})`;
+      } (${formattedDistance}, prep: ${prepText} + delivery: ${deliveryText})`;
     } else {
-      deliveryTime = `${mins} minutes (prep: ${prepText} + delivery: ${deliveryText})`;
+      deliveryTime = `${mins} minutes (${formattedDistance}, prep: ${prepText} + delivery: ${deliveryText})`;
     }
   } else {
-    // For regular shop orders, show shopping + delivery time
+    // For regular shop orders, show shopping + delivery time with distance
     if (days > 0) {
       deliveryTime = `Will be delivered in ${days} day${days > 1 ? "s" : ""}${
         hours > 0 ? ` ${hours}h` : ""
-      }`;
+      } (${formattedDistance})`;
     } else if (hours > 0) {
       deliveryTime = `Will be delivered in ${hours}h${
         mins > 0 ? ` ${mins}m` : ""
-      }`;
+      } (${formattedDistance})`;
     } else {
-      deliveryTime = `Will be delivered in ${mins} minutes`;
+      deliveryTime = `Will be delivered in ${mins} minutes (${formattedDistance})`;
     }
   }
 
-  // Check if discounts are enabled in system configuration
-  const discountsEnabled = systemConfig ? systemConfig.discounts : false;
+  // discountsEnabled is now a separate state that's always fetched fresh from server
 
-  const handleApplyPromo = () => {
-    // If discounts are disabled, don't apply promo codes
+  const handleApplyCode = async () => {
+    // If discounts are disabled, don't apply codes
     if (!discountsEnabled) {
       toaster.push(
         <Notification type="warning" header="Discounts Disabled">
@@ -497,30 +714,117 @@ export default function CheckoutItems({
       return;
     }
 
+    const code = discountCode.trim().toUpperCase();
+    if (!code) {
+      toaster.push(
+        <Notification type="error" header="Code Required">
+          Please enter a promo or referral code.
+        </Notification>,
+        { placement: "topEnd" }
+      );
+      return;
+    }
+
+    setValidatingCode(true);
+
+    // First, check if it's a promo code
     const PROMO_CODES: { [code: string]: number } = {
       SAVE10: 0.1,
       SAVE20: 0.2,
     };
 
-    const code = promoCode.trim().toUpperCase();
-
     if (PROMO_CODES[code]) {
+      // It's a promo code
       setDiscount(Total * PROMO_CODES[code]);
-      setAppliedPromo(code);
-    } else {
-      setDiscount(0);
-      setAppliedPromo(null);
+      setAppliedCode(code);
+      setCodeType("promo");
+      // Clear referral discounts
+      setServiceFeeDiscount(0);
+      setDeliveryFeeDiscount(0);
+      setReferralDiscount(0);
+
       toaster.push(
-        <Notification type="error" header="Invalid Promo Code">
-          Invalid promo code.
+        <Notification type="success" header="Promo Code Applied">
+          Discount applied successfully!
         </Notification>,
         { placement: "topEnd" }
       );
+      setValidatingCode(false);
+      return;
+    }
+
+    // If not a promo code, check if it's a referral code
+    try {
+      const response = await fetch("/api/referrals/validate-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ referralCode: code }),
+      });
+
+      const result = await response.json();
+
+      if (result.valid) {
+        // Calculate 17% discount from service fee and delivery fee
+        // Split: 8.5% from service fee, 8.5% from delivery fee
+        // Note: These will be recalculated when delivery fee changes
+        const serviceFeeDiscountAmount = serviceFee * 0.085;
+        const deliveryFeeDiscountAmount = deliveryFee * 0.085;
+        const totalReferralDiscount =
+          serviceFeeDiscountAmount + deliveryFeeDiscountAmount;
+
+        setServiceFeeDiscount(serviceFeeDiscountAmount);
+        setDeliveryFeeDiscount(deliveryFeeDiscountAmount);
+        setReferralDiscount(totalReferralDiscount);
+        setAppliedCode(code);
+        setCodeType("referral");
+        // Clear promo discount
+        setDiscount(0);
+
+        toaster.push(
+          <Notification type="success" header="Referral Code Applied">
+            You've received a 17% discount on service and delivery fees!
+          </Notification>,
+          { placement: "topEnd" }
+        );
+      } else {
+        // Reset all discounts
+        setServiceFeeDiscount(0);
+        setDeliveryFeeDiscount(0);
+        setReferralDiscount(0);
+        setDiscount(0);
+        setAppliedCode(null);
+        setCodeType(null);
+        toaster.push(
+          <Notification type="error" header="Invalid Code">
+            {result.message || "Invalid code. Please check and try again."}
+          </Notification>,
+          { placement: "topEnd" }
+        );
+      }
+    } catch (error) {
+      console.error("Error validating code:", error);
+      // Reset all discounts
+      setServiceFeeDiscount(0);
+      setDeliveryFeeDiscount(0);
+      setReferralDiscount(0);
+      setDiscount(0);
+      setAppliedCode(null);
+      setCodeType(null);
+      toaster.push(
+        <Notification type="error" header="Error">
+          Failed to validate code. Please try again.
+        </Notification>,
+        { placement: "topEnd" }
+      );
+    } finally {
+      setValidatingCode(false);
     }
   };
 
-  // Compute numeric final total including service fee
-  const finalTotal = Total - discount + serviceFee + deliveryFee;
+  // Compute numeric final total including service fee and delivery fee, minus discounts
+  const finalServiceFee = serviceFee - serviceFeeDiscount;
+  const finalDeliveryFee = deliveryFee - deliveryFeeDiscount;
+  const finalTotal = Total - discount + finalServiceFee + finalDeliveryFee;
 
   const handleProceedToCheckout = async () => {
     // Validate cart has items
@@ -593,9 +897,16 @@ export default function CheckoutItems({
           restaurant_id: restaurant.id,
           delivery_address_id: deliveryAddressId,
           service_fee: "0", // No service fee for food orders
-          delivery_fee: deliveryFee.toString(),
+          delivery_fee: finalDeliveryFee.toString(),
           discount: discount > 0 ? discount.toString() : null,
-          voucher_code: appliedPromo,
+          voucher_code: codeType === "promo" ? appliedCode : null,
+          referral_code: codeType === "referral" ? appliedCode : null,
+          referral_discount:
+            referralDiscount > 0 ? referralDiscount.toString() : null,
+          service_fee_discount:
+            serviceFeeDiscount > 0 ? serviceFeeDiscount.toString() : null,
+          delivery_fee_discount:
+            deliveryFeeDiscount > 0 ? deliveryFeeDiscount.toString() : null,
           delivery_time: deliveryTimestamp,
           delivery_notes: deliveryNotes || null,
           items: restaurant.items.map((item) => ({
@@ -611,10 +922,17 @@ export default function CheckoutItems({
         payload = {
           shop_id: shopId,
           delivery_address_id: deliveryAddressId,
-          service_fee: serviceFee.toString(),
-          delivery_fee: deliveryFee.toString(),
+          service_fee: finalServiceFee.toString(),
+          delivery_fee: finalDeliveryFee.toString(),
           discount: discount > 0 ? discount.toString() : null,
-          voucher_code: appliedPromo,
+          voucher_code: codeType === "promo" ? appliedCode : null,
+          referral_code: codeType === "referral" ? appliedCode : null,
+          referral_discount:
+            referralDiscount > 0 ? referralDiscount.toString() : null,
+          service_fee_discount:
+            serviceFeeDiscount > 0 ? serviceFeeDiscount.toString() : null,
+          delivery_fee_discount:
+            deliveryFeeDiscount > 0 ? deliveryFeeDiscount.toString() : null,
           delivery_time: deliveryTimestamp,
           delivery_notes: deliveryNotes || null,
         };
@@ -720,6 +1038,215 @@ export default function CheckoutItems({
     setIsExpanded(!isExpanded);
   };
 
+  // Handle payment method selection
+  const handlePaymentMethodChange = (value: string | null) => {
+    setSelectedPaymentValue(value);
+    setShowOneTimePhoneInput(false);
+
+    if (!value) {
+      setSelectedPaymentMethod(null);
+      return;
+    }
+
+    if (value === "refund") {
+      setSelectedPaymentMethod({ type: "refund" });
+    } else if (value === "wallet") {
+      setSelectedPaymentMethod({ type: "wallet" });
+    } else if (value === "one-time-phone") {
+      setShowOneTimePhoneInput(true);
+      setSelectedPaymentMethod({ type: "momo", number: oneTimePhoneNumber });
+    } else {
+      const method = savedPaymentMethods.find((m) => m.id === value);
+      if (method) {
+        setSelectedPaymentMethod({
+          type: method.method.toLowerCase() === "mtn momo" ? "momo" : "card",
+          id: method.id,
+          number: method.number,
+        });
+      }
+    }
+  };
+
+  // Handle one-time phone number change
+  const handleOneTimePhoneChange = (
+    value: string,
+    event?: React.SyntheticEvent
+  ) => {
+    setOneTimePhoneNumber(value);
+    if (value) {
+      setSelectedPaymentMethod({ type: "momo", number: value });
+    }
+  };
+
+  // Handle address selection
+  const handleAddressChange = (value: string | null) => {
+    setSelectedAddressId(value);
+    if (value) {
+      const address = savedAddresses.find((a) => a.id === value);
+      if (address) {
+        Cookies.set("delivery_address", JSON.stringify(address));
+        setTick((t) => t + 1);
+      }
+    }
+  };
+
+  // Helper function to get payment method icon
+  const getPaymentMethodIcon = (value: string, methodType?: string) => {
+    if (value === "refund") {
+      return (
+        <svg
+          className="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+          />
+        </svg>
+      );
+    }
+    if (value === "wallet") {
+      return (
+        <svg
+          className="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+          />
+        </svg>
+      );
+    }
+    if (value === "one-time-phone") {
+      return (
+        <svg
+          className="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+          />
+        </svg>
+      );
+    }
+    if (
+      methodType?.toLowerCase() === "mtn momo" ||
+      methodType?.toLowerCase().includes("momo")
+    ) {
+      return (
+        <svg
+          className="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+          />
+        </svg>
+      );
+    }
+    // Default credit card icon
+    return (
+      <svg
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+        />
+      </svg>
+    );
+  };
+
+  // Prepare payment method options for dropdown
+  const getPaymentMethodOptions = () => {
+    const options: Array<{
+      label: string;
+      value: string;
+      methodType?: string;
+    }> = [];
+    const canUseRefund = refundBalance >= finalTotal;
+    const canUseWallet = walletBalance >= finalTotal;
+
+    // Add refund option if balance is sufficient
+    if (canUseRefund) {
+      options.push({
+        label: `Use Refund Balance (${formatCurrency(
+          refundBalance
+        )} available)`,
+        value: "refund",
+      });
+    }
+
+    // Add wallet option (always show if wallet exists)
+    if (hasWallet) {
+      options.push({
+        label: canUseWallet
+          ? `Use Wallet (${formatCurrency(walletBalance)} available)`
+          : `Use Wallet (${formatCurrency(
+              walletBalance
+            )} available - Insufficient)`,
+        value: "wallet",
+      });
+    }
+
+    // Add saved payment methods
+    savedPaymentMethods.forEach((method) => {
+      const displayNumber =
+        method.method.toLowerCase() === "mtn momo"
+          ? `•••• ${method.number.slice(-3)}`
+          : `•••• ${method.number.slice(-4)}`;
+      options.push({
+        label: `${method.method} ${displayNumber}${
+          method.is_default ? " (Default)" : ""
+        }`,
+        value: method.id,
+        methodType: method.method,
+      });
+    });
+
+    // Add one-time phone number option
+    options.push({
+      label: "Use One-Time Phone Number",
+      value: "one-time-phone",
+    });
+
+    return options;
+  };
+
+  // Prepare address options for dropdown
+  const getAddressOptions = () => {
+    return savedAddresses.map((address) => ({
+      label: `${address.street}, ${address.city}${
+        address.is_default ? " (Default)" : ""
+      }`,
+      value: address.id,
+    }));
+  };
+
   // Update the payment method display section
   const renderPaymentMethod = () => {
     if (loadingPayment) {
@@ -757,6 +1284,8 @@ export default function CheckoutItems({
         <div className="mr-2 flex items-center justify-center rounded bg-blue-600 p-2 text-xs text-white">
           {selectedPaymentMethod.type === "refund"
             ? "REFUND"
+            : selectedPaymentMethod.type === "wallet"
+            ? "WALLET"
             : selectedPaymentMethod.type === "momo"
             ? "MOMO"
             : "VISA"}
@@ -764,6 +1293,8 @@ export default function CheckoutItems({
         <span className={theme === "dark" ? "text-gray-300" : "text-gray-700"}>
           {selectedPaymentMethod.type === "refund"
             ? "Using Refund Balance"
+            : selectedPaymentMethod.type === "wallet"
+            ? `Using Wallet (${formatCurrency(walletBalance)} available)`
             : selectedPaymentMethod.type === "momo"
             ? `•••• ${selectedPaymentMethod.number?.slice(-3)}`
             : `•••• ${selectedPaymentMethod.number?.slice(-4)}`}
@@ -851,13 +1382,9 @@ export default function CheckoutItems({
       )}
 
       <div
-        className={`fixed bottom-16 left-0 right-0 z-50 w-full transition-all duration-300 md:hidden ${
-          theme === "dark" ? "bg-gray-800" : "bg-white"
-        } ${
-          isExpanded
-            ? "border-2 border-white/10 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] ring-4 ring-white/20"
-            : "shadow-2xl"
-        }`}
+        className={`fixed bottom-16 left-0 right-0 z-50 w-full rounded-2xl transition-all duration-300 md:hidden ${
+          theme === "dark" ? "bg-gray-900" : "bg-white"
+        } ${isExpanded ? "shadow-2xl" : "shadow-xl"}`}
         style={{
           maxHeight: isExpanded ? "calc(90vh - 64px)" : "160px",
           overflow: "hidden",
@@ -865,9 +1392,7 @@ export default function CheckoutItems({
       >
         {/* Header with toggle button */}
         <div
-          className={`flex items-center justify-between border-b p-4 ${
-            theme === "dark" ? "border-gray-700" : "border-gray-200"
-          }`}
+          className="flex items-center justify-between p-4 shadow-sm"
           onClick={toggleExpand} // Make the entire header clickable to toggle
         >
           <div className="flex items-center">
@@ -932,6 +1457,7 @@ export default function CheckoutItems({
               size="lg"
               loading={isCheckoutLoading}
               onClick={handleProceedToCheckout}
+              className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
             >
               Proceed to Checkout
             </Button>
@@ -946,24 +1472,26 @@ export default function CheckoutItems({
           {discountsEnabled && (
             <div>
               <p
-                className={`mb-2 ${
+                className={`mb-0.5 ${
                   theme === "dark" ? "text-gray-300" : "text-gray-600"
                 }`}
               >
-                Do you have any promo code?
+                Promo or Referral Code
               </p>
-              <div className="flex flex-wrap gap-2">
-                <Input
-                  value={promoCode}
-                  onChange={setPromoCode}
-                  placeholder="Enter promo code"
-                  className="max-w-md"
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={discountCode}
+                  onChange={(e) => setDiscountCode(e.target.value)}
+                  placeholder="Enter promo or referral code"
+                  className="flex-1 border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20"
                 />
                 <Button
                   appearance="primary"
                   color="green"
-                  className="bg-green-100 font-medium text-green-600 dark:bg-green-900/20 dark:text-green-300"
-                  onClick={handleApplyPromo}
+                  className="whitespace-nowrap bg-green-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-green-600 hover:shadow-md"
+                  onClick={handleApplyCode}
+                  loading={validatingCode}
                 >
                   Apply
                 </Button>
@@ -971,14 +1499,10 @@ export default function CheckoutItems({
             </div>
           )}
 
-          <hr
-            className={`mt-4 ${
-              theme === "dark" ? "border-gray-700" : "border-gray-200"
-            }`}
-          />
+          <div className="my-1.5 h-px bg-gray-200 dark:bg-gray-700"></div>
 
-          <div className="mt-6 flex flex-col gap-2">
-            <div className="flex justify-between">
+          <div className="flex flex-col gap-1.5">
+            <div className="flex justify-between py-1">
               <span
                 className={`text-sm ${
                   theme === "dark" ? "text-gray-300" : "text-gray-600"
@@ -987,20 +1511,30 @@ export default function CheckoutItems({
                 Subtotal
               </span>
               <span
-                className={`text-sm ${
+                className={`text-sm font-medium ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
                 {formatCurrency(Total)}
               </span>
             </div>
-            {discount > 0 && (
-              <div className="flex justify-between text-green-600 dark:text-green-400">
-                <span className="text-sm">Discount ({appliedPromo})</span>
-                <span className="text-sm">-{formatCurrency(discount)}</span>
+            {discount > 0 && codeType === "promo" && (
+              <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
+                <span className="text-sm">Discount ({appliedCode})</span>
+                <span className="text-sm font-medium">
+                  -{formatCurrency(discount)}
+                </span>
               </div>
             )}
-            <div className="flex justify-between">
+            {referralDiscount > 0 && codeType === "referral" && (
+              <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
+                <span className="text-sm">
+                  Referral Discount ({appliedCode})
+                </span>
+                <span className="text-sm font-medium">17% off</span>
+              </div>
+            )}
+            <div className="flex justify-between py-1">
               <span
                 className={`text-sm ${
                   theme === "dark" ? "text-gray-300" : "text-gray-600"
@@ -1009,14 +1543,14 @@ export default function CheckoutItems({
                 Units
               </span>
               <span
-                className={`text-sm ${
+                className={`text-sm font-medium ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
                 {totalUnits}
               </span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between py-1">
               <span
                 className={`text-sm ${
                   theme === "dark" ? "text-gray-300" : "text-gray-600"
@@ -1025,14 +1559,14 @@ export default function CheckoutItems({
                 Service Fee
               </span>
               <span
-                className={`text-sm ${
+                className={`text-sm font-medium ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
-                {formatCurrency(serviceFee)}
+                {formatCurrency(finalServiceFee)}
               </span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between py-1">
               <span
                 className={`text-sm ${
                   theme === "dark" ? "text-gray-300" : "text-gray-600"
@@ -1041,90 +1575,15 @@ export default function CheckoutItems({
                 Delivery Fee
               </span>
               <span
-                className={`text-sm ${
+                className={`text-sm font-medium ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
-                {formatCurrency(deliveryFee)}
+                {formatCurrency(finalDeliveryFee)}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span
-                className={`text-sm ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                Delivery Time
-              </span>
-              <span
-                className={`text-sm font-medium text-green-600 dark:text-green-400`}
-              >
-                {deliveryTime}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span
-                className={`text-sm ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                Delivery Address
-              </span>
-              <div className="flex items-center gap-2">
-                <div className="text-right">
-                  {(() => {
-                    const cookieValue = Cookies.get("delivery_address");
-                    if (!cookieValue) {
-                      return (
-                        <span className="text-sm text-red-500">No address</span>
-                      );
-                    }
-                    try {
-                      const addressObj = JSON.parse(cookieValue);
-                      if (addressObj.street && addressObj.city) {
-                        return (
-                          <div className="text-right">
-                            <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {addressObj.street.length > 20
-                                ? `${addressObj.street.substring(0, 20)}...`
-                                : addressObj.street}
-                            </div>
-                            <div className="text-xs text-gray-600 dark:text-gray-400">
-                              {addressObj.city}
-                            </div>
-                          </div>
-                        );
-                      } else if (addressObj.latitude && addressObj.longitude) {
-                        return (
-                          <span className="text-sm text-gray-900 dark:text-white">
-                            Current Location
-                          </span>
-                        );
-                      } else {
-                        return (
-                          <span className="text-sm text-red-500">Invalid</span>
-                        );
-                      }
-                    } catch (err) {
-                      return (
-                        <span className="text-sm text-red-500">Error</span>
-                      );
-                    }
-                  })()}
-                </div>
-                <Button
-                  size="xs"
-                  appearance="ghost"
-                  className="px-2 py-1 text-green-600 hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
-                  onClick={() => {
-                    setShowAddressModal(true);
-                  }}
-                >
-                  Change
-                </Button>
-              </div>
-            </div>
-            <div className="mt-2 flex justify-between">
+            <div className="my-3 h-px bg-gray-200 dark:bg-gray-700"></div>
+            <div className="flex justify-between py-1">
               <span
                 className={`text-lg font-bold ${
                   theme === "dark" ? "text-white" : "text-gray-900"
@@ -1136,26 +1595,224 @@ export default function CheckoutItems({
                 {formatCurrency(finalTotal)}
               </span>
             </div>
+            <div className="flex justify-between py-1">
+              <span
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                }`}
+              >
+                Delivery Time
+              </span>
+              <span
+                className={`text-sm font-medium text-green-600 dark:text-green-400`}
+              >
+                {deliveryTime}
+              </span>
+            </div>
+            <div className="mt-2">
+              <h4
+                className={`mb-1 text-sm font-semibold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Delivery Address
+              </h4>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddressDropdown(!showAddressDropdown);
+                    setShowPaymentDropdown(false);
+                  }}
+                  className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
+                    selectedAddressId
+                      ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
+                      : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                  }`}
+                >
+                  {selectedAddressId
+                    ? getAddressOptions().find(
+                        (opt) => opt.value === selectedAddressId
+                      )?.label || "Select delivery address"
+                    : "Select delivery address"}
+                  <svg
+                    className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
+                      showAddressDropdown ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+                {showAddressDropdown && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowAddressDropdown(false)}
+                    />
+                    <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                      {getAddressOptions().map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => {
+                            handleAddressChange(option.value);
+                            setShowAddressDropdown(false);
+                          }}
+                          className={`w-full px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                            selectedAddressId === option.value
+                              ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                              : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+              <button
+                type="button"
+                className="mt-1 w-full rounded-lg border-2 border-green-500 bg-transparent px-2 py-1 text-xs font-medium text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20"
+                onClick={() => {
+                  setShowAddressModal(true);
+                }}
+              >
+                + Add New Address
+              </button>
+            </div>
+            <div className="mt-2">
+              <h4
+                className={`mb-1 text-sm font-semibold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Payment Method
+              </h4>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPaymentDropdown(!showPaymentDropdown);
+                    setShowAddressDropdown(false);
+                  }}
+                  className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
+                    selectedPaymentValue
+                      ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
+                      : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                  }`}
+                >
+                  {selectedPaymentValue
+                    ? getPaymentMethodOptions().find(
+                        (opt) => opt.value === selectedPaymentValue
+                      )?.label || "Select payment method"
+                    : "Select payment method"}
+                  <svg
+                    className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
+                      showPaymentDropdown ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+                {showPaymentDropdown && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowPaymentDropdown(false)}
+                    />
+                    <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                      {getPaymentMethodOptions().map((option) => {
+                        const isWalletInsufficient =
+                          option.value === "wallet" &&
+                          walletBalance < finalTotal;
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => {
+                              if (!isWalletInsufficient) {
+                                handlePaymentMethodChange(option.value);
+                                setShowPaymentDropdown(false);
+                              }
+                            }}
+                            disabled={isWalletInsufficient}
+                            className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                              isWalletInsufficient
+                                ? "cursor-not-allowed bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
+                                : selectedPaymentValue === option.value
+                                ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                                : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+                            }`}
+                          >
+                            <span
+                              className={`flex-shrink-0 ${
+                                isWalletInsufficient
+                                  ? "text-red-500 dark:text-red-400"
+                                  : selectedPaymentValue === option.value
+                                  ? "text-green-600 dark:text-green-400"
+                                  : "text-gray-500 dark:text-gray-400"
+                              }`}
+                            >
+                              {getPaymentMethodIcon(
+                                option.value,
+                                option.methodType
+                              )}
+                            </span>
+                            <span className="flex-1">{option.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+              {showOneTimePhoneInput && (
+                <input
+                  type="tel"
+                  placeholder="Enter phone number"
+                  value={oneTimePhoneNumber}
+                  onChange={(e) => handleOneTimePhoneChange(e.target.value)}
+                  className="mt-2 w-full rounded-lg border-2 border-gray-300 px-4 py-2.5 text-sm transition-all focus:border-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-green-400"
+                />
+              )}
+            </div>
             {/* Delivery Notes Input */}
             <div className="mt-2">
               <h4
-                className={`mb-1 font-medium ${
+                className={`mb-0.5 text-sm font-semibold ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
                 Add a Note
               </h4>
-              <Input
-                as="textarea"
-                rows={2}
+              <textarea
+                rows={3}
                 value={deliveryNotes}
-                onChange={setDeliveryNotes}
+                onChange={(e) => setDeliveryNotes(e.target.value)}
                 placeholder="Enter any delivery instructions or notes"
                 onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on input
+                className="w-full border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-400 dark:focus:ring-green-400/20"
               />
             </div>
             {/* Proceed to Checkout Button */}
-            <div className="mt-2">
+            <div className="mt-4">
               <Button
                 appearance="primary"
                 color="green"
@@ -1163,6 +1820,7 @@ export default function CheckoutItems({
                 size="lg"
                 loading={isCheckoutLoading}
                 onClick={handleProceedToCheckout}
+                className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
               >
                 Proceed to Checkout
               </Button>
@@ -1186,7 +1844,7 @@ export default function CheckoutItems({
             }}
           >
             <div
-              className={`-mx-4 -mt-4 mb-6 p-4 ${
+              className={`-mx-4 -mt-4 mb-2 p-3 ${
                 theme === "dark" ? "bg-gray-700" : "bg-gray-50"
               }`}
             >
@@ -1199,63 +1857,80 @@ export default function CheckoutItems({
               </h2>
             </div>
 
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-300">
+            <div className="space-y-2">
+              <div className="flex justify-between py-1">
+                <span className="text-sm text-gray-600 dark:text-gray-300">
                   Subtotal
                 </span>
-                <span className="font-medium text-gray-900 dark:text-white">
+                <span className="text-sm font-medium text-gray-900 dark:text-white">
                   {formatCurrency(Total)}
                 </span>
               </div>
 
-              {discount > 0 && (
-                <div className="flex justify-between text-green-600 dark:text-green-400">
-                  <span>Discount ({appliedPromo})</span>
-                  <span>-{formatCurrency(discount)}</span>
+              {discount > 0 && codeType === "promo" && (
+                <div className="flex justify-between py-1">
+                  <span className="text-sm text-green-600 dark:text-green-400">
+                    Discount ({appliedCode})
+                  </span>
+                  <span className="text-sm font-bold text-green-600 dark:text-green-400">
+                    -{formatCurrency(discount)}
+                  </span>
+                </div>
+              )}
+              {referralDiscount > 0 && codeType === "referral" && (
+                <div className="flex justify-between py-1">
+                  <span className="text-sm text-green-600 dark:text-green-400">
+                    Referral Discount ({appliedCode})
+                  </span>
+                  <span className="text-sm font-bold text-green-600 dark:text-green-400">
+                    17% off
+                  </span>
                 </div>
               )}
 
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-300">Units</span>
-                <span className="font-medium text-gray-900 dark:text-white">
+              <div className="flex justify-between py-1">
+                <span className="text-sm text-gray-600 dark:text-gray-300">
+                  Units
+                </span>
+                <span className="text-sm font-medium text-gray-900 dark:text-white">
                   {totalUnits}
                 </span>
               </div>
 
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-300">
+              <div className="flex justify-between py-1">
+                <span className="text-sm text-gray-600 dark:text-gray-300">
                   Service Fee
                 </span>
-                <span className="font-medium text-gray-900 dark:text-white">
-                  {formatCurrency(serviceFee)}
+                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  {formatCurrency(finalServiceFee)}
                 </span>
               </div>
 
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-300">
+              <div className="flex justify-between py-1">
+                <span className="text-sm text-gray-600 dark:text-gray-300">
                   Delivery Fee
                 </span>
-                <span className="font-medium text-gray-900 dark:text-white">
-                  {formatCurrency(deliveryFee)}
+                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  {formatCurrency(finalDeliveryFee)}
                 </span>
               </div>
 
-              <div className="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
-                <div className="flex justify-between text-lg font-bold">
-                  <span className="text-gray-900 dark:text-white">Total</span>
-                  <span className="text-green-600 dark:text-green-400">
-                    {formatCurrency(finalTotal)}
-                  </span>
-                </div>
+              <div className="my-3 h-px bg-gray-200 dark:bg-gray-700"></div>
+              <div className="flex justify-between py-1">
+                <span className="text-lg font-bold text-gray-900 dark:text-white">
+                  Total
+                </span>
+                <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                  {formatCurrency(finalTotal)}
+                </span>
               </div>
             </div>
 
-            <div className="mt-6">
-              <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
+            <div className="mt-2">
+              <h4 className="mb-0.5 text-sm font-semibold text-gray-900 dark:text-white">
                 Delivery Time
               </h4>
-              <div className="flex items-center rounded-lg bg-gray-50 p-3 dark:bg-gray-700">
+              <div className="flex items-center rounded-xl bg-gray-50 p-2 shadow-sm dark:bg-gray-700/50">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -1266,125 +1941,209 @@ export default function CheckoutItems({
                   <circle cx="12" cy="12" r="10" />
                   <polyline points="12 6 12 12 16 14" />
                 </svg>
-                <span className="font-medium text-green-600 dark:text-green-400">
+                <span className="text-sm font-medium text-green-600 dark:text-green-400">
                   {deliveryTime}
                 </span>
               </div>
             </div>
 
             <div className="mt-6">
-              <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
+              <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
                 Delivery Address
               </h4>
-              <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-700">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-2">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="mt-0.5 h-4 w-4 text-green-500"
-                    >
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                      <circle cx="12" cy="10" r="3" />
-                    </svg>
-                    <div className="min-w-0 flex-1">
-                      {(() => {
-                        const cookieValue = Cookies.get("delivery_address");
-                        if (!cookieValue) {
-                          return (
-                            <p className="text-sm text-red-500">
-                              No delivery address selected
-                            </p>
-                          );
-                        }
-                        try {
-                          const addressObj = JSON.parse(cookieValue);
-                          if (addressObj.street && addressObj.city) {
-                            return (
-                              <div>
-                                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                  {addressObj.street}
-                                </p>
-                                <p className="text-xs text-gray-600 dark:text-gray-400">
-                                  {addressObj.city}
-                                  {addressObj.postal_code &&
-                                    `, ${addressObj.postal_code}`}
-                                </p>
-                              </div>
-                            );
-                          } else if (
-                            addressObj.latitude &&
-                            addressObj.longitude
-                          ) {
-                            return (
-                              <p className="text-sm text-gray-900 dark:text-white">
-                                Current Location
-                              </p>
-                            );
-                          } else {
-                            return (
-                              <p className="text-sm text-red-500">
-                                Invalid address format
-                              </p>
-                            );
-                          }
-                        } catch (err) {
-                          return (
-                            <p className="text-sm text-red-500">
-                              Error reading address
-                            </p>
-                          );
-                        }
-                      })()}
-                    </div>
-                  </div>
-                  <Button
-                    size="sm"
-                    appearance="ghost"
-                    className="text-green-600 hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
-                    onClick={() => {
-                      setShowAddressModal(true);
-                    }}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddressDropdown(!showAddressDropdown);
+                    setShowPaymentDropdown(false);
+                  }}
+                  className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
+                    selectedAddressId
+                      ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
+                      : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                  }`}
+                >
+                  {selectedAddressId
+                    ? getAddressOptions().find(
+                        (opt) => opt.value === selectedAddressId
+                      )?.label || "Select delivery address"
+                    : "Select delivery address"}
+                  <svg
+                    className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
+                      showAddressDropdown ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    Change
-                  </Button>
-                </div>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+                {showAddressDropdown && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowAddressDropdown(false)}
+                    />
+                    <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                      {getAddressOptions().map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => {
+                            handleAddressChange(option.value);
+                            setShowAddressDropdown(false);
+                          }}
+                          className={`w-full px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                            selectedAddressId === option.value
+                              ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                              : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
+              <button
+                type="button"
+                className="mt-2 w-full rounded-lg border-2 border-green-500 bg-transparent px-4 py-2 text-sm font-medium text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20"
+                onClick={() => {
+                  setShowAddressModal(true);
+                }}
+              >
+                + Add New Address
+              </button>
             </div>
 
-            <div className="mt-6">
-              <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
+            <div className="mt-2">
+              <h4 className="mb-0.5 text-sm font-semibold text-gray-900 dark:text-white">
                 Payment Method
               </h4>
-              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-700">
-                {renderPaymentMethod()}
-                <PaymentMethodSelector
-                  totalAmount={finalTotal}
-                  onSelect={(method) => {
-                    setSelectedPaymentMethod(method);
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPaymentDropdown(!showPaymentDropdown);
+                    setShowAddressDropdown(false);
                   }}
-                />
+                  className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
+                    selectedPaymentValue
+                      ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
+                      : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                  }`}
+                >
+                  {selectedPaymentValue
+                    ? getPaymentMethodOptions().find(
+                        (opt) => opt.value === selectedPaymentValue
+                      )?.label || "Select payment method"
+                    : "Select payment method"}
+                  <svg
+                    className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
+                      showPaymentDropdown ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+                {showPaymentDropdown && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowPaymentDropdown(false)}
+                    />
+                    <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                      {getPaymentMethodOptions().map((option) => {
+                        const isWalletInsufficient =
+                          option.value === "wallet" &&
+                          walletBalance < finalTotal;
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => {
+                              if (!isWalletInsufficient) {
+                                handlePaymentMethodChange(option.value);
+                                setShowPaymentDropdown(false);
+                              }
+                            }}
+                            disabled={isWalletInsufficient}
+                            className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                              isWalletInsufficient
+                                ? "cursor-not-allowed bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
+                                : selectedPaymentValue === option.value
+                                ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                                : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+                            }`}
+                          >
+                            <span
+                              className={`flex-shrink-0 ${
+                                isWalletInsufficient
+                                  ? "text-red-500 dark:text-red-400"
+                                  : selectedPaymentValue === option.value
+                                  ? "text-green-600 dark:text-green-400"
+                                  : "text-gray-500 dark:text-gray-400"
+                              }`}
+                            >
+                              {getPaymentMethodIcon(
+                                option.value,
+                                option.methodType
+                              )}
+                            </span>
+                            <span className="flex-1">{option.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
               </div>
+              {showOneTimePhoneInput && (
+                <input
+                  type="tel"
+                  placeholder="Enter phone number"
+                  value={oneTimePhoneNumber}
+                  onChange={(e) => handleOneTimePhoneChange(e.target.value)}
+                  className="mt-2 w-full rounded-lg border-2 border-gray-300 px-4 py-2.5 text-sm transition-all focus:border-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-green-400"
+                />
+              )}
             </div>
 
             {discountsEnabled && (
               <div className="mt-4">
                 <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
-                  Promo Code
+                  Promo or Referral Code
                 </h4>
                 <div className="flex gap-2">
-                  <Input
-                    value={promoCode}
-                    onChange={setPromoCode}
-                    placeholder="Enter promo code"
+                  <input
+                    type="text"
+                    value={discountCode}
+                    onChange={(e) => setDiscountCode(e.target.value)}
+                    placeholder="Enter promo or referral code"
+                    className="flex-1 border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20"
                   />
                   <Button
                     appearance="primary"
                     color="green"
-                    className="bg-green-100 font-medium text-green-600 dark:bg-green-900/20 dark:text-green-300"
-                    onClick={handleApplyPromo}
+                    className="whitespace-nowrap bg-green-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-green-600 hover:shadow-md"
+                    onClick={handleApplyCode}
+                    loading={validatingCode}
                   >
                     Apply
                   </Button>
@@ -1392,16 +2151,16 @@ export default function CheckoutItems({
               </div>
             )}
 
-            <div className="mt-4">
-              <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
+            <div className="mt-2">
+              <h4 className="mb-0.5 text-sm font-semibold text-gray-900 dark:text-white">
                 Add a Note
               </h4>
-              <Input
-                as="textarea"
+              <textarea
                 rows={3}
                 value={deliveryNotes}
-                onChange={setDeliveryNotes}
+                onChange={(e) => setDeliveryNotes(e.target.value)}
                 placeholder="Enter any delivery instructions or notes"
+                className="w-full border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-400 dark:focus:ring-green-400/20"
               />
             </div>
 
@@ -1410,7 +2169,7 @@ export default function CheckoutItems({
               appearance="primary"
               block
               size="lg"
-              className="mt-6 bg-green-500 font-medium text-white hover:bg-green-600"
+              className="mt-6 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
               onClick={handleProceedToCheckout}
               loading={isCheckoutLoading}
             >
@@ -1440,9 +2199,24 @@ export default function CheckoutItems({
       {/* Address Management Modal */}
       <AddressManagementModal
         open={showAddressModal}
-        onClose={() => setShowAddressModal(false)}
+        onClose={() => {
+          setShowAddressModal(false);
+          // Refresh addresses after modal closes
+          fetch("/api/queries/addresses")
+            .then(async (res) => {
+              if (!res.ok) {
+                throw new Error(`Failed to load addresses (${res.status})`);
+              }
+              const data = await res.json();
+              setSavedAddresses(data.addresses || []);
+            })
+            .catch((err) => {
+              console.error("Error fetching addresses:", err);
+            });
+        }}
         onSelect={(address) => {
           Cookies.set("delivery_address", JSON.stringify(address));
+          setSelectedAddressId(address.id);
           setShowAddressModal(false);
           setTick((t) => t + 1); // Force re-render to update address display
         }}

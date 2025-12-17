@@ -1,15 +1,7 @@
 import React, { useState, useEffect } from "react";
-import {
-  Panel,
-  Tag,
-  Button,
-  Modal,
-  Form,
-  Checkbox,
-  SelectPicker,
-} from "rsuite";
 import toast from "react-hot-toast";
 import CryptoJS from "crypto-js";
+import { useLanguage } from "../../context/LanguageContext";
 
 // Encryption key - in production, this should be in environment variables
 const ENCRYPTION_KEY =
@@ -63,6 +55,7 @@ interface PaymentCard {
 }
 
 export default function UserPayment() {
+  const { t } = useLanguage();
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [paymentCards, setPaymentCards] = useState<PaymentCard[]>([]);
   const [showModal, setShowModal] = useState(false);
@@ -79,7 +72,6 @@ export default function UserPayment() {
     try {
       const res = await fetch("/api/queries/payment-methods");
       const { paymentMethods } = await res.json();
-      console.log("Fetched payment methods:", paymentMethods);
       setPaymentMethods(paymentMethods);
     } catch (err) {
       console.error("Error loading payment methods:", err);
@@ -150,7 +142,6 @@ export default function UserPayment() {
         body: JSON.stringify({ id, is_default: true }),
       });
       const data = await res.json().catch(() => null);
-      console.log("PUT /api/queries/payment-methods", res.status, data);
       if (!res.ok) {
         throw new Error(
           data?.error || `Request failed with status ${res.status}`
@@ -168,184 +159,561 @@ export default function UserPayment() {
     <>
       {/* Payment Methods Section */}
       <div className="mb-8">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-bold">Payment Methods</h3>
-          <Button
-            appearance="primary"
-            color="green"
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+              {t("nav.paymentMethods")}
+            </h3>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {t("nav.managePaymentMethods")}
+            </p>
+          </div>
+          <button
             onClick={handleAdd}
-            size="sm"
-            className="dark:!bg-green-600 dark:!text-white dark:hover:!bg-green-700"
+            className="inline-flex items-center rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-5 py-2.5 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 active:scale-95"
           >
-            Add Payment Method
-          </Button>
+            <svg
+              className="mr-2 h-5 w-5 !text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            {t("payment.addPaymentMethod")}
+          </button>
         </div>
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {paymentMethods.map((pm) => (
-            <Panel bordered className="relative" key={pm.id}>
+            <div
+              key={pm.id}
+              className={`group relative overflow-hidden rounded-xl border-2 p-5 shadow-md transition-all duration-300 hover:shadow-xl ${
+                pm.is_default
+                  ? "border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 dark:border-green-600 dark:from-green-900/20 dark:to-emerald-900/20"
+                  : "border-gray-200 bg-white hover:border-green-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-600"
+              }`}
+            >
+              {/* Default Badge */}
               {pm.is_default && (
-                <Tag className="absolute right-2 top-2 border-green-200 bg-green-100 text-green-600">
-                  Default
-                </Tag>
+                <div className="absolute right-3 top-3">
+                  <span className="inline-flex items-center rounded-full bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-1 text-xs font-semibold !text-white shadow-lg">
+                    <svg
+                      className="mr-1 h-3 w-3 !text-white"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span className="!text-white">{t("address.default")}</span>
+                  </span>
+                </div>
               )}
-              <div className="flex items-center">
-                <div
-                  className={`mr-3 flex h-8 w-12 items-center justify-center rounded ${getMethodBg(
-                    pm.method
-                  )}`}
-                >
-                  {pm.method}
-                </div>
-                <div>
-                  <h4 className="font-bold">
-                    {`${pm.method} ending in ${pm.number.slice(-4)}`}
-                  </h4>
-                  <p className="text-sm text-gray-600">Expires {pm.validity}</p>
-                </div>
-              </div>
-              <div className="mt-4 flex gap-2">
-                <Button appearance="ghost" size="sm">
-                  Edit
-                </Button>
-                <Button appearance="ghost" color="red" size="sm">
-                  Delete
-                </Button>
-                {!pm.is_default && (
-                  <Button
-                    appearance="ghost"
-                    color="green"
-                    size="sm"
-                    onClick={() => handleSetDefault(pm.id)}
-                  >
-                    Set as Default
-                  </Button>
+
+              {/* Payment Method Icon */}
+              <div
+                className={`mb-4 flex h-14 w-14 items-center justify-center rounded-xl text-sm font-bold !text-white shadow-lg transition-transform duration-300 group-hover:scale-110 ${getMethodBg(
+                  pm.method
+                )}`}
+              >
+                {pm.method === "Visa" ? (
+                  <span className="text-lg">VISA</span>
+                ) : pm.method === "Mastercard" || pm.method === "MC" ? (
+                  <span className="text-lg">MC</span>
+                ) : (
+                  <span className="text-xs">MTN</span>
                 )}
               </div>
-            </Panel>
+
+              {/* Card Details */}
+              <div className="mb-4">
+                <h4 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
+                  {pm.method}
+                </h4>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    {t("payment.endingIn")} {pm.number.slice(-4)}
+                  </p>
+                  {pm.validity && (
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      {t("payment.expires")} {pm.validity}
+                    </p>
+                  )}
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {pm.names}
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-2">
+                {!pm.is_default && (
+                  <button
+                    className="group flex flex-1 items-center justify-center rounded-xl border-2 border-green-500 bg-white px-4 py-2.5 text-xs font-semibold text-green-600 shadow-sm transition-all duration-200 hover:scale-105 hover:border-green-600 hover:bg-gradient-to-r hover:from-green-500 hover:to-emerald-600 hover:!text-white hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:border-green-400 dark:bg-gray-800 dark:text-green-400 dark:hover:border-green-500 dark:hover:from-green-600 dark:hover:to-emerald-600 dark:hover:!text-white"
+                    onClick={() => handleSetDefault(pm.id)}
+                  >
+                    <svg
+                      className="mr-2 h-4 w-4 transition-colors group-hover:!text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span className="transition-colors group-hover:!text-white">
+                      Set Default
+                    </span>
+                  </button>
+                )}
+                <button className="group flex flex-1 items-center justify-center rounded-xl border-2 border-gray-300 bg-white px-4 py-2.5 text-xs font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:scale-105 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md active:scale-95 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700">
+                  <svg
+                    className="mr-2 h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  </svg>
+                  Edit
+                </button>
+                <button className="group flex flex-1 items-center justify-center rounded-xl border-2 border-red-300 bg-white px-4 py-2.5 text-xs font-semibold text-red-600 shadow-sm transition-all duration-200 hover:scale-105 hover:border-red-500 hover:bg-gradient-to-r hover:from-red-500 hover:to-red-600 hover:!text-white hover:shadow-md active:scale-95 dark:border-red-600 dark:bg-gray-800 dark:text-red-400 dark:hover:border-red-500 dark:hover:from-red-600 dark:hover:to-red-700 dark:hover:!text-white">
+                  <svg
+                    className="mr-2 h-4 w-4 transition-colors group-hover:!text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                  <span className="transition-colors group-hover:!text-white">
+                    Delete
+                  </span>
+                </button>
+              </div>
+
+              {/* Decorative Elements */}
+              <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gradient-to-br from-green-200/30 to-emerald-200/30 blur-xl dark:from-green-800/20 dark:to-emerald-800/20" />
+              <div className="absolute -bottom-6 -left-6 h-20 w-20 rounded-full bg-gradient-to-br from-blue-200/30 to-cyan-200/30 blur-xl dark:from-blue-800/20 dark:to-cyan-800/20" />
+            </div>
           ))}
         </div>
+        {paymentMethods.length === 0 && (
+          <div className="rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-12 text-center dark:border-gray-700 dark:bg-gray-800/50">
+            <svg
+              className="mx-auto h-16 w-16 text-gray-400 dark:text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+              />
+            </svg>
+            <p className="mt-4 text-lg font-semibold text-gray-600 dark:text-gray-400">
+              {t("payment.noPaymentMethods")}
+            </p>
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-500">
+              {t("payment.addFirstMethod")}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Payment Cards Section */}
       <div className="mb-8">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-bold">Payment Cards</h3>
+        <div className="mb-6">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+            {t("nav.paymentCards")}
+          </h3>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            {t("nav.yourSavedCards")}
+          </p>
         </div>
-        <div className="space-y-4">
-          {paymentCards.map((card) => (
-            <Panel bordered className="relative" key={card.id}>
-              <div className="flex items-center">
-                <div
-                  className={`mr-3 flex h-8 w-12 items-center justify-center rounded ${
-                    card.number.startsWith("4")
-                      ? "bg-blue-600"
-                      : card.number.startsWith("5")
-                      ? "bg-orange-500"
-                      : "bg-gray-500"
-                  } text-white`}
-                >
-                  {card.number.startsWith("4")
-                    ? "VISA"
-                    : card.number.startsWith("5")
-                    ? "MC"
-                    : "CARD"}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {paymentCards.map((card) => {
+            const isVisa = card.number.startsWith("4");
+            const isMastercard = card.number.startsWith("5");
+            return (
+              <div
+                key={card.id}
+                className="group relative overflow-hidden rounded-xl border-2 border-gray-200 bg-white p-5 shadow-md transition-all duration-300 hover:border-green-300 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-600"
+              >
+                {/* Card Type Badge */}
+                <div className="absolute right-3 top-3">
+                  <div
+                    className={`flex h-8 w-12 items-center justify-center rounded-lg text-xs font-bold !text-white shadow-lg ${
+                      isVisa
+                        ? "bg-gradient-to-br from-blue-600 to-blue-700"
+                        : isMastercard
+                        ? "bg-gradient-to-br from-orange-500 to-red-600"
+                        : "bg-gradient-to-br from-gray-500 to-gray-600"
+                    }`}
+                  >
+                    {isVisa ? "VISA" : isMastercard ? "MC" : "CARD"}
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-bold">
-                    {`${card.name} - ${formatCardNumber(card.number)}`}
-                  </h4>
-                  <p className="text-sm text-gray-600">
-                    Expires {card.expiry_date}
-                  </p>
-                </div>
-                {card.image && (
-                  <img
-                    src={card.image}
-                    alt="Card"
-                    className="ml-auto h-10 w-10 rounded-full border border-gray-200 object-cover"
-                  />
+
+                {/* Card Image or Icon */}
+                {card.image ? (
+                  <div className="mb-4 flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl border-2 border-gray-200 shadow-md dark:border-gray-700">
+                    <img
+                      src={card.image}
+                      alt="Card"
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-gray-400 to-gray-500 shadow-lg">
+                    <svg
+                      className="h-8 w-8 !text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                      />
+                    </svg>
+                  </div>
                 )}
+
+                {/* Card Details */}
+                <div className="mb-4">
+                  <h4 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
+                    {card.name}
+                  </h4>
+                  <div className="space-y-1">
+                    <p className="font-mono text-sm text-gray-600 dark:text-gray-300">
+                      {formatCardNumber(card.number)}
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      {t("payment.expires")} {card.expiry_date}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-2">
+                  <button className="group flex flex-1 items-center justify-center rounded-xl border-2 border-gray-300 bg-white px-4 py-2.5 text-xs font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:scale-105 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md active:scale-95 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700">
+                    <svg
+                      className="mr-2 h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      />
+                    </svg>
+                    Edit
+                  </button>
+                  <button className="group flex flex-1 items-center justify-center rounded-xl border-2 border-red-300 bg-white px-4 py-2.5 text-xs font-semibold text-red-600 shadow-sm transition-all duration-200 hover:scale-105 hover:border-red-500 hover:bg-gradient-to-r hover:from-red-500 hover:to-red-600 hover:!text-white hover:shadow-md active:scale-95 dark:border-red-600 dark:bg-gray-800 dark:text-red-400 dark:hover:border-red-500 dark:hover:from-red-600 dark:hover:to-red-700 dark:hover:!text-white">
+                    <svg
+                      className="mr-2 h-4 w-4 transition-colors group-hover:!text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                    <span className="transition-colors group-hover:!text-white">
+                      {t("common.delete")}
+                    </span>
+                  </button>
+                </div>
+
+                {/* Decorative Elements */}
+                <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gradient-to-br from-green-200/30 to-emerald-200/30 blur-xl dark:from-green-800/20 dark:to-emerald-800/20" />
+                <div className="absolute -bottom-6 -left-6 h-20 w-20 rounded-full bg-gradient-to-br from-blue-200/30 to-cyan-200/30 blur-xl dark:from-blue-800/20 dark:to-cyan-800/20" />
               </div>
-              <div className="mt-4 flex gap-2">
-                <Button appearance="ghost" size="sm">
-                  Edit
-                </Button>
-                <Button appearance="ghost" color="red" size="sm">
-                  Delete
-                </Button>
-              </div>
-            </Panel>
-          ))}
+            );
+          })}
         </div>
+        {paymentCards.length === 0 && (
+          <div className="rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-12 text-center dark:border-gray-700 dark:bg-gray-800/50">
+            <svg
+              className="mx-auto h-16 w-16 text-gray-400 dark:text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+              />
+            </svg>
+            <p className="mt-4 text-lg font-semibold text-gray-600 dark:text-gray-400">
+              {t("payment.noPaymentCards")}
+            </p>
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-500">
+              {t("payment.addFirstCard")}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Add Payment Method Modal */}
-      <Modal size="sm" open={showModal} onClose={() => setShowModal(false)}>
-        <Modal.Header>
-          <Modal.Title>Add Payment Method</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form fluid formValue={formValue} onChange={setFormValue}>
-            <Form.Group>
-              <Form.ControlLabel>Method</Form.ControlLabel>
-              <select
-                name="method"
-                value={formValue.method}
-                onChange={(e) =>
-                  setFormValue({ ...formValue, method: e.target.value })
-                }
-                className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
+      {showModal && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm sm:p-6">
+          <div className="max-h-[95vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800 sm:max-h-[90vh]">
+            {/* Header */}
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white px-4 py-4 dark:border-gray-700 dark:from-gray-800 dark:to-gray-800 sm:px-6 sm:py-5 md:px-8">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white sm:text-xl md:text-2xl">
+                  {t("payment.addPaymentMethod")}
+                </h3>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  {t("payment.enterPaymentDetails")}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  setFormValue({
+                    method: "",
+                    names: "",
+                    number: "",
+                    CCV: "",
+                    validity: "",
+                    is_default: false,
+                  });
+                }}
+                className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
               >
-                <option value="">Select Payment Method</option>
-                <option value="Visa">Visa</option>
-                <option value="Mastercard">Mastercard</option>
-                <option value="MTN Momo">MTN Momo</option>
-              </select>
-            </Form.Group>
-            <Form.Group>
-              <Form.ControlLabel>
-                {formValue.method === "MTN Momo"
-                  ? "Name on the number"
-                  : "Name on Card"}
-              </Form.ControlLabel>
-              <Form.Control name="names" />
-            </Form.Group>
-            <Form.Group>
-              <Form.ControlLabel>Number</Form.ControlLabel>
-              <Form.Control name="number" />
-            </Form.Group>
-            {formValue.method !== "MTN Momo" && (
-              <>
-                <Form.Group>
-                  <Form.ControlLabel>CCV</Form.ControlLabel>
-                  <Form.Control name="CCV" />
-                </Form.Group>
-                <Form.Group>
-                  <Form.ControlLabel>Validity (MM/YYYY)</Form.ControlLabel>
-                  <Form.Control name="validity" />
-                </Form.Group>
-              </>
-            )}
-            <Form.Group>
-              <Form.ControlLabel>Set as Default</Form.ControlLabel>
-              <Form.Control name="is_default" accepter={Checkbox} />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button onClick={() => setShowModal(false)} appearance="subtle">
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            appearance="primary"
-            color="green"
-            className="dark:!bg-green-600 dark:!text-white dark:hover:!bg-green-700"
-          >
-            Save
-          </Button>
-        </Modal.Footer>
-      </Modal>
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="space-y-4 p-4 sm:space-y-5 sm:p-6 md:space-y-6 md:p-8">
+              {/* Payment Method Selection */}
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  {t("payment.paymentMethod")} *
+                </label>
+                <select
+                  name="method"
+                  value={formValue.method}
+                  onChange={(e) =>
+                    setFormValue({ ...formValue, method: e.target.value })
+                  }
+                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
+                >
+                  <option value="">{t("payment.selectPaymentMethod")}</option>
+                  <option value="Visa">Visa</option>
+                  <option value="Mastercard">Mastercard</option>
+                  <option value="MTN Momo">MTN Momo</option>
+                </select>
+              </div>
+
+              {/* Name on Card/Number */}
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  {formValue.method === "MTN Momo"
+                    ? `${t("payment.nameOnNumber")} *`
+                    : `${t("payment.nameOnCard")} *`}
+                </label>
+                <input
+                  type="text"
+                  value={formValue.names}
+                  onChange={(e) =>
+                    setFormValue({ ...formValue, names: e.target.value })
+                  }
+                  placeholder={
+                    formValue.method === "MTN Momo"
+                      ? t("payment.nameOnNumber")
+                      : t("payment.nameOnCard")
+                  }
+                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
+                />
+              </div>
+
+              {/* Card/Number */}
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  {formValue.method === "MTN Momo"
+                    ? `${t("payment.phoneNumber")} *`
+                    : `${t("payment.cardNumber")} *`}
+                </label>
+                <input
+                  type="text"
+                  value={formValue.number}
+                  onChange={(e) =>
+                    setFormValue({ ...formValue, number: e.target.value })
+                  }
+                  placeholder={
+                    formValue.method === "MTN Momo"
+                      ? t("payment.enterPhoneNumber")
+                      : t("payment.enterCardNumber")
+                  }
+                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
+                />
+              </div>
+
+              {/* CCV and Validity (only for cards) */}
+              {formValue.method !== "MTN Momo" && (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      {t("payment.ccv")} *
+                    </label>
+                    <input
+                      type="text"
+                      value={formValue.CCV}
+                      onChange={(e) =>
+                        setFormValue({ ...formValue, CCV: e.target.value })
+                      }
+                      placeholder={t("payment.enterCCV")}
+                      maxLength={4}
+                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      {t("payment.validity")} *
+                    </label>
+                    <input
+                      type="text"
+                      value={formValue.validity}
+                      onChange={(e) =>
+                        setFormValue({ ...formValue, validity: e.target.value })
+                      }
+                      placeholder="MM/YYYY"
+                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Set as Default Checkbox */}
+              <div className="flex items-center space-x-3 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
+                <input
+                  type="checkbox"
+                  id="default-payment"
+                  checked={formValue.is_default}
+                  onChange={(e) =>
+                    setFormValue({
+                      ...formValue,
+                      is_default: e.target.checked,
+                    })
+                  }
+                  className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700"
+                />
+                <label
+                  htmlFor="default-payment"
+                  className="flex-1 text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  {t("payment.setAsDefaultPayment")}
+                </label>
+                {formValue.is_default && (
+                  <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                    {t("address.default")}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="sticky bottom-0 flex flex-shrink-0 items-center justify-end gap-3 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:px-6 sm:py-5 md:px-8">
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  setFormValue({
+                    method: "",
+                    names: "",
+                    number: "",
+                    CCV: "",
+                    validity: "",
+                    is_default: false,
+                  });
+                }}
+                className="rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+              >
+                {t("common.cancel")}
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={
+                  !formValue.method ||
+                  !formValue.names ||
+                  !formValue.number ||
+                  (formValue.method !== "MTN Momo" &&
+                    (!formValue.CCV || !formValue.validity))
+                }
+                className="inline-flex items-center rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold !text-white shadow-sm transition-all duration-200 hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <svg
+                  className="mr-2 h-4 w-4 !text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                <span className="!text-white">
+                  {t("payment.savePaymentMethod")}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   Filter,
@@ -13,67 +13,10 @@ import {
   MapPin,
   User,
 } from "lucide-react";
-
-const mockRFQOpportunities = [
-  {
-    id: "1",
-    title: "Office Furniture Supply",
-    description:
-      "Looking for complete office furniture setup for new office space",
-    budget: "$15,000 - $25,000",
-    category: "Furniture",
-    location: "New York, NY",
-    postedBy: "TechStart Inc",
-    postedAt: "2 hours ago",
-    deadline: "Dec 15, 2024",
-    status: "Open",
-    responses: 8,
-    isInterested: false,
-  },
-  {
-    id: "2",
-    title: "IT Equipment Procurement",
-    description:
-      "Need laptops, desktops, and networking equipment for 50 employees",
-    budget: "$50,000 - $75,000",
-    category: "Technology",
-    location: "San Francisco, CA",
-    postedBy: "Digital Solutions Ltd",
-    postedAt: "5 hours ago",
-    deadline: "Dec 20, 2024",
-    status: "Open",
-    responses: 12,
-    isInterested: true,
-  },
-  {
-    id: "3",
-    title: "Cleaning Services Contract",
-    description: "Monthly cleaning services for commercial building",
-    budget: "$3,000 - $5,000/month",
-    category: "Services",
-    location: "Chicago, IL",
-    postedBy: "Property Management Co",
-    postedAt: "1 day ago",
-    deadline: "Dec 10, 2024",
-    status: "Open",
-    responses: 15,
-    isInterested: false,
-  },
-  {
-    id: "4",
-    title: "Marketing Materials Design",
-    description: "Design and print marketing materials for product launch",
-    budget: "$8,000 - $12,000",
-    category: "Marketing",
-    location: "Austin, TX",
-    postedBy: "Creative Agency",
-    postedAt: "2 days ago",
-    deadline: "Dec 8, 2024",
-    status: "Urgent",
-    responses: 6,
-    isInterested: true,
-  },
-];
+import { formatCurrencySync } from "../../utils/formatCurrency";
+import toast from "react-hot-toast";
+import { QuoteSubmissionForm } from "./QuoteSubmissionForm";
+import { SubmittedQuoteDetails } from "./SubmittedQuoteDetails";
 
 interface RFQOpportunitiesSectionProps {
   onMessageCustomer?: (customerId: string) => void;
@@ -86,20 +29,161 @@ export function RFQOpportunitiesSection({
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedRFQ, setSelectedRFQ] = useState<any>(null);
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+  const [isQuoteFormOpen, setIsQuoteFormOpen] = useState(false);
+  const [selectedRFQForQuote, setSelectedRFQForQuote] = useState<any>(null);
+  const [rfqs, setRfqs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submittedQuotes, setSubmittedQuotes] = useState<Record<string, any>>(
+    {}
+  );
+  const [isQuoteDetailsOpen, setIsQuoteDetailsOpen] = useState(false);
+  const [selectedQuote, setSelectedQuote] = useState<any>(null);
 
+  useEffect(() => {
+    fetchRFQOpportunities();
+  }, []);
+
+  // Check for existing quotes when RFQs are loaded
+  useEffect(() => {
+    if (rfqs.length > 0) {
+      checkExistingQuotes();
+    }
+  }, [rfqs]);
+
+  const checkExistingQuotes = async () => {
+    const quotePromises = rfqs.map(async (rfq) => {
+      try {
+        const response = await fetch(
+          `/api/queries/user-rfq-quote?rfqId=${rfq.id}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          return { rfqId: rfq.id, quote: data.quote };
+        }
+      } catch (error) {
+        console.error(`Error checking quote for RFQ ${rfq.id}:`, error);
+      }
+      return { rfqId: rfq.id, quote: null };
+    });
+
+    const results = await Promise.all(quotePromises);
+    const quotesMap: Record<string, any> = {};
+    results.forEach(({ rfqId, quote }) => {
+      if (quote) {
+        quotesMap[rfqId] = quote;
+      }
+    });
+    setSubmittedQuotes(quotesMap);
+  };
+
+  const fetchRFQOpportunities = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/queries/rfq-opportunities");
+      if (response.ok) {
+        const data = await response.json();
+        setRfqs(data.rfqs || []);
+      } else {
+        const errorData = await response.json();
+        console.error("API Error Response:", errorData);
+        toast.error("Failed to load RFQ opportunities");
+      }
+    } catch (error) {
+      console.error("Error fetching RFQ opportunities:", error);
+      toast.error("Failed to load RFQ opportunities");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Format RFQ data for display
+  const formatRFQForDisplay = (rfq: any) => {
+    const minBudget = rfq.min_budget ? parseFloat(rfq.min_budget) : 0;
+    const maxBudget = rfq.max_budget ? parseFloat(rfq.max_budget) : 0;
+    const budgetDisplay =
+      minBudget > 0 && maxBudget > 0
+        ? `${formatCurrencySync(minBudget)} - ${formatCurrencySync(maxBudget)}`
+        : minBudget > 0
+        ? `${formatCurrencySync(minBudget)}+`
+        : maxBudget > 0
+        ? `Up to ${formatCurrencySync(maxBudget)}`
+        : "Not specified";
+
+    // Calculate time ago from created_at
+    const getTimeAgo = (dateString: string) => {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffInMs = now.getTime() - date.getTime();
+      const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+      const diffInDays = Math.floor(diffInHours / 24);
+
+      if (diffInHours < 1) {
+        return "Just now";
+      } else if (diffInHours < 24) {
+        return `${diffInHours} ${diffInHours === 1 ? "hour" : "hours"} ago`;
+      } else if (diffInDays < 7) {
+        return `${diffInDays} ${diffInDays === 1 ? "day" : "days"} ago`;
+      } else {
+        return date.toLocaleDateString();
+      }
+    };
+
+    // Format deadline
+    const formatDeadline = (dateString: string) => {
+      if (!dateString) return "Not specified";
+      const date = new Date(dateString);
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    };
+
+    // Determine status based on response_date
+    const today = new Date();
+    const deadline = rfq.response_date ? new Date(rfq.response_date) : null;
+    const isUrgent =
+      deadline &&
+      deadline.getTime() - today.getTime() < 3 * 24 * 60 * 60 * 1000; // Less than 3 days
+    const isClosed = deadline && deadline < today;
+    const status = isClosed ? "Closed" : isUrgent ? "Urgent" : "Open";
+
+    return {
+      id: rfq.id,
+      title: rfq.title || "Untitled RFQ",
+      description: rfq.description || "No description provided",
+      budget: budgetDisplay,
+      category: rfq.category || "Uncategorized",
+      location: rfq.location || "Not specified",
+      postedBy:
+        rfq.business_account?.business_name ||
+        rfq.contact_name ||
+        "Unknown Business",
+      postedAt: getTimeAgo(rfq.created_at),
+      deadline: formatDeadline(rfq.response_date),
+      status: status,
+      responses: 0, // TODO: Get actual response count
+      isInterested: false,
+      ...rfq, // Include all original fields
+    };
+  };
+
+  const displayRFQs = rfqs.map(formatRFQForDisplay);
+
+  // Get unique categories from RFQs
   const categories = [
     "all",
-    "Furniture",
-    "Technology",
-    "Services",
-    "Marketing",
-    "Office Supplies",
+    ...Array.from(
+      new Set(displayRFQs.map((rfq) => rfq.category).filter(Boolean))
+    ),
   ];
 
-  const filteredRFQs = mockRFQOpportunities.filter((rfq) => {
+  const filteredRFQs = displayRFQs.filter((rfq) => {
     const matchesSearch =
       rfq.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      rfq.description.toLowerCase().includes(searchTerm.toLowerCase());
+      rfq.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      rfq.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      rfq.location.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory =
       selectedCategory === "all" || rfq.category === selectedCategory;
     return matchesSearch && matchesCategory;
@@ -110,12 +194,30 @@ export function RFQOpportunitiesSection({
     setIsQuoteModalOpen(true);
   };
 
-  const handleShareQuote = (rfqId: string) => {
-    console.log("Sharing quote for RFQ:", rfqId);
+  const handleShareQuote = async (rfq: any) => {
+    // Check if quote already exists
+    const existingQuote = submittedQuotes[rfq.id];
+
+    if (existingQuote) {
+      // Show quote details instead of form
+      setSelectedRFQForQuote(rfq); // Set RFQ for title
+      setSelectedQuote(existingQuote);
+      setIsQuoteDetailsOpen(true);
+    } else {
+      // Show submission form
+      setSelectedRFQForQuote(rfq);
+      setIsQuoteFormOpen(true);
+    }
   };
 
-  const handleAcceptRFQ = (rfqId: string) => {
-    console.log("Accepting RFQ:", rfqId);
+  const handleQuoteSubmitted = () => {
+    toast.success("Quote submitted successfully!");
+    setIsQuoteFormOpen(false);
+    setSelectedRFQForQuote(null);
+    // Refresh the quotes map
+    checkExistingQuotes();
+    // Optionally refresh the RFQs list
+    fetchRFQOpportunities();
   };
 
   const handleMessageCustomer = (customerId: string) => {
@@ -130,15 +232,26 @@ export function RFQOpportunitiesSection({
     console.log("Toggling interest for RFQ:", rfqId);
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-12">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
           RFQ Opportunities
         </h3>
-        <div className="text-sm text-gray-500 dark:text-gray-400">
-          {filteredRFQs.length} opportunities found
+        <div className="text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
+          {filteredRFQs.length}{" "}
+          {filteredRFQs.length === 1 ? "opportunity" : "opportunities"} found
         </div>
       </div>
 
@@ -174,115 +287,147 @@ export function RFQOpportunitiesSection({
 
       {/* RFQ Opportunities List */}
       <div className="space-y-4">
-        {filteredRFQs.map((rfq) => (
-          <div
-            key={rfq.id}
-            className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800"
-          >
-            <div className="mb-4 flex items-start justify-between">
-              <div className="flex-1">
-                <div className="mb-2 flex items-center gap-2">
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {rfq.title}
-                  </h4>
-                  <span
-                    className={`rounded-full px-2 py-1 text-xs ${
-                      rfq.status === "Urgent"
-                        ? "bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300"
-                        : "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300"
-                    }`}
-                  >
-                    {rfq.status}
+        {filteredRFQs.length === 0 ? (
+          <div className="rounded-xl border border-gray-100 bg-white p-12 text-center shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <User className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+            <p className="mb-2 text-lg text-gray-500 dark:text-gray-400">
+              No RFQ opportunities found
+            </p>
+            <p className="text-sm text-gray-400 dark:text-gray-500">
+              {searchTerm || selectedCategory !== "all"
+                ? "Try adjusting your search or filters"
+                : "Check back later for new opportunities"}
+            </p>
+          </div>
+        ) : (
+          filteredRFQs.map((rfq) => (
+            <div
+              key={rfq.id}
+              className="rounded-xl border border-gray-100 bg-white p-4 shadow-lg transition-all duration-300 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 sm:p-6"
+            >
+              <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <h4 className="text-base font-semibold text-gray-900 dark:text-white sm:text-lg">
+                      {rfq.title}
+                    </h4>
+                    <span
+                      className={`flex-shrink-0 rounded-full px-2 py-1 text-[10px] font-medium sm:text-xs ${
+                        rfq.status === "Urgent"
+                          ? "bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300"
+                          : "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300"
+                      }`}
+                    >
+                      {rfq.status}
+                    </span>
+                  </div>
+                  <p className="mb-3 line-clamp-2 text-sm text-gray-600 dark:text-gray-400 sm:line-clamp-none">
+                    {rfq.description}
+                  </p>
+
+                  <div className="grid grid-cols-1 gap-2.5 text-xs sm:grid-cols-3 sm:gap-4 sm:text-sm">
+                    <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+                      <DollarSign className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
+                      <span className="truncate font-medium">{rfq.budget}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+                      <MapPin className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
+                      <span className="truncate">{rfq.location}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+                      <User className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
+                      <span className="truncate">{rfq.postedBy}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50 sm:flex-col sm:items-end sm:justify-start sm:bg-transparent sm:p-0 dark:sm:bg-transparent">
+                  <div className="text-left sm:text-right">
+                    <div className="text-lg font-bold text-gray-900 dark:text-white sm:mb-1 sm:text-2xl">
+                      {rfq.budget}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">
+                      {rfq.responses} responses
+                    </div>
+                    <div className="text-[10px] text-gray-500 dark:text-gray-400 sm:text-xs">
+                      Posted {rfq.postedAt}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-4 flex flex-col gap-3 border-t border-gray-200 pt-4 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between sm:border-0 sm:pt-0">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400 sm:gap-4 sm:text-sm">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
+                    <span className="whitespace-nowrap">
+                      Deadline: {rfq.deadline}
+                    </span>
+                  </div>
+                  <span className="rounded-full bg-gray-100 px-2 py-1 text-[10px] dark:bg-gray-700 sm:text-xs">
+                    {rfq.category}
                   </span>
                 </div>
-                <p className="mb-3 text-gray-600 dark:text-gray-400">
-                  {rfq.description}
-                </p>
 
-                <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
-                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                    <DollarSign className="h-4 w-4" />
-                    <span className="font-medium">{rfq.budget}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                    <MapPin className="h-4 w-4" />
-                    <span>{rfq.location}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                    <User className="h-4 w-4" />
-                    <span>{rfq.postedBy}</span>
-                  </div>
-                </div>
+                <button
+                  onClick={() => handleToggleInterest(rfq.id)}
+                  className={`w-full rounded-full px-3 py-1.5 text-xs font-medium transition-colors active:scale-95 sm:w-auto sm:py-1 ${
+                    rfq.isInterested
+                      ? "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300"
+                      : "bg-gray-100 text-gray-600 hover:bg-green-100 hover:text-green-600 dark:bg-gray-700 dark:text-gray-300"
+                  }`}
+                >
+                  {rfq.isInterested ? "Interested" : "Mark Interest"}
+                </button>
               </div>
 
-              <div className="text-right">
-                <div className="mb-1 text-2xl font-bold text-gray-900 dark:text-white">
-                  {rfq.budget}
-                </div>
-                <div className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                  {rfq.responses} responses
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">
-                  Posted {rfq.postedAt}
-                </div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:gap-2">
+                <button
+                  onClick={() => handleViewRFQ(rfq)}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-500 px-3 py-2.5 text-xs font-medium text-white transition-colors hover:bg-blue-600 active:scale-95 sm:px-4 sm:py-2 sm:text-sm"
+                >
+                  <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">View Details</span>
+                  <span className="sm:hidden">View</span>
+                </button>
+                <button
+                  onClick={() => handleShareQuote(rfq)}
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-xs font-medium text-white transition-colors active:scale-95 sm:px-4 sm:py-2 sm:text-sm ${
+                    submittedQuotes[rfq.id]
+                      ? "bg-blue-500 hover:bg-blue-600"
+                      : "bg-green-500 hover:bg-green-600"
+                  }`}
+                  style={{ color: "#ffffff" }}
+                >
+                  <CheckCircle
+                    className="h-3.5 w-3.5 sm:h-4 sm:w-4"
+                    style={{ color: "#ffffff" }}
+                  />
+                  <span style={{ color: "#ffffff" }}>
+                    {submittedQuotes[rfq.id] ? (
+                      <>
+                        <span className="hidden sm:inline">View Quote</span>
+                        <span className="sm:hidden">View Quote</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="hidden sm:inline">Submit Quote</span>
+                        <span className="sm:hidden">Submit</span>
+                      </>
+                    )}
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleMessageCustomer(rfq.id)}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-purple-500 px-3 py-2.5 text-xs font-medium text-white transition-colors hover:bg-purple-600 active:scale-95 sm:px-4 sm:py-2 sm:text-sm"
+                >
+                  <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  Message
+                </button>
               </div>
             </div>
-
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  <span>Deadline: {rfq.deadline}</span>
-                </div>
-                <span className="rounded-full bg-gray-100 px-2 py-1 dark:bg-gray-700">
-                  {rfq.category}
-                </span>
-              </div>
-
-              <button
-                onClick={() => handleToggleInterest(rfq.id)}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                  rfq.isInterested
-                    ? "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300"
-                    : "bg-gray-100 text-gray-600 hover:bg-green-100 hover:text-green-600 dark:bg-gray-700 dark:text-gray-300"
-                }`}
-              >
-                {rfq.isInterested ? "Interested" : "Mark Interest"}
-              </button>
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleViewRFQ(rfq)}
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-500 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-600"
-              >
-                <Eye className="h-4 w-4" />
-                View Details
-              </button>
-              <button
-                onClick={() => handleShareQuote(rfq.id)}
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-green-500 px-4 py-2 font-medium text-white transition-colors hover:bg-green-600"
-              >
-                <CheckCircle className="h-4 w-4" />
-                Share Quote
-              </button>
-              <button
-                onClick={() => handleAcceptRFQ(rfq.id)}
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 font-medium text-white transition-colors hover:bg-emerald-600"
-              >
-                <CheckCircle className="h-4 w-4" />
-                Accept
-              </button>
-              <button
-                onClick={() => handleMessageCustomer(rfq.id)}
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-purple-500 px-4 py-2 font-medium text-white transition-colors hover:bg-purple-600"
-              >
-                <MessageSquare className="h-4 w-4" />
-                Message
-              </button>
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Quote Modal */}
@@ -349,10 +494,19 @@ export function RFQOpportunitiesSection({
 
                 <div className="flex gap-2 pt-4">
                   <button
-                    onClick={() => handleShareQuote(selectedRFQ.id)}
-                    className="flex-1 rounded-lg bg-green-500 px-4 py-2 font-medium text-white transition-colors hover:bg-green-600"
+                    onClick={() => {
+                      setIsQuoteModalOpen(false);
+                      handleShareQuote(selectedRFQ);
+                    }}
+                    className={`flex-1 rounded-lg px-4 py-2 font-medium text-white transition-colors ${
+                      submittedQuotes[selectedRFQ.id]
+                        ? "bg-blue-500 hover:bg-blue-600"
+                        : "bg-green-500 hover:bg-green-600"
+                    }`}
                   >
-                    Share Quote
+                    {submittedQuotes[selectedRFQ.id]
+                      ? "View Quote"
+                      : "Submit Quote"}
                   </button>
                   <button
                     onClick={() => handleMessageCustomer(selectedRFQ.id)}
@@ -365,6 +519,34 @@ export function RFQOpportunitiesSection({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Quote Submission Form */}
+      {isQuoteFormOpen && selectedRFQForQuote && (
+        <QuoteSubmissionForm
+          isOpen={isQuoteFormOpen}
+          onClose={() => {
+            setIsQuoteFormOpen(false);
+            setSelectedRFQForQuote(null);
+          }}
+          rfqId={selectedRFQForQuote.id}
+          rfqTitle={selectedRFQForQuote.title}
+          onSuccess={handleQuoteSubmitted}
+        />
+      )}
+
+      {/* Submitted Quote Details */}
+      {isQuoteDetailsOpen && selectedQuote && selectedRFQForQuote && (
+        <SubmittedQuoteDetails
+          isOpen={isQuoteDetailsOpen}
+          onClose={() => {
+            setIsQuoteDetailsOpen(false);
+            setSelectedQuote(null);
+            setSelectedRFQForQuote(null);
+          }}
+          quote={selectedQuote}
+          rfqTitle={selectedRFQForQuote.title || "RFQ"}
+        />
       )}
     </div>
   );

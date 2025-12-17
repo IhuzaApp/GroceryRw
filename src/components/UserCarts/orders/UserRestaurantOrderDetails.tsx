@@ -44,15 +44,16 @@ function timeAgo(timestamp: string): string {
 
 interface UserRestaurantOrderDetailsProps {
   order: any;
+  isMobile?: boolean;
 }
 
 export default function UserRestaurantOrderDetails({
   order,
+  isMobile = false,
 }: UserRestaurantOrderDetailsProps) {
   const [feedbackModal, setFeedbackModal] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
-  const [isMobile, setIsMobile] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [hasExistingRating, setHasExistingRating] = useState(false);
@@ -253,25 +254,27 @@ export default function UserRestaurantOrderDetails({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Order #{formatOrderID(order.OrderID)}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Placed {timeAgo(order.created_at)}
-          </p>
+      {/* Header - Only show on desktop */}
+      {!isMobile && (
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Order #{formatOrderID(order.OrderID)}
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Placed {timeAgo(order.created_at)}
+            </p>
+          </div>
+          <Link href="/CurrentPendingOrders">
+            <Button
+              appearance="ghost"
+              className="text-green-500 hover:text-green-600"
+            >
+              ← Back to Orders
+            </Button>
+          </Link>
         </div>
-        <Link href="/CurrentPendingOrders">
-          <Button
-            appearance="ghost"
-            className="text-green-500 hover:text-green-600"
-          >
-            ← Back to Orders
-          </Button>
-        </Link>
-      </div>
+      )}
 
       {/* Restaurant Information */}
       {order.Restaurant && (

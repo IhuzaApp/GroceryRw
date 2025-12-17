@@ -2,6 +2,7 @@ const { createServer } = require("http");
 const { parse } = require("url");
 const next = require("next");
 const { Server } = require("socket.io");
+const cron = require("node-cron");
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
@@ -160,6 +161,24 @@ httpServer.on("request", async (req, res) => {
     res.end("internal server error");
   }
 });
+
+// Setup cleanup cron job for development
+if (dev) {
+  // Run cleanup every hour in development (for testing)
+  cron.schedule("0 * * * *", async () => {
+    try {
+      console.log("🧹 Running automatic cleanup in development...");
+      // Set the correct API URL for development
+      process.env.API_BASE_URL = `http://localhost:${port}`;
+      const { cleanupSystemLogs } = require("./scripts/cleanup-logs.js");
+      await cleanupSystemLogs();
+    } catch (error) {
+      console.error("❌ Development cleanup failed:", error.message);
+    }
+  });
+
+  console.log("📅 Development cleanup scheduled to run every hour");
+}
 
 // Start server
 app.prepare().then(() => {

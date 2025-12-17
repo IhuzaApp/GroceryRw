@@ -15,6 +15,8 @@ export default function SideBar() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
   const [pendingOrders, setPendingOrders] = useState([]);
+  const [marketplaceNotificationCount, setMarketplaceNotificationCount] =
+    useState(0);
 
   // Listen for unread messages
   useEffect(() => {
@@ -70,6 +72,30 @@ export default function SideBar() {
 
     // Set up an interval to refresh the count every minute
     const interval = setInterval(fetchPendingOrders, 60000);
+
+    return () => clearInterval(interval);
+  }, [session?.user?.id]);
+
+  // Fetch marketplace notifications (RFQ responses + incomplete orders)
+  useEffect(() => {
+    if (!session?.user?.id) {
+      setMarketplaceNotificationCount(0);
+      return;
+    }
+
+    const fetchMarketplaceNotifications = async () => {
+      try {
+        const response = await fetch("/api/queries/marketplace-notifications");
+        const data = await response.json();
+        setMarketplaceNotificationCount(data.totalCount || 0);
+      } catch (error) {
+        console.error("Error fetching marketplace notifications:", error);
+      }
+    };
+
+    fetchMarketplaceNotifications();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchMarketplaceNotifications, 30000);
 
     return () => clearInterval(interval);
   }, [session?.user?.id]);
@@ -301,7 +327,7 @@ export default function SideBar() {
           {/* Business - Only show for users (not shoppers) */}
           {session?.user && (
             <Link
-              className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
+              className="relative rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
               href={"/plasBusiness"}
               passHref
               title="Business Marketplace"
@@ -350,6 +376,13 @@ export default function SideBar() {
                   ></path>
                 </g>
               </svg>
+              {marketplaceNotificationCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-lg">
+                  {marketplaceNotificationCount > 9
+                    ? "9+"
+                    : marketplaceNotificationCount}
+                </span>
+              )}
             </Link>
           )}
 

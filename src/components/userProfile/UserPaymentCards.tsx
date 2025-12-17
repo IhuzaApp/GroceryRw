@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { GetServerSideProps } from "next";
 import AddPaymentCard from "./AddPaymentCard";
+import AddMoneyModal from "./AddMoneyModal";
 import CryptoJS from "crypto-js";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import { authenticatedFetch } from "../../lib/authenticatedFetch";
@@ -12,8 +13,11 @@ const ENCRYPTION_KEY =
 // Types for our data
 type RefundType = { amount: string; status: string };
 type WalletType = {
-  available_balance: string;
-  reserved_balance: string;
+  id: string;
+  balance: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
 } | null;
 type PaymentCardType = {
   id: string;
@@ -91,34 +95,20 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     );
     const refundsData = await refundsRes.json();
 
-    // Check if user is a shopper
-    const shopperRes = await fetch(
+    // Fetch personal wallet balance for all users
+    let wallet = null;
+    const walletRes = await fetch(
       `${
         process.env.NEXT_PUBLIC_API_URL || ""
-      }/api/queries/check-shopper-status`,
+      }/api/queries/personal-wallet-balance`,
       {
         headers: {
           cookie: req.headers.cookie || "",
         },
       }
     );
-    const shopperData = await shopperRes.json();
-
-    let wallet = null;
-
-    // If user is a shopper, fetch their wallet balance
-    if (shopperData.shopper?.active) {
-      const walletRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || ""}/api/queries/wallet-balance`,
-        {
-          headers: {
-            cookie: req.headers.cookie || "",
-          },
-        }
-      );
-      const walletData = await walletRes.json();
-      wallet = walletData.wallet;
-    }
+    const walletData = await walletRes.json();
+    wallet = walletData.wallet;
 
     // Fetch payment cards
     const paymentCardsRes = await fetch(
@@ -183,6 +173,7 @@ export default function UserPaymentCards({
     }
   );
   const [showAddCard, setShowAddCard] = useState(false);
+  const [showAddMoneyModal, setShowAddMoneyModal] = useState(false);
 
   // Fetch user data if not provided by server-side props
   useEffect(() => {
@@ -263,21 +254,18 @@ export default function UserPaymentCards({
           paymentCards: paymentCardsData.paymentCards || [],
         };
 
-        // If user is a shopper, fetch their wallet balance
-        if (shopperData.shopper?.active) {
-          return authenticatedFetch("/api/queries/wallet-balance", {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          })
-            .then((res) => res.json())
-            .then((walletData) => {
-              newBalances.wallet = walletData.wallet;
-              return newBalances;
-            });
-        }
-        return newBalances;
+        // Fetch personal wallet balance for all users
+        return authenticatedFetch("/api/queries/personal-wallet-balance", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+          .then((res) => res.json())
+          .then((walletData) => {
+            newBalances.wallet = walletData.wallet;
+            return newBalances;
+          });
       })
       .then((newBalances) => {
         setBalances(newBalances);
@@ -298,9 +286,32 @@ export default function UserPaymentCards({
   );
 
   // Get wallet balance
-  const walletBalance = balances.wallet?.available_balance
-    ? parseFloat(balances.wallet.available_balance)
-    : 0;
+  const walletBalance =
+    balances.wallet && balances.wallet.balance
+      ? parseFloat(balances.wallet.balance)
+      : 0;
+
+  // Function to refresh wallet balance
+  const refreshWalletBalance = async () => {
+    try {
+      const walletData = await authenticatedFetch(
+        "/api/queries/personal-wallet-balance",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      ).then((res) => res.json());
+
+      setBalances((prev) => ({
+        ...prev,
+        wallet: walletData.wallet,
+      }));
+    } catch (error) {
+      console.error("Error refreshing wallet balance:", error);
+    }
+  };
 
   // Fetch payment cards
   const fetchPaymentCards = async () => {
@@ -411,10 +422,10 @@ export default function UserPaymentCards({
         {balances.paymentCards.length > 0 && (
           <button
             onClick={() => setShowAddCard(true)}
-            className="inline-flex items-center rounded-md bg-green-50 px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-100 dark:!bg-green-600 dark:!text-white dark:hover:!bg-green-700"
+            className="inline-flex items-center rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-2 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 active:scale-[0.98]"
           >
             <svg
-              className="mr-2 h-4 w-4"
+              className="mr-2 h-4 w-4 !text-white"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -432,14 +443,14 @@ export default function UserPaymentCards({
       </div>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         {/* Purple Refund Card */}
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-gray-600 to-gray-800 p-5 text-white shadow-lg">
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-gray-600 to-gray-800 p-5 text-white shadow-lg [&_h1]:!text-white [&_h2]:!text-white [&_h3]:!text-white [&_h4]:!text-white [&_h5]:!text-white [&_h6]:!text-white [&_p]:!text-white [&_span]:!text-white">
           <div className="absolute right-0 top-0 -mr-10 -mt-10 h-20 w-20 rounded-full bg-white opacity-5"></div>
           <div className="absolute bottom-0 left-0 -mb-8 -ml-8 h-16 w-16 rounded-full bg-white opacity-5"></div>
 
           <div className="mb-8 flex items-start justify-between">
             <div>
-              <p className="mb-1 text-xs opacity-80">Refund Balance</p>
-              <h4 className="font-bold">PENDING REFUNDS</h4>
+              <p className="mb-1 text-xs opacity-80">Wallet Balance</p>
+              <h4 className="font-bold">My Wallet</h4>
             </div>
             <div className="flex items-center">
               <div className="mr-1 h-5 w-8 rounded-sm bg-yellow-400"></div>
@@ -457,7 +468,7 @@ export default function UserPaymentCards({
                 />
               </div>
               <p className="font-mono text-lg tracking-wider">
-                {formatCurrencySync(totalRefundAmount)}
+                {formatCurrencySync(walletBalance)}
               </p>
             </div>
           </div>
@@ -485,83 +496,49 @@ export default function UserPaymentCards({
             </div>
           </div>
 
+          {/* Add Money Button */}
+          <div className="mt-4">
+            <button
+              onClick={() => setShowAddMoneyModal(true)}
+              className="w-full rounded-lg bg-white/20 px-4 py-2.5 text-sm font-semibold !text-white backdrop-blur-sm transition-all hover:scale-105 hover:bg-white/30 active:scale-95"
+            >
+              <span className="flex items-center justify-center gap-2">
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                Add Money
+              </span>
+            </button>
+          </div>
+
           <div className="absolute bottom-3 right-3">
-            <p className="text-xs font-bold opacity-70">REFUNDS ONLY</p>
+            <p className="text-xs font-bold opacity-70">SHOPPING ONLY</p>
           </div>
         </div>
 
-        {/* Green Wallet Card - Only show for shoppers */}
-        {balances.wallet && (
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-green-500 to-green-700 p-5 text-white shadow-lg">
-            <div className="absolute right-0 top-0 -mr-10 -mt-10 h-20 w-20 rounded-full bg-white opacity-5"></div>
-            <div className="absolute bottom-0 left-0 -mb-8 -ml-8 h-16 w-16 rounded-full bg-white opacity-5"></div>
-
-            <div className="mb-8 flex items-start justify-between">
-              <div>
-                <p className="mb-1 text-xs opacity-80">Available Balance</p>
-                <h4 className="font-bold">WALLET BALANCE</h4>
-              </div>
-              <div className="flex items-center">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="h-10 w-10 text-blue-600"
-                >
-                  <path d="M10 13.802l-3.38-3.38-1.42 1.42 4.8 4.8 9.19-9.19-1.41-1.41z" />
-                  <path d="M19.03 7.39l.97-.97c.29-.29.29-.77 0-1.06l-1.06-1.06c-.29-.29-.77-.29-1.06 0l-.97.97 2.12 2.12z" />
-                </svg>
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <div className="mb-1 flex items-center">
-                <div className="mr-2 h-6 w-10 rounded-sm bg-opacity-30">
-                  <img
-                    className="-mt-3 h-12 w-12"
-                    src="/assets/images/chip.png"
-                    alt=""
-                  />
-                </div>
-                <p className="font-mono text-lg tracking-wider">
-                  {formatCurrencySync(walletBalance)}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="mb-1 text-xs opacity-80">Status</p>
-                <p className="font-medium">ACTIVE</p>
-              </div>
-              <div>
-                <p className="mb-1 text-xs opacity-80">Last Updated</p>
-                <p className="font-medium">Today</p>
-              </div>
-              <div className="text-right">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="h-8 w-8 opacity-80"
-                >
-                  <rect x="2" y="5" width="20" height="14" rx="2" />
-                  <path d="M2 10h20" />
-                </svg>
-              </div>
-            </div>
-
-            <div className="absolute bottom-3 right-3">
-              <p className="text-xs font-bold opacity-70">AVAILABLE BALANCE</p>
-            </div>
-          </div>
-        )}
+        {/* Add Money Modal */}
+        <AddMoneyModal
+          isOpen={showAddMoneyModal}
+          onClose={() => setShowAddMoneyModal(false)}
+          onSuccess={refreshWalletBalance}
+          currentBalance={walletBalance}
+        />
 
         {/* Payment Cards */}
         {balances.paymentCards.map((card) => (
           <div
             key={card.id}
-            className="relative overflow-hidden rounded-xl bg-gradient-to-r from-green-500 to-green-700 p-5 text-white shadow-lg transition-shadow duration-200 hover:shadow-xl"
+            className="relative overflow-hidden rounded-xl bg-gradient-to-r from-green-500 to-green-700 p-5 text-white shadow-lg transition-shadow duration-200 hover:shadow-xl [&_h1]:!text-white [&_h2]:!text-white [&_h3]:!text-white [&_h4]:!text-white [&_h5]:!text-white [&_h6]:!text-white [&_p]:!text-white [&_span]:!text-white"
           >
             <div className="absolute right-0 top-0 -mr-10 -mt-10 h-20 w-20 rounded-full bg-white opacity-5"></div>
             <div className="absolute bottom-0 left-0 -mb-8 -ml-8 h-16 w-16 rounded-full bg-white opacity-5"></div>
@@ -685,14 +662,14 @@ export default function UserPaymentCards({
                 Add your card for contactless NFC payments
               </p>
               <button
-                className="mt-4 inline-flex items-center rounded-md bg-green-50 px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-100 dark:!bg-green-600 dark:!text-white dark:hover:!bg-green-700"
+                className="mt-4 inline-flex items-center rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-2 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 active:scale-[0.98]"
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowAddCard(true);
                 }}
               >
                 <svg
-                  className="mr-2 h-4 w-4"
+                  className="mr-2 h-4 w-4 !text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"

@@ -148,10 +148,10 @@ export default function HeaderLayout() {
 
   return (
     <>
-      <header className="container sticky top-0 z-50 mx-auto rounded-full border-b border-gray-200 bg-white p-2 shadow-lg transition-all duration-200 dark:border-gray-700 dark:bg-gray-800">
+      <header className="container sticky top-0 z-50 mx-auto hidden rounded-full border-b border-gray-200 bg-white p-2 shadow-lg transition-all duration-200 dark:border-gray-700 dark:bg-gray-800 md:block">
         <div className="flex items-center justify-between gap-4 px-2 sm:px-4">
           {/* Left section (address + icon) - Desktop only */}
-          <div className="hidden items-center gap-3 md:flex">
+          <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center">
               <Image
                 src="/assets/logos/PlasIcon.png"
@@ -183,12 +183,12 @@ export default function HeaderLayout() {
           </div>
 
           {/* Center search - Desktop only */}
-          <div className="mx-2 hidden max-w-md flex-1 md:mx-4 md:block">
+          <div className="mx-2 mx-4 max-w-md flex-1">
             <SearchBar />
           </div>
 
           {/* Right actions - Desktop only */}
-          <div className="hidden items-center gap-4 md:flex">
+          <div className="flex items-center gap-4">
             {/* Theme Switch */}
             <button
               onClick={handleThemeToggle}
@@ -330,79 +330,8 @@ export default function HeaderLayout() {
             </Link>
           </div>
         </div>
-
-        {/* Mobile version */}
-        <div className="flex items-center justify-between px-3 pt-2 md:hidden">
-          {/* Logo Section - Mobile */}
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center">
-              <div
-                className={`transition-all duration-200 ${
-                  theme === "dark" ? "brightness-0 invert" : ""
-                }`}
-              >
-                <Image
-                  src="/assets/logos/PlasIcon.png"
-                  alt="Plas Logo"
-                  width={60}
-                  height={24}
-                  className="h-6 w-auto"
-                />
-              </div>
-            </Link>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Messages Icon - Mobile */}
-            <Link href="/Messages" passHref>
-              <div className="relative flex items-center gap-1 rounded-md p-1.5 transition-colors duration-200 hover:cursor-pointer hover:bg-green-50 dark:hover:bg-green-900">
-                <div className="text-gray-900 dark:text-white">
-                  <svg
-                    width="24px"
-                    height="24px"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="stroke-current"
-                  >
-                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                    <g
-                      id="SVGRepo_tracerCarrier"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></g>
-                    <g id="SVGRepo_iconCarrier">
-                      <path
-                        d="M8 10.5H16"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                      />
-                      <path
-                        d="M8 14H13.5"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                      />
-                      <path
-                        d="M17 3.33782C15.5291 2.48697 13.8214 2 12 2C6.47715 2 2 6.47715 2 12C2 13.5997 2.37562 15.1116 3.04346 16.4525C3.22094 16.8088 3.28001 17.2161 3.17712 17.6006L2.58151 19.8267C2.32295 20.793 3.20701 21.677 4.17335 21.4185L6.39939 20.8229C6.78393 20.72 7.19121 20.7791 7.54753 20.9565C8.88837 21.6244 10.4003 22 12 22C17.5228 22 22 17.5228 22 12C22 10.1786 21.513 8.47087 20.6622 7"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                      />
-                    </g>
-                  </svg>
-                </div>
-                {unreadMessages > 0 && (
-                  <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
-                    {unreadMessages > 9 ? "9+" : unreadMessages}
-                  </div>
-                )}
-              </div>
-            </Link>
-          </div>
-        </div>
       </header>
+
       <AddressManagementModal
         open={showAddressModal}
         onClose={() => setShowAddressModal(false)}

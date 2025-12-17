@@ -23,7 +23,7 @@ import {
 } from "../src/types";
 
 import ShopperDashboard from "@components/shopper/dashboard/ShopperDashboard";
-import UserDashboard from "@components/user/dashboard/UserDashboard";
+import ResponsiveUserDashboard from "@components/user/dashboard/ResponsiveUserDashboard";
 import MainBanners from "@components/ui/banners";
 import LoadingScreen from "@components/ui/LoadingScreen";
 
@@ -32,6 +32,7 @@ import LoadingScreen from "@components/ui/LoadingScreen";
 // Add this new component for category icons
 const CategoryIcon = ({ category }: { category: string }) => {
   const icons: { [key: string]: string } = {
+    Markets: "🛒",
     "Super Market": "🛒",
     "Public Markets": "🏪",
     Bakeries: "🥖",
@@ -40,6 +41,7 @@ const CategoryIcon = ({ category }: { category: string }) => {
     "Organic Shops": "🌿",
     "Specialty Foods": "🍱",
     Restaurant: "🍽️",
+    Stores: "🏬",
   };
 
   return (
@@ -52,6 +54,8 @@ const CategoryIcon = ({ category }: { category: string }) => {
 export default function Home({ initialData }: { initialData: Data }) {
   const { role, authReady, isLoggedIn } = useAuth();
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     // Allow guest access - don't wait for auth to be ready
@@ -90,7 +94,13 @@ export default function Home({ initialData }: { initialData: Data }) {
   return (
     <RootLayout>
       <MainBanners />
-      <UserDashboard initialData={safeInitialData} />
+      <ResponsiveUserDashboard
+        initialData={safeInitialData}
+        searchOpen={searchOpen}
+        setSearchOpen={setSearchOpen}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+      />
     </RootLayout>
   );
 }
@@ -101,10 +111,30 @@ export const getServerSideProps: GetServerSideProps = async () => {
       throw new Error("Hasura client is not initialized");
     }
 
+    // Fetch stores query
+    const storesQuery = gql`
+      query GetAllStores {
+        business_stores(where: { is_active: { _eq: true } }) {
+          id
+          name
+          description
+          category_id
+          image
+          latitude
+          longitude
+          operating_hours
+          is_active
+          created_at
+          business_id
+        }
+      }
+    `;
+
     const [
       users,
       categories,
       shops,
+      stores,
       products,
       addresses,
       carts,
@@ -157,6 +187,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
           }
         }
       `),
+      hasuraClient.request<any>(storesQuery),
       hasuraClient.request<ProductsResponse>(gql`
         query GetProducts {
           Products {
@@ -290,6 +321,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
           users: users?.Users || [],
           categories: categories?.Categories || [],
           shops: shops?.Shops || [],
+          stores: stores?.business_stores || [],
           products: products?.Products || [],
           addresses: addresses?.Addresses || [],
           carts: carts?.Carts || [],
@@ -311,6 +343,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
           users: [],
           categories: [],
           shops: [],
+          stores: [],
           products: [],
           addresses: [],
           carts: [],

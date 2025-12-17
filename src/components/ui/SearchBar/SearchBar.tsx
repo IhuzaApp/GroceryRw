@@ -6,7 +6,7 @@ import { formatCurrencySync } from "../../../utils/formatCurrency";
 interface SearchResult {
   id: string;
   name: string;
-  type: "product" | "shop";
+  type: "product" | "shop" | "store";
   image?: string;
   logo?: string;
   price?: number;
@@ -97,6 +97,9 @@ export default function SearchBar() {
     if (result.type === "product") {
       // Redirect to the shop page for the product with product ID as query parameter
       router.push(`/shops/${result.shopId}?highlight=${result.id}`);
+    } else if (result.type === "store") {
+      // Redirect to the store page
+      router.push(`/stores/${result.id}`);
     } else {
       router.push(`/shops/${result.id}`);
     }
@@ -236,11 +239,18 @@ export default function SearchBar() {
                     </div>
                   )}
 
-                  {/* Shop Details */}
-                  {result.type === "shop" && (
+                  {/* Shop/Store Details */}
+                  {(result.type === "shop" || result.type === "store") && (
                     <div className="space-y-1">
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {result.description}
+                      <div className="flex items-center gap-2">
+                        {result.type === "store" && (
+                          <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            Store
+                          </span>
+                        )}
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {result.description}
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <span

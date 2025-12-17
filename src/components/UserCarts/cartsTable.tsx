@@ -51,136 +51,289 @@ function CartItem({
   const subtotal = (parseFloat(price || "0") * quantity).toFixed(2);
 
   return (
-    <div className="border-b pb-6 md:grid md:grid-cols-12 md:items-center md:gap-4">
+    <div
+      className={`relative mb-2 rounded-lg p-3 transition-all hover:bg-gray-50/50 dark:hover:bg-gray-800/30 md:grid md:grid-cols-12 md:items-center md:gap-4 md:bg-transparent md:py-3 md:hover:bg-transparent ${
+        theme === "dark" ? "bg-gray-800/20" : "bg-white"
+      }`}
+    >
+      {/* Delete Button - Top Right */}
+      <button
+        onClick={onRemove}
+        disabled={loading}
+        className={`absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+          theme === "dark"
+            ? "bg-gray-700/80 text-gray-400 hover:bg-red-500/20 hover:text-red-400"
+            : "bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500"
+        }`}
+      >
+        {loading ? (
+          <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
+          </svg>
+        ) : (
+          <svg
+            className="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        )}
+      </button>
+
       {/* Mobile Layout */}
-      <div className="flex items-center gap-3 md:hidden">
-        <Image
-          src={image || "/images/groceryPlaceholder.png"}
-          alt={name}
-          width={60}
-          height={60}
-          className="rounded-md"
-        />
+      <div className="flex items-center gap-3 pr-8 md:hidden">
+        <div className="relative flex-shrink-0 overflow-hidden rounded-lg">
+          <Image
+            src={image || "/images/groceryPlaceholder.png"}
+            alt={name}
+            width={70}
+            height={70}
+            className="rounded-lg object-cover"
+          />
+        </div>
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-medium text-gray-900">{name}</h3>
-          <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+          <h3
+            className={`truncate text-base font-semibold ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}
+          >
+            {name}
+          </h3>
+          <span
+            className={`mt-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+              theme === "dark"
+                ? "bg-green-900/30 text-green-300"
+                : "bg-green-100 text-green-700"
+            }`}
+          >
             {size}
           </span>
-          <p className="mt-1 text-sm font-bold text-gray-900">
+          <p
+            className={`mt-2 text-sm font-bold ${
+              theme === "dark" ? "text-green-400" : "text-green-600"
+            }`}
+          >
             {formatCurrency(parseFloat(price || "0"))}
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-0 rounded-lg bg-gray-100 p-0.5 dark:bg-gray-800/50">
             <button
               onClick={onDecrease}
               disabled={quantity <= 1 || loading}
-              className={`rounded-full p-1 transition disabled:cursor-not-allowed disabled:opacity-50 ${
+              className={`flex h-7 w-7 items-center justify-center rounded-l-lg transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
                 theme === "dark"
-                  ? "bg-green-600 text-white hover:bg-green-700"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white"
+                  : "bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               }`}
             >
-              <svg className="h-4 w-4" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M19 13H5v-2h14v2z" />
+              <svg
+                className="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              >
+                <path d="M5 12h14" strokeLinecap="round" />
               </svg>
             </button>
-            <span className="w-6 text-center text-sm">{quantity}</span>
+            <span
+              className={`flex h-7 min-w-[32px] items-center justify-center bg-white px-2 text-sm font-semibold dark:bg-gray-800 ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
+            >
+              {quantity}
+            </span>
             <button
               onClick={onIncrease}
               disabled={loading}
-              className={`rounded-full p-1 transition disabled:cursor-not-allowed disabled:opacity-50 ${
+              className={`flex h-7 w-7 items-center justify-center rounded-r-lg transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
                 theme === "dark"
-                  ? "bg-green-600 text-white hover:bg-green-700"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white"
+                  : "bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               }`}
             >
-              <svg className="h-4 w-4" viewBox="0 0 24 24">
-                <path
-                  fill="currentColor"
-                  d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"
-                />
+              <svg
+                className="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              >
+                <path d="M12 5v14M5 12h14" strokeLinecap="round" />
               </svg>
             </button>
           </div>
           <div className="text-right">
-            <div className="text-sm font-bold text-gray-900">
+            <div
+              className={`text-sm font-bold ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
+            >
               {formatCurrency(parseFloat(subtotal))}
             </div>
           </div>
-          <Button
-            color="red"
-            appearance="ghost"
-            size="sm"
-            onClick={onRemove}
-            loading={loading}
-            className="px-2 py-1 text-red-600 hover:bg-red-50 hover:text-red-700"
+        </div>
+      </div>
+
+      {/* Desktop Layout */}
+      <div className="hidden md:col-span-1 md:block">
+        <div className="relative overflow-hidden rounded-lg">
+          <Image
+            src={image || "/images/groceryPlaceholder.png"}
+            alt={name}
+            width={80}
+            height={80}
+            className="rounded-lg object-cover"
+          />
+        </div>
+      </div>
+      <div className="hidden md:col-span-5 md:block">
+        <h3
+          className={`font-semibold ${
+            theme === "dark" ? "text-white" : "text-gray-900"
+          }`}
+        >
+          {name}
+        </h3>
+        <span
+          className={`mt-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+            theme === "dark"
+              ? "bg-green-900/30 text-green-300"
+              : "bg-green-100 text-green-700"
+          }`}
+        >
+          {size}
+        </span>
+      </div>
+      <div
+        className={`hidden font-bold md:col-span-2 md:flex md:justify-center ${
+          theme === "dark" ? "text-green-400" : "text-green-600"
+        }`}
+      >
+        {formatCurrency(parseFloat(price || "0"))}
+      </div>
+      <div className="hidden md:col-span-2 md:flex md:items-center md:justify-center md:gap-2">
+        <div className="flex items-center gap-0 rounded-lg bg-gray-100 p-0.5 dark:bg-gray-800/50">
+          <button
+            onClick={onDecrease}
+            disabled={quantity <= 1 || loading}
+            className={`flex h-8 w-8 items-center justify-center rounded-l-lg transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
+              theme === "dark"
+                ? "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white"
+                : "bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            }`}
           >
             <svg
               className="h-4 w-4"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="2.5"
             >
-              <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" />
+              <path d="M5 12h14" strokeLinecap="round" />
             </svg>
-          </Button>
+          </button>
+          <span
+            className={`flex h-8 min-w-[36px] items-center justify-center bg-white px-3 text-sm font-semibold dark:bg-gray-800 ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}
+          >
+            {quantity}
+          </span>
+          <button
+            onClick={onIncrease}
+            disabled={loading}
+            className={`flex h-8 w-8 items-center justify-center rounded-r-lg transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
+              theme === "dark"
+                ? "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white"
+                : "bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            }`}
+          >
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+            >
+              <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div className="hidden md:col-span-2 md:block md:text-right">
+        <div
+          className={`font-bold ${
+            theme === "dark" ? "text-white" : "text-gray-900"
+          }`}
+        >
+          {formatCurrency(parseFloat(subtotal))}
         </div>
       </div>
 
-      {/* Desktop Layout */}
-      <div className="hidden md:col-span-1 md:block">
-        <Image
-          src={image || "/images/groceryPlaceholder.png"}
-          alt={name}
-          width={80}
-          height={80}
-          className="rounded-md"
-        />
-      </div>
-      <div className="hidden md:col-span-5 md:block">
-        <h3 className="font-medium text-gray-900">{name}</h3>
-        <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
-          {size}
-        </span>
-      </div>
-      <div className="hidden font-bold md:col-span-2 md:flex md:justify-center">
-        {formatCurrency(parseFloat(price || "0"))}
-      </div>
-      <div className="hidden md:col-span-2 md:flex md:items-center md:justify-center md:gap-2">
+      {/* Delete Button - Desktop (in grid) */}
+      <div className="hidden md:col-span-1 md:flex md:justify-end">
         <button
-          onClick={onDecrease}
-          disabled={quantity <= 1 || loading}
-          className={`rounded-full p-1 transition disabled:cursor-not-allowed disabled:opacity-50 ${
-            theme === "dark"
-              ? "bg-green-600 text-white hover:bg-green-700"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-          }`}
-        >
-          <svg className="h-4 w-4" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M19 13H5v-2h14v2z" />
-          </svg>
-        </button>
-        <span className="w-8 text-center">{quantity}</span>
-        <button
-          onClick={onIncrease}
+          onClick={onRemove}
           disabled={loading}
-          className={`rounded-full p-1 transition disabled:cursor-not-allowed disabled:opacity-50 ${
+          className={`flex h-8 w-8 items-center justify-center rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
             theme === "dark"
-              ? "bg-green-600 text-white hover:bg-green-700"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              ? "bg-gray-700/80 text-gray-400 hover:bg-red-500/20 hover:text-red-400"
+              : "bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500"
           }`}
         >
-          <svg className="h-4 w-4" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-          </svg>
+          {loading ? (
+            <svg
+              className="h-4 w-4 animate-spin"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+          ) : (
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          )}
         </button>
-      </div>
-      <div className="hidden md:col-span-2 md:block md:text-right">
-        <div className="font-bold text-gray-900">
-          {formatCurrency(parseFloat(subtotal))}
-        </div>
       </div>
     </div>
   );
@@ -400,14 +553,15 @@ export default function ItemCartTable({
 
   return (
     <>
-      <div className="mb-4 hidden border-b pb-2 font-medium text-gray-500 md:grid md:grid-cols-11">
+      <div className="mb-4 hidden pb-2 font-medium text-gray-500 md:grid md:grid-cols-12">
         <div className="md:col-span-6">Product</div>
         <div className="text-center md:col-span-2">Price</div>
         <div className="text-center md:col-span-2">Quantity</div>
         <div className="text-right md:col-span-1">Total</div>
+        <div className="md:col-span-1"></div>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-2 md:space-y-0">
         {isLoadingItems ? (
           // Show loading skeleton rows
           Array(4)

@@ -30,15 +30,36 @@ const GET_ORDER_COUNT = gql`
   }
 `;
 
-// Query to get shopper ID and wallet balance
-const GET_SHOPPER_AND_WALLET = gql`
-  query GetShopperAndWallet($user_id: uuid!) {
-    # First get the shopper ID for this user
-    shoppers(where: { user_id: { _eq: $user_id }, active: { _eq: true } }) {
+// Query to find shopper by user ID (regardless of active status)
+const GET_SHOPPER_BY_USER_ID = gql`
+  query GetShopperByUserId($user_id: uuid!) {
+    shoppers(where: { user_id: { _eq: $user_id } }) {
       id
     }
-    # Get wallet for this user
-    Wallets(where: { shopper_id: { _eq: $user_id } }) {
+  }
+`;
+
+// Query to get shopper wallet available balance
+const GET_SHOPPER_WALLET = gql`
+  query GetShopperWallet($shopper_id: uuid!) {
+    Wallets(where: { shopper_id: { _eq: $shopper_id } }) {
+      id
+      available_balance
+    }
+  }
+`;
+
+// Mutation to create a wallet for a shopper
+const CREATE_SHOPPER_WALLET = gql`
+  mutation CreateShopperWallet($shopper_id: uuid!) {
+    insert_Wallets_one(
+      object: {
+        shopper_id: $shopper_id
+        available_balance: "0"
+        reserved_balance: "0"
+      }
+    ) {
+      id
       available_balance
     }
   }
@@ -85,17 +106,51 @@ export default async function handler(
     }>(GET_ORDER_COUNT, { user_id });
     const orderCount = orderData.Orders_aggregate.aggregate.count;
 
-    // Fetch shopper and wallet data
-    const shopperData = await hasuraClient.request<{
-      shoppers: Array<{ id: string }>;
-      Wallets: Array<{ available_balance: string }>;
-    }>(GET_SHOPPER_AND_WALLET, { user_id });
+    // Fetch shopper wallet available balance (for Earnings)
+    // Note: Wallets.shopper_id foreign key references Users.id, not shoppers.id
+    let walletBalance = 0;
+    try {
+      // First, check if user is a shopper
+      const shopperData = await hasuraClient.request<{
+        shoppers: Array<{ id: string }>;
+      }>(GET_SHOPPER_BY_USER_ID, { user_id });
 
-    // Get wallet balance
-    const walletBalance =
-      shopperData.Wallets.length > 0
-        ? parseFloat(shopperData.Wallets[0].available_balance)
-        : 0;
+      if (shopperData.shoppers && shopperData.shoppers.length > 0) {
+        // Wallets.shopper_id references Users.id, not shoppers.id
+        // So we use user_id directly as the shopper_id
+
+        // Fetch the shopper wallet using user_id (which is what shopper_id references)
+        let walletData = await hasuraClient.request<{
+          Wallets: Array<{ available_balance: string }>;
+        }>(GET_SHOPPER_WALLET, { shopper_id: user_id });
+
+        // If wallet doesn't exist, create one using user_id
+        if (!walletData.Wallets || walletData.Wallets.length === 0) {
+          try {
+            const newWallet = await hasuraClient.request<{
+              insert_Wallets_one: { available_balance: string };
+            }>(CREATE_SHOPPER_WALLET, { shopper_id: user_id });
+
+            if (newWallet.insert_Wallets_one) {
+              walletData = {
+                Wallets: [newWallet.insert_Wallets_one],
+              };
+            }
+          } catch (createError) {
+            // Wallet creation failed, continue with default balance
+          }
+        }
+
+        // Get available balance from shopper wallet
+        if (walletData.Wallets && walletData.Wallets.length > 0) {
+          const balanceStr = walletData.Wallets[0].available_balance;
+          walletBalance = parseFloat(balanceStr || "0");
+        }
+      }
+    } catch (error) {
+      // Error fetching wallet balance, default to 0
+      walletBalance = 0;
+    }
 
     return res.status(200).json({ user, orderCount, walletBalance });
   } catch (error) {

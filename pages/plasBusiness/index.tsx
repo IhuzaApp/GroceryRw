@@ -11,6 +11,7 @@ import {
   DollarSign,
   MessageSquare,
   Star,
+  Store,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
@@ -19,7 +20,6 @@ import { useAuth } from "../../src/context/AuthContext";
 import QuoteDetailsModal from "./quote-details-modal";
 import { BusinessHeader } from "../../src/components/business/BusinessHeader";
 import { StatsCards } from "../../src/components/business/StatsCards";
-import { SuppliersSection } from "../../src/components/business/SuppliersSection";
 import { MyRFQsSection } from "../../src/components/business/MyRFQsSection";
 import { QuotesSection } from "../../src/components/business/QuotesSection";
 import { OrdersSection } from "../../src/components/business/OrdersSection";
@@ -28,6 +28,12 @@ import { ProductsBidsSection } from "../../src/components/business/ProductsBidsS
 import { RFQOpportunitiesSection } from "../../src/components/business/RFQOpportunitiesSection";
 import { CreateRFQForm } from "../../src/components/business/CreateRFQForm";
 import { ContractsManagement } from "../../src/components/business/ContractsManagement";
+import PlasBusinessOnboarding from "../../src/components/business/PlasBusinessOnboarding";
+import { BusinessOverview } from "../../src/components/business/BusinessOverview";
+import { ServicesSection } from "../../src/components/business/ServicesSection";
+import { StoresSection } from "../../src/components/business/StoresSection";
+import BusinessChatDrawer from "../../src/components/business/BusinessChatDrawer";
+import toast from "react-hot-toast";
 
 // Data moved to individual components
 
@@ -37,6 +43,13 @@ export default function PlasBusinessPage() {
   const [selectedQuote, setSelectedQuote] = useState<any>(null);
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
   const [isCreateRFQOpen, setIsCreateRFQOpen] = useState(false);
+  const [hasBusinessAccount, setHasBusinessAccount] = useState<boolean | null>(
+    null
+  );
+  const [checkingAccount, setCheckingAccount] = useState(true);
+  const [businessAccount, setBusinessAccount] = useState<any>(null);
+  const [rfqCreated, setRfqCreated] = useState(false);
+  const [isChatDrawerOpen, setIsChatDrawerOpen] = useState(false);
 
   // Redirect shoppers away from this page
   useEffect(() => {
@@ -45,8 +58,40 @@ export default function PlasBusinessPage() {
     }
   }, [role, isLoggedIn, authReady, router]);
 
+  // Check if user has business account
+  useEffect(() => {
+    if (authReady && isLoggedIn && role !== "shopper") {
+      checkBusinessAccount();
+    }
+  }, [authReady, isLoggedIn, role]);
+
+  const checkBusinessAccount = async () => {
+    try {
+      const response = await fetch("/api/queries/check-business-account");
+      if (response.ok) {
+        const data = await response.json();
+        setHasBusinessAccount(data.hasAccount);
+        setBusinessAccount(data.account);
+      } else {
+        setHasBusinessAccount(false);
+        setBusinessAccount(null);
+      }
+    } catch (error) {
+      setHasBusinessAccount(false);
+      setBusinessAccount(null);
+    } finally {
+      setCheckingAccount(false);
+    }
+  };
+
+  const handleAccountCreated = () => {
+    setHasBusinessAccount(true);
+    // Re-fetch account details after creation to get the business name
+    checkBusinessAccount();
+  };
+
   // Show loading while auth is being determined
-  if (!authReady) {
+  if (!authReady || checkingAccount) {
     return (
       <RootLayout>
         <div className="flex h-screen w-full items-center justify-center">
@@ -64,9 +109,18 @@ export default function PlasBusinessPage() {
     return null;
   }
 
+  // Show onboarding if user doesn't have business account
+  if (!hasBusinessAccount) {
+    return (
+      <RootLayout>
+        <PlasBusinessOnboarding onAccountCreated={handleAccountCreated} />
+      </RootLayout>
+    );
+  }
+
   return (
     <RootLayout>
-      <div className="min-h-screen via-white to-gray-100 dark:from-gray-900 ">
+      <div className="min-h-screen via-white to-gray-100 dark:from-gray-900 md:ml-16">
         <div className="max-w-8xl container mx-auto">
           <BuyerDashboardContent
             selectedQuote={selectedQuote}
@@ -76,6 +130,11 @@ export default function PlasBusinessPage() {
             isCreateRFQOpen={isCreateRFQOpen}
             setIsCreateRFQOpen={setIsCreateRFQOpen}
             router={router}
+            businessAccount={businessAccount}
+            rfqCreated={rfqCreated}
+            setRfqCreated={setRfqCreated}
+            isChatDrawerOpen={isChatDrawerOpen}
+            setIsChatDrawerOpen={setIsChatDrawerOpen}
           />
         </div>
       </div>
@@ -91,6 +150,11 @@ function BuyerDashboardContent({
   isCreateRFQOpen,
   setIsCreateRFQOpen,
   router,
+  businessAccount,
+  rfqCreated,
+  setRfqCreated,
+  isChatDrawerOpen,
+  setIsChatDrawerOpen,
 }: {
   selectedQuote: any;
   setSelectedQuote: (quote: any) => void;
@@ -99,9 +163,23 @@ function BuyerDashboardContent({
   isCreateRFQOpen: boolean;
   setIsCreateRFQOpen: (open: boolean) => void;
   router: any;
+  businessAccount?: any;
+  rfqCreated: boolean;
+  setRfqCreated: (value: boolean | ((prev: boolean) => boolean)) => void;
+  isChatDrawerOpen: boolean;
+  setIsChatDrawerOpen: (open: boolean) => void;
 }) {
   const [activeTab, setActiveTab] = useState("overview");
-  const [isServiceProvider, setIsServiceProvider] = useState(true); // This should come from user data/API
+  const isPersonalAccount = businessAccount?.accountType === "personal";
+  const isBusinessAccount = businessAccount?.accountType === "business";
+  // Service provider status should come from user data/API
+  // For now, only business accounts can be service providers
+  const [isServiceProvider, setIsServiceProvider] = useState(isBusinessAccount);
+
+  useEffect(() => {
+    // Only business accounts can be service providers
+    setIsServiceProvider(isBusinessAccount);
+  }, [isBusinessAccount]);
 
   const handleViewQuoteDetails = (quote: any) => {
     setSelectedQuote(quote);
@@ -109,22 +187,18 @@ function BuyerDashboardContent({
   };
 
   const handleAcceptQuote = (quoteId: string) => {
-    console.log("Accepting quote:", quoteId);
     setIsQuoteModalOpen(false);
   };
 
   const handleRejectQuote = (quoteId: string) => {
-    console.log("Rejecting quote:", quoteId);
     setIsQuoteModalOpen(false);
   };
 
   const handleMessageQuoteSupplier = (supplierId: string) => {
-    console.log("Messaging quote supplier:", supplierId);
     router.push(`/plasBusiness/BusinessChats?supplier=${supplierId}`);
   };
 
   const handleMessageContractSupplier = (supplierId: string) => {
-    console.log("Messaging contract supplier:", supplierId);
     router.push(`/plasBusiness/BusinessChats?supplier=${supplierId}`);
   };
 
@@ -132,23 +206,20 @@ function BuyerDashboardContent({
     setIsCreateRFQOpen(true);
   };
 
-  const handleRFQSubmit = (rfqData: any) => {
-    console.log("RFQ created:", rfqData);
-    // Here you would typically send the data to your API
+  const handleRFQSubmit = async (rfqData: any) => {
+    // Trigger refresh of RFQs list
+    setRfqCreated((prev: boolean) => !prev);
   };
 
   const handleAssignContract = (contractData: any) => {
-    console.log("Contract assigned:", contractData);
     // Here you would typically send the contract data to your API
   };
 
   const handleViewContract = (contractId: string) => {
-    console.log("Viewing contract:", contractId);
     // Handle view contract logic
   };
 
   const handleEditContract = (contractId: string) => {
-    console.log("Editing contract:", contractId);
     // Handle edit contract logic
   };
 
@@ -157,171 +228,184 @@ function BuyerDashboardContent({
       {/* Header */}
       <BusinessHeader
         onCreateRFQ={handleCreateRFQ}
-        onFindSuppliers={() => console.log("Finding suppliers")}
+        onBusinessChat={() => setIsChatDrawerOpen(true)}
+        businessName={businessAccount?.businessName}
       />
 
-      {/* Stats Cards */}
-      <StatsCards />
+      {/* Stats Cards - Hidden on mobile */}
+      <div className="hidden md:block">
+        <StatsCards />
+      </div>
 
       {/* Main Content Tabs */}
-      <div className="space-y-8">
-        <div className="rounded-2xl border border-gray-100 bg-white p-2 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-          <div className="flex space-x-2 overflow-x-auto">
+      <div className="space-y-4 sm:space-y-6 md:space-y-8">
+        <div className="rounded-xl border border-gray-100 bg-white p-1.5 shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl sm:p-2">
+          <div className="scrollbar-hide -mx-1 flex snap-x snap-mandatory space-x-1.5 overflow-x-auto scroll-smooth px-1 pb-1 sm:mx-0 sm:space-x-2 sm:px-0 sm:pb-0">
             {[
-              // Service Provider tabs (only visible if user is approved service provider)
-              ...(isServiceProvider
+              // Service Provider tabs (only visible for business accounts that are service providers)
+              ...(isServiceProvider && isBusinessAccount
                 ? [
-                    { id: "overview", label: "Overview", icon: BarChart3 },
+                    {
+                      id: "overview",
+                      label: "Overview",
+                      shortLabel: "Overview",
+                      icon: BarChart3,
+                    },
                     {
                       id: "products-bids",
-                      label: "Products/Bids",
+                      label: "Services/Bids",
+                      shortLabel: "Services",
                       icon: Briefcase,
                     },
                     {
                       id: "rfq-opportunities",
                       label: "RFQ Opportunities",
+                      shortLabel: "RFQ",
                       icon: Search,
                     },
-                    { id: "orders", label: "Orders", icon: Truck },
                     {
-                      id: "business-chats",
-                      label: "Business Chats",
-                      icon: MessageSquare,
+                      id: "orders",
+                      label: "Orders",
+                      shortLabel: "Orders",
+                      icon: Truck,
+                    },
+                    {
+                      id: "stores",
+                      label: "Stores",
+                      shortLabel: "Stores",
+                      icon: Store,
                     },
                   ]
                 : []),
-              // Regular buyer tabs
-              { id: "suppliers", label: "Suppliers", icon: Package },
-              { id: "rfqs", label: "My RFQs", icon: FileText },
-              { id: "quotes", label: "Quotes", icon: ShoppingCart },
-              { id: "contracts", label: "Contracts", icon: FileText },
+              // Personal account tabs (only for personal accounts)
+              ...(isPersonalAccount
+                ? [
+                    {
+                      id: "overview",
+                      label: "Overview",
+                      shortLabel: "Overview",
+                      icon: BarChart3,
+                    },
+                    {
+                      id: "services",
+                      label: "Services",
+                      shortLabel: "Services",
+                      icon: Package,
+                    },
+                    {
+                      id: "stores",
+                      label: "Stores",
+                      shortLabel: "Stores",
+                      icon: Store,
+                    },
+                  ]
+                : []),
+              // Regular buyer tabs (for all account types)
+              {
+                id: "rfqs",
+                label: "My RFQs",
+                shortLabel: "RFQs",
+                icon: FileText,
+              },
+              {
+                id: "quotes",
+                label: "Quotes",
+                shortLabel: "Quotes",
+                icon: ShoppingCart,
+              },
+              {
+                id: "contracts",
+                label: "Contracts",
+                shortLabel: "Contracts",
+                icon: FileText,
+              },
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => {
-                  if (tab.id === "business-chats") {
-                    window.location.href = "/plasBusiness/BusinessChats";
-                    return;
-                  }
                   setActiveTab(tab.id);
                 }}
-                className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-medium transition-all duration-300 ${
+                className={`flex min-w-fit flex-shrink-0 touch-manipulation snap-start items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium transition-all duration-300 sm:gap-2 sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm md:px-6 md:py-3 ${
                   activeTab === tab.id
                     ? "scale-105 transform bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
                     : "text-gray-500 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
                 }`}
+                style={activeTab === tab.id ? { color: "#ffffff" } : undefined}
               >
-                <tab.icon className="h-4 w-4" />
-                {tab.label}
+                <tab.icon
+                  className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4"
+                  style={
+                    activeTab === tab.id ? { color: "#ffffff" } : undefined
+                  }
+                />
+                <span
+                  className="hidden sm:inline"
+                  style={
+                    activeTab === tab.id ? { color: "#ffffff" } : undefined
+                  }
+                >
+                  {tab.label}
+                </span>
+                <span
+                  className="sm:hidden"
+                  style={
+                    activeTab === tab.id ? { color: "#ffffff" } : undefined
+                  }
+                >
+                  {tab.shortLabel || tab.label}
+                </span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Service Provider Tabs */}
-        {isServiceProvider && activeTab === "overview" && (
-          <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Business Overview
-            </h3>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      Total Revenue
-                    </p>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                      $45,230
-                    </p>
-                    <p className="text-sm font-medium text-green-600">
-                      +12.5% from last month
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-gradient-to-br from-green-100 to-green-200 p-4 dark:from-gray-700 dark:to-gray-600">
-                    <DollarSign className="h-8 w-8 text-green-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      Active Orders
-                    </p>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                      23
-                    </p>
-                    <p className="text-sm font-medium text-blue-600">
-                      +5 from last month
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-gradient-to-br from-blue-100 to-blue-200 p-4 dark:from-gray-700 dark:to-gray-600">
-                    <ShoppingCart className="h-8 w-8 text-blue-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      RFQ Responses
-                    </p>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                      18
-                    </p>
-                    <p className="text-sm font-medium text-purple-600">
-                      +8 from last month
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-gradient-to-br from-purple-100 to-purple-200 p-4 dark:from-gray-700 dark:to-gray-600">
-                    <MessageSquare className="h-8 w-8 text-purple-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      Average Rating
-                    </p>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                      4.8
-                    </p>
-                    <p className="text-sm font-medium text-yellow-600">
-                      +0.2 from last month
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-gradient-to-br from-yellow-100 to-yellow-200 p-4 dark:from-gray-700 dark:to-gray-600">
-                    <Star className="h-8 w-8 text-yellow-600" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Service Provider Tabs (Business Accounts Only) */}
+        {isServiceProvider && isBusinessAccount && activeTab === "overview" && (
+          <BusinessOverview businessAccount={businessAccount} />
         )}
 
-        {isServiceProvider && activeTab === "products-bids" && (
-          <ProductsBidsSection />
+        {isServiceProvider &&
+          isBusinessAccount &&
+          activeTab === "products-bids" && <ProductsBidsSection />}
+
+        {isServiceProvider &&
+          isBusinessAccount &&
+          activeTab === "rfq-opportunities" && (
+            <RFQOpportunitiesSection
+              onMessageCustomer={handleMessageQuoteSupplier}
+            />
+          )}
+
+        {isServiceProvider && isBusinessAccount && activeTab === "stores" && (
+          <StoresSection businessAccount={businessAccount} />
         )}
 
-        {isServiceProvider && activeTab === "rfq-opportunities" && (
-          <RFQOpportunitiesSection
-            onMessageCustomer={handleMessageQuoteSupplier}
+        {/* Personal Account Tabs */}
+        {isPersonalAccount && activeTab === "overview" && (
+          <BusinessOverview businessAccount={businessAccount} />
+        )}
+
+        {isPersonalAccount && activeTab === "services" && (
+          <ServicesSection
+            onRequestQuotation={(serviceId) => {
+              toast.success(
+                "Quotation request sent! The service provider will contact you soon."
+              );
+            }}
           />
         )}
 
-        {/* Regular Buyer Tabs */}
-        {activeTab === "suppliers" && <SuppliersSection />}
+        {isPersonalAccount && activeTab === "stores" && (
+          <StoresSection businessAccount={businessAccount} />
+        )}
 
+        {/* Regular Buyer Tabs */}
         {activeTab === "rfqs" && (
           <MyRFQsSection
             onCreateRFQ={handleCreateRFQ}
             onAssignContract={handleAssignContract}
             onMessageSupplier={handleMessageQuoteSupplier}
+            onRFQCreated={rfqCreated}
           />
         )}
 
@@ -353,6 +437,12 @@ function BuyerDashboardContent({
         isOpen={isCreateRFQOpen}
         onClose={() => setIsCreateRFQOpen(false)}
         onSubmit={handleRFQSubmit}
+      />
+
+      {/* Business Chat Drawer */}
+      <BusinessChatDrawer
+        isOpen={isChatDrawerOpen}
+        onClose={() => setIsChatDrawerOpen(false)}
       />
     </div>
   );

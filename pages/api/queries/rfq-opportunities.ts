@@ -1,0 +1,138 @@
+import type { NextApiRequest, NextApiResponse } from "next";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth/[...nextauth]";
+import { hasuraClient } from "../../../src/lib/hasuraClient";
+import { gql } from "graphql-request";
+
+const GET_RFQ_OPPORTUNITIES = gql`
+  query GetRFQOpportunities {
+    bussines_RFQ(
+      where: { open: { _eq: true } }
+      order_by: { created_at: desc }
+    ) {
+      id
+      title
+      description
+      category
+      min_budget
+      max_budget
+      location
+      response_date
+      urgency_level
+      estimated_quantity
+      expected_delivery_date
+      payment_terms
+      requirements
+      notes
+      contact_name
+      email
+      phone
+      attachment
+      business_id
+      user_id
+      open
+      created_at
+      updated_at
+      business_account {
+        business_name
+        account_type
+        business_email
+        business_location
+        business_phone
+      }
+    }
+  }
+`;
+
+interface SessionUser {
+  id: string;
+  name?: string;
+  email?: string;
+  role?: string;
+  [key: string]: any;
+}
+
+interface Session {
+  user: SessionUser;
+  expires: string;
+}
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  try {
+    const session = (await getServerSession(
+      req,
+      res,
+      authOptions as any
+    )) as Session | null;
+
+    if (!session || !session.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
+    // Fetch all open RFQs regardless of user or business
+    const result = await hasuraClient.request<{
+      bussines_RFQ: Array<{
+        id: string;
+        title: string;
+        description: string;
+        category: string;
+        min_budget: string;
+        max_budget: string;
+        location: string;
+        response_date: string;
+        urgency_level: string;
+        estimated_quantity: string;
+        expected_delivery_date: string;
+        payment_terms: string;
+        requirements: any;
+        notes: string;
+        contact_name: string;
+        email: string;
+        phone: string;
+        attachment: string;
+        business_id: string;
+        user_id: string;
+        open: boolean;
+        created_at: string;
+        updated_at: string;
+        business_account: {
+          business_name: string | null;
+          account_type: string | null;
+          business_email: string | null;
+          business_location: string | null;
+          business_phone: string | null;
+        } | null;
+      }>;
+    }>(GET_RFQ_OPPORTUNITIES);
+
+    console.log("API: Total RFQs fetched:", result.bussines_RFQ?.length || 0);
+    console.log(
+      "API: RFQ IDs:",
+      result.bussines_RFQ?.map((rfq) => rfq.id)
+    );
+    console.log(
+      "API: RFQ open status:",
+      result.bussines_RFQ?.map((rfq) => ({ id: rfq.id, open: rfq.open }))
+    );
+
+    return res.status(200).json({
+      rfqs: result.bussines_RFQ || [],
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      error: "Failed to fetch RFQ opportunities",
+      message: error.message,
+    });
+  }
+}

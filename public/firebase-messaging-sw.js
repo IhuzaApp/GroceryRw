@@ -7,14 +7,7 @@ importScripts(
 );
 
 // Initialize Firebase
-const firebaseConfig = {
-  "apiKey": "AIzaSyA-w5VgsITsGws1DEBoFl3SrVgn_62H_nU",
-  "authDomain": "bokiee-2e726.firebaseapp.com",
-  "projectId": "bokiee-2e726",
-  "storageBucket": "bokiee-2e726.firebasestorage.app",
-  "messagingSenderId": "421990441361",
-  "appId": "1:421990441361:web:475e3c34284122e0157a30"
-};
+const firebaseConfig = {};
 
 firebase.initializeApp(firebaseConfig);
 

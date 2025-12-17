@@ -15,6 +15,8 @@ interface Address {
   is_default: boolean;
   latitude: string;
   longitude: string;
+  type: string;
+  placeDetails: any;
   created_at: string;
   updated_at: string;
 }
@@ -31,6 +33,8 @@ const GET_ADDRESSES = gql`
       is_default
       latitude
       longitude
+      type
+      placeDetails
       created_at
       updated_at
     }
@@ -57,6 +61,8 @@ const INSERT_ADDRESS = gql`
     $is_default: Boolean!
     $latitude: String!
     $longitude: String!
+    $type: String!
+    $placeDetails: jsonb!
   ) {
     insert_Addresses_one(
       object: {
@@ -67,6 +73,8 @@ const INSERT_ADDRESS = gql`
         is_default: $is_default
         latitude: $latitude
         longitude: $longitude
+        type: $type
+        placeDetails: $placeDetails
       }
     ) {
       id
@@ -77,6 +85,8 @@ const INSERT_ADDRESS = gql`
       is_default
       latitude
       longitude
+      type
+      placeDetails
       created_at
       updated_at
     }
@@ -135,15 +145,25 @@ export default async function handler(
   }
 
   if (req.method === "POST") {
-    const { street, city, postal_code, is_default, latitude, longitude } =
-      req.body;
+    const {
+      street,
+      city,
+      postal_code,
+      is_default,
+      latitude,
+      longitude,
+      type,
+      placeDetails,
+    } = req.body;
     if (
       !street ||
       !city ||
       !postal_code ||
       typeof is_default !== "boolean" ||
       latitude == null ||
-      longitude == null
+      longitude == null ||
+      !type ||
+      placeDetails == null
     ) {
       return res.status(400).json({ error: "Missing or invalid fields" });
     }
@@ -164,6 +184,8 @@ export default async function handler(
         is_default,
         latitude: latitude.toString(),
         longitude: longitude.toString(),
+        type,
+        placeDetails,
       });
       return res.status(201).json({ address: inserted.insert_Addresses_one });
     } catch (err) {
