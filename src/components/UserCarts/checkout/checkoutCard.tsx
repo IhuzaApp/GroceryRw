@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Input, Button, Panel, Modal, toaster, Notification, SelectPicker } from "rsuite";
+import { Button, Panel, Modal, toaster, Notification } from "rsuite";
 import Link from "next/link"; // Make sure you import Link if you use it
 import { formatCurrency } from "../../../lib/formatCurrency";
 import Cookies from "js-cookie";
@@ -321,6 +321,8 @@ export default function CheckoutItems({
   const [showOneTimePhoneInput, setShowOneTimePhoneInput] = useState(false);
   const [selectedPaymentValue, setSelectedPaymentValue] = useState<string | null>(null);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [showPaymentDropdown, setShowPaymentDropdown] = useState(false);
+  const [showAddressDropdown, setShowAddressDropdown] = useState(false);
 
   // Fetch payment methods, addresses, and refund balance on component mount
   useEffect(() => {
@@ -1159,31 +1161,6 @@ export default function CheckoutItems({
 
   return (
     <>
-      {/* Custom styles for green SelectPicker */}
-      <style jsx global>{`
-        .checkout-select-picker .rs-picker-toggle {
-          border-color: #22c55e !important;
-        }
-        .checkout-select-picker .rs-picker-toggle:hover {
-          border-color: #16a34a !important;
-        }
-        .checkout-select-picker .rs-picker-toggle:focus,
-        .checkout-select-picker .rs-picker-toggle.rs-picker-toggle-active {
-          border-color: #16a34a !important;
-          box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2) !important;
-        }
-        .dark .checkout-select-picker .rs-picker-toggle {
-          border-color: #22c55e !important;
-        }
-        .dark .checkout-select-picker .rs-picker-toggle:hover {
-          border-color: #16a34a !important;
-        }
-        .dark .checkout-select-picker .rs-picker-toggle:focus,
-        .dark .checkout-select-picker .rs-picker-toggle.rs-picker-toggle-active {
-          border-color: #16a34a !important;
-          box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2) !important;
-        }
-      `}</style>
       {/* Global Loading Overlay - Shows during checkout process */}
       {isCheckoutLoading && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -1467,28 +1444,76 @@ export default function CheckoutItems({
               >
                 Delivery Address
               </h4>
-              <SelectPicker
-                data={getAddressOptions()}
-                value={selectedAddressId}
-                onChange={handleAddressChange}
-                placeholder="Select delivery address"
-                searchable={false}
-                block
-                className="w-full checkout-select-picker"
-                renderMenuItem={(label, item) => {
-                  return <div className="py-1">{label}</div>;
-                }}
-              />
-              <Button
-                size="xs"
-                appearance="ghost"
-                className="mt-1 px-2 py-1 text-xs text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddressDropdown(!showAddressDropdown);
+                    setShowPaymentDropdown(false);
+                  }}
+                  className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
+                    selectedAddressId
+                      ? "border-green-500 bg-green-50 text-gray-900 dark:border-green-400 dark:bg-green-900/20 dark:text-white"
+                      : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                  }`}
+                >
+                  {selectedAddressId
+                    ? getAddressOptions().find((opt) => opt.value === selectedAddressId)?.label ||
+                      "Select delivery address"
+                    : "Select delivery address"}
+                  <svg
+                    className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
+                      showAddressDropdown ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+                {showAddressDropdown && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowAddressDropdown(false)}
+                    />
+                    <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                      {getAddressOptions().map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => {
+                            handleAddressChange(option.value);
+                            setShowAddressDropdown(false);
+                          }}
+                          className={`w-full px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                            selectedAddressId === option.value
+                              ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                              : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+              <button
+                type="button"
+                className="mt-1 w-full rounded-lg border-2 border-green-500 bg-transparent px-2 py-1 text-xs font-medium text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20"
                 onClick={() => {
                   setShowAddressModal(true);
                 }}
               >
                 + Add New Address
-              </Button>
+              </button>
             </div>
             <div className="mt-2">
               <h4
@@ -1498,24 +1523,74 @@ export default function CheckoutItems({
               >
                 Payment Method
               </h4>
-              <SelectPicker
-                data={getPaymentMethodOptions()}
-                value={selectedPaymentValue}
-                onChange={handlePaymentMethodChange}
-                placeholder="Select payment method"
-                searchable={false}
-                block
-                className="w-full checkout-select-picker"
-                renderMenuItem={(label, item) => {
-                  return <div className="py-1">{label}</div>;
-                }}
-              />
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPaymentDropdown(!showPaymentDropdown);
+                    setShowAddressDropdown(false);
+                  }}
+                  className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
+                    selectedPaymentValue
+                      ? "border-green-500 bg-green-50 text-gray-900 dark:border-green-400 dark:bg-green-900/20 dark:text-white"
+                      : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                  }`}
+                >
+                  {selectedPaymentValue
+                    ? getPaymentMethodOptions().find((opt) => opt.value === selectedPaymentValue)?.label ||
+                      "Select payment method"
+                    : "Select payment method"}
+                  <svg
+                    className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
+                      showPaymentDropdown ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+                {showPaymentDropdown && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowPaymentDropdown(false)}
+                    />
+                    <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                      {getPaymentMethodOptions().map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => {
+                            handlePaymentMethodChange(option.value);
+                            setShowPaymentDropdown(false);
+                          }}
+                          className={`w-full px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                            selectedPaymentValue === option.value
+                              ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                              : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
               {showOneTimePhoneInput && (
-                <Input
+                <input
+                  type="tel"
                   placeholder="Enter phone number"
                   value={oneTimePhoneNumber}
-                  onChange={handleOneTimePhoneChange}
-                  className="mt-2 w-full"
+                  onChange={(e) => handleOneTimePhoneChange(e.target.value)}
+                  className="mt-2 w-full rounded-lg border-2 border-gray-300 px-4 py-2.5 text-sm transition-all focus:border-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-green-400"
                 />
               )}
             </div>
@@ -1665,52 +1740,150 @@ export default function CheckoutItems({
               <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
                 Delivery Address
               </h4>
-              <SelectPicker
-                data={getAddressOptions()}
-                value={selectedAddressId}
-                onChange={handleAddressChange}
-                placeholder="Select delivery address"
-                searchable={false}
-                block
-                className="w-full checkout-select-picker"
-                renderMenuItem={(label, item) => {
-                  return <div className="py-1">{label}</div>;
-                }}
-              />
-              <Button
-                size="sm"
-                appearance="ghost"
-                className="mt-2 text-green-600 hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddressDropdown(!showAddressDropdown);
+                    setShowPaymentDropdown(false);
+                  }}
+                  className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
+                    selectedAddressId
+                      ? "border-green-500 bg-green-50 text-gray-900 dark:border-green-400 dark:bg-green-900/20 dark:text-white"
+                      : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                  }`}
+                >
+                  {selectedAddressId
+                    ? getAddressOptions().find((opt) => opt.value === selectedAddressId)?.label ||
+                      "Select delivery address"
+                    : "Select delivery address"}
+                  <svg
+                    className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
+                      showAddressDropdown ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+                {showAddressDropdown && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowAddressDropdown(false)}
+                    />
+                    <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                      {getAddressOptions().map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => {
+                            handleAddressChange(option.value);
+                            setShowAddressDropdown(false);
+                          }}
+                          className={`w-full px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                            selectedAddressId === option.value
+                              ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                              : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+              <button
+                type="button"
+                className="mt-2 w-full rounded-lg border-2 border-green-500 bg-transparent px-4 py-2 text-sm font-medium text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20"
                 onClick={() => {
                   setShowAddressModal(true);
                 }}
               >
                 + Add New Address
-              </Button>
+              </button>
             </div>
 
             <div className="mt-2">
               <h4 className="mb-0.5 text-sm font-semibold text-gray-900 dark:text-white">
                 Payment Method
               </h4>
-              <SelectPicker
-                data={getPaymentMethodOptions()}
-                value={selectedPaymentValue}
-                onChange={handlePaymentMethodChange}
-                placeholder="Select payment method"
-                searchable={false}
-                block
-                className="w-full checkout-select-picker"
-                renderMenuItem={(label, item) => {
-                  return <div className="py-1">{label}</div>;
-                }}
-              />
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPaymentDropdown(!showPaymentDropdown);
+                    setShowAddressDropdown(false);
+                  }}
+                  className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
+                    selectedPaymentValue
+                      ? "border-green-500 bg-green-50 text-gray-900 dark:border-green-400 dark:bg-green-900/20 dark:text-white"
+                      : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                  }`}
+                >
+                  {selectedPaymentValue
+                    ? getPaymentMethodOptions().find((opt) => opt.value === selectedPaymentValue)?.label ||
+                      "Select payment method"
+                    : "Select payment method"}
+                  <svg
+                    className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
+                      showPaymentDropdown ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+                {showPaymentDropdown && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowPaymentDropdown(false)}
+                    />
+                    <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                      {getPaymentMethodOptions().map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => {
+                            handlePaymentMethodChange(option.value);
+                            setShowPaymentDropdown(false);
+                          }}
+                          className={`w-full px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                            selectedPaymentValue === option.value
+                              ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                              : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
               {showOneTimePhoneInput && (
-                <Input
+                <input
+                  type="tel"
                   placeholder="Enter phone number"
                   value={oneTimePhoneNumber}
-                  onChange={handleOneTimePhoneChange}
-                  className="mt-2 w-full"
+                  onChange={(e) => handleOneTimePhoneChange(e.target.value)}
+                  className="mt-2 w-full rounded-lg border-2 border-gray-300 px-4 py-2.5 text-sm transition-all focus:border-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-green-400"
                 />
               )}
             </div>
