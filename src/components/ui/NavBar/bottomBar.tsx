@@ -207,8 +207,9 @@ export default function BottomBar() {
       {/* Floating Buttons (Ask, Help) */}
 
       {/* Floating Cart Button (Lifted) */}
-      <div className="fixed bottom-24 right-4 z-50 md:hidden">
-        <Link href="/Cart" passHref>
+      {router.pathname !== "/Cart" && (
+        <div className="fixed bottom-24 right-4 z-50 md:hidden">
+          <Link href="/Cart" passHref>
           <div className="relative flex h-14 w-14 flex-col items-center justify-center rounded-full bg-[#115e59] text-white shadow-lg transition hover:bg-[#115e59]">
             {count > 0 && (
               <div className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
@@ -266,7 +267,8 @@ export default function BottomBar() {
             </span>
           </div>
         </Link>
-      </div>
+        </div>
+      )}
 
       {/* Desktop Floating Buttons */}
       <div className="fixed bottom-6 right-4 z-50 hidden flex-col items-end gap-2 md:flex">
