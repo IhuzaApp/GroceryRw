@@ -215,23 +215,30 @@ export default async function handler(
       totalCount,
     });
   } catch (error: any) {
-    console.error("Error fetching marketplace notifications:", error);
-
-    // Check if it's a 502 Bad Gateway error (Hasura server down)
-    const is502Error =
-      error?.response?.status === 502 ||
+    // Check if it's a server error (502, 520, 503, 504, etc.) - Hasura/Cloudflare issues
+    const serverErrorStatus = error?.response?.status || error?.response?.statusCode;
+    const isServerError =
+      serverErrorStatus >= 500 ||
+      serverErrorStatus === 520 ||
       error?.message?.includes("502") ||
-      error?.response?.statusCode === 502;
+      error?.message?.includes("520") ||
+      error?.message?.includes("503") ||
+      error?.message?.includes("504");
 
-    // For 502 errors, return 200 with default values (graceful degradation)
+    // Only log non-server errors (client errors, etc.)
+    if (!isServerError) {
+      console.error("Error fetching marketplace notifications:", error.message || error);
+    }
+
+    // For server errors, return 200 with default values (graceful degradation)
     // For other errors, return 500
-    const statusCode = is502Error ? 200 : 500;
+    const statusCode = isServerError ? 200 : 500;
 
     return res.status(statusCode).json({
-      error: is502Error
+      error: isServerError
         ? "service_unavailable"
         : "Failed to fetch notifications",
-      message: is502Error ? "Service temporarily unavailable" : error.message,
+      message: isServerError ? "Service temporarily unavailable" : error.message,
       rfqResponsesCount: 0,
       incompleteOrdersCount: 0,
       newRFQsCount: 0,

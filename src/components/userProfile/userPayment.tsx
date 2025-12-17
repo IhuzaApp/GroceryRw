@@ -72,7 +72,6 @@ export default function UserPayment() {
     try {
       const res = await fetch("/api/queries/payment-methods");
       const { paymentMethods } = await res.json();
-      console.log("Fetched payment methods:", paymentMethods);
       setPaymentMethods(paymentMethods);
     } catch (err) {
       console.error("Error loading payment methods:", err);
@@ -143,7 +142,6 @@ export default function UserPayment() {
         body: JSON.stringify({ id, is_default: true }),
       });
       const data = await res.json().catch(() => null);
-      console.log("PUT /api/queries/payment-methods", res.status, data);
       if (!res.ok) {
         throw new Error(
           data?.error || `Request failed with status ${res.status}`
