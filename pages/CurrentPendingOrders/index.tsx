@@ -5,300 +5,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
 import { AuthGuard } from "../../src/components/AuthGuard";
-import { useTheme } from "../../src/context/ThemeContext";
-
-// Mobile Component - Clean, minimal design
-const MobileCurrentOrders = ({
-  filter,
-  setFilter,
-  orders,
-  loading,
-  fetchOrders,
-}: {
-  filter: string;
-  setFilter: (filter: string) => void;
-  orders: any[];
-  loading: boolean;
-  fetchOrders: () => void;
-}) => {
-  const { theme } = useTheme();
-
-  return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
-      {/* Mobile Header */}
-      <div className="-mx-4 -mt-6 border-b border-gray-200 px-4 py-4 dark:border-gray-700">
-        <div className="flex items-center justify-between">
-          <Link
-            href="/"
-            className="flex items-center text-gray-700 transition hover:text-green-600 dark:text-gray-300 dark:hover:text-green-500"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="h-6 w-6"
-            >
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-          </Link>
-          <div className="text-center">
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Order Track
-            </h1>
-          </div>
-          <div className="w-6"></div> {/* Spacer for centering */}
-        </div>
-      </div>
-
-      {/* Mobile Content */}
-      <div className="px-4 py-6">
-        {/* Filter Buttons - Enhanced Design */}
-        <div className="mb-6">
-          <div className="relative rounded-xl bg-gray-100 p-1 dark:bg-gray-800">
-            <div className="flex">
-              <button
-                className={`relative flex-1 rounded-lg px-4 py-3 text-sm font-semibold transition-all duration-200 ${
-                  filter === "pending"
-                    ? "bg-white text-green-600 shadow-sm dark:bg-gray-700 dark:text-green-400"
-                    : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
-                }`}
-                onClick={() => setFilter("pending")}
-              >
-                <div className="flex items-center justify-center">
-                  <div
-                    className={`mr-2 rounded-full p-1 ${
-                      filter === "pending"
-                        ? "bg-green-100 dark:bg-green-900/30"
-                        : "bg-gray-200 dark:bg-gray-600"
-                    }`}
-                  >
-                    <svg
-                      className={`h-3 w-3 ${
-                        filter === "pending"
-                          ? "text-green-600 dark:text-green-400"
-                          : "text-gray-500 dark:text-gray-400"
-                      }`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2.5"
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                  Ongoing
-                </div>
-              </button>
-              <button
-                className={`relative flex-1 rounded-lg px-4 py-3 text-sm font-semibold transition-all duration-200 ${
-                  filter === "done"
-                    ? "bg-white text-green-600 shadow-sm dark:bg-gray-700 dark:text-green-400"
-                    : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
-                }`}
-                onClick={() => setFilter("done")}
-              >
-                <div className="flex items-center justify-center">
-                  <div
-                    className={`mr-2 rounded-full p-1 ${
-                      filter === "done"
-                        ? "bg-green-100 dark:bg-green-900/30"
-                        : "bg-gray-200 dark:bg-gray-600"
-                    }`}
-                  >
-                    <svg
-                      className={`h-3 w-3 ${
-                        filter === "done"
-                          ? "text-green-600 dark:text-green-400"
-                          : "text-gray-500 dark:text-gray-400"
-                      }`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2.5"
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                  Completed
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Orders List */}
-        <div className="rounded-lg bg-white shadow-sm dark:bg-gray-800">
-          <UserRecentOrders
-            filter={filter}
-            orders={orders}
-            loading={loading}
-            onRefresh={fetchOrders}
-          />
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Desktop Component - Original design
-const DesktopCurrentOrders = ({
-  filter,
-  setFilter,
-  orders,
-  loading,
-  fetchOrders,
-  session,
-}: {
-  filter: string;
-  setFilter: (filter: string) => void;
-  orders: any[];
-  loading: boolean;
-  fetchOrders: () => void;
-  session: any;
-}) => {
-  return (
-    <div className="min-h-screen bg-gray-50 p-4 transition-colors duration-200 dark:bg-gray-900 md:ml-16">
-      <div className="max-w-1xl container mx-auto">
-        {/* Profile Header */}
-        <div className="mb-8 flex items-center justify-between rounded-lg bg-white p-4 shadow-sm transition-colors duration-200 dark:bg-gray-800">
-          <div className="flex items-center">
-            <Link
-              href="/"
-              className="flex items-center text-gray-700 transition hover:text-green-600 dark:text-gray-300 dark:hover:text-green-500"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="mr-2 h-5 w-5"
-              >
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-            </Link>
-            <h1 className="ml-4 text-2xl font-bold text-gray-900 dark:text-white">
-              Orders Track
-            </h1>
-          </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            Welcome back, {session.user?.name}
-          </div>
-        </div>
-
-        {/* Filter Buttons - Enhanced Design */}
-        <div className="mb-6">
-          <div className="relative rounded-xl bg-gray-100 p-1 dark:bg-gray-800">
-            <div className="flex">
-              <button
-                className={`relative flex-1 rounded-lg px-6 py-3 text-sm font-semibold transition-all duration-200 ${
-                  filter === "pending"
-                    ? "bg-white text-green-600 shadow-sm dark:bg-gray-700 dark:text-green-400"
-                    : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
-                }`}
-                onClick={() => setFilter("pending")}
-              >
-                <div className="flex items-center justify-center">
-                  <div
-                    className={`mr-3 rounded-full p-1.5 ${
-                      filter === "pending"
-                        ? "bg-green-100 dark:bg-green-900/30"
-                        : "bg-gray-200 dark:bg-gray-600"
-                    }`}
-                  >
-                    <svg
-                      className={`h-4 w-4 ${
-                        filter === "pending"
-                          ? "text-green-600 dark:text-green-400"
-                          : "text-gray-500 dark:text-gray-400"
-                      }`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2.5"
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                  Ongoing Orders
-                </div>
-              </button>
-              <button
-                className={`relative flex-1 rounded-lg px-6 py-3 text-sm font-semibold transition-all duration-200 ${
-                  filter === "done"
-                    ? "bg-white text-green-600 shadow-sm dark:bg-gray-700 dark:text-green-400"
-                    : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
-                }`}
-                onClick={() => setFilter("done")}
-              >
-                <div className="flex items-center justify-center">
-                  <div
-                    className={`mr-3 rounded-full p-1.5 ${
-                      filter === "done"
-                        ? "bg-green-100 dark:bg-green-900/30"
-                        : "bg-gray-200 dark:bg-gray-600"
-                    }`}
-                  >
-                    <svg
-                      className={`h-4 w-4 ${
-                        filter === "done"
-                          ? "text-green-600 dark:text-green-400"
-                          : "text-gray-500 dark:text-gray-400"
-                      }`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2.5"
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                  Completed Orders
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Orders List */}
-        <div className="rounded-lg bg-white p-4 shadow-sm transition-colors duration-200 dark:bg-gray-800">
-          <UserRecentOrders
-            filter={filter}
-            orders={orders}
-            loading={loading}
-            onRefresh={fetchOrders}
-          />
-        </div>
-      </div>
-    </div>
-  );
-};
 
 function CurrentOrdersPage() {
-  // Add page debugging - DISABLED FOR PERFORMANCE
-  // const { debugInfo, logCustomEvent, logError, logSuccess } = usePageDebug({
-  //   pageName: 'CurrentPendingOrders',
-  //   requireAuth: true,
-  //   allowedRoles: ['user', 'shopper'],
-  //   debugLevel: 'verbose'
-  // });
-
   const [filter, setFilter] = useState("pending");
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -327,34 +35,51 @@ function CurrentOrdersPage() {
   if (!session) {
     return (
       <RootLayout>
-        <div className="min-h-screen bg-gray-50 p-4 transition-colors duration-200 dark:bg-gray-900 md:ml-16">
-          <div className="container mx-auto flex min-h-[60vh] flex-col items-center justify-center py-12 text-center">
-            <div className="rounded-lg bg-white p-8 shadow-lg transition-colors duration-200 dark:bg-gray-800">
-              <h1 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white">
-                Please Sign In
-              </h1>
-              <p className="mb-6 text-gray-600 dark:text-gray-300">
-                You need to be logged in to view your orders.
-              </p>
-              <Link
-                href="/login"
-                className="inline-flex items-center rounded-md bg-green-500 px-6 py-2.5 text-sm font-medium text-white transition duration-150 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-offset-gray-900"
-              >
-                <svg
-                  className="mr-2 h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-16">
+          <div className="flex min-h-[60vh] flex-col items-center justify-center py-12 px-4">
+            <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg dark:bg-gray-800">
+              <div className="text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+                  <svg
+                    className="h-8 w-8 text-green-600 dark:text-green-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
+                  </svg>
+                </div>
+                <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
+                  Sign In Required
+                </h1>
+                <p className="mb-6 text-gray-600 dark:text-gray-300">
+                  Please sign in to view your orders.
+                </p>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-green-500/30 transition-all duration-300 hover:from-green-600 hover:to-green-700 hover:shadow-xl"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                  />
-                </svg>
-                Sign In
-              </Link>
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                    />
+                  </svg>
+                  Sign In
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -362,30 +87,144 @@ function CurrentOrdersPage() {
     );
   }
 
+  const pendingCount = orders.filter((o) => o.status !== "delivered").length;
+  const completedCount = orders.filter((o) => o.status === "delivered").length;
+
   return (
     <AuthGuard requireAuth={true}>
       <RootLayout>
-        {/* Mobile View */}
-        <div className="block md:hidden">
-          <MobileCurrentOrders
-            filter={filter}
-            setFilter={setFilter}
-            orders={orders}
-            loading={loading}
-            fetchOrders={fetchOrders}
-          />
-        </div>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-16">
+          <div className="w-full py-6 md:py-8">
+            {/* Header Section */}
+            <div className="mb-8 px-4 md:px-8">
+              <div className="mb-6 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <Link
+                    href="/"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 transition-all duration-200 hover:border-green-300 hover:bg-green-50 hover:text-green-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-green-900/20"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="h-5 w-5"
+                    >
+                      <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                  </Link>
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white md:text-3xl">
+                      My Orders
+                    </h1>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      Track and manage your orders
+                    </p>
+                  </div>
+                </div>
+                {session?.user?.name && (
+                  <div className="hidden items-center gap-3 md:flex">
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        {session.user.name}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Welcome back
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
 
-        {/* Desktop View */}
-        <div className="hidden md:block">
-          <DesktopCurrentOrders
-            filter={filter}
-            setFilter={setFilter}
-            orders={orders}
-            loading={loading}
-            fetchOrders={fetchOrders}
-            session={session}
-          />
+              {/* Filter Tabs - Modern Design */}
+              <div className="inline-flex rounded-xl border border-gray-200 bg-white p-1 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                <button
+                  onClick={() => setFilter("pending")}
+                  className={`relative flex items-center gap-2 rounded-lg px-6 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                    filter === "pending"
+                      ? "bg-gradient-to-r from-green-500 to-green-600 !text-white shadow-md shadow-green-500/30"
+                      : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+                  }`}
+                >
+                  <svg
+                    className={`h-4 w-4 ${
+                      filter === "pending" ? "!text-white" : "text-gray-500"
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2.5}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span className={filter === "pending" ? "!text-white" : ""}>Ongoing</span>
+                  {pendingCount > 0 && (
+                    <span
+                      className={`ml-1.5 rounded-full px-2 py-0.5 text-xs font-bold ${
+                        filter === "pending"
+                          ? "bg-white/20 !text-white"
+                          : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                      }`}
+                    >
+                      {pendingCount}
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={() => setFilter("done")}
+                  className={`relative flex items-center gap-2 rounded-lg px-6 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                    filter === "done"
+                      ? "bg-gradient-to-r from-green-500 to-green-600 !text-white shadow-md shadow-green-500/30"
+                      : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+                  }`}
+                >
+                  <svg
+                    className={`h-4 w-4 ${
+                      filter === "done" ? "!text-white" : "text-gray-500"
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2.5}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span className={filter === "done" ? "!text-white" : ""}>Completed</span>
+                  {completedCount > 0 && (
+                    <span
+                      className={`ml-1.5 rounded-full px-2 py-0.5 text-xs font-bold ${
+                        filter === "done"
+                          ? "bg-white/20 !text-white"
+                          : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                      }`}
+                    >
+                      {completedCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Orders List */}
+            <div className="mx-4 rounded-2xl bg-white shadow-sm dark:bg-gray-800 md:mx-8">
+              <div className="p-4 md:p-6">
+                <UserRecentOrders
+                  filter={filter}
+                  orders={orders}
+                  loading={loading}
+                  onRefresh={fetchOrders}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </RootLayout>
     </AuthGuard>
