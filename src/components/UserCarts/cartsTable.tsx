@@ -52,14 +52,36 @@ function CartItem({
 
   return (
     <div
-      className={`mb-2 rounded-lg p-3 transition-all hover:bg-gray-50/50 dark:hover:bg-gray-800/30 md:grid md:grid-cols-12 md:items-center md:gap-4 md:bg-transparent md:py-3 md:hover:bg-transparent ${
+      className={`relative mb-2 rounded-lg p-3 transition-all hover:bg-gray-50/50 dark:hover:bg-gray-800/30 md:grid md:grid-cols-12 md:items-center md:gap-4 md:bg-transparent md:py-3 md:hover:bg-transparent ${
         theme === "dark"
           ? "bg-gray-800/20"
           : "bg-white"
       }`}
     >
+      {/* Delete Button - Top Right */}
+      <button
+        onClick={onRemove}
+        disabled={loading}
+        className={`absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+          theme === "dark"
+            ? "bg-gray-700/80 text-gray-400 hover:bg-red-500/20 hover:text-red-400"
+            : "bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500"
+        }`}
+      >
+        {loading ? (
+          <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+        ) : (
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        )}
+      </button>
+
       {/* Mobile Layout */}
-      <div className="flex items-center gap-3 md:hidden">
+      <div className="flex items-center gap-3 md:hidden pr-8">
         <div className="relative flex-shrink-0 overflow-hidden rounded-lg">
           <Image
             src={image || "/images/groceryPlaceholder.png"}
@@ -139,28 +161,6 @@ function CartItem({
               {formatCurrency(parseFloat(subtotal))}
             </div>
           </div>
-          <Button
-            color="red"
-            appearance="ghost"
-            size="sm"
-            onClick={onRemove}
-            loading={loading}
-            className={`px-2 py-1 ${
-              theme === "dark"
-                ? "text-red-400 hover:bg-red-900/20 hover:text-red-300"
-                : "text-red-600 hover:bg-red-50 hover:text-red-700"
-            }`}
-          >
-            <svg
-              className="h-4 w-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" />
-            </svg>
-          </Button>
         </div>
       </div>
 
@@ -246,6 +246,30 @@ function CartItem({
         >
           {formatCurrency(parseFloat(subtotal))}
         </div>
+      </div>
+      
+      {/* Delete Button - Desktop (in grid) */}
+      <div className="hidden md:col-span-1 md:flex md:justify-end">
+        <button
+          onClick={onRemove}
+          disabled={loading}
+          className={`flex h-8 w-8 items-center justify-center rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+            theme === "dark"
+              ? "bg-gray-700/80 text-gray-400 hover:bg-red-500/20 hover:text-red-400"
+              : "bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500"
+          }`}
+        >
+          {loading ? (
+            <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+          ) : (
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          )}
+        </button>
       </div>
     </div>
   );
@@ -465,11 +489,12 @@ export default function ItemCartTable({
 
   return (
     <>
-      <div className="mb-4 hidden pb-2 font-medium text-gray-500 md:grid md:grid-cols-11">
+      <div className="mb-4 hidden pb-2 font-medium text-gray-500 md:grid md:grid-cols-12">
         <div className="md:col-span-6">Product</div>
         <div className="text-center md:col-span-2">Price</div>
         <div className="text-center md:col-span-2">Quantity</div>
         <div className="text-right md:col-span-1">Total</div>
+        <div className="md:col-span-1"></div>
       </div>
 
       <div className="space-y-2 md:space-y-0">
