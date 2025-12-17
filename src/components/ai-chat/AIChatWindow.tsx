@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useSession } from "next-auth/react";
 
 interface Message {
   id: string;
@@ -13,18 +14,32 @@ interface AIChatWindowProps {
 }
 
 export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      text: "Hello! I'm your AI assistant. I can help you with orders, food recommendations, and more. How can I assist you today?",
-      sender: "ai",
-      timestamp: new Date(),
-    },
-  ]);
+  const { data: session } = useSession();
+  const userName = session?.user?.name || "there";
+  
+  const getInitialMessage = () => ({
+    id: "1",
+    text: `Hello ${userName}! 😊 I'm your Plas Agent. I can help you with orders, food recommendations, and more. How can I assist you today?`,
+    sender: "ai" as const,
+    timestamp: new Date(),
+  });
+
+  const [messages, setMessages] = useState<Message[]>([getInitialMessage()]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Update initial message when user name changes (only if it's still the initial message)
+  useEffect(() => {
+    if (messages.length === 1 && messages[0].id === "1") {
+      const newInitialMessage = getInitialMessage();
+      if (messages[0].text !== newInitialMessage.text) {
+        setMessages([newInitialMessage]);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userName]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -75,14 +90,14 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop - Hidden on mobile, shown on desktop */}
       <div
-        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300"
+        className="hidden md:fixed md:inset-0 md:z-40 md:bg-black/50 md:backdrop-blur-sm md:transition-opacity md:duration-300"
         onClick={onClose}
       />
 
       {/* Chat Window */}
-      <div className="fixed bottom-36 right-4 z-50 flex h-[calc(100vh-10rem)] w-[calc(100vw-2rem)] max-w-md flex-col rounded-2xl border border-gray-200 bg-white shadow-2xl transition-all duration-300 dark:border-gray-700 dark:bg-gray-800 md:bottom-20 md:right-4 md:h-[500px] md:w-full">
+      <div className="fixed inset-0 z-[10000] flex flex-col bg-white transition-all duration-300 dark:bg-gray-800 md:inset-auto md:bottom-20 md:right-4 md:h-[500px] md:w-full md:max-w-md md:rounded-2xl md:border md:border-gray-200 md:shadow-2xl dark:md:border-gray-700">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-200 bg-[#115e59] px-6 py-4 dark:border-gray-700">
           <div className="flex items-center gap-3">
@@ -102,7 +117,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
               </svg>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">AI Assistant</h3>
+              <h3 className="text-lg font-semibold text-white">Plas Agent</h3>
               <p className="text-xs text-white/80">Always here to help</p>
             </div>
           </div>
