@@ -1091,7 +1091,7 @@ export default function CheckoutItems({
           {discountsEnabled && (
             <div>
               <p
-                className={`mb-2 ${
+                className={`mb-0.5 ${
                   theme === "dark" ? "text-gray-300" : "text-gray-600"
                 }`}
               >
@@ -1103,12 +1103,12 @@ export default function CheckoutItems({
                   value={discountCode}
                   onChange={(e) => setDiscountCode(e.target.value)}
                   placeholder="Enter promo or referral code"
-                  className="flex-1 border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20"
+                  className="flex-1 border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20"
                 />
                 <Button
                   appearance="primary"
                   color="green"
-                  className="bg-green-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-green-600 hover:shadow-md whitespace-nowrap"
+                  className="bg-green-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-green-600 hover:shadow-md whitespace-nowrap"
                   onClick={handleApplyCode}
                   loading={validatingCode}
                 >
@@ -1118,13 +1118,9 @@ export default function CheckoutItems({
             </div>
           )}
 
-          <hr
-            className={`mt-4 ${
-              theme === "dark" ? "border-gray-700" : "border-gray-200"
-            }`}
-          />
+          <div className="my-1.5 h-px bg-gray-200 dark:bg-gray-700"></div>
 
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1.5">
             <div className="flex justify-between py-1">
               <span
                 className={`text-sm ${
@@ -1150,7 +1146,7 @@ export default function CheckoutItems({
             {referralDiscount > 0 && codeType === "referral" && (
               <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
                 <span className="text-sm">Referral Discount ({appliedCode})</span>
-                <span className="text-sm font-medium">-{formatCurrency(referralDiscount)}</span>
+                <span className="text-sm font-medium">17% off</span>
               </div>
             )}
             <div className="flex justify-between py-1">
@@ -1176,11 +1172,6 @@ export default function CheckoutItems({
                 }`}
               >
                 Service Fee
-                {serviceFeeDiscount > 0 && (
-                  <span className="ml-1 text-xs text-green-600 dark:text-green-400">
-                    (-{formatCurrency(serviceFeeDiscount)})
-                  </span>
-                )}
               </span>
               <span
                 className={`text-sm font-medium ${
@@ -1197,11 +1188,6 @@ export default function CheckoutItems({
                 }`}
               >
                 Delivery Fee
-                {deliveryFeeDiscount > 0 && (
-                  <span className="ml-1 text-xs text-green-600 dark:text-green-400">
-                    (-{formatCurrency(deliveryFeeDiscount)})
-                  </span>
-                )}
               </span>
               <span
                 className={`text-sm font-medium ${
@@ -1301,9 +1287,9 @@ export default function CheckoutItems({
               </div>
             </div>
             {/* Delivery Notes Input */}
-            <div className="mt-4">
+            <div className="mt-2">
               <h4
-                className={`mb-2 text-sm font-semibold ${
+                className={`mb-0.5 text-sm font-semibold ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
@@ -1351,7 +1337,7 @@ export default function CheckoutItems({
             }}
           >
             <div
-              className={`-mx-4 -mt-4 mb-6 p-4 ${
+              className={`-mx-4 -mt-4 mb-2 p-3 ${
                 theme === "dark" ? "bg-gray-700" : "bg-gray-50"
               }`}
             >
@@ -1364,7 +1350,7 @@ export default function CheckoutItems({
               </h2>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div className="flex justify-between py-1">
                 <span className="text-sm text-gray-600 dark:text-gray-300">
                   Subtotal
@@ -1375,15 +1361,15 @@ export default function CheckoutItems({
               </div>
 
               {discount > 0 && codeType === "promo" && (
-                <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
-                  <span className="text-sm">Discount ({appliedCode})</span>
-                  <span className="text-sm font-medium">-{formatCurrency(discount)}</span>
+                <div className="flex justify-between py-1">
+                  <span className="text-sm text-green-600 dark:text-green-400">Discount ({appliedCode})</span>
+                  <span className="text-sm font-bold text-green-600 dark:text-green-400">-{formatCurrency(discount)}</span>
                 </div>
               )}
               {referralDiscount > 0 && codeType === "referral" && (
-                <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
-                  <span className="text-sm">Referral Discount ({appliedCode})</span>
-                  <span className="text-sm font-medium">-{formatCurrency(referralDiscount)}</span>
+                <div className="flex justify-between py-1">
+                  <span className="text-sm text-green-600 dark:text-green-400">Referral Discount ({appliedCode})</span>
+                  <span className="text-sm font-bold text-green-600 dark:text-green-400">17% off</span>
                 </div>
               )}
 
@@ -1397,11 +1383,6 @@ export default function CheckoutItems({
               <div className="flex justify-between py-1">
                 <span className="text-sm text-gray-600 dark:text-gray-300">
                   Service Fee
-                  {serviceFeeDiscount > 0 && (
-                    <span className="ml-1 text-xs text-green-600 dark:text-green-400">
-                      (-{formatCurrency(serviceFeeDiscount)})
-                    </span>
-                  )}
                 </span>
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
                   {formatCurrency(finalServiceFee)}
@@ -1411,11 +1392,6 @@ export default function CheckoutItems({
               <div className="flex justify-between py-1">
                 <span className="text-sm text-gray-600 dark:text-gray-300">
                   Delivery Fee
-                  {deliveryFeeDiscount > 0 && (
-                    <span className="ml-1 text-xs text-green-600 dark:text-green-400">
-                      (-{formatCurrency(deliveryFeeDiscount)})
-                    </span>
-                  )}
                 </span>
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
                   {formatCurrency(finalDeliveryFee)}
@@ -1431,11 +1407,11 @@ export default function CheckoutItems({
               </div>
             </div>
 
-            <div className="mt-6">
-              <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
+            <div className="mt-2">
+              <h4 className="mb-0.5 text-sm font-semibold text-gray-900 dark:text-white">
                 Delivery Time
               </h4>
-              <div className="flex items-center rounded-xl bg-gray-50 p-3 shadow-sm dark:bg-gray-700/50">
+              <div className="flex items-center rounded-xl bg-gray-50 p-2 shadow-sm dark:bg-gray-700/50">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -1534,11 +1510,11 @@ export default function CheckoutItems({
               </div>
             </div>
 
-            <div className="mt-6">
-              <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
+            <div className="mt-2">
+              <h4 className="mb-0.5 text-sm font-semibold text-gray-900 dark:text-white">
                 Payment Method
               </h4>
-              <div className="flex items-center justify-between rounded-xl bg-gray-50 p-3 shadow-sm dark:bg-gray-700/50">
+              <div className="flex items-center justify-between rounded-xl bg-gray-50 p-2 shadow-sm dark:bg-gray-700/50">
                 {renderPaymentMethod()}
                 <PaymentMethodSelector
                   totalAmount={finalTotal}
@@ -1560,12 +1536,12 @@ export default function CheckoutItems({
                     value={discountCode}
                     onChange={(e) => setDiscountCode(e.target.value)}
                     placeholder="Enter promo or referral code"
-                    className="flex-1 border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20"
+                    className="flex-1 border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20"
                   />
                   <Button
                     appearance="primary"
                     color="green"
-                    className="bg-green-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-green-600 hover:shadow-md whitespace-nowrap"
+                    className="bg-green-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-green-600 hover:shadow-md whitespace-nowrap"
                     onClick={handleApplyCode}
                     loading={validatingCode}
                   >
@@ -1575,8 +1551,8 @@ export default function CheckoutItems({
               </div>
             )}
 
-            <div className="mt-6">
-              <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
+            <div className="mt-2">
+              <h4 className="mb-0.5 text-sm font-semibold text-gray-900 dark:text-white">
                 Add a Note
               </h4>
               <textarea
