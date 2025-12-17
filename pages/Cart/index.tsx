@@ -646,34 +646,83 @@ export default function CartMainPage() {
 
   return (
     <RootLayout>
-      <div className="p-4 md:ml-16">
-        <div className="container mx-auto">
-          {/* Cart Selection */}
-          <div className="mb-6 flex items-center">
+      <div className="md:ml-16">
+        {/* Mobile Header */}
+        <div
+          className="relative mb-2 h-32 overflow-hidden rounded-b-3xl sm:hidden"
+          style={{
+            marginTop: "-44px",
+            marginLeft: "-16px",
+            marginRight: "-16px",
+          }}
+        >
+          {/* Background Image */}
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: "url(/assets/images/mobileheaderbg.jpg)",
+            }}
+          >
+            {/* Overlay for better text readability */}
+            <div className="absolute inset-0 bg-black/20"></div>
+          </div>
+
+          {/* Header Content */}
+          <div className="relative z-10 flex h-full items-center justify-between px-6">
             <Link
               href="/"
-              className={`flex items-center ${
-                theme === "dark" ? "text-gray-300" : "text-gray-700"
-              }`}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white transition-colors hover:bg-white/30"
             >
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
-                className="mr-2 h-5 w-5"
+                className="h-5 w-5"
               >
                 <path d="M19 12H5M12 19l-7-7 7-7" />
               </svg>
             </Link>
-            <h1
-              className={`text-2xl font-bold ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}
-            >
-              My Cart
-            </h1>
+            <div className="text-center">
+              <h1 className="text-lg font-semibold !text-white">
+                My Cart
+              </h1>
+              <p className="text-xs !text-white/90">
+                {totalFoodItems + totalShopItems} item{(totalFoodItems + totalShopItems) !== 1 ? "s" : ""}
+              </p>
+            </div>
+            <div className="w-10"></div> {/* Spacer for centering */}
           </div>
+        </div>
+
+        <div className="p-4 md:p-4">
+          <div className="container mx-auto">
+            {/* Cart Selection - Desktop Only */}
+            <div className="mb-6 hidden items-center md:flex">
+              <Link
+                href="/"
+                className={`flex items-center ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-700"
+                }`}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="mr-2 h-5 w-5"
+                >
+                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+              </Link>
+              <h1
+                className={`text-2xl font-bold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                My Cart
+              </h1>
+            </div>
 
           {/* Show loading skeleton while waiting for initial data */}
           {isInitialLoading ? (
@@ -683,7 +732,7 @@ export default function CartMainPage() {
               {/* Cart Items Column - Restaurant/Shop Selection + Cart Table */}
               <div className="w-full lg:w-2/3">
                 {/* Restaurant/Shop Selection - Custom Tailwind Tabs */}
-                <div className="mb-6">
+                <div className="mb-2 md:mb-6">
                   <div className="flex gap-2 overflow-x-auto pb-2">
                       {hasAnyItems ? (
                         <>
@@ -1109,6 +1158,7 @@ export default function CartMainPage() {
               )}
             </div>
           )}
+          </div>
         </div>
       </div>
     </RootLayout>
