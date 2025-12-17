@@ -8,8 +8,8 @@ export default function AIChatButton({ onClick }: AIChatButtonProps) {
   return (
     <button
       onClick={onClick}
-      className="group fixed bottom-42 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#115e59] text-white shadow-lg transition-all duration-300 hover:bg-[#197a74] hover:scale-110 hover:shadow-xl active:scale-95 md:bottom-24 md:right-4"
-      aria-label="Open AI Assistant"
+      className="group fixed bottom-40 right-4 z-[10000] flex h-14 w-14 items-center justify-center rounded-full bg-[#115e59] text-white shadow-lg transition-all duration-300 hover:bg-[#197a74] hover:scale-110 hover:shadow-xl active:scale-95 md:bottom-24 md:right-4"
+      aria-label="Open Plas Agent"
     >
       <svg
         className="h-6 w-6 transition-transform duration-300 group-hover:scale-110"
