@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Input, Button, Panel, Modal, toaster, Notification } from "rsuite";
+import { Input, Button, Panel, Modal, toaster, Notification, SelectPicker } from "rsuite";
 import Link from "next/link"; // Make sure you import Link if you use it
 import { formatCurrency } from "../../../lib/formatCurrency";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
-import PaymentMethodSelector from "./PaymentMethodSelector";
 import { useTheme } from "../../../context/ThemeContext";
 import { useAuth } from "../../../context/AuthContext";
 import {
@@ -24,6 +23,24 @@ interface PaymentMethod {
   type: "refund" | "card" | "momo";
   id?: string;
   number?: string;
+}
+
+interface SavedPaymentMethod {
+  id: string;
+  method: string;
+  names: string;
+  number: string;
+  is_default: boolean;
+}
+
+interface SavedAddress {
+  id: string;
+  street: string;
+  city: string;
+  postal_code?: string;
+  latitude?: number;
+  longitude?: number;
+  is_default: boolean;
 }
 
 interface CheckoutItemsProps {
@@ -296,18 +313,29 @@ export default function CheckoutItems({
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<PaymentMethod | null>(null);
   const [loadingPayment, setLoadingPayment] = useState(true);
+  // Payment methods and addresses state
+  const [savedPaymentMethods, setSavedPaymentMethods] = useState<SavedPaymentMethod[]>([]);
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [refundBalance, setRefundBalance] = useState(0);
+  const [oneTimePhoneNumber, setOneTimePhoneNumber] = useState<string>("");
+  const [showOneTimePhoneInput, setShowOneTimePhoneInput] = useState(false);
+  const [selectedPaymentValue, setSelectedPaymentValue] = useState<string | null>(null);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
 
-  // Fetch default payment method on component mount
+  // Fetch payment methods, addresses, and refund balance on component mount
   useEffect(() => {
-    const fetchDefaultPaymentMethod = async () => {
+    const fetchPaymentData = async () => {
       try {
-        const response = await fetch("/api/queries/payment-methods");
-        const data = await response.json();
-        const defaultMethod = data.paymentMethods?.find(
-          (m: any) => m.is_default
-        );
+        // Fetch payment methods
+        const paymentResponse = await fetch("/api/queries/payment-methods");
+        const paymentData = await paymentResponse.json();
+        const methods = paymentData.paymentMethods || [];
+        setSavedPaymentMethods(methods);
 
+        // Find and select the default payment method
+        const defaultMethod = methods.find((m: SavedPaymentMethod) => m.is_default);
         if (defaultMethod) {
+          setSelectedPaymentValue(defaultMethod.id);
           setSelectedPaymentMethod({
             type:
               defaultMethod.method.toLowerCase() === "mtn momo"
@@ -317,17 +345,79 @@ export default function CheckoutItems({
             number: defaultMethod.number,
           });
         }
+
+        // Fetch refund balance
+        const refundResponse = await fetch("/api/queries/refunds");
+        const refundData = await refundResponse.json();
+        setRefundBalance(parseFloat(refundData.totalAmount || "0"));
       } catch (error) {
-        console.error("Error fetching default payment method:", error);
+        console.error("Error fetching payment data:", error);
       } finally {
         setLoadingPayment(false);
       }
     };
 
-    fetchDefaultPaymentMethod();
+    fetchPaymentData();
   }, []);
 
-  // Service and Delivery Fee calculations
+  // Fetch addresses on component mount
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      try {
+        const response = await fetch("/api/queries/addresses");
+        const data = await response.json();
+        const addresses = data.addresses || [];
+        setSavedAddresses(addresses);
+
+        // Check if there's a selected address in cookie
+        const cookieValue = Cookies.get("delivery_address");
+        if (cookieValue) {
+          try {
+            const addressObj = JSON.parse(cookieValue);
+            if (addressObj.id) {
+              setSelectedAddressId(addressObj.id);
+            } else {
+              // If no ID in cookie, try to find default address
+              const defaultAddr = addresses.find((a: SavedAddress) => a.is_default);
+              if (defaultAddr) {
+                setSelectedAddressId(defaultAddr.id);
+                Cookies.set("delivery_address", JSON.stringify(defaultAddr));
+                setTick((t) => t + 1);
+              }
+            }
+          } catch (err) {
+            console.error("Error parsing address cookie:", err);
+            // Try to find default address
+            const defaultAddr = addresses.find((a: SavedAddress) => a.is_default);
+            if (defaultAddr) {
+              setSelectedAddressId(defaultAddr.id);
+              Cookies.set("delivery_address", JSON.stringify(defaultAddr));
+              setTick((t) => t + 1);
+            }
+          }
+        } else {
+          // No address in cookie, try to find default address
+          const defaultAddr = addresses.find((a: SavedAddress) => a.is_default);
+          if (defaultAddr) {
+            setSelectedAddressId(defaultAddr.id);
+            Cookies.set("delivery_address", JSON.stringify(defaultAddr));
+            setTick((t) => t + 1);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching addresses:", error);
+      }
+    };
+
+    fetchAddresses();
+  }, []);
+
+  // Get selected address for delivery fee calculation
+  const selectedAddress = selectedAddressId
+    ? savedAddresses.find((a) => a.id === selectedAddressId)
+    : null;
+
+  // Service and Delivery Fee calculations - recalculates when selectedAddress changes
   const serviceFee = isFoodCart
     ? 0
     : systemConfig
@@ -343,24 +433,40 @@ export default function CheckoutItems({
   const extraUnits = Math.max(0, totalUnits - extraUnitsThreshold);
   const unitsSurcharge =
     extraUnits * (systemConfig ? parseInt(systemConfig.unitsSurcharge) : 0);
-  // Surcharge based on distance beyond 3km
+  // Surcharge based on distance beyond 3km - uses selected address
   let distanceKm = 0;
   let userAlt = 0;
-  const cookie = Cookies.get("delivery_address");
-  if (cookie) {
-    try {
-      const userAddr = JSON.parse(cookie);
-      const userLat = parseFloat(userAddr.latitude);
-      const userLng = parseFloat(userAddr.longitude);
-      userAlt = parseFloat(userAddr.altitude || "0");
-      distanceKm = getDistanceFromLatLonInKm(
-        userLat,
-        userLng,
-        shopLat,
-        shopLng
-      );
-    } catch (err) {
-      console.error("Error parsing delivery_address cookie:", err);
+  if (selectedAddress && selectedAddress.latitude && selectedAddress.longitude) {
+    const userLat = parseFloat(selectedAddress.latitude.toString());
+    const userLng = parseFloat(selectedAddress.longitude.toString());
+    // Altitude is typically not stored in addresses, use 0 as default
+    userAlt = 0;
+    distanceKm = getDistanceFromLatLonInKm(
+      userLat,
+      userLng,
+      shopLat,
+      shopLng
+    );
+  } else {
+    // Fallback to cookie if no address selected yet
+    const cookie = Cookies.get("delivery_address");
+    if (cookie) {
+      try {
+        const userAddr = JSON.parse(cookie);
+        if (userAddr.latitude && userAddr.longitude) {
+          const userLat = parseFloat(userAddr.latitude.toString());
+          const userLng = parseFloat(userAddr.longitude.toString());
+          userAlt = parseFloat((userAddr.altitude || "0").toString());
+          distanceKm = getDistanceFromLatLonInKm(
+            userLat,
+            userLng,
+            shopLat,
+            shopLng
+          );
+        }
+      } catch (err) {
+        console.error("Error parsing delivery_address cookie:", err);
+      }
     }
   }
   const extraDistance = Math.max(0, distanceKm - 3);
@@ -376,6 +482,20 @@ export default function CheckoutItems({
     rawDistanceFee > cappedDistanceFee ? cappedDistanceFee : rawDistanceFee;
   // Final delivery fee includes unit surcharge
   const deliveryFee = finalDistanceFee + unitsSurcharge;
+
+  // Update referral discounts when delivery fee changes (if referral code is applied)
+  useEffect(() => {
+    if (codeType === "referral" && appliedCode) {
+      // Recalculate referral discount based on current delivery fee
+      const serviceFeeDiscountAmount = serviceFee * 0.085;
+      const deliveryFeeDiscountAmount = deliveryFee * 0.085;
+      const totalReferralDiscount = serviceFeeDiscountAmount + deliveryFeeDiscountAmount;
+
+      setServiceFeeDiscount(serviceFeeDiscountAmount);
+      setDeliveryFeeDiscount(deliveryFeeDiscountAmount);
+      setReferralDiscount(totalReferralDiscount);
+    }
+  }, [deliveryFee, serviceFee, codeType, appliedCode]);
 
   // Compute total delivery time: travel time in 3D plus shopping time/preparation time
   const shoppingTime = systemConfig ? parseInt(systemConfig.shoppingTime) : 0;
@@ -606,6 +726,7 @@ export default function CheckoutItems({
       if (result.valid) {
         // Calculate 17% discount from service fee and delivery fee
         // Split: 8.5% from service fee, 8.5% from delivery fee
+        // Note: These will be recalculated when delivery fee changes
         const serviceFeeDiscountAmount = serviceFee * 0.085;
         const deliveryFeeDiscountAmount = deliveryFee * 0.085;
         const totalReferralDiscount = serviceFeeDiscountAmount + deliveryFeeDiscountAmount;
@@ -868,6 +989,95 @@ export default function CheckoutItems({
   // Toggle mobile checkout card expanded/collapsed state
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
+  };
+
+  // Handle payment method selection
+  const handlePaymentMethodChange = (value: string | null) => {
+    setSelectedPaymentValue(value);
+    setShowOneTimePhoneInput(false);
+
+    if (!value) {
+      setSelectedPaymentMethod(null);
+      return;
+    }
+
+    if (value === "refund") {
+      setSelectedPaymentMethod({ type: "refund" });
+    } else if (value === "one-time-phone") {
+      setShowOneTimePhoneInput(true);
+      setSelectedPaymentMethod({ type: "momo", number: oneTimePhoneNumber });
+    } else {
+      const method = savedPaymentMethods.find((m) => m.id === value);
+      if (method) {
+        setSelectedPaymentMethod({
+          type: method.method.toLowerCase() === "mtn momo" ? "momo" : "card",
+          id: method.id,
+          number: method.number,
+        });
+      }
+    }
+  };
+
+  // Handle one-time phone number change
+  const handleOneTimePhoneChange = (value: string, event?: React.SyntheticEvent) => {
+    setOneTimePhoneNumber(value);
+    if (value) {
+      setSelectedPaymentMethod({ type: "momo", number: value });
+    }
+  };
+
+  // Handle address selection
+  const handleAddressChange = (value: string | null) => {
+    setSelectedAddressId(value);
+    if (value) {
+      const address = savedAddresses.find((a) => a.id === value);
+      if (address) {
+        Cookies.set("delivery_address", JSON.stringify(address));
+        setTick((t) => t + 1);
+      }
+    }
+  };
+
+  // Prepare payment method options for dropdown
+  const getPaymentMethodOptions = () => {
+    const options: Array<{ label: string; value: string }> = [];
+    const canUseRefund = refundBalance >= finalTotal;
+
+    // Add refund option if balance is sufficient
+    if (canUseRefund) {
+      options.push({
+        label: `Use Refund Balance (${formatCurrency(refundBalance)} available)`,
+        value: "refund",
+      });
+    }
+
+    // Add saved payment methods
+    savedPaymentMethods.forEach((method) => {
+      const displayNumber =
+        method.method.toLowerCase() === "mtn momo"
+          ? `•••• ${method.number.slice(-3)}`
+          : `•••• ${method.number.slice(-4)}`;
+      options.push({
+        label: `${method.method} ${displayNumber}${method.is_default ? " (Default)" : ""}`,
+        value: method.id,
+      });
+    });
+
+    // Add one-time phone number option
+    options.push({
+      label: "Use One-Time Phone Number",
+      value: "one-time-phone",
+    });
+
+    return options;
+  };
+
+  // Prepare address options for dropdown
+  const getAddressOptions = () => {
+    return savedAddresses.map((address) => ({
+      label: `${address.street}, ${address.city}${address.is_default ? " (Default)" : ""}`,
+      value: address.id,
+    }));
   };
 
   // Update the payment method display section
@@ -1224,67 +1434,65 @@ export default function CheckoutItems({
                 {deliveryTime}
               </span>
             </div>
-            <div className="flex justify-between py-1">
-              <span
-                className={`text-sm ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+            <div className="mt-2">
+              <h4
+                className={`mb-1 text-sm font-semibold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
                 Delivery Address
-              </span>
-              <div className="flex items-center gap-2">
-                <div className="text-right">
-                  {(() => {
-                    const cookieValue = Cookies.get("delivery_address");
-                    if (!cookieValue) {
-                      return (
-                        <span className="text-sm text-red-500">No address</span>
-                      );
-                    }
-                    try {
-                      const addressObj = JSON.parse(cookieValue);
-                      if (addressObj.street && addressObj.city) {
-                        return (
-                          <div className="text-right">
-                            <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {addressObj.street.length > 20
-                                ? `${addressObj.street.substring(0, 20)}...`
-                                : addressObj.street}
-                            </div>
-                            <div className="text-xs text-gray-600 dark:text-gray-400">
-                              {addressObj.city}
-                            </div>
-                          </div>
-                        );
-                      } else if (addressObj.latitude && addressObj.longitude) {
-                        return (
-                          <span className="text-sm text-gray-900 dark:text-white">
-                            Current Location
-                          </span>
-                        );
-                      } else {
-                        return (
-                          <span className="text-sm text-red-500">Invalid</span>
-                        );
-                      }
-                    } catch (err) {
-                      return (
-                        <span className="text-sm text-red-500">Error</span>
-                      );
-                    }
-                  })()}
-                </div>
-                <Button
-                  size="xs"
-                  appearance="ghost"
-                  className="px-2 py-1 text-xs text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
-                  onClick={() => {
-                    setShowAddressModal(true);
-                  }}
-                >
-                  Change
-                </Button>
-              </div>
+              </h4>
+              <SelectPicker
+                data={getAddressOptions()}
+                value={selectedAddressId}
+                onChange={handleAddressChange}
+                placeholder="Select delivery address"
+                searchable={false}
+                block
+                className="w-full"
+                renderMenuItem={(label, item) => {
+                  return <div className="py-1">{label}</div>;
+                }}
+              />
+              <Button
+                size="xs"
+                appearance="ghost"
+                className="mt-1 px-2 py-1 text-xs text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
+                onClick={() => {
+                  setShowAddressModal(true);
+                }}
+              >
+                + Add New Address
+              </Button>
+            </div>
+            <div className="mt-2">
+              <h4
+                className={`mb-1 text-sm font-semibold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Payment Method
+              </h4>
+              <SelectPicker
+                data={getPaymentMethodOptions()}
+                value={selectedPaymentValue}
+                onChange={handlePaymentMethodChange}
+                placeholder="Select payment method"
+                searchable={false}
+                block
+                className="w-full"
+                renderMenuItem={(label, item) => {
+                  return <div className="py-1">{label}</div>;
+                }}
+              />
+              {showOneTimePhoneInput && (
+                <Input
+                  placeholder="Enter phone number"
+                  value={oneTimePhoneNumber}
+                  onChange={handleOneTimePhoneChange}
+                  className="mt-2 w-full"
+                />
+              )}
             </div>
             {/* Delivery Notes Input */}
             <div className="mt-2">
@@ -1432,97 +1640,54 @@ export default function CheckoutItems({
               <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
                 Delivery Address
               </h4>
-              <div className="rounded-xl bg-gray-50 p-3 shadow-sm dark:bg-gray-700/50">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-2">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="mt-0.5 h-4 w-4 text-green-500"
-                    >
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                      <circle cx="12" cy="10" r="3" />
-                    </svg>
-                    <div className="min-w-0 flex-1">
-                      {(() => {
-                        const cookieValue = Cookies.get("delivery_address");
-                        if (!cookieValue) {
-                          return (
-                            <p className="text-sm text-red-500">
-                              No delivery address selected
-                            </p>
-                          );
-                        }
-                        try {
-                          const addressObj = JSON.parse(cookieValue);
-                          if (addressObj.street && addressObj.city) {
-                            return (
-                              <div>
-                                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                  {addressObj.street}
-                                </p>
-                                <p className="text-xs text-gray-600 dark:text-gray-400">
-                                  {addressObj.city}
-                                  {addressObj.postal_code &&
-                                    `, ${addressObj.postal_code}`}
-                                </p>
-                              </div>
-                            );
-                          } else if (
-                            addressObj.latitude &&
-                            addressObj.longitude
-                          ) {
-                            return (
-                              <p className="text-sm text-gray-900 dark:text-white">
-                                Current Location
-                              </p>
-                            );
-                          } else {
-                            return (
-                              <p className="text-sm text-red-500">
-                                Invalid address format
-                              </p>
-                            );
-                          }
-                        } catch (err) {
-                          return (
-                            <p className="text-sm text-red-500">
-                              Error reading address
-                            </p>
-                          );
-                        }
-                      })()}
-                    </div>
-                  </div>
-                  <Button
-                    size="sm"
-                    appearance="ghost"
-                    className="text-green-600 hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
-                    onClick={() => {
-                      setShowAddressModal(true);
-                    }}
-                  >
-                    Change
-                  </Button>
-                </div>
-              </div>
+              <SelectPicker
+                data={getAddressOptions()}
+                value={selectedAddressId}
+                onChange={handleAddressChange}
+                placeholder="Select delivery address"
+                searchable={false}
+                block
+                className="w-full"
+                renderMenuItem={(label, item) => {
+                  return <div className="py-1">{label}</div>;
+                }}
+              />
+              <Button
+                size="sm"
+                appearance="ghost"
+                className="mt-2 text-green-600 hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
+                onClick={() => {
+                  setShowAddressModal(true);
+                }}
+              >
+                + Add New Address
+              </Button>
             </div>
 
             <div className="mt-2">
               <h4 className="mb-0.5 text-sm font-semibold text-gray-900 dark:text-white">
                 Payment Method
               </h4>
-              <div className="flex items-center justify-between rounded-xl bg-gray-50 p-2 shadow-sm dark:bg-gray-700/50">
-                {renderPaymentMethod()}
-                <PaymentMethodSelector
-                  totalAmount={finalTotal}
-                  onSelect={(method) => {
-                    setSelectedPaymentMethod(method);
-                  }}
+              <SelectPicker
+                data={getPaymentMethodOptions()}
+                value={selectedPaymentValue}
+                onChange={handlePaymentMethodChange}
+                placeholder="Select payment method"
+                searchable={false}
+                block
+                className="w-full"
+                renderMenuItem={(label, item) => {
+                  return <div className="py-1">{label}</div>;
+                }}
+              />
+              {showOneTimePhoneInput && (
+                <Input
+                  placeholder="Enter phone number"
+                  value={oneTimePhoneNumber}
+                  onChange={handleOneTimePhoneChange}
+                  className="mt-2 w-full"
                 />
-              </div>
+              )}
             </div>
 
             {discountsEnabled && (
@@ -1599,9 +1764,24 @@ export default function CheckoutItems({
       {/* Address Management Modal */}
       <AddressManagementModal
         open={showAddressModal}
-        onClose={() => setShowAddressModal(false)}
+        onClose={() => {
+          setShowAddressModal(false);
+          // Refresh addresses after modal closes
+          fetch("/api/queries/addresses")
+            .then(async (res) => {
+              if (!res.ok) {
+                throw new Error(`Failed to load addresses (${res.status})`);
+              }
+              const data = await res.json();
+              setSavedAddresses(data.addresses || []);
+            })
+            .catch((err) => {
+              console.error("Error fetching addresses:", err);
+            });
+        }}
         onSelect={(address) => {
           Cookies.set("delivery_address", JSON.stringify(address));
+          setSelectedAddressId(address.id);
           setShowAddressModal(false);
           setTick((t) => t + 1); // Force re-render to update address display
         }}
