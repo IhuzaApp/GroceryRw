@@ -503,8 +503,8 @@ export default function CheckoutItems({
   const shoppingTime = systemConfig ? parseInt(systemConfig.shoppingTime) : 0;
   const altKm = (shopAlt - userAlt) / 1000;
   const distance3D = Math.sqrt(distanceKm * distanceKm + altKm * altKm);
-  // Cap travel time to reasonable maximum (2 hours = 120 minutes)
-  const travelTime = Math.min(Math.ceil(distance3D), 120); // assume 1 km ≈ 1 minute travel, max 2 hours
+  // Cap travel time to reasonable maximum (4 hours = 240 minutes)
+  const travelTime = Math.min(Math.ceil(distance3D), 240); // assume 1 km ≈ 1 minute travel, max 4 hours
 
   // Helper function to parse preparation time string from database
   const parsePreparationTimeString = (timeString?: string): number => {
@@ -629,9 +629,14 @@ export default function CheckoutItems({
     }
   };
 
+  // Format distance for display
+  const formattedDistance = distanceKm > 0 
+    ? `${distanceKm.toFixed(1)} km`
+    : "0 km";
+
   // Create detailed delivery time message
   if (isFoodCart) {
-    // For food orders, show preparation + delivery time breakdown
+    // For food orders, show preparation + delivery time breakdown with distance
     const prepText =
       preparationTime === 0 ? "ready now" : formatTimeMinutes(preparationTime);
     const deliveryText = formatTimeMinutes(travelTime);
@@ -639,26 +644,26 @@ export default function CheckoutItems({
     if (days > 0) {
       deliveryTime = `${days} day${days > 1 ? "s" : ""}${
         hours > 0 ? ` ${hours}h` : ""
-      } (prep: ${prepText} + delivery: ${deliveryText})`;
+      } (${formattedDistance}, prep: ${prepText} + delivery: ${deliveryText})`;
     } else if (hours > 0) {
       deliveryTime = `${hours}h${
         mins > 0 ? ` ${mins}m` : ""
-      } (prep: ${prepText} + delivery: ${deliveryText})`;
+      } (${formattedDistance}, prep: ${prepText} + delivery: ${deliveryText})`;
     } else {
-      deliveryTime = `${mins} minutes (prep: ${prepText} + delivery: ${deliveryText})`;
+      deliveryTime = `${mins} minutes (${formattedDistance}, prep: ${prepText} + delivery: ${deliveryText})`;
     }
   } else {
-    // For regular shop orders, show shopping + delivery time
+    // For regular shop orders, show shopping + delivery time with distance
     if (days > 0) {
       deliveryTime = `Will be delivered in ${days} day${days > 1 ? "s" : ""}${
         hours > 0 ? ` ${hours}h` : ""
-      }`;
+      } (${formattedDistance})`;
     } else if (hours > 0) {
       deliveryTime = `Will be delivered in ${hours}h${
         mins > 0 ? ` ${mins}m` : ""
-      }`;
+      } (${formattedDistance})`;
     } else {
-      deliveryTime = `Will be delivered in ${mins} minutes`;
+      deliveryTime = `Will be delivered in ${mins} minutes (${formattedDistance})`;
     }
   }
 
@@ -1453,7 +1458,7 @@ export default function CheckoutItems({
                   }}
                   className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
                     selectedAddressId
-                      ? "border-green-500 bg-green-50 text-gray-900 dark:border-green-400 dark:bg-green-900/20 dark:text-white"
+                      ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
                       : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
                   }`}
                 >
@@ -1532,7 +1537,7 @@ export default function CheckoutItems({
                   }}
                   className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
                     selectedPaymentValue
-                      ? "border-green-500 bg-green-50 text-gray-900 dark:border-green-400 dark:bg-green-900/20 dark:text-white"
+                      ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
                       : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
                   }`}
                 >
@@ -1749,7 +1754,7 @@ export default function CheckoutItems({
                   }}
                   className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
                     selectedAddressId
-                      ? "border-green-500 bg-green-50 text-gray-900 dark:border-green-400 dark:bg-green-900/20 dark:text-white"
+                      ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
                       : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
                   }`}
                 >
@@ -1825,7 +1830,7 @@ export default function CheckoutItems({
                   }}
                   className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
                     selectedPaymentValue
-                      ? "border-green-500 bg-green-50 text-gray-900 dark:border-green-400 dark:bg-green-900/20 dark:text-white"
+                      ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
                       : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
                   }`}
                 >
