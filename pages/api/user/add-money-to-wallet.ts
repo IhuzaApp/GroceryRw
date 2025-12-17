@@ -59,7 +59,7 @@ const UPDATE_PERSONAL_WALLET_BALANCE = gql`
 interface AddMoneyRequest {
   amount: number;
   description?: string;
-  card_number?: string;
+  phone_number?: string;
 }
 
 export default async function handler(
@@ -78,16 +78,16 @@ export default async function handler(
     }
 
     const user_id = session.user.id;
-    const { amount, description, card_number }: AddMoneyRequest = req.body;
+    const { amount, description, phone_number }: AddMoneyRequest = req.body;
 
     // Validate amount
     if (!amount || amount <= 0) {
       return res.status(400).json({ error: "Invalid amount" });
     }
 
-    // Validate card number
-    if (!card_number || card_number.length < 13 || card_number.length > 16) {
-      return res.status(400).json({ error: "Valid card number is required (13-16 digits)" });
+    // Validate phone number (Rwanda format: 9-10 digits)
+    if (!phone_number || phone_number.length < 9 || phone_number.length > 10) {
+      return res.status(400).json({ error: "Valid phone number is required (9-10 digits)" });
     }
 
     if (!hasuraClient) {
