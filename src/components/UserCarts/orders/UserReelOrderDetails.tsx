@@ -154,30 +154,94 @@ export default function UserReelOrderDetails({
         <div className="mb-6">
           <h2 className="mb-4 text-xl font-bold">Order Status</h2>
           {isMobile ? (
-            // Mobile: Simple status display
-            <div className="py-4 text-center">
-              <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                {order.status === "delivered"
-                  ? "Delivered"
-                  : order.status === "on_the_way"
-                  ? "On the Way"
-                  : order.status === "packing"
-                  ? "Packing"
-                  : order.status === "shopping"
-                  ? "Shopping"
-                  : "Pending Assignment"}
-              </div>
-              <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                {order.status === "delivered"
-                  ? "Order completed successfully"
-                  : order.status === "on_the_way"
-                  ? "Heading to your location"
-                  : order.status === "packing"
-                  ? "Preparing for delivery"
-                  : order.status === "shopping"
-                  ? "Picking your items"
-                  : "Waiting for shopper assignment"}
-              </div>
+            // Mobile: Simple status display or shopper details
+            <div className="py-4">
+              {order.status === "delivered" ? (
+                <div className="text-center">
+                  <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Delivered
+                  </div>
+                  <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Order completed successfully
+                  </div>
+                </div>
+              ) : order.assignedTo || order.shopper_id ? (
+                // Show shopper details when assigned (regardless of status)
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-purple-100 dark:bg-purple-900/30">
+                    {order.assignedTo?.profile_photo ? (
+                      <Image
+                        src={order.assignedTo.profile_photo}
+                        alt={order.assignedTo.name || "Shopper"}
+                        width={48}
+                        height={48}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <svg
+                        className="h-6 w-6 text-purple-600 dark:text-purple-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                      {order.assignedTo?.name || "Shopper Assigned"}
+                    </div>
+                    <div className="mt-0.5 flex items-center gap-2">
+                      {order.assignedTo?.rating && (
+                        <div className="flex items-center gap-1">
+                          <svg
+                            className="h-3 w-3 text-yellow-400"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {order.assignedTo.rating.toFixed(1)}
+                          </span>
+                        </div>
+                      )}
+                      {order.assignedTo?.phone && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {order.assignedTo.phone}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {order.status === "on_the_way"
+                      ? "On the Way"
+                      : order.status === "packing"
+                      ? "Packing"
+                      : order.status === "shopping"
+                      ? "Shopping"
+                      : "Pending Assignment"}
+                  </div>
+                  <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    {order.status === "on_the_way"
+                      ? "Heading to your location"
+                      : order.status === "packing"
+                      ? "Preparing for delivery"
+                      : order.status === "shopping"
+                      ? "Picking your items"
+                      : "Waiting for shopper assignment"}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             // Desktop: Full steps display
@@ -480,6 +544,95 @@ export default function UserReelOrderDetails({
                     Message
                   </Button>
                 </div>
+
+                {/* Recent Reviews Section */}
+                {order.assignedTo?.recentReviews && order.assignedTo.recentReviews.length > 0 && (
+                  <div className="mt-8 w-full border-t border-gray-200 pt-6 dark:border-gray-700">
+                    <div className="mb-5 flex items-center justify-between">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                        Recent Reviews
+                      </h3>
+                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        {order.assignedTo.recentReviews.length} review
+                        {order.assignedTo.recentReviews.length !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+                    <div className="space-y-3">
+                      {order.assignedTo.recentReviews.map((review: any) => (
+                        <div
+                          key={review.id}
+                          className="group rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-purple-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-purple-600"
+                        >
+                          <div className="mb-3 flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-purple-100 to-purple-200 ring-2 ring-purple-50 dark:from-purple-900/30 dark:to-purple-800/30 dark:ring-purple-900/20">
+                                {review.User?.profile_picture ? (
+                                  <Image
+                                    src={review.User.profile_picture}
+                                    alt={review.User.name || "Customer"}
+                                    width={40}
+                                    height={40}
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  <svg
+                                    className="h-6 w-6 text-purple-600 dark:text-purple-400"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                    />
+                                  </svg>
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                  {review.User?.name || "Anonymous Customer"}
+                                </p>
+                                {review.reviewed_at && (
+                                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                                    {new Date(review.reviewed_at).toLocaleDateString("en-US", {
+                                      month: "long",
+                                      day: "numeric",
+                                      year: "numeric",
+                                    })}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex shrink-0 items-center gap-0.5 rounded-lg bg-yellow-50 px-2 py-1 dark:bg-yellow-900/20">
+                              {[...Array(5)].map((_, i) => (
+                                <svg
+                                  key={i}
+                                  className={`h-4 w-4 transition-all ${
+                                    i < (review.rating || 0)
+                                      ? "fill-yellow-400 text-yellow-400"
+                                      : "fill-gray-200 text-gray-200 dark:fill-gray-700 dark:text-gray-700"
+                                  }`}
+                                  viewBox="0 0 20 20"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                              ))}
+                              <span className="ml-1.5 text-xs font-semibold text-yellow-700 dark:text-yellow-400">
+                                {review.rating || 0}
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+                            "{review.review}"
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center">
