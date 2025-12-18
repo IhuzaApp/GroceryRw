@@ -121,9 +121,9 @@ const MobileShopCard: React.FC<MobileShopCardProps> = ({
 
   return (
     <Link href={getNavigationPath()}>
-      <div className="relative mb-3 h-28 w-full transform cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-md">
-        {/* Background Image */}
-        <div className="absolute inset-0">
+      <div className="relative mb-3 w-full transform cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:shadow-lg">
+        {/* Image Section */}
+        <div className="relative h-28 w-full bg-gray-100 dark:bg-gray-800">
           <Image
             src={getImageUrl()}
             alt={shop.name}
@@ -143,85 +143,29 @@ const MobileShopCard: React.FC<MobileShopCardProps> = ({
             }}
           />
 
-          {/* Dark overlay for better text readability */}
-          <div className="absolute inset-0 bg-black bg-opacity-30"></div>
-        </div>
-
-        {/* Store badge */}
-        {isStore && (
-          <span className="absolute left-2 top-2 z-20 rounded-full bg-blue-500 px-2 py-1 text-xs font-semibold text-white shadow-md">
-            Store
-          </span>
-        )}
-
-        {/* Content Overlay */}
-        <div className="relative z-10 flex h-full items-center justify-between p-4">
-          {/* Left side - Shop info */}
-          <div className="flex flex-1 items-center space-x-3">
-            {/* Shop Logo */}
-            {shop.logo && shop.logo.trim() !== "" && (
-              <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border-2 border-white bg-white shadow-sm">
-                <img
-                  src={shop.logo}
-                  alt={`${shop.name} logo`}
-                  className="h-full w-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
-              </div>
-            )}
-
-            {/* Shop Name */}
-            <div className="min-w-0 flex-1">
-              <h3
-                className="truncate text-lg font-bold drop-shadow-md"
-                style={{ color: "white" }}
-              >
-                {shop.name}
-              </h3>
-
-              {/* Distance and Time (if logged in) */}
-              {isLoggedIn && (
-                <div
-                  className="mt-1 flex items-center space-x-3 text-xs drop-shadow-sm"
-                  style={{ color: "white" }}
-                >
-                  <div className="flex items-center" style={{ color: "white" }}>
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="mr-1 h-3 w-3"
-                      style={{ color: "white" }}
-                    >
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                      <circle cx="12" cy="10" r="3" />
-                    </svg>
-                    {dynamics.distance}
-                  </div>
-                  <div className="flex items-center" style={{ color: "white" }}>
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="mr-1 h-3 w-3"
-                      style={{ color: "white" }}
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
-                    </svg>
-                    {dynamics.time}
-                  </div>
-                </div>
-              )}
+          {/* Shop Logo - Top Left */}
+          {shop.logo && shop.logo.trim() !== "" && (
+            <div className="absolute left-2 top-2 z-20 h-12 w-12 overflow-hidden rounded-full border-2 border-white bg-white shadow-sm">
+              <img
+                src={shop.logo}
+                alt={`${shop.name} logo`}
+                className="h-full w-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
             </div>
-          </div>
+          )}
 
-          {/* Right side - Status badge */}
-          <div className="flex-shrink-0">
+          {/* Store badge */}
+          {isStore && (
+            <span className={`absolute left-2 z-20 rounded-full bg-blue-500 px-2 py-1 text-xs font-semibold text-white shadow-md ${shop.logo && shop.logo.trim() !== "" ? "top-14" : "top-2"}`}>
+              Store
+            </span>
+          )}
+
+          {/* Status badge */}
+          <div className="absolute right-2 top-2 z-20">
             {isShopOpen ? (
               <span className="inline-flex items-center rounded-full bg-green-500 px-2 py-1 text-xs font-semibold text-white shadow-sm">
                 Open
@@ -230,6 +174,47 @@ const MobileShopCard: React.FC<MobileShopCardProps> = ({
               <span className="inline-flex items-center rounded-full bg-red-500 px-2 py-1 text-xs font-semibold text-white shadow-sm">
                 Closed
               </span>
+            )}
+          </div>
+        </div>
+
+        {/* Content Below Image - Name, Distance, and Time */}
+        <div className="p-4">
+          <div className="min-w-0">
+            <h3 className="truncate text-base font-semibold text-gray-800 dark:text-white">
+              {shop.name}
+            </h3>
+
+            {/* Distance and Time (if logged in) */}
+            {isLoggedIn && (
+              <div className="mt-1 flex items-center space-x-3 text-xs text-gray-600 dark:text-gray-300">
+                <div className="flex items-center">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="mr-1 h-3 w-3"
+                  >
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                  {dynamics.distance}
+                </div>
+                <div className="flex items-center">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="mr-1 h-3 w-3"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                  {dynamics.time}
+                </div>
+              </div>
             )}
           </div>
         </div>
