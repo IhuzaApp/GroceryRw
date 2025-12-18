@@ -758,8 +758,12 @@ export default function VideoReel({
   return (
     <>
       <div
-        className={`relative h-screen w-full overflow-hidden border-t-4 border-gray-800`}
-        style={{ scrollSnapAlign: "start" }}
+        className={`relative h-full w-full overflow-hidden`}
+        style={{ 
+          scrollSnapAlign: "start",
+          height: "100vh",
+          minHeight: "100vh"
+        }}
       >
         {/* Background Video */}
         <div style={{ position: "absolute", inset: 0 }}>

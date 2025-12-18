@@ -471,7 +471,8 @@ export default function BottomBar() {
       </div>
 
       {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 z-[9999] flex w-full items-center justify-around border-t border-gray-200 bg-white py-4 shadow-lg transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800 md:hidden">
+      {router.pathname !== "/Reels" && (
+        <nav className="fixed bottom-0 left-0 z-[9999] flex w-full items-center justify-around border-t border-gray-200 bg-white py-4 shadow-lg transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800 md:hidden">
         <NavItem
           href="/plasBusiness"
           icon={
@@ -1070,6 +1071,7 @@ export default function BottomBar() {
           )}
         </div>
       </nav>
+      )}
     </>
   );
 }
