@@ -185,10 +185,7 @@ export default function DesktopCommentsSidebar({
             }}
           >
             {comments.map((comment) => (
-              <div
-                key={comment.id}
-                style={{ display: "flex", gap: "12px" }}
-              >
+              <div key={comment.id} style={{ display: "flex", gap: "12px" }}>
                 <Avatar
                   circle
                   size="sm"

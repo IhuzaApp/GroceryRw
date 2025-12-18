@@ -1,13 +1,6 @@
 import React, { useEffect } from "react";
 import Image from "next/image";
-import {
-  Input,
-  InputGroup,
-  Button,
-  Panel,
-  Steps,
-  Message,
-} from "rsuite";
+import { Input, InputGroup, Button, Panel, Steps, Message } from "rsuite";
 import Link from "next/link";
 import { useState } from "react";
 import { formatCurrency } from "../../../lib/formatCurrency";
@@ -144,12 +137,15 @@ export default function UserRestaurantOrderDetails({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const handleSubmitRating = async (ratings: {
-    rating: number;
-    packaging_quality: number;
-    delivery_experience: number;
-    professionalism: number;
-  }, comment: string) => {
+  const handleSubmitRating = async (
+    ratings: {
+      rating: number;
+      packaging_quality: number;
+      delivery_experience: number;
+      professionalism: number;
+    },
+    comment: string
+  ) => {
     setSubmitting(true);
     setSubmitError(null);
 
@@ -429,10 +425,11 @@ export default function UserRestaurantOrderDetails({
               {order.status === "READY" && "Your order is ready for pickup"}
               {order.status === "OUT_FOR_DELIVERY" &&
                 "Your order is on the way"}
-              {order.status === "DELIVERED" && !order.delivery_photo_url &&
+              {order.status === "DELIVERED" &&
+                !order.delivery_photo_url &&
                 "Order has been delivered successfully"}
             </div>
-            
+
             {/* Delivery Proof Image for Mobile */}
             {order.status === "DELIVERED" && order.delivery_photo_url && (
               <div className="mt-4">
@@ -461,7 +458,7 @@ export default function UserRestaurantOrderDetails({
               <Steps.Item key={index} title={step} />
             ))}
           </Steps>
-          
+
           {/* Delivery Proof Image for Desktop */}
           {order.status === "DELIVERED" && order.delivery_photo_url && (
             <div className="mt-6">

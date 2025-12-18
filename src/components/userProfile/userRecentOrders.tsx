@@ -402,7 +402,7 @@ export default function UserRecentOrders({
               {(() => {
                 const isDone = order.status === "delivered";
                 const isAssigned = !!order?.shopper_id || !!order?.assignedTo;
-                
+
                 if (isDone) {
                   return (
                     <div className="flex items-center gap-1.5 rounded-full bg-green-100 px-2 py-1 dark:bg-green-900/30">

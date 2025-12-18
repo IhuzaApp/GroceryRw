@@ -672,33 +672,33 @@ export default function FoodReelsApp() {
     // Helper function to extract string value
     const extractStringValue = (value: any): string | null => {
       if (!value) return null;
-      if (typeof value === 'string') {
+      if (typeof value === "string") {
         const trimmed = value.trim();
         return trimmed.length > 0 ? trimmed : null;
       }
-      if (typeof value === 'object' && value !== null) {
-        if (value.value && typeof value.value === 'string') {
+      if (typeof value === "object" && value !== null) {
+        if (value.value && typeof value.value === "string") {
           const trimmed = value.value.trim();
           return trimmed.length > 0 ? trimmed : null;
         }
-        if (value.text && typeof value.text === 'string') {
+        if (value.text && typeof value.text === "string") {
           const trimmed = value.text.trim();
           return trimmed.length > 0 ? trimmed : null;
         }
-        if (value.name && typeof value.name === 'string') {
+        if (value.name && typeof value.name === "string") {
           const trimmed = value.name.trim();
           return trimmed.length > 0 ? trimmed : null;
         }
         try {
           const str = value.toString();
-          if (str && str !== '[object Object]' && typeof str === 'string') {
+          if (str && str !== "[object Object]" && typeof str === "string") {
             const trimmed = str.trim();
             return trimmed.length > 0 ? trimmed : null;
           }
         } catch (e) {}
         const keys = Object.keys(value);
         for (const key of keys) {
-          if (typeof value[key] === 'string') {
+          if (typeof value[key] === "string") {
             const trimmed = value[key].trim();
             if (trimmed.length > 0) return trimmed;
           }
@@ -712,18 +712,21 @@ export default function FoodReelsApp() {
       case "restaurant":
         // Try Restaurant location first, then fallback to Shops address if restaurant_id is null
         let restaurantLocation = null;
-        
+
         if (dbReel.Restaurant?.location) {
           restaurantLocation = extractStringValue(dbReel.Restaurant.location);
         }
-        
+
         // If no restaurant location but we have a shop_id, try using Shops address
         if (!restaurantLocation && dbReel.Shops) {
-          restaurantLocation = extractStringValue(dbReel.Shops.address) || extractStringValue(dbReel.Shops.name);
+          restaurantLocation =
+            extractStringValue(dbReel.Shops.address) ||
+            extractStringValue(dbReel.Shops.name);
         }
-        
-        const finalLocation = restaurantLocation || "Location information unavailable";
-        
+
+        const finalLocation =
+          restaurantLocation || "Location information unavailable";
+
         return {
           ...basePost,
           type: "restaurant",
@@ -738,28 +741,33 @@ export default function FoodReelsApp() {
 
       case "supermarket":
         const product = dbReel.Product || {};
-        
+
         // Try multiple sources for store information, in order of preference:
         let storeName: string | null = null;
-        
+
         // 1. Try Shops relationship (if shop_id exists and Shops is loaded)
         if (dbReel.Shops) {
-          storeName = extractStringValue(dbReel.Shops.name) || extractStringValue(dbReel.Shops.address);
+          storeName =
+            extractStringValue(dbReel.Shops.name) ||
+            extractStringValue(dbReel.Shops.address);
         }
-        
+
         // 2. Try Product JSON field for store information (some reels might store it there)
-        if (!storeName && product && typeof product === 'object') {
-          storeName = extractStringValue(product.store) || 
-                     extractStringValue(product.storeName) || 
-                     extractStringValue(product.shopName) ||
-                     extractStringValue(product.shop);
+        if (!storeName && product && typeof product === "object") {
+          storeName =
+            extractStringValue(product.store) ||
+            extractStringValue(product.storeName) ||
+            extractStringValue(product.shopName) ||
+            extractStringValue(product.shop);
         }
-        
+
         // 3. Try Restaurant name/location if we have restaurant_id instead of shop_id
         if (!storeName && dbReel.Restaurant) {
-          storeName = extractStringValue(dbReel.Restaurant.name) || extractStringValue(dbReel.Restaurant.location);
+          storeName =
+            extractStringValue(dbReel.Restaurant.name) ||
+            extractStringValue(dbReel.Restaurant.location);
         }
-        
+
         // 4. Last resort - check if description or title contains store info
         if (!storeName) {
           const description = extractStringValue(dbReel.description);
@@ -770,9 +778,9 @@ export default function FoodReelsApp() {
             storeName = title;
           }
         }
-        
+
         const finalStoreName = storeName || "Store information unavailable";
-        
+
         return {
           ...basePost,
           type: "supermarket",
@@ -803,35 +811,41 @@ export default function FoodReelsApp() {
       case "store":
         // Handle shop/store type reels - similar to supermarket
         const shopProduct = dbReel.Product || {};
-        
+
         // Try multiple sources for store information
         let shopStoreName: string | null = null;
-        
+
         // 1. Try Shops relationship
         if (dbReel.Shops) {
-          shopStoreName = extractStringValue(dbReel.Shops.name) || extractStringValue(dbReel.Shops.address);
+          shopStoreName =
+            extractStringValue(dbReel.Shops.name) ||
+            extractStringValue(dbReel.Shops.address);
         }
-        
+
         // 2. Try Product JSON field
         if (!shopStoreName && shopProduct) {
-          shopStoreName = extractStringValue(shopProduct.store) || 
-                         extractStringValue(shopProduct.storeName) || 
-                         extractStringValue(shopProduct.shopName) ||
-                         extractStringValue(shopProduct.shop);
+          shopStoreName =
+            extractStringValue(shopProduct.store) ||
+            extractStringValue(shopProduct.storeName) ||
+            extractStringValue(shopProduct.shopName) ||
+            extractStringValue(shopProduct.shop);
         }
-        
+
         // 3. Try Restaurant name/location
         if (!shopStoreName && dbReel.Restaurant) {
-          shopStoreName = extractStringValue(dbReel.Restaurant.name) || extractStringValue(dbReel.Restaurant.location);
+          shopStoreName =
+            extractStringValue(dbReel.Restaurant.name) ||
+            extractStringValue(dbReel.Restaurant.location);
         }
-        
+
         // 4. If we have shop_id but no Shops data
         if (!shopStoreName && dbReel.shop_id) {
           shopStoreName = "Store information available (loading...)";
         }
-        
-        const finalShopStoreName = shopStoreName || "Store information unavailable";
-        
+
+        const finalShopStoreName =
+          shopStoreName || "Store information unavailable";
+
         return {
           ...basePost,
           type: "supermarket" as PostType, // Map shop/store to supermarket type for display
@@ -938,15 +952,15 @@ export default function FoodReelsApp() {
       setIsRefreshing(true);
       setError(null);
 
-        const response = await fetch("/api/queries/reels");
-        if (!response.ok) {
-          throw new Error("Failed to fetch reels");
-        }
+      const response = await fetch("/api/queries/reels");
+      if (!response.ok) {
+        throw new Error("Failed to fetch reels");
+      }
 
-        const data = await response.json();
-        const convertedPosts = data.reels.map((reel: DatabaseReel) =>
-          convertDatabaseReelToFoodPost(reel)
-        );
+      const data = await response.json();
+      const convertedPosts = data.reels.map((reel: DatabaseReel) =>
+        convertDatabaseReelToFoodPost(reel)
+      );
 
       // Update state first for immediate UI update
       setPosts(convertedPosts);
@@ -1052,14 +1066,14 @@ export default function FoodReelsApp() {
 
       // Don't handle navigation if user is typing in an input field
       const activeElement = document.activeElement;
-      const isTyping = activeElement && (
-        activeElement.tagName === "INPUT" ||
-        activeElement.tagName === "TEXTAREA" ||
-        activeElement.getAttribute("contenteditable") === "true" ||
-        activeElement.closest("input") ||
-        activeElement.closest("textarea") ||
-        activeElement.closest("[contenteditable='true']")
-      );
+      const isTyping =
+        activeElement &&
+        (activeElement.tagName === "INPUT" ||
+          activeElement.tagName === "TEXTAREA" ||
+          activeElement.getAttribute("contenteditable") === "true" ||
+          activeElement.closest("input") ||
+          activeElement.closest("textarea") ||
+          activeElement.closest("[contenteditable='true']"));
 
       // For space key, only handle navigation if not typing
       if (e.key === " " && isTyping) {
@@ -1549,8 +1563,12 @@ export default function FoodReelsApp() {
   // Automatically set active post and load comments for desktop view
   useEffect(() => {
     if (isMobile) return; // Only for desktop
-    
-    if (posts.length > 0 && visiblePostIndex >= 0 && visiblePostIndex < posts.length) {
+
+    if (
+      posts.length > 0 &&
+      visiblePostIndex >= 0 &&
+      visiblePostIndex < posts.length
+    ) {
       const currentPost = posts[visiblePostIndex];
       if (currentPost && currentPost.id) {
         // Always update activePostId for desktop to show comments sidebar
@@ -1630,12 +1648,14 @@ export default function FoodReelsApp() {
   };
 
   // On desktop, always use visible post for comments; on mobile, use activePostId (from clicking comment icon)
-  const activePostForComments = isMobile 
+  const activePostForComments = isMobile
     ? posts.find((post: FoodPost) => post.id === activePostId)
-    : (posts.length > 0 && visiblePostIndex >= 0 && visiblePostIndex < posts.length 
-        ? posts[visiblePostIndex] 
-        : null);
-  
+    : posts.length > 0 &&
+      visiblePostIndex >= 0 &&
+      visiblePostIndex < posts.length
+    ? posts[visiblePostIndex]
+    : null;
+
   const activePost = activePostForComments;
   const mergedActiveComments = activePost
     ? [

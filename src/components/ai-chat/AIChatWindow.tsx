@@ -16,7 +16,7 @@ interface AIChatWindowProps {
 export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
   const { data: session } = useSession();
   const userName = session?.user?.name || "there";
-  
+
   const getInitialMessage = () => ({
     id: "1",
     text: `Hello ${userName}! 😊 I'm your Plas Agent. I can help you with orders, food recommendations, and more. How can I assist you today?`,
@@ -143,7 +143,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 space-y-4 overflow-y-auto p-4">
           {messages.map((message) => (
             <div
               key={message.id}
@@ -231,4 +231,3 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
     </>
   );
 }
-

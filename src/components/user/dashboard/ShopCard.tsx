@@ -160,7 +160,11 @@ const ShopCard: React.FC<ShopCardProps> = ({
 
           {/* Store badge */}
           {isStore && (
-            <span className={`absolute left-2 rounded-full bg-blue-500 px-2 py-1 text-xs font-semibold text-white shadow-md ${shop.logo && shop.logo.trim() !== "" ? "top-14" : "top-2"}`}>
+            <span
+              className={`absolute left-2 rounded-full bg-blue-500 px-2 py-1 text-xs font-semibold text-white shadow-md ${
+                shop.logo && shop.logo.trim() !== "" ? "top-14" : "top-2"
+              }`}
+            >
               Store
             </span>
           )}
@@ -175,7 +179,7 @@ const ShopCard: React.FC<ShopCardProps> = ({
             </span>
           )}
         </div>
-        <div className="p-4 sm:p-5 bg-white dark:bg-gray-800">
+        <div className="bg-white p-4 dark:bg-gray-800 sm:p-5">
           <h3 className="mb-1 text-sm font-semibold text-gray-800 dark:text-white sm:text-base">
             {shop.name}
           </h3>

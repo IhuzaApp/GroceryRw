@@ -119,7 +119,6 @@ export default function CommentsDrawer({
     }
   }, [open]);
 
-
   const handleAddComment = async () => {
     if (!newComment.trim() || isAddingComment) return;
 
@@ -312,11 +311,13 @@ export default function CommentsDrawer({
             minHeight: isMobile ? "50px" : "60px",
           }}
         >
-          <div style={{ 
-            display: "flex", 
-            alignItems: "center", 
-            gap: "8px",
-          }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
             <h3
               style={{
                 fontSize: isMobile ? "18px" : "18px",
@@ -615,7 +616,9 @@ export default function CommentsDrawer({
                   onFocus={(e) => {
                     if (isMobile) {
                       e.target.style.borderColor = "#3b82f6";
-                      e.target.style.backgroundColor = isDark ? "#4b5563" : "#ffffff";
+                      e.target.style.backgroundColor = isDark
+                        ? "#4b5563"
+                        : "#ffffff";
                     }
                   }}
                   onBlur={(e) => {

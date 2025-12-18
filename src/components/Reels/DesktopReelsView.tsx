@@ -40,9 +40,10 @@ export default function DesktopReelsView({
   theme,
 }: DesktopReelsViewProps) {
   // Get active post based on visible index - always show sidebar if there's a post
-  const activePost = (posts.length > 0 && visiblePostIndex >= 0 && visiblePostIndex < posts.length) 
-    ? posts[visiblePostIndex] 
-    : null;
+  const activePost =
+    posts.length > 0 && visiblePostIndex >= 0 && visiblePostIndex < posts.length
+      ? posts[visiblePostIndex]
+      : null;
 
   // Keyboard and scroll handling for desktop
   useEffect(() => {
@@ -59,7 +60,11 @@ export default function DesktopReelsView({
       const containerHeight = container.clientHeight;
       const currentIndex = Math.round(scrollPosition / containerHeight);
 
-      if (currentIndex !== visiblePostIndex && currentIndex >= 0 && currentIndex < posts.length) {
+      if (
+        currentIndex !== visiblePostIndex &&
+        currentIndex >= 0 &&
+        currentIndex < posts.length
+      ) {
         setVisiblePostIndex(currentIndex);
       }
 
@@ -71,14 +76,14 @@ export default function DesktopReelsView({
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't handle navigation if user is typing in an input field
       const activeElement = document.activeElement;
-      const isTyping = activeElement && (
-        activeElement.tagName === "INPUT" ||
-        activeElement.tagName === "TEXTAREA" ||
-        activeElement.getAttribute("contenteditable") === "true" ||
-        activeElement.closest("input") ||
-        activeElement.closest("textarea") ||
-        activeElement.closest("[contenteditable='true']")
-      );
+      const isTyping =
+        activeElement &&
+        (activeElement.tagName === "INPUT" ||
+          activeElement.tagName === "TEXTAREA" ||
+          activeElement.getAttribute("contenteditable") === "true" ||
+          activeElement.closest("input") ||
+          activeElement.closest("textarea") ||
+          activeElement.closest("[contenteditable='true']"));
 
       // For space key, only handle navigation if not typing
       if (e.key === " " && isTyping) {
@@ -127,7 +132,7 @@ export default function DesktopReelsView({
 
     container.addEventListener("scroll", handleScroll);
     window.addEventListener("keydown", handleKeyDown);
-    
+
     return () => {
       container.removeEventListener("scroll", handleScroll);
       window.removeEventListener("keydown", handleKeyDown);
@@ -148,7 +153,10 @@ export default function DesktopReelsView({
             width: "48px",
             height: "48px",
             borderRadius: "50%",
-            backgroundColor: theme === "dark" ? "rgba(31, 41, 55, 0.9)" : "rgba(255, 255, 255, 0.9)",
+            backgroundColor:
+              theme === "dark"
+                ? "rgba(31, 41, 55, 0.9)"
+                : "rgba(255, 255, 255, 0.9)",
             border: `1px solid ${theme === "dark" ? "#374151" : "#e5e7eb"}`,
             display: "flex",
             alignItems: "center",
@@ -158,11 +166,17 @@ export default function DesktopReelsView({
             transition: "all 0.2s",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = theme === "dark" ? "rgba(55, 65, 81, 0.95)" : "rgba(255, 255, 255, 1)";
+            e.currentTarget.style.backgroundColor =
+              theme === "dark"
+                ? "rgba(55, 65, 81, 0.95)"
+                : "rgba(255, 255, 255, 1)";
             e.currentTarget.style.transform = "translateY(-50%) scale(1.1)";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = theme === "dark" ? "rgba(31, 41, 55, 0.9)" : "rgba(255, 255, 255, 0.9)";
+            e.currentTarget.style.backgroundColor =
+              theme === "dark"
+                ? "rgba(31, 41, 55, 0.9)"
+                : "rgba(255, 255, 255, 0.9)";
             e.currentTarget.style.transform = "translateY(-50%) scale(1)";
           }}
         >
@@ -227,7 +241,7 @@ export default function DesktopReelsView({
             <div
               key={`${post.id}-desktop`}
               data-index={index}
-              style={{ 
+              style={{
                 scrollSnapAlign: "start",
                 width: "100%",
                 height: "95vh",
@@ -235,7 +249,7 @@ export default function DesktopReelsView({
                 maxHeight: "95vh",
                 flexShrink: 0,
                 margin: 0,
-                padding: 0
+                padding: 0,
               }}
             >
               <VideoReel
@@ -265,4 +279,3 @@ export default function DesktopReelsView({
     </RootLayout>
   );
 }
-

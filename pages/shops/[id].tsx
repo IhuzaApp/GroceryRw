@@ -141,7 +141,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       },
     };
   } catch (error) {
-    
     return {
       props: {
         shop: null,
