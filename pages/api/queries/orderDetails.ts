@@ -356,16 +356,6 @@ export default async function handler(
       const restaurantOrdersCount = statsData.restaurant_orders_aggregate?.aggregate?.count || 0;
       const totalDeliveredOrders = regularOrdersCount + reelOrdersCount + restaurantOrdersCount;
 
-      // Debug logging
-      console.log("Shopper Stats for", shopperId, {
-        ratingsCount: statsData.Ratings.length,
-        averageRating,
-        regularOrdersCount,
-        reelOrdersCount,
-        restaurantOrdersCount,
-        totalDeliveredOrders,
-      });
-
       shopperStats = {
         rating: averageRating,
         orders_aggregate: {
@@ -412,7 +402,6 @@ export default async function handler(
 
     res.status(200).json({ order: formattedOrder });
   } catch (error) {
-    console.error("Error in orderDetails API:", error);
     res.status(500).json({
       error: "Failed to fetch order details",
       details: error instanceof Error ? error.message : "Unknown error",
