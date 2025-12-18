@@ -618,7 +618,7 @@ export default function VideoReel({
                 }}
                 onClick={() => {
                   if (isAuthenticated && post.shop_id) {
-                    router.push(`/stores/${post.shop_id}`);
+                    router.push(`/shops/${post.shop_id}`);
                   }
                 }}
                 disabled={!isAuthenticated || !post.shop_id}
