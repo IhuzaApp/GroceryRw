@@ -429,9 +429,28 @@ export default function UserRestaurantOrderDetails({
               {order.status === "READY" && "Your order is ready for pickup"}
               {order.status === "OUT_FOR_DELIVERY" &&
                 "Your order is on the way"}
-              {order.status === "DELIVERED" &&
+              {order.status === "DELIVERED" && !order.delivery_photo_url &&
                 "Order has been delivered successfully"}
             </div>
+            
+            {/* Delivery Proof Image for Mobile */}
+            {order.status === "DELIVERED" && order.delivery_photo_url && (
+              <div className="mt-4">
+                <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Delivery Proof
+                </p>
+                <div className="relative mx-auto max-w-[280px] overflow-hidden rounded-lg border-2 border-gray-200 dark:border-gray-700">
+                  <Image
+                    src={order.delivery_photo_url}
+                    alt="Delivery proof"
+                    width={280}
+                    height={280}
+                    className="h-auto w-full object-cover"
+                    unoptimized
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -442,6 +461,25 @@ export default function UserRestaurantOrderDetails({
               <Steps.Item key={index} title={step} />
             ))}
           </Steps>
+          
+          {/* Delivery Proof Image for Desktop */}
+          {order.status === "DELIVERED" && order.delivery_photo_url && (
+            <div className="mt-6">
+              <h3 className="mb-3 text-base font-semibold text-gray-900 dark:text-white">
+                Delivery Proof
+              </h3>
+              <div className="relative mx-auto max-w-md overflow-hidden rounded-lg border-2 border-gray-200 dark:border-gray-700">
+                <Image
+                  src={order.delivery_photo_url}
+                  alt="Delivery proof"
+                  width={448}
+                  height={448}
+                  className="h-auto w-full object-cover"
+                  unoptimized
+                />
+              </div>
+            </div>
+          )}
         </div>
       </Panel>
 
