@@ -524,200 +524,266 @@ export default function UserOrderDetails({
 
         {/* Right Column - Assigned Person (Desktop only) */}
         <div className="hidden w-full md:block md:w-1/3">
-          <Panel shaded bordered>
-            <h2 className="mb-4 text-xl font-bold">
-              {order.status === "shopping" || order.status === "packing"
-                ? "Your Shopper"
-                : "Your Delivery Person"}
-            </h2>
-            {order.assignedTo || order.shopper_id ? (
-              <div className="flex flex-col items-center text-center">
-                <div className="mb-3 h-24 w-24 overflow-hidden rounded-full">
-                  <Image
-                    src={order.assignedTo?.profile_photo || "/assets/images/profile.jpg"}
-                    alt={order.assignedTo?.name || "Shopper"}
-                    width={96}
-                    height={96}
-                    className="object-cover"
-                  />
-                </div>
-                <h3 className="text-lg font-bold">{order.assignedTo?.name || "Shopper Assigned"}</h3>
-                {order.assignedTo?.phone && (
-                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                    {order.assignedTo.phone}
-                  </p>
-                )}
-                {(order.assignedTo?.rating !== undefined && order.assignedTo?.rating !== null) && (
-                  <div className="mt-1 flex items-center">
-                    <div className="flex">
-                      {[...Array(5)].map((_: any, i: number) => (
-                        <svg
-                          key={i}
-                          viewBox="0 0 24 24"
-                          fill={
-                            i < Math.floor(Number(order.assignedTo.rating) || 0)
-                              ? "currentColor"
-                              : "none"
-                          }
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          className={`h-4 w-4 ${
-                            i < Math.floor(Number(order.assignedTo.rating) || 0)
-                              ? "text-yellow-400"
-                              : "text-gray-300"
-                          }`}
-                        >
-                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                        </svg>
-                      ))}
-                    </div>
-                    <span className="ml-1 text-sm text-gray-600 dark:text-gray-400">
-                      {Number(order.assignedTo.rating).toFixed(1)}
-                    </span>
-                  </div>
-                )}
-                {order.assignedTo?.orders_aggregate?.aggregate?.count !== undefined && (
-                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    {order.assignedTo.orders_aggregate.aggregate.count}{" "}
-                    orders completed
-                  </p>
-                )}
-                <div className="mt-6 w-full space-y-3">
-                  <Button
-                    appearance="primary"
-                    block
-                    className={`${
-                      order.status === "delivered"
-                        ? "cursor-not-allowed opacity-50"
-                        : "bg-green-500"
-                    } text-white`}
-                    disabled={order.status === "delivered"}
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="mr-2 h-4 w-4"
-                    >
-                      <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"></path>
-                    </svg>
-                    Call
-                  </Button>
-                  <Button
-                    appearance="ghost"
-                    block
-                    disabled={order.status === "delivered"}
-                    className={
-                      order.status === "delivered"
-                        ? "cursor-not-allowed opacity-50"
-                        : ""
-                    }
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="mr-2 h-4 w-4"
-                    >
-                      <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 a8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"></path>
-                    </svg>
-                    Message
-                  </Button>
-                </div>
+          <Panel shaded bordered className="overflow-hidden">
+            <div className="relative bg-gradient-to-br from-green-50 to-green-100/50 px-6 py-5 dark:from-green-900/20 dark:to-green-800/10">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                {order.status === "shopping" || order.status === "packing"
+                  ? "Your Shopper"
+                  : "Your Delivery Person"}
+              </h2>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                {order.status === "shopping"
+                  ? "Currently shopping for your items"
+                  : order.status === "packing"
+                  ? "Preparing your order"
+                  : order.status === "on_the_way"
+                  ? "On the way to you"
+                  : "Assigned to your order"}
+              </p>
+            </div>
 
-                {/* Recent Reviews Section */}
-                {order.assignedTo?.recentReviews && order.assignedTo.recentReviews.length > 0 && (
-                  <div className="mt-8 w-full border-t border-gray-200 pt-6 dark:border-gray-700">
-                    <div className="mb-5 flex items-center justify-between">
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                        Recent Reviews
-                      </h3>
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                        {order.assignedTo.recentReviews.length} review
-                        {order.assignedTo.recentReviews.length !== 1 ? "s" : ""}
-                      </span>
-                    </div>
-                    <div className="space-y-3">
-                      {order.assignedTo.recentReviews.map((review: any) => (
-                        <div
-                          key={review.id}
-                          className="group rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-green-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-600"
-                        >
-                          <div className="mb-3 flex items-start justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-100 to-green-200 ring-2 ring-green-50 dark:from-green-900/30 dark:to-green-800/30 dark:ring-green-900/20">
-                                {review.User?.profile_picture ? (
-                                  <Image
-                                    src={review.User.profile_picture}
-                                    alt={review.User.name || "Customer"}
-                                    width={40}
-                                    height={40}
-                                    className="h-full w-full object-cover"
-                                  />
-                                ) : (
-                                  <svg
-                                    className="h-6 w-6 text-green-600 dark:text-green-400"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                                    />
-                                  </svg>
-                                )}
-                              </div>
-                              <div className="flex-1">
-                                <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                  {review.User?.name || "Anonymous Customer"}
-                                </p>
-                                {review.reviewed_at && (
-                                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                                    {new Date(review.reviewed_at).toLocaleDateString("en-US", {
-                                      month: "long",
-                                      day: "numeric",
-                                      year: "numeric",
-                                    })}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex shrink-0 items-center gap-0.5 rounded-lg bg-yellow-50 px-2 py-1 dark:bg-yellow-900/20">
-                              {[...Array(5)].map((_, i) => (
-                                <svg
-                                  key={i}
-                                  className={`h-4 w-4 transition-all ${
-                                    i < (review.rating || 0)
-                                      ? "fill-yellow-400 text-yellow-400"
-                                      : "fill-gray-200 text-gray-200 dark:fill-gray-700 dark:text-gray-700"
-                                  }`}
-                                  viewBox="0 0 20 20"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                              ))}
-                              <span className="ml-1.5 text-xs font-semibold text-yellow-700 dark:text-yellow-400">
-                                {review.rating || 0}
-                              </span>
-                            </div>
-                          </div>
-                          <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
-                            "{review.review}"
-                          </p>
-                        </div>
-                      ))}
+            {order.assignedTo || order.shopper_id ? (
+              <div className="p-6">
+                <div className="flex flex-col items-center">
+                  {/* Profile Image with Ring */}
+                  <div className="relative mb-4">
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-green-400 to-green-600 opacity-20 blur-xl"></div>
+                    <div className="relative h-28 w-28 overflow-hidden rounded-full border-4 border-white shadow-lg ring-4 ring-green-100 dark:border-gray-800 dark:ring-green-900/30">
+                      <Image
+                        src={order.assignedTo?.profile_photo || "/assets/images/profile.jpg"}
+                        alt={order.assignedTo?.name || "Shopper"}
+                        width={112}
+                        height={112}
+                        className="h-full w-full object-cover"
+                      />
                     </div>
                   </div>
-                )}
+
+                  {/* Name */}
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                    {order.assignedTo?.name || "Shopper Assigned"}
+                  </h3>
+
+                  {/* Phone */}
+                  {order.assignedTo?.phone && (
+                    <div className="mt-2 flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-1.5 dark:bg-gray-800">
+                      <svg
+                        className="h-4 w-4 text-gray-500 dark:text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                        />
+                      </svg>
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {order.assignedTo.phone}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Rating and Stats */}
+                  <div className="mt-4 flex w-full items-center justify-center gap-4">
+                    {(order.assignedTo?.rating !== undefined && order.assignedTo?.rating !== null) && (
+                      <div className="flex flex-col items-center rounded-lg bg-yellow-50 px-4 py-2 dark:bg-yellow-900/20">
+                        <div className="flex items-center gap-1">
+                          {[...Array(5)].map((_: any, i: number) => (
+                            <svg
+                              key={i}
+                              className={`h-4 w-4 ${
+                                i < Math.floor(Number(order.assignedTo.rating) || 0)
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "fill-gray-300 text-gray-300 dark:fill-gray-600 dark:text-gray-600"
+                              }`}
+                              viewBox="0 0 20 20"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                          ))}
+                        </div>
+                        <span className="mt-1 text-xs font-semibold text-yellow-700 dark:text-yellow-400">
+                          {Number(order.assignedTo.rating).toFixed(1)} Rating
+                        </span>
+                      </div>
+                    )}
+                    {order.assignedTo?.orders_aggregate?.aggregate?.count !== undefined && (
+                      <div className="flex flex-col items-center rounded-lg bg-blue-50 px-4 py-2 dark:bg-blue-900/20">
+                        <span className="text-lg font-bold text-blue-700 dark:text-blue-400">
+                          {order.assignedTo.orders_aggregate.aggregate.count}
+                        </span>
+                        <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                          Orders
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="mt-6 w-full space-y-3">
+                    <button
+                      onClick={() => {
+                        if (order.assignedTo?.phone) {
+                          window.location.href = `tel:${order.assignedTo.phone}`;
+                        }
+                      }}
+                      disabled={order.status === "delivered" || !order.assignedTo?.phone}
+                      className={`flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-200 ${
+                        order.status === "delivered" || !order.assignedTo?.phone
+                          ? "cursor-not-allowed bg-gray-400 opacity-50"
+                          : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                      }`}
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        className="h-5 w-5"
+                      >
+                        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"></path>
+                      </svg>
+                      Call Shopper
+                    </button>
+                    <button
+                      disabled={order.status === "delivered"}
+                      className={`flex w-full items-center justify-center gap-2 rounded-xl border-2 px-4 py-3 text-sm font-semibold transition-all duration-200 ${
+                        order.status === "delivered"
+                          ? "cursor-not-allowed border-gray-300 bg-gray-50 text-gray-400 opacity-50 dark:border-gray-700 dark:bg-gray-800"
+                          : "border-green-500 bg-white text-green-600 hover:bg-green-50 hover:shadow-md active:scale-[0.98] dark:border-green-600 dark:bg-gray-800 dark:text-green-400 dark:hover:bg-green-900/20"
+                      }`}
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        className="h-5 w-5"
+                      >
+                        <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 a8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"></path>
+                      </svg>
+                      Send Message
+                    </button>
+                  </div>
+
+                  {/* Recent Reviews Section */}
+                  {order.assignedTo?.recentReviews && order.assignedTo.recentReviews.length > 0 && (
+                    <div className="mt-8 w-full border-t border-gray-200 pt-6 dark:border-gray-700">
+                      <div className="mb-5 flex items-center justify-between">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                          Recent Reviews
+                        </h3>
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                          {order.assignedTo.recentReviews.length} review
+                          {order.assignedTo.recentReviews.length !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+                      <div className="max-h-[280px] space-y-3 overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 #f1f5f9' }}>
+                        {order.assignedTo.recentReviews.map((review: any) => (
+                          <div
+                            key={review.id}
+                            className="group rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-green-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-600"
+                          >
+                            <div className="mb-3 flex items-start justify-between gap-3">
+                              <div className="flex items-center gap-3">
+                                <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-100 to-green-200 ring-2 ring-green-50 dark:from-green-900/30 dark:to-green-800/30 dark:ring-green-900/20">
+                                  {review.User?.profile_picture ? (
+                                    <Image
+                                      src={review.User.profile_picture}
+                                      alt={review.User.name || "Customer"}
+                                      width={32}
+                                      height={32}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <svg
+                                      className="h-5 w-5 text-green-600 dark:text-green-400"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                      />
+                                    </svg>
+                                  )}
+                                </div>
+                                <div className="flex-1">
+                                  <p className="text-sm font-semibold text-gray-400 dark:text-gray-400">
+                                    {review.User?.name || "Anonymous Customer"}
+                                  </p>
+                                  {review.reviewed_at && (
+                                    <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-400">
+                                      {new Date(review.reviewed_at).toLocaleDateString("en-US", {
+                                        month: "long",
+                                        day: "numeric",
+                                        year: "numeric",
+                                      })}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex shrink-0 items-center gap-0.5 rounded-lg bg-yellow-50 px-2 py-1 dark:bg-yellow-900/20">
+                                {[...Array(5)].map((_, i) => (
+                                  <svg
+                                    key={i}
+                                    className={`h-4 w-4 transition-all ${
+                                      i < (review.rating || 0)
+                                        ? "fill-yellow-400 text-yellow-400"
+                                        : "fill-gray-200 text-gray-200 dark:fill-gray-700 dark:text-gray-700"
+                                    }`}
+                                    viewBox="0 0 20 20"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                  >
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                  </svg>
+                                ))}
+                                <span className="ml-1.5 text-xs font-semibold text-yellow-700 dark:text-yellow-400">
+                                  {review.rating || 0}
+                                </span>
+                              </div>
+                            </div>
+                            <p className="text-left text-sm leading-relaxed text-black dark:text-white">
+                              {review.review}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
-              <p className="text-gray-600">No assigned person available.</p>
+              <div className="p-6 text-center">
+                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+                  <svg
+                    className="h-10 w-10 text-gray-400 dark:text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                </div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  No assigned person available
+                </p>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+                  Waiting for shopper assignment
+                </p>
+              </div>
             )}
           </Panel>
 
