@@ -108,27 +108,37 @@ export default function DesktopReelsView({
         </div>
       )}
 
-      {/* Main Reels Container - Centered with rounded corners */}
+      {/* Main Reels Container - Centered vertically and horizontally */}
       <div
-        ref={containerRef}
-        className="scrollbar-hide reels-container"
         style={{
-          position: "relative",
-          margin: "0 auto",
-          width: "100%",
-          maxWidth: "28rem",
-          height: "95vh",
-          overflowY: "auto",
-          overflowX: "hidden",
-          scrollSnapType: "y mandatory",
-          scrollBehavior: "smooth",
-          overscrollBehavior: "none",
-          padding: 0,
-          borderRadius: "1rem",
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-          backgroundColor: theme === "dark" ? "#111827" : "#ffffff",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "100vh",
+          padding: "2.5vh 0",
         }}
       >
+        <div
+          ref={containerRef}
+          className="scrollbar-hide reels-container"
+          style={{
+            position: "relative",
+            width: "100%",
+            maxWidth: "28rem",
+            height: "95vh",
+            minHeight: "95vh",
+            maxHeight: "95vh",
+            overflowY: "auto",
+            overflowX: "hidden",
+            scrollSnapType: "y mandatory",
+            scrollBehavior: "smooth",
+            overscrollBehavior: "none",
+            padding: 0,
+            borderRadius: "1rem",
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+            backgroundColor: theme === "dark" ? "#111827" : "#ffffff",
+          }}
+        >
         {posts.map((post, index) => (
           <div
             key={`${post.id}-desktop`}
@@ -138,7 +148,10 @@ export default function DesktopReelsView({
               width: "100%",
               height: "95vh",
               minHeight: "95vh",
-              flexShrink: 0
+              maxHeight: "95vh",
+              flexShrink: 0,
+              margin: 0,
+              padding: 0
             }}
           >
             <VideoReel
@@ -151,6 +164,7 @@ export default function DesktopReelsView({
             />
           </div>
         ))}
+        </div>
       </div>
 
       {/* Comments Drawer */}
@@ -169,3 +183,4 @@ export default function DesktopReelsView({
     </RootLayout>
   );
 }
+
