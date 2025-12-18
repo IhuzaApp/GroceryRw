@@ -219,7 +219,7 @@ export default function FeedbackModal({
   const colors = getAccentColors();
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-0 sm:p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -228,10 +228,10 @@ export default function FeedbackModal({
 
       {/* Modal */}
       <div
-        className={`relative z-10 w-full max-w-[550px] rounded-2xl border shadow-2xl ${
+        className={`relative z-10 w-full max-w-[550px] rounded-t-2xl sm:rounded-2xl border-0 sm:border shadow-2xl ${
           theme === "dark"
-            ? "border-gray-700 bg-gray-800"
-            : "border-gray-200 bg-white"
+            ? "sm:border-gray-700 bg-gray-800"
+            : "sm:border-gray-200 bg-white"
         }`}
       >
         {/* Header */}
@@ -463,7 +463,7 @@ export default function FeedbackModal({
                     clipRule="evenodd"
                   />
                 </svg>
-                Submit Feedback
+                Send Feedback
               </>
             )}
           </button>
