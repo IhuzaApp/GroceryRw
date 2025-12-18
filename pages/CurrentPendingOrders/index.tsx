@@ -87,37 +87,41 @@ function CurrentOrdersPage() {
     );
   }
 
-  const pendingCount = orders.filter((o) => o.status !== "delivered").length;
+  // Count only assigned orders that are not delivered for "Ongoing"
+  const pendingCount = orders.filter((o) => {
+    const isAssigned = !!o?.shopper_id || !!o?.assignedTo;
+    return o.status !== "delivered" && isAssigned;
+  }).length;
   const completedCount = orders.filter((o) => o.status === "delivered").length;
 
   return (
     <AuthGuard requireAuth={true}>
       <RootLayout>
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-16">
-          <div className="w-full py-6 md:py-8">
+          <div className="w-full py-3 md:py-8">
             {/* Header Section */}
-            <div className="mb-8 px-4 md:px-8">
-              <div className="mb-6 flex items-center justify-between">
-                <div className="flex items-center gap-4">
+            <div className="mb-4 px-3 md:mb-8 md:px-8">
+              <div className="mb-4 flex items-center justify-between md:mb-6">
+                <div className="flex items-center gap-3 md:gap-4">
                   <Link
                     href="/"
-                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 transition-all duration-200 hover:border-green-300 hover:bg-green-50 hover:text-green-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-green-900/20"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 transition-all duration-200 hover:border-green-300 hover:bg-green-50 hover:text-green-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-green-900/20 md:h-10 md:w-10"
                   >
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
-                      className="h-5 w-5"
+                      className="h-4 w-4 md:h-5 md:w-5"
                     >
                       <path d="M19 12H5M12 19l-7-7 7-7" />
                     </svg>
                   </Link>
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white md:text-3xl">
+                    <h1 className="text-xl font-bold text-gray-900 dark:text-white md:text-3xl">
                       My Orders
                     </h1>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 md:mt-1 md:text-sm">
                       Track and manage your orders
                     </p>
                   </div>
@@ -137,7 +141,7 @@ function CurrentOrdersPage() {
               </div>
 
               {/* Filter Tabs - Modern Design */}
-              <div className="inline-flex rounded-xl border border-gray-200 bg-white p-1 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+              <div className="inline-flex w-full rounded-xl border border-gray-200 bg-white p-1 shadow-sm dark:border-gray-700 dark:bg-gray-800 md:w-auto">
                 <button
                   onClick={() => setFilter("pending")}
                   className={`relative flex items-center gap-2 rounded-lg px-6 py-2.5 text-sm font-semibold transition-all duration-200 ${
@@ -214,8 +218,8 @@ function CurrentOrdersPage() {
             </div>
 
             {/* Orders List */}
-            <div className="mx-4 rounded-2xl bg-white shadow-sm dark:bg-gray-800 md:mx-8">
-              <div className="p-4 md:p-6">
+            <div className="mx-0 rounded-t-2xl bg-white shadow-sm dark:bg-gray-800 md:mx-8 md:rounded-2xl">
+              <div className="p-3 md:p-6">
                 <UserRecentOrders
                   filter={filter}
                   orders={orders}

@@ -251,6 +251,132 @@ export default async function handler(
 
     const order = data.Orders[0];
 
+    // If there's an assigned shopper, fetch their complete stats
+    let shopperStats = null;
+    if (order.assignedTo) {
+      const shopperId = order.assignedTo.id;
+
+      // Query to get all ratings for this shopper and count of delivered orders
+      const GET_SHOPPER_STATS = gql`
+        query GetShopperStats($shopperId: uuid!) {
+          # Get all ratings for this shopper
+          Ratings(where: { shopper_id: { _eq: $shopperId } }) {
+            rating
+          }
+          # Get recent reviews (5 most recent with reviews)
+          RecentReviews: Ratings(
+            where: {
+              shopper_id: { _eq: $shopperId }
+              _and: [
+                { review: { _is_null: false } }
+                { review: { _neq: "" } }
+              ]
+            }
+            order_by: { reviewed_at: desc_nulls_last }
+            limit: 5
+          ) {
+            id
+            rating
+            review
+            reviewed_at
+            customer_id
+            User {
+              id
+              name
+              profile_picture
+            }
+          }
+          # Count delivered regular orders
+          Orders_aggregate(
+            where: {
+              shopper_id: { _eq: $shopperId }
+              status: { _eq: "delivered" }
+            }
+          ) {
+            aggregate {
+              count
+            }
+          }
+          # Count delivered reel orders
+          reel_orders_aggregate(
+            where: {
+              shopper_id: { _eq: $shopperId }
+              status: { _eq: "delivered" }
+            }
+          ) {
+            aggregate {
+              count
+            }
+          }
+          # Count delivered restaurant orders
+          restaurant_orders_aggregate(
+            where: {
+              shopper_id: { _eq: $shopperId }
+              status: { _eq: "delivered" }
+            }
+          ) {
+            aggregate {
+              count
+            }
+          }
+        }
+      `;
+
+      const statsData = await hasuraClient.request<{
+        Ratings: Array<{ rating: string }>;
+        RecentReviews: Array<{
+          id: string;
+          rating: number;
+          review: string;
+          reviewed_at: string | null;
+          customer_id: string;
+          User: {
+            id: string;
+            name: string;
+            profile_picture: string | null;
+          };
+        }>;
+        Orders_aggregate: { aggregate: { count: number } };
+        reel_orders_aggregate: { aggregate: { count: number } };
+        restaurant_orders_aggregate: { aggregate: { count: number } };
+      }>(GET_SHOPPER_STATS, { shopperId });
+
+      // Calculate average rating from all ratings
+      const averageRating =
+        statsData.Ratings.length > 0
+          ? statsData.Ratings.reduce(
+              (sum, rating) => sum + parseFloat(rating.rating || "0"),
+              0
+            ) / statsData.Ratings.length
+          : 0;
+
+      // Count total delivered orders (regular + reel + restaurant)
+      const regularOrdersCount = statsData.Orders_aggregate?.aggregate?.count || 0;
+      const reelOrdersCount = statsData.reel_orders_aggregate?.aggregate?.count || 0;
+      const restaurantOrdersCount = statsData.restaurant_orders_aggregate?.aggregate?.count || 0;
+      const totalDeliveredOrders = regularOrdersCount + reelOrdersCount + restaurantOrdersCount;
+
+      // Debug logging
+      console.log("Shopper Stats for", shopperId, {
+        ratingsCount: statsData.Ratings.length,
+        averageRating,
+        regularOrdersCount,
+        reelOrdersCount,
+        restaurantOrdersCount,
+        totalDeliveredOrders,
+      });
+
+      shopperStats = {
+        rating: averageRating,
+        orders_aggregate: {
+          aggregate: {
+            count: totalDeliveredOrders,
+          },
+        },
+        recentReviews: statsData.RecentReviews || [],
+      };
+    }
+
     // Format timestamps to human-readable strings
     const formattedOrder = {
       ...order,
@@ -262,22 +388,24 @@ export default async function handler(
       estimatedDelivery: order.estimatedDelivery
         ? new Date(order.estimatedDelivery).toISOString()
         : null,
-      // Calculate average rating and order count for assignedTo if available
-      assignedTo: order.assignedTo
+      // Use calculated shopper stats if available
+      assignedTo: order.assignedTo && shopperStats
         ? {
             ...order.assignedTo,
-            rating:
-              order.assignedTo.Ratings.length > 0
-                ? order.assignedTo.Ratings.reduce(
-                    (sum, rating) => sum + parseFloat(rating.rating),
-                    0
-                  ) / order.assignedTo.Ratings.length
-                : 0,
+            rating: shopperStats.rating,
+            orders_aggregate: shopperStats.orders_aggregate,
+            recentReviews: shopperStats.recentReviews,
+          }
+        : order.assignedTo
+        ? {
+            ...order.assignedTo,
+            rating: 0,
             orders_aggregate: {
               aggregate: {
-                count: order.assignedTo.Ratings.length,
+                count: 0,
               },
             },
+            recentReviews: [],
           }
         : null,
     };
