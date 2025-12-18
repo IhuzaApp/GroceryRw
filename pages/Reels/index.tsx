@@ -1198,21 +1198,12 @@ export default function FoodReelsApp() {
 
     if (!containerRef.current) return;
 
-    console.log(
-      `Setting up observer for ${isMobile ? "mobile" : "desktop"} layout`
-    );
-
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const index = parseInt(
               entry.target.getAttribute("data-index") || "0"
-            );
-            console.log(
-              `Post ${index} is now visible on ${
-                isMobile ? "mobile" : "desktop"
-              }`
             );
             setVisiblePostIndex(index);
           }
@@ -1227,23 +1218,12 @@ export default function FoodReelsApp() {
     observerRef.current = observer;
 
     const posts = containerRef.current.querySelectorAll("[data-index]");
-    console.log(
-      `Found ${posts.length} posts to observe on ${
-        isMobile ? "mobile" : "desktop"
-      }`
-    );
 
-    posts.forEach((post, index) => {
-      console.log(
-        `Observing post ${index} on ${isMobile ? "mobile" : "desktop"}`
-      );
+    posts.forEach((post) => {
       observer.observe(post);
     });
 
     return () => {
-      console.log(
-        `Cleaning up observer for ${isMobile ? "mobile" : "desktop"}`
-      );
       if (observerRef.current) {
         observerRef.current.disconnect();
         observerRef.current = null;
