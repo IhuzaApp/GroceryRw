@@ -1288,7 +1288,6 @@ export default function FoodReelsApp() {
         }));
         // Optionally, you can trigger a refetch here for extra safety
         await refetchComments(postId);
-        console.log("Comment added successfully:", result.comment);
       } else {
         throw new Error("Invalid response from server");
       }
@@ -1373,8 +1372,6 @@ export default function FoodReelsApp() {
             : post
         )
       );
-
-      console.log("Comments refetched successfully for post:", postId);
     } catch (error) {
       console.error("Error refetching comments:", error);
     } finally {
