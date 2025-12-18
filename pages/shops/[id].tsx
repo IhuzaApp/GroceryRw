@@ -21,14 +21,28 @@ interface ShopResponse {
   Shops_by_pk: Shop;
 }
 
+interface Rating {
+  packaging_quality?: number;
+  rating?: number;
+  updated_at: string;
+  created_at: string;
+  customer_id: string;
+}
+
+interface RatingsResponse {
+  Ratings: Rating[];
+}
+
 export default function ShopByIdPage({
   shop,
   products,
+  ratings,
 }: {
   shop: Shop;
   products: any[];
+  ratings: { averageRating: number; totalReviews: number };
 }) {
-  return <FreshMarkPage shop={shop} products={products} />;
+  return <FreshMarkPage shop={shop} products={products} ratings={ratings} />;
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
@@ -80,28 +94,62 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
   `;
 
+  // Fetch ratings for this shop
+  const ratingsQuery = gql`
+    query GetShopRatings($shop_id: uuid!) {
+      Ratings(where: { Order: { shop_id: { _eq: $shop_id } } }) {
+        packaging_quality
+        rating
+        updated_at
+        created_at
+        customer_id
+      }
+    }
+  `;
+
   try {
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
 
-    const [shopData, productsData] = await Promise.all([
+    const [shopData, productsData, ratingsData] = await Promise.all([
       hasuraClient.request<ShopResponse>(shopQuery, { id }),
       hasuraClient.request<ProductsResponse>(productsQuery, { shop_id: id }),
+      hasuraClient.request<RatingsResponse>(ratingsQuery, { shop_id: id }),
     ]);
+
+    // Calculate average rating and total reviews
+    const ratings = ratingsData.Ratings || [];
+    const ratingsWithValues = ratings.filter(
+      (r) => r.rating !== null && r.rating !== undefined
+    );
+    const averageRating =
+      ratingsWithValues.length > 0
+        ? ratingsWithValues.reduce((sum, r) => sum + (r.rating || 0), 0) /
+          ratingsWithValues.length
+        : 0;
+    const totalReviews = ratingsWithValues.length;
 
     return {
       props: {
         shop: shopData.Shops_by_pk || null,
         products: productsData.Products || [],
+        ratings: {
+          averageRating: Math.round(averageRating * 10) / 10, // Round to 1 decimal place
+          totalReviews,
+        },
       },
     };
   } catch (error) {
-    console.error("Error fetching data:", error);
+    
     return {
       props: {
         shop: null,
         products: [],
+        ratings: {
+          averageRating: 0,
+          totalReviews: 0,
+        },
       },
     };
   }
