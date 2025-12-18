@@ -267,10 +267,7 @@ export default async function handler(
           RecentReviews: Ratings(
             where: {
               shopper_id: { _eq: $shopperId }
-              _and: [
-                { review: { _is_null: false } }
-                { review: { _neq: "" } }
-              ]
+              _and: [{ review: { _is_null: false } }, { review: { _neq: "" } }]
             }
             order_by: { reviewed_at: desc_nulls_last }
             limit: 5
@@ -351,10 +348,14 @@ export default async function handler(
           : 0;
 
       // Count total delivered orders (regular + reel + restaurant)
-      const regularOrdersCount = statsData.Orders_aggregate?.aggregate?.count || 0;
-      const reelOrdersCount = statsData.reel_orders_aggregate?.aggregate?.count || 0;
-      const restaurantOrdersCount = statsData.restaurant_orders_aggregate?.aggregate?.count || 0;
-      const totalDeliveredOrders = regularOrdersCount + reelOrdersCount + restaurantOrdersCount;
+      const regularOrdersCount =
+        statsData.Orders_aggregate?.aggregate?.count || 0;
+      const reelOrdersCount =
+        statsData.reel_orders_aggregate?.aggregate?.count || 0;
+      const restaurantOrdersCount =
+        statsData.restaurant_orders_aggregate?.aggregate?.count || 0;
+      const totalDeliveredOrders =
+        regularOrdersCount + reelOrdersCount + restaurantOrdersCount;
 
       shopperStats = {
         rating: averageRating,
@@ -379,25 +380,26 @@ export default async function handler(
         ? new Date(order.estimatedDelivery).toISOString()
         : null,
       // Use calculated shopper stats if available
-      assignedTo: order.assignedTo && shopperStats
-        ? {
-            ...order.assignedTo,
-            rating: shopperStats.rating,
-            orders_aggregate: shopperStats.orders_aggregate,
-            recentReviews: shopperStats.recentReviews,
-          }
-        : order.assignedTo
-        ? {
-            ...order.assignedTo,
-            rating: 0,
-            orders_aggregate: {
-              aggregate: {
-                count: 0,
+      assignedTo:
+        order.assignedTo && shopperStats
+          ? {
+              ...order.assignedTo,
+              rating: shopperStats.rating,
+              orders_aggregate: shopperStats.orders_aggregate,
+              recentReviews: shopperStats.recentReviews,
+            }
+          : order.assignedTo
+          ? {
+              ...order.assignedTo,
+              rating: 0,
+              orders_aggregate: {
+                aggregate: {
+                  count: 0,
+                },
               },
-            },
-            recentReviews: [],
-          }
-        : null,
+              recentReviews: [],
+            }
+          : null,
     };
 
     res.status(200).json({ order: formattedOrder });

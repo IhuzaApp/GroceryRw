@@ -36,7 +36,7 @@ function CurrentOrdersPage() {
     return (
       <RootLayout>
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-16">
-          <div className="flex min-h-[60vh] flex-col items-center justify-center py-12 px-4">
+          <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 py-12">
             <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg dark:bg-gray-800">
               <div className="text-center">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
@@ -165,7 +165,9 @@ function CurrentOrdersPage() {
                       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <span className={filter === "pending" ? "!text-white" : ""}>Ongoing</span>
+                  <span className={filter === "pending" ? "!text-white" : ""}>
+                    Ongoing
+                  </span>
                   {pendingCount > 0 && (
                     <span
                       className={`ml-1.5 rounded-full px-2 py-0.5 text-xs font-bold ${
@@ -201,7 +203,9 @@ function CurrentOrdersPage() {
                       d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <span className={filter === "done" ? "!text-white" : ""}>Completed</span>
+                  <span className={filter === "done" ? "!text-white" : ""}>
+                    Completed
+                  </span>
                   {completedCount > 0 && (
                     <span
                       className={`ml-1.5 rounded-full px-2 py-0.5 text-xs font-bold ${

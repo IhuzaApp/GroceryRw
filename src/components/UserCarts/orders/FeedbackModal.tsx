@@ -4,12 +4,15 @@ import { useTheme } from "../../../context/ThemeContext";
 interface FeedbackModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (ratings: {
-    rating: number;
-    packaging_quality: number;
-    delivery_experience: number;
-    professionalism: number;
-  }, comment: string) => Promise<void>;
+  onSubmit: (
+    ratings: {
+      rating: number;
+      packaging_quality: number;
+      delivery_experience: number;
+      professionalism: number;
+    },
+    comment: string
+  ) => Promise<void>;
   submitting: boolean;
   submitError: string | null;
   accentColor?: "green" | "purple" | "orange";
@@ -27,7 +30,9 @@ export default function FeedbackModal({
   const [packagingQuality, setPackagingQuality] = useState(0);
   const [deliveryExperience, setDeliveryExperience] = useState(0);
   const [professionalism, setProfessionalism] = useState(0);
-  const [hoveredRating, setHoveredRating] = useState<{ [key: string]: number }>({});
+  const [hoveredRating, setHoveredRating] = useState<{ [key: string]: number }>(
+    {}
+  );
   const [comment, setComment] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -35,7 +40,11 @@ export default function FeedbackModal({
 
   // Calculate overall rating from the three specific ratings
   const calculateOverallRating = () => {
-    const ratings = [packagingQuality, deliveryExperience, professionalism].filter(r => r > 0);
+    const ratings = [
+      packagingQuality,
+      deliveryExperience,
+      professionalism,
+    ].filter((r) => r > 0);
     if (ratings.length === 0) return 0;
     const sum = ratings.reduce((a, b) => a + b, 0);
     return Math.round(sum / ratings.length);
@@ -67,20 +76,29 @@ export default function FeedbackModal({
 
   const handleSubmit = async () => {
     // Check if all three ratings are provided
-    if (packagingQuality === 0 || deliveryExperience === 0 || professionalism === 0) {
-      setValidationError("Please rate all aspects: Packaging, Delivery, and Professionalism");
+    if (
+      packagingQuality === 0 ||
+      deliveryExperience === 0 ||
+      professionalism === 0
+    ) {
+      setValidationError(
+        "Please rate all aspects: Packaging, Delivery, and Professionalism"
+      );
       return;
     }
-    
+
     setValidationError(null);
     const overallRating = calculateOverallRating();
-    
-    await onSubmit({
-      rating: overallRating,
-      packaging_quality: packagingQuality,
-      delivery_experience: deliveryExperience,
-      professionalism: professionalism,
-    }, comment);
+
+    await onSubmit(
+      {
+        rating: overallRating,
+        packaging_quality: packagingQuality,
+        delivery_experience: deliveryExperience,
+        professionalism: professionalism,
+      },
+      comment
+    );
     // Reset form after successful submission
     if (!submitting && !submitError) {
       setPackagingQuality(0);
@@ -120,22 +138,22 @@ export default function FeedbackModal({
   };
 
   // Star Rating Component
-  const StarRating = ({ 
-    value, 
-    field, 
-    label 
-  }: { 
-    value: number; 
-    field: string; 
+  const StarRating = ({
+    value,
+    field,
+    label,
+  }: {
+    value: number;
+    field: string;
     label: string;
   }) => {
     const currentHover = hoveredRating[field] || 0;
     const currentValue = value;
-    
+
     return (
       <div className="space-y-3">
         <label
-          className={`block text-sm font-semibold text-left ${
+          className={`block text-left text-sm font-semibold ${
             theme === "dark" ? "text-white" : "text-gray-900"
           }`}
         >
@@ -154,13 +172,19 @@ export default function FeedbackModal({
                 onTouchStart={() => {
                   handleStarClick(starValue, field);
                 }}
-                className="transition-all duration-200 touch-manipulation hover:scale-110 active:scale-95"
+                className="touch-manipulation transition-all duration-200 hover:scale-110 active:scale-95"
                 style={{ touchAction: "manipulation" }}
               >
                 <svg
                   className="h-10 w-10 sm:h-11 sm:w-11"
                   viewBox="0 0 20 20"
-                  fill={isActive ? "#facc15" : theme === "dark" ? "#4b5563" : "#d1d5db"}
+                  fill={
+                    isActive
+                      ? "#facc15"
+                      : theme === "dark"
+                      ? "#4b5563"
+                      : "#d1d5db"
+                  }
                 >
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
@@ -185,31 +209,43 @@ export default function FeedbackModal({
     switch (accentColor) {
       case "purple":
         return {
-          iconBg: theme === "dark" ? "bg-purple-500/20" : "bg-gradient-to-br from-purple-100 to-purple-50",
+          iconBg:
+            theme === "dark"
+              ? "bg-purple-500/20"
+              : "bg-gradient-to-br from-purple-100 to-purple-50",
           iconColor: theme === "dark" ? "text-purple-400" : "text-purple-600",
-          button: theme === "dark"
-            ? "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
-            : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700",
+          button:
+            theme === "dark"
+              ? "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
+              : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700",
           focus: "focus:ring-purple-500",
           border: "focus:border-purple-500",
         };
       case "orange":
         return {
-          iconBg: theme === "dark" ? "bg-orange-500/20" : "bg-gradient-to-br from-orange-100 to-orange-50",
+          iconBg:
+            theme === "dark"
+              ? "bg-orange-500/20"
+              : "bg-gradient-to-br from-orange-100 to-orange-50",
           iconColor: theme === "dark" ? "text-orange-400" : "text-orange-600",
-          button: theme === "dark"
-            ? "bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800"
-            : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700",
+          button:
+            theme === "dark"
+              ? "bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800"
+              : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700",
           focus: "focus:ring-orange-500",
           border: "focus:border-orange-500",
         };
       default: // green
         return {
-          iconBg: theme === "dark" ? "bg-green-500/20" : "bg-gradient-to-br from-green-100 to-green-50",
+          iconBg:
+            theme === "dark"
+              ? "bg-green-500/20"
+              : "bg-gradient-to-br from-green-100 to-green-50",
           iconColor: theme === "dark" ? "text-green-400" : "text-green-600",
-          button: theme === "dark"
-            ? "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
-            : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700",
+          button:
+            theme === "dark"
+              ? "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+              : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700",
           focus: "focus:ring-green-500",
           border: "focus:border-green-500",
         };
@@ -219,7 +255,7 @@ export default function FeedbackModal({
   const colors = getAccentColors();
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-[99999] flex items-end justify-center p-0 sm:items-center sm:p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -228,16 +264,18 @@ export default function FeedbackModal({
 
       {/* Modal */}
       <div
-        className={`relative z-10 w-full max-w-[550px] rounded-t-2xl sm:rounded-2xl border-0 sm:border shadow-2xl ${
+        className={`relative z-10 w-full max-w-[550px] rounded-t-2xl border-0 shadow-2xl sm:rounded-2xl sm:border ${
           theme === "dark"
-            ? "sm:border-gray-700 bg-gray-800"
-            : "sm:border-gray-200 bg-white"
+            ? "bg-gray-800 sm:border-gray-700"
+            : "bg-white sm:border-gray-200"
         }`}
       >
         {/* Header */}
         <div
           className={`flex items-center justify-between px-6 py-6 sm:px-8 ${
-            theme === "dark" ? "border-b border-gray-700" : "border-b border-gray-200"
+            theme === "dark"
+              ? "border-b border-gray-700"
+              : "border-b border-gray-200"
           }`}
         >
           <div>
@@ -246,7 +284,9 @@ export default function FeedbackModal({
                 theme === "dark" ? "text-white" : "text-gray-900"
               }`}
             >
-              {accentColor === "orange" ? "Rate Your Restaurant Order" : "Rate Your Experience"}
+              {accentColor === "orange"
+                ? "Rate Your Restaurant Order"
+                : "Rate Your Experience"}
             </h2>
             <p
               className={`mt-1.5 text-sm ${
@@ -287,9 +327,9 @@ export default function FeedbackModal({
           }`}
         >
           {(submitError || validationError) && (
-            <div className="mb-6 flex items-start gap-3 p-4 rounded-lg bg-red-50 dark:bg-red-900/20">
+            <div className="mb-6 flex items-start gap-3 rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
               <svg
-                className={`h-5 w-5 flex-shrink-0 mt-0.5 ${
+                className={`mt-0.5 h-5 w-5 flex-shrink-0 ${
                   theme === "dark" ? "text-red-400" : "text-red-500"
                 }`}
                 viewBox="0 0 20 20"
@@ -310,7 +350,7 @@ export default function FeedbackModal({
               </p>
             </div>
           )}
-          
+
           <div className="space-y-8">
             {/* Ratings Section */}
             <div className="space-y-6">
@@ -360,10 +400,10 @@ export default function FeedbackModal({
               </div>
               <div className="relative">
                 <textarea
-                  className={`w-full rounded-xl p-5 text-sm leading-relaxed transition-all duration-200 resize-none ${
+                  className={`w-full resize-none rounded-xl p-5 text-sm leading-relaxed transition-all duration-200 ${
                     theme === "dark"
-                      ? "bg-gray-900/40 border-2 border-gray-700/50 text-white placeholder-gray-500/70 focus:bg-gray-900/60 focus:border-gray-600 focus:shadow-lg focus:shadow-gray-900/20"
-                      : "bg-gray-50/80 border-2 border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-gray-300 focus:shadow-lg focus:shadow-gray-200/50"
+                      ? "border-2 border-gray-700/50 bg-gray-900/40 text-white placeholder-gray-500/70 focus:border-gray-600 focus:bg-gray-900/60 focus:shadow-lg focus:shadow-gray-900/20"
+                      : "border-2 border-gray-200 bg-gray-50/80 text-gray-900 placeholder-gray-400 focus:border-gray-300 focus:bg-white focus:shadow-lg focus:shadow-gray-200/50"
                   } focus:outline-none ${colors.border} ${colors.focus}`}
                   placeholder="How was your order? Was everything as expected? How was the delivery service? Any issues or suggestions?"
                   rows={6}
@@ -398,7 +438,8 @@ export default function FeedbackModal({
                   theme === "dark" ? "text-gray-500" : "text-gray-400"
                 }`}
               >
-                Share your experience with the order quality and delivery service
+                Share your experience with the order quality and delivery
+                service
               </p>
             </div>
           </div>
@@ -407,7 +448,9 @@ export default function FeedbackModal({
         {/* Footer */}
         <div
           className={`flex w-full flex-col-reverse gap-3 px-6 py-5 sm:flex-row sm:justify-end sm:px-8 ${
-            theme === "dark" ? "border-t border-gray-700" : "border-t border-gray-200"
+            theme === "dark"
+              ? "border-t border-gray-700"
+              : "border-t border-gray-200"
           }`}
         >
           <button
@@ -416,23 +459,25 @@ export default function FeedbackModal({
               theme === "dark"
                 ? "text-gray-300 hover:bg-gray-700/50 hover:text-white"
                 : "text-gray-700 hover:bg-gray-50"
-            } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500`}
+            } focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2`}
             type="button"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
-            disabled={submitting || packagingQuality === 0 || deliveryExperience === 0 || professionalism === 0}
-            className={`flex items-center justify-center rounded-lg px-6 py-3 text-sm font-semibold text-white transition-all ${colors.button} ${colors.focus} focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+            disabled={
+              submitting ||
+              packagingQuality === 0 ||
+              deliveryExperience === 0 ||
+              professionalism === 0
+            }
+            className={`flex items-center justify-center rounded-lg px-6 py-3 text-sm font-semibold text-white transition-all ${colors.button} ${colors.focus} focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`}
             type="submit"
           >
             {submitting ? (
               <>
-                <svg
-                  className="mr-2 h-4 w-4 animate-spin"
-                  viewBox="0 0 24 24"
-                >
+                <svg className="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24">
                   <circle
                     className="opacity-25"
                     cx="12"

@@ -59,7 +59,11 @@ export default function MobileReelsView({
       const windowHeight = window.innerHeight;
       const currentIndex = Math.round(scrollPosition / windowHeight);
 
-      if (currentIndex !== visiblePostIndex && currentIndex >= 0 && currentIndex < posts.length) {
+      if (
+        currentIndex !== visiblePostIndex &&
+        currentIndex >= 0 &&
+        currentIndex < posts.length
+      ) {
         setVisiblePostIndex(currentIndex);
       }
 
@@ -111,12 +115,12 @@ export default function MobileReelsView({
           <div
             key={`${post.id}-mobile`}
             data-index={index}
-            style={{ 
+            style={{
               scrollSnapAlign: "start",
               width: "100%",
               height: "100vh",
               minHeight: "100vh",
-              flexShrink: 0
+              flexShrink: 0,
             }}
           >
             <VideoReel
@@ -147,4 +151,3 @@ export default function MobileReelsView({
     </>
   );
 }
-

@@ -54,8 +54,18 @@ function getOrderStatusInfo(order: any) {
       status: "Delivered",
       color: "green",
       icon: (
-        <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        <svg
+          className="h-8 w-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5 13l4 4L19 7"
+          />
         </svg>
       ),
       description: "Order completed successfully",
@@ -65,8 +75,18 @@ function getOrderStatusInfo(order: any) {
       status: "Pending",
       color: "yellow",
       icon: (
-        <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <svg
+          className="h-8 w-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
       ),
       description: "Waiting for shopper assignment",
@@ -78,8 +98,18 @@ function getOrderStatusInfo(order: any) {
           status: "Shopping",
           color: "blue",
           icon: (
-            <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            <svg
+              className="h-8 w-8"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+              />
             </svg>
           ),
           description: "Shopper is picking your items",
@@ -89,8 +119,18 @@ function getOrderStatusInfo(order: any) {
           status: "Packing",
           color: "purple",
           icon: (
-            <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            <svg
+              className="h-8 w-8"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+              />
             </svg>
           ),
           description: "Preparing for delivery",
@@ -100,8 +140,18 @@ function getOrderStatusInfo(order: any) {
           status: "On the Way",
           color: "orange",
           icon: (
-            <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+            <svg
+              className="h-8 w-8"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"
+              />
             </svg>
           ),
           description: "Heading to your location",
@@ -111,8 +161,18 @@ function getOrderStatusInfo(order: any) {
           status: "Ongoing",
           color: "blue",
           icon: (
-            <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            <svg
+              className="h-8 w-8"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
             </svg>
           ),
           description: "Order in progress",
@@ -182,7 +242,7 @@ const MobileOrderDetails = ({
 
         {/* Order ID Badge */}
         <div className="absolute right-4 top-7 z-20">
-          <span className="inline-flex items-center rounded-full bg-white/20 backdrop-blur-md px-4 py-2 text-sm font-semibold !text-white shadow-lg">
+          <span className="inline-flex items-center rounded-full bg-white/20 px-4 py-2 text-sm font-semibold !text-white shadow-lg backdrop-blur-md">
             #{formatOrderID(order?.OrderID)}
           </span>
         </div>
@@ -481,12 +541,12 @@ function ViewOrderDetailsPage() {
             .mobile-full-width .rs-panel-body {
               padding: 0 !important;
             }
-            
+
             /* Remove padding from scroll view on mobile */
             .mobile-full-width .rs-scroll-view {
               padding: 0 !important;
             }
-            
+
             /* Remove border radius, margins, and box shadows from panels */
             .mobile-full-width .rs-panel {
               border-radius: 0 !important;
@@ -498,28 +558,28 @@ function ViewOrderDetailsPage() {
               border-left: none !important;
               border-right: none !important;
             }
-            
+
             /* Remove border radius from panel body and scroll view */
             .mobile-full-width .rs-panel-body,
             .mobile-full-width .rs-scroll-view {
               border-radius: 0 !important;
             }
-            
+
             /* Add internal padding to content inside panels for readability */
             .mobile-full-width .rs-panel-body > div {
               padding-left: 1rem !important;
               padding-right: 1rem !important;
             }
-            
+
             /* Ensure proper spacing for first and last elements */
             .mobile-full-width .rs-panel-body > div:first-child {
               padding-top: 1rem !important;
             }
-            
+
             .mobile-full-width .rs-panel-body > div:last-child {
               padding-bottom: 1rem !important;
             }
-            
+
             /* Remove shadows from panel containers */
             .mobile-full-width .rs-panel,
             .mobile-full-width .rs-panel-body,

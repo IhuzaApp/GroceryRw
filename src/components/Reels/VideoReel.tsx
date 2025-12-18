@@ -31,7 +31,10 @@ const MessageIcon = () => (
     fill="currentColor"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <path d="M327.494,279.633 L324,284 L320.506,279.633 C314.464,278.355 309.992,273.863 309.992,268.501 C309.992,262.146 316.264,256.994 324,256.994 C331.736,256.994 338.008,262.146 338.008,268.501 C338.008,273.863 333.536,278.355 327.494,279.633 L327.494,279.633 Z M324,255 C315.163,255 308,261.143 308,268.72 C308,274.969 312.877,280.232 319.542,281.889 L324,287.001 L328.459,281.889 C335.123,280.232 340,274.969 340,268.72 C340,261.143 332.837,255 324,255 L324,255 Z" transform="translate(-308, -255)" />
+    <path
+      d="M327.494,279.633 L324,284 L320.506,279.633 C314.464,278.355 309.992,273.863 309.992,268.501 C309.992,262.146 316.264,256.994 324,256.994 C331.736,256.994 338.008,262.146 338.008,268.501 C338.008,273.863 333.536,278.355 327.494,279.633 L327.494,279.633 Z M324,255 C315.163,255 308,261.143 308,268.72 C308,274.969 312.877,280.232 319.542,281.889 L324,287.001 L328.459,281.889 C335.123,280.232 340,274.969 340,268.72 C340,261.143 332.837,255 324,255 L324,255 Z"
+      transform="translate(-308, -255)"
+    />
   </svg>
 );
 
@@ -610,7 +613,8 @@ export default function VideoReel({
                   borderColor: "#2563eb",
                   color: "white",
                   border: "none",
-                  cursor: isAuthenticated && post.shop_id ? "pointer" : "not-allowed",
+                  cursor:
+                    isAuthenticated && post.shop_id ? "pointer" : "not-allowed",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -767,7 +771,7 @@ export default function VideoReel({
   return (
     <>
       <div
-        style={{ 
+        style={{
           position: "relative",
           width: "100%",
           height: "100%",
@@ -775,7 +779,7 @@ export default function VideoReel({
           margin: 0,
           padding: 0,
           overflow: "hidden",
-          backgroundColor: "#000"
+          backgroundColor: "#000",
         }}
       >
         {/* Background Video - Direct fill */}
@@ -795,18 +799,18 @@ export default function VideoReel({
             margin: 0,
             padding: 0,
             display: "block",
-            zIndex: 1
+            zIndex: 1,
           }}
-            loop
-            muted
-            playsInline
-            preload="metadata"
-            poster={post.creator.avatar || "/placeholder.svg"}
-            onLoadedData={handleVideoLoad}
-            onError={handleVideoError}
-            onLoadStart={() => setVideoLoading(true)}
-            onCanPlay={handleVideoCanPlay}
-          />
+          loop
+          muted
+          playsInline
+          preload="metadata"
+          poster={post.creator.avatar || "/placeholder.svg"}
+          onLoadedData={handleVideoLoad}
+          onError={handleVideoError}
+          onLoadStart={() => setVideoLoading(true)}
+          onCanPlay={handleVideoCanPlay}
+        />
 
         {/* Loading overlay */}
         {videoLoading && (
@@ -1086,7 +1090,8 @@ export default function VideoReel({
             padding: "20px 16px 20px 16px",
             paddingRight: "80px", // Space for right side buttons
             zIndex: 10,
-            background: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%)",
+            background:
+              "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%)",
           }}
         >
           {/* Title and Description */}

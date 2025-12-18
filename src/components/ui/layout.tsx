@@ -29,10 +29,26 @@ export default function RootLayout({
           className={`text-gray-900 transition-colors duration-200 dark:text-white ${
             isChatPage || isReelsPage ? "" : "px-4 pb-20 pt-6 md:pb-0"
           }`}
-          style={isReelsPage ? { margin: 0, padding: 0, height: "100vh", minHeight: "100vh", maxHeight: "100vh", overflow: "hidden" } : {}}
+          style={
+            isReelsPage
+              ? {
+                  margin: 0,
+                  padding: 0,
+                  height: "100vh",
+                  minHeight: "100vh",
+                  maxHeight: "100vh",
+                  overflow: "hidden",
+                }
+              : {}
+          }
         >
           {!isChatPage && !isReelsPage && <SideBar />}
-          <div className="[&_*]:text-inherit" style={isReelsPage ? { height: "100%", width: "100%" } : {}}>{children}</div>
+          <div
+            className="[&_*]:text-inherit"
+            style={isReelsPage ? { height: "100%", width: "100%" } : {}}
+          >
+            {children}
+          </div>
           {!isChatPage && !isReelsPage && <BottomBar />}
         </main>
         {/* AI Chat - Available on all pages except chat pages */}

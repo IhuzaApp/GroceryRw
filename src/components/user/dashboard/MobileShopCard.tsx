@@ -159,7 +159,11 @@ const MobileShopCard: React.FC<MobileShopCardProps> = ({
 
           {/* Store badge */}
           {isStore && (
-            <span className={`absolute left-2 z-20 rounded-full bg-blue-500 px-2 py-1 text-xs font-semibold text-white shadow-md ${shop.logo && shop.logo.trim() !== "" ? "top-14" : "top-2"}`}>
+            <span
+              className={`absolute left-2 z-20 rounded-full bg-blue-500 px-2 py-1 text-xs font-semibold text-white shadow-md ${
+                shop.logo && shop.logo.trim() !== "" ? "top-14" : "top-2"
+              }`}
+            >
               Store
             </span>
           )}
