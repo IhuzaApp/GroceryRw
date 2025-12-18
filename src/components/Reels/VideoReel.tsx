@@ -962,7 +962,7 @@ export default function VideoReel({
           style={{
             position: "absolute",
             right: 16,
-            bottom: 200,
+            bottom: 80,
             display: "flex",
             flexDirection: "column",
             gap: 24,
@@ -976,29 +976,21 @@ export default function VideoReel({
               alignItems: "center",
             }}
           >
-            <Button
-              appearance="ghost"
-              size="lg"
+            <div
+              onClick={isAuthenticated ? () => onLike(post.id) : undefined}
               style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 width: 48,
                 height: 48,
-                borderRadius: "50%",
-                backgroundColor: post.isLiked
-                  ? "#ef4444"
-                  : "rgba(255,255,255,0.2)",
-                backdropFilter: "blur(4px)",
-                border: post.isLiked ? "2px solid #ef4444" : "none",
-                color: "#fff",
-                transition: "all 0.2s ease",
-                opacity: isAuthenticated ? 1 : 0.5,
                 cursor: isAuthenticated ? "pointer" : "not-allowed",
-                padding: 0,
+                opacity: isAuthenticated ? 1 : 0.5,
+                transition: "opacity 0.2s ease",
               }}
-              onClick={isAuthenticated ? () => onLike(post.id) : undefined}
-              disabled={!isAuthenticated}
             >
               <HeartIcon filled={post.isLiked} />
-            </Button>
+            </div>
             <span
               style={{
                 color: "#fff",
@@ -1021,26 +1013,21 @@ export default function VideoReel({
               alignItems: "center",
             }}
           >
-            <Button
-              appearance="ghost"
-              size="lg"
+            <div
+              onClick={isAuthenticated ? () => onComment(post.id) : undefined}
               style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 width: 48,
                 height: 48,
-                borderRadius: "50%",
-                backgroundColor: "rgba(255,255,255,0.2)",
-                backdropFilter: "blur(4px)",
-                border: "none",
-                color: "#fff",
-                opacity: isAuthenticated ? 1 : 0.5,
                 cursor: isAuthenticated ? "pointer" : "not-allowed",
-                padding: 0,
+                opacity: isAuthenticated ? 1 : 0.5,
+                transition: "opacity 0.2s ease",
               }}
-              onClick={isAuthenticated ? () => onComment(post.id) : undefined}
-              disabled={!isAuthenticated}
             >
               <MessageIcon />
-            </Button>
+            </div>
             <span
               style={{
                 color: "#fff",
@@ -1061,26 +1048,21 @@ export default function VideoReel({
               alignItems: "center",
             }}
           >
-            <Button
-              appearance="ghost"
-              size="lg"
+            <div
+              onClick={isAuthenticated ? () => onShare(post.id) : undefined}
               style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 width: 48,
                 height: 48,
-                borderRadius: "50%",
-                backgroundColor: "rgba(255,255,255,0.2)",
-                backdropFilter: "blur(4px)",
-                border: "none",
-                color: "#fff",
-                opacity: isAuthenticated ? 1 : 0.5,
                 cursor: isAuthenticated ? "pointer" : "not-allowed",
-                padding: 0,
+                opacity: isAuthenticated ? 1 : 0.5,
+                transition: "opacity 0.2s ease",
               }}
-              onClick={isAuthenticated ? () => onShare(post.id) : undefined}
-              disabled={!isAuthenticated}
             >
               <ShareIcon />
-            </Button>
+            </div>
           </div>
         </div>
 
