@@ -10,12 +10,13 @@ import { formatCurrencySync } from "../../utils/formatCurrency";
 // Inline SVGs for icons
 const HeartIcon = ({ filled = false }: { filled?: boolean }) => (
   <svg
-    width="24"
-    height="24"
+    width="32"
+    height="32"
     viewBox="0 0 24 24"
     fill={filled ? "currentColor" : "none"}
-    stroke="currentColor"
+    stroke={filled ? "currentColor" : "currentColor"}
     strokeWidth="2"
+    style={{ color: filled ? "#ef4444" : "currentColor" }}
   >
     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
   </svg>
@@ -23,8 +24,8 @@ const HeartIcon = ({ filled = false }: { filled?: boolean }) => (
 
 const MessageIcon = () => (
   <svg
-    width="24"
-    height="24"
+    width="32"
+    height="32"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -36,8 +37,8 @@ const MessageIcon = () => (
 
 const ShareIcon = () => (
   <svg
-    width="24"
-    height="24"
+    width="32"
+    height="32"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -982,11 +983,12 @@ export default function VideoReel({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                width: 48,
-                height: 48,
+                width: 56,
+                height: 56,
                 cursor: isAuthenticated ? "pointer" : "not-allowed",
                 opacity: isAuthenticated ? 1 : 0.5,
                 transition: "opacity 0.2s ease",
+                color: post.isLiked ? "#ef4444" : "#fff",
               }}
             >
               <HeartIcon filled={post.isLiked} />
@@ -1019,8 +1021,8 @@ export default function VideoReel({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                width: 48,
-                height: 48,
+                width: 56,
+                height: 56,
                 cursor: isAuthenticated ? "pointer" : "not-allowed",
                 opacity: isAuthenticated ? 1 : 0.5,
                 transition: "opacity 0.2s ease",
@@ -1054,8 +1056,8 @@ export default function VideoReel({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                width: 48,
-                height: 48,
+                width: 56,
+                height: 56,
                 cursor: isAuthenticated ? "pointer" : "not-allowed",
                 opacity: isAuthenticated ? 1 : 0.5,
                 transition: "opacity 0.2s ease",
