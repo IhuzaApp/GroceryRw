@@ -327,7 +327,10 @@ interface DatabaseReel {
   Product: any;
   Shops: {
     name: string;
-    // add other shop fields if needed
+    address?: string;
+    id: string;
+    image?: string;
+    description?: string;
   } | null;
   User: {
     email: string;
@@ -662,16 +665,68 @@ export default function FoodReelsApp() {
       commentsList,
     };
 
+    // Helper function to extract string value
+    const extractStringValue = (value: any): string | null => {
+      if (!value) return null;
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        return trimmed.length > 0 ? trimmed : null;
+      }
+      if (typeof value === 'object' && value !== null) {
+        if (value.value && typeof value.value === 'string') {
+          const trimmed = value.value.trim();
+          return trimmed.length > 0 ? trimmed : null;
+        }
+        if (value.text && typeof value.text === 'string') {
+          const trimmed = value.text.trim();
+          return trimmed.length > 0 ? trimmed : null;
+        }
+        if (value.name && typeof value.name === 'string') {
+          const trimmed = value.name.trim();
+          return trimmed.length > 0 ? trimmed : null;
+        }
+        try {
+          const str = value.toString();
+          if (str && str !== '[object Object]' && typeof str === 'string') {
+            const trimmed = str.trim();
+            return trimmed.length > 0 ? trimmed : null;
+          }
+        } catch (e) {}
+        const keys = Object.keys(value);
+        for (const key of keys) {
+          if (typeof value[key] === 'string') {
+            const trimmed = value[key].trim();
+            if (trimmed.length > 0) return trimmed;
+          }
+        }
+      }
+      return null;
+    };
+
     // Convert based on type
     switch (dbReel.type) {
       case "restaurant":
+        // Try Restaurant location first, then fallback to Shops address if restaurant_id is null
+        let restaurantLocation = null;
+        
+        if (dbReel.Restaurant?.location) {
+          restaurantLocation = extractStringValue(dbReel.Restaurant.location);
+        }
+        
+        // If no restaurant location but we have a shop_id, try using Shops address
+        if (!restaurantLocation && dbReel.Shops) {
+          restaurantLocation = extractStringValue(dbReel.Shops.address) || extractStringValue(dbReel.Shops.name);
+        }
+        
+        const finalLocation = restaurantLocation || "Location information unavailable";
+        
         return {
           ...basePost,
           type: "restaurant",
           restaurant: {
-            rating: 4.5, // Default rating, could be fetched from restaurant data
-            reviews: 100, // Default reviews
-            location: dbReel.Restaurant?.location || "Location not available",
+            rating: 4.5,
+            reviews: 100,
+            location: finalLocation,
             deliveryTime: dbReel.delivery_time || "30-45 min",
             price: parseFloat(dbReel.Price || "0"),
           },
@@ -679,13 +734,28 @@ export default function FoodReelsApp() {
 
       case "supermarket":
         const product = dbReel.Product || {};
+        
+        // Try Shops name/address first, then fallback to Restaurant name/location if shop_id is null
+        let storeName: string | null = null;
+        
+        if (dbReel.Shops) {
+          storeName = extractStringValue(dbReel.Shops.name) || extractStringValue(dbReel.Shops.address);
+        }
+        
+        // If no shop data but we have a restaurant_id, try using Restaurant name/location
+        if (!storeName && dbReel.Restaurant) {
+          storeName = extractStringValue(dbReel.Restaurant.name) || extractStringValue(dbReel.Restaurant.location);
+        }
+        
+        const finalStoreName = storeName || "Store information unavailable";
+        
         return {
           ...basePost,
           type: "supermarket",
           product: {
             price: parseFloat(dbReel.Price || "0"),
             originalPrice: product.originalPrice || undefined,
-            store: dbReel.Shops?.name || "Store not available",
+            store: finalStoreName,
             inStock: product.inStock !== false,
             discount: product.discount || undefined,
           },
@@ -799,15 +869,15 @@ export default function FoodReelsApp() {
       setIsRefreshing(true);
       setError(null);
 
-      const response = await fetch("/api/queries/reels");
-      if (!response.ok) {
-        throw new Error("Failed to fetch reels");
-      }
+        const response = await fetch("/api/queries/reels");
+        if (!response.ok) {
+          throw new Error("Failed to fetch reels");
+        }
 
-      const data = await response.json();
-      const convertedPosts = data.reels.map((reel: DatabaseReel) =>
-        convertDatabaseReelToFoodPost(reel)
-      );
+        const data = await response.json();
+        const convertedPosts = data.reels.map((reel: DatabaseReel) =>
+          convertDatabaseReelToFoodPost(reel)
+        );
 
       // Update state first for immediate UI update
       setPosts(convertedPosts);

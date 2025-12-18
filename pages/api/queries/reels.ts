@@ -30,6 +30,7 @@ const GET_ALL_REELS = gql`
         id
         image
         description
+        address
       }
       User {
         email
@@ -107,6 +108,7 @@ const GET_REELS_BY_USER = gql`
         id
         image
         description
+        address
       }
       User {
         email
@@ -184,6 +186,7 @@ const GET_REELS_BY_RESTAURANT = gql`
         id
         image
         description
+        address
       }
       User {
         email
@@ -338,6 +341,7 @@ interface Reel {
     id: string;
     image: string;
     description: string;
+    address?: string;
   } | null;
   User: {
     email: string;
