@@ -33,6 +33,7 @@ export default function MobileReelsView({
   isAuthenticated,
   activePost,
   showComments,
+  openComments,
   closeComments,
   mergedActiveComments,
   toggleCommentLike,

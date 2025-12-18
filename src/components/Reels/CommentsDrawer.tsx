@@ -119,15 +119,6 @@ export default function CommentsDrawer({
     }
   }, [open]);
 
-  console.log("CommentsDrawer render:", {
-    open,
-    commentCount,
-    postId,
-    commentsLength: comments.length,
-    comments,
-    isMobile,
-    isTablet,
-  });
 
   const handleAddComment = async () => {
     if (!newComment.trim() || isAddingComment) return;
@@ -193,16 +184,17 @@ export default function CommentsDrawer({
   // Responsive styles based on screen size
   const getDrawerStyles = () => {
     if (isMobile) {
-      // Mobile: Enhanced bottom sheet with drag support
+      // Mobile: Enhanced bottom sheet with drag support - expanded for better UX
       return {
         position: "fixed" as const,
         bottom: 0,
         left: 0,
         right: 0,
-        height: "85vh", // Increased height for better mobile experience
+        height: "75vh", // Reduced height to not fill entire screen
+        maxHeight: "600px", // Maximum height cap
         width: "100%",
         transform: `translateY(${open ? currentTranslateY : 100}%)`,
-        borderRadius: "20px 20px 0 0",
+        borderRadius: "24px 24px 0 0",
         maxWidth: "100%",
         touchAction: "pan-y" as const,
       };
@@ -294,7 +286,7 @@ export default function CommentsDrawer({
               display: "flex",
               justifyContent: "center",
               padding: "8px 0",
-              borderBottom: `1px solid ${borderColor}`,
+              borderBottom: "none",
             }}
           >
             <div
@@ -314,16 +306,20 @@ export default function CommentsDrawer({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: isMobile ? "12px 16px" : "16px 20px",
-            borderBottom: `1px solid ${borderColor}`,
+            padding: isMobile ? "14px 16px" : "16px 20px",
+            borderBottom: "none",
             backgroundColor: bgColor,
             minHeight: isMobile ? "50px" : "60px",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "8px",
+          }}>
             <h3
               style={{
-                fontSize: isMobile ? "16px" : "18px",
+                fontSize: isMobile ? "18px" : "18px",
                 fontWeight: 600,
                 margin: 0,
                 color: textColor,
@@ -560,10 +556,11 @@ export default function CommentsDrawer({
             )}
           </div>
 
-          {/* Comment Input */}
+          {/* Comment Input - Enhanced for mobile */}
           <div
             style={{
-              padding: isMobile ? "12px" : "16px",
+              padding: isMobile ? "16px" : "16px",
+              paddingBottom: isMobile ? "20px" : "16px",
               borderTop: `1px solid ${borderColor}`,
               backgroundColor: bgColor,
             }}
@@ -571,22 +568,27 @@ export default function CommentsDrawer({
             <div
               style={{
                 display: "flex",
-                alignItems: "center",
-                gap: isMobile ? "8px" : "12px",
+                alignItems: "flex-end",
+                gap: isMobile ? "10px" : "12px",
               }}
             >
               <Avatar
                 circle
-                size={isMobile ? "xs" : "sm"}
+                size={isMobile ? "sm" : "sm"}
                 src="/placeholder.svg?height=32&width=32"
                 alt="You"
+                style={{
+                  flexShrink: 0,
+                  marginBottom: isMobile ? "2px" : "0",
+                }}
               />
               <div
                 style={{
                   flex: 1,
                   display: "flex",
-                  alignItems: "center",
-                  gap: isMobile ? "6px" : "8px",
+                  alignItems: "flex-end",
+                  gap: isMobile ? "8px" : "8px",
+                  minHeight: isMobile ? "48px" : "44px",
                 }}
               >
                 <Input
@@ -598,35 +600,55 @@ export default function CommentsDrawer({
                   disabled={isAddingComment}
                   style={{
                     flex: 1,
-                    border: "none",
+                    border: `1px solid ${borderColor}`,
                     backgroundColor: commentBgColor,
-                    borderRadius: isMobile ? "16px" : "20px",
-                    padding: isMobile ? "6px 12px" : "8px 16px",
+                    borderRadius: isMobile ? "24px" : "20px",
+                    padding: isMobile ? "12px 18px" : "10px 16px",
                     color: textColor,
-                    fontSize: isMobile ? "12px" : "14px",
+                    fontSize: isMobile ? "16px" : "14px",
+                    minHeight: isMobile ? "48px" : "44px",
+                    lineHeight: "1.5",
                     opacity: isAddingComment ? 0.7 : 1,
+                    transition: "all 0.2s ease",
                   }}
                   onKeyPress={handleKeyPress}
+                  onFocus={(e) => {
+                    if (isMobile) {
+                      e.target.style.borderColor = "#3b82f6";
+                      e.target.style.backgroundColor = isDark ? "#4b5563" : "#ffffff";
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (isMobile) {
+                      e.target.style.borderColor = borderColor;
+                      e.target.style.backgroundColor = commentBgColor;
+                    }
+                  }}
                 />
                 <Button
-                  size="sm"
+                  size={isMobile ? "md" : "sm"}
                   appearance="primary"
                   color="blue"
                   style={{
-                    width: isMobile ? 28 : 32,
-                    height: isMobile ? 28 : 32,
+                    width: isMobile ? 48 : 40,
+                    height: isMobile ? 48 : 40,
                     borderRadius: "50%",
                     padding: 0,
-                    backgroundColor: "#3b82f6",
+                    backgroundColor: newComment.trim() ? "#3b82f6" : "#9ca3af",
                     border: "none",
+                    transition: "all 0.2s ease",
+                    flexShrink: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                   onClick={handleAddComment}
                   disabled={!newComment.trim() || isAddingComment}
                 >
                   {isAddingComment ? (
                     <svg
-                      width="20"
-                      height="20"
+                      width={isMobile ? "24" : "20"}
+                      height={isMobile ? "24" : "20"}
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
@@ -634,7 +656,8 @@ export default function CommentsDrawer({
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     >
-                      <path d="M12 2v4M12 18v4M2 12h20" />
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M12 6v6l4 2" />
                     </svg>
                   ) : (
                     <SendIcon />
