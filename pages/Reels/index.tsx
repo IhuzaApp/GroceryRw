@@ -272,6 +272,8 @@ interface BasePost {
   };
   isLiked: boolean;
   commentsList: Comment[];
+  shop_id?: string | null;
+  restaurant_id?: string | null;
 }
 
 interface RestaurantPost extends BasePost {
@@ -663,6 +665,8 @@ export default function FoodReelsApp() {
       },
       isLiked: userHasLiked, // Use actual user like status
       commentsList,
+      shop_id: dbReel.shop_id || null,
+      restaurant_id: dbReel.restaurant_id || null,
     };
 
     // Helper function to extract string value
@@ -735,25 +739,12 @@ export default function FoodReelsApp() {
       case "supermarket":
         const product = dbReel.Product || {};
         
-        // Debug logging for troubleshooting
-        console.log(`🔍 [SUPERMARKET] Reel ${dbReel.id}:`, {
-          shop_id: dbReel.shop_id,
-          hasShops: !!dbReel.Shops,
-          Shops: dbReel.Shops,
-          Product: product,
-          restaurant_id: dbReel.restaurant_id,
-          hasRestaurant: !!dbReel.Restaurant,
-        });
-        
         // Try multiple sources for store information, in order of preference:
         let storeName: string | null = null;
         
         // 1. Try Shops relationship (if shop_id exists and Shops is loaded)
         if (dbReel.Shops) {
           storeName = extractStringValue(dbReel.Shops.name) || extractStringValue(dbReel.Shops.address);
-          console.log(`✅ [SUPERMARKET] Found store from Shops:`, storeName);
-        } else if (dbReel.shop_id) {
-          console.warn(`⚠️ [SUPERMARKET] Reel ${dbReel.id} has shop_id (${dbReel.shop_id}) but Shops is null/undefined`);
         }
         
         // 2. Try Product JSON field for store information (some reels might store it there)
@@ -762,25 +753,17 @@ export default function FoodReelsApp() {
                      extractStringValue(product.storeName) || 
                      extractStringValue(product.shopName) ||
                      extractStringValue(product.shop);
-          if (storeName) {
-            console.log(`✅ [SUPERMARKET] Found store from Product:`, storeName);
-          }
         }
         
         // 3. Try Restaurant name/location if we have restaurant_id instead of shop_id
         if (!storeName && dbReel.Restaurant) {
           storeName = extractStringValue(dbReel.Restaurant.name) || extractStringValue(dbReel.Restaurant.location);
-          if (storeName) {
-            console.log(`✅ [SUPERMARKET] Found store from Restaurant:`, storeName);
-          }
         }
         
         // 4. Last resort - check if description or title contains store info
         if (!storeName) {
-          // Sometimes store name might be in the description or title
           const description = extractStringValue(dbReel.description);
           const title = extractStringValue(dbReel.title);
-          // This is a fallback - not ideal but better than "unavailable"
           if (description && description.length < 100) {
             storeName = description;
           } else if (title && title.length < 50) {
@@ -789,7 +772,6 @@ export default function FoodReelsApp() {
         }
         
         const finalStoreName = storeName || "Store information unavailable";
-        console.log(`📦 [SUPERMARKET] Final store name for reel ${dbReel.id}:`, finalStoreName);
         
         return {
           ...basePost,
@@ -914,19 +896,6 @@ export default function FoodReelsApp() {
         }
 
         const data = await response.json();
-        
-        // Debug: Log reels with shop_id but no Shops data
-        if (data.reels) {
-          const reelsWithMissingShops = data.reels.filter((reel: DatabaseReel) => 
-            reel.shop_id && !reel.Shops && (reel.type === "supermarket" || reel.type === "shop" || reel.type === "store")
-          );
-          if (reelsWithMissingShops.length > 0) {
-            console.warn(`⚠️ Found ${reelsWithMissingShops.length} reels with shop_id but no Shops data:`, 
-              reelsWithMissingShops.map((r: DatabaseReel) => ({ id: r.id, shop_id: r.shop_id, type: r.type }))
-            );
-          }
-        }
-        
         const convertedPosts = data.reels.map((reel: DatabaseReel) =>
           convertDatabaseReelToFoodPost(reel)
         );
