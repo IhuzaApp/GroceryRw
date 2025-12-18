@@ -39,8 +39,10 @@ export default function DesktopReelsView({
   isRefreshing,
   theme,
 }: DesktopReelsViewProps) {
-  // Get active post based on visible index
-  const activePost = posts[visiblePostIndex] || null;
+  // Get active post based on visible index - always show sidebar if there's a post
+  const activePost = (posts.length > 0 && visiblePostIndex >= 0 && visiblePostIndex < posts.length) 
+    ? posts[visiblePostIndex] 
+    : null;
 
   // Keyboard and scroll handling for desktop
   useEffect(() => {
