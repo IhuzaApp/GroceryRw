@@ -4,7 +4,12 @@ import { useTheme } from "../../../context/ThemeContext";
 interface FeedbackModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (rating: number, comment: string) => Promise<void>;
+  onSubmit: (ratings: {
+    rating: number;
+    packaging_quality: number;
+    delivery_experience: number;
+    professionalism: number;
+  }, comment: string) => Promise<void>;
   submitting: boolean;
   submitError: string | null;
   accentColor?: "green" | "purple" | "orange";
@@ -19,60 +24,161 @@ export default function FeedbackModal({
   accentColor = "green",
 }: FeedbackModalProps) {
   const { theme } = useTheme();
-  const [rating, setRating] = useState(0);
-  const [hoveredRating, setHoveredRating] = useState(0);
+  const [packagingQuality, setPackagingQuality] = useState(0);
+  const [deliveryExperience, setDeliveryExperience] = useState(0);
+  const [professionalism, setProfessionalism] = useState(0);
+  const [hoveredRating, setHoveredRating] = useState<{ [key: string]: number }>({});
   const [comment, setComment] = useState("");
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const handleStarClick = (value: number) => {
-    console.log(`[Custom Rating] Star clicked: ${value}`);
-    setRating(value);
+  // Calculate overall rating from the three specific ratings
+  const calculateOverallRating = () => {
+    const ratings = [packagingQuality, deliveryExperience, professionalism].filter(r => r > 0);
+    if (ratings.length === 0) return 0;
+    const sum = ratings.reduce((a, b) => a + b, 0);
+    return Math.round(sum / ratings.length);
   };
 
-  const handleStarHover = (value: number) => {
-    setHoveredRating(value);
+  const handleStarClick = (value: number, field: string) => {
+    console.log(`[Custom Rating] ${field} clicked: ${value}`);
+    setValidationError(null); // Clear validation error when user rates
+    switch (field) {
+      case "packaging":
+        setPackagingQuality(value);
+        break;
+      case "delivery":
+        setDeliveryExperience(value);
+        break;
+      case "professionalism":
+        setProfessionalism(value);
+        break;
+    }
   };
 
-  const handleStarLeave = () => {
-    setHoveredRating(0);
+  const handleStarHover = (value: number, field: string) => {
+    setHoveredRating({ ...hoveredRating, [field]: value });
+  };
+
+  const handleStarLeave = (field: string) => {
+    setHoveredRating({ ...hoveredRating, [field]: 0 });
   };
 
   const handleSubmit = async () => {
-    if (rating === 0) {
+    // Check if all three ratings are provided
+    if (packagingQuality === 0 || deliveryExperience === 0 || professionalism === 0) {
+      setValidationError("Please rate all aspects: Packaging, Delivery, and Professionalism");
       return;
     }
-    await onSubmit(rating, comment);
+    
+    setValidationError(null);
+    const overallRating = calculateOverallRating();
+    
+    await onSubmit({
+      rating: overallRating,
+      packaging_quality: packagingQuality,
+      delivery_experience: deliveryExperience,
+      professionalism: professionalism,
+    }, comment);
     // Reset form after successful submission
     if (!submitting && !submitError) {
-      setRating(0);
+      setPackagingQuality(0);
+      setDeliveryExperience(0);
+      setProfessionalism(0);
       setComment("");
-      setHoveredRating(0);
+      setHoveredRating({});
+      setValidationError(null);
     }
   };
 
   const handleClose = () => {
-    setRating(0);
+    setPackagingQuality(0);
+    setDeliveryExperience(0);
+    setProfessionalism(0);
     setComment("");
-    setHoveredRating(0);
+    setHoveredRating({});
+    setValidationError(null);
     onClose();
   };
 
-  const getRatingLabel = () => {
-    switch (rating) {
+  const getRatingLabel = (value: number) => {
+    switch (value) {
       case 1:
-        return "⭐ Poor";
+        return "Poor";
       case 2:
-        return "⭐⭐ Fair";
+        return "Fair";
       case 3:
-        return "⭐⭐⭐ Good";
+        return "Good";
       case 4:
-        return "⭐⭐⭐⭐ Very Good";
+        return "Very Good";
       case 5:
-        return "⭐⭐⭐⭐⭐ Excellent";
+        return "Excellent";
       default:
         return "Select your rating";
     }
+  };
+
+  // Star Rating Component
+  const StarRating = ({ 
+    value, 
+    field, 
+    label 
+  }: { 
+    value: number; 
+    field: string; 
+    label: string;
+  }) => {
+    const currentHover = hoveredRating[field] || 0;
+    const currentValue = value;
+    
+    return (
+      <div className="space-y-3">
+        <label
+          className={`block text-sm font-semibold text-left ${
+            theme === "dark" ? "text-white" : "text-gray-900"
+          }`}
+        >
+          {label}
+        </label>
+        <div className="flex justify-start gap-2">
+          {[1, 2, 3, 4, 5].map((starValue) => {
+            const isActive = starValue <= (currentHover || currentValue);
+            return (
+              <button
+                key={starValue}
+                type="button"
+                onClick={() => handleStarClick(starValue, field)}
+                onMouseEnter={() => handleStarHover(starValue, field)}
+                onMouseLeave={() => handleStarLeave(field)}
+                onTouchStart={() => {
+                  handleStarClick(starValue, field);
+                }}
+                className="transition-all duration-200 touch-manipulation hover:scale-110 active:scale-95"
+                style={{ touchAction: "manipulation" }}
+              >
+                <svg
+                  className="h-10 w-10 sm:h-11 sm:w-11"
+                  viewBox="0 0 20 20"
+                  fill={isActive ? "#facc15" : theme === "dark" ? "#4b5563" : "#d1d5db"}
+                >
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+              </button>
+            );
+          })}
+        </div>
+        {currentValue > 0 && (
+          <p
+            className={`text-xs ${
+              theme === "dark" ? "text-green-400" : "text-green-500"
+            }`}
+          >
+            {getRatingLabel(currentValue)}
+          </p>
+        )}
+      </div>
+    );
   };
 
   const getAccentColors = () => {
@@ -130,48 +236,31 @@ export default function FeedbackModal({
       >
         {/* Header */}
         <div
-          className={`flex items-center justify-between border-b px-4 py-4 sm:px-6 ${
-            theme === "dark" ? "border-gray-700" : "border-gray-200"
+          className={`flex items-center justify-between px-6 py-6 sm:px-8 ${
+            theme === "dark" ? "border-b border-gray-700" : "border-b border-gray-200"
           }`}
         >
-          <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
-            <div className={`flex h-12 w-12 items-center justify-center rounded-full ${colors.iconBg}`}>
-              <svg
-                className={`h-6 w-6 ${colors.iconColor}`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-                />
-              </svg>
-            </div>
-            <div>
-              <h2
-                className={`text-xl font-bold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                {accentColor === "orange" ? "Rate Your Restaurant Order" : "Rate Your Experience"}
-              </h2>
-              <p
-                className={`mt-1 text-sm ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
-              >
-                Help us improve by sharing your feedback
-              </p>
-            </div>
+          <div>
+            <h2
+              className={`text-2xl font-bold ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
+            >
+              {accentColor === "orange" ? "Rate Your Restaurant Order" : "Rate Your Experience"}
+            </h2>
+            <p
+              className={`mt-1.5 text-sm ${
+                theme === "dark" ? "text-gray-400" : "text-gray-500"
+              }`}
+            >
+              Help us improve by sharing your feedback
+            </p>
           </div>
           <button
             onClick={handleClose}
             className={`rounded-lg p-2 transition-colors ${
               theme === "dark"
-                ? "text-gray-400 hover:bg-gray-700 hover:text-gray-300"
+                ? "text-gray-400 hover:bg-gray-700/50 hover:text-gray-200"
                 : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
             }`}
           >
@@ -193,180 +282,149 @@ export default function FeedbackModal({
 
         {/* Body */}
         <div
-          className={`max-h-[70vh] overflow-y-auto px-4 py-4 sm:px-6 ${
+          className={`max-h-[70vh] overflow-y-auto px-6 py-8 sm:px-8 ${
             theme === "dark" ? "bg-gray-800" : "bg-white"
           }`}
         >
-          {submitError && (
-            <div
-              className={`mb-6 rounded-lg p-4 ${
-                theme === "dark"
-                  ? "bg-red-900/30 border border-red-800/50"
-                  : "bg-red-50 border border-red-200"
-              }`}
-            >
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg
-                    className={`h-5 w-5 ${
-                      theme === "dark" ? "text-red-400" : "text-red-500"
-                    }`}
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <p
-                    className={`text-sm font-medium ${
-                      theme === "dark" ? "text-red-400" : "text-red-700"
-                    }`}
-                  >
-                    {submitError}
-                  </p>
-                </div>
-              </div>
+          {(submitError || validationError) && (
+            <div className="mb-6 flex items-start gap-3 p-4 rounded-lg bg-red-50 dark:bg-red-900/20">
+              <svg
+                className={`h-5 w-5 flex-shrink-0 mt-0.5 ${
+                  theme === "dark" ? "text-red-400" : "text-red-500"
+                }`}
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <p
+                className={`text-sm font-medium ${
+                  theme === "dark" ? "text-red-400" : "text-red-700"
+                }`}
+              >
+                {validationError || submitError}
+              </p>
             </div>
           )}
-          <div className="space-y-6">
-            {/* Rating Section - Custom Tailwind Stars */}
-            <div
-              className={`rounded-xl p-6 text-center transition-all ${
-                theme === "dark"
-                  ? "bg-gradient-to-br from-gray-700/50 to-gray-800/50 border border-gray-700"
-                  : "bg-gradient-to-br from-gray-50 to-gray-100/50 border border-gray-200"
-              }`}
-            >
-              <h4
-                className={`mb-4 text-lg font-semibold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                How was your experience?
-              </h4>
-              <div className="flex justify-center mb-4">
-                <div className="flex gap-1 sm:gap-2">
-                  {[1, 2, 3, 4, 5].map((starValue) => {
-                    const isActive = starValue <= (hoveredRating || rating);
-                    return (
-                      <button
-                        key={starValue}
-                        type="button"
-                        onClick={() => handleStarClick(starValue)}
-                        onMouseEnter={() => handleStarHover(starValue)}
-                        onMouseLeave={handleStarLeave}
-                        onTouchStart={() => {
-                          // Immediate response on touch
-                          handleStarClick(starValue);
-                        }}
-                        className={`transition-all duration-150 ${
-                          isActive
-                            ? "scale-110 transform"
-                            : "scale-100"
-                        } touch-manipulation`}
-                        style={{ touchAction: "manipulation" }}
-                      >
-                        <svg
-                          className={`h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 ${
-                            isActive
-                              ? rating > 3
-                                ? "text-green-500"
-                                : rating > 0
-                                ? "text-yellow-400"
-                                : "text-yellow-400"
-                              : theme === "dark"
-                              ? "text-gray-600"
-                              : "text-gray-300"
-                          }`}
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              <div
-                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 ${
-                  theme === "dark" ? "bg-gray-700/50" : "bg-white/80"
-                }`}
-              >
-                <p
-                  className={`text-sm font-medium ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  {getRatingLabel()}
-                </p>
+          
+          <div className="space-y-8">
+            {/* Ratings Section */}
+            <div className="space-y-6">
+              <div className="space-y-6">
+                <StarRating
+                  value={packagingQuality}
+                  field="packaging"
+                  label="Packaging the Product"
+                />
+                <StarRating
+                  value={deliveryExperience}
+                  field="delivery"
+                  label="Delivery Experience"
+                />
+                <StarRating
+                  value={professionalism}
+                  field="professionalism"
+                  label="Professionalism"
+                />
               </div>
             </div>
-            {/* Details Section */}
-            <div
-              className={`space-y-4 rounded-xl p-6 border ${
-                theme === "dark"
-                  ? "bg-gray-700/30 border-gray-700"
-                  : "bg-white border-gray-200"
-              }`}
-            >
-              <h4
-                className={`text-lg font-semibold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                Additional Feedback
-              </h4>
-              <div>
+
+            {/* Feedback Section - Enhanced Design */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
                 <label
-                  className={`mb-2 block text-sm font-medium ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-700"
+                  className={`block text-base font-semibold ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
                   }`}
                 >
-                  Share your thoughts{accentColor === "orange" ? " (Optional)" : ""}
+                  Tell us about your order & service
+                  {accentColor === "orange" && (
+                    <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
+                      (Optional)
+                    </span>
+                  )}
                 </label>
+                {comment.length > 0 && (
+                  <span
+                    className={`text-xs font-medium ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
+                    {comment.length} characters
+                  </span>
+                )}
+              </div>
+              <div className="relative">
                 <textarea
-                  className={`w-full rounded-lg p-4 text-sm transition-all ${
+                  className={`w-full rounded-xl p-5 text-sm leading-relaxed transition-all duration-200 resize-none ${
                     theme === "dark"
-                      ? "bg-gray-800 border-gray-600 text-white placeholder-gray-400"
-                      : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-                  } border focus:outline-none focus:ring-2 ${colors.border} ${colors.focus}`}
-                  placeholder="Tell us what you liked or what we could improve..."
-                  rows={4}
+                      ? "bg-gray-900/40 border-2 border-gray-700/50 text-white placeholder-gray-500/70 focus:bg-gray-900/60 focus:border-gray-600 focus:shadow-lg focus:shadow-gray-900/20"
+                      : "bg-gray-50/80 border-2 border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-gray-300 focus:shadow-lg focus:shadow-gray-200/50"
+                  } focus:outline-none ${colors.border} ${colors.focus}`}
+                  placeholder="How was your order? Was everything as expected? How was the delivery service? Any issues or suggestions?"
+                  rows={6}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                ></textarea>
+                  style={{
+                    minHeight: "120px",
+                  }}
+                />
+                {comment.length > 0 && (
+                  <div className="absolute bottom-3 right-3 flex items-center gap-1.5">
+                    <svg
+                      className={`h-4 w-4 ${
+                        theme === "dark" ? "text-gray-600" : "text-gray-300"
+                      }`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      />
+                    </svg>
+                  </div>
+                )}
               </div>
+              <p
+                className={`text-xs ${
+                  theme === "dark" ? "text-gray-500" : "text-gray-400"
+                }`}
+              >
+                Share your experience with the order quality and delivery service
+              </p>
             </div>
           </div>
         </div>
 
         {/* Footer */}
         <div
-          className={`flex w-full flex-col-reverse gap-3 border-t px-4 py-4 sm:flex-row sm:justify-end sm:px-6 ${
-            theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"
+          className={`flex w-full flex-col-reverse gap-3 px-6 py-5 sm:flex-row sm:justify-end sm:px-8 ${
+            theme === "dark" ? "border-t border-gray-700" : "border-t border-gray-200"
           }`}
         >
           <button
             onClick={handleClose}
-            className={`rounded-lg px-5 py-2.5 text-sm font-medium transition-all ${
+            className={`rounded-lg px-6 py-3 text-sm font-medium transition-all ${
               theme === "dark"
-                ? "border-gray-600 bg-gray-700 text-gray-300 hover:bg-gray-600 focus:ring-gray-500"
-                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-gray-500"
-            } border shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2`}
+                ? "text-gray-300 hover:bg-gray-700/50 hover:text-white"
+                : "text-gray-700 hover:bg-gray-50"
+            } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500`}
             type="button"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
-            disabled={submitting || rating === 0}
-            className={`flex items-center justify-center rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all ${colors.button} ${colors.focus} focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+            disabled={submitting || packagingQuality === 0 || deliveryExperience === 0 || professionalism === 0}
+            className={`flex items-center justify-center rounded-lg px-6 py-3 text-sm font-semibold text-white transition-all ${colors.button} ${colors.focus} focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed`}
             type="submit"
           >
             {submitting ? (
