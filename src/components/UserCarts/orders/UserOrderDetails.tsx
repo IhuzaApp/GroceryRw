@@ -76,7 +76,12 @@ export default function UserOrderDetails({
     }
   };
 
-  const handleFeedbackSubmit = async (rating: number, comment: string) => {
+  const handleFeedbackSubmit = async (ratings: {
+    rating: number;
+    packaging_quality: number;
+    delivery_experience: number;
+    professionalism: number;
+  }, comment: string) => {
     setSubmitting(true);
     setSubmitError(null);
 
@@ -89,11 +94,11 @@ export default function UserOrderDetails({
         body: JSON.stringify({
           order_id: order.id,
           shopper_id: order.assignedTo.id,
-          rating: rating.toString(),
+          rating: ratings.rating.toString(),
           review: comment,
-          delivery_experience: rating.toString(),
-          packaging_quality: rating.toString(),
-          professionalism: rating.toString(),
+          delivery_experience: ratings.delivery_experience.toString(),
+          packaging_quality: ratings.packaging_quality.toString(),
+          professionalism: ratings.professionalism.toString(),
         }),
       });
 

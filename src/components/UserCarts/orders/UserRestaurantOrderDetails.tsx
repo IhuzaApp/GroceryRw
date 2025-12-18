@@ -144,7 +144,12 @@ export default function UserRestaurantOrderDetails({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const handleSubmitRating = async (rating: number, comment: string) => {
+  const handleSubmitRating = async (ratings: {
+    rating: number;
+    packaging_quality: number;
+    delivery_experience: number;
+    professionalism: number;
+  }, comment: string) => {
     setSubmitting(true);
     setSubmitError(null);
 
@@ -156,9 +161,12 @@ export default function UserRestaurantOrderDetails({
         },
         body: JSON.stringify({
           orderId: order.id,
-          rating: rating,
+          rating: ratings.rating,
           comment: comment.trim(),
           shopId: order.Restaurant?.id,
+          packaging_quality: ratings.packaging_quality,
+          delivery_experience: ratings.delivery_experience,
+          professionalism: ratings.professionalism,
         }),
       });
 
