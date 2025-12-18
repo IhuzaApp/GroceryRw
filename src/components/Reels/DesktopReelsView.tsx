@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import Link from "next/link";
 import RootLayout from "@components/ui/layout";
 import VideoReel from "./VideoReel";
 import DesktopCommentsSidebar from "./DesktopCommentsSidebar";
@@ -117,6 +118,51 @@ export default function DesktopReelsView({
 
   return (
     <RootLayout>
+      {/* Back to Home Button */}
+      <Link href="/">
+        <button
+          style={{
+            position: "fixed",
+            left: "24px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            zIndex: 100,
+            width: "48px",
+            height: "48px",
+            borderRadius: "50%",
+            backgroundColor: theme === "dark" ? "rgba(31, 41, 55, 0.9)" : "rgba(255, 255, 255, 0.9)",
+            border: `1px solid ${theme === "dark" ? "#374151" : "#e5e7eb"}`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = theme === "dark" ? "rgba(55, 65, 81, 0.95)" : "rgba(255, 255, 255, 1)";
+            e.currentTarget.style.transform = "translateY(-50%) scale(1.1)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = theme === "dark" ? "rgba(31, 41, 55, 0.9)" : "rgba(255, 255, 255, 0.9)";
+            e.currentTarget.style.transform = "translateY(-50%) scale(1)";
+          }}
+        >
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke={theme === "dark" ? "#f9fafb" : "#111827"}
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+        </button>
+      </Link>
+
       {/* Refresh Indicator */}
       {isRefreshing && (
         <div className="fixed left-1/2 top-4 z-50 flex -translate-x-1/2 transform items-center gap-2 rounded-full bg-black bg-opacity-75 px-4 py-2 text-sm text-white">

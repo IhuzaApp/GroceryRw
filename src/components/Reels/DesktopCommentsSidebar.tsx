@@ -97,8 +97,8 @@ export default function DesktopCommentsSidebar({
   return (
     <div
       style={{
-        width: "450px",
-        minWidth: "450px",
+        width: "520px",
+        minWidth: "520px",
         height: "95vh",
         minHeight: "95vh",
         maxHeight: "95vh",
