@@ -154,12 +154,30 @@ export default function UserOrderDetails({
             <div className="py-4">
               {order.status === "delivered" ? (
                 <div className="text-center">
-                  <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <div className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
                     Delivered
                   </div>
-                  <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    Order completed successfully
-                  </div>
+                  {order.deliveryPhotoUrl ? (
+                    <div className="mt-3">
+                      <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Delivery Proof
+                      </p>
+                      <div className="relative mx-auto max-w-[280px] overflow-hidden rounded-lg border-2 border-gray-200 dark:border-gray-700">
+                        <Image
+                          src={order.deliveryPhotoUrl}
+                          alt="Delivery proof"
+                          width={280}
+                          height={280}
+                          className="h-auto w-full object-cover"
+                          unoptimized
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      Order completed successfully
+                    </div>
+                  )}
                 </div>
               ) : order.assignedTo || order.shopper_id ? (
                 // Show shopper details when assigned (regardless of status) - Mobile enhanced view
@@ -306,6 +324,25 @@ export default function UserOrderDetails({
                   description="Enjoy your groceries!"
                 />
               </Steps>
+              
+              {/* Delivery Proof Image for Desktop */}
+              {order.status === "delivered" && order.deliveryPhotoUrl && (
+                <div className="mt-6">
+                  <h3 className="mb-3 text-base font-semibold text-gray-900 dark:text-white">
+                    Delivery Proof
+                  </h3>
+                  <div className="relative mx-auto max-w-md overflow-hidden rounded-lg border-2 border-gray-200 dark:border-gray-700">
+                    <Image
+                      src={order.deliveryPhotoUrl}
+                      alt="Delivery proof"
+                      width={448}
+                      height={448}
+                      className="h-auto w-full object-cover"
+                      unoptimized
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
