@@ -957,12 +957,12 @@ export default function VideoReel({
           </div>
         </div>
 
-        {/* Right Side Actions */}
+        {/* Right Side Actions - Like, Comment, Share */}
         <div
           style={{
             position: "absolute",
             right: 16,
-            bottom: 240, // Increased from 160 to be above bottom navbar
+            bottom: 200,
             display: "flex",
             flexDirection: "column",
             gap: 24,
@@ -992,6 +992,7 @@ export default function VideoReel({
                 transition: "all 0.2s ease",
                 opacity: isAuthenticated ? 1 : 0.5,
                 cursor: isAuthenticated ? "pointer" : "not-allowed",
+                padding: 0,
               }}
               onClick={isAuthenticated ? () => onLike(post.id) : undefined}
               disabled={!isAuthenticated}
@@ -1004,6 +1005,7 @@ export default function VideoReel({
                 fontSize: "12px",
                 marginTop: 4,
                 fontWeight: 500,
+                textShadow: "0 1px 2px rgba(0,0,0,0.5)",
               }}
             >
               {post.stats.likes > 999
@@ -1032,6 +1034,7 @@ export default function VideoReel({
                 color: "#fff",
                 opacity: isAuthenticated ? 1 : 0.5,
                 cursor: isAuthenticated ? "pointer" : "not-allowed",
+                padding: 0,
               }}
               onClick={isAuthenticated ? () => onComment(post.id) : undefined}
               disabled={!isAuthenticated}
@@ -1044,6 +1047,7 @@ export default function VideoReel({
                 fontSize: "12px",
                 marginTop: 4,
                 fontWeight: 500,
+                textShadow: "0 1px 2px rgba(0,0,0,0.5)",
               }}
             >
               {post.stats.comments}
@@ -1070,6 +1074,7 @@ export default function VideoReel({
                 color: "#fff",
                 opacity: isAuthenticated ? 1 : 0.5,
                 cursor: isAuthenticated ? "pointer" : "not-allowed",
+                padding: 0,
               }}
               onClick={isAuthenticated ? () => onShare(post.id) : undefined}
               disabled={!isAuthenticated}
@@ -1079,17 +1084,20 @@ export default function VideoReel({
           </div>
         </div>
 
-        {/* Bottom Content */}
+        {/* Bottom Content - Title, Description, and Order Actions */}
         <div
           style={{
             position: "absolute",
-            bottom: 80, // Account for bottom navbar height
+            bottom: 0,
             left: 0,
             right: 0,
-            padding: 16,
+            padding: "20px 16px 20px 16px",
+            paddingRight: "80px", // Space for right side buttons
             zIndex: 10,
+            background: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%)",
           }}
         >
+          {/* Title and Description */}
           <div style={{ marginBottom: 16 }}>
             <h2
               style={{
@@ -1116,6 +1124,7 @@ export default function VideoReel({
             </p>
           </div>
 
+          {/* Bottom Actions - Order Now, Visit Store, etc. */}
           {renderBottomActions(post)}
         </div>
 
