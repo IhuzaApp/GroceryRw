@@ -1561,7 +1561,7 @@ export default function FoodReelsApp() {
   // Desktop layout - with normal page alignment matching main page
   return (
     <RootLayout>
-      <div className="flex h-fit items-center justify-center">
+      <div className="flex items-center justify-center md:py-4" style={{ margin: 0, padding: 0, height: "100vh", minHeight: "100vh" }}>
         {/* Refresh Indicator */}
         {isRefreshing && (
           <div className="fixed left-1/2 top-4 z-50 flex -translate-x-1/2 transform items-center gap-2 rounded-full bg-black bg-opacity-75 px-4 py-2 text-sm text-white">
@@ -1571,11 +1571,16 @@ export default function FoodReelsApp() {
         )}
 
         <div
-          className={`container mx-auto h-full max-w-md transition-colors duration-200 md:h-[95vh] md:rounded-2xl md:shadow-2xl ${
+          className={`w-full transition-colors duration-200 md:container md:mx-auto md:h-[95vh] md:max-w-md md:rounded-2xl md:shadow-2xl ${
             theme === "dark"
               ? "bg-gray-900 text-white"
               : "bg-white text-gray-900"
           }`}
+          style={{ 
+            height: "100vh",
+            minHeight: "100vh",
+            maxHeight: "100vh"
+          }}
         >
           <div
             ref={containerRef}
@@ -1584,14 +1589,18 @@ export default function FoodReelsApp() {
               scrollSnapType: "y mandatory",
               scrollBehavior: "smooth",
               overscrollBehavior: "none",
+              height: "100%"
             }}
           >
             {posts.map((post, index) => (
               <div
                 key={`${post.id}-${isMobile ? "mobile" : "desktop"}`}
                 data-index={index}
-                className="h-screen w-full"
-                style={{ scrollSnapAlign: "start" }}
+                style={{ 
+                  scrollSnapAlign: "start",
+                  height: "100vh",
+                  minHeight: "100vh"
+                }}
               >
                 <VideoReel
                   post={post}

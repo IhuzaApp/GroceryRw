@@ -6,9 +6,13 @@ const ReelPlaceholder = () => {
 
   return (
     <div
-      className={`relative h-screen w-full animate-pulse snap-start overflow-hidden md:h-[80vh] ${
+      className={`relative w-full animate-pulse snap-start overflow-hidden ${
         theme === "dark" ? "bg-gray-900" : "bg-white"
       }`}
+      style={{
+        height: "100vh",
+        minHeight: "100vh"
+      }}
     >
       <div className="absolute inset-0 z-20 flex flex-col justify-between p-4">
         {/* Top Header */}
