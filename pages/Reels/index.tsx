@@ -1570,14 +1570,63 @@ export default function FoodReelsApp() {
     setActivePostId(null);
   };
 
-  const handleShare = (postId: string) => {
+  const handleShare = async (post: FoodPost) => {
     // Check if user is logged in
     if (!session?.user) {
       alert("Please log in to share videos");
       return;
     }
 
-    console.log("Sharing post:", postId);
+    try {
+      // Create share link - link to the reel page with the post ID
+      const shareUrl = `${window.location.origin}/Reels?reel=${post.id}`;
+      const shareText = `Check out this ${post.type}: ${post.content.title}\n${post.content.description}`;
+      const shareTitle = post.content.title;
+
+      // Use Web Share API if available (mobile browsers)
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: shareTitle,
+            text: shareText,
+            url: shareUrl,
+          });
+          // Share was successful
+          return;
+        } catch (shareError: any) {
+          // User cancelled or share failed, fallback to copy
+          if (shareError.name !== "AbortError") {
+            throw shareError;
+          }
+          return; // User cancelled, don't show error
+        }
+      }
+
+      // Fallback: Copy link to clipboard
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        // Show success message (you might want to use a toast/notification library)
+        alert("Link copied to clipboard!");
+      } catch (clipboardError) {
+        // Fallback for older browsers
+        const textArea = document.createElement("textarea");
+        textArea.value = shareUrl;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand("copy");
+          alert("Link copied to clipboard!");
+        } catch (fallbackError) {
+          alert(`Share this link: ${shareUrl}`);
+        }
+        document.body.removeChild(textArea);
+      }
+    } catch (error) {
+      console.error("Error sharing:", error);
+      alert("Failed to share. Please try again.");
+    }
   };
 
   // On desktop, always use visible post for comments; on mobile, use activePostId (from clicking comment icon)
@@ -1671,7 +1720,7 @@ export default function FoodReelsApp() {
         addComment={addComment}
         isRefreshingComments={isRefreshingComments}
         toggleLike={toggleLike}
-        handleShare={handleShare}
+        handleShare={(post) => handleShare(post)}
         isRefreshing={isRefreshing}
       />
     );
@@ -1689,7 +1738,7 @@ export default function FoodReelsApp() {
       addComment={addComment}
       isRefreshingComments={isRefreshingComments}
       toggleLike={toggleLike}
-      handleShare={handleShare}
+      handleShare={(post) => handleShare(post)}
       isRefreshing={isRefreshing}
       theme={theme}
     />

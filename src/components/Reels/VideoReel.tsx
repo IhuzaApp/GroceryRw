@@ -276,7 +276,7 @@ interface VideoReelProps {
   isAuthenticated: boolean;
   onLike: (postId: string) => void;
   onComment: (postId: string) => void;
-  onShare: (postId: string) => void;
+  onShare: (post: FoodPost) => void;
 }
 
 export default function VideoReel({
@@ -1059,7 +1059,7 @@ export default function VideoReel({
             }}
           >
             <div
-              onClick={isAuthenticated ? () => onShare(post.id) : undefined}
+              onClick={isAuthenticated ? () => onShare(post) : undefined}
               style={{
                 display: "flex",
                 alignItems: "center",
