@@ -121,7 +121,7 @@ const ShopCard: React.FC<ShopCardProps> = ({
 
   return (
     <Link href={getNavigationPath()} className="no-underline">
-      <div className="relative transform cursor-pointer overflow-hidden rounded-2xl border shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+      <div className="relative transform cursor-pointer overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:hover:shadow-xl">
         <div className="relative h-48 w-full bg-gray-100 dark:bg-gray-800">
           <Image
             src={getImageUrl()}
@@ -175,15 +175,15 @@ const ShopCard: React.FC<ShopCardProps> = ({
             </span>
           )}
         </div>
-        <div className="p-4 sm:p-5">
-          <h3 className="mb-1 text-sm font-semibold !text-gray-800 dark:!text-white sm:text-base hover:!text-gray-800 dark:hover:!text-white">
+        <div className="p-4 sm:p-5 bg-white dark:bg-gray-800">
+          <h3 className="mb-1 text-sm font-semibold text-gray-800 dark:text-white sm:text-base">
             {shop.name}
           </h3>
-          <p className="hidden text-xs leading-relaxed !text-gray-500 dark:!text-gray-400 sm:block hover:!text-gray-500 dark:hover:!text-gray-400">
+          <p className="hidden text-xs leading-relaxed text-gray-500 dark:text-gray-400 sm:block">
             {shop.description?.slice(0, 80) || "No description"}
           </p>
           {isLoggedIn && (
-            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs !text-gray-600 dark:!text-gray-300 sm:text-sm hover:!text-gray-600 dark:hover:!text-gray-300">
+            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-300 sm:text-sm">
               <div className="flex items-center">
                 <svg
                   viewBox="0 0 24 24"
