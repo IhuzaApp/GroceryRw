@@ -1527,10 +1527,6 @@ export default function FoodReelsApp() {
       setVisiblePostIndex={setVisiblePostIndex}
       containerRef={containerRef}
       isAuthenticated={!!session?.user}
-      activePost={activePost}
-      showComments={showComments}
-      openComments={openComments}
-      closeComments={closeComments}
       mergedActiveComments={mergedActiveComments}
       toggleCommentLike={toggleCommentLike}
       addComment={addComment}

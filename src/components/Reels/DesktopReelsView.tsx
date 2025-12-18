@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import RootLayout from "@components/ui/layout";
 import VideoReel from "./VideoReel";
-import CommentsDrawer from "./CommentsDrawer";
+import DesktopCommentsSidebar from "./DesktopCommentsSidebar";
 
 // Types - will be imported from parent component
 type FoodPost = any;
@@ -13,10 +13,6 @@ interface DesktopReelsViewProps {
   setVisiblePostIndex: (index: number) => void;
   containerRef: React.RefObject<HTMLDivElement>;
   isAuthenticated: boolean;
-  activePost: FoodPost | null;
-  showComments: boolean;
-  openComments: (postId: string) => void;
-  closeComments: () => void;
   mergedActiveComments: Comment[];
   toggleCommentLike: (commentId: string) => void;
   addComment: (text: string) => void;
@@ -33,9 +29,6 @@ export default function DesktopReelsView({
   setVisiblePostIndex,
   containerRef,
   isAuthenticated,
-  activePost,
-  showComments,
-  closeComments,
   mergedActiveComments,
   toggleCommentLike,
   addComment,
@@ -45,11 +38,32 @@ export default function DesktopReelsView({
   isRefreshing,
   theme,
 }: DesktopReelsViewProps) {
+  // Get active post based on visible index
+  const activePost = posts[visiblePostIndex] || null;
+
   // Keyboard and scroll handling for desktop
   useEffect(() => {
     if (!containerRef.current || posts.length === 0) return;
 
     const container = containerRef.current;
+    let isScrolling = false;
+
+    const handleScroll = () => {
+      if (isScrolling) return;
+      isScrolling = true;
+
+      const scrollPosition = container.scrollTop;
+      const containerHeight = container.clientHeight;
+      const currentIndex = Math.round(scrollPosition / containerHeight);
+
+      if (currentIndex !== visiblePostIndex && currentIndex >= 0 && currentIndex < posts.length) {
+        setVisiblePostIndex(currentIndex);
+      }
+
+      setTimeout(() => {
+        isScrolling = false;
+      }, 100);
+    };
 
     const handleKeyDown = (e: KeyboardEvent) => {
       const currentIndex = visiblePostIndex;
@@ -92,8 +106,11 @@ export default function DesktopReelsView({
       }
     };
 
+    container.addEventListener("scroll", handleScroll);
     window.addEventListener("keydown", handleKeyDown);
+    
     return () => {
+      container.removeEventListener("scroll", handleScroll);
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [posts.length, visiblePostIndex, containerRef, setVisiblePostIndex]);
@@ -116,8 +133,10 @@ export default function DesktopReelsView({
           justifyContent: "center",
           minHeight: "100vh",
           padding: "2.5vh 0",
+          gap: "16px",
         }}
       >
+        {/* Video Reel Container */}
         <div
           ref={containerRef}
           className="scrollbar-hide reels-container"
@@ -139,47 +158,45 @@ export default function DesktopReelsView({
             backgroundColor: theme === "dark" ? "#111827" : "#ffffff",
           }}
         >
-        {posts.map((post, index) => (
-          <div
-            key={`${post.id}-desktop`}
-            data-index={index}
-            style={{ 
-              scrollSnapAlign: "start",
-              width: "100%",
-              height: "95vh",
-              minHeight: "95vh",
-              maxHeight: "95vh",
-              flexShrink: 0,
-              margin: 0,
-              padding: 0
-            }}
-          >
-            <VideoReel
-              post={post}
-              isVisible={visiblePostIndex === index}
-              isAuthenticated={isAuthenticated}
-              onLike={toggleLike}
-              onComment={(postId) => openComments(postId)}
-              onShare={handleShare}
-            />
-          </div>
-        ))}
+          {posts.map((post, index) => (
+            <div
+              key={`${post.id}-desktop`}
+              data-index={index}
+              style={{ 
+                scrollSnapAlign: "start",
+                width: "100%",
+                height: "95vh",
+                minHeight: "95vh",
+                maxHeight: "95vh",
+                flexShrink: 0,
+                margin: 0,
+                padding: 0
+              }}
+            >
+              <VideoReel
+                post={post}
+                isVisible={visiblePostIndex === index}
+                isAuthenticated={isAuthenticated}
+                onLike={toggleLike}
+                onComment={() => {}}
+                onShare={handleShare}
+              />
+            </div>
+          ))}
         </div>
-      </div>
 
-      {/* Comments Drawer */}
-      {activePost && (
-        <CommentsDrawer
-          open={showComments}
-          onClose={closeComments}
-          comments={mergedActiveComments}
-          commentCount={activePost.stats.comments}
-          postId={activePost.id}
-          onToggleCommentLike={toggleCommentLike}
-          onAddComment={addComment}
-          isRefreshing={isRefreshingComments}
-        />
-      )}
+        {/* Comments Sidebar - Outside and next to the reel container */}
+        {activePost && (
+          <DesktopCommentsSidebar
+            comments={mergedActiveComments}
+            commentCount={activePost.stats.comments}
+            postId={activePost.id}
+            onToggleCommentLike={toggleCommentLike}
+            onAddComment={addComment}
+            isRefreshing={isRefreshingComments}
+          />
+        )}
+      </div>
     </RootLayout>
   );
 }
