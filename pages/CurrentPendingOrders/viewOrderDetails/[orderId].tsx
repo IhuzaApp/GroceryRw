@@ -141,7 +141,7 @@ const MobileOrderDetails = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen ">
       {/* Mobile Header with Image */}
       <div
         className="relative h-36 w-full sm:hidden"
@@ -200,9 +200,9 @@ const MobileOrderDetails = ({
       </div>
 
       {/* Mobile Content */}
-      <div className="px-4 py-6">
+      <div className="py-6">
         {/* Order Status Badge - Modern Design */}
-        <div className="mb-6">
+        <div className="mb-6 px-4">
           {(() => {
             const statusInfo = getOrderStatusInfo(order);
             const colorClasses = {
@@ -247,8 +247,8 @@ const MobileOrderDetails = ({
           })()}
         </div>
 
-        {/* Order Details Component */}
-        <div className="rounded-2xl bg-white shadow-sm dark:bg-gray-800">
+        {/* Order Details Component - Full width on mobile */}
+        <div className="mobile-full-width ">
           {orderType === "reel" ? (
             <UserReelOrderDetails order={order} isMobile={true} />
           ) : orderType === "restaurant" ? (
@@ -271,10 +271,10 @@ const DesktopOrderDetails = ({
   orderType: "regular" | "reel" | "restaurant" | null;
 }) => {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-16">
+    <div className="min-h-screen md:ml-16">
       {/* Desktop Content - No Header */}
       <div className="container mx-auto px-8 py-8">
-        <div className="rounded-2xl bg-white shadow-sm dark:bg-gray-800">
+        <div className="rounded-2xl  shadow-sm ">
           {orderType === "reel" ? (
             <UserReelOrderDetails order={order} />
           ) : orderType === "restaurant" ? (
@@ -473,6 +473,61 @@ function ViewOrderDetailsPage() {
         <div className="hidden md:block">
           <DesktopOrderDetails order={order} orderType={orderType} />
         </div>
+
+        {/* Mobile-specific styles for full-width layout */}
+        <style jsx global>{`
+          @media (max-width: 767px) {
+            /* Remove padding from Panel body on mobile for full-width */
+            .mobile-full-width .rs-panel-body {
+              padding: 0 !important;
+            }
+            
+            /* Remove padding from scroll view on mobile */
+            .mobile-full-width .rs-scroll-view {
+              padding: 0 !important;
+            }
+            
+            /* Remove border radius, margins, and box shadows from panels */
+            .mobile-full-width .rs-panel {
+              border-radius: 0 !important;
+              margin-left: 0 !important;
+              margin-right: 0 !important;
+              margin-top: 0 !important;
+              margin-bottom: 0 !important;
+              box-shadow: none !important;
+              border-left: none !important;
+              border-right: none !important;
+            }
+            
+            /* Remove border radius from panel body and scroll view */
+            .mobile-full-width .rs-panel-body,
+            .mobile-full-width .rs-scroll-view {
+              border-radius: 0 !important;
+            }
+            
+            /* Add internal padding to content inside panels for readability */
+            .mobile-full-width .rs-panel-body > div {
+              padding-left: 1rem !important;
+              padding-right: 1rem !important;
+            }
+            
+            /* Ensure proper spacing for first and last elements */
+            .mobile-full-width .rs-panel-body > div:first-child {
+              padding-top: 1rem !important;
+            }
+            
+            .mobile-full-width .rs-panel-body > div:last-child {
+              padding-bottom: 1rem !important;
+            }
+            
+            /* Remove shadows from panel containers */
+            .mobile-full-width .rs-panel,
+            .mobile-full-width .rs-panel-body,
+            .mobile-full-width .rs-scroll-view {
+              box-shadow: none !important;
+            }
+          }
+        `}</style>
       </RootLayout>
     </AuthGuard>
   );

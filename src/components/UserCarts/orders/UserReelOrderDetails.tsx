@@ -14,6 +14,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { formatCurrency } from "../../../lib/formatCurrency";
 import EstimatedDeliveryTime from "./EstimatedDeliveryTime";
+import { useTheme } from "../../../context/ThemeContext";
 
 // Helper to pad order IDs to at least 4 digits
 function formatOrderID(id?: string | number): string {
@@ -30,6 +31,7 @@ export default function UserReelOrderDetails({
   order,
   isMobile = false,
 }: UserReelOrderDetailsProps) {
+  const { theme } = useTheme();
   const [feedbackModal, setFeedbackModal] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -733,7 +735,7 @@ export default function UserReelOrderDetails({
         </div>
       </div>
 
-      {/* Feedback Modal */}
+      {/* Feedback Modal - Redesigned with Theme Support */}
       <Modal
         open={feedbackModal}
         onClose={() => {
@@ -742,14 +744,22 @@ export default function UserReelOrderDetails({
           setComment("");
           setSubmitError(null);
         }}
-        className="mx-4 max-w-[95%] overflow-hidden md:mx-auto md:max-w-[500px]"
+        className={`mx-4 max-w-[95%] overflow-hidden md:mx-auto md:max-w-[550px] ${
+          theme === "dark" ? "dark" : ""
+        }`}
       >
-        <Modal.Header>
+        <Modal.Header className={`${theme === "dark" ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}>
           <Modal.Title>
             <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
+              <div className={`flex h-12 w-12 items-center justify-center rounded-full ${
+                theme === "dark" 
+                  ? "bg-purple-500/20" 
+                  : "bg-gradient-to-br from-purple-100 to-purple-50"
+              }`}>
                 <svg
-                  className="h-6 w-6 text-purple-500"
+                  className={`h-6 w-6 ${
+                    theme === "dark" ? "text-purple-400" : "text-purple-600"
+                  }`}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -758,23 +768,38 @@ export default function UserReelOrderDetails({
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
                   />
                 </svg>
               </div>
-              <span className="text-lg font-semibold text-gray-900">
-                Rate Your Experience
-              </span>
+              <div>
+                <span className={`text-xl font-bold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}>
+                  Rate Your Experience
+                </span>
+                <p className={`mt-1 text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}>
+                  Help us improve by sharing your feedback
+                </p>
+              </div>
             </div>
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body className={`${theme === "dark" ? "bg-gray-800" : "bg-white"}`}>
           {submitError && (
-            <div className="mb-6 rounded-md bg-red-50 p-4">
+            <div className={`mb-6 rounded-lg p-4 ${
+              theme === "dark" 
+                ? "bg-red-900/30 border border-red-800/50" 
+                : "bg-red-50 border border-red-200"
+            }`}>
               <div className="flex">
                 <div className="flex-shrink-0">
                   <svg
-                    className="h-5 w-5 text-red-400"
+                    className={`h-5 w-5 ${
+                      theme === "dark" ? "text-red-400" : "text-red-500"
+                    }`}
                     viewBox="0 0 20 20"
                     fill="currentColor"
                   >
@@ -786,47 +811,77 @@ export default function UserReelOrderDetails({
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm text-red-500">{submitError}</p>
+                  <p className={`text-sm font-medium ${
+                    theme === "dark" ? "text-red-400" : "text-red-700"
+                  }`}>
+                    {submitError}
+                  </p>
                 </div>
               </div>
             </div>
           )}
-          <div className="space-y-6">
-            {/* Rating Section */}
-            <div className="rounded-lg bg-gray-50 p-6 text-center">
-              <h4 className="mb-4 text-lg font-medium text-gray-900">
+          <div className="space-y-6 px-6 py-4">
+            {/* Rating Section - Redesigned */}
+            <div className={`rounded-xl p-6 text-center transition-all ${
+              theme === "dark"
+                ? "bg-gradient-to-br from-gray-700/50 to-gray-800/50 border border-gray-700"
+                : "bg-gradient-to-br from-gray-50 to-gray-100/50 border border-gray-200"
+            }`}>
+              <h4 className={`mb-4 text-lg font-semibold ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}>
                 How was your experience?
               </h4>
-              <div className="flex justify-center">
+              <div className="flex justify-center mb-4">
                 <Rate
                   defaultValue={0}
                   value={rating}
                   onChange={setRating}
-                  color={rating > 0 ? "yellow" : undefined}
+                  color={rating > 3 ? "purple" : rating > 0 ? "yellow" : undefined}
                   size="lg"
-                  className="text-3xl"
+                  className="text-4xl"
                 />
               </div>
-              <p className="mt-2 text-sm text-gray-500">
-                {rating === 0 && "Select your rating"}
-                {rating === 1 && "Poor"}
-                {rating === 2 && "Fair"}
-                {rating === 3 && "Good"}
-                {rating === 4 && "Very Good"}
-                {rating === 5 && "Excellent"}
-              </p>
+              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${
+                theme === "dark"
+                  ? "bg-gray-700/50"
+                  : "bg-white/80"
+              }`}>
+                <p className={`text-sm font-medium ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-700"
+                }`}>
+                  {rating === 0 && "Select your rating"}
+                  {rating === 1 && "⭐ Poor"}
+                  {rating === 2 && "⭐⭐ Fair"}
+                  {rating === 3 && "⭐⭐⭐ Good"}
+                  {rating === 4 && "⭐⭐⭐⭐ Very Good"}
+                  {rating === 5 && "⭐⭐⭐⭐⭐ Excellent"}
+                </p>
+              </div>
             </div>
-            {/* Details Section */}
-            <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-6">
-              <h4 className="text-lg font-medium text-gray-900">
+            {/* Details Section - Redesigned */}
+            <div className={`space-y-4 rounded-xl p-6 border ${
+              theme === "dark"
+                ? "bg-gray-700/30 border-gray-700"
+                : "bg-white border-gray-200"
+            }`}>
+              <h4 className={`text-lg font-semibold ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}>
                 Additional Feedback
               </h4>
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label className={`mb-2 block text-sm font-medium ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-700"
+                }`}>
                   Share your thoughts
                 </label>
                 <textarea
-                  className="w-full rounded-md border border-gray-300 p-3 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  className={`w-full rounded-lg p-4 text-sm transition-all ${
+                    theme === "dark"
+                      ? "bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500 focus:ring-purple-500/50"
+                      : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-purple-500 focus:ring-purple-500"
+                  } border focus:outline-none focus:ring-2`}
                   placeholder="Tell us what you liked or what we could improve..."
                   rows={4}
                   value={comment}
@@ -836,8 +891,10 @@ export default function UserReelOrderDetails({
             </div>
           </div>
         </Modal.Body>
-        <Modal.Footer>
-          <div className="flex w-full flex-col-reverse gap-3 border-t border-gray-200 px-4 py-4 sm:flex-row sm:justify-end sm:px-6">
+        <Modal.Footer className={`${theme === "dark" ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}>
+          <div className={`flex w-full flex-col-reverse gap-3 border-t px-6 py-4 sm:flex-row sm:justify-end ${
+            theme === "dark" ? "border-gray-700" : "border-gray-200"
+          }`}>
             <button
               onClick={() => {
                 setFeedbackModal(false);
@@ -845,7 +902,11 @@ export default function UserReelOrderDetails({
                 setComment("");
                 setSubmitError(null);
               }}
-              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+              className={`rounded-lg px-5 py-2.5 text-sm font-medium transition-all ${
+                theme === "dark"
+                  ? "border-gray-600 bg-gray-700 text-gray-300 hover:bg-gray-600 focus:ring-gray-500"
+                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-gray-500"
+              } border shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2`}
               type="button"
             >
               Cancel
@@ -853,7 +914,11 @@ export default function UserReelOrderDetails({
             <button
               onClick={handleFeedbackSubmit}
               disabled={submitting}
-              className="flex items-center justify-center rounded-md bg-purple-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50"
+              className={`flex items-center justify-center rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all ${
+                theme === "dark"
+                  ? "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 focus:ring-purple-500"
+                  : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 focus:ring-purple-500"
+              } focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed`}
               type="submit"
             >
               {submitting ? (
@@ -888,7 +953,7 @@ export default function UserReelOrderDetails({
                   >
                     <path
                       fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                       clipRule="evenodd"
                     />
                   </svg>
@@ -899,6 +964,56 @@ export default function UserReelOrderDetails({
           </div>
         </Modal.Footer>
       </Modal>
+
+      <style jsx global>{`
+        .rs-modal-header {
+          border-bottom: 1px solid !important;
+          padding: 1.5rem !important;
+        }
+        .rs-modal-body {
+          padding: 0 !important;
+        }
+        .rs-modal-footer {
+          padding: 0 !important;
+          border-top: 1px solid !important;
+        }
+        .rs-rate-character-active {
+          color: #eab308 !important;
+        }
+        .rs-rate-character:hover {
+          transform: scale(1.1);
+          transition: transform 0.2s ease;
+        }
+        .rs-modal-content {
+          border-radius: 1rem !important;
+          overflow: hidden !important;
+        }
+        .dark .rs-modal-content {
+          background-color: #1f2937 !important;
+        }
+        .dark .rs-modal-header {
+          background-color: #1f2937 !important;
+          border-color: #374151 !important;
+        }
+        .dark .rs-modal-body {
+          background-color: #1f2937 !important;
+        }
+        .dark .rs-modal-footer {
+          background-color: #1f2937 !important;
+          border-color: #374151 !important;
+        }
+        @media (max-width: 640px) {
+          .rs-modal {
+            margin: 1rem !important;
+          }
+          .rs-modal-header {
+            padding: 1.25rem !important;
+          }
+          .rs-rate {
+            font-size: 2.5rem !important;
+          }
+        }
+      `}</style>
     </>
   );
 }
