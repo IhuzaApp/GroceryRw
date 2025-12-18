@@ -69,6 +69,22 @@ export default function DesktopReelsView({
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't handle navigation if user is typing in an input field
+      const activeElement = document.activeElement;
+      const isTyping = activeElement && (
+        activeElement.tagName === "INPUT" ||
+        activeElement.tagName === "TEXTAREA" ||
+        activeElement.getAttribute("contenteditable") === "true" ||
+        activeElement.closest("input") ||
+        activeElement.closest("textarea") ||
+        activeElement.closest("[contenteditable='true']")
+      );
+
+      // For space key, only handle navigation if not typing
+      if (e.key === " " && isTyping) {
+        return;
+      }
+
       const currentIndex = visiblePostIndex;
       let nextIndex = currentIndex;
 
