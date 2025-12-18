@@ -7,7 +7,6 @@ import {
   Panel,
   Steps,
   Rate,
-  Modal,
   Message,
 } from "rsuite";
 import Link from "next/link";
@@ -833,92 +832,147 @@ export default function UserOrderDetails({
         </div>
       </div>
 
-      {/* Feedback Modal - Redesigned with Theme Support */}
-      <Modal
-        open={feedbackModal}
-        onClose={() => {
-          setFeedbackModal(false);
-          setRating(0);
-          setComment("");
-          setSubmitError(null);
-        }}
-        className={`mx-4 max-w-[95%] overflow-hidden md:mx-auto md:max-w-[550px] ${
-          theme === "dark" ? "dark" : ""
-        }`}
-      >
-        <Modal.Header className={`${theme === "dark" ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}>
-          <Modal.Title>
-            <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
-              <div className={`flex h-12 w-12 items-center justify-center rounded-full ${
-                theme === "dark" 
-                  ? "bg-green-500/20" 
-                  : "bg-gradient-to-br from-green-100 to-green-50"
-              }`}>
-                <svg
-                  className={`h-6 w-6 ${
-                    theme === "dark" ? "text-green-400" : "text-green-600"
+      {/* Feedback Modal - Tailwind CSS Modal */}
+      {feedbackModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => {
+              setFeedbackModal(false);
+              setRating(0);
+              setComment("");
+              setSubmitError(null);
+            }}
+          />
+
+          {/* Modal */}
+          <div
+            className={`relative z-10 w-full max-w-[550px] rounded-2xl border shadow-2xl ${
+              theme === "dark"
+                ? "border-gray-700 bg-gray-800"
+                : "border-gray-200 bg-white"
+            }`}
+          >
+            {/* Header */}
+            <div
+              className={`flex items-center justify-between border-b px-6 py-4 ${
+                theme === "dark" ? "border-gray-700" : "border-gray-200"
+              }`}
+            >
+              <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
+                <div
+                  className={`flex h-12 w-12 items-center justify-center rounded-full ${
+                    theme === "dark"
+                      ? "bg-green-500/20"
+                      : "bg-gradient-to-br from-green-100 to-green-50"
                   }`}
+                >
+                  <svg
+                    className={`h-6 w-6 ${
+                      theme === "dark" ? "text-green-400" : "text-green-600"
+                    }`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h2
+                    className={`text-xl font-bold ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    Rate Your Experience
+                  </h2>
+                  <p
+                    className={`mt-1 text-sm ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
+                    Help us improve by sharing your feedback
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setFeedbackModal(false);
+                  setRating(0);
+                  setComment("");
+                  setSubmitError(null);
+                }}
+                className={`rounded-lg p-2 transition-colors ${
+                  theme === "dark"
+                    ? "text-gray-400 hover:bg-gray-700 hover:text-gray-300"
+                    : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                }`}
+              >
+                <svg
+                  className="h-5 w-5"
                   fill="none"
-                  viewBox="0 0 24 24"
                   stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
                   />
                 </svg>
-              </div>
-              <div>
-                <span className={`text-xl font-bold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}>
-                  Rate Your Experience
-                </span>
-                <p className={`mt-1 text-sm ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}>
-                  Help us improve by sharing your feedback
-                </p>
-              </div>
+              </button>
             </div>
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body className={`${theme === "dark" ? "bg-gray-800" : "bg-white"}`}>
-          {submitError && (
-            <div className={`mb-6 rounded-lg p-4 ${
-              theme === "dark" 
-                ? "bg-red-900/30 border border-red-800/50" 
-                : "bg-red-50 border border-red-200"
-            }`}>
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg
-                    className={`h-5 w-5 ${
-                      theme === "dark" ? "text-red-400" : "text-red-500"
-                    }`}
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+
+            {/* Body */}
+            <div
+              className={`max-h-[70vh] overflow-y-auto px-4 py-4 sm:px-6 ${
+                theme === "dark" ? "bg-gray-800" : "bg-white"
+              }`}
+            >
+              {submitError && (
+                <div
+                  className={`mb-6 rounded-lg p-4 ${
+                    theme === "dark"
+                      ? "bg-red-900/30 border border-red-800/50"
+                      : "bg-red-50 border border-red-200"
+                  }`}
+                >
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg
+                        className={`h-5 w-5 ${
+                          theme === "dark" ? "text-red-400" : "text-red-500"
+                        }`}
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p
+                        className={`text-sm font-medium ${
+                          theme === "dark" ? "text-red-400" : "text-red-700"
+                        }`}
+                      >
+                        {submitError}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="ml-3">
-                  <p className={`text-sm font-medium ${
-                    theme === "dark" ? "text-red-400" : "text-red-700"
-                  }`}>
-                    {submitError}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-          <div className="space-y-6 px-6 py-4">
+              )}
+              <div className="space-y-6">
             {/* Rating Section - Redesigned */}
             <div className={`rounded-xl p-6 text-center transition-all ${
               theme === "dark"
@@ -987,12 +1041,15 @@ export default function UserOrderDetails({
                 ></textarea>
               </div>
             </div>
-          </div>
-        </Modal.Body>
-        <Modal.Footer className={`${theme === "dark" ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}>
-          <div className={`flex w-full flex-col-reverse gap-3 border-t px-6 py-4 sm:flex-row sm:justify-end ${
-            theme === "dark" ? "border-gray-700" : "border-gray-200"
-          }`}>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div
+              className={`flex w-full flex-col-reverse gap-3 border-t px-4 py-4 sm:flex-row sm:justify-end sm:px-6 ${
+                theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"
+              }`}
+            >
             <button
               onClick={() => {
                 setFeedbackModal(false);
@@ -1060,8 +1117,9 @@ export default function UserOrderDetails({
               )}
             </button>
           </div>
-        </Modal.Footer>
-      </Modal>
+        </div>
+      </div>
+      )}
 
       <style jsx global>{`
         .custom-steps
