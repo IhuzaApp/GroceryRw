@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import { useTheme } from "../../context/ThemeContext";
 import { Button, Avatar, Badge, toaster } from "rsuite";
 import Image from "next/image";
@@ -287,6 +288,7 @@ export default function VideoReel({
   onShare,
 }: VideoReelProps) {
   const { theme } = useTheme();
+  const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoError, setVideoError] = useState(false);
@@ -608,14 +610,18 @@ export default function VideoReel({
                   borderColor: "#2563eb",
                   color: "white",
                   border: "none",
-                  cursor: isAuthenticated ? "pointer" : "not-allowed",
+                  cursor: isAuthenticated && post.shop_id ? "pointer" : "not-allowed",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  opacity: isAuthenticated ? 1 : 0.5,
+                  opacity: isAuthenticated && post.shop_id ? 1 : 0.5,
                 }}
-                onClick={isAuthenticated ? undefined : undefined}
-                disabled={!isAuthenticated}
+                onClick={() => {
+                  if (isAuthenticated && post.shop_id) {
+                    router.push(`/stores/${post.shop_id}`);
+                  }
+                }}
+                disabled={!isAuthenticated || !post.shop_id}
               >
                 <StoreIcon />
                 <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>
