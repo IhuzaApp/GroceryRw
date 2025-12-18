@@ -271,8 +271,8 @@ export default function UserReelOrderDetails({
         </div>
 
         <div className="mt-4 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-          {/* Delivery Info */}
-          <div className="w-full">
+          {/* Delivery Info - Hidden on desktop */}
+          <div className="w-full md:hidden">
             <p className="mb-2 text-gray-600">Estimated delivery time:</p>
             <EstimatedDeliveryTime
               estimatedDelivery={order.estimatedDelivery}
@@ -297,21 +297,20 @@ export default function UserReelOrderDetails({
             </button>
           ) : (
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-              <Button
-                appearance="ghost"
-                className="flex items-center justify-center bg-purple-500 text-white transition hover:bg-purple-600"
+              <button
+                className="group flex items-center justify-center gap-2 rounded-md bg-gradient-to-r from-green-500 to-green-600 px-4 py-2.5 text-sm font-semibold !text-white shadow-md transition-all duration-200 hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-[0.98]"
               >
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="2"
-                  className="mr-1 h-4 w-4"
+                  strokeWidth="2.5"
+                  className="h-5 w-5 !text-white transition-transform group-hover:scale-110"
                 >
                   <path d="M15.05 5A5 5 0 0119 8.95M15.05 1A9 9 0 0123 8.94m-1 7.98v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"></path>
                 </svg>
                 Contact Support
-              </Button>
+              </button>
             </div>
           )}
         </div>
@@ -578,10 +577,10 @@ export default function UserReelOrderDetails({
                       }
                     }}
                     disabled={order.status === "delivered" || !order.assignedTo?.phone}
-                    className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white shadow-md transition-all duration-200 ${
+                    className={`flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-semibold !text-white shadow-md transition-all duration-200 ${
                       order.status === "delivered" || !order.assignedTo?.phone
                         ? "cursor-not-allowed bg-gray-400 opacity-50"
-                        : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 hover:shadow-lg active:scale-[0.98]"
+                        : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-[0.98]"
                     }`}
                   >
                     <svg
@@ -589,7 +588,7 @@ export default function UserReelOrderDetails({
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2.5"
-                      className="h-4 w-4"
+                      className="h-4 w-4 !text-white"
                     >
                       <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"></path>
                     </svg>
@@ -597,7 +596,7 @@ export default function UserReelOrderDetails({
                   </button>
                   <button
                     disabled={order.status === "delivered"}
-                    className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg border-2 px-3 py-2 text-xs font-semibold transition-all duration-200 ${
+                    className={`flex flex-1 items-center justify-center gap-1.5 rounded-md border-2 px-3 py-2 text-xs font-semibold transition-all duration-200 ${
                       order.status === "delivered"
                         ? "cursor-not-allowed border-gray-300 bg-gray-50 text-gray-400 opacity-50 dark:border-gray-700 dark:bg-gray-800"
                         : "border-purple-500 bg-white text-purple-600 hover:bg-purple-50 hover:shadow-md active:scale-[0.98] dark:border-purple-600 dark:bg-gray-800 dark:text-purple-400 dark:hover:bg-purple-900/20"
