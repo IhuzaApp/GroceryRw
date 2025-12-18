@@ -1002,6 +1002,26 @@ export default function UserReelOrderDetails({
           background-color: #1f2937 !important;
           border-color: #374151 !important;
         }
+        /* Dark theme styles for Steps */
+        .dark .custom-steps .rs-steps-item-title {
+          color: #ffffff !important;
+        }
+        .dark .custom-steps .rs-steps-item-description {
+          color: #e5e7eb !important;
+        }
+        .dark .custom-steps .rs-steps-item-title-wrapper {
+          color: #ffffff !important;
+        }
+        .dark .custom-steps .rs-steps-item-content {
+          color: #ffffff !important;
+        }
+        .dark .custom-steps .rs-steps-item-icon-wrapper {
+          color: #ffffff !important;
+        }
+        .dark .custom-steps .rs-steps-item-status-wait .rs-steps-item-icon-wrapper {
+          color: #9ca3af !important;
+          border-color: #9ca3af !important;
+        }
         @media (max-width: 640px) {
           .rs-modal {
             margin: 1rem !important;

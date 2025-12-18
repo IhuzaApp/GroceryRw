@@ -1077,6 +1077,27 @@ export default function UserOrderDetails({
         .custom-steps .rs-steps-item-status-finish .rs-steps-item-tail {
           border-color: #22c55e !important;
         }
+        /* Dark theme styles for Steps */
+        .dark .custom-steps .rs-steps-item-title {
+          color: #ffffff !important;
+        }
+        .dark .custom-steps .rs-steps-item-description {
+          color: #e5e7eb !important;
+        }
+        .dark .custom-steps .rs-steps-item-title-wrapper {
+          color: #ffffff !important;
+        }
+        .dark .custom-steps .rs-steps-item-content {
+          color: #ffffff !important;
+        }
+        /* Ensure step icons are visible in dark theme */
+        .dark .custom-steps .rs-steps-item-icon-wrapper {
+          color: #ffffff !important;
+        }
+        .dark .custom-steps .rs-steps-item-status-wait .rs-steps-item-icon-wrapper {
+          color: #9ca3af !important;
+          border-color: #9ca3af !important;
+        }
         .rs-modal-header {
           border-bottom: 1px solid !important;
           padding: 1.5rem !important;
