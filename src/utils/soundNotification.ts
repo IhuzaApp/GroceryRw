@@ -22,9 +22,6 @@ class SoundNotification {
 
     // Debounce: Don't play if we played recently
     if (now - this.lastPlayTime < this.debounceDelay) {
-      console.log(
-        "🔊 [Sound Notification] Debounced - too soon since last play"
-      );
       return;
     }
 
@@ -32,13 +29,12 @@ class SoundNotification {
       // Reset audio to beginning in case it's already playing
       this.audio.currentTime = 0;
       this.audio.play().catch((error) => {
-        console.warn("Could not play notification sound:", error);
+        // Could not play notification sound
       });
 
       this.lastPlayTime = now;
-      console.log("🔊 [Sound Notification] Playing notification sound");
     } catch (error) {
-      console.warn("Error playing notification sound:", error);
+      // Error playing notification sound
     }
   }
 
