@@ -1414,6 +1414,24 @@ export default function FoodReelsApp() {
     return () => clearInterval(refreshInterval);
   }, [showComments, activePostId]);
 
+  // Automatically set active post and load comments for desktop view
+  useEffect(() => {
+    if (isMobile) return; // Only for desktop
+    
+    if (posts.length > 0 && visiblePostIndex >= 0 && visiblePostIndex < posts.length) {
+      const currentPost = posts[visiblePostIndex];
+      if (currentPost && currentPost.id) {
+        // Always update activePostId for desktop to show comments sidebar
+        setActivePostId(currentPost.id);
+        // Auto-fetch comments for the visible post on desktop if user is logged in
+        if (session?.user) {
+          refetchComments(currentPost.id);
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visiblePostIndex, posts.length, isMobile, session?.user?.id]);
+
   const closeComments = () => {
     console.log("Closing comments");
     setShowComments(false);
@@ -1430,11 +1448,18 @@ export default function FoodReelsApp() {
     console.log("Sharing post:", postId);
   };
 
-  const activePost = posts.find((post: FoodPost) => post.id === activePostId);
+  // On desktop, always use visible post for comments; on mobile, use activePostId (from clicking comment icon)
+  const activePostForComments = isMobile 
+    ? posts.find((post: FoodPost) => post.id === activePostId)
+    : (posts.length > 0 && visiblePostIndex >= 0 && visiblePostIndex < posts.length 
+        ? posts[visiblePostIndex] 
+        : null);
+  
+  const activePost = activePostForComments;
   const mergedActiveComments = activePost
     ? [
         ...(optimisticComments[activePost.id] || []),
-        ...activePost.commentsList.filter(
+        ...(activePost.commentsList || []).filter(
           (c) =>
             !(optimisticComments[activePost.id] || []).some(
               (o) => o.text === c.text && o.user.name === c.user.name
