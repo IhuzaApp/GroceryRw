@@ -2,12 +2,11 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import RootLayout from "@components/ui/layout";
-import BottomBar from "@components/ui/NavBar/bottomBar";
 import { useTheme } from "../../src/context/ThemeContext";
-import VideoReel from "../../src/components/Reels/VideoReel";
-import CommentsDrawer from "../../src/components/Reels/CommentsDrawer";
 import { useSession } from "next-auth/react";
 import ReelPlaceholder from "@components/Reels/ReelPlaceholder";
+import MobileReelsView from "../../src/components/Reels/MobileReelsView";
+import DesktopReelsView from "../../src/components/Reels/DesktopReelsView";
 
 // Inline SVGs for icons
 const HeartIcon = ({ filled = false }: { filled?: boolean }) => (
@@ -1497,138 +1496,49 @@ export default function FoodReelsApp() {
     );
   }
 
-  // Mobile layout - full screen without navbar/sidebar but with bottom bar
+  // Render mobile or desktop view
   if (isMobile) {
     return (
-      <div className={`min-h-screen transition-colors duration-200 `}>
-        {/* Refresh Indicator */}
-        {isRefreshing && (
-          <div className="fixed left-1/2 top-4 z-50 flex -translate-x-1/2 transform items-center gap-2 rounded-full bg-black bg-opacity-75 px-4 py-2 text-sm text-white">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-            Refreshing...
-          </div>
-        )}
-
-        <div
-          ref={containerRef}
-          className="scrollbar-hide reels-container h-full w-full overflow-y-auto"
-          style={{
-            height: "calc(100vh - 80px)",
-            scrollSnapType: "y mandatory",
-            scrollBehavior: "smooth",
-            overscrollBehavior: "none",
-          }}
-        >
-          {posts.map((post, index) => (
-            <div
-              key={`${post.id}-${isMobile ? "mobile" : "desktop"}`}
-              data-index={index}
-              className="h-screen w-full"
-              style={{ scrollSnapAlign: "start" }}
-            >
-              <VideoReel
-                post={post}
-                isVisible={visiblePostIndex === index}
-                isAuthenticated={!!session?.user}
-                onLike={toggleLike}
-                onComment={openComments}
-                onShare={handleShare}
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* Comments Drawer */}
-        {activePost && (
-          <CommentsDrawer
-            open={showComments}
-            onClose={closeComments}
-            comments={mergedActiveComments}
-            commentCount={activePost.stats.comments}
-            postId={activePost.id}
-            onToggleCommentLike={toggleCommentLike}
-            onAddComment={addComment}
-            isRefreshing={isRefreshingComments}
-          />
-        )}
-
-        {/* Mobile Bottom Navigation */}
-        <BottomBar />
-      </div>
+      <MobileReelsView
+        posts={posts}
+        visiblePostIndex={visiblePostIndex}
+        setVisiblePostIndex={setVisiblePostIndex}
+        containerRef={containerRef}
+        isAuthenticated={!!session?.user}
+        activePost={activePost}
+        showComments={showComments}
+        openComments={openComments}
+        closeComments={closeComments}
+        mergedActiveComments={mergedActiveComments}
+        toggleCommentLike={toggleCommentLike}
+        addComment={addComment}
+        isRefreshingComments={isRefreshingComments}
+        toggleLike={toggleLike}
+        handleShare={handleShare}
+        isRefreshing={isRefreshing}
+      />
     );
   }
 
-  // Desktop layout - with normal page alignment matching main page
   return (
-    <RootLayout>
-      <div className="flex items-center justify-center md:py-4" style={{ margin: 0, padding: 0, height: "100vh", minHeight: "100vh" }}>
-        {/* Refresh Indicator */}
-        {isRefreshing && (
-          <div className="fixed left-1/2 top-4 z-50 flex -translate-x-1/2 transform items-center gap-2 rounded-full bg-black bg-opacity-75 px-4 py-2 text-sm text-white">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-            Refreshing...
-          </div>
-        )}
-
-        <div
-          className={`w-full transition-colors duration-200 md:container md:mx-auto md:h-[95vh] md:max-w-md md:rounded-2xl md:shadow-2xl ${
-            theme === "dark"
-              ? "bg-gray-900 text-white"
-              : "bg-white text-gray-900"
-          }`}
-          style={{ 
-            height: "100vh",
-            minHeight: "100vh",
-            maxHeight: "100vh"
-          }}
-        >
-          <div
-            ref={containerRef}
-            className="scrollbar-hide reels-container h-full w-full overflow-y-auto"
-            style={{
-              scrollSnapType: "y mandatory",
-              scrollBehavior: "smooth",
-              overscrollBehavior: "none",
-              height: "100%"
-            }}
-          >
-            {posts.map((post, index) => (
-              <div
-                key={`${post.id}-${isMobile ? "mobile" : "desktop"}`}
-                data-index={index}
-                style={{ 
-                  scrollSnapAlign: "start",
-                  height: "100vh",
-                  minHeight: "100vh"
-                }}
-              >
-                <VideoReel
-                  post={post}
-                  isVisible={visiblePostIndex === index}
-                  isAuthenticated={!!session?.user}
-                  onLike={toggleLike}
-                  onComment={openComments}
-                  onShare={handleShare}
-                />
-              </div>
-            ))}
-          </div>
-
-          {/* Comments Drawer */}
-          {activePost && (
-            <CommentsDrawer
-              open={showComments}
-              onClose={closeComments}
-              comments={mergedActiveComments}
-              commentCount={activePost.stats.comments}
-              postId={activePost.id}
-              onToggleCommentLike={toggleCommentLike}
-              onAddComment={addComment}
-              isRefreshing={isRefreshingComments}
-            />
-          )}
-        </div>
-      </div>
-    </RootLayout>
+    <DesktopReelsView
+      posts={posts}
+      visiblePostIndex={visiblePostIndex}
+      setVisiblePostIndex={setVisiblePostIndex}
+      containerRef={containerRef}
+      isAuthenticated={!!session?.user}
+      activePost={activePost}
+      showComments={showComments}
+      openComments={openComments}
+      closeComments={closeComments}
+      mergedActiveComments={mergedActiveComments}
+      toggleCommentLike={toggleCommentLike}
+      addComment={addComment}
+      isRefreshingComments={isRefreshingComments}
+      toggleLike={toggleLike}
+      handleShare={handleShare}
+      isRefreshing={isRefreshing}
+      theme={theme}
+    />
   );
 }

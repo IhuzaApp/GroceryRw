@@ -758,24 +758,36 @@ export default function VideoReel({
   return (
     <>
       <div
-        className={`relative h-full w-full overflow-hidden`}
         style={{ 
-          scrollSnapAlign: "start",
+          position: "relative",
+          width: "100%",
           height: "100vh",
-          minHeight: "100vh"
+          minHeight: "100vh",
+          margin: 0,
+          padding: 0,
+          overflow: "hidden",
+          backgroundColor: "#000"
         }}
       >
-        {/* Background Video */}
-        <div style={{ position: "absolute", inset: 0 }}>
-          <video
-            ref={videoRef}
-            src={post.content.video}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              backgroundColor: "#000",
-            }}
+        {/* Background Video - Direct fill */}
+        <video
+          ref={videoRef}
+          src={post.content.video}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100vh",
+            minHeight: "100vh",
+            objectFit: "cover",
+            objectPosition: "center",
+            backgroundColor: "#000",
+            margin: 0,
+            padding: 0,
+            display: "block",
+            zIndex: 1
+          }}
             loop
             muted
             playsInline
@@ -787,65 +799,84 @@ export default function VideoReel({
             onCanPlay={handleVideoCanPlay}
           />
 
-          {/* Loading overlay */}
-          {videoLoading && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: "rgba(0,0,0,0.8)",
-                zIndex: 5,
-              }}
-            >
-              <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  border: "4px solid rgba(255,255,255,0.3)",
-                  borderTop: "4px solid #fff",
-                  borderRadius: "50%",
-                  animation: "spin 1s linear infinite",
-                }}
-              />
-            </div>
-          )}
-
-          {/* Error overlay */}
-          {videoError && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: "rgba(0,0,0,0.9)",
-                zIndex: 5,
-              }}
-            >
-              <div style={{ textAlign: "center", color: "#fff" }}>
-                <div style={{ fontSize: "16px", marginBottom: "8px" }}>
-                  Video unavailable
-                </div>
-                <div style={{ fontSize: "14px", opacity: 0.7 }}>
-                  Please try again later
-                </div>
-              </div>
-            </div>
-          )}
-
+        {/* Loading overlay */}
+        {videoLoading && (
           <div
             style={{
               position: "absolute",
-              inset: 0,
-              background:
-                "linear-gradient(to top, rgba(0,0,0,0.9), transparent, rgba(0,0,0,0.3))",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: "100%",
+              height: "100vh",
+              minHeight: "100vh",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "rgba(0,0,0,0.8)",
+              zIndex: 5,
             }}
-          />
-        </div>
+          >
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                border: "4px solid rgba(255,255,255,0.3)",
+                borderTop: "4px solid #fff",
+                borderRadius: "50%",
+                animation: "spin 1s linear infinite",
+              }}
+            />
+          </div>
+        )}
+
+        {/* Error overlay */}
+        {videoError && (
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: "100%",
+              height: "100vh",
+              minHeight: "100vh",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "rgba(0,0,0,0.9)",
+              zIndex: 5,
+            }}
+          >
+            <div style={{ textAlign: "center", color: "#fff" }}>
+              <div style={{ fontSize: "16px", marginBottom: "8px" }}>
+                Video unavailable
+              </div>
+              <div style={{ fontSize: "14px", opacity: 0.7 }}>
+                Please try again later
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Gradient overlay */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: "100%",
+            height: "100vh",
+            minHeight: "100vh",
+            background:
+              "linear-gradient(to top, rgba(0,0,0,0.9), transparent, rgba(0,0,0,0.3))",
+            zIndex: 2,
+          }}
+        />
 
         {/* Top Header */}
         <div
