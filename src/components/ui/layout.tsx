@@ -17,17 +17,19 @@ export default function RootLayout({
 
   // Check if current page is the chat page
   const isChatPage = router.pathname.startsWith("/Messages/[orderId]");
+  // Check if current page is the Messages index page (mobile full screen)
+  const isMessagesPage = router.pathname === "/Messages";
   // Check if current page is the Reels page
   const isReelsPage = router.pathname === "/Reels";
 
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-white text-gray-900 transition-colors duration-200 dark:bg-gray-900 dark:text-white">
-        {!isChatPage && !isReelsPage && <HeaderLayout />}
+        {!isChatPage && !isReelsPage && !isMessagesPage && <HeaderLayout />}
         {/* Main content */}
         <main
           className={`text-gray-900 transition-colors duration-200 dark:text-white ${
-            isChatPage || isReelsPage ? "" : "px-4 pb-20 pt-6 md:pb-0"
+            isChatPage || isReelsPage || isMessagesPage ? "" : "px-4 pb-20 pt-6 md:pb-0"
           }`}
           style={
             isReelsPage
@@ -42,7 +44,7 @@ export default function RootLayout({
               : {}
           }
         >
-          {!isChatPage && !isReelsPage && <SideBar />}
+          {!isChatPage && !isReelsPage && !isMessagesPage && <SideBar />}
           <div
             className="[&_*]:text-inherit"
             style={isReelsPage ? { height: "100%", width: "100%" } : {}}
@@ -52,7 +54,7 @@ export default function RootLayout({
           {!isChatPage && !isReelsPage && <BottomBar />}
         </main>
         {/* AI Chat - Available on all pages except chat pages */}
-        {!isChatPage && <AIChatProvider />}
+        {!isChatPage && !isMessagesPage && <AIChatProvider />}
       </div>
     </ThemeProvider>
   );

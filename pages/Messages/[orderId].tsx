@@ -562,14 +562,25 @@ function ChatPage() {
             </>
           ) : (
             <div className="flex h-full items-center justify-center">
-              <div className="text-center">
-                <div className="mb-4 text-6xl">⏳</div>
-                <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-                  Loading...
-                </h3>
-                <p className="text-gray-500 dark:text-gray-400">
-                  Setting up your chat
-                </p>
+              <div className="flex flex-col items-center gap-4">
+                <div className="relative">
+                  <img
+                    src="/assets/logos/PlasIcon.png"
+                    alt="Plas Logo"
+                    className="h-16 w-16 animate-pulse"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+                    Loading...
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Setting up your chat
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -672,14 +683,25 @@ function ChatPage() {
               </div>
             ) : (
               <div className="flex h-full items-center justify-center">
-                <div className="text-center">
-                  <div className="mb-4 text-6xl">⏳</div>
-                  <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-                    Loading...
-                  </h3>
-                  <p className="text-gray-500 dark:text-gray-400">
-                    Setting up your chat
-                  </p>
+                <div className="flex flex-col items-center gap-4">
+                  <div className="relative">
+                    <img
+                      src="/assets/logos/PlasIcon.png"
+                      alt="Plas Logo"
+                      className="h-16 w-16 animate-pulse"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+                      Loading...
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Setting up your chat
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
