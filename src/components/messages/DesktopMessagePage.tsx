@@ -641,9 +641,9 @@ export default function DesktopMessagePage({
                             <div
                               className={`max-w-md rounded-2xl px-4 py-2.5 ${
                                 isCurrentUser
-                                  ? "bg-white dark:bg-gray-800"
-                                  : "bg-white dark:bg-gray-800"
-                              } shadow-sm`}
+                                  ? "bg-green-500 text-white shadow-md"
+                                  : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                              }`}
                             >
                               {message.product ? (
                                 <div className="flex gap-3">
@@ -653,16 +653,22 @@ export default function DesktopMessagePage({
                                     className="h-15 w-15 rounded object-cover"
                                   />
                                   <div>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                    <p className={`text-sm font-medium ${
+                                      isCurrentUser ? "text-white" : "text-gray-900 dark:text-white"
+                                    }`}>
                                       {message.product.name}
                                     </p>
-                                    <p className="text-sm font-semibold text-green-500">
+                                    <p className={`text-sm font-semibold ${
+                                      isCurrentUser ? "text-white" : "text-green-500"
+                                    }`}>
                                       Rp {message.product.price.toLocaleString()}
                                     </p>
                                   </div>
                                 </div>
                               ) : (
-                                <p className="text-sm text-gray-900 dark:text-white">
+                                <p className={`text-sm ${
+                                  isCurrentUser ? "text-white" : "text-gray-900 dark:text-white"
+                                }`}>
                                   {message.text || message.message || ""}
                                 </p>
                               )}

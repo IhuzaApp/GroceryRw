@@ -25,6 +25,7 @@ import CustomerChatDrawer from "../../src/components/chat/CustomerChatDrawer";
 import { isMobileDevice } from "../../src/lib/formatters";
 import { AuthGuard } from "../../src/components/AuthGuard";
 import DesktopMessagePage from "../../src/components/messages/DesktopMessagePage";
+import MobileMessagePage from "../../src/components/messages/MobileMessagePage";
 
 // Helper to display timestamps as relative time ago
 function timeAgo(timestamp: any) {
@@ -574,7 +575,26 @@ function MessagesPage() {
     return (
       <RootLayout>
         <div className="flex h-[calc(100vh-200px)] items-center justify-center">
-          <Loader content="Loading conversations..." />
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative">
+              <img
+                src="/assets/logos/PlasIcon.png"
+                alt="Plas Logo"
+                className="h-16 w-16 animate-pulse"
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
+              </div>
+            </div>
+            <div className="text-center">
+              <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+                Loading...
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Loading conversations
+              </p>
+            </div>
+          </div>
         </div>
       </RootLayout>
     );
@@ -668,158 +688,28 @@ function MessagesPage() {
     );
   }
 
-  // Render conversations with new UI (Mobile or when no conversations)
+  // Render mobile view with new component
   return (
     <AuthGuard requireAuth={true}>
       <RootLayout>
-        <div className="mx-auto max-w-7xl p-4">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Messages
-            </h1>
-            <p className="text-gray-500 dark:text-gray-400">
-              Your conversations with shoppers
-            </p>
-          </div>
-
-          {/* Filters */}
-          <div className="mb-6 flex flex-wrap items-center gap-4">
-            <Input
-              placeholder="Search conversations..."
-              value={searchQuery}
-              onChange={setSearchQuery}
-              className="max-w-sm rounded-lg border-gray-200 bg-white text-gray-900 transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-            />
-            <Button
-              appearance={showUnreadOnly ? "primary" : "ghost"}
-              color="green"
-              onClick={() => setShowUnreadOnly(!showUnreadOnly)}
-              className="dark:text-gray-300"
-            >
-              Unread Only
-            </Button>
-            <Button
-              appearance="ghost"
-              onClick={() =>
-                setSortOrder(sortOrder === "newest" ? "oldest" : "newest")
-              }
-              className="dark:text-gray-300"
-            >
-              Sort: {sortOrder === "newest" ? "Newest First" : "Oldest First"}
-            </Button>
-          </div>
-
-          {/* Conversations List */}
-          {loading ? (
-            <div className="flex h-[calc(100vh-200px)] items-center justify-center">
-              <Loader content="Loading conversations..." />
-            </div>
-          ) : conversations.length === 0 ? (
-            <Panel
-              className="text-center"
-              style={{
-                background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
-              }}
-            >
-              <Placeholder.Graph
-                style={{ height: 200 }}
-                active
-                className="mb-4"
-              />
-              <Placeholder.Paragraph rows={2} />
-              <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-                No conversations yet
-              </h3>
-              <p className="text-gray-500 dark:text-gray-400">
-                You'll see your chat conversations with shoppers here once you
-                place orders.
-              </p>
-            </Panel>
-          ) : (
-            <div className="space-y-4">
-              {filteredConversations.map((conversation) => {
-                const order = orders[conversation.orderId] || {};
-                const shopperName =
-                  order?.assignedTo?.name || order?.shopper?.name || "Shopper";
-                const shopperAvatar =
-                  order?.assignedTo?.profile_picture ||
-                  order?.shopper?.avatar ||
-                  "/images/ProfileImage.png";
-
-                return (
-                  <div
-                    key={conversation.id}
-                    onClick={() => handleChatClick(conversation.orderId)}
-                    className="group cursor-pointer rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
-                  >
-                    <div className="flex items-start space-x-4">
-                      <div className="relative">
-                        <Avatar
-                          src={shopperAvatar}
-                          alt={shopperName}
-                          circle
-                          size="lg"
-                        />
-                        {conversation.unreadCount > 0 && (
-                          <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
-                            {conversation.unreadCount > 9
-                              ? "9+"
-                              : conversation.unreadCount}
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                            {shopperName}
-                          </h3>
-                          <div className="flex flex-col items-end">
-                            <span className="text-sm text-gray-500 dark:text-gray-400">
-                              {timeAgo(conversation.lastMessageTime)}
-                            </span>
-                            {order && (
-                              <span
-                                className={`mt-1 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                                  order.status === "delivered"
-                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                    : order.status === "on_the_way"
-                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                                    : order.status === "at_customer"
-                                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                                    : order.status === "pending"
-                                    ? "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
-                                    : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-                                }`}
-                              >
-                                {order.status
-                                  ?.replace("_", " ")
-                                  .toUpperCase() || "PENDING"}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                          Order{" "}
-                          {formatOrderID(
-                            order?.OrderID || order?.id || conversation.orderId
-                          )}
-                          {order?.shop?.name && (
-                            <span className="ml-2">- {order.shop.name}</span>
-                          )}
-                        </p>
-                        <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                          {conversation.lastMessage || "No messages yet"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+        <div className="fixed inset-0 md:relative md:inset-auto">
+          <MobileMessagePage
+            conversations={conversations}
+            orders={orders}
+            loading={loading}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            showUnreadOnly={showUnreadOnly}
+            setShowUnreadOnly={setShowUnreadOnly}
+            sortOrder={sortOrder}
+            setSortOrder={setSortOrder}
+            onConversationClick={handleChatClick}
+            selectedOrder={selectedOrder}
+            isDrawerOpen={isDrawerOpen}
+            onCloseDrawer={() => setIsDrawerOpen(false)}
+          />
         </div>
-
-        {/* Customer Chat Drawer for Desktop */}
+        {/* Customer Chat Drawer for Mobile */}
         {selectedOrder && selectedOrder.shopper && (
           <CustomerChatDrawer
             orderId={selectedOrder.id}
