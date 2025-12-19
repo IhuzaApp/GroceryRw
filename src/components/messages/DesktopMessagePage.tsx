@@ -310,10 +310,10 @@ export default function DesktopMessagePage({
   return (
     <div className="flex h-full w-full bg-gray-50 dark:bg-gray-900 rounded-lg overflow-hidden shadow-sm">
       {/* Left Column - Conversation List */}
-      <div className="w-96 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex flex-col h-full flex-shrink-0">
+      <div className="w-96 border border-gray-200 dark:border-gray-700  flex flex-col h-full flex-shrink-0">
         {/* Header */}
         <div className="flex-shrink-0 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-          <h1 className="text-lg font-bold text-gray-900 dark:text-white">Customer Message</h1>
+          <h1 className="text-lg font-bold text-gray-900 dark:text-white">Client Messages</h1>
           <button className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
             <svg
               width="20"
@@ -408,11 +408,29 @@ export default function DesktopMessagePage({
                   }`}
                 >
                   <div className="relative flex-shrink-0">
-                    <img
-                      src={contactAvatar}
-                      alt={contactName}
-                      className="h-12 w-12 rounded-full object-cover"
-                    />
+                    <div className="h-12 w-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                      {contactAvatar && contactAvatar !== "/images/ProfileImage.png" ? (
+                        <img
+                          src={contactAvatar}
+                          alt={contactName}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <svg
+                          className="h-6 w-6 text-gray-500 dark:text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                      )}
+                    </div>
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between">
@@ -440,25 +458,43 @@ export default function DesktopMessagePage({
       </div>
 
       {/* Right Column - Chat Window */}
-      <div className="flex-1 flex flex-col bg-white dark:bg-gray-800 h-full overflow-hidden min-w-0">
+      <div className="flex-1 flex flex-col border border-gray-200 dark:border-gray-700 rounded-lg h-full overflow-hidden min-w-0">
         {selectedConversation && selectedOrder ? (
           <>
             {/* Chat Header */}
             <div className="flex-shrink-0 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4">
               <div className="flex items-center gap-4">
-                <img
-                  src={
-                    selectedOrder.assignedTo?.profile_picture ||
-                    selectedOrder.shopper?.avatar ||
-                    "/images/ProfileImage.png"
-                  }
-                  alt={
-                    selectedOrder.assignedTo?.name ||
-                    selectedOrder.shopper?.name ||
-                    "Shopper"
-                  }
-                  className="h-12 w-12 rounded-full object-cover"
-                />
+                <div className="h-12 w-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                  {selectedOrder.assignedTo?.profile_picture ||
+                  selectedOrder.shopper?.avatar ? (
+                    <img
+                      src={
+                        selectedOrder.assignedTo?.profile_picture ||
+                        selectedOrder.shopper?.avatar
+                      }
+                      alt={
+                        selectedOrder.assignedTo?.name ||
+                        selectedOrder.shopper?.name ||
+                        "Shopper"
+                      }
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <svg
+                      className="h-6 w-6 text-gray-500 dark:text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
+                  )}
+                </div>
                 <div>
                   <h2 className="text-base font-semibold text-gray-900 dark:text-white">
                     {selectedOrder.assignedTo?.name ||
@@ -496,7 +532,7 @@ export default function DesktopMessagePage({
             {/* Messages Area */}
             <div
               ref={messagesContainerRef}
-              className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 px-6 py-4 min-h-0"
+              className="flex-1 overflow-y-auto  px-6 py-4 min-h-0"
             >
               {messages.length === 0 ? (
                 <div className="flex h-full items-center justify-center">
@@ -532,24 +568,59 @@ export default function DesktopMessagePage({
                             isCurrentUser ? "flex-row-reverse" : "flex-row"
                           }`}
                         >
-                          <img
-                            src={
-                              isCurrentUser
-                                ? session?.user?.image ||
-                                  "/images/userProfile.png"
-                                : selectedOrder.assignedTo?.profile_picture ||
-                                  selectedOrder.shopper?.avatar ||
-                                  "/images/ProfileImage.png"
-                            }
-                            alt={
-                              isCurrentUser
-                                ? session?.user?.name || "You"
-                                : selectedOrder.assignedTo?.name ||
+                          <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                            {isCurrentUser ? (
+                              session?.user?.image ? (
+                                <img
+                                  src={session.user.image}
+                                  alt={session?.user?.name || "You"}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <svg
+                                  className="h-5 w-5 text-gray-500 dark:text-gray-400"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                  />
+                                </svg>
+                              )
+                            ) : selectedOrder.assignedTo?.profile_picture ||
+                              selectedOrder.shopper?.avatar ? (
+                              <img
+                                src={
+                                  selectedOrder.assignedTo?.profile_picture ||
+                                  selectedOrder.shopper?.avatar
+                                }
+                                alt={
+                                  selectedOrder.assignedTo?.name ||
                                   selectedOrder.shopper?.name ||
                                   "Shopper"
-                            }
-                            className="h-8 w-8 rounded-full object-cover flex-shrink-0"
-                          />
+                                }
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <svg
+                                className="h-5 w-5 text-gray-500 dark:text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                />
+                              </svg>
+                            )}
+                          </div>
                           <div
                             className={`flex flex-col ${
                               isCurrentUser ? "items-end" : "items-start"
@@ -607,24 +678,61 @@ export default function DesktopMessagePage({
             </div>
 
             {/* Message Input */}
-            <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-6 py-4">
+            <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700  px-6 py-4">
               <form
                 onSubmit={handleSendMessage}
-                className="flex items-center gap-3"
+                className="flex items-end gap-3"
               >
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type your message..."
-                  className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:border-green-500 dark:focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 dark:focus:ring-green-500"
-                />
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type your message..."
+                    className="w-full rounded-full border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-5 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:border-green-500 dark:focus:border-green-500 focus:bg-white dark:focus:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:focus:ring-green-500/20 transition-all duration-200"
+                  />
+                </div>
                 <button
                   type="submit"
                   disabled={isSending || !newMessage.trim()}
-                  className="rounded-lg bg-green-500 px-6 py-2.5 text-sm font-medium text-white hover:bg-green-600 dark:hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+                  className="flex-shrink-0 rounded-full bg-green-500 p-3 text-white shadow-lg transition-all duration-200 hover:bg-green-600 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-green-500 disabled:hover:shadow-lg dark:focus:ring-offset-gray-800"
+                  aria-label="Send message"
                 >
-                  {isSending ? "Sending..." : "Send"}
+                  {isSending ? (
+                    <svg
+                      className="h-5 w-5 animate-spin"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                  ) : (
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                      />
+                    </svg>
+                  )}
                 </button>
               </form>
             </div>
