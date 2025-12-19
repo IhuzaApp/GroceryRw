@@ -48,6 +48,7 @@ import {
   Eye,
 } from "lucide-react";
 import { ExpandedSectionModal } from "./ExpandedSectionModal";
+import { ProductEditModal } from "./ProductEditModal";
 
 // RFQs Section Component
 function RFQsSection({ businessAccount }: { businessAccount: any }) {
@@ -163,6 +164,10 @@ export function MobileBusinessDashboard({
   const [stores, setStores] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
   const [loadingSection, setLoadingSection] = useState<string | null>(null);
+  
+  // Product edit modal state
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [editingStoreId, setEditingStoreId] = useState<string | null>(null);
 
   const businessFeatures = [
     {
@@ -541,7 +546,7 @@ export function MobileBusinessDashboard({
       </div>
 
       {/* Expanded Section Modal */}
-      {expandedSection && (
+      {expandedSection && !editingProduct && (
         <ExpandedSectionModal
           sectionId={expandedSection}
           onClose={() => setExpandedSection(null)}
@@ -556,6 +561,36 @@ export function MobileBusinessDashboard({
           loading={loadingSection === expandedSection}
           businessAccount={businessAccount}
           router={router}
+          onEditProduct={(product, storeId) => {
+            // Close expanded modal and open edit modal
+            setEditingProduct(product);
+            setEditingStoreId(storeId);
+          }}
+        />
+      )}
+
+      {/* Product Edit Modal */}
+      {editingProduct && editingStoreId && (
+        <ProductEditModal
+          product={editingProduct}
+          storeId={editingStoreId}
+          onClose={() => {
+            setEditingProduct(null);
+            setEditingStoreId(null);
+            // Re-open the expanded section modal by refreshing data
+            if (expandedSection) {
+              fetchSectionData(expandedSection);
+            }
+          }}
+          onSave={() => {
+            // Refresh the section data after saving
+            if (expandedSection) {
+              fetchSectionData(expandedSection);
+            }
+            // Close edit modal and re-open expanded modal
+            setEditingProduct(null);
+            setEditingStoreId(null);
+          }}
         />
       )}
     </div>
