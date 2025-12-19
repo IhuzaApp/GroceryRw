@@ -24,6 +24,7 @@ import { formatCurrency } from "../../src/lib/formatCurrency";
 import CustomerChatDrawer from "../../src/components/chat/CustomerChatDrawer";
 import { isMobileDevice } from "../../src/lib/formatters";
 import { AuthGuard } from "../../src/components/AuthGuard";
+import DesktopMessagePage from "../../src/components/messages/DesktopMessagePage";
 
 // Helper to display timestamps as relative time ago
 function timeAgo(timestamp: any) {
@@ -95,6 +96,20 @@ function MessagesPage() {
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | undefined>(
+    undefined
+  );
+
+  // Check if mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(isMobileDevice());
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Fetch conversations and their associated orders
   useEffect(() => {
@@ -365,9 +380,10 @@ function MessagesPage() {
 
   // Handle chat click
   const handleChatClick = async (orderId: string) => {
-    if (isMobileDevice()) {
+    if (isMobile) {
       router.push(`/Messages/${orderId}`);
     } else {
+      setSelectedOrderId(orderId);
       try {
         // Get conversation ID and shopper data
         const conversationsRef = collection(db, "chat_conversations");
@@ -422,6 +438,11 @@ function MessagesPage() {
         console.error("Error getting conversation:", error);
       }
     }
+  };
+
+  // Handle conversation select for desktop
+  const handleConversationSelect = (orderId: string) => {
+    setSelectedOrderId(orderId);
   };
 
   // Set up messages listener
@@ -626,7 +647,28 @@ function MessagesPage() {
     );
   }
 
-  // Render conversations with new UI
+  // Render desktop view with new component
+  if (!isMobile) {
+    return (
+      <AuthGuard requireAuth={true}>
+        <RootLayout>
+          <div className="h-[calc(100vh-160px)] md:h-[calc(100vh-100px)] md:ml-16">
+            <div className="container mx-auto max-w-8xl h-full">
+              <DesktopMessagePage
+                conversations={conversations}
+                orders={orders}
+                loading={loading}
+                onConversationSelect={handleConversationSelect}
+                selectedOrderId={selectedOrderId}
+              />
+            </div>
+          </div>
+        </RootLayout>
+      </AuthGuard>
+    );
+  }
+
+  // Render conversations with new UI (Mobile or when no conversations)
   return (
     <AuthGuard requireAuth={true}>
       <RootLayout>
