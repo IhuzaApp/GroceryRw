@@ -17,6 +17,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import RootLayout from "../../src/components/ui/layout";
 import { useAuth } from "../../src/context/AuthContext";
+import { isMobileDevice } from "../../src/lib/formatters";
 import QuoteDetailsModal from "./quote-details-modal";
 import { BusinessHeader } from "../../src/components/business/BusinessHeader";
 import { StatsCards } from "../../src/components/business/StatsCards";
@@ -33,6 +34,7 @@ import { BusinessOverview } from "../../src/components/business/BusinessOverview
 import { ServicesSection } from "../../src/components/business/ServicesSection";
 import { StoresSection } from "../../src/components/business/StoresSection";
 import BusinessChatDrawer from "../../src/components/business/BusinessChatDrawer";
+import { MobilePlasBusinessPage } from "../../src/components/business/mobile/MobilePlasBusinessPage";
 import toast from "react-hot-toast";
 
 // Data moved to individual components
@@ -50,6 +52,17 @@ export default function PlasBusinessPage() {
   const [businessAccount, setBusinessAccount] = useState<any>(null);
   const [rfqCreated, setRfqCreated] = useState(false);
   const [isChatDrawerOpen, setIsChatDrawerOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(isMobileDevice());
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Redirect shoppers away from this page
   useEffect(() => {
@@ -109,7 +122,16 @@ export default function PlasBusinessPage() {
     return null;
   }
 
-  // Show onboarding if user doesn't have business account
+  // On mobile, show mobile components (accessible to everyone, with or without account)
+  if (isMobile) {
+    return (
+      <RootLayout>
+        <MobilePlasBusinessPage />
+      </RootLayout>
+    );
+  }
+
+  // Desktop view - show onboarding if user doesn't have business account
   if (!hasBusinessAccount) {
     return (
       <RootLayout>
