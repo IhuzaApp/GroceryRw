@@ -145,9 +145,9 @@ export default function MobileMessagePage({
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-white dark:bg-gray-800 overflow-hidden">
+    <div className="fixed inset-0 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex-shrink-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between px-4 py-3">
           <button
             onClick={() => router.back()}
