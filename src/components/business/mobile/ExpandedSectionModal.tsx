@@ -18,7 +18,11 @@ import {
   Filter,
   ChevronDown,
   Image as ImageIcon,
+  Trash2,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface ExpandedSectionModalProps {
   sectionId: string;
@@ -34,6 +38,7 @@ interface ExpandedSectionModalProps {
   loading: boolean;
   businessAccount?: any;
   router: any;
+  onEditProduct?: (product: any, storeId: string) => void; // Callback to open edit modal
 }
 
 export function ExpandedSectionModal({
@@ -43,6 +48,7 @@ export function ExpandedSectionModal({
   loading,
   businessAccount,
   router,
+  onEditProduct,
 }: ExpandedSectionModalProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -208,6 +214,54 @@ export function ExpandedSectionModal({
   const handleSave = () => {
     // TODO: Implement save functionality
     setIsEditing(false);
+  };
+
+  const handleEditProduct = (product: any) => {
+    if (onEditProduct && selectedItem) {
+      // Close this modal and open edit modal
+      onClose();
+      onEditProduct(product, selectedItem.id);
+    }
+  };
+
+
+  const handleDeleteProduct = async (product: any) => {
+    if (!window.confirm(`Are you sure you want to disable "${product.name}"?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/mutations/update-business-product", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          product_id: product.id,
+          name: product.name,
+          description: product.Description || "",
+          image: product.Image || "",
+          price: product.price,
+          unit: product.unit || "",
+          status: "inactive", // Disable the product
+          minimumOrders: product.minimumOrders || "0",
+          maxOrders: product.maxOrders || "",
+          delveryArea: product.delveryArea || "",
+          store_id: selectedItem.id,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success("Product disabled successfully");
+        // Refresh products
+        fetchStoreProducts(selectedItem.id);
+      } else {
+        toast.error("Failed to disable product");
+      }
+    } catch (error) {
+      console.error("Error disabling product:", error);
+      toast.error("Failed to disable product");
+    }
   };
 
   // If viewing/editing an item
@@ -425,117 +479,165 @@ export function ExpandedSectionModal({
 
                 {sectionId === "stores" && (
                   <>
-                    {/* Store Image */}
-                    {selectedItem.image && (
-                      <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-                        <div className="w-full h-48 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
-                          <img
-                            src={selectedItem.image}
-                            alt={selectedItem.name || "Store"}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.display = "none";
-                              e.currentTarget.nextElementSibling?.classList.remove("hidden");
-                            }}
-                          />
-                          <ImageIcon className="h-12 w-12 text-gray-400 hidden" />
+                    {/* Store Header - Minimal */}
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-4 mb-4 border border-green-200 dark:border-green-800/50">
+                      <div className="flex items-center gap-3">
+                        {selectedItem.image && (
+                          <div className="w-16 h-16 rounded-xl overflow-hidden bg-white dark:bg-gray-700 flex-shrink-0">
+                            <img
+                              src={selectedItem.image}
+                              alt={selectedItem.name || "Store"}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                                e.currentTarget.nextElementSibling?.classList.remove("hidden");
+                              }}
+                            />
+                            <Store className="h-8 w-8 text-gray-400 hidden" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-1">
+                            {selectedItem.name || "Store"}
+                          </h4>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            {storeProducts.length} {storeProducts.length === 1 ? "product" : "products"}
+                          </p>
                         </div>
+                        {selectedItem.is_active !== undefined && (
+                          <span
+                            className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${
+                              selectedItem.is_active
+                                ? "bg-green-500 text-white"
+                                : "bg-gray-500 text-white"
+                            }`}
+                          >
+                            {selectedItem.is_active ? "Active" : "Inactive"}
+                          </span>
+                        )}
                       </div>
-                    )}
-
-                    {/* Store Info */}
-                    <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-                      <h4 className="font-bold text-xl text-gray-900 dark:text-white mb-2">
-                        {selectedItem.name || "Store"}
-                      </h4>
-                      {selectedItem.is_active !== undefined && (
-                        <span
-                          className={`inline-block px-3 py-1 rounded-md text-xs font-semibold mb-3 ${
-                            selectedItem.is_active
-                              ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                              : "bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-400"
-                          }`}
-                        >
-                          {selectedItem.is_active ? "Active" : "Inactive"}
-                        </span>
-                      )}
                     </div>
 
-                    {selectedItem.description && (
-                      <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-                        <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</h5>
-                        <p className="text-gray-600 dark:text-gray-400">{selectedItem.description}</p>
+                    {/* Products Grid - Main Focus */}
+                    {loadingProducts ? (
+                      <div className="flex items-center justify-center py-16">
+                        <div className="flex flex-col items-center space-y-4">
+                          <div className="h-12 w-12 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
+                          <p className="text-gray-600 dark:text-gray-400">Loading products...</p>
+                        </div>
                       </div>
-                    )}
-
-                    {selectedItem.created_at && (
-                      <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-                        <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Created Date</h5>
-                        <p className="text-gray-600 dark:text-gray-400">
-                          {new Date(selectedItem.created_at).toLocaleDateString()}
+                    ) : storeProducts.length === 0 ? (
+                      <div className="text-center py-16">
+                        <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                          <Package className="h-10 w-10 text-gray-400" />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                          No products found
+                        </h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          This store doesn't have any products yet
                         </p>
                       </div>
-                    )}
-
-                    {/* Store Products */}
-                    <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-                      <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-4">
-                        Products ({storeProducts.length})
-                      </h5>
-                      {loadingProducts ? (
-                        <div className="flex items-center justify-center py-8">
-                          <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
-                        </div>
-                      ) : storeProducts.length === 0 ? (
-                        <div className="text-center py-8">
-                          <Package className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                          <p className="text-gray-600 dark:text-gray-400 text-sm">No products found</p>
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-2 gap-3">
-                          {storeProducts.map((product: any) => (
-                            <div
-                              key={product.id}
-                              className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600 hover:shadow-md transition-all"
-                            >
+                    ) : (
+                      <div className="grid grid-cols-2 gap-3">
+                        {storeProducts.map((product: any) => (
+                          <div
+                            key={product.id}
+                            className="group relative flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:border-green-400 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-600"
+                          >
+                            {/* Image Section */}
+                            <div className="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-700">
                               {product.Image || product.image ? (
-                                <div className="w-full h-32 bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
-                                  <img
-                                    src={product.Image || product.image}
-                                    alt={product.name}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      e.currentTarget.style.display = "none";
-                                      e.currentTarget.nextElementSibling?.classList.remove("hidden");
-                                    }}
-                                  />
-                                  <ImageIcon className="h-8 w-8 text-gray-400 hidden" />
-                                </div>
+                                <img
+                                  src={product.Image || product.image}
+                                  alt={product.name}
+                                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                />
                               ) : (
-                                <div className="w-full h-32 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                                  <Package className="h-8 w-8 text-gray-400" />
+                                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
+                                  <Package className="h-10 w-10 text-gray-300" />
                                 </div>
                               )}
-                              <div className="p-3">
-                                <h6 className="font-semibold text-sm text-gray-900 dark:text-white mb-1 line-clamp-2">
-                                  {product.name}
-                                </h6>
-                                {product.price && (
-                                  <p className="text-sm font-bold text-green-600 dark:text-green-400">
-                                    {product.price} {product.unit ? `/ ${product.unit}` : ""}
-                                  </p>
-                                )}
-                                {product.Description && (
-                                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
-                                    {product.Description}
-                                  </p>
-                                )}
+
+                              {/* Status Badge */}
+                              {product.status && (
+                                <span
+                                  className={`absolute left-2 top-2 flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold shadow-sm ${
+                                    product.status === "active"
+                                      ? "bg-green-500"
+                                      : "bg-gray-500"
+                                  }`}
+                                  style={{ color: "#ffffff" }}
+                                >
+                                  {product.status === "active" ? (
+                                    <CheckCircle className="h-2 w-2" style={{ color: "#ffffff" }} />
+                                  ) : (
+                                    <XCircle className="h-2 w-2" style={{ color: "#ffffff" }} />
+                                  )}
+                                  <span style={{ color: "#ffffff" }}>
+                                    {product.status === "active" ? "Active" : "Inactive"}
+                                  </span>
+                                </span>
+                              )}
+
+                              {/* Edit Button Overlay */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditProduct(product);
+                                }}
+                                className="absolute right-2 top-2 rounded-lg bg-white/90 p-1.5 text-green-600 shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-110 hover:bg-white hover:text-green-700 dark:bg-gray-800/90 dark:text-green-400 dark:hover:bg-gray-800"
+                                title="Edit product"
+                              >
+                                <Edit className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+
+                            {/* Content Section */}
+                            <div className="flex flex-1 flex-col p-3">
+                              {/* Product Name */}
+                              <h3 className="mb-1.5 line-clamp-2 flex-1 text-xs font-semibold leading-tight text-gray-900 dark:text-white">
+                                {product.name}
+                              </h3>
+
+                              {/* Price and Unit */}
+                              <div className="mb-2 flex items-baseline gap-1">
+                                <span className="text-sm font-bold text-green-600 dark:text-green-500">
+                                  {product.price}
+                                </span>
+                                <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                                  / {product.unit || "unit"}
+                                </span>
+                              </div>
+
+                              {/* Action Buttons */}
+                              <div className="grid grid-cols-2 gap-2 mt-auto">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditProduct(product);
+                                  }}
+                                  className="flex items-center justify-center gap-1.5 rounded-lg border-2 border-blue-500 bg-blue-50 px-2 py-2 text-[10px] font-bold text-blue-600 transition-all hover:bg-blue-100 active:scale-95 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30"
+                                >
+                                  <Edit className="h-3 w-3" />
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteProduct(product);
+                                  }}
+                                  className="flex items-center justify-center gap-1.5 rounded-lg border-2 border-red-500 bg-red-50 px-2 py-2 text-[10px] font-bold text-red-600 transition-all hover:bg-red-100 active:scale-95 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                  Delete
+                                </button>
                               </div>
                             </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </>
                 )}
 
