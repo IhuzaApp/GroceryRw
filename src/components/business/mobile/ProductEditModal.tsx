@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   X,
   Package,
   Image as ImageIcon,
   CheckCircle,
   Camera,
+  Upload,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import CameraCapture from "../../ui/CameraCapture";
 
 interface ProductEditModalProps {
   product?: any; // If provided, we're editing. If not, we're adding.
@@ -25,6 +27,8 @@ export function ProductEditModal({
 }: ProductEditModalProps) {
   const isEditing = !!product;
   const [savingProduct, setSavingProduct] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [productForm, setProductForm] = useState({
     name: product?.name || "",
     description: product?.Description || product?.description || "",
@@ -35,6 +39,38 @@ export function ProductEditModal({
     deliveryArea: product?.delveryArea || product?.deliveryArea || "",
     image: product?.Image || product?.image || "",
   });
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size should be less than 5MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setProductForm({ ...productForm, image: base64String });
+    };
+    reader.onerror = () => {
+      toast.error("Failed to read image file");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCameraCapture = (imageDataUrl: string) => {
+    setProductForm({ ...productForm, image: imageDataUrl });
+    setShowCamera(false);
+  };
 
   const handleSave = async () => {
     if (!productForm.name.trim()) {
@@ -272,19 +308,55 @@ export function ProductEditModal({
               />
             </div>
 
-            {/* Image URL */}
+            {/* Image Upload/Capture */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Image URL
+                Product Image
               </label>
+              
+              {/* Image Preview */}
+              {productForm.image && (
+                <div className="mb-3 w-full h-48 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600">
+                  <img
+                    src={productForm.image}
+                    alt="Product"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      e.currentTarget.nextElementSibling?.classList.remove("hidden");
+                    }}
+                  />
+                  <ImageIcon className="h-12 w-12 text-gray-400 hidden" />
+                </div>
+              )}
+
+              {/* Upload/Capture Buttons */}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-600 transition-all active:scale-95"
+                >
+                  <Upload className="h-5 w-5" />
+                  Upload
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCamera(true)}
+                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-600 transition-all active:scale-95"
+                >
+                  <Camera className="h-5 w-5" />
+                  Camera
+                </button>
+              </div>
+
+              {/* Hidden file input */}
               <input
-                type="text"
-                value={productForm.image}
-                onChange={(e) =>
-                  setProductForm({ ...productForm, image: e.target.value })
-                }
-                className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="Enter image URL"
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
               />
             </div>
 
@@ -321,6 +393,15 @@ export function ProductEditModal({
           </div>
         </div>
       </div>
+
+      {/* Camera Capture Modal */}
+      <CameraCapture
+        isOpen={showCamera}
+        onClose={() => setShowCamera(false)}
+        onCapture={handleCameraCapture}
+        cameraType="environment"
+        title="Capture Product Image"
+      />
     </div>
   );
 }
