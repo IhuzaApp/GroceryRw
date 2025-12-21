@@ -169,6 +169,7 @@ export function MobileBusinessDashboard({
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [editingStoreId, setEditingStoreId] = useState<string | null>(null);
 
+
   const businessFeatures = [
     {
       id: "rfqs",
@@ -546,7 +547,7 @@ export function MobileBusinessDashboard({
       </div>
 
       {/* Expanded Section Modal */}
-      {expandedSection && !editingProduct && (
+      {expandedSection && (
         <ExpandedSectionModal
           sectionId={expandedSection}
           onClose={() => setExpandedSection(null)}
@@ -562,22 +563,23 @@ export function MobileBusinessDashboard({
           businessAccount={businessAccount}
           router={router}
           onEditProduct={(product, storeId) => {
-            // Close expanded modal and open edit modal
+            // Open edit modal while keeping expanded modal open
             setEditingProduct(product);
             setEditingStoreId(storeId);
           }}
         />
       )}
 
-      {/* Product Edit Modal */}
+      {/* Product Edit Modal - Higher z-index so it appears on top */}
       {editingProduct && editingStoreId && (
         <ProductEditModal
           product={editingProduct}
           storeId={editingStoreId}
           onClose={() => {
+            // Just close edit modal, keep expanded modal open
             setEditingProduct(null);
             setEditingStoreId(null);
-            // Re-open the expanded section modal by refreshing data
+            // Refresh data in expanded modal
             if (expandedSection) {
               fetchSectionData(expandedSection);
             }
@@ -587,7 +589,7 @@ export function MobileBusinessDashboard({
             if (expandedSection) {
               fetchSectionData(expandedSection);
             }
-            // Close edit modal and re-open expanded modal
+            // Close edit modal, expanded modal stays open
             setEditingProduct(null);
             setEditingStoreId(null);
           }}

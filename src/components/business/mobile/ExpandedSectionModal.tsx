@@ -21,8 +21,15 @@ import {
   Trash2,
   CheckCircle,
   XCircle,
+  User,
+  Phone,
+  Mail,
+  DollarSign,
+  Truck,
+  CreditCard,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { formatCurrencySync } from "../../../utils/formatCurrency";
 
 interface ExpandedSectionModalProps {
   sectionId: string;
@@ -57,6 +64,8 @@ export function ExpandedSectionModal({
   const [isEditing, setIsEditing] = useState(false);
   const [storeProducts, setStoreProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
+  const [orderDetails, setOrderDetails] = useState<any>(null);
+  const [loadingOrderDetails, setLoadingOrderDetails] = useState(false);
 
   const sectionTitles: Record<string, string> = {
     rfqs: "My RFQs",
@@ -181,8 +190,11 @@ export function ExpandedSectionModal({
     // If it's a store, fetch products
     if (sectionId === "stores" && item.id) {
       fetchStoreProducts(item.id);
+    } else if (sectionId === "orders" && item.id) {
+      fetchOrderDetails(item.id);
     } else {
       setStoreProducts([]);
+      setOrderDetails(null);
     }
   };
 
@@ -199,6 +211,34 @@ export function ExpandedSectionModal({
       setStoreProducts([]);
     } finally {
       setLoadingProducts(false);
+    }
+  };
+
+  const fetchOrderDetails = async (orderId: string) => {
+    setLoadingOrderDetails(true);
+    try {
+      // Fetch from business-product-orders API (same as OrdersSection uses)
+      const response = await fetch("/api/queries/business-product-orders");
+      if (response.ok) {
+        const data = await response.json();
+        // Find the order with matching ID
+        const order = data.orders?.find((o: any) => o.id === orderId);
+        if (order) {
+          setOrderDetails(order);
+        } else {
+          toast.error("Order not found");
+          setOrderDetails(null);
+        }
+      } else {
+        toast.error("Failed to load order details");
+        setOrderDetails(null);
+      }
+    } catch (error) {
+      console.error("Error fetching order details:", error);
+      toast.error("Failed to load order details");
+      setOrderDetails(null);
+    } finally {
+      setLoadingOrderDetails(false);
     }
   };
 
@@ -429,27 +469,374 @@ export function ExpandedSectionModal({
 
                 {sectionId === "orders" && (
                   <>
-                    <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-                      <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-2">
-                        Order #{selectedItem.id?.slice(0, 8) || "N/A"}
-                      </h4>
-                      <span
-                        className={`inline-block px-3 py-1 rounded-md text-xs font-semibold ${
-                          selectedItem.status === "completed"
-                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                            : selectedItem.status === "pending"
-                            ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400"
-                            : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                        }`}
-                      >
-                        {selectedItem.status || "Active"}
-                      </span>
-                    </div>
-                    {selectedItem.created_at && (
-                      <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-                        <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Created Date</h5>
-                        <p className="text-gray-600 dark:text-gray-400">
-                          {new Date(selectedItem.created_at).toLocaleDateString()}
+                    {loadingOrderDetails ? (
+                      <div className="flex items-center justify-center py-16">
+                        <div className="flex flex-col items-center space-y-4">
+                          <div className="h-12 w-12 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
+                          <p className="text-gray-600 dark:text-gray-400">Loading order details...</p>
+                        </div>
+                      </div>
+                    ) : orderDetails ? (
+                      <>
+                        {/* Order Header - Premium Design */}
+                        <div className="bg-gradient-to-br from-green-800 via-green-700 to-emerald-800 dark:from-green-900 dark:via-green-800 dark:to-emerald-900 rounded-2xl p-5 mb-4 shadow-xl relative overflow-hidden">
+                          {/* Decorative Pattern */}
+                          <div className="absolute inset-0 opacity-10">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -mr-16 -mt-16"></div>
+                            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full -ml-12 -mb-12"></div>
+                          </div>
+                          
+                          <div className="relative z-10">
+                            <div className="flex items-start justify-between mb-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <div className="p-2 rounded-xl bg-white/20 backdrop-blur-sm">
+                                    <ShoppingCart className="h-6 w-6 text-white" style={{ color: "#ffffff" }} />
+                                  </div>
+                                  <div>
+                                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#ffffff" }}>
+                                      Order ID
+                                    </p>
+                                    <h4 className="font-bold text-2xl mt-1 font-mono" style={{ color: "#ffffff" }}>
+                                      {orderDetails.allProducts?.[0]?.query_id ||
+                                        orderDetails.query_id ||
+                                        orderDetails.orderId ||
+                                        orderDetails.id?.slice(0, 8) ||
+                                        "N/A"}
+                                    </h4>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm" style={{ color: "#ffffff" }}>
+                                  <Calendar className="h-4 w-4" style={{ color: "#ffffff" }} />
+                                  <span>
+                                    {orderDetails.created_at
+                                      ? new Date(orderDetails.created_at).toLocaleString()
+                                      : "Date not available"}
+                                  </span>
+                                </div>
+                              </div>
+                              <span
+                                className={`px-4 py-2 rounded-xl text-xs font-bold shadow-lg ${
+                                  orderDetails.status === "completed" || orderDetails.status === "Delivered"
+                                    ? "bg-green-500"
+                                    : orderDetails.status === "pending" || orderDetails.status === "Pending"
+                                    ? "bg-yellow-500"
+                                    : orderDetails.status === "cancelled" || orderDetails.status === "Cancelled"
+                                    ? "bg-red-500"
+                                    : "bg-blue-500"
+                                }`}
+                                style={{ color: "#ffffff" }}
+                              >
+                                {orderDetails.status?.toUpperCase() || "ACTIVE"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Customer Information - Enhanced Design */}
+                        {orderDetails.orderedBy && (
+                          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 mb-4 border-2 border-gray-200 dark:border-gray-700 shadow-lg">
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="p-3 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30">
+                                <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                              </div>
+                              <h5 className="font-bold text-lg text-gray-900 dark:text-white">
+                                Customer Information
+                              </h5>
+                            </div>
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                                <div className="p-2 rounded-lg bg-white dark:bg-gray-600">
+                                  <User className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                                </div>
+                                <div className="flex-1">
+                                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                                    Name
+                                  </p>
+                                  <p className="text-sm font-semibold text-gray-900 dark:text-white mt-0.5">
+                                    {orderDetails.orderedBy.name || "N/A"}
+                                  </p>
+                                </div>
+                              </div>
+                              {orderDetails.orderedBy.email && (
+                                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                                  <div className="p-2 rounded-lg bg-white dark:bg-gray-600">
+                                    <Mail className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                                      Email
+                                    </p>
+                                    <p className="text-sm font-semibold text-gray-900 dark:text-white mt-0.5 truncate">
+                                      {orderDetails.orderedBy.email}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                              {orderDetails.orderedBy.phone && (
+                                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                                  <div className="p-2 rounded-lg bg-white dark:bg-gray-600">
+                                    <Phone className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                                      Phone
+                                    </p>
+                                    <p className="text-sm font-semibold text-gray-900 dark:text-white mt-0.5">
+                                      {orderDetails.orderedBy.phone}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Order Items */}
+                        {orderDetails.Order_Items && orderDetails.Order_Items.length > 0 && (
+                          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-4 border border-gray-200 dark:border-gray-700 shadow-sm">
+                            <h5 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                              <Package className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                              Order Items ({orderDetails.Order_Items.length})
+                            </h5>
+                            <div className="space-y-3">
+                              {orderDetails.Order_Items.map((item: any, index: number) => (
+                                <div
+                                  key={item.id || index}
+                                  className="flex gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600"
+                                >
+                                  {item.product?.image || item.product?.ProductName?.image ? (
+                                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-600 flex-shrink-0">
+                                      <img
+                                        src={item.product.image || item.product.ProductName?.image}
+                                        alt={item.product?.ProductName?.name || "Product"}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                          e.currentTarget.style.display = "none";
+                                          e.currentTarget.nextElementSibling?.classList.remove("hidden");
+                                        }}
+                                      />
+                                      <Package className="h-8 w-8 text-gray-400 hidden" />
+                                    </div>
+                                  ) : (
+                                    <div className="w-16 h-16 rounded-lg bg-gray-200 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
+                                      <Package className="h-8 w-8 text-gray-400" />
+                                    </div>
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <h6 className="font-semibold text-gray-900 dark:text-white mb-1">
+                                      {item.product?.ProductName?.name || item.product?.name || "Product"}
+                                    </h6>
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                                        Qty: {item.quantity}
+                                      </span>
+                                      <span className="text-sm font-bold text-green-600 dark:text-green-400">
+                                        {item.price || item.product?.price || "0"} RF
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Delivery Address - Enhanced Design */}
+                        {orderDetails.deliveryAddress && (
+                          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 mb-4 border-2 border-gray-200 dark:border-gray-700 shadow-lg">
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="p-3 rounded-xl bg-gradient-to-br from-red-100 to-pink-100 dark:from-red-900/30 dark:to-pink-900/30">
+                                <MapPin className="h-6 w-6 text-red-600 dark:text-red-400" />
+                              </div>
+                              <h5 className="font-bold text-lg text-gray-900 dark:text-white">
+                                Delivery Address
+                              </h5>
+                            </div>
+                            <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600">
+                              <p className="text-sm font-semibold text-gray-900 dark:text-white leading-relaxed">
+                                {orderDetails.deliveryAddress}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Order Summary - Premium Design */}
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 mb-4 border-2 border-gray-200 dark:border-gray-700 shadow-lg">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="p-3 rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 shadow-md">
+                              <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
+                            </div>
+                            <h5 className="font-bold text-lg text-gray-900 dark:text-white">
+                              Order Summary
+                            </h5>
+                          </div>
+                          <div className="space-y-3">
+                            {orderDetails.service_fee && (
+                              <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 shadow-sm">
+                                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                  Service Fee
+                                </span>
+                                <span className="text-sm font-bold text-gray-900 dark:text-white">
+                                  {formatCurrencySync(parseFloat(orderDetails.service_fee.toString()))}
+                                </span>
+                              </div>
+                            )}
+                            {orderDetails.transportation_fee && (
+                              <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 shadow-sm">
+                                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                  Transportation Fee
+                                </span>
+                                <span className="text-sm font-bold text-gray-900 dark:text-white">
+                                  {formatCurrencySync(parseFloat(orderDetails.transportation_fee.toString()))}
+                                </span>
+                              </div>
+                            )}
+                            <div className="border-t-2 border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                              <div className="flex justify-between items-center p-4 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 shadow-lg">
+                                <span className="text-base font-bold" style={{ color: "#ffffff" }}>Total Amount</span>
+                                <span className="text-2xl font-bold" style={{ color: "#ffffff" }}>
+                                  {orderDetails.value
+                                    ? formatCurrencySync(parseFloat(orderDetails.value.toString()))
+                                    : formatCurrencySync(0)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Delivery Information - Enhanced Design */}
+                        {(orderDetails.deliveryDate || orderDetails.deliveryTime || orderDetails.comment) && (
+                          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 mb-4 border-2 border-gray-200 dark:border-gray-700 shadow-lg">
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="p-3 rounded-xl bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30">
+                                <Truck className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                              </div>
+                              <h5 className="font-bold text-lg text-gray-900 dark:text-white">
+                                Delivery Information
+                              </h5>
+                            </div>
+                            <div className="space-y-3">
+                              {orderDetails.deliveryDate && (
+                                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                                  <Calendar className="h-5 w-5 text-orange-600 dark:text-orange-400 flex-shrink-0" />
+                                  <div className="flex-1">
+                                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                                      Delivery Date
+                                    </p>
+                                    <p className="text-sm font-semibold text-gray-900 dark:text-white mt-0.5">
+                                      {orderDetails.deliveryDate}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                              {orderDetails.deliveryTime && (
+                                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                                  <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400 flex-shrink-0" />
+                                  <div className="flex-1">
+                                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                                      Delivery Time
+                                    </p>
+                                    <p className="text-sm font-semibold text-gray-900 dark:text-white mt-0.5">
+                                      {orderDetails.deliveryTime}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                              {orderDetails.comment && (
+                                <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                                    Order Comment
+                                  </p>
+                                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                                    {orderDetails.comment}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Store Information - Enhanced Design */}
+                        {orderDetails.store && (
+                          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border-2 border-gray-200 dark:border-gray-700 shadow-lg">
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="p-3 rounded-xl bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30">
+                                <Store className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                              </div>
+                              <h5 className="font-bold text-lg text-gray-900 dark:text-white">
+                                Store Information
+                              </h5>
+                            </div>
+                            <div className="space-y-3">
+                              <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                                  Store Name
+                                </p>
+                                <p className="text-base font-bold text-gray-900 dark:text-white">
+                                  {orderDetails.store}
+                                </p>
+                              </div>
+                              {orderDetails.store_image && (
+                                <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                                  <img
+                                    src={orderDetails.store_image}
+                                    alt={orderDetails.store}
+                                    className="w-full h-32 rounded-lg object-cover"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Shopper Information */}
+                        {orderDetails.shopper && (
+                          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border-2 border-gray-200 dark:border-gray-700 shadow-lg">
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-100 to-blue-100 dark:from-cyan-900/30 dark:to-blue-900/30">
+                                <Truck className="h-6 w-6 text-cyan-600 dark:text-cyan-400" />
+                              </div>
+                              <h5 className="font-bold text-lg text-gray-900 dark:text-white">
+                                Assigned Shopper
+                              </h5>
+                            </div>
+                            <div className="space-y-3">
+                              <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                                  Shopper Name
+                                </p>
+                                <p className="text-base font-bold text-gray-900 dark:text-white">
+                                  {orderDetails.shopper.name || "Not assigned"}
+                                </p>
+                              </div>
+                              {orderDetails.shopper.phone && (
+                                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                                  <Phone className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                                  <div className="flex-1">
+                                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                                      Phone
+                                    </p>
+                                    <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                      {orderDetails.shopper.phone}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-center py-16">
+                        <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                          <Package className="h-10 w-10 text-gray-400" />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                          Order details not found
+                        </h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Unable to load order details
                         </p>
                       </div>
                     )}
@@ -611,26 +998,28 @@ export function ExpandedSectionModal({
                               </div>
 
                               {/* Action Buttons */}
-                              <div className="grid grid-cols-2 gap-2 mt-auto">
+                              <div className="flex gap-2 mt-auto justify-center">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleEditProduct(product);
                                   }}
-                                  className="flex items-center justify-center gap-1.5 rounded-lg border-2 border-blue-500 bg-blue-50 px-2 py-2 text-[10px] font-bold text-blue-600 transition-all hover:bg-blue-100 active:scale-95 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30"
+                                  className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center transition-all hover:bg-blue-600 active:scale-95 shadow-sm hover:shadow-md"
+                                  style={{ color: "#ffffff" }}
+                                  title="Edit"
                                 >
-                                  <Edit className="h-3 w-3" />
-                                  Edit
+                                  <Edit className="h-4 w-4" style={{ color: "#ffffff", stroke: "#ffffff" }} />
                                 </button>
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleDeleteProduct(product);
                                   }}
-                                  className="flex items-center justify-center gap-1.5 rounded-lg border-2 border-red-500 bg-red-50 px-2 py-2 text-[10px] font-bold text-red-600 transition-all hover:bg-red-100 active:scale-95 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
+                                  className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center transition-all hover:bg-red-600 active:scale-95 shadow-sm hover:shadow-md"
+                                  style={{ color: "#ffffff" }}
+                                  title="Delete"
                                 >
-                                  <Trash2 className="h-3 w-3" />
-                                  Delete
+                                  <Trash2 className="h-4 w-4" style={{ color: "#ffffff", stroke: "#ffffff" }} />
                                 </button>
                               </div>
                             </div>
@@ -919,33 +1308,66 @@ function QuoteCard({ quote, onView }: { quote: any; onView: (item: any) => void 
 }
 
 function OrderCard({ order, onView }: { order: any; onView: (item: any) => void }) {
+  // Get query_id from order items if available
+  const queryId = order.allProducts?.[0]?.query_id || order.query_id || null;
+  
   return (
     <div
       onClick={() => onView(order)}
-      className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600 cursor-pointer hover:shadow-md hover:border-green-300 dark:hover:border-green-600 transition-all active:scale-[0.98]"
+      className="group bg-white dark:bg-gray-800 rounded-2xl p-4 border-2 border-gray-200 dark:border-gray-600 cursor-pointer hover:shadow-xl hover:border-green-400 dark:hover:border-green-600 transition-all duration-300 active:scale-[0.98]"
     >
-      <div className="flex items-start justify-between mb-2">
-        <h4 className="font-bold text-gray-900 dark:text-white text-base flex-1">
-          Order #{order.id?.slice(0, 8) || "N/A"}
-        </h4>
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30">
+              <ShoppingCart className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <h4 className="font-bold text-gray-900 dark:text-white text-base">
+                {queryId || order.OrderID || order.id?.slice(0, 8) || "N/A"}
+              </h4>
+              {queryId && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                  Query ID
+                </p>
+              )}
+            </div>
+          </div>
+          {order.created_at && (
+            <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 ml-10">
+              <Calendar className="h-3 w-3" />
+              {new Date(order.created_at).toLocaleDateString()}
+            </div>
+          )}
+        </div>
         <span
-          className={`px-2.5 py-1 rounded-md text-xs font-semibold ml-2 ${
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold shadow-md ${
             order.status === "completed"
-              ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+              ? "bg-green-500 text-white"
               : order.status === "pending"
-              ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400"
-              : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+              ? "bg-yellow-500 text-white"
+              : order.status === "cancelled"
+              ? "bg-red-500 text-white"
+              : "bg-blue-500 text-white"
           }`}
         >
-          {order.status || "Active"}
+          {order.status?.toUpperCase() || "ACTIVE"}
         </span>
       </div>
-      {order.created_at && (
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          <Calendar className="h-3 w-3 inline mr-1" />
-          {new Date(order.created_at).toLocaleDateString()}
-        </p>
+      
+      {order.total && (
+        <div className="flex items-center justify-between pt-3 mt-3 border-t-2 border-gray-200 dark:border-gray-700">
+          <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Total:</span>
+          <span className="text-lg font-bold text-green-600 dark:text-green-400">
+            {formatCurrencySync(parseFloat(order.total || "0"))}
+          </span>
+        </div>
       )}
+      
+      <div className="mt-3 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+        <Eye className="h-3.5 w-3.5" />
+        <span className="font-medium">Tap to view details</span>
+      </div>
     </div>
   );
 }
