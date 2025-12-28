@@ -345,9 +345,24 @@ export function QuoteSubmissionForm({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-white shadow-2xl dark:bg-gray-800">
-        <div className="sticky top-0 border-b border-gray-200 bg-white px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
+    <div 
+      className="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center bg-black bg-opacity-50 p-0 sm:p-4"
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100vw",
+        height: "100vh",
+      }}
+    >
+      <div 
+        className="h-screen sm:h-auto sm:max-h-[90vh] w-full sm:max-w-3xl overflow-y-auto rounded-none sm:rounded-xl bg-white shadow-2xl dark:bg-gray-800 flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="sticky top-0 border-b border-gray-200 bg-white px-5 sm:px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -368,7 +383,7 @@ export function QuoteSubmissionForm({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6">
+        <form onSubmit={handleSubmit} className="flex-1 p-5 sm:p-6 overflow-y-auto">
           <div className="space-y-6">
             {/* Quote Amount */}
             <div>

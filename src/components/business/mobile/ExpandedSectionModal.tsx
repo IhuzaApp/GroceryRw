@@ -89,6 +89,7 @@ export function ExpandedSectionModal({
   const [selectedRFQForQuote, setSelectedRFQForQuote] = useState<any>(null);
   const [isQuoteDetailsOpen, setIsQuoteDetailsOpen] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState<any>(null);
+  const [isOpeningQuoteForm, setIsOpeningQuoteForm] = useState(false);
 
   const sectionTitles: Record<string, string> = {
     rfqs: "My RFQs",
@@ -310,6 +311,13 @@ export function ExpandedSectionModal({
     }
   }, [sectionId, allItems]);
 
+  // Clear loading state when quote form opens
+  useEffect(() => {
+    if (isQuoteFormOpen) {
+      setIsOpeningQuoteForm(false);
+    }
+  }, [isQuoteFormOpen]);
+
   const checkExistingQuotes = async () => {
     const quotePromises = allItems.map(async (rfq: any) => {
       try {
@@ -341,8 +349,16 @@ export function ExpandedSectionModal({
       setSelectedQuote(existingQuote);
       setIsQuoteDetailsOpen(true);
     } else {
+      // Show loading state
+      setIsOpeningQuoteForm(true);
+      // Close the expanded modal to allow quote form to be full screen
+      setSelectedItem(null);
       setSelectedRFQForQuote(rfq);
-      setIsQuoteFormOpen(true);
+      // Small delay to ensure smooth transition
+      setTimeout(() => {
+        setIsQuoteFormOpen(true);
+        setIsOpeningQuoteForm(false);
+      }, 100);
     }
   };
 
@@ -550,6 +566,7 @@ export function ExpandedSectionModal({
                               ? "bg-green-500 text-white"
                               : "bg-gray-500 text-white"
                           }`}
+                          style={{ color: "#ffffff" }}
                         >
                           {selectedItem.open ? "Open" : "Closed"}
                         </span>
@@ -615,13 +632,22 @@ export function ExpandedSectionModal({
                     <div className="flex flex-col gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
                       <button
                         onClick={() => handleShareQuote(selectedItem)}
-                        className={`w-full rounded-lg px-4 py-3 font-semibold text-white transition-colors ${
+                        disabled={isOpeningQuoteForm}
+                        className={`w-full rounded-lg px-4 py-3 font-semibold text-white transition-colors flex items-center justify-center gap-2 ${
                           submittedQuotes[selectedItem.id]
                             ? "bg-blue-500 hover:bg-blue-600"
                             : "bg-green-500 hover:bg-green-600"
-                        }`}
+                        } ${isOpeningQuoteForm ? "opacity-75 cursor-not-allowed" : ""}`}
+                        style={{ color: "#ffffff" }}
                       >
-                        {submittedQuotes[selectedItem.id] ? "View Quote" : "Submit Quote"}
+                        {isOpeningQuoteForm ? (
+                          <>
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                            <span>Opening...</span>
+                          </>
+                        ) : (
+                          submittedQuotes[selectedItem.id] ? "View Quote" : "Submit Quote"
+                        )}
                       </button>
                       {onMessageCustomer && (
                         <button
@@ -630,6 +656,7 @@ export function ExpandedSectionModal({
                             onMessageCustomer(customerId);
                           }}
                           className="w-full rounded-lg bg-purple-500 px-4 py-3 font-semibold text-white transition-colors hover:bg-purple-600"
+                          style={{ color: "#ffffff" }}
                         >
                           Message Customer
                         </button>
@@ -2188,32 +2215,37 @@ export function ExpandedSectionModal({
         </div>
       </div>
 
-      {/* Quote Submission Form */}
+      {/* Quote Submission Form - Full screen on mobile */}
       {isQuoteFormOpen && selectedRFQForQuote && (
-        <QuoteSubmissionForm
-          isOpen={isQuoteFormOpen}
-          onClose={() => {
-            setIsQuoteFormOpen(false);
-            setSelectedRFQForQuote(null);
-          }}
-          rfqId={selectedRFQForQuote.id}
-          rfqTitle={selectedRFQForQuote.title}
-          onSuccess={handleQuoteSubmitted}
-        />
+        <div className="fixed inset-0 z-[10001]">
+          <QuoteSubmissionForm
+            isOpen={isQuoteFormOpen}
+            onClose={() => {
+              setIsQuoteFormOpen(false);
+              setSelectedRFQForQuote(null);
+              setIsOpeningQuoteForm(false);
+            }}
+            rfqId={selectedRFQForQuote.id}
+            rfqTitle={selectedRFQForQuote.title}
+            onSuccess={handleQuoteSubmitted}
+          />
+        </div>
       )}
 
-      {/* Submitted Quote Details */}
+      {/* Submitted Quote Details - Full screen on mobile */}
       {isQuoteDetailsOpen && selectedQuote && selectedRFQForQuote && (
-        <SubmittedQuoteDetails
-          isOpen={isQuoteDetailsOpen}
-          onClose={() => {
-            setIsQuoteDetailsOpen(false);
-            setSelectedQuote(null);
-            setSelectedRFQForQuote(null);
-          }}
-          quote={selectedQuote}
-          rfqTitle={selectedRFQForQuote.title || "RFQ"}
-        />
+        <div className="fixed inset-0 z-[10001]">
+          <SubmittedQuoteDetails
+            isOpen={isQuoteDetailsOpen}
+            onClose={() => {
+              setIsQuoteDetailsOpen(false);
+              setSelectedQuote(null);
+              setSelectedRFQForQuote(null);
+            }}
+            quote={selectedQuote}
+            rfqTitle={selectedRFQForQuote.title || "RFQ"}
+          />
+        </div>
       )}
     </div>
   );
