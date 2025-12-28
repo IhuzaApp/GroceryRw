@@ -49,9 +49,19 @@ import {
 } from "lucide-react";
 import { ExpandedSectionModal } from "./ExpandedSectionModal";
 import { ProductEditModal } from "./ProductEditModal";
+import { QuoteSubmissionForm } from "../QuoteSubmissionForm";
+import { SubmittedQuoteDetails } from "../SubmittedQuoteDetails";
+import { formatCurrencySync } from "../../../utils/formatCurrency";
+import toast from "react-hot-toast";
 
 // RFQs Section Component
-function RFQsSection({ businessAccount, onRFQClick }: { businessAccount: any; onRFQClick?: () => void }) {
+function RFQsSection({ 
+  businessAccount,
+  onRFQClick 
+}: { 
+  businessAccount: any;
+  onRFQClick?: (rfq: any) => void;
+}) {
   const router = useRouter();
   const [rfqs, setRfqs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,9 +118,8 @@ function RFQsSection({ businessAccount, onRFQClick }: { businessAccount: any; on
             key={rfq.id}
             className="group bg-white dark:bg-gray-700 rounded-xl p-4 border border-gray-200 dark:border-gray-600 active:scale-[0.98] transition-all duration-200 cursor-pointer hover:shadow-lg hover:border-green-300 dark:hover:border-green-600 shadow-sm"
             onClick={() => {
-              // Open RFQs section in expanded modal instead of navigating
               if (onRFQClick) {
-                onRFQClick();
+                onRFQClick(rfq);
               }
             }}
           >
@@ -154,6 +163,15 @@ export function MobileBusinessDashboard({
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [selectedRFQ, setSelectedRFQ] = useState<any>(null);
+  // RFQ Opportunity states (different from My RFQs)
+  const [selectedRFQOpportunity, setSelectedRFQOpportunity] = useState<any>(null);
+  const [isRFQOpportunityModalOpen, setIsRFQOpportunityModalOpen] = useState(false);
+  const [isQuoteFormOpen, setIsQuoteFormOpen] = useState(false);
+  const [selectedRFQForQuote, setSelectedRFQForQuote] = useState<any>(null);
+  const [submittedQuotes, setSubmittedQuotes] = useState<Record<string, any>>({});
+  const [isQuoteDetailsOpen, setIsQuoteDetailsOpen] = useState(false);
+  const [selectedQuote, setSelectedQuote] = useState<any>(null);
   const [stats, setStats] = useState({
     totalRFQs: 0,
     activeOrders: 0,
@@ -163,6 +181,7 @@ export function MobileBusinessDashboard({
   
   // Data states for expanded sections
   const [myRFQs, setMyRFQs] = useState<any[]>([]);
+  const [rfqOpportunities, setRfqOpportunities] = useState<any[]>([]);
   const [quotes, setQuotes] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [services, setServices] = useState<any[]>([]);
@@ -241,6 +260,41 @@ export function MobileBusinessDashboard({
     }
   }, [businessAccount]);
 
+  const checkExistingQuote = async (rfqId: string) => {
+    try {
+      const response = await fetch(`/api/queries/user-rfq-quote?rfqId=${rfqId}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.quote) {
+          setSubmittedQuotes((prev) => ({ ...prev, [rfqId]: data.quote }));
+        }
+      }
+    } catch (error) {
+      console.error("Error checking existing quote:", error);
+    }
+  };
+
+  const handleShareQuote = async (rfq: any) => {
+    const existingQuote = submittedQuotes[rfq.id];
+    if (existingQuote) {
+      setSelectedRFQForQuote(rfq);
+      setSelectedQuote(existingQuote);
+      setIsQuoteDetailsOpen(true);
+    } else {
+      setSelectedRFQForQuote(rfq);
+      setIsQuoteFormOpen(true);
+    }
+  };
+
+  const handleQuoteSubmitted = () => {
+    toast.success("Quote submitted successfully!");
+    setIsQuoteFormOpen(false);
+    setSelectedRFQForQuote(null);
+    if (selectedRFQOpportunity) {
+      checkExistingQuote(selectedRFQOpportunity.id);
+    }
+  };
+
   const fetchStats = async () => {
     if (!businessAccount?.id) return;
     
@@ -314,6 +368,13 @@ export function MobileBusinessDashboard({
           if (rfqsRes.ok) {
             const rfqsData = await rfqsRes.json();
             setMyRFQs(rfqsData.rfqs || []);
+          }
+          break;
+        case "rfq-opportunities":
+          const rfqOppsRes = await fetch("/api/queries/rfq-opportunities");
+          if (rfqOppsRes.ok) {
+            const rfqOppsData = await rfqOppsRes.json();
+            setRfqOpportunities(rfqOppsData.rfqs || []);
           }
           break;
         case "quotes":
@@ -552,8 +613,11 @@ export function MobileBusinessDashboard({
         {/* RFQs Section */}
         {businessAccount && !expandedSection && (
           <RFQsSection 
-            businessAccount={businessAccount} 
-            onRFQClick={() => setExpandedSection("rfqs")}
+            businessAccount={businessAccount}
+            onRFQClick={(rfq) => {
+              setSelectedRFQ(rfq);
+              setExpandedSection("rfq-opportunities");
+            }}
           />
         )}
       </div>
@@ -562,9 +626,13 @@ export function MobileBusinessDashboard({
       {expandedSection && (
         <ExpandedSectionModal
           sectionId={expandedSection}
-          onClose={() => setExpandedSection(null)}
+          onClose={() => {
+            setExpandedSection(null);
+            setSelectedRFQ(null);
+          }}
           data={{
-            rfqs: myRFQs,
+            rfqs: expandedSection === "rfqs" && selectedRFQ ? [selectedRFQ, ...myRFQs] : myRFQs,
+            rfqOpportunities: expandedSection === "rfq-opportunities" && selectedRFQ ? [selectedRFQ, ...rfqOpportunities] : rfqOpportunities,
             quotes: quotes,
             orders: orders,
             services: services,
@@ -574,11 +642,160 @@ export function MobileBusinessDashboard({
           loading={loadingSection === expandedSection}
           businessAccount={businessAccount}
           router={router}
+          initialSelectedItem={(expandedSection === "rfqs" || expandedSection === "rfq-opportunities") ? selectedRFQ : undefined}
           onEditProduct={(product, storeId) => {
             // Open edit modal while keeping expanded modal open
             setEditingProduct(product);
             setEditingStoreId(storeId);
           }}
+          onMessageCustomer={(customerId) => {
+            router.push(`/plasBusiness/BusinessChats?supplier=${customerId}`);
+          }}
+        />
+      )}
+
+      {/* RFQ Opportunity Details Modal */}
+      {isRFQOpportunityModalOpen && selectedRFQOpportunity && (
+        <div 
+          className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-end justify-center"
+          onClick={() => {
+            setIsRFQOpportunityModalOpen(false);
+            setSelectedRFQOpportunity(null);
+          }}
+        >
+          <div 
+            className="bg-white dark:bg-gray-800 rounded-t-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-5 py-4 flex items-center justify-between rounded-t-3xl">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                RFQ Details
+              </h3>
+              <button
+                onClick={() => {
+                  setIsRFQOpportunityModalOpen(false);
+                  setSelectedRFQOpportunity(null);
+                }}
+                className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <div>
+                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                  {selectedRFQOpportunity.title || `RFQ #${selectedRFQOpportunity.id?.slice(0, 8)}`}
+                </h4>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {selectedRFQOpportunity.description || "No description provided"}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Budget:
+                  </span>
+                  <p className="text-gray-900 dark:text-white font-semibold">
+                    {selectedRFQOpportunity.min_budget && selectedRFQOpportunity.max_budget
+                      ? `${formatCurrencySync(parseFloat(selectedRFQOpportunity.min_budget))} - ${formatCurrencySync(parseFloat(selectedRFQOpportunity.max_budget))}`
+                      : selectedRFQOpportunity.min_budget
+                      ? `${formatCurrencySync(parseFloat(selectedRFQOpportunity.min_budget))}+`
+                      : selectedRFQOpportunity.max_budget
+                      ? `Up to ${formatCurrencySync(parseFloat(selectedRFQOpportunity.max_budget))}`
+                      : "Not specified"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Location:
+                  </span>
+                  <p className="text-gray-900 dark:text-white font-semibold">
+                    {selectedRFQOpportunity.location || "Not specified"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Posted By:
+                  </span>
+                  <p className="text-gray-900 dark:text-white font-semibold">
+                    {selectedRFQOpportunity.business_account?.business_name || 
+                     selectedRFQOpportunity.contact_name || 
+                     "Unknown Business"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Deadline:
+                  </span>
+                  <p className="text-gray-900 dark:text-white font-semibold">
+                    {selectedRFQOpportunity.response_date
+                      ? new Date(selectedRFQOpportunity.response_date).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })
+                      : "Not specified"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  onClick={() => {
+                    setIsRFQOpportunityModalOpen(false);
+                    handleShareQuote(selectedRFQOpportunity);
+                  }}
+                  className={`w-full rounded-lg px-4 py-3 font-semibold text-white transition-colors ${
+                    submittedQuotes[selectedRFQOpportunity.id]
+                      ? "bg-blue-500 hover:bg-blue-600"
+                      : "bg-green-500 hover:bg-green-600"
+                  }`}
+                >
+                  {submittedQuotes[selectedRFQOpportunity.id]
+                    ? "View Quote"
+                    : "Submit Quote"}
+                </button>
+                <button
+                  onClick={() => {
+                    router.push(`/plasBusiness/BusinessChats?supplier=${selectedRFQOpportunity.business_account?.id || selectedRFQOpportunity.id}`);
+                  }}
+                  className="w-full rounded-lg bg-purple-500 px-4 py-3 font-semibold text-white transition-colors hover:bg-purple-600"
+                >
+                  Message Customer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quote Submission Form */}
+      {isQuoteFormOpen && selectedRFQForQuote && (
+        <QuoteSubmissionForm
+          isOpen={isQuoteFormOpen}
+          onClose={() => {
+            setIsQuoteFormOpen(false);
+            setSelectedRFQForQuote(null);
+          }}
+          rfqId={selectedRFQForQuote.id}
+          rfqTitle={selectedRFQForQuote.title}
+          onSuccess={handleQuoteSubmitted}
+        />
+      )}
+
+      {/* Submitted Quote Details */}
+      {isQuoteDetailsOpen && selectedQuote && selectedRFQForQuote && (
+        <SubmittedQuoteDetails
+          isOpen={isQuoteDetailsOpen}
+          onClose={() => {
+            setIsQuoteDetailsOpen(false);
+            setSelectedQuote(null);
+            setSelectedRFQForQuote(null);
+          }}
+          quote={selectedQuote}
+          rfqTitle={selectedRFQForQuote.title || "RFQ"}
         />
       )}
 
