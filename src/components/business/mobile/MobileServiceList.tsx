@@ -176,7 +176,11 @@ export function MobileServiceList({
                   {rfqs.slice(0, 5).map((rfq) => (
                     <div
                       key={rfq.id}
-                      onClick={() => router.push(`/plasBusiness/rfqs/${rfq.id}`)}
+                      onClick={() => {
+                        // RFQ details should be shown in modal, not navigate
+                        // This will be handled by the parent component
+                        console.log("RFQ clicked:", rfq.id);
+                      }}
                       className="group bg-white dark:bg-gray-700 rounded-xl border-2 border-green-200 dark:border-green-800 p-4 cursor-pointer active:scale-[0.98] transition-all duration-200 hover:shadow-lg hover:border-green-400 dark:hover:border-green-600 shadow-md"
                     >
                       <div className="flex gap-3">

@@ -51,7 +51,7 @@ import { ExpandedSectionModal } from "./ExpandedSectionModal";
 import { ProductEditModal } from "./ProductEditModal";
 
 // RFQs Section Component
-function RFQsSection({ businessAccount }: { businessAccount: any }) {
+function RFQsSection({ businessAccount, onRFQClick }: { businessAccount: any; onRFQClick?: () => void }) {
   const router = useRouter();
   const [rfqs, setRfqs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -107,7 +107,12 @@ function RFQsSection({ businessAccount }: { businessAccount: any }) {
           <div
             key={rfq.id}
             className="group bg-white dark:bg-gray-700 rounded-xl p-4 border border-gray-200 dark:border-gray-600 active:scale-[0.98] transition-all duration-200 cursor-pointer hover:shadow-lg hover:border-green-300 dark:hover:border-green-600 shadow-sm"
-            onClick={() => router.push(`/plasBusiness/rfqs/${rfq.id}`)}
+            onClick={() => {
+              // Open RFQs section in expanded modal instead of navigating
+              if (onRFQClick) {
+                onRFQClick();
+              }
+            }}
           >
             <h4 className="font-bold text-gray-900 dark:text-white mb-2 text-base">
               {rfq.title || `RFQ #${rfq.id.slice(0, 8)}`}
@@ -237,12 +242,14 @@ export function MobileBusinessDashboard({
   }, [businessAccount]);
 
   const fetchStats = async () => {
+    if (!businessAccount?.id) return;
+    
     try {
       const [rfqsRes, ordersRes, quotesRes, walletRes] = await Promise.all([
         fetch("/api/queries/business-rfqs").catch(() => null),
         fetch("/api/queries/business-product-orders").catch(() => null),
         fetch("/api/queries/business-submitted-quotes").catch(() => null),
-        fetch("/api/queries/check-business-wallet").catch(() => null),
+        fetch(`/api/queries/check-business-wallet?business_id=${businessAccount.id}`).catch(() => null),
       ]);
 
       let totalRFQs = 0;
@@ -267,7 +274,7 @@ export function MobileBusinessDashboard({
 
       if (walletRes?.ok) {
         const data = await walletRes.json();
-        walletBalance = parseFloat(data.balance || "0");
+        walletBalance = parseFloat(data.wallet?.amount || "0");
       }
 
       setStats({ totalRFQs, activeOrders, pendingQuotes, walletBalance });
@@ -543,7 +550,12 @@ export function MobileBusinessDashboard({
         </div>
 
         {/* RFQs Section */}
-        {businessAccount && !expandedSection && <RFQsSection businessAccount={businessAccount} />}
+        {businessAccount && !expandedSection && (
+          <RFQsSection 
+            businessAccount={businessAccount} 
+            onRFQClick={() => setExpandedSection("rfqs")}
+          />
+        )}
       </div>
 
       {/* Expanded Section Modal */}
