@@ -36,6 +36,8 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../../utils/formatCurrency";
+import { QuoteSubmissionForm } from "../QuoteSubmissionForm";
+import { SubmittedQuoteDetails } from "../SubmittedQuoteDetails";
 
 interface ExpandedSectionModalProps {
   sectionId: string;
@@ -47,11 +49,16 @@ interface ExpandedSectionModalProps {
     services: any[];
     stores: any[];
     contracts: any[];
+    rfqOpportunities?: any[];
   };
   loading: boolean;
   businessAccount?: any;
   router: any;
   onEditProduct?: (product: any, storeId: string) => void; // Callback to open edit modal
+  initialSelectedItem?: any; // Item to auto-select when modal opens
+  onMessageCustomer?: (customerId: string) => void;
+  onSubmitQuote?: (rfq: any) => void;
+  onViewQuote?: (rfq: any) => void;
 }
 
 export function ExpandedSectionModal({
@@ -62,20 +69,30 @@ export function ExpandedSectionModal({
   businessAccount,
   router,
   onEditProduct,
+  initialSelectedItem,
+  onMessageCustomer,
+  onSubmitQuote,
+  onViewQuote,
 }: ExpandedSectionModalProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
-  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [selectedItem, setSelectedItem] = useState<any>(initialSelectedItem || null);
   const [isEditing, setIsEditing] = useState(false);
   const [storeProducts, setStoreProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [orderDetails, setOrderDetails] = useState<any>(null);
   const [loadingOrderDetails, setLoadingOrderDetails] = useState(false);
   const [quoteActiveTab, setQuoteActiveTab] = useState("overview");
+  const [submittedQuotes, setSubmittedQuotes] = useState<Record<string, any>>({});
+  const [isQuoteFormOpen, setIsQuoteFormOpen] = useState(false);
+  const [selectedRFQForQuote, setSelectedRFQForQuote] = useState<any>(null);
+  const [isQuoteDetailsOpen, setIsQuoteDetailsOpen] = useState(false);
+  const [selectedQuote, setSelectedQuote] = useState<any>(null);
 
   const sectionTitles: Record<string, string> = {
     rfqs: "My RFQs",
+    "rfq-opportunities": "RFQ Opportunities",
     quotes: "Quotes",
     orders: "Orders",
     services: "Services",
@@ -85,6 +102,7 @@ export function ExpandedSectionModal({
 
   const sectionIcons: Record<string, any> = {
     rfqs: FileText,
+    "rfq-opportunities": FileText,
     quotes: ShoppingCart,
     orders: Package,
     services: Briefcase,
@@ -94,7 +112,9 @@ export function ExpandedSectionModal({
 
   const Icon = sectionIcons[sectionId] || FileText;
   const title = sectionTitles[sectionId] || "Details";
-  const allItems = data[sectionId as keyof typeof data] || [];
+  const allItems = sectionId === "rfq-opportunities" 
+    ? (data.rfqOpportunities || [])
+    : (data[sectionId as keyof typeof data] || []);
 
   // Filter options based on section
   const filterOptions = useMemo(() => {
@@ -103,6 +123,14 @@ export function ExpandedSectionModal({
         { value: "all", label: "All RFQs" },
         { value: "open", label: "Open" },
         { value: "closed", label: "Closed" },
+      ];
+    }
+    if (sectionId === "rfq-opportunities") {
+      return [
+        { value: "all", label: "All Opportunities" },
+        { value: "open", label: "Open" },
+        { value: "closed", label: "Closed" },
+        { value: "urgent", label: "Urgent" },
       ];
     }
     if (sectionId === "quotes") {
@@ -139,11 +167,13 @@ export function ExpandedSectionModal({
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter((item) => {
-        if (sectionId === "rfqs") {
+        if (sectionId === "rfqs" || sectionId === "rfq-opportunities") {
           return (
             item.title?.toLowerCase().includes(term) ||
             item.description?.toLowerCase().includes(term) ||
-            item.category?.toLowerCase().includes(term)
+            item.category?.toLowerCase().includes(term) ||
+            item.location?.toLowerCase().includes(term) ||
+            item.business_account?.business_name?.toLowerCase().includes(term)
           );
         }
         if (sectionId === "quotes") {
@@ -178,7 +208,22 @@ export function ExpandedSectionModal({
     // Apply status filter
     if (selectedFilter !== "all") {
       filtered = filtered.filter((item) => {
-        if (sectionId === "rfqs") {
+        if (sectionId === "rfqs" || sectionId === "rfq-opportunities") {
+          if (selectedFilter === "open") {
+            return item.open;
+          } else if (selectedFilter === "closed") {
+            return !item.open;
+          } else if (selectedFilter === "urgent" && sectionId === "rfq-opportunities") {
+            // Check if deadline is within 3 days
+            if (item.response_date) {
+              const deadline = new Date(item.response_date);
+              const today = new Date();
+              const diffTime = deadline.getTime() - today.getTime();
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              return diffDays > 0 && diffDays <= 3;
+            }
+            return false;
+          }
           return selectedFilter === "open" ? item.open : !item.open;
         }
         if (sectionId === "quotes" || sectionId === "orders" || sectionId === "contracts") {
@@ -248,6 +293,64 @@ export function ExpandedSectionModal({
     } finally {
       setLoadingOrderDetails(false);
     }
+  };
+
+  // Auto-select initial item when it's provided
+  useEffect(() => {
+    if (initialSelectedItem && !selectedItem) {
+      handleItemClick(initialSelectedItem);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSelectedItem]);
+
+  // Check for existing quotes when RFQ opportunities are loaded
+  useEffect(() => {
+    if (sectionId === "rfq-opportunities" && allItems.length > 0) {
+      checkExistingQuotes();
+    }
+  }, [sectionId, allItems]);
+
+  const checkExistingQuotes = async () => {
+    const quotePromises = allItems.map(async (rfq: any) => {
+      try {
+        const response = await fetch(`/api/queries/user-rfq-quote?rfqId=${rfq.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          return { rfqId: rfq.id, quote: data.quote };
+        }
+      } catch (error) {
+        console.error(`Error checking quote for RFQ ${rfq.id}:`, error);
+      }
+      return { rfqId: rfq.id, quote: null };
+    });
+
+    const results = await Promise.all(quotePromises);
+    const quotesMap: Record<string, any> = {};
+    results.forEach(({ rfqId, quote }) => {
+      if (quote) {
+        quotesMap[rfqId] = quote;
+      }
+    });
+    setSubmittedQuotes(quotesMap);
+  };
+
+  const handleShareQuote = async (rfq: any) => {
+    const existingQuote = submittedQuotes[rfq.id];
+    if (existingQuote) {
+      setSelectedRFQForQuote(rfq);
+      setSelectedQuote(existingQuote);
+      setIsQuoteDetailsOpen(true);
+    } else {
+      setSelectedRFQForQuote(rfq);
+      setIsQuoteFormOpen(true);
+    }
+  };
+
+  const handleQuoteSubmitted = () => {
+    toast.success("Quote submitted successfully!");
+    setIsQuoteFormOpen(false);
+    setSelectedRFQForQuote(null);
+    checkExistingQuotes();
   };
 
   const handleBackToList = () => {
@@ -346,7 +449,7 @@ export function ExpandedSectionModal({
                 <p className="text-xs text-gray-600 dark:text-gray-400">{title}</p>
               </div>
             </div>
-            {!isEditing && (
+            {!isEditing && sectionId !== "rfq-opportunities" && (
               <button
                 onClick={handleEdit}
                 className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors active:scale-95"
@@ -431,6 +534,107 @@ export function ExpandedSectionModal({
                         <p className="text-gray-600 dark:text-gray-400">{selectedItem.location}</p>
                       </div>
                     )}
+                  </>
+                )}
+
+                {sectionId === "rfq-opportunities" && (
+                  <>
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-4 mb-4 border border-green-200 dark:border-green-800/50">
+                      <div className="flex items-start justify-between mb-3">
+                        <h4 className="font-bold text-lg text-gray-900 dark:text-white flex-1">
+                          {selectedItem.title || `RFQ #${selectedItem.id?.slice(0, 8)}`}
+                        </h4>
+                        <span
+                          className={`px-3 py-1 rounded-md text-xs font-semibold ml-2 ${
+                            selectedItem.open
+                              ? "bg-green-500 text-white"
+                              : "bg-gray-500 text-white"
+                          }`}
+                        >
+                          {selectedItem.open ? "Open" : "Closed"}
+                        </span>
+                      </div>
+                      {selectedItem.business_account?.business_name && (
+                        <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 mb-2">
+                          <Building className="h-4 w-4" />
+                          <span>{selectedItem.business_account.business_name}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {selectedItem.description && (
+                      <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 mb-4">
+                        <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</h5>
+                        <p className="text-gray-600 dark:text-gray-400">{selectedItem.description}</p>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      {selectedItem.category && (
+                        <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+                          <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-1 text-xs">Category</h5>
+                          <p className="text-gray-900 dark:text-white font-medium">{selectedItem.category}</p>
+                        </div>
+                      )}
+                      {selectedItem.location && (
+                        <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+                          <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-1 text-xs">Location</h5>
+                          <p className="text-gray-900 dark:text-white font-medium">{selectedItem.location}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {(selectedItem.min_budget || selectedItem.max_budget) && (
+                      <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 mb-4">
+                        <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Budget</h5>
+                        <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                          {selectedItem.min_budget && selectedItem.max_budget
+                            ? `${formatCurrencySync(parseFloat(selectedItem.min_budget))} - ${formatCurrencySync(parseFloat(selectedItem.max_budget))}`
+                            : selectedItem.min_budget
+                            ? `${formatCurrencySync(parseFloat(selectedItem.min_budget))}+`
+                            : selectedItem.max_budget
+                            ? `Up to ${formatCurrencySync(parseFloat(selectedItem.max_budget))}`
+                            : "Not specified"}
+                        </p>
+                      </div>
+                    )}
+
+                    {selectedItem.response_date && (
+                      <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 mb-4">
+                        <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Response Deadline</h5>
+                        <p className="text-gray-900 dark:text-white font-medium">
+                          {new Date(selectedItem.response_date).toLocaleDateString("en-US", {
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex flex-col gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <button
+                        onClick={() => handleShareQuote(selectedItem)}
+                        className={`w-full rounded-lg px-4 py-3 font-semibold text-white transition-colors ${
+                          submittedQuotes[selectedItem.id]
+                            ? "bg-blue-500 hover:bg-blue-600"
+                            : "bg-green-500 hover:bg-green-600"
+                        }`}
+                      >
+                        {submittedQuotes[selectedItem.id] ? "View Quote" : "Submit Quote"}
+                      </button>
+                      {onMessageCustomer && (
+                        <button
+                          onClick={() => {
+                            const customerId = selectedItem.business_account?.id || selectedItem.id;
+                            onMessageCustomer(customerId);
+                          }}
+                          className="w-full rounded-lg bg-purple-500 px-4 py-3 font-semibold text-white transition-colors hover:bg-purple-600"
+                        >
+                          Message Customer
+                        </button>
+                      )}
+                    </div>
                   </>
                 )}
 
@@ -713,7 +917,7 @@ export function ExpandedSectionModal({
                               </div>
 
                               {/* RFQ Requester Quick Info */}
-                              <div className="overflow-hidden rounded-none border-x-0 border-t-0 border-b border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                              <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800">
                                 <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-5 py-4 dark:from-blue-900/20 dark:to-cyan-900/20">
                                   <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
                                     <Building className="h-5 w-5 text-blue-600" />
@@ -761,7 +965,7 @@ export function ExpandedSectionModal({
 
                             {/* Quote Message */}
                             {quote.quoteMessage && (
-                              <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800">
+                              <div className="overflow-hidden rounded-none border-x-0 border-t-0 border-b border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
                                 <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-5 py-4 dark:from-purple-900/20 dark:to-pink-900/20">
                                   <h3 className="flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white">
                                     <MessageSquare className="h-5 w-5 text-purple-600" />
@@ -1178,7 +1382,7 @@ export function ExpandedSectionModal({
                         )}
 
                         {quoteActiveTab === "terms" && (
-                          <div className="space-y-4">
+                          <div className="space-y-4 -mx-5 px-5">
                             <div className="rounded-lg bg-white p-4 shadow-md dark:bg-gray-800">
                               <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
                                 Terms & Conditions
@@ -1944,6 +2148,8 @@ export function ExpandedSectionModal({
                   ? "No services available"
                   : sectionId === "stores"
                   ? "No stores created yet"
+                  : sectionId === "rfq-opportunities"
+                  ? "No RFQ opportunities available"
                   : "No contracts found"}
               </p>
             </div>
@@ -1952,6 +2158,10 @@ export function ExpandedSectionModal({
               {sectionId === "rfqs" &&
                 filteredItems.map((rfq: any) => (
                   <RFQCard key={rfq.id} rfq={rfq} onView={handleItemClick} />
+                ))}
+              {sectionId === "rfq-opportunities" &&
+                filteredItems.map((rfq: any) => (
+                  <RFQOpportunityCard key={rfq.id} rfq={rfq} onView={handleItemClick} submittedQuotes={submittedQuotes} />
                 ))}
               {sectionId === "quotes" &&
                 filteredItems.map((quote: any) => (
@@ -1977,6 +2187,34 @@ export function ExpandedSectionModal({
           )}
         </div>
       </div>
+
+      {/* Quote Submission Form */}
+      {isQuoteFormOpen && selectedRFQForQuote && (
+        <QuoteSubmissionForm
+          isOpen={isQuoteFormOpen}
+          onClose={() => {
+            setIsQuoteFormOpen(false);
+            setSelectedRFQForQuote(null);
+          }}
+          rfqId={selectedRFQForQuote.id}
+          rfqTitle={selectedRFQForQuote.title}
+          onSuccess={handleQuoteSubmitted}
+        />
+      )}
+
+      {/* Submitted Quote Details */}
+      {isQuoteDetailsOpen && selectedQuote && selectedRFQForQuote && (
+        <SubmittedQuoteDetails
+          isOpen={isQuoteDetailsOpen}
+          onClose={() => {
+            setIsQuoteDetailsOpen(false);
+            setSelectedQuote(null);
+            setSelectedRFQForQuote(null);
+          }}
+          quote={selectedQuote}
+          rfqTitle={selectedRFQForQuote.title || "RFQ"}
+        />
+      )}
     </div>
   );
 }
@@ -2350,6 +2588,114 @@ function ContractCard({ contract, onView }: { contract: any; onView: (item: any)
           <Calendar className="h-3 w-3 inline mr-1" />
           {new Date(contract.created_at).toLocaleDateString()}
         </p>
+      )}
+    </div>
+  );
+}
+
+function RFQOpportunityCard({ 
+  rfq, 
+  onView, 
+  submittedQuotes 
+}: { 
+  rfq: any; 
+  onView: (item: any) => void;
+  submittedQuotes: Record<string, any>;
+}) {
+  const minBudget = rfq.min_budget ? parseFloat(rfq.min_budget) : 0;
+  const maxBudget = rfq.max_budget ? parseFloat(rfq.max_budget) : 0;
+  const budgetDisplay =
+    minBudget > 0 && maxBudget > 0
+      ? `${formatCurrencySync(minBudget)} - ${formatCurrencySync(maxBudget)}`
+      : minBudget > 0
+      ? `${formatCurrencySync(minBudget)}+`
+      : maxBudget > 0
+      ? `Up to ${formatCurrencySync(maxBudget)}`
+      : "Not specified";
+
+  // Calculate urgency
+  const today = new Date();
+  const deadline = rfq.response_date ? new Date(rfq.response_date) : null;
+  const isUrgent =
+    deadline &&
+    deadline.getTime() - today.getTime() < 3 * 24 * 60 * 60 * 1000 && 
+    deadline > today;
+  const isClosed = deadline && deadline < today;
+  const status = isClosed ? "Closed" : isUrgent ? "Urgent" : "Open";
+
+  const postedBy = rfq.business_account?.business_name || rfq.contact_name || "Unknown Business";
+
+  return (
+    <div
+      onClick={() => onView(rfq)}
+      className="group bg-white dark:bg-gray-800 rounded-xl p-4 border-2 border-gray-200 dark:border-gray-600 cursor-pointer hover:shadow-lg hover:border-green-400 dark:hover:border-green-600 transition-all active:scale-[0.98]"
+    >
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-2">
+            <h4 className="font-bold text-gray-900 dark:text-white text-base flex-1 line-clamp-2">
+              {rfq.title || `RFQ #${rfq.id?.slice(0, 8)}`}
+            </h4>
+            <span
+              className={`px-2.5 py-1 rounded-md text-xs font-semibold flex-shrink-0 ${
+                status === "Urgent"
+                  ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                  : status === "Closed"
+                  ? "bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-400"
+                  : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+              }`}
+            >
+              {status}
+            </span>
+          </div>
+          {rfq.description && (
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
+              {rfq.description}
+            </p>
+          )}
+          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+            {rfq.category && (
+              <span className="flex items-center gap-1">
+                <Briefcase className="h-3 w-3" />
+                {rfq.category}
+              </span>
+            )}
+            {rfq.location && (
+              <span className="flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                {rfq.location}
+              </span>
+            )}
+            {rfq.response_date && (
+              <span className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                {new Date(rfq.response_date).toLocaleDateString()}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
+        <div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Budget</p>
+          <p className="text-base font-bold text-green-600 dark:text-green-400">{budgetDisplay}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Posted by</p>
+          <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 truncate max-w-[120px]">
+            {postedBy}
+          </p>
+        </div>
+      </div>
+
+      {submittedQuotes[rfq.id] && (
+        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400">
+            <CheckCircle className="h-3.5 w-3.5" />
+            <span className="font-semibold">Quote submitted</span>
+          </div>
+        </div>
       )}
     </div>
   );
