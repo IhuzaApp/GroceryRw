@@ -125,37 +125,106 @@ function RFQsSection({
         </button>
       </div>
       <div className="space-y-3">
-        {rfqs.map((rfq) => (
-          <div
-            key={rfq.id}
-            className="group bg-white dark:bg-gray-700 rounded-xl p-4 border border-gray-200 dark:border-gray-600 active:scale-[0.98] transition-all duration-200 cursor-pointer hover:shadow-lg hover:border-green-300 dark:hover:border-green-600 shadow-sm"
-            onClick={() => {
-              if (onRFQClick) {
-                onRFQClick(rfq);
-              }
-            }}
-          >
-            <h4 className="font-bold text-gray-900 dark:text-white mb-2 text-base">
-              {rfq.title || `RFQ #${rfq.id.slice(0, 8)}`}
-            </h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2 leading-relaxed">
-              {rfq.description || "RFQ description available..."}
-            </p>
-            <div className="flex items-center justify-between">
-              <span className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
-                rfq.open 
-                  ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" 
-                  : "bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-400"
-              }`}>
-                {rfq.open ? "Open" : "Closed"}
-              </span>
-              <button className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 font-semibold hover:text-green-700 dark:hover:text-green-300 transition-colors">
-                View Details
-                <ChevronRight className="h-3 w-3" />
-              </button>
+        {rfqs.map((rfq) => {
+          // Calculate urgency
+          const today = new Date();
+          const deadline = rfq.response_date ? new Date(rfq.response_date) : null;
+          const isUrgent =
+            deadline &&
+            deadline.getTime() - today.getTime() < 3 * 24 * 60 * 60 * 1000 && 
+            deadline > today;
+          const isClosed = deadline && deadline < today;
+          const status = isClosed ? "Closed" : isUrgent ? "Urgent" : "Open";
+
+          const minBudget = rfq.min_budget ? parseFloat(rfq.min_budget) : 0;
+          const maxBudget = rfq.max_budget ? parseFloat(rfq.max_budget) : 0;
+          const budgetDisplay =
+            minBudget > 0 && maxBudget > 0
+              ? `${formatCurrencySync(minBudget)} - ${formatCurrencySync(maxBudget)}`
+              : minBudget > 0
+              ? `${formatCurrencySync(minBudget)}+`
+              : maxBudget > 0
+              ? `Up to ${formatCurrencySync(maxBudget)}`
+              : "Not specified";
+
+          return (
+            <div
+              key={rfq.id}
+              className="group relative overflow-hidden rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-white via-gray-50 to-white p-4 shadow-md transition-all duration-300 hover:border-green-400 hover:shadow-xl hover:shadow-green-500/20 dark:border-gray-700 dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 dark:hover:border-green-600 cursor-pointer active:scale-[0.97]"
+              onClick={() => {
+                if (onRFQClick) {
+                  onRFQClick(rfq);
+                }
+              }}
+            >
+              {/* Decorative gradient overlay on hover */}
+              <div className="absolute inset-0 bg-gradient-to-br from-green-50/0 via-emerald-50/0 to-teal-50/0 transition-opacity duration-300 group-hover:from-green-50/50 group-hover:via-emerald-50/30 group-hover:to-teal-50/50 dark:group-hover:from-green-900/10 dark:group-hover:via-emerald-900/5 dark:group-hover:to-teal-900/10 pointer-events-none"></div>
+              
+              <div className="relative">
+                {/* Header */}
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg">
+                      <FileText className="h-4.5 w-4.5 text-white" style={{ color: "#ffffff", stroke: "#ffffff" }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-gray-900 dark:text-white text-base line-clamp-2 leading-tight">
+                        {rfq.title || `RFQ #${rfq.id.slice(0, 8)}`}
+                      </h4>
+                    </div>
+                  </div>
+                  <span
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-semibold flex-shrink-0 shadow-sm ${
+                      status === "Urgent"
+                        ? "bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-md shadow-red-500/30"
+                        : status === "Closed"
+                        ? "bg-gray-500 text-white"
+                        : "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md shadow-green-500/30"
+                    }`}
+                    style={status !== "Urgent" && status !== "Closed" ? { color: "#ffffff" } : undefined}
+                  >
+                    {status}
+                  </span>
+                </div>
+
+                {/* Description */}
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2 leading-relaxed ml-11">
+                  {rfq.description || "RFQ description available..."}
+                </p>
+
+                {/* Budget */}
+                <div className="mb-3 ml-11">
+                  <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                    {budgetDisplay}
+                  </p>
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400">Budget Range</p>
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                    {rfq.category && (
+                      <span className="flex items-center gap-1">
+                        <Briefcase className="h-3 w-3" />
+                        {rfq.category}
+                      </span>
+                    )}
+                    {rfq.location && (
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {rfq.location}
+                      </span>
+                    )}
+                  </div>
+                  <button className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 font-semibold hover:text-green-700 dark:hover:text-green-300 transition-colors">
+                    View Details
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -405,7 +474,19 @@ export function MobileBusinessDashboard({
           const quotesRes = await fetch("/api/queries/business-submitted-quotes");
           if (quotesRes.ok) {
             const quotesData = await quotesRes.json();
-            setQuotes(quotesData.quotes || []);
+            let filteredQuotes = quotesData.quotes || [];
+            
+            // Ensure we only show quotes submitted by the current business account
+            // If no business account, show empty array (quotes require business account)
+            if (businessAccount?.id) {
+              filteredQuotes = filteredQuotes.filter(
+                (quote: any) => quote.respond_business_id === businessAccount.id
+              );
+            } else {
+              filteredQuotes = [];
+            }
+            
+            setQuotes(filteredQuotes);
           }
           break;
         case "orders":
