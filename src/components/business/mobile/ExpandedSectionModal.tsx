@@ -2625,78 +2625,156 @@ function RFQOpportunityCard({
 
   const postedBy = rfq.business_account?.business_name || rfq.contact_name || "Unknown Business";
 
+  // Calculate days until deadline
+  const getDaysUntilDeadline = () => {
+    if (!deadline) return null;
+    const diffTime = deadline.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const daysLeft = getDaysUntilDeadline();
+
   return (
     <div
       onClick={() => onView(rfq)}
-      className="group bg-white dark:bg-gray-800 rounded-xl p-4 border-2 border-gray-200 dark:border-gray-600 cursor-pointer hover:shadow-lg hover:border-green-400 dark:hover:border-green-600 transition-all active:scale-[0.98]"
+      className="group relative overflow-hidden rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-white via-gray-50 to-white p-5 shadow-md transition-all duration-300 hover:border-green-400 hover:shadow-xl hover:shadow-green-500/20 dark:border-gray-700 dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 dark:hover:border-green-600 cursor-pointer active:scale-[0.97]"
     >
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-2">
-            <h4 className="font-bold text-gray-900 dark:text-white text-base flex-1 line-clamp-2">
-              {rfq.title || `RFQ #${rfq.id?.slice(0, 8)}`}
-            </h4>
+      {/* Decorative gradient overlay on hover */}
+      <div className="absolute inset-0 bg-gradient-to-br from-green-50/0 via-emerald-50/0 to-teal-50/0 transition-opacity duration-300 group-hover:from-green-50/50 group-hover:via-emerald-50/30 group-hover:to-teal-50/50 dark:group-hover:from-green-900/10 dark:group-hover:via-emerald-900/5 dark:group-hover:to-teal-900/10 pointer-events-none"></div>
+      
+      <div className="relative flex flex-col gap-4">
+        {/* Header Section */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="mb-2 flex items-center gap-2">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg">
+                <FileText className="h-5 w-5 text-white" style={{ color: "#ffffff", stroke: "#ffffff" }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-base font-bold leading-tight text-gray-900 transition-colors group-hover:text-green-600 dark:text-white line-clamp-2">
+                  {rfq.title || `RFQ #${rfq.id?.slice(0, 8)}`}
+                </h4>
+              </div>
+            </div>
+            
+            {/* Posted By */}
+            <div className="ml-12 flex items-center gap-2 rounded-lg bg-gray-100/80 px-3 py-1.5 dark:bg-gray-700/50 mb-2">
+              <Building className="h-3.5 w-3.5 flex-shrink-0 text-gray-500 dark:text-gray-400" />
+              <span className="truncate text-xs font-semibold text-gray-700 dark:text-gray-300">
+                {postedBy}
+              </span>
+            </div>
+          </div>
+
+          {/* Status Badge */}
+          <div className="flex flex-col items-end gap-2 flex-shrink-0">
             <span
-              className={`px-2.5 py-1 rounded-md text-xs font-semibold flex-shrink-0 ${
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold shadow-sm ${
                 status === "Urgent"
-                  ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                  ? "bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-md shadow-red-500/30"
                   : status === "Closed"
-                  ? "bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-400"
-                  : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                  ? "bg-gray-500 text-white"
+                  : "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md shadow-green-500/30"
               }`}
+              style={status !== "Urgent" && status !== "Closed" ? { color: "#ffffff" } : undefined}
             >
+              {status === "Urgent" && <AlertCircle className="h-3 w-3" style={{ color: "#ffffff" }} />}
               {status}
             </span>
-          </div>
-          {rfq.description && (
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
-              {rfq.description}
-            </p>
-          )}
-          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-            {rfq.category && (
-              <span className="flex items-center gap-1">
-                <Briefcase className="h-3 w-3" />
-                {rfq.category}
-              </span>
-            )}
-            {rfq.location && (
-              <span className="flex items-center gap-1">
-                <MapPin className="h-3 w-3" />
-                {rfq.location}
-              </span>
-            )}
-            {rfq.response_date && (
-              <span className="flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
-                {new Date(rfq.response_date).toLocaleDateString()}
+            {submittedQuotes[rfq.id] && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 px-3 py-1.5 text-[11px] font-bold text-white shadow-md shadow-blue-500/30" style={{ color: "#ffffff" }}>
+                <CheckCircle className="h-3 w-3" style={{ color: "#ffffff", stroke: "#ffffff" }} />
+                <span style={{ color: "#ffffff" }}>Quote Sent</span>
               </span>
             )}
           </div>
         </div>
-      </div>
-      
-      <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
-        <div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Budget</p>
-          <p className="text-base font-bold text-green-600 dark:text-green-400">{budgetDisplay}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Posted by</p>
-          <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 truncate max-w-[120px]">
-            {postedBy}
-          </p>
-        </div>
-      </div>
 
-      {submittedQuotes[rfq.id] && (
-        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400">
-            <CheckCircle className="h-3.5 w-3.5" />
-            <span className="font-semibold">Quote submitted</span>
-          </div>
+        {/* Description */}
+        {rfq.description && (
+          <p className="ml-12 line-clamp-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+            {rfq.description}
+          </p>
+        )}
+
+        {/* Details Grid */}
+        <div className="ml-12 grid grid-cols-1 gap-2.5 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100/50 p-3 dark:from-gray-700/30 dark:to-gray-800/30">
+          {rfq.category && (
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30">
+                <Briefcase className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Category</p>
+                <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">{rfq.category}</p>
+              </div>
+            </div>
+          )}
+          {rfq.location && (
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30">
+                <MapPin className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Location</p>
+                <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">{rfq.location}</p>
+              </div>
+            </div>
+          )}
+          {rfq.response_date && (
+            <div className="flex items-center gap-2.5">
+              <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${
+                isUrgent 
+                  ? "bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900/30 dark:to-orange-900/30"
+                  : "bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30"
+              }`}>
+                <Calendar className={`h-4 w-4 ${isUrgent ? "text-red-600 dark:text-red-400" : "text-orange-600 dark:text-orange-400"}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Deadline</p>
+                <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">
+                  {new Date(rfq.response_date).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                  {daysLeft !== null && daysLeft > 0 && (
+                    <span className={`ml-1 ${isUrgent ? "text-red-600 dark:text-red-400 font-bold" : "text-gray-500 dark:text-gray-400"}`}>
+                      ({daysLeft} {daysLeft === 1 ? "day" : "days"} left)
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Footer with Budget and Action */}
+        <div className="flex items-center justify-between gap-3 rounded-xl border-t-2 border-gray-200 bg-gradient-to-r from-gray-50 to-white pt-4 dark:border-gray-700 dark:from-gray-800/50 dark:to-gray-800">
+          <div className="flex-1">
+            <div className="flex items-baseline gap-2">
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {budgetDisplay}
+              </p>
+            </div>
+            <p className="mt-1 text-[10px] font-medium text-gray-500 dark:text-gray-400">
+              Budget Range
+            </p>
+          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onView(rfq);
+            }}
+            className="flex flex-shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-green-500/30 transition-all duration-300 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl hover:shadow-green-500/40 active:scale-95"
+            style={{ color: "#ffffff" }}
+          >
+            <Eye className="h-4 w-4" style={{ color: "#ffffff", stroke: "#ffffff" }} />
+            <span style={{ color: "#ffffff" }}>View</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
