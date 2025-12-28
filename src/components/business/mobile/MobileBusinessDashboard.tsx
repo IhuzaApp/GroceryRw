@@ -76,7 +76,19 @@ function RFQsSection({
       const response = await fetch("/api/queries/rfq-opportunities");
       if (response.ok) {
         const data = await response.json();
-        setRfqs(data.rfqs?.slice(0, 3) || []);
+        let filteredRFQs = data.rfqs || [];
+        
+        // If user has a business account, filter out RFQs that belong to them
+        if (businessAccount?.id) {
+          filteredRFQs = filteredRFQs.filter(
+            (rfq: any) => {
+              // Exclude RFQs where business_id matches the user's business account
+              return rfq.business_id !== businessAccount.id;
+            }
+          );
+        }
+        
+        setRfqs(filteredRFQs.slice(0, 3));
       }
     } catch (error) {
       console.error("Error fetching RFQs:", error);
@@ -374,7 +386,19 @@ export function MobileBusinessDashboard({
           const rfqOppsRes = await fetch("/api/queries/rfq-opportunities");
           if (rfqOppsRes.ok) {
             const rfqOppsData = await rfqOppsRes.json();
-            setRfqOpportunities(rfqOppsData.rfqs || []);
+            let filteredRFQs = rfqOppsData.rfqs || [];
+            
+            // If user has a business account, filter out RFQs that belong to them
+            if (businessAccount?.id) {
+              filteredRFQs = filteredRFQs.filter(
+                (rfq: any) => {
+                  // Exclude RFQs where business_id matches the user's business account
+                  return rfq.business_id !== businessAccount.id;
+                }
+              );
+            }
+            
+            setRfqOpportunities(filteredRFQs);
           }
           break;
         case "quotes":
