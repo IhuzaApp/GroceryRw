@@ -568,7 +568,7 @@ export function ExpandedSectionModal({
                   return (
                     <>
                       {/* Header */}
-                      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-5 py-4 mb-4">
+                      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 -mx-5 px-5 py-4">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0 flex-1">
                             <div className="mb-3 flex items-center gap-3">
@@ -592,7 +592,7 @@ export function ExpandedSectionModal({
                       </div>
 
                       {/* Tabs */}
-                      <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 px-5 pb-3 pt-0 shadow-sm mb-4 border-b border-gray-200 dark:border-gray-700">
+                      <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 -mx-5 px-5 py-3 shadow-sm border-b border-gray-200 dark:border-gray-700">
                         <div className="scrollbar-hide flex space-x-2 overflow-x-auto pb-2">
                           {[
                             { id: "overview", label: "Overview", icon: FileText, shortLabel: "Overview" },
@@ -633,12 +633,12 @@ export function ExpandedSectionModal({
                       </div>
 
                       {/* Tab Content */}
-                      <div className="px-5 pb-4 space-y-4">
+                      <div className="pb-4 space-y-4">
                         {quoteActiveTab === "overview" && (
-                          <div className="space-y-4 -mx-5 px-5">
+                          <div className="space-y-4">
                             <div className="grid grid-cols-1 gap-4">
                               {/* Quote Summary */}
-                              <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800">
+                              <div className="overflow-hidden rounded-none border-x-0 border-t-0 border-b border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
                                 <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-5 py-4 dark:from-green-900/20 dark:to-emerald-900/20">
                                   <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
                                     <DollarSign className="h-5 w-5 text-green-600" />
@@ -713,7 +713,7 @@ export function ExpandedSectionModal({
                               </div>
 
                               {/* RFQ Requester Quick Info */}
-                              <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800">
+                              <div className="overflow-hidden rounded-none border-x-0 border-t-0 border-b border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
                                 <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-5 py-4 dark:from-blue-900/20 dark:to-cyan-900/20">
                                   <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
                                     <Building className="h-5 w-5 text-blue-600" />
@@ -778,7 +778,7 @@ export function ExpandedSectionModal({
 
                             {/* Attachments */}
                             {quote.attachments && quote.attachments.length > 0 && (
-                              <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800">
+                              <div className="overflow-hidden rounded-none border-x-0 border-t-0 border-b border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
                                 <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-5 py-4 dark:from-amber-900/20 dark:to-orange-900/20">
                                   <h3 className="flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white">
                                     <FileText className="h-5 w-5 text-amber-600" />
@@ -812,8 +812,8 @@ export function ExpandedSectionModal({
                         )}
 
                         {quoteActiveTab === "rfq" && (
-                          <div className="space-y-4 -mx-5 px-5">
-                            <div className="rounded-lg bg-white p-4 shadow-md dark:bg-gray-800">
+                          <div className="space-y-4">
+                            <div className="rounded-none border-x-0 border-t-0 border-b border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                               <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
                                 RFQ Details
                               </h3>
@@ -960,7 +960,7 @@ export function ExpandedSectionModal({
                         )}
 
                         {quoteActiveTab === "requester" && (
-                          <div className="space-y-4 -mx-5 px-5">
+                          <div className="space-y-4">
                             <div className="rounded-lg bg-white p-4 shadow-md dark:bg-gray-800">
                               <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
                                 RFQ Requester Company Information
@@ -1047,7 +1047,7 @@ export function ExpandedSectionModal({
 
                         {quoteActiveTab === "quote" && (
                           <div className="space-y-4">
-                            <div className="rounded-lg bg-white p-4 shadow-md dark:bg-gray-800">
+                            <div className="rounded-none border-x-0 border-t-0 border-b border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                               <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
                                 My Quote Details
                               </h3>
@@ -1178,7 +1178,7 @@ export function ExpandedSectionModal({
                         )}
 
                         {quoteActiveTab === "terms" && (
-                          <div className="space-y-4 -mx-5 px-5">
+                          <div className="space-y-4">
                             <div className="rounded-lg bg-white p-4 shadow-md dark:bg-gray-800">
                               <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
                                 Terms & Conditions
