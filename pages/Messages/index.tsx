@@ -672,8 +672,8 @@ function MessagesPage() {
     return (
       <AuthGuard requireAuth={true}>
         <RootLayout>
-          <div className="h-[calc(100vh-160px)] md:h-[calc(100vh-100px)] md:ml-16">
-            <div className="container mx-auto max-w-8xl h-full">
+          <div className="h-[calc(100vh-160px)] md:ml-16 md:h-[calc(100vh-100px)]">
+            <div className="max-w-8xl container mx-auto h-full">
               <DesktopMessagePage
                 conversations={conversations}
                 orders={orders}

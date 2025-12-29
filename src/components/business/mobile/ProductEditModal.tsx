@@ -123,7 +123,9 @@ export function ProductEditModal({
         }
       } else {
         // Create new product - would need query_id generation
-        toast.error("Adding new products requires verification ID. Please use the desktop version.");
+        toast.error(
+          "Adding new products requires verification ID. Please use the desktop version."
+        );
         // For now, we'll just show an error
         // In the future, we could add query_id generation here
       }
@@ -137,7 +139,7 @@ export function ProductEditModal({
 
   return (
     <div
-      className="fixed inset-0 z-[10000] bg-black/50 backdrop-blur-sm flex flex-col"
+      className="fixed inset-0 z-[10000] flex flex-col bg-black/50 backdrop-blur-sm"
       onClick={onClose}
       style={{
         position: "fixed",
@@ -150,14 +152,14 @@ export function ProductEditModal({
       }}
     >
       <div
-        className="bg-white dark:bg-gray-800 rounded-t-3xl mt-[5vh] flex flex-col shadow-2xl overflow-hidden"
+        className="mt-[5vh] flex flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-gray-800"
         onClick={(e) => e.stopPropagation()}
         style={{ height: "calc(100vh - 5vh)", marginBottom: 0 }}
       >
         {/* Header */}
-        <div className="bg-white dark:bg-gray-800 px-5 py-4 flex items-center justify-between rounded-t-3xl border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div className="flex flex-shrink-0 items-center justify-between rounded-t-3xl border-b border-gray-200 bg-white px-5 py-4 dark:border-gray-700 dark:bg-gray-800">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700">
+            <div className="rounded-lg bg-gray-100 p-2 dark:bg-gray-700">
               <Package className="h-6 w-6 text-gray-700 dark:text-gray-300" />
             </div>
             <div>
@@ -171,7 +173,7 @@ export function ProductEditModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors active:scale-95"
+            className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 active:scale-95 dark:text-gray-300 dark:hover:bg-gray-700"
           >
             <X className="h-6 w-6" />
           </button>
@@ -179,26 +181,28 @@ export function ProductEditModal({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-5 pb-24">
-          <div className="space-y-4 max-w-2xl mx-auto">
+          <div className="mx-auto max-w-2xl space-y-4">
             {/* Product Image Preview */}
             {productForm.image && (
-              <div className="w-full h-48 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600">
+              <div className="flex h-48 w-full items-center justify-center overflow-hidden rounded-xl border-2 border-gray-200 bg-gray-100 dark:border-gray-600 dark:bg-gray-700">
                 <img
                   src={productForm.image}
                   alt="Product"
-                  className="w-full h-full object-cover"
+                  className="h-full w-full object-cover"
                   onError={(e) => {
                     e.currentTarget.style.display = "none";
-                    e.currentTarget.nextElementSibling?.classList.remove("hidden");
+                    e.currentTarget.nextElementSibling?.classList.remove(
+                      "hidden"
+                    );
                   }}
                 />
-                <ImageIcon className="h-12 w-12 text-gray-400 hidden" />
+                <ImageIcon className="hidden h-12 w-12 text-gray-400" />
               </div>
             )}
 
             {/* Product Name */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Product Name *
               </label>
               <input
@@ -207,23 +211,26 @@ export function ProductEditModal({
                 onChange={(e) =>
                   setProductForm({ ...productForm, name: e.target.value })
                 }
-                className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 placeholder="Enter product name"
               />
             </div>
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Description
               </label>
               <textarea
                 value={productForm.description}
                 onChange={(e) =>
-                  setProductForm({ ...productForm, description: e.target.value })
+                  setProductForm({
+                    ...productForm,
+                    description: e.target.value,
+                  })
                 }
                 rows={4}
-                className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 placeholder="Enter product description"
               />
             </div>
@@ -231,7 +238,7 @@ export function ProductEditModal({
             {/* Price and Unit */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                   Price *
                 </label>
                 <input
@@ -240,12 +247,12 @@ export function ProductEditModal({
                   onChange={(e) =>
                     setProductForm({ ...productForm, price: e.target.value })
                   }
-                  className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   placeholder="0.00"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                   Unit *
                 </label>
                 <input
@@ -254,7 +261,7 @@ export function ProductEditModal({
                   onChange={(e) =>
                     setProductForm({ ...productForm, unit: e.target.value })
                   }
-                  className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   placeholder="kg, piece, etc"
                 />
               </div>
@@ -262,23 +269,26 @@ export function ProductEditModal({
 
             {/* Minimum Orders */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Minimum Orders
               </label>
               <input
                 type="text"
                 value={productForm.minimumOrders}
                 onChange={(e) =>
-                  setProductForm({ ...productForm, minimumOrders: e.target.value })
+                  setProductForm({
+                    ...productForm,
+                    minimumOrders: e.target.value,
+                  })
                 }
-                className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 placeholder="0"
               />
             </div>
 
             {/* Max Orders */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Maximum Orders
               </label>
               <input
@@ -287,46 +297,51 @@ export function ProductEditModal({
                 onChange={(e) =>
                   setProductForm({ ...productForm, maxOrders: e.target.value })
                 }
-                className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 placeholder="Optional"
               />
             </div>
 
             {/* Delivery Area */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Delivery Area
               </label>
               <input
                 type="text"
                 value={productForm.deliveryArea}
                 onChange={(e) =>
-                  setProductForm({ ...productForm, deliveryArea: e.target.value })
+                  setProductForm({
+                    ...productForm,
+                    deliveryArea: e.target.value,
+                  })
                 }
-                className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 placeholder="Enter delivery area"
               />
             </div>
 
             {/* Image Upload/Capture */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Product Image
               </label>
-              
+
               {/* Image Preview */}
               {productForm.image && (
-                <div className="mb-3 w-full h-48 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600">
+                <div className="mb-3 flex h-48 w-full items-center justify-center overflow-hidden rounded-xl border-2 border-gray-200 bg-gray-100 dark:border-gray-600 dark:bg-gray-700">
                   <img
                     src={productForm.image}
                     alt="Product"
-                    className="w-full h-full object-cover"
+                    className="h-full w-full object-cover"
                     onError={(e) => {
                       e.currentTarget.style.display = "none";
-                      e.currentTarget.nextElementSibling?.classList.remove("hidden");
+                      e.currentTarget.nextElementSibling?.classList.remove(
+                        "hidden"
+                      );
                     }}
                   />
-                  <ImageIcon className="h-12 w-12 text-gray-400 hidden" />
+                  <ImageIcon className="hidden h-12 w-12 text-gray-400" />
                 </div>
               )}
 
@@ -335,7 +350,7 @@ export function ProductEditModal({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-600 transition-all active:scale-95"
+                  className="flex items-center justify-center gap-2 rounded-lg border-2 border-gray-300 bg-white px-4 py-3 font-semibold text-gray-700 transition-all hover:bg-gray-50 active:scale-95 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                 >
                   <Upload className="h-5 w-5" />
                   Upload
@@ -343,7 +358,7 @@ export function ProductEditModal({
                 <button
                   type="button"
                   onClick={() => setShowCamera(true)}
-                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-600 transition-all active:scale-95"
+                  className="flex items-center justify-center gap-2 rounded-lg border-2 border-gray-300 bg-white px-4 py-3 font-semibold text-gray-700 transition-all hover:bg-gray-50 active:scale-95 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                 >
                   <Camera className="h-5 w-5" />
                   Camera
@@ -359,24 +374,23 @@ export function ProductEditModal({
                 className="hidden"
               />
             </div>
-
           </div>
         </div>
 
         {/* Fixed Action Buttons Footer */}
-        <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
-          <div className="flex gap-3 max-w-2xl mx-auto">
+        <div className="flex-shrink-0 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+          <div className="mx-auto flex max-w-2xl gap-3">
             <button
               onClick={onClose}
               disabled={savingProduct}
-              className="flex-1 px-4 py-3 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+              className="flex-1 rounded-lg bg-gray-200 px-4 py-3 font-semibold text-gray-700 transition-colors hover:bg-gray-300 disabled:opacity-50 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={savingProduct}
-              className="flex-1 px-4 py-3 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3 font-semibold text-white shadow-lg transition-all hover:shadow-xl disabled:opacity-50"
             >
               {savingProduct ? (
                 <>

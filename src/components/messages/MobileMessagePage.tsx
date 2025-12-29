@@ -6,10 +6,7 @@ function formatMessageTime(timestamp: any): string {
   if (!timestamp) return "";
 
   const now = new Date();
-  const date =
-    timestamp instanceof Date
-      ? timestamp
-      : new Date(timestamp);
+  const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
 
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const yesterday = new Date(today);
@@ -99,8 +96,11 @@ export default function MobileMessagePage({
       if (searchQuery) {
         const order = orders[conversation.orderId];
         const contactName =
-          (order?.assignedTo?.name || order?.shopper?.name || "Shopper")
-            ?.toLowerCase() || "";
+          (
+            order?.assignedTo?.name ||
+            order?.shopper?.name ||
+            "Shopper"
+          )?.toLowerCase() || "";
         const orderNumber = formatOrderID(
           order?.OrderID || conversation.orderId
         ).toLowerCase();
@@ -151,7 +151,7 @@ export default function MobileMessagePage({
         <div className="flex items-center justify-between px-4 py-3">
           <button
             onClick={() => router.back()}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
           >
             <svg
               className="h-6 w-6"
@@ -170,7 +170,7 @@ export default function MobileMessagePage({
           <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
             Chat List
           </h1>
-          <button className="flex h-10 w-10 items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors">
+          <button className="flex h-10 w-10 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700">
             <svg
               className="h-6 w-6"
               fill="none"
@@ -188,14 +188,14 @@ export default function MobileMessagePage({
         </div>
 
         {/* Search and Filter */}
-        <div className="px-4 pb-3 flex items-center gap-2">
+        <div className="flex items-center gap-2 px-4 pb-3">
           <div className="relative flex-1">
             <input
               type="text"
               placeholder="Search by name"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-full bg-gray-100 dark:bg-gray-700 px-4 py-2.5 pl-10 pr-4 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:bg-white dark:focus:bg-gray-600 transition-colors"
+              className="w-full rounded-full bg-gray-100 px-4 py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:bg-gray-600"
             />
             <svg
               className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-gray-500"
@@ -216,7 +216,7 @@ export default function MobileMessagePage({
             className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
               showUnreadOnly
                 ? "bg-green-500 text-white"
-                : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
             }`}
           >
             <svg
@@ -275,12 +275,13 @@ export default function MobileMessagePage({
                 <div
                   key={conversation.id}
                   onClick={() => onConversationClick(conversation.orderId)}
-                  className="flex items-center gap-3 px-4 py-3 active:bg-gray-50 dark:active:bg-gray-700 transition-colors cursor-pointer"
+                  className="flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors active:bg-gray-50 dark:active:bg-gray-700"
                 >
                   {/* Avatar with online indicator */}
                   <div className="relative flex-shrink-0">
-                    <div className="h-12 w-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
-                      {contactAvatar && contactAvatar !== "/images/ProfileImage.png" ? (
+                    <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                      {contactAvatar &&
+                      contactAvatar !== "/images/ProfileImage.png" ? (
                         <img
                           src={contactAvatar}
                           alt={contactName}
@@ -311,18 +312,18 @@ export default function MobileMessagePage({
                   </div>
 
                   {/* Content */}
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="truncate text-sm font-semibold text-gray-900 dark:text-white">
                           {contactName}
                         </h3>
-                        <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400 line-clamp-1">
+                        <p className="mt-0.5 line-clamp-1 text-sm text-gray-500 dark:text-gray-400">
                           {conversation.lastMessage || "No messages yet"}
                         </p>
                       </div>
-                      <div className="flex flex-col items-end flex-shrink-0">
-                        <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                      <div className="flex flex-shrink-0 flex-col items-end">
+                        <span className="whitespace-nowrap text-xs text-gray-400 dark:text-gray-500">
                           {formatMessageTime(conversation.lastMessageTime)}
                         </span>
                         {conversation.unreadCount > 0 && (

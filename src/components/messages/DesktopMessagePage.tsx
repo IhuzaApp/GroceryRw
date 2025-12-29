@@ -23,9 +23,7 @@ function formatTime(timestamp: any): string {
   if (!timestamp) return "";
 
   const date =
-    timestamp instanceof Timestamp
-      ? timestamp.toDate()
-      : new Date(timestamp);
+    timestamp instanceof Timestamp ? timestamp.toDate() : new Date(timestamp);
 
   return date.toLocaleTimeString([], {
     hour: "2-digit",
@@ -39,9 +37,7 @@ function formatDate(timestamp: any): string {
   if (!timestamp) return "";
 
   const date =
-    timestamp instanceof Timestamp
-      ? timestamp.toDate()
-      : new Date(timestamp);
+    timestamp instanceof Timestamp ? timestamp.toDate() : new Date(timestamp);
 
   return date.toLocaleDateString("en-US", {
     day: "numeric",
@@ -153,9 +149,7 @@ export default function DesktopMessagePage({
   // Set selected conversation when selectedOrderId changes
   useEffect(() => {
     if (selectedOrderId) {
-      const conv = conversations.find(
-        (c) => c.orderId === selectedOrderId
-      );
+      const conv = conversations.find((c) => c.orderId === selectedOrderId);
       if (conv) {
         setSelectedConversation(conv);
       }
@@ -308,13 +302,15 @@ export default function DesktopMessagePage({
     : null;
 
   return (
-    <div className="flex h-full w-full bg-gray-50 dark:bg-gray-900 rounded-lg overflow-hidden shadow-sm">
+    <div className="flex h-full w-full overflow-hidden rounded-lg bg-gray-50 shadow-sm dark:bg-gray-900">
       {/* Left Column - Conversation List */}
-      <div className="w-96 border border-gray-200 dark:border-gray-700  flex flex-col h-full flex-shrink-0">
+      <div className="flex h-full w-96 flex-shrink-0  flex-col border border-gray-200 dark:border-gray-700">
         {/* Header */}
-        <div className="flex-shrink-0 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-          <h1 className="text-lg font-bold text-gray-900 dark:text-white">Client Messages</h1>
-          <button className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+        <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
+          <h1 className="text-lg font-bold text-gray-900 dark:text-white">
+            Client Messages
+          </h1>
+          <button className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
             <svg
               width="20"
               height="20"
@@ -331,7 +327,7 @@ export default function DesktopMessagePage({
         </div>
 
         {/* Search Bar */}
-        <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+        <div className="flex-shrink-0 border-b border-gray-200 px-6 py-4 dark:border-gray-700">
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
               <input
@@ -339,7 +335,7 @@ export default function DesktopMessagePage({
                 placeholder="Search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-4 py-2.5 pr-10 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:border-green-500 dark:focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 dark:focus:ring-green-500"
+                className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 pr-10 text-sm text-gray-900 placeholder-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500"
               />
               <svg
                 className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500"
@@ -355,7 +351,7 @@ export default function DesktopMessagePage({
                 />
               </svg>
             </div>
-            <button className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 p-2.5 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600">
+            <button className="rounded-lg border border-gray-300 bg-white p-2.5 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600">
               <svg
                 width="18"
                 height="18"
@@ -371,15 +367,19 @@ export default function DesktopMessagePage({
         </div>
 
         {/* Conversation List */}
-        <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="min-h-0 flex-1 overflow-y-auto">
           {loading ? (
             <div className="flex h-full items-center justify-center">
-              <div className="text-sm text-gray-500 dark:text-gray-400">Loading...</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Loading...
+              </div>
             </div>
           ) : filteredConversations.length === 0 ? (
             <div className="flex h-full items-center justify-center">
               <div className="text-center">
-                <p className="text-sm text-gray-500 dark:text-gray-400">No conversations found</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  No conversations found
+                </p>
               </div>
             </div>
           ) : (
@@ -387,29 +387,27 @@ export default function DesktopMessagePage({
               const order = orders[conversation.orderId] || {};
               // For customer messages page, show shopper info in the list
               const contactName =
-                order?.assignedTo?.name ||
-                order?.shopper?.name ||
-                "Shopper";
+                order?.assignedTo?.name || order?.shopper?.name || "Shopper";
               const contactAvatar =
                 order?.assignedTo?.profile_picture ||
                 order?.shopper?.avatar ||
                 "/images/ProfileImage.png";
-              const isSelected =
-                selectedConversation?.id === conversation.id;
+              const isSelected = selectedConversation?.id === conversation.id;
 
               return (
                 <div
                   key={conversation.id}
                   onClick={() => handleConversationClick(conversation)}
-                  className={`flex cursor-pointer items-start gap-3 border-b border-gray-100 dark:border-gray-700 px-6 py-4 transition-colors ${
+                  className={`flex cursor-pointer items-start gap-3 border-b border-gray-100 px-6 py-4 transition-colors dark:border-gray-700 ${
                     isSelected
                       ? "bg-gray-50 dark:bg-gray-700/50"
-                      : "bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                      : "bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700/50"
                   }`}
                 >
                   <div className="relative flex-shrink-0">
-                    <div className="h-12 w-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
-                      {contactAvatar && contactAvatar !== "/images/ProfileImage.png" ? (
+                    <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                      {contactAvatar &&
+                      contactAvatar !== "/images/ProfileImage.png" ? (
                         <img
                           src={contactAvatar}
                           alt={contactName}
@@ -437,7 +435,7 @@ export default function DesktopMessagePage({
                       <h3 className="truncate text-sm font-medium text-gray-900 dark:text-white">
                         {contactName}
                       </h3>
-                      <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="flex flex-shrink-0 items-center gap-2">
                         <span className="text-xs text-gray-500 dark:text-gray-400">
                           {formatTime(conversation.lastMessageTime)}
                         </span>
@@ -458,13 +456,13 @@ export default function DesktopMessagePage({
       </div>
 
       {/* Right Column - Chat Window */}
-      <div className="flex-1 flex flex-col border border-gray-200 dark:border-gray-700 rounded-lg h-full overflow-hidden min-w-0">
+      <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
         {selectedConversation && selectedOrder ? (
           <>
             {/* Chat Header */}
-            <div className="flex-shrink-0 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+            <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                   {selectedOrder.assignedTo?.profile_picture ||
                   selectedOrder.shopper?.avatar ? (
                     <img
@@ -510,9 +508,10 @@ export default function DesktopMessagePage({
               </div>
               <div className="flex items-center gap-6">
                 <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Order #{formatOrderID(selectedOrder.OrderID || selectedOrder.id)}
+                  Order #
+                  {formatOrderID(selectedOrder.OrderID || selectedOrder.id)}
                 </div>
-                <button className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                <button className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
                   <svg
                     width="20"
                     height="20"
@@ -532,7 +531,7 @@ export default function DesktopMessagePage({
             {/* Messages Area */}
             <div
               ref={messagesContainerRef}
-              className="flex-1 overflow-y-auto  px-6 py-4 min-h-0"
+              className="min-h-0 flex-1  overflow-y-auto px-6 py-4"
             >
               {messages.length === 0 ? (
                 <div className="flex h-full items-center justify-center">
@@ -568,7 +567,7 @@ export default function DesktopMessagePage({
                             isCurrentUser ? "flex-row-reverse" : "flex-row"
                           }`}
                         >
-                          <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                             {isCurrentUser ? (
                               session?.user?.image ? (
                                 <img
@@ -642,7 +641,7 @@ export default function DesktopMessagePage({
                               className={`max-w-md rounded-2xl px-4 py-2.5 ${
                                 isCurrentUser
                                   ? "bg-green-500 text-white shadow-md"
-                                  : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                                  : "bg-gray-100 text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
                               }`}
                             >
                               {message.product ? (
@@ -653,22 +652,35 @@ export default function DesktopMessagePage({
                                     className="h-15 w-15 rounded object-cover"
                                   />
                                   <div>
-                                    <p className={`text-sm font-medium ${
-                                      isCurrentUser ? "text-white" : "text-gray-900 dark:text-white"
-                                    }`}>
+                                    <p
+                                      className={`text-sm font-medium ${
+                                        isCurrentUser
+                                          ? "text-white"
+                                          : "text-gray-900 dark:text-white"
+                                      }`}
+                                    >
                                       {message.product.name}
                                     </p>
-                                    <p className={`text-sm font-semibold ${
-                                      isCurrentUser ? "text-white" : "text-green-500"
-                                    }`}>
-                                      Rp {message.product.price.toLocaleString()}
+                                    <p
+                                      className={`text-sm font-semibold ${
+                                        isCurrentUser
+                                          ? "text-white"
+                                          : "text-green-500"
+                                      }`}
+                                    >
+                                      Rp{" "}
+                                      {message.product.price.toLocaleString()}
                                     </p>
                                   </div>
                                 </div>
                               ) : (
-                                <p className={`text-sm ${
-                                  isCurrentUser ? "text-white" : "text-gray-900 dark:text-white"
-                                }`}>
+                                <p
+                                  className={`text-sm ${
+                                    isCurrentUser
+                                      ? "text-white"
+                                      : "text-gray-900 dark:text-white"
+                                  }`}
+                                >
                                   {message.text || message.message || ""}
                                 </p>
                               )}
@@ -684,7 +696,7 @@ export default function DesktopMessagePage({
             </div>
 
             {/* Message Input */}
-            <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700  px-6 py-4">
+            <div className="flex-shrink-0 border-t border-gray-200 px-6  py-4 dark:border-gray-700">
               <form
                 onSubmit={handleSendMessage}
                 className="flex items-end gap-3"
@@ -695,7 +707,7 @@ export default function DesktopMessagePage({
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Type your message..."
-                    className="w-full rounded-full border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-5 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:border-green-500 dark:focus:border-green-500 focus:bg-white dark:focus:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:focus:ring-green-500/20 transition-all duration-200"
+                    className="w-full rounded-full border border-gray-300 bg-gray-50 px-5 py-3 text-sm text-gray-900 placeholder-gray-400 transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:bg-gray-600 dark:focus:ring-green-500/20"
                   />
                 </div>
                 <button

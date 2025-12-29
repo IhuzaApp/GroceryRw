@@ -21,8 +21,12 @@ export function MobilePlasBusinessPage({
   const router = useRouter();
   const { isLoggedIn, user, authReady } = useAuth();
   const [currentView, setCurrentView] = useState<View>(initialView);
-  const [selectedServiceId, setSelectedServiceId] = useState<string | undefined>(serviceId);
-  const [hasBusinessAccount, setHasBusinessAccount] = useState<boolean | null>(null);
+  const [selectedServiceId, setSelectedServiceId] = useState<
+    string | undefined
+  >(serviceId);
+  const [hasBusinessAccount, setHasBusinessAccount] = useState<boolean | null>(
+    null
+  );
   const [checkingAccount, setCheckingAccount] = useState(true);
   const [businessAccount, setBusinessAccount] = useState<any>(null);
 
@@ -72,7 +76,7 @@ export function MobilePlasBusinessPage({
   // Determine which view to show based on URL params or account status
   useEffect(() => {
     if (!authReady || checkingAccount) return;
-    
+
     const viewParam = router.query.view as string;
     if (viewParam === "list") {
       setCurrentView("list");
@@ -87,7 +91,13 @@ export function MobilePlasBusinessPage({
         setCurrentView("list");
       }
     }
-  }, [hasBusinessAccount, initialView, router.query.view, authReady, checkingAccount]);
+  }, [
+    hasBusinessAccount,
+    initialView,
+    router.query.view,
+    authReady,
+    checkingAccount,
+  ]);
 
   // Show loading while checking account
   if (!authReady || checkingAccount) {
