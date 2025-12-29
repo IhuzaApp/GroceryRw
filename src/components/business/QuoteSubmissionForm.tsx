@@ -54,6 +54,50 @@ export function QuoteSubmissionForm({
     fetchDefaultCurrency();
   }, []);
 
+  // Hide bottom navbar when modal is open on mobile
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Hide bottom navbar - target the specific navbar element
+    const hideNavbar = () => {
+      // Try multiple selectors to find the bottom navbar
+      const selectors = [
+        'nav.fixed.bottom-0',
+        'nav[class*="fixed"][class*="bottom-0"]',
+        '.fixed.bottom-0.z-\\[9999\\]',
+        'nav.z-\\[9999\\]',
+      ];
+      
+      selectors.forEach((selector) => {
+        try {
+          const elements = document.querySelectorAll(selector);
+          elements.forEach((el) => {
+            const htmlEl = el as HTMLElement;
+            // Check if it's a bottom navigation (has bottom-0 and is fixed)
+            if (htmlEl.classList.contains('bottom-0') && htmlEl.classList.contains('fixed')) {
+              htmlEl.style.display = 'none';
+              htmlEl.setAttribute('data-modal-hidden', 'true');
+            }
+          });
+        } catch (e) {
+          // Ignore selector errors
+        }
+      });
+    };
+
+    hideNavbar();
+
+    // Cleanup: restore navbar when modal closes
+    return () => {
+      const elements = document.querySelectorAll('[data-modal-hidden="true"]');
+      elements.forEach((el) => {
+        const htmlEl = el as HTMLElement;
+        htmlEl.style.display = '';
+        htmlEl.removeAttribute('data-modal-hidden');
+      });
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleInputChange = (
@@ -356,13 +400,15 @@ export function QuoteSubmissionForm({
         bottom: 0,
         width: "100vw",
         height: "100vh",
+        zIndex: 10000,
+        overflow: "hidden",
       }}
     >
       <div 
-        className="h-screen sm:h-auto sm:max-h-[90vh] w-full sm:max-w-3xl overflow-y-auto rounded-none sm:rounded-xl bg-white shadow-2xl dark:bg-gray-800 flex flex-col"
+        className="h-screen sm:h-auto sm:max-h-[90vh] w-full sm:max-w-3xl rounded-none sm:rounded-xl bg-white shadow-2xl dark:bg-gray-800 flex flex-col relative"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 border-b border-gray-200 bg-white px-5 sm:px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
+        <div className="sticky top-0 z-10 border-b border-gray-200 bg-white px-5 sm:px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -383,17 +429,18 @@ export function QuoteSubmissionForm({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 p-5 sm:p-6 overflow-y-auto">
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto p-5 sm:p-6">
           <div className="space-y-6">
             {/* Quote Amount */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Quote Amount <span className="text-red-500">*</span>
               </label>
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <div className="flex-1">
                   <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                    <DollarSign className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
                     <input
                       type="number"
                       name="quote_amount"
@@ -402,7 +449,7 @@ export function QuoteSubmissionForm({
                       step="0.01"
                       min="0"
                       required
-                      className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 pl-12 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
                       placeholder="0.00"
                     />
                   </div>
@@ -411,7 +458,7 @@ export function QuoteSubmissionForm({
                   name="currency"
                   value={formData.currency}
                   onChange={handleInputChange}
-                  className="rounded-lg border border-gray-300 px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  className="rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
                 >
                   <option value="USD">USD</option>
                   <option value="EUR">EUR</option>
@@ -424,16 +471,16 @@ export function QuoteSubmissionForm({
             {/* Delivery Time & Validity */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                   Delivery Time
                 </label>
                 <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                  <Clock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
                   <select
                     name="delivery_time"
                     value={formData.delivery_time}
                     onChange={handleInputChange}
-                    className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="w-full rounded-xl border-2 border-gray-200 bg-white py-3 pl-12 pr-4 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
                   >
                     <option value="">Select delivery time</option>
                     <option value="Same day">Same day</option>
@@ -448,14 +495,14 @@ export function QuoteSubmissionForm({
                 </div>
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                   Quote Validity
                 </label>
                 <select
                   name="validity"
                   value={formData.validity}
                   onChange={handleInputChange}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
                 >
                   <option value="">Select validity period</option>
                   <option value="7 days">7 days</option>
@@ -472,7 +519,7 @@ export function QuoteSubmissionForm({
 
             {/* Message */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Message / Proposal
               </label>
               <textarea
@@ -480,26 +527,26 @@ export function QuoteSubmissionForm({
                 value={formData.message}
                 onChange={handleInputChange}
                 rows={4}
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
                 placeholder="Describe your proposal, capabilities, and why you're the best fit..."
               />
             </div>
 
             {/* Terms */}
-            <div className="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <div className="space-y-4 rounded-xl border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100/50 p-5 shadow-sm dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                 Terms & Conditions
               </h3>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Payment Terms
                   </label>
                   <select
                     name="payment_terms"
                     value={formData.payment_terms}
                     onChange={handleInputChange}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
                   >
                     <option value="">Select payment terms</option>
                     <option value="Cash on Delivery (COD)">
@@ -524,14 +571,14 @@ export function QuoteSubmissionForm({
                   </select>
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Warranty
                   </label>
                   <select
                     name="warranty"
                     value={formData.warranty}
                     onChange={handleInputChange}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
                   >
                     <option value="">Select warranty</option>
                     <option value="No warranty">No warranty</option>
@@ -549,14 +596,14 @@ export function QuoteSubmissionForm({
                   </select>
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Delivery Terms
                   </label>
                   <select
                     name="delivery_terms"
                     value={formData.delivery_terms}
                     onChange={handleInputChange}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
                   >
                     <option value="">Select delivery terms</option>
                     <option value="FOB Origin (Free On Board)">
@@ -584,14 +631,14 @@ export function QuoteSubmissionForm({
                   </select>
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Cancellation Terms
                   </label>
                   <select
                     name="cancellation_terms"
                     value={formData.cancellation_terms}
                     onChange={handleInputChange}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
                   >
                     <option value="">Select cancellation terms</option>
                     <option value="No cancellation allowed">
@@ -628,26 +675,30 @@ export function QuoteSubmissionForm({
 
             {/* Attachments */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Attachments{" "}
-                <span className="text-xs text-gray-500">(Max 3 files)</span>
+                <span className="text-xs font-normal text-gray-500">(Max 3 files)</span>
               </label>
               <div className="space-y-2">
                 <label
-                  className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-6 transition-colors ${
+                  className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-4 py-8 transition-all duration-200 ${
                     attachments.length >= 3
                       ? "cursor-not-allowed border-gray-300 bg-gray-100 opacity-50 dark:border-gray-600 dark:bg-gray-800"
-                      : "border-gray-300 bg-gray-50 hover:border-green-500 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700/50 dark:hover:border-green-500"
+                      : "border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100/50 shadow-sm hover:border-green-400 hover:bg-gradient-to-br hover:from-green-50/50 hover:to-emerald-50/30 hover:shadow-md dark:border-gray-600 dark:from-gray-700/50 dark:to-gray-800/50 dark:hover:border-green-500"
                   }`}
                 >
-                  <Upload className="h-5 w-5 text-gray-400" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {attachments.length >= 3
-                      ? "Maximum 3 attachments reached"
-                      : `Click to upload files (${3 - attachments.length} slot${
-                          3 - attachments.length > 1 ? "s" : ""
-                        } remaining)`}
-                  </span>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30">
+                    <Upload className="h-6 w-6 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div className="text-center">
+                    <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      {attachments.length >= 3
+                        ? "Maximum 3 attachments reached"
+                        : `Click to upload files (${3 - attachments.length} slot${
+                            3 - attachments.length > 1 ? "s" : ""
+                          } remaining)`}
+                    </span>
+                  </div>
                   <input
                     type="file"
                     multiple
@@ -656,7 +707,7 @@ export function QuoteSubmissionForm({
                     accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                     disabled={attachments.length >= 3}
                   />
-                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     Max 1.5MB per file, 4MB total. Images will be automatically
                     compressed. PDFs and other documents must be under 1.5MB.
                   </p>
@@ -666,23 +717,27 @@ export function QuoteSubmissionForm({
                     {attachments.map((file, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-700"
+                        className="flex items-center justify-between rounded-xl border-2 border-gray-200 bg-white px-4 py-3 shadow-sm transition-all duration-200 hover:border-green-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-700 dark:hover:border-green-600"
                       >
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-gray-400" />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">
-                            {file.name}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            ({(file.size / 1024).toFixed(2)} KB)
-                          </span>
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30">
+                            <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <div>
+                            <span className="block text-sm font-semibold text-gray-900 dark:text-white">
+                              {file.name}
+                            </span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {(file.size / 1024).toFixed(2)} KB
+                            </span>
+                          </div>
                         </div>
                         <button
                           type="button"
                           onClick={() => removeAttachment(index)}
-                          className="text-red-500 hover:text-red-700"
+                          className="rounded-lg p-2 text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20"
                         >
-                          <X className="h-4 w-4" />
+                          <X className="h-5 w-5" />
                         </button>
                       </div>
                     ))}
@@ -691,34 +746,37 @@ export function QuoteSubmissionForm({
               </div>
             </div>
           </div>
+          </div>
 
-          {/* Submit Button */}
-          <div className="mt-6 flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 font-medium text-white transition-colors hover:bg-green-700 disabled:opacity-50"
-              style={{ color: "#ffffff" }}
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                  Submitting...
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4" />
-                  Submit Quote
-                </>
-              )}
-            </button>
+          {/* Submit Button - Always visible at bottom */}
+          <div className="flex-shrink-0 border-t-2 border-gray-200 bg-white px-5 py-4 shadow-xl dark:border-gray-700 dark:bg-gray-800 sm:border-t-0 sm:bg-transparent sm:shadow-none sm:px-6 sm:py-0 sm:mt-6">
+            <div className="flex gap-3 sm:mt-0">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 rounded-xl border-2 border-gray-300 bg-white px-4 py-3 font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md active:scale-95 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 sm:py-2.5"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3 font-semibold text-white shadow-lg shadow-green-500/30 transition-all duration-200 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl hover:shadow-green-500/40 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed sm:py-2.5"
+                style={{ color: "#ffffff" }}
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" style={{ borderColor: "#ffffff", borderTopColor: "transparent" }}></div>
+                    <span style={{ color: "#ffffff" }}>Submitting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" style={{ color: "#ffffff", stroke: "#ffffff" }} />
+                    <span style={{ color: "#ffffff" }}>Submit Quote</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>
