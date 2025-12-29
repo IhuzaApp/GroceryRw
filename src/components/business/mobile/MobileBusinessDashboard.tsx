@@ -55,10 +55,10 @@ import { formatCurrencySync } from "../../../utils/formatCurrency";
 import toast from "react-hot-toast";
 
 // RFQs Section Component
-function RFQsSection({ 
+function RFQsSection({
   businessAccount,
-  onRFQClick 
-}: { 
+  onRFQClick,
+}: {
   businessAccount: any;
   onRFQClick?: (rfq: any) => void;
 }) {
@@ -77,17 +77,15 @@ function RFQsSection({
       if (response.ok) {
         const data = await response.json();
         let filteredRFQs = data.rfqs || [];
-        
+
         // If user has a business account, filter out RFQs that belong to them
         if (businessAccount?.id) {
-          filteredRFQs = filteredRFQs.filter(
-            (rfq: any) => {
-              // Exclude RFQs where business_id matches the user's business account
-              return rfq.business_id !== businessAccount.id;
-            }
-          );
+          filteredRFQs = filteredRFQs.filter((rfq: any) => {
+            // Exclude RFQs where business_id matches the user's business account
+            return rfq.business_id !== businessAccount.id;
+          });
         }
-        
+
         setRfqs(filteredRFQs.slice(0, 3));
       }
     } catch (error) {
@@ -99,7 +97,7 @@ function RFQsSection({
 
   if (loading) {
     return (
-      <div className="px-4 mb-6">
+      <div className="mb-6 px-4">
         <div className="flex items-center justify-center py-8">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
         </div>
@@ -112,14 +110,14 @@ function RFQsSection({
   }
 
   return (
-    <div className="px-4 mb-6">
-      <div className="flex items-center justify-between mb-3">
+    <div className="mb-6 px-4">
+      <div className="mb-3 flex items-center justify-between">
         <h3 className="font-bold text-gray-900 dark:text-white">
           RFQ Opportunities
         </h3>
         <button
           onClick={() => router.push("/plasBusiness?view=list")}
-          className="text-sm font-semibold text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 transition-colors px-3 py-1 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20"
+          className="rounded-lg px-3 py-1 text-sm font-semibold text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-900/20 dark:hover:text-green-300"
         >
           View All
         </button>
@@ -128,10 +126,12 @@ function RFQsSection({
         {rfqs.map((rfq) => {
           // Calculate urgency
           const today = new Date();
-          const deadline = rfq.response_date ? new Date(rfq.response_date) : null;
+          const deadline = rfq.response_date
+            ? new Date(rfq.response_date)
+            : null;
           const isUrgent =
             deadline &&
-            deadline.getTime() - today.getTime() < 3 * 24 * 60 * 60 * 1000 && 
+            deadline.getTime() - today.getTime() < 3 * 24 * 60 * 60 * 1000 &&
             deadline > today;
           const isClosed = deadline && deadline < today;
           const status = isClosed ? "Closed" : isUrgent ? "Urgent" : "Open";
@@ -140,7 +140,9 @@ function RFQsSection({
           const maxBudget = rfq.max_budget ? parseFloat(rfq.max_budget) : 0;
           const budgetDisplay =
             minBudget > 0 && maxBudget > 0
-              ? `${formatCurrencySync(minBudget)} - ${formatCurrencySync(maxBudget)}`
+              ? `${formatCurrencySync(minBudget)} - ${formatCurrencySync(
+                  maxBudget
+                )}`
               : minBudget > 0
               ? `${formatCurrencySync(minBudget)}+`
               : maxBudget > 0
@@ -150,7 +152,7 @@ function RFQsSection({
           return (
             <div
               key={rfq.id}
-              className="group relative overflow-hidden rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-white via-gray-50 to-white p-4 shadow-md transition-all duration-300 hover:border-green-400 hover:shadow-xl hover:shadow-green-500/20 dark:border-gray-700 dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 dark:hover:border-green-600 cursor-pointer active:scale-[0.97]"
+              className="group relative cursor-pointer overflow-hidden rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-white via-gray-50 to-white p-4 shadow-md transition-all duration-300 hover:border-green-400 hover:shadow-xl hover:shadow-green-500/20 active:scale-[0.97] dark:border-gray-700 dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 dark:hover:border-green-600"
               onClick={() => {
                 if (onRFQClick) {
                   onRFQClick(rfq);
@@ -158,37 +160,44 @@ function RFQsSection({
               }}
             >
               {/* Decorative gradient overlay on hover */}
-              <div className="absolute inset-0 bg-gradient-to-br from-green-50/0 via-emerald-50/0 to-teal-50/0 transition-opacity duration-300 group-hover:from-green-50/50 group-hover:via-emerald-50/30 group-hover:to-teal-50/50 dark:group-hover:from-green-900/10 dark:group-hover:via-emerald-900/5 dark:group-hover:to-teal-900/10 pointer-events-none"></div>
-              
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-green-50/0 via-emerald-50/0 to-teal-50/0 transition-opacity duration-300 group-hover:from-green-50/50 group-hover:via-emerald-50/30 group-hover:to-teal-50/50 dark:group-hover:from-green-900/10 dark:group-hover:via-emerald-900/5 dark:group-hover:to-teal-900/10"></div>
+
               <div className="relative">
                 {/* Header */}
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
                     <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg">
-                      <FileText className="h-4.5 w-4.5 text-white" style={{ color: "#ffffff", stroke: "#ffffff" }} />
+                      <FileText
+                        className="h-4.5 w-4.5 text-white"
+                        style={{ color: "#ffffff", stroke: "#ffffff" }}
+                      />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-gray-900 dark:text-white text-base line-clamp-2 leading-tight">
+                    <div className="min-w-0 flex-1">
+                      <h4 className="line-clamp-2 text-base font-bold leading-tight text-gray-900 dark:text-white">
                         {rfq.title || `RFQ #${rfq.id.slice(0, 8)}`}
                       </h4>
                     </div>
                   </div>
                   <span
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-semibold flex-shrink-0 shadow-sm ${
+                    className={`flex-shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold shadow-sm ${
                       status === "Urgent"
                         ? "bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-md shadow-red-500/30"
                         : status === "Closed"
                         ? "bg-gray-500 text-white"
                         : "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md shadow-green-500/30"
                     }`}
-                    style={status !== "Urgent" && status !== "Closed" ? { color: "#ffffff" } : undefined}
+                    style={
+                      status !== "Urgent" && status !== "Closed"
+                        ? { color: "#ffffff" }
+                        : undefined
+                    }
                   >
                     {status}
                   </span>
                 </div>
 
                 {/* Description */}
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2 leading-relaxed ml-11">
+                <p className="mb-3 ml-11 line-clamp-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
                   {rfq.description || "RFQ description available..."}
                 </p>
 
@@ -197,11 +206,13 @@ function RFQsSection({
                   <p className="text-lg font-bold text-green-600 dark:text-green-400">
                     {budgetDisplay}
                   </p>
-                  <p className="text-[10px] text-gray-500 dark:text-gray-400">Budget Range</p>
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                    Budget Range
+                  </p>
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between border-t border-gray-200 pt-3 dark:border-gray-700">
                   <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                     {rfq.category && (
                       <span className="flex items-center gap-1">
@@ -216,7 +227,7 @@ function RFQsSection({
                       </span>
                     )}
                   </div>
-                  <button className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 font-semibold hover:text-green-700 dark:hover:text-green-300 transition-colors">
+                  <button className="flex items-center gap-1 text-xs font-semibold text-green-600 transition-colors hover:text-green-700 dark:text-green-400 dark:hover:text-green-300">
                     View Details
                     <ChevronRight className="h-3.5 w-3.5" />
                   </button>
@@ -246,11 +257,15 @@ export function MobileBusinessDashboard({
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [selectedRFQ, setSelectedRFQ] = useState<any>(null);
   // RFQ Opportunity states (different from My RFQs)
-  const [selectedRFQOpportunity, setSelectedRFQOpportunity] = useState<any>(null);
-  const [isRFQOpportunityModalOpen, setIsRFQOpportunityModalOpen] = useState(false);
+  const [selectedRFQOpportunity, setSelectedRFQOpportunity] =
+    useState<any>(null);
+  const [isRFQOpportunityModalOpen, setIsRFQOpportunityModalOpen] =
+    useState(false);
   const [isQuoteFormOpen, setIsQuoteFormOpen] = useState(false);
   const [selectedRFQForQuote, setSelectedRFQForQuote] = useState<any>(null);
-  const [submittedQuotes, setSubmittedQuotes] = useState<Record<string, any>>({});
+  const [submittedQuotes, setSubmittedQuotes] = useState<Record<string, any>>(
+    {}
+  );
   const [isQuoteDetailsOpen, setIsQuoteDetailsOpen] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState<any>(null);
   const [stats, setStats] = useState({
@@ -259,7 +274,7 @@ export function MobileBusinessDashboard({
     pendingQuotes: 0,
     walletBalance: 0,
   });
-  
+
   // Data states for expanded sections
   const [myRFQs, setMyRFQs] = useState<any[]>([]);
   const [rfqOpportunities, setRfqOpportunities] = useState<any[]>([]);
@@ -269,11 +284,10 @@ export function MobileBusinessDashboard({
   const [stores, setStores] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
   const [loadingSection, setLoadingSection] = useState<string | null>(null);
-  
+
   // Product edit modal state
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [editingStoreId, setEditingStoreId] = useState<string | null>(null);
-
 
   const businessFeatures = [
     {
@@ -343,7 +357,9 @@ export function MobileBusinessDashboard({
 
   const checkExistingQuote = async (rfqId: string) => {
     try {
-      const response = await fetch(`/api/queries/user-rfq-quote?rfqId=${rfqId}`);
+      const response = await fetch(
+        `/api/queries/user-rfq-quote?rfqId=${rfqId}`
+      );
       if (response.ok) {
         const data = await response.json();
         if (data.quote) {
@@ -378,13 +394,15 @@ export function MobileBusinessDashboard({
 
   const fetchStats = async () => {
     if (!businessAccount?.id) return;
-    
+
     try {
       const [rfqsRes, ordersRes, quotesRes, walletRes] = await Promise.all([
         fetch("/api/queries/business-rfqs").catch(() => null),
         fetch("/api/queries/business-product-orders").catch(() => null),
         fetch("/api/queries/business-submitted-quotes").catch(() => null),
-        fetch(`/api/queries/check-business-wallet?business_id=${businessAccount.id}`).catch(() => null),
+        fetch(
+          `/api/queries/check-business-wallet?business_id=${businessAccount.id}`
+        ).catch(() => null),
       ]);
 
       let totalRFQs = 0;
@@ -399,12 +417,15 @@ export function MobileBusinessDashboard({
 
       if (ordersRes?.ok) {
         const data = await ordersRes.json();
-        activeOrders = data.orders?.filter((o: any) => o.status !== "completed")?.length || 0;
+        activeOrders =
+          data.orders?.filter((o: any) => o.status !== "completed")?.length ||
+          0;
       }
 
       if (quotesRes?.ok) {
         const data = await quotesRes.json();
-        pendingQuotes = data.quotes?.filter((q: any) => q.status === "pending")?.length || 0;
+        pendingQuotes =
+          data.quotes?.filter((q: any) => q.status === "pending")?.length || 0;
       }
 
       if (walletRes?.ok) {
@@ -424,13 +445,13 @@ export function MobileBusinessDashboard({
       feature.action();
       return;
     }
-    
+
     // If it's messages, navigate to messages page
     if (feature.id === "messages") {
       router.push(feature.route);
       return;
     }
-    
+
     // Toggle expansion for other features
     if (expandedSection === feature.id) {
       setExpandedSection(null);
@@ -456,26 +477,26 @@ export function MobileBusinessDashboard({
           if (rfqOppsRes.ok) {
             const rfqOppsData = await rfqOppsRes.json();
             let filteredRFQs = rfqOppsData.rfqs || [];
-            
+
             // If user has a business account, filter out RFQs that belong to them
             if (businessAccount?.id) {
-              filteredRFQs = filteredRFQs.filter(
-                (rfq: any) => {
-                  // Exclude RFQs where business_id matches the user's business account
-                  return rfq.business_id !== businessAccount.id;
-                }
-              );
+              filteredRFQs = filteredRFQs.filter((rfq: any) => {
+                // Exclude RFQs where business_id matches the user's business account
+                return rfq.business_id !== businessAccount.id;
+              });
             }
-            
+
             setRfqOpportunities(filteredRFQs);
           }
           break;
         case "quotes":
-          const quotesRes = await fetch("/api/queries/business-submitted-quotes");
+          const quotesRes = await fetch(
+            "/api/queries/business-submitted-quotes"
+          );
           if (quotesRes.ok) {
             const quotesData = await quotesRes.json();
             let filteredQuotes = quotesData.quotes || [];
-            
+
             // Ensure we only show quotes submitted by the current business account
             // If no business account, show empty array (quotes require business account)
             if (businessAccount?.id) {
@@ -485,7 +506,7 @@ export function MobileBusinessDashboard({
             } else {
               filteredQuotes = [];
             }
-            
+
             setQuotes(filteredQuotes);
           }
           break;
@@ -523,78 +544,87 @@ export function MobileBusinessDashboard({
   };
 
   return (
-    <div className="flex flex-col h-full  overflow-hidden">
+    <div className="flex h-full flex-col  overflow-hidden">
       {/* Header with Gradient */}
-      <div className="flex-shrink-0 bg-gradient-to-b from-green-800 to-green-700 dark:from-green-900 dark:to-green-800 relative overflow-hidden">
+      <div className="relative flex-shrink-0 overflow-hidden bg-gradient-to-b from-green-800 to-green-700 dark:from-green-900 dark:to-green-800">
         {/* Grid Overlay Pattern */}
-        <div 
-          className="absolute inset-0 opacity-20 pointer-events-none"
+        <div
+          className="pointer-events-none absolute inset-0 opacity-20"
           style={{
             backgroundImage: `
               linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
               linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px)
             `,
-            backgroundSize: '20px 20px'
+            backgroundSize: "20px 20px",
           }}
         ></div>
-        
+
         {/* Decorative Icons - Scattered */}
-        <div className="absolute inset-0 pointer-events-none opacity-30">
+        <div className="pointer-events-none absolute inset-0 opacity-30">
           {/* Business Icons */}
-          <Building2 className="absolute top-8 right-16 h-8 w-8 text-gray-200/20 rotate-12" />
-          <Briefcase className="absolute top-20 right-8 h-6 w-6 text-gray-200/15 -rotate-12" />
-          <Store className="absolute top-32 right-24 h-7 w-7 text-gray-200/20 rotate-45" />
-          <Layers className="absolute top-44 right-32 h-6 w-6 text-gray-200/15 rotate-12" />
-          <Users className="absolute top-52 right-20 h-5 w-5 text-gray-200/20 -rotate-45" />
-          <Award className="absolute top-60 right-12 h-6 w-6 text-gray-200/15 rotate-12" />
-          <Shield className="absolute top-[280px] right-28 h-5 w-5 text-gray-200/20 rotate-45" />
-          
+          <Building2 className="absolute right-16 top-8 h-8 w-8 rotate-12 text-gray-200/20" />
+          <Briefcase className="absolute right-8 top-20 h-6 w-6 -rotate-12 text-gray-200/15" />
+          <Store className="absolute right-24 top-32 h-7 w-7 rotate-45 text-gray-200/20" />
+          <Layers className="absolute right-32 top-44 h-6 w-6 rotate-12 text-gray-200/15" />
+          <Users className="absolute right-20 top-52 h-5 w-5 -rotate-45 text-gray-200/20" />
+          <Award className="absolute right-12 top-60 h-6 w-6 rotate-12 text-gray-200/15" />
+          <Shield className="absolute right-28 top-[280px] h-5 w-5 rotate-45 text-gray-200/20" />
+
           {/* Market/Trading Icons */}
-          <TrendingUp className="absolute top-12 left-12 h-6 w-6 text-gray-200/20 rotate-45" />
-          <BarChart3 className="absolute top-24 left-8 h-7 w-7 text-gray-200/15 -rotate-12" />
-          <TrendingDown className="absolute top-36 left-20 h-5 w-5 text-gray-200/20 rotate-12" />
-          <Target className="absolute top-16 left-32 h-6 w-6 text-gray-200/15" />
-          <PieChart className="absolute top-28 left-24 h-6 w-6 text-gray-200/20 rotate-45" />
-          <LineChart className="absolute top-40 left-12 h-5 w-5 text-gray-200/15 -rotate-12" />
-          <Activity className="absolute top-48 left-36 h-6 w-6 text-gray-200/20 rotate-12" />
-          <DollarSign className="absolute top-56 left-16 h-5 w-5 text-gray-200/15 rotate-45" />
-          
+          <TrendingUp className="absolute left-12 top-12 h-6 w-6 rotate-45 text-gray-200/20" />
+          <BarChart3 className="absolute left-8 top-24 h-7 w-7 -rotate-12 text-gray-200/15" />
+          <TrendingDown className="absolute left-20 top-36 h-5 w-5 rotate-12 text-gray-200/20" />
+          <Target className="absolute left-32 top-16 h-6 w-6 text-gray-200/15" />
+          <PieChart className="absolute left-24 top-28 h-6 w-6 rotate-45 text-gray-200/20" />
+          <LineChart className="absolute left-12 top-40 h-5 w-5 -rotate-12 text-gray-200/15" />
+          <Activity className="absolute left-36 top-48 h-6 w-6 rotate-12 text-gray-200/20" />
+          <DollarSign className="absolute left-16 top-56 h-5 w-5 rotate-45 text-gray-200/15" />
+
           {/* AI/Tech Icons */}
-          <Brain className="absolute top-6 right-32 h-7 w-7 text-gray-200/20 rotate-12" />
-          <Sparkles className="absolute top-28 right-40 h-6 w-6 text-gray-200/15 -rotate-45" />
-          <Zap className="absolute top-40 right-12 h-5 w-5 text-gray-200/20 rotate-12" />
-          <Network className="absolute top-14 left-48 h-6 w-6 text-gray-200/15 rotate-45" />
-          <Globe className="absolute top-32 left-40 h-7 w-7 text-gray-200/20 -rotate-12" />
-          <Cpu className="absolute top-18 right-48 h-6 w-6 text-gray-200/15 rotate-12" />
-          <Rocket className="absolute top-36 right-36 h-5 w-5 text-gray-200/20 -rotate-45" />
-          <Lightbulb className="absolute top-44 left-28 h-6 w-6 text-gray-200/15 rotate-45" />
-          <Code className="absolute top-52 right-44 h-5 w-5 text-gray-200/20 rotate-12" />
-          <Database className="absolute top-60 left-44 h-6 w-6 text-gray-200/15 -rotate-12" />
-          <Cloud className="absolute top-24 right-52 h-5 w-5 text-gray-200/20 rotate-45" />
-          <Settings className="absolute top-48 right-24 h-5 w-5 text-gray-200/15 rotate-12" />
-          <CheckCircle className="absolute top-56 left-52 h-6 w-6 text-gray-200/20 -rotate-45" />
-          <Star className="absolute top-64 right-36 h-5 w-5 text-gray-200/15 rotate-45" />
+          <Brain className="absolute right-32 top-6 h-7 w-7 rotate-12 text-gray-200/20" />
+          <Sparkles className="absolute right-40 top-28 h-6 w-6 -rotate-45 text-gray-200/15" />
+          <Zap className="absolute right-12 top-40 h-5 w-5 rotate-12 text-gray-200/20" />
+          <Network className="absolute left-48 top-14 h-6 w-6 rotate-45 text-gray-200/15" />
+          <Globe className="absolute left-40 top-32 h-7 w-7 -rotate-12 text-gray-200/20" />
+          <Cpu className="top-18 absolute right-48 h-6 w-6 rotate-12 text-gray-200/15" />
+          <Rocket className="absolute right-36 top-36 h-5 w-5 -rotate-45 text-gray-200/20" />
+          <Lightbulb className="absolute left-28 top-44 h-6 w-6 rotate-45 text-gray-200/15" />
+          <Code className="absolute right-44 top-52 h-5 w-5 rotate-12 text-gray-200/20" />
+          <Database className="absolute left-44 top-60 h-6 w-6 -rotate-12 text-gray-200/15" />
+          <Cloud className="absolute right-52 top-24 h-5 w-5 rotate-45 text-gray-200/20" />
+          <Settings className="absolute right-24 top-48 h-5 w-5 rotate-12 text-gray-200/15" />
+          <CheckCircle className="absolute left-52 top-56 h-6 w-6 -rotate-45 text-gray-200/20" />
+          <Star className="absolute right-36 top-64 h-5 w-5 rotate-45 text-gray-200/15" />
         </div>
-        
-        <div className="px-4 pt-12 pb-4 relative z-10">
+
+        <div className="relative z-10 px-4 pb-4 pt-12">
           {/* Profile & Greeting */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center overflow-hidden ring-2 ring-white/30 shadow-lg">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-white/20 shadow-lg ring-2 ring-white/30 backdrop-blur-md">
               {userProfilePicture ? (
                 <img
                   src={userProfilePicture}
                   alt={userName}
-                  className="w-full h-full object-cover"
+                  className="h-full w-full object-cover"
                 />
               ) : (
-                <User className="h-7 w-7 text-white" />
+                <User
+                  className="h-7 w-7 text-white"
+                  style={{ color: "#ffffff", stroke: "#ffffff" }}
+                />
               )}
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white drop-shadow-sm">
+              <h2
+                className="text-xl font-bold text-white drop-shadow-sm"
+                style={{ color: "#ffffff" }}
+              >
                 Hello, {userName}
               </h2>
-              <p className="text-sm text-white/95 font-medium">
+              <p
+                className="text-sm font-medium text-white/95"
+                style={{ color: "#ffffff" }}
+              >
                 {businessAccount?.businessName || "Business Dashboard"}
               </p>
             </div>
@@ -607,9 +637,9 @@ export function MobileBusinessDashboard({
               placeholder="Search: services, suppliers, RFQs..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-full bg-white px-4 py-3.5 pl-4 pr-14 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-green-500 shadow-xl border-0"
+              className="w-full rounded-full border-0 bg-white px-4 py-3.5 pl-4 pr-14 text-sm text-gray-900 placeholder-gray-500 shadow-xl focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-green-500"
             />
-            <button className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 active:scale-95">
+            <button className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 p-2.5 text-white shadow-lg transition-all duration-200 hover:scale-110 hover:shadow-xl active:scale-95">
               <Search className="h-4 w-4" />
             </button>
           </div>
@@ -621,39 +651,53 @@ export function MobileBusinessDashboard({
         {/* Quick Stats */}
         <div className="px-4 py-5">
           <div className="grid grid-cols-2 gap-3">
-            <div className="group bg-white dark:bg-gray-700 rounded-xl p-4 border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md hover:border-green-300 dark:hover:border-green-600 transition-all duration-200">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1.5 rounded-lg bg-green-100 dark:bg-green-900/30">
+            <div className="group rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-green-300 hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:hover:border-green-600">
+              <div className="mb-2 flex items-center gap-2">
+                <div className="rounded-lg bg-green-100 p-1.5 dark:bg-green-900/30">
                   <FileText className="h-4 w-4 text-green-600 dark:text-green-400" />
                 </div>
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">My RFQs</span>
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  My RFQs
+                </span>
               </div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalRFQs}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {stats.totalRFQs}
+              </p>
             </div>
-            <div className="group bg-white dark:bg-gray-700 rounded-xl p-4 border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md hover:border-green-300 dark:hover:border-green-600 transition-all duration-200">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1.5 rounded-lg bg-green-100 dark:bg-green-900/30">
+            <div className="group rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-green-300 hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:hover:border-green-600">
+              <div className="mb-2 flex items-center gap-2">
+                <div className="rounded-lg bg-green-100 p-1.5 dark:bg-green-900/30">
                   <Package className="h-4 w-4 text-green-600 dark:text-green-400" />
                 </div>
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Active Orders</span>
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  Active Orders
+                </span>
               </div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.activeOrders}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {stats.activeOrders}
+              </p>
             </div>
-            <div className="group bg-white dark:bg-gray-700 rounded-xl p-4 border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md hover:border-green-300 dark:hover:border-green-600 transition-all duration-200">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1.5 rounded-lg bg-green-100 dark:bg-green-900/30">
+            <div className="group rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-green-300 hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:hover:border-green-600">
+              <div className="mb-2 flex items-center gap-2">
+                <div className="rounded-lg bg-green-100 p-1.5 dark:bg-green-900/30">
                   <ShoppingCart className="h-4 w-4 text-green-600 dark:text-green-400" />
                 </div>
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Pending Quotes</span>
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  Pending Quotes
+                </span>
               </div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.pendingQuotes}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {stats.pendingQuotes}
+              </p>
             </div>
-            <div className="group bg-white dark:bg-gray-700 rounded-xl p-4 border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md hover:border-green-300 dark:hover:border-green-600 transition-all duration-200">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1.5 rounded-lg bg-green-100 dark:bg-green-900/30">
+            <div className="group rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-green-300 hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:hover:border-green-600">
+              <div className="mb-2 flex items-center gap-2">
+                <div className="rounded-lg bg-green-100 p-1.5 dark:bg-green-900/30">
                   <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
                 </div>
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Wallet Balance</span>
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  Wallet Balance
+                </span>
               </div>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {stats.walletBalance.toLocaleString()}
@@ -671,16 +715,22 @@ export function MobileBusinessDashboard({
                 <button
                   key={feature.id}
                   onClick={() => handleFeatureClick(feature)}
-                  className={`group flex flex-col items-center gap-2.5 p-3.5 rounded-xl transition-all duration-200 active:scale-95 hover:scale-105 ${
-                    feature.bgColor || "bg-white dark:bg-gray-700 shadow-sm hover:shadow-md border border-gray-200 dark:border-gray-600 hover:border-green-300 dark:hover:border-green-600"
+                  className={`group flex flex-col items-center gap-2.5 rounded-xl p-3.5 transition-all duration-200 hover:scale-105 active:scale-95 ${
+                    feature.bgColor ||
+                    "border border-gray-200 bg-white shadow-sm hover:border-green-300 hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:hover:border-green-600"
                   }`}
                 >
-                  <div className={`p-2.5 rounded-xl shadow-sm transition-all duration-200 group-hover:scale-110 ${
-                    feature.bgColor || "bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-600 dark:to-gray-700"
-                  }`}>
-                    <Icon className={`h-6 w-6 ${feature.color} transition-transform duration-200`} />
+                  <div
+                    className={`rounded-xl p-2.5 shadow-sm transition-all duration-200 group-hover:scale-110 ${
+                      feature.bgColor ||
+                      "bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-600 dark:to-gray-700"
+                    }`}
+                  >
+                    <Icon
+                      className={`h-6 w-6 ${feature.color} transition-transform duration-200`}
+                    />
                   </div>
-                  <span className="text-xs text-center text-gray-700 dark:text-gray-300 font-semibold leading-tight">
+                  <span className="text-center text-xs font-semibold leading-tight text-gray-700 dark:text-gray-300">
                     {feature.label}
                   </span>
                 </button>
@@ -690,25 +740,25 @@ export function MobileBusinessDashboard({
         </div>
 
         {/* Monitor RFQs Card */}
-        <div className="px-4 mb-6">
-          <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/20 dark:via-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-5 shadow-lg border border-green-200 dark:border-green-800/50 hover:shadow-xl transition-all duration-200">
+        <div className="mb-6 px-4">
+          <div className="rounded-2xl border border-green-200 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 p-5 shadow-lg transition-all duration-200 hover:shadow-xl dark:border-green-800/50 dark:from-green-900/20 dark:via-emerald-900/20 dark:to-teal-900/20">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
-                <h3 className="font-bold text-gray-900 dark:text-white mb-2 text-lg">
+                <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
                   Monitor RFQ Status
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
+                <p className="mb-4 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
                   Track your RFQs and view quote responses
                 </p>
                 <button
                   onClick={() => router.push("/plasBusiness?tab=rfqs")}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-gray-700 text-green-600 dark:text-green-400 text-sm font-semibold shadow-sm hover:shadow-md hover:bg-green-50 dark:hover:bg-green-900/30 transition-all duration-200"
+                  className="flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-green-600 shadow-sm transition-all duration-200 hover:bg-green-50 hover:shadow-md dark:bg-gray-700 dark:text-green-400 dark:hover:bg-green-900/30"
                 >
                   View All RFQs
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
-              <div className="w-24 h-24 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-800/50 dark:to-emerald-800/50 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+              <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 shadow-md dark:from-green-800/50 dark:to-emerald-800/50">
                 <TrendingUp className="h-12 w-12 text-green-600 dark:text-green-400" />
               </div>
             </div>
@@ -717,7 +767,7 @@ export function MobileBusinessDashboard({
 
         {/* RFQs Section */}
         {businessAccount && !expandedSection && (
-          <RFQsSection 
+          <RFQsSection
             businessAccount={businessAccount}
             onRFQClick={(rfq) => {
               setSelectedRFQ(rfq);
@@ -736,8 +786,14 @@ export function MobileBusinessDashboard({
             setSelectedRFQ(null);
           }}
           data={{
-            rfqs: expandedSection === "rfqs" && selectedRFQ ? [selectedRFQ, ...myRFQs] : myRFQs,
-            rfqOpportunities: expandedSection === "rfq-opportunities" && selectedRFQ ? [selectedRFQ, ...rfqOpportunities] : rfqOpportunities,
+            rfqs:
+              expandedSection === "rfqs" && selectedRFQ
+                ? [selectedRFQ, ...myRFQs]
+                : myRFQs,
+            rfqOpportunities:
+              expandedSection === "rfq-opportunities" && selectedRFQ
+                ? [selectedRFQ, ...rfqOpportunities]
+                : rfqOpportunities,
             quotes: quotes,
             orders: orders,
             services: services,
@@ -747,7 +803,12 @@ export function MobileBusinessDashboard({
           loading={loadingSection === expandedSection}
           businessAccount={businessAccount}
           router={router}
-          initialSelectedItem={(expandedSection === "rfqs" || expandedSection === "rfq-opportunities") ? selectedRFQ : undefined}
+          initialSelectedItem={
+            expandedSection === "rfqs" ||
+            expandedSection === "rfq-opportunities"
+              ? selectedRFQ
+              : undefined
+          }
           onEditProduct={(product, storeId) => {
             // Open edit modal while keeping expanded modal open
             setEditingProduct(product);
@@ -761,18 +822,18 @@ export function MobileBusinessDashboard({
 
       {/* RFQ Opportunity Details Modal */}
       {isRFQOpportunityModalOpen && selectedRFQOpportunity && (
-        <div 
-          className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-end justify-center"
+        <div
+          className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/50 backdrop-blur-sm"
           onClick={() => {
             setIsRFQOpportunityModalOpen(false);
             setSelectedRFQOpportunity(null);
           }}
         >
-          <div 
-            className="bg-white dark:bg-gray-800 rounded-t-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+          <div
+            className="max-h-[90vh] w-full overflow-y-auto rounded-t-3xl bg-white shadow-2xl dark:bg-gray-800"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-5 py-4 flex items-center justify-between rounded-t-3xl">
+            <div className="sticky top-0 flex items-center justify-between rounded-t-3xl border-b border-gray-200 bg-white px-5 py-4 dark:border-gray-700 dark:bg-gray-800">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                 RFQ Details
               </h3>
@@ -781,19 +842,21 @@ export function MobileBusinessDashboard({
                   setIsRFQOpportunityModalOpen(false);
                   setSelectedRFQOpportunity(null);
                 }}
-                className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="p-5 space-y-4">
+            <div className="space-y-4 p-5">
               <div>
-                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                  {selectedRFQOpportunity.title || `RFQ #${selectedRFQOpportunity.id?.slice(0, 8)}`}
+                <h4 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
+                  {selectedRFQOpportunity.title ||
+                    `RFQ #${selectedRFQOpportunity.id?.slice(0, 8)}`}
                 </h4>
                 <p className="text-gray-600 dark:text-gray-400">
-                  {selectedRFQOpportunity.description || "No description provided"}
+                  {selectedRFQOpportunity.description ||
+                    "No description provided"}
                 </p>
               </div>
 
@@ -802,13 +865,22 @@ export function MobileBusinessDashboard({
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Budget:
                   </span>
-                  <p className="text-gray-900 dark:text-white font-semibold">
-                    {selectedRFQOpportunity.min_budget && selectedRFQOpportunity.max_budget
-                      ? `${formatCurrencySync(parseFloat(selectedRFQOpportunity.min_budget))} - ${formatCurrencySync(parseFloat(selectedRFQOpportunity.max_budget))}`
+                  <p className="font-semibold text-gray-900 dark:text-white">
+                    {selectedRFQOpportunity.min_budget &&
+                    selectedRFQOpportunity.max_budget
+                      ? `${formatCurrencySync(
+                          parseFloat(selectedRFQOpportunity.min_budget)
+                        )} - ${formatCurrencySync(
+                          parseFloat(selectedRFQOpportunity.max_budget)
+                        )}`
                       : selectedRFQOpportunity.min_budget
-                      ? `${formatCurrencySync(parseFloat(selectedRFQOpportunity.min_budget))}+`
+                      ? `${formatCurrencySync(
+                          parseFloat(selectedRFQOpportunity.min_budget)
+                        )}+`
                       : selectedRFQOpportunity.max_budget
-                      ? `Up to ${formatCurrencySync(parseFloat(selectedRFQOpportunity.max_budget))}`
+                      ? `Up to ${formatCurrencySync(
+                          parseFloat(selectedRFQOpportunity.max_budget)
+                        )}`
                       : "Not specified"}
                   </p>
                 </div>
@@ -816,7 +888,7 @@ export function MobileBusinessDashboard({
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Location:
                   </span>
-                  <p className="text-gray-900 dark:text-white font-semibold">
+                  <p className="font-semibold text-gray-900 dark:text-white">
                     {selectedRFQOpportunity.location || "Not specified"}
                   </p>
                 </div>
@@ -824,19 +896,21 @@ export function MobileBusinessDashboard({
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Posted By:
                   </span>
-                  <p className="text-gray-900 dark:text-white font-semibold">
-                    {selectedRFQOpportunity.business_account?.business_name || 
-                     selectedRFQOpportunity.contact_name || 
-                     "Unknown Business"}
+                  <p className="font-semibold text-gray-900 dark:text-white">
+                    {selectedRFQOpportunity.business_account?.business_name ||
+                      selectedRFQOpportunity.contact_name ||
+                      "Unknown Business"}
                   </p>
                 </div>
                 <div>
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Deadline:
                   </span>
-                  <p className="text-gray-900 dark:text-white font-semibold">
+                  <p className="font-semibold text-gray-900 dark:text-white">
                     {selectedRFQOpportunity.response_date
-                      ? new Date(selectedRFQOpportunity.response_date).toLocaleDateString("en-US", {
+                      ? new Date(
+                          selectedRFQOpportunity.response_date
+                        ).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
                           year: "numeric",
@@ -846,7 +920,7 @@ export function MobileBusinessDashboard({
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex flex-col gap-2 border-t border-gray-200 pt-4 dark:border-gray-700">
                 <button
                   onClick={() => {
                     setIsRFQOpportunityModalOpen(false);
@@ -864,7 +938,12 @@ export function MobileBusinessDashboard({
                 </button>
                 <button
                   onClick={() => {
-                    router.push(`/plasBusiness/BusinessChats?supplier=${selectedRFQOpportunity.business_account?.id || selectedRFQOpportunity.id}`);
+                    router.push(
+                      `/plasBusiness/BusinessChats?supplier=${
+                        selectedRFQOpportunity.business_account?.id ||
+                        selectedRFQOpportunity.id
+                      }`
+                    );
                   }}
                   className="w-full rounded-lg bg-purple-500 px-4 py-3 font-semibold text-white transition-colors hover:bg-purple-600"
                 >
@@ -932,4 +1011,3 @@ export function MobileBusinessDashboard({
     </div>
   );
 }
-

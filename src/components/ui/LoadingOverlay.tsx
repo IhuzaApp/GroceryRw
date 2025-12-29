@@ -29,16 +29,16 @@ const LoadingOverlay: React.FC = () => {
           <img
             src="/assets/logos/PlasIcon.png"
             alt="Plas Logo"
-            className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 animate-pulse drop-shadow-lg"
+            className="h-16 w-16 animate-pulse drop-shadow-lg sm:h-20 sm:w-20 md:h-24 md:w-24"
           />
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent sm:h-10 sm:w-10 md:h-12 md:w-12"></div>
           </div>
         </div>
 
         {/* Loading Text */}
         <span
-          className={`animate-pulse text-sm sm:text-base md:text-lg font-medium ${
+          className={`animate-pulse text-sm font-medium sm:text-base md:text-lg ${
             theme === "dark" ? "text-gray-300" : "text-gray-600"
           }`}
         >

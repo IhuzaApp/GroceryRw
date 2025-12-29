@@ -27,11 +27,16 @@ export default function RootLayout({
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-white text-gray-900 transition-colors duration-200 dark:bg-gray-900 dark:text-white">
-        {!isChatPage && !isReelsPage && !isMessagesPage && !isPlasBusinessPage && <HeaderLayout />}
+        {!isChatPage &&
+          !isReelsPage &&
+          !isMessagesPage &&
+          !isPlasBusinessPage && <HeaderLayout />}
         {/* Main content */}
         <main
           className={`text-gray-900 transition-colors duration-200 dark:text-white ${
-            isChatPage || isReelsPage || isMessagesPage || isPlasBusinessPage ? "" : "px-4 pb-20 pt-6 md:pb-0"
+            isChatPage || isReelsPage || isMessagesPage || isPlasBusinessPage
+              ? ""
+              : "px-4 pb-20 pt-6 md:pb-0"
           }`}
           style={
             isReelsPage
@@ -46,10 +51,17 @@ export default function RootLayout({
               : {}
           }
         >
-          {!isChatPage && !isReelsPage && !isMessagesPage && !isPlasBusinessPage && <SideBar />}
+          {!isChatPage &&
+            !isReelsPage &&
+            !isMessagesPage &&
+            !isPlasBusinessPage && <SideBar />}
           <div
             className="[&_*]:text-inherit"
-            style={isReelsPage || isPlasBusinessPage ? { height: "100%", width: "100%" } : {}}
+            style={
+              isReelsPage || isPlasBusinessPage
+                ? { height: "100%", width: "100%" }
+                : {}
+            }
           >
             {children}
           </div>

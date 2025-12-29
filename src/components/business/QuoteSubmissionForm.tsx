@@ -62,21 +62,24 @@ export function QuoteSubmissionForm({
     const hideNavbar = () => {
       // Try multiple selectors to find the bottom navbar
       const selectors = [
-        'nav.fixed.bottom-0',
+        "nav.fixed.bottom-0",
         'nav[class*="fixed"][class*="bottom-0"]',
-        '.fixed.bottom-0.z-\\[9999\\]',
-        'nav.z-\\[9999\\]',
+        ".fixed.bottom-0.z-\\[9999\\]",
+        "nav.z-\\[9999\\]",
       ];
-      
+
       selectors.forEach((selector) => {
         try {
           const elements = document.querySelectorAll(selector);
           elements.forEach((el) => {
             const htmlEl = el as HTMLElement;
             // Check if it's a bottom navigation (has bottom-0 and is fixed)
-            if (htmlEl.classList.contains('bottom-0') && htmlEl.classList.contains('fixed')) {
-              htmlEl.style.display = 'none';
-              htmlEl.setAttribute('data-modal-hidden', 'true');
+            if (
+              htmlEl.classList.contains("bottom-0") &&
+              htmlEl.classList.contains("fixed")
+            ) {
+              htmlEl.style.display = "none";
+              htmlEl.setAttribute("data-modal-hidden", "true");
             }
           });
         } catch (e) {
@@ -92,8 +95,8 @@ export function QuoteSubmissionForm({
       const elements = document.querySelectorAll('[data-modal-hidden="true"]');
       elements.forEach((el) => {
         const htmlEl = el as HTMLElement;
-        htmlEl.style.display = '';
-        htmlEl.removeAttribute('data-modal-hidden');
+        htmlEl.style.display = "";
+        htmlEl.removeAttribute("data-modal-hidden");
       });
     };
   }, [isOpen]);
@@ -389,8 +392,8 @@ export function QuoteSubmissionForm({
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center bg-black bg-opacity-50 p-0 sm:p-4"
+    <div
+      className="fixed inset-0 z-[10000] flex items-end justify-center bg-black bg-opacity-50 p-0 sm:items-center sm:p-4"
       onClick={onClose}
       style={{
         position: "fixed",
@@ -404,11 +407,11 @@ export function QuoteSubmissionForm({
         overflow: "hidden",
       }}
     >
-      <div 
-        className="h-screen sm:h-auto sm:max-h-[90vh] w-full sm:max-w-3xl rounded-none sm:rounded-xl bg-white shadow-2xl dark:bg-gray-800 flex flex-col relative"
+      <div
+        className="relative flex h-screen w-full flex-col rounded-none bg-white shadow-2xl dark:bg-gray-800 sm:h-auto sm:max-h-[90vh] sm:max-w-3xl sm:rounded-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 border-b border-gray-200 bg-white px-5 sm:px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
+        <div className="sticky top-0 z-10 border-b border-gray-200 bg-white px-5 py-4 dark:border-gray-700 dark:bg-gray-800 sm:px-6">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -429,327 +432,340 @@ export function QuoteSubmissionForm({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <div className="flex-1 overflow-y-auto p-5 sm:p-6">
-          <div className="space-y-6">
-            {/* Quote Amount */}
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Quote Amount <span className="text-red-500">*</span>
-              </label>
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <div className="relative">
-                    <DollarSign className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-                    <input
-                      type="number"
-                      name="quote_amount"
-                      value={formData.quote_amount}
-                      onChange={handleInputChange}
-                      step="0.01"
-                      min="0"
-                      required
-                      className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 pl-12 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
-                      placeholder="0.00"
-                    />
-                  </div>
-                </div>
-                <select
-                  name="currency"
-                  value={formData.currency}
-                  onChange={handleInputChange}
-                  className="rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
-                >
-                  <option value="USD">USD</option>
-                  <option value="EUR">EUR</option>
-                  <option value="GBP">GBP</option>
-                  <option value="RWF">RWF</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Delivery Time & Validity */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="space-y-6">
+              {/* Quote Amount */}
               <div>
                 <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  Delivery Time
+                  Quote Amount <span className="text-red-500">*</span>
                 </label>
-                <div className="relative">
-                  <Clock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <DollarSign className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+                      <input
+                        type="number"
+                        name="quote_amount"
+                        value={formData.quote_amount}
+                        onChange={handleInputChange}
+                        step="0.01"
+                        min="0"
+                        required
+                        className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 pl-12 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
                   <select
-                    name="delivery_time"
-                    value={formData.delivery_time}
+                    name="currency"
+                    value={formData.currency}
                     onChange={handleInputChange}
-                    className="w-full rounded-xl border-2 border-gray-200 bg-white py-3 pl-12 pr-4 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
+                    className="rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
                   >
-                    <option value="">Select delivery time</option>
-                    <option value="Same day">Same day</option>
-                    <option value="1-2 business days">1-2 business days</option>
-                    <option value="3-5 business days">3-5 business days</option>
-                    <option value="1 week">1 week</option>
-                    <option value="2 weeks">2 weeks</option>
-                    <option value="3-4 weeks">3-4 weeks</option>
-                    <option value="1-2 months">1-2 months</option>
-                    <option value="3+ months">3+ months</option>
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                    <option value="RWF">RWF</option>
                   </select>
                 </div>
               </div>
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  Quote Validity
-                </label>
-                <select
-                  name="validity"
-                  value={formData.validity}
-                  onChange={handleInputChange}
-                  className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
-                >
-                  <option value="">Select validity period</option>
-                  <option value="7 days">7 days</option>
-                  <option value="14 days">14 days</option>
-                  <option value="30 days">30 days</option>
-                  <option value="45 days">45 days</option>
-                  <option value="60 days">60 days</option>
-                  <option value="90 days">90 days</option>
-                  <option value="6 months">6 months</option>
-                  <option value="1 year">1 year</option>
-                </select>
-              </div>
-            </div>
 
-            {/* Message */}
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Message / Proposal
-              </label>
-              <textarea
-                name="message"
-                value={formData.message}
-                onChange={handleInputChange}
-                rows={4}
-                className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
-                placeholder="Describe your proposal, capabilities, and why you're the best fit..."
-              />
-            </div>
-
-            {/* Terms */}
-            <div className="space-y-4 rounded-xl border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100/50 p-5 shadow-sm dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                Terms & Conditions
-              </h3>
+              {/* Delivery Time & Validity */}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Payment Terms
+                    Delivery Time
                   </label>
-                  <select
-                    name="payment_terms"
-                    value={formData.payment_terms}
-                    onChange={handleInputChange}
-                    className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
-                  >
-                    <option value="">Select payment terms</option>
-                    <option value="Cash on Delivery (COD)">
-                      Cash on Delivery (COD)
-                    </option>
-                    <option value="Net 7 days">Net 7 days</option>
-                    <option value="Net 15 days">Net 15 days</option>
-                    <option value="Net 30 days">Net 30 days</option>
-                    <option value="Net 45 days">Net 45 days</option>
-                    <option value="Net 60 days">Net 60 days</option>
-                    <option value="50% advance, 50% on delivery">
-                      50% advance, 50% on delivery
-                    </option>
-                    <option value="100% advance payment">
-                      100% advance payment
-                    </option>
-                    <option value="Letter of Credit (L/C)">
-                      Letter of Credit (L/C)
-                    </option>
-                    <option value="Bank Transfer">Bank Transfer</option>
-                    <option value="Credit Card">Credit Card</option>
-                  </select>
+                  <div className="relative">
+                    <Clock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+                    <select
+                      name="delivery_time"
+                      value={formData.delivery_time}
+                      onChange={handleInputChange}
+                      className="w-full rounded-xl border-2 border-gray-200 bg-white py-3 pl-12 pr-4 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
+                    >
+                      <option value="">Select delivery time</option>
+                      <option value="Same day">Same day</option>
+                      <option value="1-2 business days">
+                        1-2 business days
+                      </option>
+                      <option value="3-5 business days">
+                        3-5 business days
+                      </option>
+                      <option value="1 week">1 week</option>
+                      <option value="2 weeks">2 weeks</option>
+                      <option value="3-4 weeks">3-4 weeks</option>
+                      <option value="1-2 months">1-2 months</option>
+                      <option value="3+ months">3+ months</option>
+                    </select>
+                  </div>
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Warranty
+                    Quote Validity
                   </label>
                   <select
-                    name="warranty"
-                    value={formData.warranty}
+                    name="validity"
+                    value={formData.validity}
                     onChange={handleInputChange}
                     className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
                   >
-                    <option value="">Select warranty</option>
-                    <option value="No warranty">No warranty</option>
-                    <option value="30 days warranty">30 days warranty</option>
-                    <option value="90 days warranty">90 days warranty</option>
-                    <option value="6 months warranty">6 months warranty</option>
-                    <option value="1 year warranty">1 year warranty</option>
-                    <option value="2 years warranty">2 years warranty</option>
-                    <option value="3 years warranty">3 years warranty</option>
-                    <option value="5 years warranty">5 years warranty</option>
-                    <option value="Lifetime warranty">Lifetime warranty</option>
-                    <option value="Manufacturer warranty">
-                      Manufacturer warranty
-                    </option>
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Delivery Terms
-                  </label>
-                  <select
-                    name="delivery_terms"
-                    value={formData.delivery_terms}
-                    onChange={handleInputChange}
-                    className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
-                  >
-                    <option value="">Select delivery terms</option>
-                    <option value="FOB Origin (Free On Board)">
-                      FOB Origin (Free On Board)
-                    </option>
-                    <option value="FOB Destination">FOB Destination</option>
-                    <option value="CIF (Cost, Insurance, Freight)">
-                      CIF (Cost, Insurance, Freight)
-                    </option>
-                    <option value="EXW (Ex Works)">EXW (Ex Works)</option>
-                    <option value="DDP (Delivered Duty Paid)">
-                      DDP (Delivered Duty Paid)
-                    </option>
-                    <option value="Free delivery">Free delivery</option>
-                    <option value="Customer pickup">Customer pickup</option>
-                    <option value="Delivery charges apply">
-                      Delivery charges apply
-                    </option>
-                    <option value="Free delivery within city">
-                      Free delivery within city
-                    </option>
-                    <option value="Free delivery within 50km">
-                      Free delivery within 50km
-                    </option>
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Cancellation Terms
-                  </label>
-                  <select
-                    name="cancellation_terms"
-                    value={formData.cancellation_terms}
-                    onChange={handleInputChange}
-                    className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
-                  >
-                    <option value="">Select cancellation terms</option>
-                    <option value="No cancellation allowed">
-                      No cancellation allowed
-                    </option>
-                    <option value="24 hours notice required">
-                      24 hours notice required
-                    </option>
-                    <option value="48 hours notice required">
-                      48 hours notice required
-                    </option>
-                    <option value="7 days notice required">
-                      7 days notice required
-                    </option>
-                    <option value="14 days notice required">
-                      14 days notice required
-                    </option>
-                    <option value="30 days notice required">
-                      30 days notice required
-                    </option>
-                    <option value="50% cancellation fee">
-                      50% cancellation fee
-                    </option>
-                    <option value="Full refund if cancelled before delivery">
-                      Full refund if cancelled before delivery
-                    </option>
-                    <option value="Partial refund based on work completed">
-                      Partial refund based on work completed
-                    </option>
+                    <option value="">Select validity period</option>
+                    <option value="7 days">7 days</option>
+                    <option value="14 days">14 days</option>
+                    <option value="30 days">30 days</option>
+                    <option value="45 days">45 days</option>
+                    <option value="60 days">60 days</option>
+                    <option value="90 days">90 days</option>
+                    <option value="6 months">6 months</option>
+                    <option value="1 year">1 year</option>
                   </select>
                 </div>
               </div>
-            </div>
 
-            {/* Attachments */}
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Attachments{" "}
-                <span className="text-xs font-normal text-gray-500">(Max 3 files)</span>
-              </label>
-              <div className="space-y-2">
-                <label
-                  className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-4 py-8 transition-all duration-200 ${
-                    attachments.length >= 3
-                      ? "cursor-not-allowed border-gray-300 bg-gray-100 opacity-50 dark:border-gray-600 dark:bg-gray-800"
-                      : "border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100/50 shadow-sm hover:border-green-400 hover:bg-gradient-to-br hover:from-green-50/50 hover:to-emerald-50/30 hover:shadow-md dark:border-gray-600 dark:from-gray-700/50 dark:to-gray-800/50 dark:hover:border-green-500"
-                  }`}
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30">
-                    <Upload className="h-6 w-6 text-green-600 dark:text-green-400" />
-                  </div>
-                  <div className="text-center">
-                    <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      {attachments.length >= 3
-                        ? "Maximum 3 attachments reached"
-                        : `Click to upload files (${3 - attachments.length} slot${
-                            3 - attachments.length > 1 ? "s" : ""
-                          } remaining)`}
-                    </span>
-                  </div>
-                  <input
-                    type="file"
-                    multiple
-                    onChange={handleFileChange}
-                    className="hidden"
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                    disabled={attachments.length >= 3}
-                  />
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Max 1.5MB per file, 4MB total. Images will be automatically
-                    compressed. PDFs and other documents must be under 1.5MB.
-                  </p>
+              {/* Message */}
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Message / Proposal
                 </label>
-                {attachments.length > 0 && (
-                  <div className="space-y-2">
-                    {attachments.map((file, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between rounded-xl border-2 border-gray-200 bg-white px-4 py-3 shadow-sm transition-all duration-200 hover:border-green-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-700 dark:hover:border-green-600"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30">
-                            <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                          </div>
-                          <div>
-                            <span className="block text-sm font-semibold text-gray-900 dark:text-white">
-                              {file.name}
-                            </span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              {(file.size / 1024).toFixed(2)} KB
-                            </span>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeAttachment(index)}
-                          className="rounded-lg p-2 text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20"
-                        >
-                          <X className="h-5 w-5" />
-                        </button>
-                      </div>
-                    ))}
+                <textarea
+                  name="message"
+                  value={formData.message}
+                  onChange={handleInputChange}
+                  rows={4}
+                  className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
+                  placeholder="Describe your proposal, capabilities, and why you're the best fit..."
+                />
+              </div>
+
+              {/* Terms */}
+              <div className="space-y-4 rounded-xl border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100/50 p-5 shadow-sm dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  Terms & Conditions
+                </h3>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Payment Terms
+                    </label>
+                    <select
+                      name="payment_terms"
+                      value={formData.payment_terms}
+                      onChange={handleInputChange}
+                      className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
+                    >
+                      <option value="">Select payment terms</option>
+                      <option value="Cash on Delivery (COD)">
+                        Cash on Delivery (COD)
+                      </option>
+                      <option value="Net 7 days">Net 7 days</option>
+                      <option value="Net 15 days">Net 15 days</option>
+                      <option value="Net 30 days">Net 30 days</option>
+                      <option value="Net 45 days">Net 45 days</option>
+                      <option value="Net 60 days">Net 60 days</option>
+                      <option value="50% advance, 50% on delivery">
+                        50% advance, 50% on delivery
+                      </option>
+                      <option value="100% advance payment">
+                        100% advance payment
+                      </option>
+                      <option value="Letter of Credit (L/C)">
+                        Letter of Credit (L/C)
+                      </option>
+                      <option value="Bank Transfer">Bank Transfer</option>
+                      <option value="Credit Card">Credit Card</option>
+                    </select>
                   </div>
-                )}
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Warranty
+                    </label>
+                    <select
+                      name="warranty"
+                      value={formData.warranty}
+                      onChange={handleInputChange}
+                      className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
+                    >
+                      <option value="">Select warranty</option>
+                      <option value="No warranty">No warranty</option>
+                      <option value="30 days warranty">30 days warranty</option>
+                      <option value="90 days warranty">90 days warranty</option>
+                      <option value="6 months warranty">
+                        6 months warranty
+                      </option>
+                      <option value="1 year warranty">1 year warranty</option>
+                      <option value="2 years warranty">2 years warranty</option>
+                      <option value="3 years warranty">3 years warranty</option>
+                      <option value="5 years warranty">5 years warranty</option>
+                      <option value="Lifetime warranty">
+                        Lifetime warranty
+                      </option>
+                      <option value="Manufacturer warranty">
+                        Manufacturer warranty
+                      </option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Delivery Terms
+                    </label>
+                    <select
+                      name="delivery_terms"
+                      value={formData.delivery_terms}
+                      onChange={handleInputChange}
+                      className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
+                    >
+                      <option value="">Select delivery terms</option>
+                      <option value="FOB Origin (Free On Board)">
+                        FOB Origin (Free On Board)
+                      </option>
+                      <option value="FOB Destination">FOB Destination</option>
+                      <option value="CIF (Cost, Insurance, Freight)">
+                        CIF (Cost, Insurance, Freight)
+                      </option>
+                      <option value="EXW (Ex Works)">EXW (Ex Works)</option>
+                      <option value="DDP (Delivered Duty Paid)">
+                        DDP (Delivered Duty Paid)
+                      </option>
+                      <option value="Free delivery">Free delivery</option>
+                      <option value="Customer pickup">Customer pickup</option>
+                      <option value="Delivery charges apply">
+                        Delivery charges apply
+                      </option>
+                      <option value="Free delivery within city">
+                        Free delivery within city
+                      </option>
+                      <option value="Free delivery within 50km">
+                        Free delivery within 50km
+                      </option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Cancellation Terms
+                    </label>
+                    <select
+                      name="cancellation_terms"
+                      value={formData.cancellation_terms}
+                      onChange={handleInputChange}
+                      className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
+                    >
+                      <option value="">Select cancellation terms</option>
+                      <option value="No cancellation allowed">
+                        No cancellation allowed
+                      </option>
+                      <option value="24 hours notice required">
+                        24 hours notice required
+                      </option>
+                      <option value="48 hours notice required">
+                        48 hours notice required
+                      </option>
+                      <option value="7 days notice required">
+                        7 days notice required
+                      </option>
+                      <option value="14 days notice required">
+                        14 days notice required
+                      </option>
+                      <option value="30 days notice required">
+                        30 days notice required
+                      </option>
+                      <option value="50% cancellation fee">
+                        50% cancellation fee
+                      </option>
+                      <option value="Full refund if cancelled before delivery">
+                        Full refund if cancelled before delivery
+                      </option>
+                      <option value="Partial refund based on work completed">
+                        Partial refund based on work completed
+                      </option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Attachments */}
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Attachments{" "}
+                  <span className="text-xs font-normal text-gray-500">
+                    (Max 3 files)
+                  </span>
+                </label>
+                <div className="space-y-2">
+                  <label
+                    className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-4 py-8 transition-all duration-200 ${
+                      attachments.length >= 3
+                        ? "cursor-not-allowed border-gray-300 bg-gray-100 opacity-50 dark:border-gray-600 dark:bg-gray-800"
+                        : "border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100/50 shadow-sm hover:border-green-400 hover:bg-gradient-to-br hover:from-green-50/50 hover:to-emerald-50/30 hover:shadow-md dark:border-gray-600 dark:from-gray-700/50 dark:to-gray-800/50 dark:hover:border-green-500"
+                    }`}
+                  >
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30">
+                      <Upload className="h-6 w-6 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div className="text-center">
+                      <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        {attachments.length >= 3
+                          ? "Maximum 3 attachments reached"
+                          : `Click to upload files (${
+                              3 - attachments.length
+                            } slot${
+                              3 - attachments.length > 1 ? "s" : ""
+                            } remaining)`}
+                      </span>
+                    </div>
+                    <input
+                      type="file"
+                      multiple
+                      onChange={handleFileChange}
+                      className="hidden"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      disabled={attachments.length >= 3}
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Max 1.5MB per file, 4MB total. Images will be
+                      automatically compressed. PDFs and other documents must be
+                      under 1.5MB.
+                    </p>
+                  </label>
+                  {attachments.length > 0 && (
+                    <div className="space-y-2">
+                      {attachments.map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between rounded-xl border-2 border-gray-200 bg-white px-4 py-3 shadow-sm transition-all duration-200 hover:border-green-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-700 dark:hover:border-green-600"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30">
+                              <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div>
+                              <span className="block text-sm font-semibold text-gray-900 dark:text-white">
+                                {file.name}
+                              </span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                {(file.size / 1024).toFixed(2)} KB
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeAttachment(index)}
+                            className="rounded-lg p-2 text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20"
+                          >
+                            <X className="h-5 w-5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
           </div>
 
           {/* Submit Button - Always visible at bottom */}
-          <div className="flex-shrink-0 border-t-2 border-gray-200 bg-white px-5 py-4 shadow-xl dark:border-gray-700 dark:bg-gray-800 sm:border-t-0 sm:bg-transparent sm:shadow-none sm:px-6 sm:py-0 sm:mt-6">
+          <div className="flex-shrink-0 border-t-2 border-gray-200 bg-white px-5 py-4 shadow-xl dark:border-gray-700 dark:bg-gray-800 sm:mt-6 sm:border-t-0 sm:bg-transparent sm:px-6 sm:py-0 sm:shadow-none">
             <div className="flex gap-3 sm:mt-0">
               <button
                 type="button"
@@ -761,17 +777,26 @@ export function QuoteSubmissionForm({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3 font-semibold text-white shadow-lg shadow-green-500/30 transition-all duration-200 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl hover:shadow-green-500/40 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed sm:py-2.5"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3 font-semibold text-white shadow-lg shadow-green-500/30 transition-all duration-200 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl hover:shadow-green-500/40 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:py-2.5"
                 style={{ color: "#ffffff" }}
               >
                 {isSubmitting ? (
                   <>
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" style={{ borderColor: "#ffffff", borderTopColor: "transparent" }}></div>
+                    <div
+                      className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+                      style={{
+                        borderColor: "#ffffff",
+                        borderTopColor: "transparent",
+                      }}
+                    ></div>
                     <span style={{ color: "#ffffff" }}>Submitting...</span>
                   </>
                 ) : (
                   <>
-                    <Send className="h-4 w-4" style={{ color: "#ffffff", stroke: "#ffffff" }} />
+                    <Send
+                      className="h-4 w-4"
+                      style={{ color: "#ffffff", stroke: "#ffffff" }}
+                    />
                     <span style={{ color: "#ffffff" }}>Submit Quote</span>
                   </>
                 )}

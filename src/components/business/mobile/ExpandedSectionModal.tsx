@@ -77,14 +77,18 @@ export function ExpandedSectionModal({
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
-  const [selectedItem, setSelectedItem] = useState<any>(initialSelectedItem || null);
+  const [selectedItem, setSelectedItem] = useState<any>(
+    initialSelectedItem || null
+  );
   const [isEditing, setIsEditing] = useState(false);
   const [storeProducts, setStoreProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [orderDetails, setOrderDetails] = useState<any>(null);
   const [loadingOrderDetails, setLoadingOrderDetails] = useState(false);
   const [quoteActiveTab, setQuoteActiveTab] = useState("overview");
-  const [submittedQuotes, setSubmittedQuotes] = useState<Record<string, any>>({});
+  const [submittedQuotes, setSubmittedQuotes] = useState<Record<string, any>>(
+    {}
+  );
   const [isQuoteFormOpen, setIsQuoteFormOpen] = useState(false);
   const [selectedRFQForQuote, setSelectedRFQForQuote] = useState<any>(null);
   const [isQuoteDetailsOpen, setIsQuoteDetailsOpen] = useState(false);
@@ -113,9 +117,10 @@ export function ExpandedSectionModal({
 
   const Icon = sectionIcons[sectionId] || FileText;
   const title = sectionTitles[sectionId] || "Details";
-  const allItems = sectionId === "rfq-opportunities" 
-    ? (data.rfqOpportunities || [])
-    : (data[sectionId as keyof typeof data] || []);
+  const allItems =
+    sectionId === "rfq-opportunities"
+      ? data.rfqOpportunities || []
+      : data[sectionId as keyof typeof data] || [];
 
   // Filter options based on section
   const filterOptions = useMemo(() => {
@@ -214,7 +219,10 @@ export function ExpandedSectionModal({
             return item.open;
           } else if (selectedFilter === "closed") {
             return !item.open;
-          } else if (selectedFilter === "urgent" && sectionId === "rfq-opportunities") {
+          } else if (
+            selectedFilter === "urgent" &&
+            sectionId === "rfq-opportunities"
+          ) {
             // Check if deadline is within 3 days
             if (item.response_date) {
               const deadline = new Date(item.response_date);
@@ -227,7 +235,11 @@ export function ExpandedSectionModal({
           }
           return selectedFilter === "open" ? item.open : !item.open;
         }
-        if (sectionId === "quotes" || sectionId === "orders" || sectionId === "contracts") {
+        if (
+          sectionId === "quotes" ||
+          sectionId === "orders" ||
+          sectionId === "contracts"
+        ) {
           return item.status?.toLowerCase() === selectedFilter.toLowerCase();
         }
         return true;
@@ -255,7 +267,9 @@ export function ExpandedSectionModal({
   const fetchStoreProducts = async (storeId: string) => {
     setLoadingProducts(true);
     try {
-      const response = await fetch(`/api/queries/business-products?store_id=${storeId}`);
+      const response = await fetch(
+        `/api/queries/business-products?store_id=${storeId}`
+      );
       if (response.ok) {
         const data = await response.json();
         setStoreProducts(data.products || []);
@@ -321,7 +335,9 @@ export function ExpandedSectionModal({
   const checkExistingQuotes = async () => {
     const quotePromises = allItems.map(async (rfq: any) => {
       try {
-        const response = await fetch(`/api/queries/user-rfq-quote?rfqId=${rfq.id}`);
+        const response = await fetch(
+          `/api/queries/user-rfq-quote?rfqId=${rfq.id}`
+        );
         if (response.ok) {
           const data = await response.json();
           return { rfqId: rfq.id, quote: data.quote };
@@ -391,9 +407,10 @@ export function ExpandedSectionModal({
     }
   };
 
-
   const handleDeleteProduct = async (product: any) => {
-    if (!window.confirm(`Are you sure you want to disable "${product.name}"?`)) {
+    if (
+      !window.confirm(`Are you sure you want to disable "${product.name}"?`)
+    ) {
       return;
     }
 
@@ -435,7 +452,7 @@ export function ExpandedSectionModal({
   if (selectedItem) {
     return (
       <div
-        className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex flex-col"
+        className="fixed inset-0 z-[9999] flex flex-col bg-black/50 backdrop-blur-sm"
         onClick={onClose}
         style={{
           position: "fixed",
@@ -448,27 +465,31 @@ export function ExpandedSectionModal({
         }}
       >
         <div
-          className="bg-white dark:bg-gray-800 rounded-t-3xl mt-[5vh] flex flex-col h-[92vh] shadow-2xl"
+          className="mt-[5vh] flex h-[92vh] flex-col rounded-t-3xl bg-white shadow-2xl dark:bg-gray-800"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Item Detail Header */}
-          <div className="bg-white dark:bg-gray-800 px-5 py-4 flex items-center justify-between rounded-t-3xl border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between rounded-t-3xl border-b border-gray-200 bg-white px-5 py-4 dark:border-gray-700 dark:bg-gray-800">
             <div className="flex items-center gap-3">
               <button
                 onClick={handleBackToList}
-                className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors active:scale-95"
+                className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 active:scale-95 dark:text-gray-300 dark:hover:bg-gray-700"
               >
                 <X className="h-5 w-5" />
               </button>
               <div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">View Details</h3>
-                <p className="text-xs text-gray-600 dark:text-gray-400">{title}</p>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  View Details
+                </h3>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  {title}
+                </p>
               </div>
             </div>
             {!isEditing && sectionId !== "rfq-opportunities" && (
               <button
                 onClick={handleEdit}
-                className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors active:scale-95"
+                className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 active:scale-95 dark:text-gray-300 dark:hover:bg-gray-700"
               >
                 <Edit className="h-5 w-5" />
               </button>
@@ -476,39 +497,41 @@ export function ExpandedSectionModal({
           </div>
 
           {/* Item Detail Content */}
-          <div className="flex-1 overflow-y-auto pb-24 p-5">
+          <div className="flex-1 overflow-y-auto p-5 pb-24">
             {isEditing ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Title
                   </label>
                   <input
                     type="text"
                     defaultValue={selectedItem.title || selectedItem.name || ""}
-                    className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Description
                   </label>
                   <textarea
-                    defaultValue={selectedItem.description || selectedItem.Description || ""}
+                    defaultValue={
+                      selectedItem.description || selectedItem.Description || ""
+                    }
                     rows={4}
-                    className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
                 <div className="flex gap-3 pt-4">
                   <button
                     onClick={handleBackToList}
-                    className="flex-1 px-4 py-3 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                    className="flex-1 rounded-lg bg-gray-200 px-4 py-3 font-semibold text-gray-700 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSave}
-                    className="flex-1 px-4 py-3 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
+                    className="flex-1 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3 font-semibold text-white shadow-lg transition-all hover:shadow-xl"
                   >
                     Save Changes
                   </button>
@@ -518,36 +541,49 @@ export function ExpandedSectionModal({
               <div className="space-y-4">
                 {sectionId === "rfqs" && (
                   <>
-                    <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-                      <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-2">
-                        {selectedItem.title || `RFQ #${selectedItem.id?.slice(0, 8)}`}
+                    <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-700">
+                      <h4 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
+                        {selectedItem.title ||
+                          `RFQ #${selectedItem.id?.slice(0, 8)}`}
                       </h4>
                       <span
-                        className={`inline-block px-3 py-1 rounded-md text-xs font-semibold ${
+                        className={`inline-block rounded-md px-3 py-1 text-xs font-semibold ${
                           selectedItem.open
-                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                            : "bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-400"
+                            ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                            : "bg-gray-100 text-gray-600 dark:bg-gray-600 dark:text-gray-400"
                         }`}
                       >
                         {selectedItem.open ? "Open" : "Closed"}
                       </span>
                     </div>
                     {selectedItem.description && (
-                      <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-                        <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</h5>
-                        <p className="text-gray-600 dark:text-gray-400">{selectedItem.description}</p>
+                      <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-700">
+                        <h5 className="mb-2 font-semibold text-gray-700 dark:text-gray-300">
+                          Description
+                        </h5>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          {selectedItem.description}
+                        </p>
                       </div>
                     )}
                     {selectedItem.category && (
-                      <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-                        <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Category</h5>
-                        <p className="text-gray-600 dark:text-gray-400">{selectedItem.category}</p>
+                      <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-700">
+                        <h5 className="mb-2 font-semibold text-gray-700 dark:text-gray-300">
+                          Category
+                        </h5>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          {selectedItem.category}
+                        </p>
                       </div>
                     )}
                     {selectedItem.location && (
-                      <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-                        <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Location</h5>
-                        <p className="text-gray-600 dark:text-gray-400">{selectedItem.location}</p>
+                      <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-700">
+                        <h5 className="mb-2 font-semibold text-gray-700 dark:text-gray-300">
+                          Location
+                        </h5>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          {selectedItem.location}
+                        </p>
                       </div>
                     )}
                   </>
@@ -555,13 +591,14 @@ export function ExpandedSectionModal({
 
                 {sectionId === "rfq-opportunities" && (
                   <>
-                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-4 mb-4 border border-green-200 dark:border-green-800/50">
-                      <div className="flex items-start justify-between mb-3">
-                        <h4 className="font-bold text-lg text-gray-900 dark:text-white flex-1">
-                          {selectedItem.title || `RFQ #${selectedItem.id?.slice(0, 8)}`}
+                    <div className="mb-4 rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-4 dark:border-green-800/50 dark:from-green-900/20 dark:to-emerald-900/20">
+                      <div className="mb-3 flex items-start justify-between">
+                        <h4 className="flex-1 text-lg font-bold text-gray-900 dark:text-white">
+                          {selectedItem.title ||
+                            `RFQ #${selectedItem.id?.slice(0, 8)}`}
                         </h4>
                         <span
-                          className={`px-3 py-1 rounded-md text-xs font-semibold ml-2 ${
+                          className={`ml-2 rounded-md px-3 py-1 text-xs font-semibold ${
                             selectedItem.open
                               ? "bg-green-500 text-white"
                               : "bg-gray-500 text-white"
@@ -572,55 +609,83 @@ export function ExpandedSectionModal({
                         </span>
                       </div>
                       {selectedItem.business_account?.business_name && (
-                        <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 mb-2">
+                        <div className="mb-2 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                           <Building className="h-4 w-4" />
-                          <span>{selectedItem.business_account.business_name}</span>
+                          <span>
+                            {selectedItem.business_account.business_name}
+                          </span>
                         </div>
                       )}
                     </div>
 
                     {selectedItem.description && (
-                      <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 mb-4">
-                        <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</h5>
-                        <p className="text-gray-600 dark:text-gray-400">{selectedItem.description}</p>
+                      <div className="mb-4 rounded-xl bg-gray-50 p-4 dark:bg-gray-700">
+                        <h5 className="mb-2 font-semibold text-gray-700 dark:text-gray-300">
+                          Description
+                        </h5>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          {selectedItem.description}
+                        </p>
                       </div>
                     )}
 
-                    <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="mb-4 grid grid-cols-2 gap-3">
                       {selectedItem.category && (
-                        <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-                          <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-1 text-xs">Category</h5>
-                          <p className="text-gray-900 dark:text-white font-medium">{selectedItem.category}</p>
+                        <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-700">
+                          <h5 className="mb-1 text-xs font-semibold text-gray-700 dark:text-gray-300">
+                            Category
+                          </h5>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {selectedItem.category}
+                          </p>
                         </div>
                       )}
                       {selectedItem.location && (
-                        <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-                          <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-1 text-xs">Location</h5>
-                          <p className="text-gray-900 dark:text-white font-medium">{selectedItem.location}</p>
+                        <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-700">
+                          <h5 className="mb-1 text-xs font-semibold text-gray-700 dark:text-gray-300">
+                            Location
+                          </h5>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {selectedItem.location}
+                          </p>
                         </div>
                       )}
                     </div>
 
                     {(selectedItem.min_budget || selectedItem.max_budget) && (
-                      <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 mb-4">
-                        <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Budget</h5>
+                      <div className="mb-4 rounded-xl bg-gray-50 p-4 dark:bg-gray-700">
+                        <h5 className="mb-2 font-semibold text-gray-700 dark:text-gray-300">
+                          Budget
+                        </h5>
                         <p className="text-lg font-bold text-green-600 dark:text-green-400">
                           {selectedItem.min_budget && selectedItem.max_budget
-                            ? `${formatCurrencySync(parseFloat(selectedItem.min_budget))} - ${formatCurrencySync(parseFloat(selectedItem.max_budget))}`
+                            ? `${formatCurrencySync(
+                                parseFloat(selectedItem.min_budget)
+                              )} - ${formatCurrencySync(
+                                parseFloat(selectedItem.max_budget)
+                              )}`
                             : selectedItem.min_budget
-                            ? `${formatCurrencySync(parseFloat(selectedItem.min_budget))}+`
+                            ? `${formatCurrencySync(
+                                parseFloat(selectedItem.min_budget)
+                              )}+`
                             : selectedItem.max_budget
-                            ? `Up to ${formatCurrencySync(parseFloat(selectedItem.max_budget))}`
+                            ? `Up to ${formatCurrencySync(
+                                parseFloat(selectedItem.max_budget)
+                              )}`
                             : "Not specified"}
                         </p>
                       </div>
                     )}
 
                     {selectedItem.response_date && (
-                      <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 mb-4">
-                        <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Response Deadline</h5>
-                        <p className="text-gray-900 dark:text-white font-medium">
-                          {new Date(selectedItem.response_date).toLocaleDateString("en-US", {
+                      <div className="mb-4 rounded-xl bg-gray-50 p-4 dark:bg-gray-700">
+                        <h5 className="mb-2 font-semibold text-gray-700 dark:text-gray-300">
+                          Response Deadline
+                        </h5>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {new Date(
+                            selectedItem.response_date
+                          ).toLocaleDateString("en-US", {
                             month: "long",
                             day: "numeric",
                             year: "numeric",
@@ -629,15 +694,19 @@ export function ExpandedSectionModal({
                       </div>
                     )}
 
-                    <div className="flex flex-col gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex flex-col gap-2 border-t border-gray-200 pt-4 dark:border-gray-700">
                       <button
                         onClick={() => handleShareQuote(selectedItem)}
                         disabled={isOpeningQuoteForm}
-                        className={`w-full rounded-lg px-4 py-3 font-semibold text-white transition-colors flex items-center justify-center gap-2 ${
+                        className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 font-semibold text-white transition-colors ${
                           submittedQuotes[selectedItem.id]
                             ? "bg-blue-500 hover:bg-blue-600"
                             : "bg-green-500 hover:bg-green-600"
-                        } ${isOpeningQuoteForm ? "opacity-75 cursor-not-allowed" : ""}`}
+                        } ${
+                          isOpeningQuoteForm
+                            ? "cursor-not-allowed opacity-75"
+                            : ""
+                        }`}
                         style={{ color: "#ffffff" }}
                       >
                         {isOpeningQuoteForm ? (
@@ -645,14 +714,18 @@ export function ExpandedSectionModal({
                             <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                             <span>Opening...</span>
                           </>
+                        ) : submittedQuotes[selectedItem.id] ? (
+                          "View Quote"
                         ) : (
-                          submittedQuotes[selectedItem.id] ? "View Quote" : "Submit Quote"
+                          "Submit Quote"
                         )}
                       </button>
                       {onMessageCustomer && (
                         <button
                           onClick={() => {
-                            const customerId = selectedItem.business_account?.id || selectedItem.id;
+                            const customerId =
+                              selectedItem.business_account?.id ||
+                              selectedItem.id;
                             onMessageCustomer(customerId);
                           }}
                           className="w-full rounded-lg bg-purple-500 px-4 py-3 font-semibold text-white transition-colors hover:bg-purple-600"
@@ -665,675 +738,327 @@ export function ExpandedSectionModal({
                   </>
                 )}
 
-                {sectionId === "quotes" && (() => {
-                  // Transform quote data similar to desktop version
-                  const transformQuote = (quote: any) => {
-                    const attachments = [
-                      quote.attachement,
-                      quote.attachment_1,
-                      quote.attachment_2,
-                    ].filter((att) => att && att.trim() !== "");
+                {sectionId === "quotes" &&
+                  (() => {
+                    // Transform quote data similar to desktop version
+                    const transformQuote = (quote: any) => {
+                      const attachments = [
+                        quote.attachement,
+                        quote.attachment_1,
+                        quote.attachment_2,
+                      ].filter((att) => att && att.trim() !== "");
 
-                    const rfqRequester = quote.bussines_RFQ?.business_account;
-                    const myBusiness = quote.business_account;
-                    const rfq = quote.bussines_RFQ || quote.businessRfq || quote.rfq;
+                      const rfqRequester = quote.bussines_RFQ?.business_account;
+                      const myBusiness = quote.business_account;
+                      const rfq =
+                        quote.bussines_RFQ || quote.businessRfq || quote.rfq;
 
-                    const getValue = (value: any, defaultValue: string = "") => {
-                      if (value === null || value === undefined || value === "") {
-                        return defaultValue;
-                      }
-                      return String(value);
-                    };
+                      const getValue = (
+                        value: any,
+                        defaultValue: string = ""
+                      ) => {
+                        if (
+                          value === null ||
+                          value === undefined ||
+                          value === ""
+                        ) {
+                          return defaultValue;
+                        }
+                        return String(value);
+                      };
 
-                    const formatDate = (dateString: string) => {
-                      if (!dateString) return "Not specified";
-                      const date = new Date(dateString);
-                      return date.toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      });
-                    };
+                      const formatDate = (dateString: string) => {
+                        if (!dateString) return "Not specified";
+                        const date = new Date(dateString);
+                        return date.toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        });
+                      };
 
-                    const formatCurrency = (amount: string, currency: string) => {
-                      try {
-                        return new Intl.NumberFormat("en-US", {
-                          style: "currency",
-                          currency: currency || "RWF",
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 2,
-                        }).format(parseFloat(amount));
-                      } catch {
-                        return `${amount} ${currency || "RWF"}`;
-                      }
-                    };
+                      const formatCurrency = (
+                        amount: string,
+                        currency: string
+                      ) => {
+                        try {
+                          return new Intl.NumberFormat("en-US", {
+                            style: "currency",
+                            currency: currency || "RWF",
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 2,
+                          }).format(parseFloat(amount));
+                        } catch {
+                          return `${amount} ${currency || "RWF"}`;
+                        }
+                      };
 
-                    return {
-                      id: quote.id,
-                      title: getValue(rfq?.title, "RFQ Quote"),
-                      description: getValue(rfq?.description),
-                      category: getValue(rfq?.category),
-                      location: getValue(rfq?.location),
-                      minBudget: getValue(rfq?.min_budget),
-                      maxBudget: getValue(rfq?.max_budget),
-                      responseDate: getValue(rfq?.response_date),
-                      urgencyLevel: getValue(rfq?.urgency_level),
-                      estimatedQuantity: getValue(rfq?.estimated_quantity),
-                      expectedDeliveryDate: getValue(rfq?.expected_delivery_date),
-                      requirements: rfq?.requirements || null,
-                      notes: getValue(rfq?.notes),
-                      rfqContactName: getValue(rfq?.contact_name),
-                      rfqEmail: getValue(rfq?.email),
-                      rfqPhone: getValue(rfq?.phone),
-                      rfqCreatedAt: getValue(rfq?.created_at),
-                      totalPrice: quote.qouteAmount ? formatCurrency(quote.qouteAmount, quote.currency) : "N/A",
-                      currency: quote.currency || "RWF",
-                      deliveryTime: quote.delivery_time || "Not specified",
-                      validUntil: quote.quote_validity || "Not specified",
-                      status: quote.status || "pending",
-                      submittedDate: formatDate(quote.created_at),
-                      updatedDate: formatDate(quote.updated_at),
-                      quoteMessage: quote.message || "",
-                      attachments: attachments,
-                      rfqRequester: {
-                        name: getValue(
-                          rfqRequester?.business_name || rfq?.contact_name,
-                          "Unknown Business"
+                      return {
+                        id: quote.id,
+                        title: getValue(rfq?.title, "RFQ Quote"),
+                        description: getValue(rfq?.description),
+                        category: getValue(rfq?.category),
+                        location: getValue(rfq?.location),
+                        minBudget: getValue(rfq?.min_budget),
+                        maxBudget: getValue(rfq?.max_budget),
+                        responseDate: getValue(rfq?.response_date),
+                        urgencyLevel: getValue(rfq?.urgency_level),
+                        estimatedQuantity: getValue(rfq?.estimated_quantity),
+                        expectedDeliveryDate: getValue(
+                          rfq?.expected_delivery_date
                         ),
-                        email: getValue(rfqRequester?.business_email || rfq?.email),
-                        phone: getValue(rfqRequester?.business_phone || rfq?.phone),
-                        location: getValue(rfqRequester?.business_location || rfq?.location),
-                        accountType: getValue(rfqRequester?.account_type),
-                        status: getValue(rfqRequester?.status),
-                        id: getValue(rfqRequester?.id),
-                      },
-                      myBusiness: {
-                        name: myBusiness?.business_name || "Unknown Business",
-                        email: myBusiness?.business_email || "",
-                        phone: myBusiness?.business_phone || "",
-                        location: myBusiness?.business_location || "",
-                        accountType: myBusiness?.account_type || "",
-                        status: myBusiness?.status || "",
-                        id: myBusiness?.id || "",
-                      },
-                      terms: {
-                        paymentTerms: getValue(quote.PaymentTerms, "Not specified"),
-                        deliveryTerms: getValue(quote.DeliveryTerms, "Not specified"),
-                        warranty: getValue(quote.warrantly, "Not specified"),
-                        cancellationTerms: getValue(quote.cancellatioinTerms, "Not specified"),
-                      },
+                        requirements: rfq?.requirements || null,
+                        notes: getValue(rfq?.notes),
+                        rfqContactName: getValue(rfq?.contact_name),
+                        rfqEmail: getValue(rfq?.email),
+                        rfqPhone: getValue(rfq?.phone),
+                        rfqCreatedAt: getValue(rfq?.created_at),
+                        totalPrice: quote.qouteAmount
+                          ? formatCurrency(quote.qouteAmount, quote.currency)
+                          : "N/A",
+                        currency: quote.currency || "RWF",
+                        deliveryTime: quote.delivery_time || "Not specified",
+                        validUntil: quote.quote_validity || "Not specified",
+                        status: quote.status || "pending",
+                        submittedDate: formatDate(quote.created_at),
+                        updatedDate: formatDate(quote.updated_at),
+                        quoteMessage: quote.message || "",
+                        attachments: attachments,
+                        rfqRequester: {
+                          name: getValue(
+                            rfqRequester?.business_name || rfq?.contact_name,
+                            "Unknown Business"
+                          ),
+                          email: getValue(
+                            rfqRequester?.business_email || rfq?.email
+                          ),
+                          phone: getValue(
+                            rfqRequester?.business_phone || rfq?.phone
+                          ),
+                          location: getValue(
+                            rfqRequester?.business_location || rfq?.location
+                          ),
+                          accountType: getValue(rfqRequester?.account_type),
+                          status: getValue(rfqRequester?.status),
+                          id: getValue(rfqRequester?.id),
+                        },
+                        myBusiness: {
+                          name: myBusiness?.business_name || "Unknown Business",
+                          email: myBusiness?.business_email || "",
+                          phone: myBusiness?.business_phone || "",
+                          location: myBusiness?.business_location || "",
+                          accountType: myBusiness?.account_type || "",
+                          status: myBusiness?.status || "",
+                          id: myBusiness?.id || "",
+                        },
+                        terms: {
+                          paymentTerms: getValue(
+                            quote.PaymentTerms,
+                            "Not specified"
+                          ),
+                          deliveryTerms: getValue(
+                            quote.DeliveryTerms,
+                            "Not specified"
+                          ),
+                          warranty: getValue(quote.warrantly, "Not specified"),
+                          cancellationTerms: getValue(
+                            quote.cancellatioinTerms,
+                            "Not specified"
+                          ),
+                        },
+                      };
                     };
-                  };
 
-                  const quote = transformQuote(selectedItem);
+                    const quote = transformQuote(selectedItem);
 
-                  const downloadAttachment = (base64String: string, index: number) => {
-                    try {
-                      const [mimeType, base64Data] = base64String.split(",");
-                      const byteCharacters = atob(base64Data);
-                      const byteNumbers = new Array(byteCharacters.length);
-                      for (let i = 0; i < byteCharacters.length; i++) {
-                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    const downloadAttachment = (
+                      base64String: string,
+                      index: number
+                    ) => {
+                      try {
+                        const [mimeType, base64Data] = base64String.split(",");
+                        const byteCharacters = atob(base64Data);
+                        const byteNumbers = new Array(byteCharacters.length);
+                        for (let i = 0; i < byteCharacters.length; i++) {
+                          byteNumbers[i] = byteCharacters.charCodeAt(i);
+                        }
+                        const byteArray = new Uint8Array(byteNumbers);
+                        const blob = new Blob([byteArray], {
+                          type: mimeType.split(":")[1].split(";")[0],
+                        });
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement("a");
+                        link.href = url;
+                        link.download = `quote-attachment-${index + 1}.${
+                          blob.type.includes("pdf") ? "pdf" : "jpg"
+                        }`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                      } catch (error) {
+                        console.error("Error downloading attachment:", error);
                       }
-                      const byteArray = new Uint8Array(byteNumbers);
-                      const blob = new Blob([byteArray], {
-                        type: mimeType.split(":")[1].split(";")[0],
-                      });
-                      const url = URL.createObjectURL(blob);
-                      const link = document.createElement("a");
-                      link.href = url;
-                      link.download = `quote-attachment-${index + 1}.${
-                        blob.type.includes("pdf") ? "pdf" : "jpg"
-                      }`;
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
-                      URL.revokeObjectURL(url);
-                    } catch (error) {
-                      console.error("Error downloading attachment:", error);
-                    }
-                  };
+                    };
 
-                  return (
-                    <>
-                      {/* Header */}
-                      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 -mx-5 px-5 py-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0 flex-1">
-                            <div className="mb-3 flex items-center gap-3">
-                              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 shadow-md">
-                                <FileText className="h-6 w-6 text-gray-700 dark:text-gray-300" />
+                    return (
+                      <>
+                        {/* Header */}
+                        <div className="-mx-5 border-b border-gray-200 bg-white px-5 py-4 dark:border-gray-700 dark:bg-gray-800">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                              <div className="mb-3 flex items-center gap-3">
+                                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 shadow-md dark:from-gray-700 dark:to-gray-600">
+                                  <FileText className="h-6 w-6 text-gray-700 dark:text-gray-300" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <h2 className="line-clamp-2 text-lg font-bold leading-tight text-gray-900 dark:text-white">
+                                    {quote.title}
+                                  </h2>
+                                </div>
                               </div>
-                              <div className="min-w-0 flex-1">
-                                <h2 className="text-lg font-bold leading-tight text-gray-900 dark:text-white line-clamp-2">
-                                  {quote.title}
-                                </h2>
+                              <div className="ml-14 flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-600 dark:bg-gray-700/50">
+                                <Building className="h-4 w-4 flex-shrink-0 text-gray-600 dark:text-gray-400" />
+                                <span className="truncate text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                  {quote.rfqRequester?.name ||
+                                    "Unknown Business"}
+                                </span>
                               </div>
-                            </div>
-                            <div className="ml-14 flex items-center gap-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 px-3 py-2 border border-gray-200 dark:border-gray-600">
-                              <Building className="h-4 w-4 flex-shrink-0 text-gray-600 dark:text-gray-400" />
-                              <span className="truncate text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                {quote.rfqRequester?.name || "Unknown Business"}
-                              </span>
                             </div>
                           </div>
                         </div>
-                      </div>
 
-                      {/* Tabs */}
-                      <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 -mx-5 px-5 py-3 shadow-sm border-b border-gray-200 dark:border-gray-700">
-                        <div className="scrollbar-hide flex space-x-2 overflow-x-auto pb-2">
-                          {[
-                            { id: "overview", label: "Overview", icon: FileText, shortLabel: "Overview" },
-                            { id: "rfq", label: "RFQ Details", icon: FileText, shortLabel: "RFQ" },
-                            { id: "requester", label: "RFQ Requester", icon: Building, shortLabel: "Requester" },
-                            { id: "quote", label: "My Quote", icon: DollarSign, shortLabel: "Quote" },
-                            { id: "terms", label: "Terms & Conditions", icon: FileText, shortLabel: "Terms" },
-                          ].map((tab) => (
-                            <button
-                              key={tab.id}
-                              onClick={() => setQuoteActiveTab(tab.id)}
-                              className={`group flex flex-shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all duration-200 active:scale-95 ${
-                                quoteActiveTab === tab.id
-                                  ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/40"
-                                  : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
-                              }`}
-                              style={
-                                quoteActiveTab === tab.id ? { color: "#ffffff" } : undefined
-                              }
-                            >
-                              <tab.icon
-                                className="h-4 w-4 transition-transform duration-200"
+                        {/* Tabs */}
+                        <div className="sticky top-0 z-10 -mx-5 border-b border-gray-200 bg-white px-5 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                          <div className="scrollbar-hide flex space-x-2 overflow-x-auto pb-2">
+                            {[
+                              {
+                                id: "overview",
+                                label: "Overview",
+                                icon: FileText,
+                                shortLabel: "Overview",
+                              },
+                              {
+                                id: "rfq",
+                                label: "RFQ Details",
+                                icon: FileText,
+                                shortLabel: "RFQ",
+                              },
+                              {
+                                id: "requester",
+                                label: "RFQ Requester",
+                                icon: Building,
+                                shortLabel: "Requester",
+                              },
+                              {
+                                id: "quote",
+                                label: "My Quote",
+                                icon: DollarSign,
+                                shortLabel: "Quote",
+                              },
+                              {
+                                id: "terms",
+                                label: "Terms & Conditions",
+                                icon: FileText,
+                                shortLabel: "Terms",
+                              },
+                            ].map((tab) => (
+                              <button
+                                key={tab.id}
+                                onClick={() => setQuoteActiveTab(tab.id)}
+                                className={`group flex flex-shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all duration-200 active:scale-95 ${
+                                  quoteActiveTab === tab.id
+                                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/40"
+                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+                                }`}
                                 style={
-                                  quoteActiveTab === tab.id ? { color: "#ffffff" } : undefined
-                                }
-                              />
-                              <span
-                                className="whitespace-nowrap"
-                                style={
-                                  quoteActiveTab === tab.id ? { color: "#ffffff" } : undefined
+                                  quoteActiveTab === tab.id
+                                    ? { color: "#ffffff" }
+                                    : undefined
                                 }
                               >
-                                {tab.shortLabel}
-                              </span>
-                            </button>
-                          ))}
+                                <tab.icon
+                                  className="h-4 w-4 transition-transform duration-200"
+                                  style={
+                                    quoteActiveTab === tab.id
+                                      ? { color: "#ffffff" }
+                                      : undefined
+                                  }
+                                />
+                                <span
+                                  className="whitespace-nowrap"
+                                  style={
+                                    quoteActiveTab === tab.id
+                                      ? { color: "#ffffff" }
+                                      : undefined
+                                  }
+                                >
+                                  {tab.shortLabel}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Tab Content */}
-                      <div className="pb-4 space-y-4">
-                        {quoteActiveTab === "overview" && (
-                          <div className="space-y-4">
-                            <div className="grid grid-cols-1 gap-4">
-                              {/* Quote Summary */}
-                              <div className="overflow-hidden rounded-none border-x-0 border-t-0 border-b border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                                <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-5 py-4 dark:from-green-900/20 dark:to-emerald-900/20">
-                                  <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
-                                    <DollarSign className="h-5 w-5 text-green-600" />
-                                    Quote Summary
-                                  </h3>
-                                </div>
-                                <div className="space-y-4 p-5">
-                                  <div className="rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 p-4 dark:from-green-900/20 dark:to-emerald-900/20">
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                                        Total Price
-                                      </span>
-                                      <span className="text-2xl font-bold text-green-600 dark:text-green-400">
-                                        {quote.totalPrice}
-                                      </span>
-                                    </div>
+                        {/* Tab Content */}
+                        <div className="space-y-4 pb-4">
+                          {quoteActiveTab === "overview" && (
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-1 gap-4">
+                                {/* Quote Summary */}
+                                <div className="overflow-hidden rounded-none border-x-0 border-b border-t-0 border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-5 py-4 dark:from-green-900/20 dark:to-emerald-900/20">
+                                    <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
+                                      <DollarSign className="h-5 w-5 text-green-600" />
+                                      Quote Summary
+                                    </h3>
                                   </div>
-                                  <div className="space-y-3">
-                                    <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
-                                      <span className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300">
-                                        <Truck className="h-4 w-4 text-green-600" />
-                                        Delivery Time
-                                      </span>
-                                      <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                                        {quote.deliveryTime}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
-                                      <span className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300">
-                                        <Calendar className="h-4 w-4 text-orange-500" />
-                                        Valid Until
-                                      </span>
-                                      <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                                        {quote.validUntil}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
-                                      <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                                        Currency
-                                      </span>
-                                      <span className="rounded-full bg-gray-200 px-3 py-1 text-xs font-semibold text-gray-700 dark:bg-gray-600 dark:text-gray-300">
-                                        {quote.currency}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
-                                      <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                                        Status
-                                      </span>
-                                      <span
-                                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                                          quote.status === "accepted"
-                                            ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
-                                            : quote.status === "rejected"
-                                            ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
-                                            : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
-                                        }`}
-                                      >
-                                        {quote.status?.charAt(0).toUpperCase() +
-                                          quote.status?.slice(1) || "Pending"}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
-                                      <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                                        Submitted
-                                      </span>
-                                      <span className="text-xs text-gray-700 dark:text-gray-300">
-                                        {quote.submittedDate}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* RFQ Requester Quick Info */}
-                              <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800">
-                                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-5 py-4 dark:from-blue-900/20 dark:to-cyan-900/20">
-                                  <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
-                                    <Building className="h-5 w-5 text-blue-600" />
-                                    RFQ Requester
-                                  </h3>
-                                </div>
-                                <div className="space-y-4 p-5">
-                                  <div className="flex items-center gap-4 rounded-xl bg-gray-50 p-4 dark:bg-gray-700/50">
-                                    <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 shadow-md">
-                                      <Building className="h-7 w-7 text-white" />
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                      <h4 className="truncate font-bold text-gray-900 dark:text-white">
-                                        {quote.rfqRequester?.name || "Unknown Business"}
-                                      </h4>
-                                      <div className="mt-1 flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
-                                        <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-                                        <span className="truncate">
-                                          {quote.rfqRequester?.location || "Not specified"}
+                                  <div className="space-y-4 p-5">
+                                    <div className="rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 p-4 dark:from-green-900/20 dark:to-emerald-900/20">
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                                          Total Price
                                         </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="space-y-2.5">
-                                    <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
-                                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                                        <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                                      </div>
-                                      <span className="truncate text-sm text-gray-700 dark:text-gray-300">
-                                        {quote.rfqRequester?.email || "Not provided"}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
-                                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30">
-                                        <Phone className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                      </div>
-                                      <span className="truncate text-sm text-gray-700 dark:text-gray-300">
-                                        {quote.rfqRequester?.phone || "Not provided"}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Quote Message */}
-                            {quote.quoteMessage && (
-                              <div className="overflow-hidden rounded-none border-x-0 border-t-0 border-b border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                                <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-5 py-4 dark:from-purple-900/20 dark:to-pink-900/20">
-                                  <h3 className="flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white">
-                                    <MessageSquare className="h-5 w-5 text-purple-600" />
-                                    Quote Message
-                                  </h3>
-                                </div>
-                                <div className="p-5">
-                                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700 dark:text-gray-300">
-                                    {quote.quoteMessage}
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Attachments */}
-                            {quote.attachments && quote.attachments.length > 0 && (
-                              <div className="overflow-hidden rounded-none border-x-0 border-t-0 border-b border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                                <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-5 py-4 dark:from-amber-900/20 dark:to-orange-900/20">
-                                  <h3 className="flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white">
-                                    <FileText className="h-5 w-5 text-amber-600" />
-                                    Attachments ({quote.attachments.length})
-                                  </h3>
-                                </div>
-                                <div className="space-y-2.5 p-5">
-                                  {quote.attachments.map(
-                                    (attachment: string, index: number) => (
-                                      <button
-                                        key={index}
-                                        onClick={() => downloadAttachment(attachment, index)}
-                                        className="flex w-full items-center justify-between rounded-xl border-2 border-gray-200 bg-gray-50 p-4 transition-all duration-200 hover:border-green-300 hover:bg-green-50 active:scale-95 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-700 dark:hover:bg-green-900/20"
-                                      >
-                                        <div className="flex items-center gap-3">
-                                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                                            <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                                          </div>
-                                          <span className="font-medium text-gray-700 dark:text-gray-300">
-                                            Attachment {index + 1}
-                                          </span>
-                                        </div>
-                                        <Download className="h-5 w-5 flex-shrink-0 text-gray-500 dark:text-gray-400" />
-                                      </button>
-                                    )
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {quoteActiveTab === "rfq" && (
-                          <div className="space-y-4">
-                            <div className="rounded-none border-x-0 border-t-0 border-b border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                              <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
-                                RFQ Details
-                              </h3>
-                              <div className="space-y-6">
-                                <div className="grid grid-cols-1 gap-6">
-                                  <div className="space-y-4">
-                                    <div>
-                                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                        Title:
-                                      </span>
-                                      <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
-                                        {quote.title}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                        Description:
-                                      </span>
-                                      <p className="mt-1 whitespace-pre-wrap text-sm text-gray-900 dark:text-white">
-                                        {quote.description || "Not provided"}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                        Category:
-                                      </span>
-                                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                        {quote.category || "Not specified"}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                        Location:
-                                      </span>
-                                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                        {quote.location || "Not specified"}
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <div className="space-y-4">
-                                    <div>
-                                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                        Budget Range:
-                                      </span>
-                                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                        {quote.minBudget && quote.maxBudget
-                                          ? `${formatCurrencySync(
-                                              parseFloat(quote.minBudget)
-                                            )} - ${formatCurrencySync(
-                                              parseFloat(quote.maxBudget)
-                                            )}`
-                                          : quote.minBudget
-                                          ? `Min: ${formatCurrencySync(
-                                              parseFloat(quote.minBudget)
-                                            )}`
-                                          : quote.maxBudget
-                                          ? `Max: ${formatCurrencySync(
-                                              parseFloat(quote.maxBudget)
-                                            )}`
-                                          : "Not specified"}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                        Response Deadline:
-                                      </span>
-                                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                        {quote.responseDate
-                                          ? new Date(quote.responseDate).toLocaleDateString("en-US", {
-                                              year: "numeric",
-                                              month: "long",
-                                              day: "numeric",
-                                            })
-                                          : "Not specified"}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                        Expected Delivery:
-                                      </span>
-                                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                        {quote.expectedDeliveryDate
-                                          ? new Date(quote.expectedDeliveryDate).toLocaleDateString("en-US", {
-                                              year: "numeric",
-                                              month: "long",
-                                              day: "numeric",
-                                            })
-                                          : "Not specified"}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                        Urgency Level:
-                                      </span>
-                                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                        {quote.urgencyLevel || "Not specified"}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                        Estimated Quantity:
-                                      </span>
-                                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                        {quote.estimatedQuantity || "Not specified"}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                                {quote.notes && (
-                                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
-                                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                      Additional Notes:
-                                    </span>
-                                    <p className="mt-2 whitespace-pre-wrap text-sm text-gray-900 dark:text-white">
-                                      {quote.notes}
-                                    </p>
-                                  </div>
-                                )}
-                                {quote.requirements && (
-                                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
-                                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                      Requirements:
-                                    </span>
-                                    <div className="mt-2 text-sm text-gray-900 dark:text-white">
-                                      {typeof quote.requirements === "string" ? (
-                                        <p className="whitespace-pre-wrap">{quote.requirements}</p>
-                                      ) : Array.isArray(quote.requirements) ? (
-                                        <ul className="list-inside list-disc space-y-1">
-                                          {quote.requirements.map((req: any, idx: number) => (
-                                            <li key={idx}>
-                                              {typeof req === "string" ? req : JSON.stringify(req)}
-                                            </li>
-                                          ))}
-                                        </ul>
-                                      ) : (
-                                        <p>{JSON.stringify(quote.requirements)}</p>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {quoteActiveTab === "requester" && (
-                          <div className="space-y-4">
-                            <div className="rounded-lg bg-white p-4 shadow-md dark:bg-gray-800">
-                              <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
-                                RFQ Requester Company Information
-                              </h3>
-                              <div className="space-y-6">
-                                <div className="grid grid-cols-1 gap-6">
-                                  <div className="space-y-4">
-                                    <h4 className="font-semibold text-gray-900 dark:text-white">
-                                      Company Details
-                                    </h4>
-                                    <div className="space-y-3">
-                                      <div>
-                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                          Business Name:
-                                        </span>
-                                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                          {quote.rfqRequester?.name || "Not provided"}
-                                        </p>
-                                      </div>
-                                      <div>
-                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                          Account Type:
-                                        </span>
-                                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                          {quote.rfqRequester?.accountType || "Not specified"}
-                                        </p>
-                                      </div>
-                                      <div>
-                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                          Status:
-                                        </span>
-                                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                          {quote.rfqRequester?.status || "Not specified"}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="space-y-4">
-                                    <h4 className="font-semibold text-gray-900 dark:text-white">
-                                      Contact Information
-                                    </h4>
-                                    <div className="space-y-3">
-                                      <div>
-                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                          Email:
-                                        </span>
-                                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                          {quote.rfqRequester?.email || quote.rfqEmail || "Not provided"}
-                                        </p>
-                                      </div>
-                                      <div>
-                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                          Phone:
-                                        </span>
-                                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                          {quote.rfqRequester?.phone || quote.rfqPhone || "Not provided"}
-                                        </p>
-                                      </div>
-                                      <div>
-                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                          Location:
-                                        </span>
-                                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                          {quote.rfqRequester?.location || quote.location || "Not provided"}
-                                        </p>
-                                      </div>
-                                      {quote.rfqContactName && (
-                                        <div>
-                                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                            Contact Person:
-                                          </span>
-                                          <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                            {quote.rfqContactName}
-                                          </p>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {quoteActiveTab === "quote" && (
-                          <div className="space-y-4">
-                            <div className="rounded-none border-x-0 border-t-0 border-b border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                              <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
-                                My Quote Details
-                              </h3>
-                              <div className="space-y-6">
-                                <div className="grid grid-cols-1 gap-6">
-                                  <div className="space-y-4">
-                                    <h4 className="font-semibold text-gray-900 dark:text-white">
-                                      Quote Information
-                                    </h4>
-                                    <div className="space-y-3">
-                                      <div>
-                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                          Quote Amount:
-                                        </span>
-                                        <p className="mt-1 text-lg font-bold text-green-600">
+                                        <span className="text-2xl font-bold text-green-600 dark:text-green-400">
                                           {quote.totalPrice}
-                                        </p>
-                                      </div>
-                                      <div>
-                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                          Currency:
                                         </span>
-                                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                          {quote.currency}
-                                        </p>
-                                      </div>
-                                      <div>
-                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                          Delivery Time:
-                                        </span>
-                                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                          {quote.deliveryTime}
-                                        </p>
-                                      </div>
-                                      <div>
-                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                          Quote Validity:
-                                        </span>
-                                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                          {quote.validUntil}
-                                        </p>
                                       </div>
                                     </div>
-                                  </div>
-                                  <div className="space-y-4">
-                                    <h4 className="font-semibold text-gray-900 dark:text-white">
-                                      Status & Dates
-                                    </h4>
                                     <div className="space-y-3">
-                                      <div>
-                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                          Status:
+                                      <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
+                                        <span className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300">
+                                          <Truck className="h-4 w-4 text-green-600" />
+                                          Delivery Time
                                         </span>
-                                        <p
-                                          className={`mt-1 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                                        <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                                          {quote.deliveryTime}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
+                                        <span className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300">
+                                          <Calendar className="h-4 w-4 text-orange-500" />
+                                          Valid Until
+                                        </span>
+                                        <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                                          {quote.validUntil}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
+                                        <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                                          Currency
+                                        </span>
+                                        <span className="rounded-full bg-gray-200 px-3 py-1 text-xs font-semibold text-gray-700 dark:bg-gray-600 dark:text-gray-300">
+                                          {quote.currency}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
+                                        <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                                          Status
+                                        </span>
+                                        <span
+                                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
                                             quote.status === "accepted"
                                               ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
                                               : quote.status === "rejected"
@@ -1341,126 +1066,597 @@ export function ExpandedSectionModal({
                                               : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
                                           }`}
                                         >
-                                          {quote.status?.charAt(0).toUpperCase() +
+                                          {quote.status
+                                            ?.charAt(0)
+                                            .toUpperCase() +
                                             quote.status?.slice(1) || "Pending"}
-                                        </p>
-                                      </div>
-                                      <div>
-                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                          Submitted Date:
                                         </span>
-                                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                          {quote.submittedDate || "Not available"}
-                                        </p>
                                       </div>
-                                      {quote.updatedDate &&
-                                        quote.updatedDate !== quote.submittedDate && (
-                                          <div>
-                                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                              Last Updated:
-                                            </span>
-                                            <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                              {quote.updatedDate}
-                                            </p>
-                                          </div>
-                                        )}
+                                      <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
+                                        <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                                          Submitted
+                                        </span>
+                                        <span className="text-xs text-gray-700 dark:text-gray-300">
+                                          {quote.submittedDate}
+                                        </span>
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
-                                {quote.quoteMessage && (
-                                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
-                                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                      Quote Message:
-                                    </span>
-                                    <p className="mt-2 whitespace-pre-wrap text-sm text-gray-900 dark:text-white">
+
+                                {/* RFQ Requester Quick Info */}
+                                <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800">
+                                  <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-5 py-4 dark:from-blue-900/20 dark:to-cyan-900/20">
+                                    <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
+                                      <Building className="h-5 w-5 text-blue-600" />
+                                      RFQ Requester
+                                    </h3>
+                                  </div>
+                                  <div className="space-y-4 p-5">
+                                    <div className="flex items-center gap-4 rounded-xl bg-gray-50 p-4 dark:bg-gray-700/50">
+                                      <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 shadow-md">
+                                        <Building className="h-7 w-7 text-white" />
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <h4 className="truncate font-bold text-gray-900 dark:text-white">
+                                          {quote.rfqRequester?.name ||
+                                            "Unknown Business"}
+                                        </h4>
+                                        <div className="mt-1 flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+                                          <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                                          <span className="truncate">
+                                            {quote.rfqRequester?.location ||
+                                              "Not specified"}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="space-y-2.5">
+                                      <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
+                                        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                                          <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                        </div>
+                                        <span className="truncate text-sm text-gray-700 dark:text-gray-300">
+                                          {quote.rfqRequester?.email ||
+                                            "Not provided"}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
+                                        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30">
+                                          <Phone className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                        </div>
+                                        <span className="truncate text-sm text-gray-700 dark:text-gray-300">
+                                          {quote.rfqRequester?.phone ||
+                                            "Not provided"}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Quote Message */}
+                              {quote.quoteMessage && (
+                                <div className="overflow-hidden rounded-none border-x-0 border-b border-t-0 border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-5 py-4 dark:from-purple-900/20 dark:to-pink-900/20">
+                                    <h3 className="flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white">
+                                      <MessageSquare className="h-5 w-5 text-purple-600" />
+                                      Quote Message
+                                    </h3>
+                                  </div>
+                                  <div className="p-5">
+                                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700 dark:text-gray-300">
                                       {quote.quoteMessage}
                                     </p>
                                   </div>
-                                )}
-                                {quote.attachments && quote.attachments.length > 0 && (
-                                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
-                                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                      Attachments ({quote.attachments.length}):
-                                    </span>
-                                    <div className="mt-3 space-y-2">
+                                </div>
+                              )}
+
+                              {/* Attachments */}
+                              {quote.attachments &&
+                                quote.attachments.length > 0 && (
+                                  <div className="overflow-hidden rounded-none border-x-0 border-b border-t-0 border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-5 py-4 dark:from-amber-900/20 dark:to-orange-900/20">
+                                      <h3 className="flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white">
+                                        <FileText className="h-5 w-5 text-amber-600" />
+                                        Attachments ({quote.attachments.length})
+                                      </h3>
+                                    </div>
+                                    <div className="space-y-2.5 p-5">
                                       {quote.attachments.map(
                                         (attachment: string, index: number) => (
                                           <button
                                             key={index}
-                                            onClick={() => downloadAttachment(attachment, index)}
-                                            className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white p-3 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
+                                            onClick={() =>
+                                              downloadAttachment(
+                                                attachment,
+                                                index
+                                              )
+                                            }
+                                            className="flex w-full items-center justify-between rounded-xl border-2 border-gray-200 bg-gray-50 p-4 transition-all duration-200 hover:border-green-300 hover:bg-green-50 active:scale-95 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-700 dark:hover:bg-green-900/20"
                                           >
-                                            <div className="flex items-center gap-2">
-                                              <FileText className="h-4 w-4 text-gray-400" />
-                                              <span className="text-sm text-gray-700 dark:text-gray-300">
+                                            <div className="flex items-center gap-3">
+                                              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                                                <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                              </div>
+                                              <span className="font-medium text-gray-700 dark:text-gray-300">
                                                 Attachment {index + 1}
                                               </span>
                                             </div>
-                                            <Download className="h-4 w-4 text-gray-400" />
+                                            <Download className="h-5 w-5 flex-shrink-0 text-gray-500 dark:text-gray-400" />
                                           </button>
                                         )
                                       )}
                                     </div>
                                   </div>
                                 )}
-                              </div>
                             </div>
-                          </div>
-                        )}
+                          )}
 
-                        {quoteActiveTab === "terms" && (
-                          <div className="space-y-4 -mx-5 px-5">
-                            <div className="rounded-lg bg-white p-4 shadow-md dark:bg-gray-800">
-                              <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
-                                Terms & Conditions
-                              </h3>
-                              <div className="space-y-6">
-                                <div className="grid grid-cols-1 gap-6">
-                                  <div className="space-y-4">
-                                    <div>
-                                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                        Payment Terms:
-                                      </span>
-                                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                        {quote.terms?.paymentTerms || "Not specified"}
-                                      </p>
+                          {quoteActiveTab === "rfq" && (
+                            <div className="space-y-4">
+                              <div className="rounded-none border-x-0 border-b border-t-0 border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                                <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
+                                  RFQ Details
+                                </h3>
+                                <div className="space-y-6">
+                                  <div className="grid grid-cols-1 gap-6">
+                                    <div className="space-y-4">
+                                      <div>
+                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                          Title:
+                                        </span>
+                                        <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                                          {quote.title}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                          Description:
+                                        </span>
+                                        <p className="mt-1 whitespace-pre-wrap text-sm text-gray-900 dark:text-white">
+                                          {quote.description || "Not provided"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                          Category:
+                                        </span>
+                                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                          {quote.category || "Not specified"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                          Location:
+                                        </span>
+                                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                          {quote.location || "Not specified"}
+                                        </p>
+                                      </div>
                                     </div>
-                                    <div>
-                                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                        Delivery Terms:
-                                      </span>
-                                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                        {quote.terms?.deliveryTerms || "Not specified"}
-                                      </p>
+                                    <div className="space-y-4">
+                                      <div>
+                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                          Budget Range:
+                                        </span>
+                                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                          {quote.minBudget && quote.maxBudget
+                                            ? `${formatCurrencySync(
+                                                parseFloat(quote.minBudget)
+                                              )} - ${formatCurrencySync(
+                                                parseFloat(quote.maxBudget)
+                                              )}`
+                                            : quote.minBudget
+                                            ? `Min: ${formatCurrencySync(
+                                                parseFloat(quote.minBudget)
+                                              )}`
+                                            : quote.maxBudget
+                                            ? `Max: ${formatCurrencySync(
+                                                parseFloat(quote.maxBudget)
+                                              )}`
+                                            : "Not specified"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                          Response Deadline:
+                                        </span>
+                                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                          {quote.responseDate
+                                            ? new Date(
+                                                quote.responseDate
+                                              ).toLocaleDateString("en-US", {
+                                                year: "numeric",
+                                                month: "long",
+                                                day: "numeric",
+                                              })
+                                            : "Not specified"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                          Expected Delivery:
+                                        </span>
+                                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                          {quote.expectedDeliveryDate
+                                            ? new Date(
+                                                quote.expectedDeliveryDate
+                                              ).toLocaleDateString("en-US", {
+                                                year: "numeric",
+                                                month: "long",
+                                                day: "numeric",
+                                              })
+                                            : "Not specified"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                          Urgency Level:
+                                        </span>
+                                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                          {quote.urgencyLevel ||
+                                            "Not specified"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                          Estimated Quantity:
+                                        </span>
+                                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                          {quote.estimatedQuantity ||
+                                            "Not specified"}
+                                        </p>
+                                      </div>
                                     </div>
                                   </div>
-                                  <div className="space-y-4">
-                                    <div>
+                                  {quote.notes && (
+                                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
                                       <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                        Warranty:
+                                        Additional Notes:
                                       </span>
-                                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                        {quote.terms?.warranty || "Not specified"}
+                                      <p className="mt-2 whitespace-pre-wrap text-sm text-gray-900 dark:text-white">
+                                        {quote.notes}
                                       </p>
                                     </div>
-                                    <div>
+                                  )}
+                                  {quote.requirements && (
+                                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
                                       <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                        Cancellation Terms:
+                                        Requirements:
                                       </span>
-                                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                        {quote.terms?.cancellationTerms || "Not specified"}
-                                      </p>
+                                      <div className="mt-2 text-sm text-gray-900 dark:text-white">
+                                        {typeof quote.requirements ===
+                                        "string" ? (
+                                          <p className="whitespace-pre-wrap">
+                                            {quote.requirements}
+                                          </p>
+                                        ) : Array.isArray(
+                                            quote.requirements
+                                          ) ? (
+                                          <ul className="list-inside list-disc space-y-1">
+                                            {quote.requirements.map(
+                                              (req: any, idx: number) => (
+                                                <li key={idx}>
+                                                  {typeof req === "string"
+                                                    ? req
+                                                    : JSON.stringify(req)}
+                                                </li>
+                                              )
+                                            )}
+                                          </ul>
+                                        ) : (
+                                          <p>
+                                            {JSON.stringify(quote.requirements)}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {quoteActiveTab === "requester" && (
+                            <div className="space-y-4">
+                              <div className="rounded-lg bg-white p-4 shadow-md dark:bg-gray-800">
+                                <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
+                                  RFQ Requester Company Information
+                                </h3>
+                                <div className="space-y-6">
+                                  <div className="grid grid-cols-1 gap-6">
+                                    <div className="space-y-4">
+                                      <h4 className="font-semibold text-gray-900 dark:text-white">
+                                        Company Details
+                                      </h4>
+                                      <div className="space-y-3">
+                                        <div>
+                                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                            Business Name:
+                                          </span>
+                                          <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                            {quote.rfqRequester?.name ||
+                                              "Not provided"}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                            Account Type:
+                                          </span>
+                                          <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                            {quote.rfqRequester?.accountType ||
+                                              "Not specified"}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                            Status:
+                                          </span>
+                                          <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                            {quote.rfqRequester?.status ||
+                                              "Not specified"}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="space-y-4">
+                                      <h4 className="font-semibold text-gray-900 dark:text-white">
+                                        Contact Information
+                                      </h4>
+                                      <div className="space-y-3">
+                                        <div>
+                                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                            Email:
+                                          </span>
+                                          <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                            {quote.rfqRequester?.email ||
+                                              quote.rfqEmail ||
+                                              "Not provided"}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                            Phone:
+                                          </span>
+                                          <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                            {quote.rfqRequester?.phone ||
+                                              quote.rfqPhone ||
+                                              "Not provided"}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                            Location:
+                                          </span>
+                                          <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                            {quote.rfqRequester?.location ||
+                                              quote.location ||
+                                              "Not provided"}
+                                          </p>
+                                        </div>
+                                        {quote.rfqContactName && (
+                                          <div>
+                                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                              Contact Person:
+                                            </span>
+                                            <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                              {quote.rfqContactName}
+                                            </p>
+                                          </div>
+                                        )}
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  );
-                })()}
+                          )}
+
+                          {quoteActiveTab === "quote" && (
+                            <div className="space-y-4">
+                              <div className="rounded-none border-x-0 border-b border-t-0 border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                                <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
+                                  My Quote Details
+                                </h3>
+                                <div className="space-y-6">
+                                  <div className="grid grid-cols-1 gap-6">
+                                    <div className="space-y-4">
+                                      <h4 className="font-semibold text-gray-900 dark:text-white">
+                                        Quote Information
+                                      </h4>
+                                      <div className="space-y-3">
+                                        <div>
+                                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                            Quote Amount:
+                                          </span>
+                                          <p className="mt-1 text-lg font-bold text-green-600">
+                                            {quote.totalPrice}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                            Currency:
+                                          </span>
+                                          <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                            {quote.currency}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                            Delivery Time:
+                                          </span>
+                                          <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                            {quote.deliveryTime}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                            Quote Validity:
+                                          </span>
+                                          <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                            {quote.validUntil}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="space-y-4">
+                                      <h4 className="font-semibold text-gray-900 dark:text-white">
+                                        Status & Dates
+                                      </h4>
+                                      <div className="space-y-3">
+                                        <div>
+                                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                            Status:
+                                          </span>
+                                          <p
+                                            className={`mt-1 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                                              quote.status === "accepted"
+                                                ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                                                : quote.status === "rejected"
+                                                ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
+                                                : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
+                                            }`}
+                                          >
+                                            {quote.status
+                                              ?.charAt(0)
+                                              .toUpperCase() +
+                                              quote.status?.slice(1) ||
+                                              "Pending"}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                            Submitted Date:
+                                          </span>
+                                          <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                            {quote.submittedDate ||
+                                              "Not available"}
+                                          </p>
+                                        </div>
+                                        {quote.updatedDate &&
+                                          quote.updatedDate !==
+                                            quote.submittedDate && (
+                                            <div>
+                                              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                                Last Updated:
+                                              </span>
+                                              <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                                {quote.updatedDate}
+                                              </p>
+                                            </div>
+                                          )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {quote.quoteMessage && (
+                                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
+                                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                        Quote Message:
+                                      </span>
+                                      <p className="mt-2 whitespace-pre-wrap text-sm text-gray-900 dark:text-white">
+                                        {quote.quoteMessage}
+                                      </p>
+                                    </div>
+                                  )}
+                                  {quote.attachments &&
+                                    quote.attachments.length > 0 && (
+                                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
+                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                          Attachments (
+                                          {quote.attachments.length}):
+                                        </span>
+                                        <div className="mt-3 space-y-2">
+                                          {quote.attachments.map(
+                                            (
+                                              attachment: string,
+                                              index: number
+                                            ) => (
+                                              <button
+                                                key={index}
+                                                onClick={() =>
+                                                  downloadAttachment(
+                                                    attachment,
+                                                    index
+                                                  )
+                                                }
+                                                className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white p-3 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
+                                              >
+                                                <div className="flex items-center gap-2">
+                                                  <FileText className="h-4 w-4 text-gray-400" />
+                                                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                                                    Attachment {index + 1}
+                                                  </span>
+                                                </div>
+                                                <Download className="h-4 w-4 text-gray-400" />
+                                              </button>
+                                            )
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {quoteActiveTab === "terms" && (
+                            <div className="-mx-5 space-y-4 px-5">
+                              <div className="rounded-lg bg-white p-4 shadow-md dark:bg-gray-800">
+                                <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
+                                  Terms & Conditions
+                                </h3>
+                                <div className="space-y-6">
+                                  <div className="grid grid-cols-1 gap-6">
+                                    <div className="space-y-4">
+                                      <div>
+                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                          Payment Terms:
+                                        </span>
+                                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                          {quote.terms?.paymentTerms ||
+                                            "Not specified"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                          Delivery Terms:
+                                        </span>
+                                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                          {quote.terms?.deliveryTerms ||
+                                            "Not specified"}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="space-y-4">
+                                      <div>
+                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                          Warranty:
+                                        </span>
+                                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                          {quote.terms?.warranty ||
+                                            "Not specified"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                          Cancellation Terms:
+                                        </span>
+                                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                          {quote.terms?.cancellationTerms ||
+                                            "Not specified"}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    );
+                  })()}
 
                 {sectionId === "orders" && (
                   <>
@@ -1468,32 +1664,44 @@ export function ExpandedSectionModal({
                       <div className="flex items-center justify-center py-16">
                         <div className="flex flex-col items-center space-y-4">
                           <div className="h-12 w-12 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
-                          <p className="text-gray-600 dark:text-gray-400">Loading order details...</p>
+                          <p className="text-gray-600 dark:text-gray-400">
+                            Loading order details...
+                          </p>
                         </div>
                       </div>
                     ) : orderDetails ? (
                       <>
                         {/* Order Header - Premium Design */}
-                        <div className="bg-gradient-to-br from-green-800 via-green-700 to-emerald-800 dark:from-green-900 dark:via-green-800 dark:to-emerald-900 rounded-2xl p-5 mb-4 shadow-xl relative overflow-hidden">
+                        <div className="relative mb-4 overflow-hidden rounded-2xl bg-gradient-to-br from-green-800 via-green-700 to-emerald-800 p-5 shadow-xl dark:from-green-900 dark:via-green-800 dark:to-emerald-900">
                           {/* Decorative Pattern */}
                           <div className="absolute inset-0 opacity-10">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -mr-16 -mt-16"></div>
-                            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full -ml-12 -mb-12"></div>
+                            <div className="absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full bg-white"></div>
+                            <div className="absolute bottom-0 left-0 -mb-12 -ml-12 h-24 w-24 rounded-full bg-white"></div>
                           </div>
-                          
+
                           <div className="relative z-10">
-                            <div className="flex items-start justify-between mb-4">
+                            <div className="mb-4 flex items-start justify-between">
                               <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <div className="p-2 rounded-xl bg-white/20 backdrop-blur-sm">
-                                    <ShoppingCart className="h-6 w-6 text-white" style={{ color: "#ffffff" }} />
+                                <div className="mb-2 flex items-center gap-2">
+                                  <div className="rounded-xl bg-white/20 p-2 backdrop-blur-sm">
+                                    <ShoppingCart
+                                      className="h-6 w-6 text-white"
+                                      style={{ color: "#ffffff" }}
+                                    />
                                   </div>
                                   <div>
-                                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#ffffff" }}>
+                                    <p
+                                      className="text-xs font-semibold uppercase tracking-wide"
+                                      style={{ color: "#ffffff" }}
+                                    >
                                       Order ID
                                     </p>
-                                    <h4 className="font-bold text-2xl mt-1 font-mono" style={{ color: "#ffffff" }}>
-                                      {orderDetails.allProducts?.[0]?.query_id ||
+                                    <h4
+                                      className="mt-1 font-mono text-2xl font-bold"
+                                      style={{ color: "#ffffff" }}
+                                    >
+                                      {orderDetails.allProducts?.[0]
+                                        ?.query_id ||
                                         orderDetails.query_id ||
                                         orderDetails.orderId ||
                                         orderDetails.id?.slice(0, 8) ||
@@ -1501,22 +1709,33 @@ export function ExpandedSectionModal({
                                     </h4>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm" style={{ color: "#ffffff" }}>
-                                  <Calendar className="h-4 w-4" style={{ color: "#ffffff" }} />
+                                <div
+                                  className="flex items-center gap-2 text-sm"
+                                  style={{ color: "#ffffff" }}
+                                >
+                                  <Calendar
+                                    className="h-4 w-4"
+                                    style={{ color: "#ffffff" }}
+                                  />
                                   <span>
                                     {orderDetails.created_at
-                                      ? new Date(orderDetails.created_at).toLocaleString()
+                                      ? new Date(
+                                          orderDetails.created_at
+                                        ).toLocaleString()
                                       : "Date not available"}
                                   </span>
                                 </div>
                               </div>
                               <span
-                                className={`px-4 py-2 rounded-xl text-xs font-bold shadow-lg ${
-                                  orderDetails.status === "completed" || orderDetails.status === "Delivered"
+                                className={`rounded-xl px-4 py-2 text-xs font-bold shadow-lg ${
+                                  orderDetails.status === "completed" ||
+                                  orderDetails.status === "Delivered"
                                     ? "bg-green-500"
-                                    : orderDetails.status === "pending" || orderDetails.status === "Pending"
+                                    : orderDetails.status === "pending" ||
+                                      orderDetails.status === "Pending"
                                     ? "bg-yellow-500"
-                                    : orderDetails.status === "cancelled" || orderDetails.status === "Cancelled"
+                                    : orderDetails.status === "cancelled" ||
+                                      orderDetails.status === "Cancelled"
                                     ? "bg-red-500"
                                     : "bg-blue-500"
                                 }`}
@@ -1530,54 +1749,54 @@ export function ExpandedSectionModal({
 
                         {/* Customer Information - Enhanced Design */}
                         {orderDetails.orderedBy && (
-                          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 mb-4 border-2 border-gray-200 dark:border-gray-700 shadow-lg">
-                            <div className="flex items-center gap-3 mb-4">
-                              <div className="p-3 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30">
+                          <div className="mb-4 rounded-2xl border-2 border-gray-200 bg-white p-5 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                            <div className="mb-4 flex items-center gap-3">
+                              <div className="rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 p-3 dark:from-blue-900/30 dark:to-indigo-900/30">
                                 <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                               </div>
-                              <h5 className="font-bold text-lg text-gray-900 dark:text-white">
+                              <h5 className="text-lg font-bold text-gray-900 dark:text-white">
                                 Customer Information
                               </h5>
                             </div>
                             <div className="space-y-3">
-                              <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                                <div className="p-2 rounded-lg bg-white dark:bg-gray-600">
+                              <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
+                                <div className="rounded-lg bg-white p-2 dark:bg-gray-600">
                                   <User className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                                 </div>
                                 <div className="flex-1">
-                                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                                  <p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
                                     Name
                                   </p>
-                                  <p className="text-sm font-semibold text-gray-900 dark:text-white mt-0.5">
+                                  <p className="mt-0.5 text-sm font-semibold text-gray-900 dark:text-white">
                                     {orderDetails.orderedBy.name || "N/A"}
                                   </p>
                                 </div>
                               </div>
                               {orderDetails.orderedBy.email && (
-                                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                                  <div className="p-2 rounded-lg bg-white dark:bg-gray-600">
+                                <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
+                                  <div className="rounded-lg bg-white p-2 dark:bg-gray-600">
                                     <Mail className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                                   </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
                                       Email
                                     </p>
-                                    <p className="text-sm font-semibold text-gray-900 dark:text-white mt-0.5 truncate">
+                                    <p className="mt-0.5 truncate text-sm font-semibold text-gray-900 dark:text-white">
                                       {orderDetails.orderedBy.email}
                                     </p>
                                   </div>
                                 </div>
                               )}
                               {orderDetails.orderedBy.phone && (
-                                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                                  <div className="p-2 rounded-lg bg-white dark:bg-gray-600">
+                                <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
+                                  <div className="rounded-lg bg-white p-2 dark:bg-gray-600">
                                     <Phone className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                                   </div>
                                   <div className="flex-1">
-                                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                                    <p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
                                       Phone
                                     </p>
-                                    <p className="text-sm font-semibold text-gray-900 dark:text-white mt-0.5">
+                                    <p className="mt-0.5 text-sm font-semibold text-gray-900 dark:text-white">
                                       {orderDetails.orderedBy.phone}
                                     </p>
                                   </div>
@@ -1588,68 +1807,86 @@ export function ExpandedSectionModal({
                         )}
 
                         {/* Order Items */}
-                        {orderDetails.Order_Items && orderDetails.Order_Items.length > 0 && (
-                          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-4 border border-gray-200 dark:border-gray-700 shadow-sm">
-                            <h5 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                              <Package className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                              Order Items ({orderDetails.Order_Items.length})
-                            </h5>
-                            <div className="space-y-3">
-                              {orderDetails.Order_Items.map((item: any, index: number) => (
-                                <div
-                                  key={item.id || index}
-                                  className="flex gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600"
-                                >
-                                  {item.product?.image || item.product?.ProductName?.image ? (
-                                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-600 flex-shrink-0">
-                                      <img
-                                        src={item.product.image || item.product.ProductName?.image}
-                                        alt={item.product?.ProductName?.name || "Product"}
-                                        className="w-full h-full object-cover"
-                                        onError={(e) => {
-                                          e.currentTarget.style.display = "none";
-                                          e.currentTarget.nextElementSibling?.classList.remove("hidden");
-                                        }}
-                                      />
-                                      <Package className="h-8 w-8 text-gray-400 hidden" />
+                        {orderDetails.Order_Items &&
+                          orderDetails.Order_Items.length > 0 && (
+                            <div className="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                              <h5 className="mb-3 flex items-center gap-2 font-bold text-gray-900 dark:text-white">
+                                <Package className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                                Order Items ({orderDetails.Order_Items.length})
+                              </h5>
+                              <div className="space-y-3">
+                                {orderDetails.Order_Items.map(
+                                  (item: any, index: number) => (
+                                    <div
+                                      key={item.id || index}
+                                      className="flex gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-600 dark:bg-gray-700/50"
+                                    >
+                                      {item.product?.image ||
+                                      item.product?.ProductName?.image ? (
+                                        <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-600">
+                                          <img
+                                            src={
+                                              item.product.image ||
+                                              item.product.ProductName?.image
+                                            }
+                                            alt={
+                                              item.product?.ProductName?.name ||
+                                              "Product"
+                                            }
+                                            className="h-full w-full object-cover"
+                                            onError={(e) => {
+                                              e.currentTarget.style.display =
+                                                "none";
+                                              e.currentTarget.nextElementSibling?.classList.remove(
+                                                "hidden"
+                                              );
+                                            }}
+                                          />
+                                          <Package className="hidden h-8 w-8 text-gray-400" />
+                                        </div>
+                                      ) : (
+                                        <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-600">
+                                          <Package className="h-8 w-8 text-gray-400" />
+                                        </div>
+                                      )}
+                                      <div className="min-w-0 flex-1">
+                                        <h6 className="mb-1 font-semibold text-gray-900 dark:text-white">
+                                          {item.product?.ProductName?.name ||
+                                            item.product?.name ||
+                                            "Product"}
+                                        </h6>
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                                            Qty: {item.quantity}
+                                          </span>
+                                          <span className="text-sm font-bold text-green-600 dark:text-green-400">
+                                            {item.price ||
+                                              item.product?.price ||
+                                              "0"}{" "}
+                                            RF
+                                          </span>
+                                        </div>
+                                      </div>
                                     </div>
-                                  ) : (
-                                    <div className="w-16 h-16 rounded-lg bg-gray-200 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
-                                      <Package className="h-8 w-8 text-gray-400" />
-                                    </div>
-                                  )}
-                                  <div className="flex-1 min-w-0">
-                                    <h6 className="font-semibold text-gray-900 dark:text-white mb-1">
-                                      {item.product?.ProductName?.name || item.product?.name || "Product"}
-                                    </h6>
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                                        Qty: {item.quantity}
-                                      </span>
-                                      <span className="text-sm font-bold text-green-600 dark:text-green-400">
-                                        {item.price || item.product?.price || "0"} RF
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
+                                  )
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )}
 
                         {/* Delivery Address - Enhanced Design */}
                         {orderDetails.deliveryAddress && (
-                          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 mb-4 border-2 border-gray-200 dark:border-gray-700 shadow-lg">
-                            <div className="flex items-center gap-3 mb-4">
-                              <div className="p-3 rounded-xl bg-gradient-to-br from-red-100 to-pink-100 dark:from-red-900/30 dark:to-pink-900/30">
+                          <div className="mb-4 rounded-2xl border-2 border-gray-200 bg-white p-5 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                            <div className="mb-4 flex items-center gap-3">
+                              <div className="rounded-xl bg-gradient-to-br from-red-100 to-pink-100 p-3 dark:from-red-900/30 dark:to-pink-900/30">
                                 <MapPin className="h-6 w-6 text-red-600 dark:text-red-400" />
                               </div>
-                              <h5 className="font-bold text-lg text-gray-900 dark:text-white">
+                              <h5 className="text-lg font-bold text-gray-900 dark:text-white">
                                 Delivery Address
                               </h5>
                             </div>
-                            <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600">
-                              <p className="text-sm font-semibold text-gray-900 dark:text-white leading-relaxed">
+                            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-700/50">
+                              <p className="text-sm font-semibold leading-relaxed text-gray-900 dark:text-white">
                                 {orderDetails.deliveryAddress}
                               </p>
                             </div>
@@ -1657,42 +1894,62 @@ export function ExpandedSectionModal({
                         )}
 
                         {/* Order Summary - Premium Design */}
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 mb-4 border-2 border-gray-200 dark:border-gray-700 shadow-lg">
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="p-3 rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 shadow-md">
+                        <div className="mb-4 rounded-2xl border-2 border-gray-200 bg-white p-5 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                          <div className="mb-4 flex items-center gap-3">
+                            <div className="rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 p-3 shadow-md dark:from-green-900/30 dark:to-emerald-900/30">
                               <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
                             </div>
-                            <h5 className="font-bold text-lg text-gray-900 dark:text-white">
+                            <h5 className="text-lg font-bold text-gray-900 dark:text-white">
                               Order Summary
                             </h5>
                           </div>
                           <div className="space-y-3">
                             {orderDetails.service_fee && (
-                              <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 shadow-sm">
+                              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 shadow-sm dark:bg-gray-700/50">
                                 <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                                   Service Fee
                                 </span>
                                 <span className="text-sm font-bold text-gray-900 dark:text-white">
-                                  {formatCurrencySync(parseFloat(orderDetails.service_fee.toString()))}
+                                  {formatCurrencySync(
+                                    parseFloat(
+                                      orderDetails.service_fee.toString()
+                                    )
+                                  )}
                                 </span>
                               </div>
                             )}
                             {orderDetails.transportation_fee && (
-                              <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 shadow-sm">
+                              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 shadow-sm dark:bg-gray-700/50">
                                 <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                                   Transportation Fee
                                 </span>
                                 <span className="text-sm font-bold text-gray-900 dark:text-white">
-                                  {formatCurrencySync(parseFloat(orderDetails.transportation_fee.toString()))}
+                                  {formatCurrencySync(
+                                    parseFloat(
+                                      orderDetails.transportation_fee.toString()
+                                    )
+                                  )}
                                 </span>
                               </div>
                             )}
-                            <div className="border-t-2 border-gray-200 dark:border-gray-700 pt-4 mt-4">
-                              <div className="flex justify-between items-center p-4 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 shadow-lg">
-                                <span className="text-base font-bold" style={{ color: "#ffffff" }}>Total Amount</span>
-                                <span className="text-2xl font-bold" style={{ color: "#ffffff" }}>
+                            <div className="mt-4 border-t-2 border-gray-200 pt-4 dark:border-gray-700">
+                              <div className="flex items-center justify-between rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 p-4 shadow-lg">
+                                <span
+                                  className="text-base font-bold"
+                                  style={{ color: "#ffffff" }}
+                                >
+                                  Total Amount
+                                </span>
+                                <span
+                                  className="text-2xl font-bold"
+                                  style={{ color: "#ffffff" }}
+                                >
                                   {orderDetails.value
-                                    ? formatCurrencySync(parseFloat(orderDetails.value.toString()))
+                                    ? formatCurrencySync(
+                                        parseFloat(
+                                          orderDetails.value.toString()
+                                        )
+                                      )
                                     : formatCurrencySync(0)}
                                 </span>
                               </div>
@@ -1701,46 +1958,48 @@ export function ExpandedSectionModal({
                         </div>
 
                         {/* Delivery Information - Enhanced Design */}
-                        {(orderDetails.deliveryDate || orderDetails.deliveryTime || orderDetails.comment) && (
-                          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 mb-4 border-2 border-gray-200 dark:border-gray-700 shadow-lg">
-                            <div className="flex items-center gap-3 mb-4">
-                              <div className="p-3 rounded-xl bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30">
+                        {(orderDetails.deliveryDate ||
+                          orderDetails.deliveryTime ||
+                          orderDetails.comment) && (
+                          <div className="mb-4 rounded-2xl border-2 border-gray-200 bg-white p-5 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                            <div className="mb-4 flex items-center gap-3">
+                              <div className="rounded-xl bg-gradient-to-br from-orange-100 to-amber-100 p-3 dark:from-orange-900/30 dark:to-amber-900/30">
                                 <Truck className="h-6 w-6 text-orange-600 dark:text-orange-400" />
                               </div>
-                              <h5 className="font-bold text-lg text-gray-900 dark:text-white">
+                              <h5 className="text-lg font-bold text-gray-900 dark:text-white">
                                 Delivery Information
                               </h5>
                             </div>
                             <div className="space-y-3">
                               {orderDetails.deliveryDate && (
-                                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                                  <Calendar className="h-5 w-5 text-orange-600 dark:text-orange-400 flex-shrink-0" />
+                                <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
+                                  <Calendar className="h-5 w-5 flex-shrink-0 text-orange-600 dark:text-orange-400" />
                                   <div className="flex-1">
-                                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                                    <p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
                                       Delivery Date
                                     </p>
-                                    <p className="text-sm font-semibold text-gray-900 dark:text-white mt-0.5">
+                                    <p className="mt-0.5 text-sm font-semibold text-gray-900 dark:text-white">
                                       {orderDetails.deliveryDate}
                                     </p>
                                   </div>
                                 </div>
                               )}
                               {orderDetails.deliveryTime && (
-                                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                                  <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400 flex-shrink-0" />
+                                <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
+                                  <Clock className="h-5 w-5 flex-shrink-0 text-orange-600 dark:text-orange-400" />
                                   <div className="flex-1">
-                                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                                    <p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
                                       Delivery Time
                                     </p>
-                                    <p className="text-sm font-semibold text-gray-900 dark:text-white mt-0.5">
+                                    <p className="mt-0.5 text-sm font-semibold text-gray-900 dark:text-white">
                                       {orderDetails.deliveryTime}
                                     </p>
                                   </div>
                                 </div>
                               )}
                               {orderDetails.comment && (
-                                <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                                <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
+                                  <p className="mb-1 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
                                     Order Comment
                                   </p>
                                   <p className="text-sm text-gray-700 dark:text-gray-300">
@@ -1754,18 +2013,18 @@ export function ExpandedSectionModal({
 
                         {/* Store Information - Enhanced Design */}
                         {orderDetails.store && (
-                          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border-2 border-gray-200 dark:border-gray-700 shadow-lg">
-                            <div className="flex items-center gap-3 mb-4">
-                              <div className="p-3 rounded-xl bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30">
+                          <div className="rounded-2xl border-2 border-gray-200 bg-white p-5 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                            <div className="mb-4 flex items-center gap-3">
+                              <div className="rounded-xl bg-gradient-to-br from-purple-100 to-pink-100 p-3 dark:from-purple-900/30 dark:to-pink-900/30">
                                 <Store className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                               </div>
-                              <h5 className="font-bold text-lg text-gray-900 dark:text-white">
+                              <h5 className="text-lg font-bold text-gray-900 dark:text-white">
                                 Store Information
                               </h5>
                             </div>
                             <div className="space-y-3">
-                              <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                              <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
+                                <p className="mb-1 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
                                   Store Name
                                 </p>
                                 <p className="text-base font-bold text-gray-900 dark:text-white">
@@ -1773,11 +2032,11 @@ export function ExpandedSectionModal({
                                 </p>
                               </div>
                               {orderDetails.store_image && (
-                                <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                                <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
                                   <img
                                     src={orderDetails.store_image}
                                     alt={orderDetails.store}
-                                    className="w-full h-32 rounded-lg object-cover"
+                                    className="h-32 w-full rounded-lg object-cover"
                                   />
                                 </div>
                               )}
@@ -1787,18 +2046,18 @@ export function ExpandedSectionModal({
 
                         {/* Shopper Information */}
                         {orderDetails.shopper && (
-                          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border-2 border-gray-200 dark:border-gray-700 shadow-lg">
-                            <div className="flex items-center gap-3 mb-4">
-                              <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-100 to-blue-100 dark:from-cyan-900/30 dark:to-blue-900/30">
+                          <div className="rounded-2xl border-2 border-gray-200 bg-white p-5 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                            <div className="mb-4 flex items-center gap-3">
+                              <div className="rounded-xl bg-gradient-to-br from-cyan-100 to-blue-100 p-3 dark:from-cyan-900/30 dark:to-blue-900/30">
                                 <Truck className="h-6 w-6 text-cyan-600 dark:text-cyan-400" />
                               </div>
-                              <h5 className="font-bold text-lg text-gray-900 dark:text-white">
+                              <h5 className="text-lg font-bold text-gray-900 dark:text-white">
                                 Assigned Shopper
                               </h5>
                             </div>
                             <div className="space-y-3">
-                              <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                              <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
+                                <p className="mb-1 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
                                   Shopper Name
                                 </p>
                                 <p className="text-base font-bold text-gray-900 dark:text-white">
@@ -1806,10 +2065,10 @@ export function ExpandedSectionModal({
                                 </p>
                               </div>
                               {orderDetails.shopper.phone && (
-                                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                                  <Phone className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                                <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
+                                  <Phone className="h-4 w-4 flex-shrink-0 text-gray-500" />
                                   <div className="flex-1">
-                                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                                    <p className="mb-1 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
                                       Phone
                                     </p>
                                     <p className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -1823,11 +2082,11 @@ export function ExpandedSectionModal({
                         )}
                       </>
                     ) : (
-                      <div className="text-center py-16">
-                        <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                      <div className="py-16 text-center">
+                        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
                           <Package className="h-10 w-10 text-gray-400" />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                        <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
                           Order details not found
                         </h3>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -1840,20 +2099,25 @@ export function ExpandedSectionModal({
 
                 {sectionId === "services" && (
                   <>
-                    <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-                      <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-2">
+                    <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-700">
+                      <h4 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
                         {selectedItem.name}
                       </h4>
                       {selectedItem.price && (
-                        <p className="text-2xl font-bold text-green-600 dark:text-green-400 mb-2">
-                          {selectedItem.price} {selectedItem.unit ? `/ ${selectedItem.unit}` : ""}
+                        <p className="mb-2 text-2xl font-bold text-green-600 dark:text-green-400">
+                          {selectedItem.price}{" "}
+                          {selectedItem.unit ? `/ ${selectedItem.unit}` : ""}
                         </p>
                       )}
                     </div>
                     {selectedItem.Description && (
-                      <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-                        <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</h5>
-                        <p className="text-gray-600 dark:text-gray-400">{selectedItem.Description}</p>
+                      <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-700">
+                        <h5 className="mb-2 font-semibold text-gray-700 dark:text-gray-300">
+                          Description
+                        </h5>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          {selectedItem.Description}
+                        </p>
                       </div>
                     )}
                   </>
@@ -1862,33 +2126,38 @@ export function ExpandedSectionModal({
                 {sectionId === "stores" && (
                   <>
                     {/* Store Header - Minimal */}
-                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-4 mb-4 border border-green-200 dark:border-green-800/50">
+                    <div className="mb-4 rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-4 dark:border-green-800/50 dark:from-green-900/20 dark:to-emerald-900/20">
                       <div className="flex items-center gap-3">
                         {selectedItem.image && (
-                          <div className="w-16 h-16 rounded-xl overflow-hidden bg-white dark:bg-gray-700 flex-shrink-0">
+                          <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl bg-white dark:bg-gray-700">
                             <img
                               src={selectedItem.image}
                               alt={selectedItem.name || "Store"}
-                              className="w-full h-full object-cover"
+                              className="h-full w-full object-cover"
                               onError={(e) => {
                                 e.currentTarget.style.display = "none";
-                                e.currentTarget.nextElementSibling?.classList.remove("hidden");
+                                e.currentTarget.nextElementSibling?.classList.remove(
+                                  "hidden"
+                                );
                               }}
                             />
-                            <Store className="h-8 w-8 text-gray-400 hidden" />
+                            <Store className="hidden h-8 w-8 text-gray-400" />
                           </div>
                         )}
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-1">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="mb-1 text-lg font-bold text-gray-900 dark:text-white">
                             {selectedItem.name || "Store"}
                           </h4>
                           <p className="text-xs text-gray-600 dark:text-gray-400">
-                            {storeProducts.length} {storeProducts.length === 1 ? "product" : "products"}
+                            {storeProducts.length}{" "}
+                            {storeProducts.length === 1
+                              ? "product"
+                              : "products"}
                           </p>
                         </div>
                         {selectedItem.is_active !== undefined && (
                           <span
-                            className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${
+                            className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
                               selectedItem.is_active
                                 ? "bg-green-500 text-white"
                                 : "bg-gray-500 text-white"
@@ -1905,15 +2174,17 @@ export function ExpandedSectionModal({
                       <div className="flex items-center justify-center py-16">
                         <div className="flex flex-col items-center space-y-4">
                           <div className="h-12 w-12 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
-                          <p className="text-gray-600 dark:text-gray-400">Loading products...</p>
+                          <p className="text-gray-600 dark:text-gray-400">
+                            Loading products...
+                          </p>
                         </div>
                       </div>
                     ) : storeProducts.length === 0 ? (
-                      <div className="text-center py-16">
-                        <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                      <div className="py-16 text-center">
+                        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
                           <Package className="h-10 w-10 text-gray-400" />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                        <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
                           No products found
                         </h3>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -1952,12 +2223,20 @@ export function ExpandedSectionModal({
                                   style={{ color: "#ffffff" }}
                                 >
                                   {product.status === "active" ? (
-                                    <CheckCircle className="h-2 w-2" style={{ color: "#ffffff" }} />
+                                    <CheckCircle
+                                      className="h-2 w-2"
+                                      style={{ color: "#ffffff" }}
+                                    />
                                   ) : (
-                                    <XCircle className="h-2 w-2" style={{ color: "#ffffff" }} />
+                                    <XCircle
+                                      className="h-2 w-2"
+                                      style={{ color: "#ffffff" }}
+                                    />
                                   )}
                                   <span style={{ color: "#ffffff" }}>
-                                    {product.status === "active" ? "Active" : "Inactive"}
+                                    {product.status === "active"
+                                      ? "Active"
+                                      : "Inactive"}
                                   </span>
                                 </span>
                               )}
@@ -1993,28 +2272,40 @@ export function ExpandedSectionModal({
                               </div>
 
                               {/* Action Buttons */}
-                              <div className="flex gap-2 mt-auto justify-center">
+                              <div className="mt-auto flex justify-center gap-2">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleEditProduct(product);
                                   }}
-                                  className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center transition-all hover:bg-blue-600 active:scale-95 shadow-sm hover:shadow-md"
+                                  className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 shadow-sm transition-all hover:bg-blue-600 hover:shadow-md active:scale-95"
                                   style={{ color: "#ffffff" }}
                                   title="Edit"
                                 >
-                                  <Edit className="h-4 w-4" style={{ color: "#ffffff", stroke: "#ffffff" }} />
+                                  <Edit
+                                    className="h-4 w-4"
+                                    style={{
+                                      color: "#ffffff",
+                                      stroke: "#ffffff",
+                                    }}
+                                  />
                                 </button>
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleDeleteProduct(product);
                                   }}
-                                  className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center transition-all hover:bg-red-600 active:scale-95 shadow-sm hover:shadow-md"
+                                  className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500 shadow-sm transition-all hover:bg-red-600 hover:shadow-md active:scale-95"
                                   style={{ color: "#ffffff" }}
                                   title="Delete"
                                 >
-                                  <Trash2 className="h-4 w-4" style={{ color: "#ffffff", stroke: "#ffffff" }} />
+                                  <Trash2
+                                    className="h-4 w-4"
+                                    style={{
+                                      color: "#ffffff",
+                                      stroke: "#ffffff",
+                                    }}
+                                  />
                                 </button>
                               </div>
                             </div>
@@ -2027,25 +2318,29 @@ export function ExpandedSectionModal({
 
                 {sectionId === "contracts" && (
                   <>
-                    <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-                      <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-2">
+                    <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-700">
+                      <h4 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
                         Contract #{selectedItem.id?.slice(0, 8) || "N/A"}
                       </h4>
                       <span
-                        className={`inline-block px-3 py-1 rounded-md text-xs font-semibold ${
+                        className={`inline-block rounded-md px-3 py-1 text-xs font-semibold ${
                           selectedItem.status === "active"
-                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                            : "bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-400"
+                            ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                            : "bg-gray-100 text-gray-600 dark:bg-gray-600 dark:text-gray-400"
                         }`}
                       >
                         {selectedItem.status || "Active"}
                       </span>
                     </div>
                     {selectedItem.created_at && (
-                      <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-                        <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Created Date</h5>
+                      <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-700">
+                        <h5 className="mb-2 font-semibold text-gray-700 dark:text-gray-300">
+                          Created Date
+                        </h5>
                         <p className="text-gray-600 dark:text-gray-400">
-                          {new Date(selectedItem.created_at).toLocaleDateString()}
+                          {new Date(
+                            selectedItem.created_at
+                          ).toLocaleDateString()}
                         </p>
                       </div>
                     )}
@@ -2061,7 +2356,7 @@ export function ExpandedSectionModal({
 
   return (
     <div
-      className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex flex-col"
+      className="fixed inset-0 z-[9999] flex flex-col bg-black/50 backdrop-blur-sm"
       onClick={onClose}
       style={{
         position: "fixed",
@@ -2074,57 +2369,61 @@ export function ExpandedSectionModal({
       }}
     >
       <div
-        className="bg-white dark:bg-gray-800 rounded-t-3xl mt-[5vh] flex flex-col h-[92vh] shadow-2xl"
+        className="mt-[5vh] flex h-[92vh] flex-col rounded-t-3xl bg-white shadow-2xl dark:bg-gray-800"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-white dark:bg-gray-800 px-5 py-4 flex items-center justify-between rounded-t-3xl border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between rounded-t-3xl border-b border-gray-200 bg-white px-5 py-4 dark:border-gray-700 dark:bg-gray-800">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700">
+            <div className="rounded-lg bg-gray-100 p-2 dark:bg-gray-700">
               <Icon className="h-6 w-6 text-gray-700 dark:text-gray-300" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">{title}</h3>
-              <p className="text-xs text-gray-600 dark:text-gray-400">{filteredItems.length} items</p>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                {title}
+              </h3>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                {filteredItems.length} items
+              </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors active:scale-95"
+            className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 active:scale-95 dark:text-gray-300 dark:hover:bg-gray-700"
           >
             <X className="h-6 w-6" />
           </button>
         </div>
 
         {/* Search and Filter Bar */}
-        <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
-          <div className="flex gap-2 mb-2">
-            <div className="flex-1 relative">
+        <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-600 dark:bg-gray-700/50">
+          <div className="mb-2 flex gap-2">
+            <div className="relative flex-1">
               <input
                 type="text"
                 placeholder={`Search ${title.toLowerCase()}...`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full rounded-full bg-white dark:bg-gray-700 px-4 py-2.5 pl-10 pr-4 text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 shadow-sm border border-gray-200 dark:border-gray-600"
+                className="w-full rounded-full border border-gray-200 bg-white px-4 py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:ring-offset-gray-800"
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`px-4 py-2.5 rounded-full text-sm font-semibold transition-all ${
+              className={`rounded-full px-4 py-2.5 text-sm font-semibold transition-all ${
                 showFilters || selectedFilter !== "all"
                   ? "bg-green-500 text-white shadow-md"
-                  : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600"
+                  : "border border-gray-200 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
               }`}
             >
-              <Filter className="h-4 w-4 inline mr-1" />
+              <Filter className="mr-1 inline h-4 w-4" />
               Filter
             </button>
           </div>
 
           {/* Filter Options */}
           {showFilters && (
-            <div className="flex flex-wrap gap-2 mt-2">
+            <div className="mt-2 flex flex-wrap gap-2">
               {filterOptions.map((option) => (
                 <button
                   key={option.value}
@@ -2132,10 +2431,10 @@ export function ExpandedSectionModal({
                     setSelectedFilter(option.value);
                     setShowFilters(false);
                   }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                     selectedFilter === option.value
                       ? "bg-green-500 text-white shadow-md"
-                      : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600"
+                      : "border border-gray-200 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
                   }`}
                 >
                   {option.label}
@@ -2151,15 +2450,17 @@ export function ExpandedSectionModal({
             <div className="flex items-center justify-center py-16">
               <div className="flex flex-col items-center space-y-4">
                 <div className="h-12 w-12 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
-                <p className="text-gray-600 dark:text-gray-400">Loading {title}...</p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Loading {title}...
+                </p>
               </div>
             </div>
           ) : filteredItems.length === 0 ? (
             <div className="p-8 text-center">
-              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+              <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
                 <Icon className="h-10 w-10 text-gray-400" />
               </div>
-              <p className="text-gray-600 dark:text-gray-400 font-semibold text-lg mb-1">
+              <p className="mb-1 text-lg font-semibold text-gray-600 dark:text-gray-400">
                 No {title.toLowerCase()} found
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-500">
@@ -2181,34 +2482,59 @@ export function ExpandedSectionModal({
               </p>
             </div>
           ) : (
-            <div className="p-4 space-y-3">
+            <div className="space-y-3 p-4">
               {sectionId === "rfqs" &&
                 filteredItems.map((rfq: any) => (
                   <RFQCard key={rfq.id} rfq={rfq} onView={handleItemClick} />
                 ))}
               {sectionId === "rfq-opportunities" &&
                 filteredItems.map((rfq: any) => (
-                  <RFQOpportunityCard key={rfq.id} rfq={rfq} onView={handleItemClick} submittedQuotes={submittedQuotes} />
+                  <RFQOpportunityCard
+                    key={rfq.id}
+                    rfq={rfq}
+                    onView={handleItemClick}
+                    submittedQuotes={submittedQuotes}
+                  />
                 ))}
               {sectionId === "quotes" &&
                 filteredItems.map((quote: any) => (
-                  <QuoteCard key={quote.id} quote={quote} onView={handleItemClick} />
+                  <QuoteCard
+                    key={quote.id}
+                    quote={quote}
+                    onView={handleItemClick}
+                  />
                 ))}
               {sectionId === "orders" &&
                 filteredItems.map((order: any) => (
-                  <OrderCard key={order.id} order={order} onView={handleItemClick} />
+                  <OrderCard
+                    key={order.id}
+                    order={order}
+                    onView={handleItemClick}
+                  />
                 ))}
               {sectionId === "services" &&
                 filteredItems.map((service: any) => (
-                  <ServiceCard key={service.id} service={service} onView={handleItemClick} />
+                  <ServiceCard
+                    key={service.id}
+                    service={service}
+                    onView={handleItemClick}
+                  />
                 ))}
               {sectionId === "stores" &&
                 filteredItems.map((store: any) => (
-                  <StoreCard key={store.id} store={store} onView={handleItemClick} />
+                  <StoreCard
+                    key={store.id}
+                    store={store}
+                    onView={handleItemClick}
+                  />
                 ))}
               {sectionId === "contracts" &&
                 filteredItems.map((contract: any) => (
-                  <ContractCard key={contract.id} contract={contract} onView={handleItemClick} />
+                  <ContractCard
+                    key={contract.id}
+                    contract={contract}
+                    onView={handleItemClick}
+                  />
                 ))}
             </div>
           )}
@@ -2256,24 +2582,26 @@ function RFQCard({ rfq, onView }: { rfq: any; onView: (item: any) => void }) {
   return (
     <div
       onClick={() => onView(rfq)}
-      className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600 cursor-pointer hover:shadow-md hover:border-green-300 dark:hover:border-green-600 transition-all active:scale-[0.98]"
+      className="cursor-pointer rounded-xl border border-gray-200 bg-gray-50 p-4 transition-all hover:border-green-300 hover:shadow-md active:scale-[0.98] dark:border-gray-600 dark:bg-gray-800 dark:hover:border-green-600"
     >
-      <div className="flex items-start justify-between mb-2">
-        <h4 className="font-bold text-gray-900 dark:text-white text-base flex-1">
+      <div className="mb-2 flex items-start justify-between">
+        <h4 className="flex-1 text-base font-bold text-gray-900 dark:text-white">
           {rfq.title || `RFQ #${rfq.id.slice(0, 8)}`}
         </h4>
         <span
-          className={`px-2.5 py-1 rounded-md text-xs font-semibold ml-2 ${
+          className={`ml-2 rounded-md px-2.5 py-1 text-xs font-semibold ${
             rfq.open
-              ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-              : "bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-400"
+              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+              : "bg-gray-100 text-gray-600 dark:bg-gray-600 dark:text-gray-400"
           }`}
         >
           {rfq.open ? "Open" : "Closed"}
         </span>
       </div>
       {rfq.description && (
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">{rfq.description}</p>
+        <p className="mb-3 line-clamp-2 text-sm text-gray-600 dark:text-gray-400">
+          {rfq.description}
+        </p>
       )}
       <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
         {rfq.category && (
@@ -2299,7 +2627,13 @@ function RFQCard({ rfq, onView }: { rfq: any; onView: (item: any) => void }) {
   );
 }
 
-function QuoteCard({ quote, onView }: { quote: any; onView: (item: any) => void }) {
+function QuoteCard({
+  quote,
+  onView,
+}: {
+  quote: any;
+  onView: (item: any) => void;
+}) {
   const attachments = [
     quote.attachement,
     quote.attachment_1,
@@ -2358,32 +2692,36 @@ function QuoteCard({ quote, onView }: { quote: any; onView: (item: any) => void 
 
   const statusBadge = getStatusBadge(quote.status);
   const StatusIcon = statusBadge.icon;
-  const rfqTitle = quote.bussines_RFQ?.title || quote.rfq?.title || `RFQ #${quote.businessRfq_id?.slice(0, 8)}`;
-  const rfqRequesterName = quote.bussines_RFQ?.business_account?.business_name || "Unknown Business";
+  const rfqTitle =
+    quote.bussines_RFQ?.title ||
+    quote.rfq?.title ||
+    `RFQ #${quote.businessRfq_id?.slice(0, 8)}`;
+  const rfqRequesterName =
+    quote.bussines_RFQ?.business_account?.business_name || "Unknown Business";
 
   return (
     <div
       onClick={() => onView(quote)}
-      className="group relative overflow-hidden rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-white via-gray-50 to-white p-5 shadow-md transition-all duration-300 hover:border-green-400 hover:shadow-xl hover:shadow-green-500/20 dark:border-gray-700 dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 dark:hover:border-green-600 cursor-pointer active:scale-[0.97]"
+      className="group relative cursor-pointer overflow-hidden rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-white via-gray-50 to-white p-5 shadow-md transition-all duration-300 hover:border-green-400 hover:shadow-xl hover:shadow-green-500/20 active:scale-[0.97] dark:border-gray-700 dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 dark:hover:border-green-600"
     >
       {/* Decorative gradient overlay on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-green-50/0 via-emerald-50/0 to-teal-50/0 transition-opacity duration-300 group-hover:from-green-50/50 group-hover:via-emerald-50/30 group-hover:to-teal-50/50 dark:group-hover:from-green-900/10 dark:group-hover:via-emerald-900/5 dark:group-hover:to-teal-900/10 pointer-events-none"></div>
-      
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-green-50/0 via-emerald-50/0 to-teal-50/0 transition-opacity duration-300 group-hover:from-green-50/50 group-hover:via-emerald-50/30 group-hover:to-teal-50/50 dark:group-hover:from-green-900/10 dark:group-hover:via-emerald-900/5 dark:group-hover:to-teal-900/10"></div>
+
       <div className="relative flex flex-col gap-4">
         {/* Header Section */}
         <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="mb-2 flex items-center gap-2">
               <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg">
                 <FileText className="h-5 w-5 text-white" />
               </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-base font-bold leading-tight text-gray-900 transition-colors group-hover:text-green-600 dark:text-white line-clamp-2">
+              <div className="min-w-0 flex-1">
+                <h3 className="line-clamp-2 text-base font-bold leading-tight text-gray-900 transition-colors group-hover:text-green-600 dark:text-white">
                   {rfqTitle}
                 </h3>
               </div>
             </div>
-            
+
             {/* RFQ Requester */}
             <div className="ml-12 flex items-center gap-2 rounded-lg bg-gray-100/80 px-3 py-1.5 dark:bg-gray-700/50">
               <Building className="h-3.5 w-3.5 flex-shrink-0 text-gray-500 dark:text-gray-400" />
@@ -2394,7 +2732,7 @@ function QuoteCard({ quote, onView }: { quote: any; onView: (item: any) => void 
           </div>
 
           {/* Status and Attachments Badges */}
-          <div className="flex flex-col items-end gap-2 flex-shrink-0">
+          <div className="flex flex-shrink-0 flex-col items-end gap-2">
             <span
               className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold shadow-sm ${statusBadge.className}`}
             >
@@ -2417,9 +2755,13 @@ function QuoteCard({ quote, onView }: { quote: any; onView: (item: any) => void 
               <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30">
                 <Truck className="h-4 w-4 text-green-600 dark:text-green-400" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Delivery</p>
-                <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">{quote.delivery_time}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
+                  Delivery
+                </p>
+                <p className="truncate text-xs font-semibold text-gray-900 dark:text-white">
+                  {quote.delivery_time}
+                </p>
               </div>
             </div>
           )}
@@ -2428,9 +2770,13 @@ function QuoteCard({ quote, onView }: { quote: any; onView: (item: any) => void 
               <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30">
                 <Clock className="h-4 w-4 text-orange-600 dark:text-orange-400" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Valid Until</p>
-                <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">{quote.quote_validity}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
+                  Valid Until
+                </p>
+                <p className="truncate text-xs font-semibold text-gray-900 dark:text-white">
+                  {quote.quote_validity}
+                </p>
               </div>
             </div>
           )}
@@ -2439,9 +2785,13 @@ function QuoteCard({ quote, onView }: { quote: any; onView: (item: any) => void 
               <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30">
                 <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Location</p>
-                <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">{quote.bussines_RFQ.location}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
+                  Location
+                </p>
+                <p className="truncate text-xs font-semibold text-gray-900 dark:text-white">
+                  {quote.bussines_RFQ.location}
+                </p>
               </div>
             </div>
           )}
@@ -2452,7 +2802,9 @@ function QuoteCard({ quote, onView }: { quote: any; onView: (item: any) => void 
           <div className="flex-1">
             <div className="flex items-baseline gap-2">
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {quote.qouteAmount ? formatCurrency(quote.qouteAmount, quote.currency) : "N/A"}
+                {quote.qouteAmount
+                  ? formatCurrency(quote.qouteAmount, quote.currency)
+                  : "N/A"}
               </p>
               {quote.currency && (
                 <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
@@ -2463,7 +2815,9 @@ function QuoteCard({ quote, onView }: { quote: any; onView: (item: any) => void 
             <div className="mt-1 flex items-center gap-2">
               <Calendar className="h-3 w-3 text-gray-400" />
               <p className="text-[10px] text-gray-500 dark:text-gray-400">
-                {quote.created_at ? formatDate(quote.created_at) : "Not specified"}
+                {quote.created_at
+                  ? formatDate(quote.created_at)
+                  : "Not specified"}
               </p>
             </div>
           </div>
@@ -2483,41 +2837,47 @@ function QuoteCard({ quote, onView }: { quote: any; onView: (item: any) => void 
   );
 }
 
-function OrderCard({ order, onView }: { order: any; onView: (item: any) => void }) {
+function OrderCard({
+  order,
+  onView,
+}: {
+  order: any;
+  onView: (item: any) => void;
+}) {
   // Get query_id from order items if available
   const queryId = order.allProducts?.[0]?.query_id || order.query_id || null;
-  
+
   return (
     <div
       onClick={() => onView(order)}
-      className="group bg-white dark:bg-gray-800 rounded-2xl p-4 border-2 border-gray-200 dark:border-gray-600 cursor-pointer hover:shadow-xl hover:border-green-400 dark:hover:border-green-600 transition-all duration-300 active:scale-[0.98]"
+      className="group cursor-pointer rounded-2xl border-2 border-gray-200 bg-white p-4 transition-all duration-300 hover:border-green-400 hover:shadow-xl active:scale-[0.98] dark:border-gray-600 dark:bg-gray-800 dark:hover:border-green-600"
     >
-      <div className="flex items-start justify-between mb-3">
+      <div className="mb-3 flex items-start justify-between">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30">
+          <div className="mb-2 flex items-center gap-2">
+            <div className="rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 p-2 dark:from-blue-900/30 dark:to-indigo-900/30">
               <ShoppingCart className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <h4 className="font-bold text-gray-900 dark:text-white text-base">
+              <h4 className="text-base font-bold text-gray-900 dark:text-white">
                 {queryId || order.OrderID || order.id?.slice(0, 8) || "N/A"}
               </h4>
               {queryId && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                <p className="font-mono text-xs text-gray-500 dark:text-gray-400">
                   Query ID
                 </p>
               )}
             </div>
           </div>
           {order.created_at && (
-            <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 ml-10">
+            <div className="ml-10 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
               <Calendar className="h-3 w-3" />
               {new Date(order.created_at).toLocaleDateString()}
             </div>
           )}
         </div>
         <span
-          className={`px-3 py-1.5 rounded-xl text-xs font-bold shadow-md ${
+          className={`rounded-xl px-3 py-1.5 text-xs font-bold shadow-md ${
             order.status === "completed"
               ? "bg-green-500 text-white"
               : order.status === "pending"
@@ -2530,16 +2890,18 @@ function OrderCard({ order, onView }: { order: any; onView: (item: any) => void 
           {order.status?.toUpperCase() || "ACTIVE"}
         </span>
       </div>
-      
+
       {order.total && (
-        <div className="flex items-center justify-between pt-3 mt-3 border-t-2 border-gray-200 dark:border-gray-700">
-          <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Total:</span>
+        <div className="mt-3 flex items-center justify-between border-t-2 border-gray-200 pt-3 dark:border-gray-700">
+          <span className="text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">
+            Total:
+          </span>
           <span className="text-lg font-bold text-green-600 dark:text-green-400">
             {formatCurrencySync(parseFloat(order.total || "0"))}
           </span>
         </div>
       )}
-      
+
       <div className="mt-3 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
         <Eye className="h-3.5 w-3.5" />
         <span className="font-medium">Tap to view details</span>
@@ -2548,25 +2910,35 @@ function OrderCard({ order, onView }: { order: any; onView: (item: any) => void 
   );
 }
 
-function ServiceCard({ service, onView }: { service: any; onView: (item: any) => void }) {
+function ServiceCard({
+  service,
+  onView,
+}: {
+  service: any;
+  onView: (item: any) => void;
+}) {
   return (
     <div
       onClick={() => onView(service)}
-      className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600 cursor-pointer hover:shadow-md hover:border-green-300 dark:hover:border-green-600 transition-all active:scale-[0.98]"
+      className="cursor-pointer rounded-xl border border-gray-200 bg-gray-50 p-4 transition-all hover:border-green-300 hover:shadow-md active:scale-[0.98] dark:border-gray-600 dark:bg-gray-800 dark:hover:border-green-600"
     >
       <div className="flex items-start gap-3">
-        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-600 dark:to-gray-700 flex items-center justify-center flex-shrink-0">
+        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-600 dark:to-gray-700">
           <Package className="h-6 w-6 text-gray-500" />
         </div>
-        <div className="flex-1 min-w-0">
-          <h4 className="font-bold text-gray-900 dark:text-white text-base mb-1">{service.name}</h4>
+        <div className="min-w-0 flex-1">
+          <h4 className="mb-1 text-base font-bold text-gray-900 dark:text-white">
+            {service.name}
+          </h4>
           {service.price && (
-            <p className="text-sm font-semibold text-green-600 dark:text-green-400 mb-1">
+            <p className="mb-1 text-sm font-semibold text-green-600 dark:text-green-400">
               {service.price} {service.unit ? `/ ${service.unit}` : ""}
             </p>
           )}
           {service.Description && (
-            <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">{service.Description}</p>
+            <p className="line-clamp-2 text-xs text-gray-600 dark:text-gray-400">
+              {service.Description}
+            </p>
           )}
         </div>
       </div>
@@ -2574,20 +2946,30 @@ function ServiceCard({ service, onView }: { service: any; onView: (item: any) =>
   );
 }
 
-function StoreCard({ store, onView }: { store: any; onView: (item: any) => void }) {
+function StoreCard({
+  store,
+  onView,
+}: {
+  store: any;
+  onView: (item: any) => void;
+}) {
   return (
     <div
       onClick={() => onView(store)}
-      className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600 cursor-pointer hover:shadow-md hover:border-green-300 dark:hover:border-green-600 transition-all active:scale-[0.98]"
+      className="cursor-pointer rounded-xl border border-gray-200 bg-gray-50 p-4 transition-all hover:border-green-300 hover:shadow-md active:scale-[0.98] dark:border-gray-600 dark:bg-gray-800 dark:hover:border-green-600"
     >
       <div className="flex items-start gap-3">
-        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-600 dark:to-gray-700 flex items-center justify-center flex-shrink-0">
+        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-600 dark:to-gray-700">
           <Store className="h-6 w-6 text-gray-500" />
         </div>
-        <div className="flex-1 min-w-0">
-          <h4 className="font-bold text-gray-900 dark:text-white text-base mb-1">{store.name || "Store"}</h4>
+        <div className="min-w-0 flex-1">
+          <h4 className="mb-1 text-base font-bold text-gray-900 dark:text-white">
+            {store.name || "Store"}
+          </h4>
           {store.description && (
-            <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">{store.description}</p>
+            <p className="line-clamp-2 text-xs text-gray-600 dark:text-gray-400">
+              {store.description}
+            </p>
           )}
         </div>
       </div>
@@ -2595,21 +2977,27 @@ function StoreCard({ store, onView }: { store: any; onView: (item: any) => void 
   );
 }
 
-function ContractCard({ contract, onView }: { contract: any; onView: (item: any) => void }) {
+function ContractCard({
+  contract,
+  onView,
+}: {
+  contract: any;
+  onView: (item: any) => void;
+}) {
   return (
     <div
       onClick={() => onView(contract)}
-      className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600 cursor-pointer hover:shadow-md hover:border-green-300 dark:hover:border-green-600 transition-all active:scale-[0.98]"
+      className="cursor-pointer rounded-xl border border-gray-200 bg-gray-50 p-4 transition-all hover:border-green-300 hover:shadow-md active:scale-[0.98] dark:border-gray-600 dark:bg-gray-800 dark:hover:border-green-600"
     >
-      <div className="flex items-start justify-between mb-2">
-        <h4 className="font-bold text-gray-900 dark:text-white text-base flex-1">
+      <div className="mb-2 flex items-start justify-between">
+        <h4 className="flex-1 text-base font-bold text-gray-900 dark:text-white">
           Contract #{contract.id?.slice(0, 8) || "N/A"}
         </h4>
         <span
-          className={`px-2.5 py-1 rounded-md text-xs font-semibold ml-2 ${
+          className={`ml-2 rounded-md px-2.5 py-1 text-xs font-semibold ${
             contract.status === "active"
-              ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-              : "bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-400"
+              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+              : "bg-gray-100 text-gray-600 dark:bg-gray-600 dark:text-gray-400"
           }`}
         >
           {contract.status || "Active"}
@@ -2617,7 +3005,7 @@ function ContractCard({ contract, onView }: { contract: any; onView: (item: any)
       </div>
       {contract.created_at && (
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          <Calendar className="h-3 w-3 inline mr-1" />
+          <Calendar className="mr-1 inline h-3 w-3" />
           {new Date(contract.created_at).toLocaleDateString()}
         </p>
       )}
@@ -2625,12 +3013,12 @@ function ContractCard({ contract, onView }: { contract: any; onView: (item: any)
   );
 }
 
-function RFQOpportunityCard({ 
-  rfq, 
-  onView, 
-  submittedQuotes 
-}: { 
-  rfq: any; 
+function RFQOpportunityCard({
+  rfq,
+  onView,
+  submittedQuotes,
+}: {
+  rfq: any;
   onView: (item: any) => void;
   submittedQuotes: Record<string, any>;
 }) {
@@ -2650,12 +3038,15 @@ function RFQOpportunityCard({
   const deadline = rfq.response_date ? new Date(rfq.response_date) : null;
   const isUrgent =
     deadline &&
-    deadline.getTime() - today.getTime() < 3 * 24 * 60 * 60 * 1000 && 
+    deadline.getTime() - today.getTime() < 3 * 24 * 60 * 60 * 1000 &&
     deadline > today;
   const isClosed = deadline && deadline < today;
   const status = isClosed ? "Closed" : isUrgent ? "Urgent" : "Open";
 
-  const postedBy = rfq.business_account?.business_name || rfq.contact_name || "Unknown Business";
+  const postedBy =
+    rfq.business_account?.business_name ||
+    rfq.contact_name ||
+    "Unknown Business";
 
   // Calculate days until deadline
   const getDaysUntilDeadline = () => {
@@ -2670,28 +3061,31 @@ function RFQOpportunityCard({
   return (
     <div
       onClick={() => onView(rfq)}
-      className="group relative overflow-hidden rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-white via-gray-50 to-white p-5 shadow-md transition-all duration-300 hover:border-green-400 hover:shadow-xl hover:shadow-green-500/20 dark:border-gray-700 dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 dark:hover:border-green-600 cursor-pointer active:scale-[0.97]"
+      className="group relative cursor-pointer overflow-hidden rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-white via-gray-50 to-white p-5 shadow-md transition-all duration-300 hover:border-green-400 hover:shadow-xl hover:shadow-green-500/20 active:scale-[0.97] dark:border-gray-700 dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 dark:hover:border-green-600"
     >
       {/* Decorative gradient overlay on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-green-50/0 via-emerald-50/0 to-teal-50/0 transition-opacity duration-300 group-hover:from-green-50/50 group-hover:via-emerald-50/30 group-hover:to-teal-50/50 dark:group-hover:from-green-900/10 dark:group-hover:via-emerald-900/5 dark:group-hover:to-teal-900/10 pointer-events-none"></div>
-      
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-green-50/0 via-emerald-50/0 to-teal-50/0 transition-opacity duration-300 group-hover:from-green-50/50 group-hover:via-emerald-50/30 group-hover:to-teal-50/50 dark:group-hover:from-green-900/10 dark:group-hover:via-emerald-900/5 dark:group-hover:to-teal-900/10"></div>
+
       <div className="relative flex flex-col gap-4">
         {/* Header Section */}
         <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="mb-2 flex items-center gap-2">
               <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg">
-                <FileText className="h-5 w-5 text-white" style={{ color: "#ffffff", stroke: "#ffffff" }} />
+                <FileText
+                  className="h-5 w-5 text-white"
+                  style={{ color: "#ffffff", stroke: "#ffffff" }}
+                />
               </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="text-base font-bold leading-tight text-gray-900 transition-colors group-hover:text-green-600 dark:text-white line-clamp-2">
+              <div className="min-w-0 flex-1">
+                <h4 className="line-clamp-2 text-base font-bold leading-tight text-gray-900 transition-colors group-hover:text-green-600 dark:text-white">
                   {rfq.title || `RFQ #${rfq.id?.slice(0, 8)}`}
                 </h4>
               </div>
             </div>
-            
+
             {/* Posted By */}
-            <div className="ml-12 flex items-center gap-2 rounded-lg bg-gray-100/80 px-3 py-1.5 dark:bg-gray-700/50 mb-2">
+            <div className="mb-2 ml-12 flex items-center gap-2 rounded-lg bg-gray-100/80 px-3 py-1.5 dark:bg-gray-700/50">
               <Building className="h-3.5 w-3.5 flex-shrink-0 text-gray-500 dark:text-gray-400" />
               <span className="truncate text-xs font-semibold text-gray-700 dark:text-gray-300">
                 {postedBy}
@@ -2700,7 +3094,7 @@ function RFQOpportunityCard({
           </div>
 
           {/* Status Badge */}
-          <div className="flex flex-col items-end gap-2 flex-shrink-0">
+          <div className="flex flex-shrink-0 flex-col items-end gap-2">
             <span
               className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold shadow-sm ${
                 status === "Urgent"
@@ -2709,14 +3103,26 @@ function RFQOpportunityCard({
                   ? "bg-gray-500 text-white"
                   : "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md shadow-green-500/30"
               }`}
-              style={status !== "Urgent" && status !== "Closed" ? { color: "#ffffff" } : undefined}
+              style={
+                status !== "Urgent" && status !== "Closed"
+                  ? { color: "#ffffff" }
+                  : undefined
+              }
             >
-              {status === "Urgent" && <AlertCircle className="h-3 w-3" style={{ color: "#ffffff" }} />}
+              {status === "Urgent" && (
+                <AlertCircle className="h-3 w-3" style={{ color: "#ffffff" }} />
+              )}
               {status}
             </span>
             {submittedQuotes[rfq.id] && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 px-3 py-1.5 text-[11px] font-bold text-white shadow-md shadow-blue-500/30" style={{ color: "#ffffff" }}>
-                <CheckCircle className="h-3 w-3" style={{ color: "#ffffff", stroke: "#ffffff" }} />
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 px-3 py-1.5 text-[11px] font-bold text-white shadow-md shadow-blue-500/30"
+                style={{ color: "#ffffff" }}
+              >
+                <CheckCircle
+                  className="h-3 w-3"
+                  style={{ color: "#ffffff", stroke: "#ffffff" }}
+                />
                 <span style={{ color: "#ffffff" }}>Quote Sent</span>
               </span>
             )}
@@ -2737,9 +3143,13 @@ function RFQOpportunityCard({
               <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30">
                 <Briefcase className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Category</p>
-                <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">{rfq.category}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
+                  Category
+                </p>
+                <p className="truncate text-xs font-semibold text-gray-900 dark:text-white">
+                  {rfq.category}
+                </p>
               </div>
             </div>
           )}
@@ -2748,31 +3158,51 @@ function RFQOpportunityCard({
               <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30">
                 <MapPin className="h-4 w-4 text-purple-600 dark:text-purple-400" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Location</p>
-                <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">{rfq.location}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
+                  Location
+                </p>
+                <p className="truncate text-xs font-semibold text-gray-900 dark:text-white">
+                  {rfq.location}
+                </p>
               </div>
             </div>
           )}
           {rfq.response_date && (
             <div className="flex items-center gap-2.5">
-              <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${
-                isUrgent 
-                  ? "bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900/30 dark:to-orange-900/30"
-                  : "bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30"
-              }`}>
-                <Calendar className={`h-4 w-4 ${isUrgent ? "text-red-600 dark:text-red-400" : "text-orange-600 dark:text-orange-400"}`} />
+              <div
+                className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${
+                  isUrgent
+                    ? "bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900/30 dark:to-orange-900/30"
+                    : "bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30"
+                }`}
+              >
+                <Calendar
+                  className={`h-4 w-4 ${
+                    isUrgent
+                      ? "text-red-600 dark:text-red-400"
+                      : "text-orange-600 dark:text-orange-400"
+                  }`}
+                />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Deadline</p>
-                <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
+                  Deadline
+                </p>
+                <p className="truncate text-xs font-semibold text-gray-900 dark:text-white">
                   {new Date(rfq.response_date).toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric",
                     year: "numeric",
                   })}
                   {daysLeft !== null && daysLeft > 0 && (
-                    <span className={`ml-1 ${isUrgent ? "text-red-600 dark:text-red-400 font-bold" : "text-gray-500 dark:text-gray-400"}`}>
+                    <span
+                      className={`ml-1 ${
+                        isUrgent
+                          ? "font-bold text-red-600 dark:text-red-400"
+                          : "text-gray-500 dark:text-gray-400"
+                      }`}
+                    >
                       ({daysLeft} {daysLeft === 1 ? "day" : "days"} left)
                     </span>
                   )}
@@ -2802,7 +3232,10 @@ function RFQOpportunityCard({
             className="flex flex-shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-green-500/30 transition-all duration-300 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl hover:shadow-green-500/40 active:scale-95"
             style={{ color: "#ffffff" }}
           >
-            <Eye className="h-4 w-4" style={{ color: "#ffffff", stroke: "#ffffff" }} />
+            <Eye
+              className="h-4 w-4"
+              style={{ color: "#ffffff", stroke: "#ffffff" }}
+            />
             <span style={{ color: "#ffffff" }}>View</span>
           </button>
         </div>
