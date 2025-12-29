@@ -120,8 +120,8 @@ const ShopCard: React.FC<ShopCardProps> = ({
   };
 
   return (
-    <Link href={getNavigationPath()}>
-      <div className="relative transform cursor-pointer overflow-hidden rounded-2xl border shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+    <Link href={getNavigationPath()} className="no-underline">
+      <div className="relative transform cursor-pointer overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:hover:shadow-xl">
         <div className="relative h-48 w-full bg-gray-100 dark:bg-gray-800">
           <Image
             src={getImageUrl()}
@@ -143,41 +143,47 @@ const ShopCard: React.FC<ShopCardProps> = ({
             onLoad={() => {}}
           />
 
+          {/* Shop Logo - Top Left */}
+          {shop.logo && shop.logo.trim() !== "" && (
+            <div className="absolute left-2 top-2 h-10 w-10 overflow-hidden rounded-full border-2 border-white bg-white shadow-lg">
+              <img
+                src={shop.logo}
+                alt={`${shop.name} logo`}
+                className="h-full w-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+                onLoad={() => {}}
+              />
+            </div>
+          )}
+
           {/* Store badge */}
           {isStore && (
-            <span className="absolute left-2 top-2 rounded-full bg-blue-500 px-2 py-1 text-xs font-semibold text-white shadow-md">
+            <span
+              className={`absolute left-2 rounded-full bg-blue-500 px-2 py-1 text-xs font-semibold text-white shadow-md ${
+                shop.logo && shop.logo.trim() !== "" ? "top-14" : "top-2"
+              }`}
+            >
               Store
             </span>
           )}
 
           {isShopOpen ? (
-            <span className="absolute right-2 top-2 rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800 dark:bg-green-900 dark:text-green-100">
+            <span className="absolute right-2 top-2 rounded-full bg-green-100 px-2 py-1 text-xs font-bold !text-green-600 shadow-md dark:bg-green-900 dark:!text-green-400">
               Open
             </span>
           ) : (
-            <span className="absolute right-2 top-2 rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-800 dark:bg-red-900 dark:text-red-100">
+            <span className="absolute right-2 top-2 rounded-full bg-red-100 px-2 py-1 text-xs font-bold !text-red-600 shadow-md dark:bg-red-900 dark:!text-red-400">
               Closed
             </span>
           )}
         </div>
-        <div className="p-4 sm:p-5">
-          <h3 className="mb-1 flex items-center gap-3 text-base font-semibold text-gray-800 dark:text-white sm:text-xl">
-            {shop.logo && shop.logo.trim() !== "" && (
-              <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-full border-2 border-gray-200 bg-white shadow-sm">
-                <img
-                  src={shop.logo}
-                  alt={`${shop.name} logo`}
-                  className="h-full w-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
-                  onLoad={() => {}}
-                />
-              </div>
-            )}
-            <span>{shop.name}</span>
+        <div className="bg-white p-4 dark:bg-gray-800 sm:p-5">
+          <h3 className="mb-1 text-sm font-semibold text-gray-800 dark:text-white sm:text-base">
+            {shop.name}
           </h3>
-          <p className="hidden text-sm leading-relaxed text-gray-500 dark:text-gray-400 sm:block">
+          <p className="hidden text-xs leading-relaxed text-gray-500 dark:text-gray-400 sm:block">
             {shop.description?.slice(0, 80) || "No description"}
           </p>
           {isLoggedIn && (

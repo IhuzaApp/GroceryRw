@@ -36,7 +36,7 @@ const checkNewOrders = async () => {
       // Play sound if specified
       if (data.play_sound && notificationSound) {
         notificationSound.play().catch((error) => {
-          console.error("Error playing notification sound:", error);
+          // Error playing notification sound
         });
       }
 

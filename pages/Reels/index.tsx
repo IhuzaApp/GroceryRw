@@ -2,12 +2,11 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import RootLayout from "@components/ui/layout";
-import BottomBar from "@components/ui/NavBar/bottomBar";
 import { useTheme } from "../../src/context/ThemeContext";
-import VideoReel from "../../src/components/Reels/VideoReel";
-import CommentsDrawer from "../../src/components/Reels/CommentsDrawer";
 import { useSession } from "next-auth/react";
 import ReelPlaceholder from "@components/Reels/ReelPlaceholder";
+import MobileReelsView from "../../src/components/Reels/MobileReelsView";
+import DesktopReelsView from "../../src/components/Reels/DesktopReelsView";
 
 // Inline SVGs for icons
 const HeartIcon = ({ filled = false }: { filled?: boolean }) => (
@@ -273,6 +272,8 @@ interface BasePost {
   };
   isLiked: boolean;
   commentsList: Comment[];
+  shop_id?: string | null;
+  restaurant_id?: string | null;
 }
 
 interface RestaurantPost extends BasePost {
@@ -328,7 +329,10 @@ interface DatabaseReel {
   Product: any;
   Shops: {
     name: string;
-    // add other shop fields if needed
+    address?: string;
+    id: string;
+    image?: string;
+    description?: string;
   } | null;
   User: {
     email: string;
@@ -661,18 +665,75 @@ export default function FoodReelsApp() {
       },
       isLiked: userHasLiked, // Use actual user like status
       commentsList,
+      shop_id: dbReel.shop_id || null,
+      restaurant_id: dbReel.restaurant_id || null,
+    };
+
+    // Helper function to extract string value
+    const extractStringValue = (value: any): string | null => {
+      if (!value) return null;
+      if (typeof value === "string") {
+        const trimmed = value.trim();
+        return trimmed.length > 0 ? trimmed : null;
+      }
+      if (typeof value === "object" && value !== null) {
+        if (value.value && typeof value.value === "string") {
+          const trimmed = value.value.trim();
+          return trimmed.length > 0 ? trimmed : null;
+        }
+        if (value.text && typeof value.text === "string") {
+          const trimmed = value.text.trim();
+          return trimmed.length > 0 ? trimmed : null;
+        }
+        if (value.name && typeof value.name === "string") {
+          const trimmed = value.name.trim();
+          return trimmed.length > 0 ? trimmed : null;
+        }
+        try {
+          const str = value.toString();
+          if (str && str !== "[object Object]" && typeof str === "string") {
+            const trimmed = str.trim();
+            return trimmed.length > 0 ? trimmed : null;
+          }
+        } catch (e) {}
+        const keys = Object.keys(value);
+        for (const key of keys) {
+          if (typeof value[key] === "string") {
+            const trimmed = value[key].trim();
+            if (trimmed.length > 0) return trimmed;
+          }
+        }
+      }
+      return null;
     };
 
     // Convert based on type
     switch (dbReel.type) {
       case "restaurant":
+        // Try Restaurant location first, then fallback to Shops address if restaurant_id is null
+        let restaurantLocation = null;
+
+        if (dbReel.Restaurant?.location) {
+          restaurantLocation = extractStringValue(dbReel.Restaurant.location);
+        }
+
+        // If no restaurant location but we have a shop_id, try using Shops address
+        if (!restaurantLocation && dbReel.Shops) {
+          restaurantLocation =
+            extractStringValue(dbReel.Shops.address) ||
+            extractStringValue(dbReel.Shops.name);
+        }
+
+        const finalLocation =
+          restaurantLocation || "Location information unavailable";
+
         return {
           ...basePost,
           type: "restaurant",
           restaurant: {
-            rating: 4.5, // Default rating, could be fetched from restaurant data
-            reviews: 100, // Default reviews
-            location: dbReel.Restaurant?.location || "Location not available",
+            rating: 4.5,
+            reviews: 100,
+            location: finalLocation,
             deliveryTime: dbReel.delivery_time || "30-45 min",
             price: parseFloat(dbReel.Price || "0"),
           },
@@ -680,13 +741,53 @@ export default function FoodReelsApp() {
 
       case "supermarket":
         const product = dbReel.Product || {};
+
+        // Try multiple sources for store information, in order of preference:
+        let storeName: string | null = null;
+
+        // 1. Try Shops relationship (if shop_id exists and Shops is loaded)
+        if (dbReel.Shops) {
+          storeName =
+            extractStringValue(dbReel.Shops.name) ||
+            extractStringValue(dbReel.Shops.address);
+        }
+
+        // 2. Try Product JSON field for store information (some reels might store it there)
+        if (!storeName && product && typeof product === "object") {
+          storeName =
+            extractStringValue(product.store) ||
+            extractStringValue(product.storeName) ||
+            extractStringValue(product.shopName) ||
+            extractStringValue(product.shop);
+        }
+
+        // 3. Try Restaurant name/location if we have restaurant_id instead of shop_id
+        if (!storeName && dbReel.Restaurant) {
+          storeName =
+            extractStringValue(dbReel.Restaurant.name) ||
+            extractStringValue(dbReel.Restaurant.location);
+        }
+
+        // 4. Last resort - check if description or title contains store info
+        if (!storeName) {
+          const description = extractStringValue(dbReel.description);
+          const title = extractStringValue(dbReel.title);
+          if (description && description.length < 100) {
+            storeName = description;
+          } else if (title && title.length < 50) {
+            storeName = title;
+          }
+        }
+
+        const finalStoreName = storeName || "Store information unavailable";
+
         return {
           ...basePost,
           type: "supermarket",
           product: {
             price: parseFloat(dbReel.Price || "0"),
             originalPrice: product.originalPrice || undefined,
-            store: dbReel.Shops?.name || "Store not available",
+            store: finalStoreName,
             inStock: product.inStock !== false,
             discount: product.discount || undefined,
           },
@@ -705,6 +806,57 @@ export default function FoodReelsApp() {
             subscribers: recipe.subscribers || "1M",
           },
         } as ChefPost;
+
+      case "shop":
+      case "store":
+        // Handle shop/store type reels - similar to supermarket
+        const shopProduct = dbReel.Product || {};
+
+        // Try multiple sources for store information
+        let shopStoreName: string | null = null;
+
+        // 1. Try Shops relationship
+        if (dbReel.Shops) {
+          shopStoreName =
+            extractStringValue(dbReel.Shops.name) ||
+            extractStringValue(dbReel.Shops.address);
+        }
+
+        // 2. Try Product JSON field
+        if (!shopStoreName && shopProduct) {
+          shopStoreName =
+            extractStringValue(shopProduct.store) ||
+            extractStringValue(shopProduct.storeName) ||
+            extractStringValue(shopProduct.shopName) ||
+            extractStringValue(shopProduct.shop);
+        }
+
+        // 3. Try Restaurant name/location
+        if (!shopStoreName && dbReel.Restaurant) {
+          shopStoreName =
+            extractStringValue(dbReel.Restaurant.name) ||
+            extractStringValue(dbReel.Restaurant.location);
+        }
+
+        // 4. If we have shop_id but no Shops data
+        if (!shopStoreName && dbReel.shop_id) {
+          shopStoreName = "Store information available (loading...)";
+        }
+
+        const finalShopStoreName =
+          shopStoreName || "Store information unavailable";
+
+        return {
+          ...basePost,
+          type: "supermarket" as PostType, // Map shop/store to supermarket type for display
+          product: {
+            price: parseFloat(dbReel.Price || "0"),
+            originalPrice: shopProduct.originalPrice || undefined,
+            store: finalShopStoreName,
+            inStock: shopProduct.inStock !== false,
+            discount: shopProduct.discount || undefined,
+          },
+        } as SupermarketPost;
 
       default:
         return basePost as FoodPost;
@@ -912,6 +1064,22 @@ export default function FoodReelsApp() {
       // Desktop keyboard navigation
       if (isMobile) return;
 
+      // Don't handle navigation if user is typing in an input field
+      const activeElement = document.activeElement;
+      const isTyping =
+        activeElement &&
+        (activeElement.tagName === "INPUT" ||
+          activeElement.tagName === "TEXTAREA" ||
+          activeElement.getAttribute("contenteditable") === "true" ||
+          activeElement.closest("input") ||
+          activeElement.closest("textarea") ||
+          activeElement.closest("[contenteditable='true']"));
+
+      // For space key, only handle navigation if not typing
+      if (e.key === " " && isTyping) {
+        return;
+      }
+
       const currentIndex = visiblePostIndex;
       let nextIndex = currentIndex;
 
@@ -1060,21 +1228,12 @@ export default function FoodReelsApp() {
 
     if (!containerRef.current) return;
 
-    console.log(
-      `Setting up observer for ${isMobile ? "mobile" : "desktop"} layout`
-    );
-
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const index = parseInt(
               entry.target.getAttribute("data-index") || "0"
-            );
-            console.log(
-              `Post ${index} is now visible on ${
-                isMobile ? "mobile" : "desktop"
-              }`
             );
             setVisiblePostIndex(index);
           }
@@ -1089,23 +1248,12 @@ export default function FoodReelsApp() {
     observerRef.current = observer;
 
     const posts = containerRef.current.querySelectorAll("[data-index]");
-    console.log(
-      `Found ${posts.length} posts to observe on ${
-        isMobile ? "mobile" : "desktop"
-      }`
-    );
 
-    posts.forEach((post, index) => {
-      console.log(
-        `Observing post ${index} on ${isMobile ? "mobile" : "desktop"}`
-      );
+    posts.forEach((post) => {
       observer.observe(post);
     });
 
     return () => {
-      console.log(
-        `Cleaning up observer for ${isMobile ? "mobile" : "desktop"}`
-      );
       if (observerRef.current) {
         observerRef.current.disconnect();
         observerRef.current = null;
@@ -1289,7 +1437,6 @@ export default function FoodReelsApp() {
         }));
         // Optionally, you can trigger a refetch here for extra safety
         await refetchComments(postId);
-        console.log("Comment added successfully:", result.comment);
       } else {
         throw new Error("Invalid response from server");
       }
@@ -1374,8 +1521,6 @@ export default function FoodReelsApp() {
             : post
         )
       );
-
-      console.log("Comments refetched successfully for post:", postId);
     } catch (error) {
       console.error("Error refetching comments:", error);
     } finally {
@@ -1415,27 +1560,107 @@ export default function FoodReelsApp() {
     return () => clearInterval(refreshInterval);
   }, [showComments, activePostId]);
 
+  // Automatically set active post and load comments for desktop view
+  useEffect(() => {
+    if (isMobile) return; // Only for desktop
+
+    if (
+      posts.length > 0 &&
+      visiblePostIndex >= 0 &&
+      visiblePostIndex < posts.length
+    ) {
+      const currentPost = posts[visiblePostIndex];
+      if (currentPost && currentPost.id) {
+        // Always update activePostId for desktop to show comments sidebar
+        setActivePostId(currentPost.id);
+        // Auto-fetch comments for the visible post on desktop if user is logged in
+        if (session?.user) {
+          refetchComments(currentPost.id);
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visiblePostIndex, posts.length, isMobile, session?.user?.id]);
+
   const closeComments = () => {
     console.log("Closing comments");
     setShowComments(false);
     setActivePostId(null);
   };
 
-  const handleShare = (postId: string) => {
+  const handleShare = async (post: FoodPost) => {
     // Check if user is logged in
     if (!session?.user) {
       alert("Please log in to share videos");
       return;
     }
 
-    console.log("Sharing post:", postId);
+    try {
+      // Create share link - link to the reel page with the post ID
+      const shareUrl = `${window.location.origin}/Reels?reel=${post.id}`;
+      const shareText = `Check out this ${post.type}: ${post.content.title}\n${post.content.description}`;
+      const shareTitle = post.content.title;
+
+      // Use Web Share API if available (mobile browsers)
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: shareTitle,
+            text: shareText,
+            url: shareUrl,
+          });
+          // Share was successful
+          return;
+        } catch (shareError: any) {
+          // User cancelled or share failed, fallback to copy
+          if (shareError.name !== "AbortError") {
+            throw shareError;
+          }
+          return; // User cancelled, don't show error
+        }
+      }
+
+      // Fallback: Copy link to clipboard
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        // Show success message (you might want to use a toast/notification library)
+        alert("Link copied to clipboard!");
+      } catch (clipboardError) {
+        // Fallback for older browsers
+        const textArea = document.createElement("textarea");
+        textArea.value = shareUrl;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand("copy");
+          alert("Link copied to clipboard!");
+        } catch (fallbackError) {
+          alert(`Share this link: ${shareUrl}`);
+        }
+        document.body.removeChild(textArea);
+      }
+    } catch (error) {
+      console.error("Error sharing:", error);
+      alert("Failed to share. Please try again.");
+    }
   };
 
-  const activePost = posts.find((post: FoodPost) => post.id === activePostId);
+  // On desktop, always use visible post for comments; on mobile, use activePostId (from clicking comment icon)
+  const activePostForComments = isMobile
+    ? posts.find((post: FoodPost) => post.id === activePostId)
+    : posts.length > 0 &&
+      visiblePostIndex >= 0 &&
+      visiblePostIndex < posts.length
+    ? posts[visiblePostIndex]
+    : null;
+
+  const activePost = activePostForComments;
   const mergedActiveComments = activePost
     ? [
         ...(optimisticComments[activePost.id] || []),
-        ...activePost.commentsList.filter(
+        ...(activePost.commentsList || []).filter(
           (c) =>
             !(optimisticComments[activePost.id] || []).some(
               (o) => o.text === c.text && o.user.name === c.user.name
@@ -1497,129 +1722,45 @@ export default function FoodReelsApp() {
     );
   }
 
-  // Mobile layout - full screen without navbar/sidebar but with bottom bar
+  // Render mobile or desktop view
   if (isMobile) {
     return (
-      <div className={`min-h-screen transition-colors duration-200 `}>
-        {/* Refresh Indicator */}
-        {isRefreshing && (
-          <div className="fixed left-1/2 top-4 z-50 flex -translate-x-1/2 transform items-center gap-2 rounded-full bg-black bg-opacity-75 px-4 py-2 text-sm text-white">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-            Refreshing...
-          </div>
-        )}
-
-        <div
-          ref={containerRef}
-          className="scrollbar-hide reels-container h-full w-full overflow-y-auto"
-          style={{
-            height: "calc(100vh - 80px)",
-            scrollSnapType: "y mandatory",
-            scrollBehavior: "smooth",
-            overscrollBehavior: "none",
-          }}
-        >
-          {posts.map((post, index) => (
-            <div
-              key={`${post.id}-${isMobile ? "mobile" : "desktop"}`}
-              data-index={index}
-              className="h-screen w-full"
-              style={{ scrollSnapAlign: "start" }}
-            >
-              <VideoReel
-                post={post}
-                isVisible={visiblePostIndex === index}
-                isAuthenticated={!!session?.user}
-                onLike={toggleLike}
-                onComment={openComments}
-                onShare={handleShare}
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* Comments Drawer */}
-        {activePost && (
-          <CommentsDrawer
-            open={showComments}
-            onClose={closeComments}
-            comments={mergedActiveComments}
-            commentCount={activePost.stats.comments}
-            postId={activePost.id}
-            onToggleCommentLike={toggleCommentLike}
-            onAddComment={addComment}
-            isRefreshing={isRefreshingComments}
-          />
-        )}
-
-        {/* Mobile Bottom Navigation */}
-        <BottomBar />
-      </div>
+      <MobileReelsView
+        posts={posts}
+        visiblePostIndex={visiblePostIndex}
+        setVisiblePostIndex={setVisiblePostIndex}
+        containerRef={containerRef}
+        isAuthenticated={!!session?.user}
+        activePost={activePost}
+        showComments={showComments}
+        openComments={openComments}
+        closeComments={closeComments}
+        mergedActiveComments={mergedActiveComments}
+        toggleCommentLike={toggleCommentLike}
+        addComment={addComment}
+        isRefreshingComments={isRefreshingComments}
+        toggleLike={toggleLike}
+        handleShare={(post) => handleShare(post)}
+        isRefreshing={isRefreshing}
+      />
     );
   }
 
-  // Desktop layout - with normal page alignment matching main page
   return (
-    <RootLayout>
-      <div className="flex h-fit items-center justify-center">
-        {/* Refresh Indicator */}
-        {isRefreshing && (
-          <div className="fixed left-1/2 top-4 z-50 flex -translate-x-1/2 transform items-center gap-2 rounded-full bg-black bg-opacity-75 px-4 py-2 text-sm text-white">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-            Refreshing...
-          </div>
-        )}
-
-        <div
-          className={`container mx-auto h-full max-w-md transition-colors duration-200 md:h-[95vh] md:rounded-2xl md:shadow-2xl ${
-            theme === "dark"
-              ? "bg-gray-900 text-white"
-              : "bg-white text-gray-900"
-          }`}
-        >
-          <div
-            ref={containerRef}
-            className="scrollbar-hide reels-container h-full w-full overflow-y-auto"
-            style={{
-              scrollSnapType: "y mandatory",
-              scrollBehavior: "smooth",
-              overscrollBehavior: "none",
-            }}
-          >
-            {posts.map((post, index) => (
-              <div
-                key={`${post.id}-${isMobile ? "mobile" : "desktop"}`}
-                data-index={index}
-                className="h-screen w-full"
-                style={{ scrollSnapAlign: "start" }}
-              >
-                <VideoReel
-                  post={post}
-                  isVisible={visiblePostIndex === index}
-                  isAuthenticated={!!session?.user}
-                  onLike={toggleLike}
-                  onComment={openComments}
-                  onShare={handleShare}
-                />
-              </div>
-            ))}
-          </div>
-
-          {/* Comments Drawer */}
-          {activePost && (
-            <CommentsDrawer
-              open={showComments}
-              onClose={closeComments}
-              comments={mergedActiveComments}
-              commentCount={activePost.stats.comments}
-              postId={activePost.id}
-              onToggleCommentLike={toggleCommentLike}
-              onAddComment={addComment}
-              isRefreshing={isRefreshingComments}
-            />
-          )}
-        </div>
-      </div>
-    </RootLayout>
+    <DesktopReelsView
+      posts={posts}
+      visiblePostIndex={visiblePostIndex}
+      setVisiblePostIndex={setVisiblePostIndex}
+      containerRef={containerRef}
+      isAuthenticated={!!session?.user}
+      mergedActiveComments={mergedActiveComments}
+      toggleCommentLike={toggleCommentLike}
+      addComment={addComment}
+      isRefreshingComments={isRefreshingComments}
+      toggleLike={toggleLike}
+      handleShare={(post) => handleShare(post)}
+      isRefreshing={isRefreshing}
+      theme={theme}
+    />
   );
 }

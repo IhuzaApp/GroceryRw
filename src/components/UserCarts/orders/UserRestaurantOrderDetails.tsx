@@ -1,19 +1,12 @@
 import React, { useEffect } from "react";
 import Image from "next/image";
-import {
-  Input,
-  InputGroup,
-  Button,
-  Panel,
-  Steps,
-  Rate,
-  Modal,
-  Message,
-} from "rsuite";
+import { Input, InputGroup, Button, Panel, Steps, Message } from "rsuite";
 import Link from "next/link";
 import { useState } from "react";
 import { formatCurrency } from "../../../lib/formatCurrency";
 import EstimatedDeliveryTime from "./EstimatedDeliveryTime";
+import { useTheme } from "../../../context/ThemeContext";
+import FeedbackModal from "./FeedbackModal";
 
 // Helper to pad order IDs to at least 4 digits
 function formatOrderID(id?: string | number): string {
@@ -51,9 +44,8 @@ export default function UserRestaurantOrderDetails({
   order,
   isMobile = false,
 }: UserRestaurantOrderDetailsProps) {
+  const { theme } = useTheme();
   const [feedbackModal, setFeedbackModal] = useState(false);
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [hasExistingRating, setHasExistingRating] = useState(false);
@@ -145,12 +137,15 @@ export default function UserRestaurantOrderDetails({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const handleSubmitRating = async () => {
-    if (rating === 0) {
-      setSubmitError("Please select a rating");
-      return;
-    }
-
+  const handleSubmitRating = async (
+    ratings: {
+      rating: number;
+      packaging_quality: number;
+      delivery_experience: number;
+      professionalism: number;
+    },
+    comment: string
+  ) => {
     setSubmitting(true);
     setSubmitError(null);
 
@@ -162,9 +157,12 @@ export default function UserRestaurantOrderDetails({
         },
         body: JSON.stringify({
           orderId: order.id,
-          rating: rating,
+          rating: ratings.rating,
           comment: comment.trim(),
           shopId: order.Restaurant?.id,
+          packaging_quality: ratings.packaging_quality,
+          delivery_experience: ratings.delivery_experience,
+          professionalism: ratings.professionalism,
         }),
       });
 
@@ -174,8 +172,6 @@ export default function UserRestaurantOrderDetails({
       }
 
       setFeedbackModal(false);
-      setRating(0);
-      setComment("");
       setHasExistingRating(true);
       Message.success("Thank you for your feedback!");
     } catch (error) {
@@ -430,8 +426,28 @@ export default function UserRestaurantOrderDetails({
               {order.status === "OUT_FOR_DELIVERY" &&
                 "Your order is on the way"}
               {order.status === "DELIVERED" &&
+                !order.delivery_photo_url &&
                 "Order has been delivered successfully"}
             </div>
+
+            {/* Delivery Proof Image for Mobile */}
+            {order.status === "DELIVERED" && order.delivery_photo_url && (
+              <div className="mt-4">
+                <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Delivery Proof
+                </p>
+                <div className="relative mx-auto max-w-[280px] overflow-hidden rounded-lg border-2 border-gray-200 dark:border-gray-700">
+                  <Image
+                    src={order.delivery_photo_url}
+                    alt="Delivery proof"
+                    width={280}
+                    height={280}
+                    className="h-auto w-full object-cover"
+                    unoptimized
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -442,6 +458,25 @@ export default function UserRestaurantOrderDetails({
               <Steps.Item key={index} title={step} />
             ))}
           </Steps>
+
+          {/* Delivery Proof Image for Desktop */}
+          {order.status === "DELIVERED" && order.delivery_photo_url && (
+            <div className="mt-6">
+              <h3 className="mb-3 text-base font-semibold text-gray-900 dark:text-white">
+                Delivery Proof
+              </h3>
+              <div className="relative mx-auto max-w-md overflow-hidden rounded-lg border-2 border-gray-200 dark:border-gray-700">
+                <Image
+                  src={order.delivery_photo_url}
+                  alt="Delivery proof"
+                  width={448}
+                  height={448}
+                  className="h-auto w-full object-cover"
+                  unoptimized
+                />
+              </div>
+            </div>
+          )}
         </div>
       </Panel>
 
@@ -782,60 +817,120 @@ export default function UserRestaurantOrderDetails({
         </Panel>
       )}
 
-      {/* Feedback Modal */}
-      <Modal
-        open={feedbackModal}
-        onClose={() => setFeedbackModal(false)}
-        title="Rate Your Restaurant Order"
-        size="sm"
-      >
-        <Modal.Body>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Rating
-              </label>
-              <Rate
-                value={rating}
-                onChange={setRating}
-                size="lg"
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Comments (Optional)
-              </label>
-              <Input
-                as="textarea"
-                rows={3}
-                value={comment}
-                onChange={setComment}
-                placeholder="Tell us about your experience..."
-                className="mt-1"
-              />
-            </div>
-            {submitError && <Message type="error" description={submitError} />}
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button
-            onClick={() => setFeedbackModal(false)}
-            appearance="ghost"
-            disabled={submitting}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmitRating}
-            appearance="primary"
-            className="bg-orange-500 hover:bg-orange-600"
-            loading={submitting}
-          >
-            Submit Rating
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      {/* Feedback Modal - Custom Component */}
+      <FeedbackModal
+        isOpen={feedbackModal}
+        onClose={() => {
+          setFeedbackModal(false);
+          setSubmitError(null);
+        }}
+        onSubmit={handleSubmitRating}
+        submitting={submitting}
+        submitError={submitError}
+        accentColor="orange"
+      />
+
+      <style jsx global>{`
+        .rs-modal-header {
+          border-bottom: 1px solid !important;
+          padding: 1.5rem !important;
+        }
+        .rs-modal-body {
+          padding: 0 !important;
+        }
+        .rs-modal-footer {
+          padding: 0 !important;
+          border-top: 1px solid !important;
+        }
+        .rs-rate-character-active {
+          color: #eab308 !important;
+        }
+        .rs-rate-character:hover {
+          transform: scale(1.1);
+          transition: transform 0.2s ease;
+        }
+        /* Fix mobile touch interaction for Rate component */
+        .rs-rate-character {
+          touch-action: manipulation !important;
+          -webkit-tap-highlight-color: transparent !important;
+          cursor: pointer !important;
+        }
+        .rs-rate-character-wrapper {
+          touch-action: manipulation !important;
+          -webkit-tap-highlight-color: transparent !important;
+        }
+        /* Prevent double-tap zoom on mobile and improve touch response */
+        @media (max-width: 768px) {
+          .rs-rate {
+            touch-action: manipulation !important;
+            -webkit-tap-highlight-color: transparent !important;
+          }
+          .rs-rate-character {
+            pointer-events: auto !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            -webkit-touch-callout: none !important;
+          }
+          .rs-rate-character-wrapper {
+            pointer-events: auto !important;
+          }
+          /* Make sure clicks register immediately */
+          .rs-rate-character-wrapper,
+          .rs-rate-character {
+            -webkit-tap-highlight-color: transparent !important;
+            tap-highlight-color: transparent !important;
+          }
+        }
+        .rs-modal-content {
+          border-radius: 1rem !important;
+          overflow: hidden !important;
+        }
+        .dark .rs-modal-content {
+          background-color: #1f2937 !important;
+        }
+        .dark .rs-modal-header {
+          background-color: #1f2937 !important;
+          border-color: #374151 !important;
+        }
+        .dark .rs-modal-body {
+          background-color: #1f2937 !important;
+        }
+        .dark .rs-modal-footer {
+          background-color: #1f2937 !important;
+          border-color: #374151 !important;
+        }
+        /* Dark theme styles for Steps in Order Status card */
+        .dark .rs-steps-item-title {
+          color: #ffffff !important;
+        }
+        .dark .rs-steps-item-description {
+          color: #e5e7eb !important;
+        }
+        .dark .rs-steps-item-title-wrapper {
+          color: #ffffff !important;
+        }
+        .dark .rs-steps-item-content {
+          color: #ffffff !important;
+        }
+        .dark .rs-steps-item-icon-wrapper {
+          color: #ffffff !important;
+        }
+        .dark .rs-steps-item-status-wait .rs-steps-item-icon-wrapper {
+          color: #9ca3af !important;
+          border-color: #9ca3af !important;
+        }
+        @media (max-width: 640px) {
+          .rs-modal {
+            margin: 1rem !important;
+          }
+          .rs-modal-header {
+            padding: 1.25rem !important;
+          }
+          .rs-rate {
+            font-size: 2.5rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

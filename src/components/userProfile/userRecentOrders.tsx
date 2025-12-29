@@ -26,6 +26,18 @@ type Order = {
   itemsCount: number;
   unitsCount: number;
   shopper_id: string | null;
+  assignedTo?: {
+    id: string;
+    name: string;
+    phone?: string;
+    profile_photo?: string;
+    rating?: number;
+    orders_aggregate?: {
+      aggregate?: {
+        count?: number;
+      };
+    };
+  } | null;
   service_fee?: number;
   delivery_fee?: number;
   orderType?: "regular" | "reel" | "restaurant";
@@ -152,9 +164,12 @@ export default function UserRecentOrders({
   // Apply filter and search
   const filteredOrders = orders.filter((order: Order) => {
     // Apply status filter
+    // For "Ongoing" (pending filter): show only assigned orders that are not delivered
+    // For "Completed" (done filter): show only delivered orders
+    const isAssigned = !!order?.shopper_id || !!order?.assignedTo;
     const matchesFilter =
       filter === "pending"
-        ? order.status !== "delivered"
+        ? order.status !== "delivered" && isAssigned
         : order.status === "delivered";
 
     // Apply search filter
@@ -383,10 +398,11 @@ export default function UserRecentOrders({
                   {timeAgo(order?.created_at)}
                 </span>
               </div>
-              {/* Status Badge: Pending when no shopper, Ongoing when assigned, Completed when done */}
+              {/* Shopper Details or Status Badge */}
               {(() => {
                 const isDone = order.status === "delivered";
-                const isAssigned = !!order?.shopper_id;
+                const isAssigned = !!order?.shopper_id || !!order?.assignedTo;
+
                 if (isDone) {
                   return (
                     <div className="flex items-center gap-1.5 rounded-full bg-green-100 px-2 py-1 dark:bg-green-900/30">
@@ -394,6 +410,54 @@ export default function UserRecentOrders({
                       <span className="text-xs font-semibold text-green-700 dark:text-green-300">
                         Completed
                       </span>
+                    </div>
+                  );
+                } else if (isAssigned && order.assignedTo) {
+                  // Show shopper details when assigned
+                  return (
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-blue-100 dark:bg-blue-900/30">
+                        {order.assignedTo.profile_photo ? (
+                          <img
+                            src={order.assignedTo.profile_photo}
+                            alt={order.assignedTo.name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <svg
+                            className="h-5 w-5 text-blue-600 dark:text-blue-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            />
+                          </svg>
+                        )}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-xs font-semibold text-gray-900 dark:text-white">
+                          {order.assignedTo.name}
+                        </span>
+                        {order.assignedTo.rating && (
+                          <div className="flex items-center gap-1">
+                            <svg
+                              className="h-3 w-3 text-yellow-400"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {order.assignedTo.rating.toFixed(1)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   );
                 } else if (!isAssigned) {
@@ -406,11 +470,12 @@ export default function UserRecentOrders({
                     </div>
                   );
                 } else {
+                  // Assigned but no assignedTo details available
                   return (
                     <div className="flex items-center gap-1.5 rounded-full bg-blue-100 px-2 py-1 dark:bg-blue-900/30">
                       <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
                       <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">
-                        Ongoing
+                        Assigned
                       </span>
                     </div>
                   );

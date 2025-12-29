@@ -1,19 +1,12 @@
 import React, { useEffect } from "react";
 import Image from "next/image";
-import {
-  Input,
-  InputGroup,
-  Button,
-  Panel,
-  Steps,
-  Rate,
-  Modal,
-  Message,
-} from "rsuite";
+import { Input, InputGroup, Button, Panel, Steps, Message } from "rsuite";
 import Link from "next/link";
 import { useState } from "react";
 import { formatCurrency } from "../../../lib/formatCurrency";
 import EstimatedDeliveryTime from "./EstimatedDeliveryTime";
+import { useTheme } from "../../../context/ThemeContext";
+import FeedbackModal from "./FeedbackModal";
 
 // Helper to pad order IDs to at least 4 digits
 function formatOrderID(id?: string | number): string {
@@ -29,9 +22,8 @@ export default function UserOrderDetails({
   order,
   isMobile = false,
 }: UserOrderDetailsProps) {
+  const { theme } = useTheme();
   const [feedbackModal, setFeedbackModal] = useState(false);
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [hasExistingRating, setHasExistingRating] = useState(false);
@@ -77,12 +69,15 @@ export default function UserOrderDetails({
     }
   };
 
-  const handleFeedbackSubmit = async () => {
-    if (rating === 0) {
-      setSubmitError("Please provide a rating");
-      return;
-    }
-
+  const handleFeedbackSubmit = async (
+    ratings: {
+      rating: number;
+      packaging_quality: number;
+      delivery_experience: number;
+      professionalism: number;
+    },
+    comment: string
+  ) => {
     setSubmitting(true);
     setSubmitError(null);
 
@@ -95,11 +90,11 @@ export default function UserOrderDetails({
         body: JSON.stringify({
           order_id: order.id,
           shopper_id: order.assignedTo.id,
-          rating: rating.toString(),
+          rating: ratings.rating.toString(),
           review: comment,
-          delivery_experience: rating.toString(),
-          packaging_quality: rating.toString(),
-          professionalism: rating.toString(),
+          delivery_experience: ratings.delivery_experience.toString(),
+          packaging_quality: ratings.packaging_quality.toString(),
+          professionalism: ratings.professionalism.toString(),
         }),
       });
 
@@ -110,9 +105,8 @@ export default function UserOrderDetails({
 
       // Close modal and update state
       setFeedbackModal(false);
-      setRating(0);
-      setComment("");
       setHasExistingRating(true);
+      Message.success("Thank you for your feedback!");
     } catch (error) {
       setSubmitError(
         error instanceof Error ? error.message : "Failed to submit feedback"
@@ -152,30 +146,160 @@ export default function UserOrderDetails({
         <div className="mb-6">
           <h2 className="mb-4 text-xl font-bold">Order Status</h2>
           {isMobile ? (
-            // Mobile: Simple status display
-            <div className="py-4 text-center">
-              <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                {order.status === "delivered"
-                  ? "Delivered"
-                  : order.status === "on_the_way"
-                  ? "On the Way"
-                  : order.status === "packing"
-                  ? "Packing"
-                  : order.status === "shopping"
-                  ? "Shopping"
-                  : "Pending Assignment"}
-              </div>
-              <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                {order.status === "delivered"
-                  ? "Order completed successfully"
-                  : order.status === "on_the_way"
-                  ? "Heading to your location"
-                  : order.status === "packing"
-                  ? "Preparing for delivery"
-                  : order.status === "shopping"
-                  ? "Picking your items"
-                  : "Waiting for shopper assignment"}
-              </div>
+            // Mobile: Simple status display or shopper details
+            <div className="py-4">
+              {order.status === "delivered" ? (
+                <div className="text-center">
+                  <div className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">
+                    Delivered
+                  </div>
+                  {order.deliveryPhotoUrl ? (
+                    <div className="mt-3">
+                      <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Delivery Proof
+                      </p>
+                      <div className="relative mx-auto max-w-[280px] overflow-hidden rounded-lg border-2 border-gray-200 dark:border-gray-700">
+                        <Image
+                          src={order.deliveryPhotoUrl}
+                          alt="Delivery proof"
+                          width={280}
+                          height={280}
+                          className="h-auto w-full object-cover"
+                          unoptimized
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      Order completed successfully
+                    </div>
+                  )}
+                </div>
+              ) : order.assignedTo || order.shopper_id ? (
+                // Show shopper details when assigned (regardless of status) - Mobile enhanced view
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-blue-100 dark:bg-blue-900/30">
+                      {order.assignedTo?.profile_photo ? (
+                        <Image
+                          src={order.assignedTo.profile_photo}
+                          alt={order.assignedTo.name || "Shopper"}
+                          width={64}
+                          height={64}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <svg
+                          className="h-8 w-8 text-blue-600 dark:text-blue-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-base font-semibold text-gray-900 dark:text-white">
+                        {order.assignedTo?.name || "Shopper Assigned"}
+                      </div>
+                      {order.assignedTo?.phone && (
+                        <div className="mt-0.5 text-sm text-gray-600 dark:text-gray-400">
+                          {order.assignedTo.phone}
+                        </div>
+                      )}
+                      {order.assignedTo?.rating !== undefined &&
+                        order.assignedTo?.rating !== null && (
+                          <div className="mt-1 flex items-center gap-1">
+                            <svg
+                              className="h-4 w-4 text-yellow-400"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              {Number(order.assignedTo.rating).toFixed(1)}
+                            </span>
+                            {order.assignedTo.orders_aggregate?.aggregate
+                              ?.count !== undefined && (
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                •{" "}
+                                {
+                                  order.assignedTo.orders_aggregate.aggregate
+                                    .count
+                                }{" "}
+                                orders
+                              </span>
+                            )}
+                          </div>
+                        )}
+                    </div>
+                  </div>
+                  {order.status !== "delivered" && (
+                    <div className="flex gap-2">
+                      <Button
+                        appearance="primary"
+                        block
+                        className="bg-green-500 text-white"
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="mr-2 h-4 w-4"
+                        >
+                          <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"></path>
+                        </svg>
+                        Call
+                      </Button>
+                      <Button
+                        appearance="ghost"
+                        block
+                        className="border border-gray-300 dark:border-gray-600"
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="mr-2 h-4 w-4"
+                        >
+                          <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 a8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"></path>
+                        </svg>
+                        Message
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center">
+                  <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {order.status === "on_the_way"
+                      ? "On the Way"
+                      : order.status === "packing"
+                      ? "Packing"
+                      : order.status === "shopping"
+                      ? "Shopping"
+                      : "Pending Assignment"}
+                  </div>
+                  <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    {order.status === "on_the_way"
+                      ? "Heading to your location"
+                      : order.status === "packing"
+                      ? "Preparing for delivery"
+                      : order.status === "shopping"
+                      ? "Picking your items"
+                      : "Waiting for shopper assignment"}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             // Desktop: Full steps display
@@ -203,13 +327,32 @@ export default function UserOrderDetails({
                   description="Enjoy your groceries!"
                 />
               </Steps>
+
+              {/* Delivery Proof Image for Desktop */}
+              {order.status === "delivered" && order.deliveryPhotoUrl && (
+                <div className="mt-6">
+                  <h3 className="mb-3 text-base font-semibold text-gray-900 dark:text-white">
+                    Delivery Proof
+                  </h3>
+                  <div className="relative mx-auto max-w-md overflow-hidden rounded-lg border-2 border-gray-200 dark:border-gray-700">
+                    <Image
+                      src={order.deliveryPhotoUrl}
+                      alt="Delivery proof"
+                      width={448}
+                      height={448}
+                      className="h-auto w-full object-cover"
+                      unoptimized
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
 
         <div className="mt-4 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-          {/* Delivery Info */}
-          <div className="w-full">
+          {/* Delivery Info - Hidden on desktop */}
+          <div className="w-full md:hidden">
             <p className="mb-2 text-gray-600">Estimated delivery time:</p>
             <EstimatedDeliveryTime
               estimatedDelivery={order.estimatedDelivery}
@@ -234,21 +377,18 @@ export default function UserOrderDetails({
             </button>
           ) : (
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-              <Button
-                appearance="ghost"
-                className="flex items-center justify-center bg-green-500 text-white transition hover:bg-green-600"
-              >
+              <button className="group flex items-center justify-center gap-2 !rounded-md bg-gradient-to-r from-green-500 to-green-600 px-4 py-2.5 text-sm font-semibold !text-white shadow-md transition-all duration-200 hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-[0.98]">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="2"
-                  className="mr-1 h-4 w-4"
+                  strokeWidth="2.5"
+                  className="h-5 w-5 !text-white transition-transform group-hover:scale-110"
                 >
                   <path d="M15.05 5A5 5 0 0119 8.95M15.05 1A9 9 0 0123 8.94m-1 7.98v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"></path>
                 </svg>
                 Contact Support
-              </Button>
+              </button>
               {/* 
               <Button
                 appearance="primary"
@@ -417,107 +557,317 @@ export default function UserOrderDetails({
           </Panel>
         </div>
 
-        {/* Right Column - Assigned Person */}
-        <div className="w-full md:w-1/3">
-          <Panel shaded bordered>
-            <h2 className="mb-4 text-xl font-bold">
-              {order.status === "shopping" || order.status === "packing"
-                ? "Your Shopper"
-                : "Your Delivery Person"}
-            </h2>
-            {order.assignedTo ? (
-              <div className="flex flex-col items-center text-center">
-                <div className="mb-3 h-24 w-24 overflow-hidden rounded-full">
-                  <Image
-                    src={"/assets/images/profile.jpg"}
-                    alt={order.assignedTo.name}
-                    width={96}
-                    height={96}
-                    className="object-cover"
-                  />
-                </div>
-                <h3 className="text-lg font-bold">{order.assignedTo.name}</h3>
-                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                  {order.assignedTo.phone}
-                </p>
-                <div className="mt-1 flex items-center">
-                  <div className="flex">
-                    {[...Array(5)].map((_: any, i: number) => (
+        {/* Right Column - Assigned Person (Desktop only) */}
+        <div className="hidden w-full md:block md:w-1/3">
+          <Panel shaded bordered className="overflow-hidden">
+            <div className="relative bg-gradient-to-br from-green-50 to-green-100/50 px-6 py-5 dark:from-green-900/20 dark:to-green-800/10">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                {order.status === "shopping" || order.status === "packing"
+                  ? "Your Shopper"
+                  : "Your Delivery Person"}
+              </h2>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                {order.status === "shopping"
+                  ? "Currently shopping for your items"
+                  : order.status === "packing"
+                  ? "Preparing your order"
+                  : order.status === "on_the_way"
+                  ? "On the way to you"
+                  : "Assigned to your order"}
+              </p>
+            </div>
+
+            {order.assignedTo || order.shopper_id ? (
+              <div className="p-4">
+                {/* Profile Icon and Info Row */}
+                <div className="flex items-center gap-3">
+                  {/* Profile Icon */}
+                  <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-400 to-green-600 ring-2 ring-green-100 dark:ring-green-900/30">
+                    {order.assignedTo?.profile_photo ? (
+                      <Image
+                        src={order.assignedTo.profile_photo}
+                        alt={order.assignedTo?.name || "Shopper"}
+                        width={56}
+                        height={56}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
                       <svg
-                        key={i}
-                        viewBox="0 0 24 24"
-                        fill={
-                          i < Math.floor(order.assignedTo.rating || 0)
-                            ? "currentColor"
-                            : "none"
-                        }
+                        className="h-7 w-7 text-white"
+                        fill="none"
                         stroke="currentColor"
-                        strokeWidth="2"
-                        className={`h-4 w-4 ${
-                          i < Math.floor(order.assignedTo.rating || 0)
-                            ? "text-yellow-400"
-                            : "text-gray-300"
-                        }`}
+                        viewBox="0 0 24 24"
                       >
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
                       </svg>
-                    ))}
+                    )}
                   </div>
-                  <span className="ml-1 text-sm text-gray-600 dark:text-gray-400">
-                    {order.assignedTo.rating || 0}
-                  </span>
+
+                  {/* Name, Phone, Rating, Orders - Horizontal Layout */}
+                  <div className="flex flex-1 flex-col gap-1.5">
+                    {/* Name */}
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                      {order.assignedTo?.name || "Shopper Assigned"}
+                    </h3>
+
+                    {/* Phone, Rating, Orders in a row */}
+                    <div className="flex flex-wrap items-center gap-3">
+                      {/* Phone */}
+                      {order.assignedTo?.phone && (
+                        <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
+                          <svg
+                            className="h-3.5 w-3.5 shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                            />
+                          </svg>
+                          <span className="text-xs">
+                            {order.assignedTo.phone}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Rating */}
+                      {order.assignedTo?.rating !== undefined &&
+                        order.assignedTo?.rating !== null && (
+                          <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-0.5">
+                              {[...Array(5)].map((_: any, i: number) => (
+                                <svg
+                                  key={i}
+                                  className={`h-3 w-3 ${
+                                    i <
+                                    Math.floor(
+                                      Number(order.assignedTo.rating) || 0
+                                    )
+                                      ? "fill-yellow-400 text-yellow-400"
+                                      : "fill-gray-300 text-gray-300 dark:fill-gray-600 dark:text-gray-600"
+                                  }`}
+                                  viewBox="0 0 20 20"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                              ))}
+                            </div>
+                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                              {Number(order.assignedTo.rating).toFixed(1)}
+                            </span>
+                          </div>
+                        )}
+
+                      {/* Orders Count */}
+                      {order.assignedTo?.orders_aggregate?.aggregate?.count !==
+                        undefined && (
+                        <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+                          <svg
+                            className="h-3.5 w-3.5 shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                            />
+                          </svg>
+                          <span className="text-xs">
+                            {order.assignedTo.orders_aggregate.aggregate.count}{" "}
+                            orders
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  {order.assignedTo.orders_aggregate?.aggregate?.count || 0}{" "}
-                  orders completed
-                </p>
-                <div className="mt-6 w-full space-y-3">
-                  <Button
-                    appearance="primary"
-                    block
-                    className={`${
-                      order.status === "delivered"
-                        ? "cursor-not-allowed opacity-50"
-                        : "bg-green-500"
-                    } text-white`}
-                    disabled={order.status === "delivered"}
+
+                {/* Action Buttons */}
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={() => {
+                      if (order.assignedTo?.phone) {
+                        window.location.href = `tel:${order.assignedTo.phone}`;
+                      }
+                    }}
+                    disabled={
+                      order.status === "delivered" || !order.assignedTo?.phone
+                    }
+                    className={`flex flex-1 items-center justify-center gap-1.5 !rounded-md px-3 py-2 text-xs font-semibold !text-white shadow-md transition-all duration-200 ${
+                      order.status === "delivered" || !order.assignedTo?.phone
+                        ? "cursor-not-allowed bg-gray-400 opacity-50"
+                        : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-[0.98]"
+                    }`}
                   >
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
-                      strokeWidth="2"
-                      className="mr-2 h-4 w-4"
+                      strokeWidth="2.5"
+                      className="h-4 w-4 !text-white"
                     >
                       <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"></path>
                     </svg>
                     Call
-                  </Button>
-                  <Button
-                    appearance="ghost"
-                    block
+                  </button>
+                  <button
                     disabled={order.status === "delivered"}
-                    className={
+                    className={`flex flex-1 items-center justify-center gap-1.5 !rounded-md border-2 px-3 py-2 text-xs font-semibold transition-all duration-200 ${
                       order.status === "delivered"
-                        ? "cursor-not-allowed opacity-50"
-                        : ""
-                    }
+                        ? "cursor-not-allowed border-gray-300 bg-gray-50 text-gray-400 opacity-50 dark:border-gray-700 dark:bg-gray-800"
+                        : "border-green-500 bg-white text-green-600 hover:bg-green-50 hover:shadow-md active:scale-[0.98] dark:border-green-600 dark:bg-gray-800 dark:text-green-400 dark:hover:bg-green-900/20"
+                    }`}
                   >
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
-                      strokeWidth="2"
-                      className="mr-2 h-4 w-4"
+                      strokeWidth="2.5"
+                      className="h-4 w-4"
                     >
                       <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 a8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"></path>
                     </svg>
                     Message
-                  </Button>
+                  </button>
                 </div>
+
+                {/* Recent Reviews Section */}
+                {order.assignedTo?.recentReviews &&
+                  order.assignedTo.recentReviews.length > 0 && (
+                    <div className="mt-8 w-full border-t border-gray-200 pt-6 dark:border-gray-700">
+                      <div className="mb-5 flex items-center justify-between">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                          Recent Reviews
+                        </h3>
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                          {order.assignedTo.recentReviews.length} review
+                          {order.assignedTo.recentReviews.length !== 1
+                            ? "s"
+                            : ""}
+                        </span>
+                      </div>
+                      <div
+                        className="max-h-[280px] space-y-3 overflow-y-auto pr-2"
+                        style={{
+                          scrollbarWidth: "thin",
+                          scrollbarColor: "#cbd5e1 #f1f5f9",
+                        }}
+                      >
+                        {order.assignedTo.recentReviews.map((review: any) => (
+                          <div
+                            key={review.id}
+                            className="group rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-green-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-600"
+                          >
+                            <div className="mb-3 flex items-start justify-between gap-3">
+                              <div className="flex items-center gap-3">
+                                <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-100 to-green-200 ring-2 ring-green-50 dark:from-green-900/30 dark:to-green-800/30 dark:ring-green-900/20">
+                                  {review.User?.profile_picture ? (
+                                    <Image
+                                      src={review.User.profile_picture}
+                                      alt={review.User.name || "Customer"}
+                                      width={32}
+                                      height={32}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <svg
+                                      className="h-5 w-5 text-green-600 dark:text-green-400"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                      />
+                                    </svg>
+                                  )}
+                                </div>
+                                <div className="flex-1">
+                                  <p className="text-sm font-semibold text-gray-400 dark:text-gray-400">
+                                    {review.User?.name || "Anonymous Customer"}
+                                  </p>
+                                  {review.reviewed_at && (
+                                    <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-400">
+                                      {new Date(
+                                        review.reviewed_at
+                                      ).toLocaleDateString("en-US", {
+                                        month: "long",
+                                        day: "numeric",
+                                        year: "numeric",
+                                      })}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex shrink-0 items-center gap-0.5 rounded-lg bg-yellow-50 px-2 py-1 dark:bg-yellow-900/20">
+                                {[...Array(5)].map((_, i) => (
+                                  <svg
+                                    key={i}
+                                    className={`h-4 w-4 transition-all ${
+                                      i < (review.rating || 0)
+                                        ? "fill-yellow-400 text-yellow-400"
+                                        : "fill-gray-200 text-gray-200 dark:fill-gray-700 dark:text-gray-700"
+                                    }`}
+                                    viewBox="0 0 20 20"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                  >
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                  </svg>
+                                ))}
+                                <span className="ml-1.5 text-xs font-semibold text-yellow-700 dark:text-yellow-400">
+                                  {review.rating || 0}
+                                </span>
+                              </div>
+                            </div>
+                            <p className="text-left text-sm leading-relaxed text-black dark:text-white">
+                              {review.review}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
               </div>
             ) : (
-              <p className="text-gray-600">No assigned person available.</p>
+              <div className="p-6 text-center">
+                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+                  <svg
+                    className="h-10 w-10 text-gray-400 dark:text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                </div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  No assigned person available
+                </p>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+                  Waiting for shopper assignment
+                </p>
+              </div>
             )}
           </Panel>
 
@@ -538,172 +888,18 @@ export default function UserOrderDetails({
         </div>
       </div>
 
-      {/* Feedback Modal */}
-      <Modal
-        open={feedbackModal}
+      {/* Feedback Modal - Custom Component */}
+      <FeedbackModal
+        isOpen={feedbackModal}
         onClose={() => {
           setFeedbackModal(false);
-          setRating(0);
-          setComment("");
           setSubmitError(null);
         }}
-        className="mx-4 max-w-[95%] overflow-hidden md:mx-auto md:max-w-[500px]"
-      >
-        <Modal.Header>
-          <Modal.Title>
-            <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
-                <svg
-                  className="h-6 w-6 text-green-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <span className="text-lg font-semibold text-gray-900">
-                Rate Your Experience
-              </span>
-            </div>
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {submitError && (
-            <div className="mb-6 rounded-md bg-red-50 p-4">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg
-                    className="h-5 w-5 text-red-400"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm text-red-500">{submitError}</p>
-                </div>
-              </div>
-            </div>
-          )}
-          <div className="space-y-6">
-            {/* Rating Section */}
-            <div className="rounded-lg bg-gray-50 p-6 text-center">
-              <h4 className="mb-4 text-lg font-medium text-gray-900">
-                How was your experience?
-              </h4>
-              <div className="flex justify-center">
-                <Rate
-                  defaultValue={0}
-                  value={rating}
-                  onChange={setRating}
-                  color={rating > 3 ? "green" : rating > 0 ? "yellow" : "gray"}
-                  size="lg"
-                  className="text-3xl"
-                />
-              </div>
-              <p className="mt-2 text-sm text-gray-500">
-                {rating === 0 && "Select your rating"}
-                {rating === 1 && "Poor"}
-                {rating === 2 && "Fair"}
-                {rating === 3 && "Good"}
-                {rating === 4 && "Very Good"}
-                {rating === 5 && "Excellent"}
-              </p>
-            </div>
-            {/* Details Section */}
-            <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-6">
-              <h4 className="text-lg font-medium text-gray-900">
-                Additional Feedback
-              </h4>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Share your thoughts
-                </label>
-                <textarea
-                  className="w-full rounded-md border border-gray-300 p-3 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
-                  placeholder="Tell us what you liked or what we could improve..."
-                  rows={4}
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                ></textarea>
-              </div>
-            </div>
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <div className="flex w-full flex-col-reverse gap-3 border-t border-gray-200 px-4 py-4 sm:flex-row sm:justify-end sm:px-6">
-            <button
-              onClick={() => {
-                setFeedbackModal(false);
-                setRating(0);
-                setComment("");
-                setSubmitError(null);
-              }}
-              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-              type="button"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleFeedbackSubmit}
-              disabled={submitting}
-              className="flex items-center justify-center rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
-              type="submit"
-            >
-              {submitting ? (
-                <>
-                  <svg
-                    className="mr-2 h-4 w-4 animate-spin"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      fill="none"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Submitting...
-                </>
-              ) : (
-                <>
-                  <svg
-                    className="mr-2 h-4 w-4"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  Submit Feedback
-                </>
-              )}
-            </button>
-          </div>
-        </Modal.Footer>
-      </Modal>
+        onSubmit={handleFeedbackSubmit}
+        submitting={submitting}
+        submitError={submitError}
+        accentColor="green"
+      />
 
       <style jsx global>{`
         .custom-steps
@@ -719,8 +915,32 @@ export default function UserOrderDetails({
         .custom-steps .rs-steps-item-status-finish .rs-steps-item-tail {
           border-color: #22c55e !important;
         }
+        /* Dark theme styles for Steps */
+        .dark .custom-steps .rs-steps-item-title {
+          color: #ffffff !important;
+        }
+        .dark .custom-steps .rs-steps-item-description {
+          color: #e5e7eb !important;
+        }
+        .dark .custom-steps .rs-steps-item-title-wrapper {
+          color: #ffffff !important;
+        }
+        .dark .custom-steps .rs-steps-item-content {
+          color: #ffffff !important;
+        }
+        /* Ensure step icons are visible in dark theme */
+        .dark .custom-steps .rs-steps-item-icon-wrapper {
+          color: #ffffff !important;
+        }
+        .dark
+          .custom-steps
+          .rs-steps-item-status-wait
+          .rs-steps-item-icon-wrapper {
+          color: #9ca3af !important;
+          border-color: #9ca3af !important;
+        }
         .rs-modal-header {
-          border-bottom: none !important;
+          border-bottom: 1px solid !important;
           padding: 1.5rem !important;
         }
         .rs-modal-body {
@@ -728,23 +948,42 @@ export default function UserOrderDetails({
         }
         .rs-modal-footer {
           padding: 0 !important;
-          border-top: none !important;
+          border-top: 1px solid !important;
         }
         .rs-rate-character-active {
           color: #eab308 !important;
         }
+        .rs-rate-character:hover {
+          transform: scale(1.1);
+          transition: transform 0.2s ease;
+        }
         .rs-modal-content {
-          border-radius: 0.75rem !important;
+          border-radius: 1rem !important;
+          overflow: hidden !important;
+        }
+        .dark .rs-modal-content {
+          background-color: #1f2937 !important;
+        }
+        .dark .rs-modal-header {
+          background-color: #1f2937 !important;
+          border-color: #374151 !important;
+        }
+        .dark .rs-modal-body {
+          background-color: #1f2937 !important;
+        }
+        .dark .rs-modal-footer {
+          background-color: #1f2937 !important;
+          border-color: #374151 !important;
         }
         @media (max-width: 640px) {
           .rs-modal {
             margin: 1rem !important;
           }
           .rs-modal-header {
-            padding: 1rem !important;
+            padding: 1.25rem !important;
           }
           .rs-rate {
-            font-size: 2rem !important;
+            font-size: 2.5rem !important;
           }
         }
       `}</style>

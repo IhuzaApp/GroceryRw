@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import { useTheme } from "../../context/ThemeContext";
 import { Button, Avatar, Badge, toaster } from "rsuite";
 import Image from "next/image";
@@ -10,12 +11,13 @@ import { formatCurrencySync } from "../../utils/formatCurrency";
 // Inline SVGs for icons
 const HeartIcon = ({ filled = false }: { filled?: boolean }) => (
   <svg
-    width="24"
-    height="24"
+    width="32"
+    height="32"
     viewBox="0 0 24 24"
     fill={filled ? "currentColor" : "none"}
-    stroke="currentColor"
+    stroke={filled ? "currentColor" : "currentColor"}
     strokeWidth="2"
+    style={{ color: filled ? "#ef4444" : "currentColor" }}
   >
     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
   </svg>
@@ -23,29 +25,34 @@ const HeartIcon = ({ filled = false }: { filled?: boolean }) => (
 
 const MessageIcon = () => (
   <svg
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
+    width="32"
+    height="32"
+    viewBox="0 0 32 32"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
   >
-    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    <path
+      d="M327.494,279.633 L324,284 L320.506,279.633 C314.464,278.355 309.992,273.863 309.992,268.501 C309.992,262.146 316.264,256.994 324,256.994 C331.736,256.994 338.008,262.146 338.008,268.501 C338.008,273.863 333.536,278.355 327.494,279.633 L327.494,279.633 Z M324,255 C315.163,255 308,261.143 308,268.72 C308,274.969 312.877,280.232 319.542,281.889 L324,287.001 L328.459,281.889 C335.123,280.232 340,274.969 340,268.72 C340,261.143 332.837,255 324,255 L324,255 Z"
+      transform="translate(-308, -255)"
+    />
   </svg>
 );
 
 const ShareIcon = () => (
   <svg
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
+    width="32"
+    height="32"
+    viewBox="-0.5 0 25 25"
     fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
+    xmlns="http://www.w3.org/2000/svg"
   >
-    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-    <polyline points="16,6 12,2 8,6" />
-    <line x1="12" y1="2" x2="12" y2="15" />
+    <path
+      d="M13.47 4.13998C12.74 4.35998 12.28 5.96 12.09 7.91C6.77997 7.91 2 13.4802 2 20.0802C4.19 14.0802 8.99995 12.45 12.14 12.45C12.34 14.21 12.79 15.6202 13.47 15.8202C15.57 16.4302 22 12.4401 22 9.98006C22 7.52006 15.57 3.52998 13.47 4.13998Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
@@ -272,7 +279,7 @@ interface VideoReelProps {
   isAuthenticated: boolean;
   onLike: (postId: string) => void;
   onComment: (postId: string) => void;
-  onShare: (postId: string) => void;
+  onShare: (post: FoodPost) => void;
 }
 
 export default function VideoReel({
@@ -284,6 +291,7 @@ export default function VideoReel({
   onShare,
 }: VideoReelProps) {
   const { theme } = useTheme();
+  const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoError, setVideoError] = useState(false);
@@ -605,14 +613,19 @@ export default function VideoReel({
                   borderColor: "#2563eb",
                   color: "white",
                   border: "none",
-                  cursor: isAuthenticated ? "pointer" : "not-allowed",
+                  cursor:
+                    isAuthenticated && post.shop_id ? "pointer" : "not-allowed",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  opacity: isAuthenticated ? 1 : 0.5,
+                  opacity: isAuthenticated && post.shop_id ? 1 : 0.5,
                 }}
-                onClick={isAuthenticated ? undefined : undefined}
-                disabled={!isAuthenticated}
+                onClick={() => {
+                  if (isAuthenticated && post.shop_id) {
+                    router.push(`/shops/${post.shop_id}`);
+                  }
+                }}
+                disabled={!isAuthenticated || !post.shop_id}
               >
                 <StoreIcon />
                 <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>
@@ -758,90 +771,125 @@ export default function VideoReel({
   return (
     <>
       <div
-        className={`relative h-screen w-full overflow-hidden border-t-4 border-gray-800`}
-        style={{ scrollSnapAlign: "start" }}
+        style={{
+          position: "relative",
+          width: "100%",
+          height: "100%",
+          minHeight: "100%",
+          margin: 0,
+          padding: 0,
+          overflow: "hidden",
+          backgroundColor: "#000",
+        }}
       >
-        {/* Background Video */}
-        <div style={{ position: "absolute", inset: 0 }}>
-          <video
-            ref={videoRef}
-            src={post.content.video}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              backgroundColor: "#000",
-            }}
-            loop
-            muted
-            playsInline
-            preload="metadata"
-            poster={post.creator.avatar || "/placeholder.svg"}
-            onLoadedData={handleVideoLoad}
-            onError={handleVideoError}
-            onLoadStart={() => setVideoLoading(true)}
-            onCanPlay={handleVideoCanPlay}
-          />
+        {/* Background Video - Direct fill */}
+        <video
+          ref={videoRef}
+          src={post.content.video}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            minHeight: "100%",
+            objectFit: "cover",
+            objectPosition: "center",
+            backgroundColor: "#000",
+            margin: 0,
+            padding: 0,
+            display: "block",
+            zIndex: 1,
+          }}
+          loop
+          muted
+          playsInline
+          preload="metadata"
+          poster={post.creator.avatar || "/placeholder.svg"}
+          onLoadedData={handleVideoLoad}
+          onError={handleVideoError}
+          onLoadStart={() => setVideoLoading(true)}
+          onCanPlay={handleVideoCanPlay}
+        />
 
-          {/* Loading overlay */}
-          {videoLoading && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: "rgba(0,0,0,0.8)",
-                zIndex: 5,
-              }}
-            >
-              <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  border: "4px solid rgba(255,255,255,0.3)",
-                  borderTop: "4px solid #fff",
-                  borderRadius: "50%",
-                  animation: "spin 1s linear infinite",
-                }}
-              />
-            </div>
-          )}
-
-          {/* Error overlay */}
-          {videoError && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: "rgba(0,0,0,0.9)",
-                zIndex: 5,
-              }}
-            >
-              <div style={{ textAlign: "center", color: "#fff" }}>
-                <div style={{ fontSize: "16px", marginBottom: "8px" }}>
-                  Video unavailable
-                </div>
-                <div style={{ fontSize: "14px", opacity: 0.7 }}>
-                  Please try again later
-                </div>
-              </div>
-            </div>
-          )}
-
+        {/* Loading overlay */}
+        {videoLoading && (
           <div
             style={{
               position: "absolute",
-              inset: 0,
-              background:
-                "linear-gradient(to top, rgba(0,0,0,0.9), transparent, rgba(0,0,0,0.3))",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: "100%",
+              height: "100%",
+              minHeight: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "rgba(0,0,0,0.8)",
+              zIndex: 5,
             }}
-          />
-        </div>
+          >
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                border: "4px solid rgba(255,255,255,0.3)",
+                borderTop: "4px solid #fff",
+                borderRadius: "50%",
+                animation: "spin 1s linear infinite",
+              }}
+            />
+          </div>
+        )}
+
+        {/* Error overlay */}
+        {videoError && (
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: "100%",
+              height: "100%",
+              minHeight: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "rgba(0,0,0,0.9)",
+              zIndex: 5,
+            }}
+          >
+            <div style={{ textAlign: "center", color: "#fff" }}>
+              <div style={{ fontSize: "16px", marginBottom: "8px" }}>
+                Video unavailable
+              </div>
+              <div style={{ fontSize: "14px", opacity: 0.7 }}>
+                Please try again later
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Gradient overlay */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: "100%",
+            height: "100%",
+            minHeight: "100%",
+            background:
+              "linear-gradient(to top, rgba(0,0,0,0.9), transparent, rgba(0,0,0,0.3))",
+            zIndex: 2,
+          }}
+        />
 
         {/* Top Header */}
         <div
@@ -922,12 +970,12 @@ export default function VideoReel({
           </div>
         </div>
 
-        {/* Right Side Actions */}
+        {/* Right Side Actions - Like, Comment, Share */}
         <div
           style={{
             position: "absolute",
             right: 16,
-            bottom: 240, // Increased from 160 to be above bottom navbar
+            bottom: 80,
             display: "flex",
             flexDirection: "column",
             gap: 24,
@@ -941,34 +989,29 @@ export default function VideoReel({
               alignItems: "center",
             }}
           >
-            <Button
-              appearance="ghost"
-              size="lg"
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: "50%",
-                backgroundColor: post.isLiked
-                  ? "#ef4444"
-                  : "rgba(255,255,255,0.2)",
-                backdropFilter: "blur(4px)",
-                border: post.isLiked ? "2px solid #ef4444" : "none",
-                color: "#fff",
-                transition: "all 0.2s ease",
-                opacity: isAuthenticated ? 1 : 0.5,
-                cursor: isAuthenticated ? "pointer" : "not-allowed",
-              }}
+            <div
               onClick={isAuthenticated ? () => onLike(post.id) : undefined}
-              disabled={!isAuthenticated}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 56,
+                height: 56,
+                cursor: isAuthenticated ? "pointer" : "not-allowed",
+                opacity: isAuthenticated ? 1 : 0.5,
+                transition: "opacity 0.2s ease",
+                color: post.isLiked ? "#ef4444" : "#fff",
+              }}
             >
               <HeartIcon filled={post.isLiked} />
-            </Button>
+            </div>
             <span
               style={{
                 color: "#fff",
                 fontSize: "12px",
                 marginTop: 4,
                 fontWeight: 500,
+                textShadow: "0 1px 2px rgba(0,0,0,0.5)",
               }}
             >
               {post.stats.likes > 999
@@ -984,31 +1027,28 @@ export default function VideoReel({
               alignItems: "center",
             }}
           >
-            <Button
-              appearance="ghost"
-              size="lg"
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: "50%",
-                backgroundColor: "rgba(255,255,255,0.2)",
-                backdropFilter: "blur(4px)",
-                border: "none",
-                color: "#fff",
-                opacity: isAuthenticated ? 1 : 0.5,
-                cursor: isAuthenticated ? "pointer" : "not-allowed",
-              }}
+            <div
               onClick={isAuthenticated ? () => onComment(post.id) : undefined}
-              disabled={!isAuthenticated}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 56,
+                height: 56,
+                cursor: isAuthenticated ? "pointer" : "not-allowed",
+                opacity: isAuthenticated ? 1 : 0.5,
+                transition: "opacity 0.2s ease",
+              }}
             >
               <MessageIcon />
-            </Button>
+            </div>
             <span
               style={{
                 color: "#fff",
                 fontSize: "12px",
                 marginTop: 4,
                 fontWeight: 500,
+                textShadow: "0 1px 2px rgba(0,0,0,0.5)",
               }}
             >
               {post.stats.comments}
@@ -1022,39 +1062,39 @@ export default function VideoReel({
               alignItems: "center",
             }}
           >
-            <Button
-              appearance="ghost"
-              size="lg"
+            <div
+              onClick={isAuthenticated ? () => onShare(post) : undefined}
               style={{
-                width: 48,
-                height: 48,
-                borderRadius: "50%",
-                backgroundColor: "rgba(255,255,255,0.2)",
-                backdropFilter: "blur(4px)",
-                border: "none",
-                color: "#fff",
-                opacity: isAuthenticated ? 1 : 0.5,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 56,
+                height: 56,
                 cursor: isAuthenticated ? "pointer" : "not-allowed",
+                opacity: isAuthenticated ? 1 : 0.5,
+                transition: "opacity 0.2s ease",
               }}
-              onClick={isAuthenticated ? () => onShare(post.id) : undefined}
-              disabled={!isAuthenticated}
             >
               <ShareIcon />
-            </Button>
+            </div>
           </div>
         </div>
 
-        {/* Bottom Content */}
+        {/* Bottom Content - Title, Description, and Order Actions */}
         <div
           style={{
             position: "absolute",
-            bottom: 80, // Account for bottom navbar height
+            bottom: 0,
             left: 0,
             right: 0,
-            padding: 16,
+            padding: "20px 16px 20px 16px",
+            paddingRight: "80px", // Space for right side buttons
             zIndex: 10,
+            background:
+              "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%)",
           }}
         >
+          {/* Title and Description */}
           <div style={{ marginBottom: 16 }}>
             <h2
               style={{
@@ -1081,6 +1121,7 @@ export default function VideoReel({
             </p>
           </div>
 
+          {/* Bottom Actions - Order Now, Visit Store, etc. */}
           {renderBottomActions(post)}
         </div>
 
