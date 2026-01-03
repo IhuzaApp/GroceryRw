@@ -94,8 +94,13 @@ export default function QuoteDetailsModal({
               className="mt-4 w-full rounded-xl border-2 border-gray-200 bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3 text-sm font-semibold !text-white shadow-md transition-all duration-200 hover:from-green-600 hover:to-emerald-600 hover:shadow-lg active:scale-95 dark:border-gray-700 sm:mt-0 sm:w-auto"
               style={{ color: "#ffffff" }}
             >
-              <MessageSquare className="mr-2 inline h-4 w-4 !text-white" style={{ color: "#ffffff" }} />
-              <span className="!text-white" style={{ color: "#ffffff" }}>Message Supplier</span>
+              <MessageSquare
+                className="mr-2 inline h-4 w-4 !text-white"
+                style={{ color: "#ffffff" }}
+              />
+              <span className="!text-white" style={{ color: "#ffffff" }}>
+                Message Supplier
+              </span>
             </button>
           </div>
         </div>
