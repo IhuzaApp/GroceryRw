@@ -422,31 +422,37 @@ export function RFQOpportunitiesSection({
 
                 <button
                   onClick={() => handleToggleInterest(rfq.id)}
-                  className={`w-full rounded-full px-3 py-1.5 text-xs font-medium transition-colors active:scale-95 sm:w-auto sm:py-1 ${
+                  className={`w-full rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 active:scale-95 sm:w-auto sm:px-4 sm:py-2 sm:text-sm ${
                     rfq.isInterested
-                      ? "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300"
-                      : "bg-gray-100 text-gray-600 hover:bg-green-100 hover:text-green-600 dark:bg-gray-700 dark:text-gray-300"
+                      ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md shadow-green-500/30 hover:from-green-600 hover:to-emerald-600 hover:shadow-lg hover:shadow-green-500/40"
+                      : "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 shadow-sm hover:from-green-50 hover:to-emerald-50 hover:text-green-700 dark:from-gray-700 dark:to-gray-600 dark:text-gray-300 dark:hover:from-green-900/30 dark:hover:to-emerald-900/30 dark:hover:text-green-300"
                   }`}
+                  style={rfq.isInterested ? { color: "#ffffff" } : undefined}
                 >
-                  {rfq.isInterested ? "Interested" : "Mark Interest"}
+                  {rfq.isInterested ? "✓ Interested" : "Mark Interest"}
                 </button>
               </div>
 
               <div className="flex flex-col gap-2 sm:flex-row sm:gap-2">
                 <button
                   onClick={() => handleViewRFQ(rfq)}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-500 px-3 py-2.5 text-xs font-medium text-white transition-colors hover:bg-blue-600 active:scale-95 sm:px-4 sm:py-2 sm:text-sm"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-800 to-green-900 px-4 py-2.5 text-xs font-semibold text-white shadow-md shadow-green-900/40 transition-all duration-200 hover:from-green-900 hover:to-green-950 hover:shadow-lg hover:shadow-green-900/50 active:scale-95 sm:px-4 sm:py-2.5 sm:text-sm"
+                  style={{ color: "#ffffff" }}
                 >
-                  <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">View Details</span>
-                  <span className="sm:hidden">View</span>
+                  <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" style={{ color: "#ffffff" }} />
+                  <span className="hidden sm:inline" style={{ color: "#ffffff" }}>
+                    View Details
+                  </span>
+                  <span className="sm:hidden" style={{ color: "#ffffff" }}>
+                    View
+                  </span>
                 </button>
                 <button
                   onClick={() => handleShareQuote(rfq)}
-                  className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-xs font-medium text-white transition-colors active:scale-95 sm:px-4 sm:py-2 sm:text-sm ${
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold text-white shadow-md transition-all duration-200 hover:shadow-lg active:scale-95 sm:px-4 sm:py-2.5 sm:text-sm ${
                     submittedQuotes[rfq.id]
-                      ? "bg-blue-500 hover:bg-blue-600"
-                      : "bg-green-500 hover:bg-green-600"
+                      ? "bg-gradient-to-r from-blue-500 to-blue-600 shadow-blue-500/30 hover:from-blue-600 hover:to-blue-700 hover:shadow-blue-500/40"
+                      : "bg-gradient-to-r from-green-500 to-emerald-500 shadow-green-500/30 hover:from-green-600 hover:to-emerald-600 hover:shadow-green-500/40"
                   }`}
                   style={{ color: "#ffffff" }}
                 >
@@ -470,10 +476,14 @@ export function RFQOpportunitiesSection({
                 </button>
                 <button
                   onClick={() => handleMessageCustomer(rfq.id)}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-purple-500 px-3 py-2.5 text-xs font-medium text-white transition-colors hover:bg-purple-600 active:scale-95 sm:px-4 sm:py-2 sm:text-sm"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 px-4 py-2.5 text-xs font-semibold text-white shadow-md shadow-purple-500/30 transition-all duration-200 hover:from-purple-600 hover:to-purple-700 hover:shadow-lg hover:shadow-purple-500/40 active:scale-95 sm:px-4 sm:py-2.5 sm:text-sm"
+                  style={{ color: "#ffffff" }}
                 >
-                  <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  Message
+                  <MessageSquare
+                    className="h-3.5 w-3.5 sm:h-4 sm:w-4"
+                    style={{ color: "#ffffff" }}
+                  />
+                  <span style={{ color: "#ffffff" }}>Message</span>
                 </button>
               </div>
             </div>
