@@ -203,14 +203,37 @@ export function QuotesSection({
 
   if (loading) {
     return (
-      <div className={`space-y-8 ${className}`}>
-        <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
-          <div className="flex items-center justify-center p-12">
-            <div className="text-center">
-              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-green-500"></div>
-              <p className="mt-4 text-gray-600 dark:text-gray-400">
-                Loading submitted quotes...
-              </p>
+      <div className={`space-y-4 sm:space-y-8 ${className}`}>
+        <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl">
+          <div className="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white p-4 dark:border-gray-700 dark:from-gray-700 dark:to-gray-800 sm:p-6 md:p-8">
+            <div className="animate-pulse space-y-2">
+              <div className="h-8 w-48 rounded bg-gray-200 dark:bg-gray-700"></div>
+              <div className="h-4 w-64 rounded bg-gray-200 dark:bg-gray-700"></div>
+            </div>
+          </div>
+          <div className="p-4 sm:p-6 md:p-8">
+            <div className="space-y-3 sm:space-y-4 md:space-y-6">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="animate-pulse rounded-xl border-2 border-gray-100 bg-gradient-to-r from-white to-gray-50 p-4 dark:border-gray-700 dark:from-gray-800 dark:to-gray-700 sm:rounded-2xl sm:p-6"
+                >
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex-1 space-y-3 sm:space-y-4">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                        <div className="h-6 w-48 rounded bg-gray-200 dark:bg-gray-700"></div>
+                        <div className="h-6 w-20 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                      </div>
+                      <div className="h-4 w-32 rounded bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="hidden h-3 w-64 rounded bg-gray-200 dark:bg-gray-700 sm:block"></div>
+                    </div>
+                    <div className="flex items-center justify-between border-t border-gray-200 pt-4 dark:border-gray-700 sm:ml-6 sm:flex-col sm:items-end sm:justify-start sm:space-y-4 sm:border-0 sm:pt-0">
+                      <div className="h-8 w-24 rounded bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="h-10 w-28 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

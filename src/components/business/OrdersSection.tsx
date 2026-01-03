@@ -269,8 +269,43 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
   if (loading) {
     return (
       <div className={`space-y-8 ${className}`}>
-        <div className="flex items-center justify-center rounded-2xl border border-gray-100 bg-white p-12 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-          <Loader2 className="h-8 w-8 animate-spin text-green-500" />
+        <div className="rounded-2xl border border-gray-100 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+          <div className="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white p-4 dark:border-gray-700 dark:from-gray-700 dark:to-gray-800 sm:p-6">
+            <div className="animate-pulse space-y-2">
+              <div className="h-8 w-48 rounded bg-gray-200 dark:bg-gray-700"></div>
+              <div className="h-4 w-64 rounded bg-gray-200 dark:bg-gray-700"></div>
+            </div>
+          </div>
+          <div className="p-4 sm:p-6">
+            <div className="space-y-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="animate-pulse rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <div className="h-6 w-48 rounded bg-gray-200 dark:bg-gray-700"></div>
+                        <div className="h-4 w-32 rounded bg-gray-200 dark:bg-gray-700"></div>
+                      </div>
+                      <div className="h-6 w-20 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                      <div className="h-16 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="h-16 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="h-16 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="h-16 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="h-10 w-24 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="h-10 w-24 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );

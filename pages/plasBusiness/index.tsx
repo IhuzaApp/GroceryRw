@@ -107,10 +107,52 @@ export default function PlasBusinessPage() {
   if (!authReady || checkingAccount) {
     return (
       <RootLayout>
-        <div className="flex h-screen w-full items-center justify-center">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="h-16 w-16 animate-spin rounded-full border-b-4 border-t-4 border-green-800"></div>
-            <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+        <div className="min-h-screen via-white to-gray-100 dark:from-gray-900 md:ml-16">
+          <div className="max-w-8xl container mx-auto space-y-8 p-6">
+            {/* Header Skeleton */}
+            <div className="animate-pulse space-y-4">
+              <div className="h-12 w-64 rounded-xl bg-gray-200 dark:bg-gray-700"></div>
+              <div className="h-6 w-96 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+            </div>
+
+            {/* Stats Cards Skeleton */}
+            <div className="hidden md:grid md:grid-cols-4 md:gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="animate-pulse rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
+                >
+                  <div className="mb-4 h-4 w-24 rounded bg-gray-200 dark:bg-gray-700"></div>
+                  <div className="mb-2 h-8 w-32 rounded bg-gray-200 dark:bg-gray-700"></div>
+                  <div className="h-3 w-20 rounded bg-gray-200 dark:bg-gray-700"></div>
+                </div>
+              ))}
+            </div>
+
+            {/* Tabs Skeleton */}
+            <div className="animate-pulse rounded-xl border border-gray-100 bg-white p-2 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div
+                    key={i}
+                    className="h-10 w-24 rounded-lg bg-gray-200 dark:bg-gray-700"
+                  ></div>
+                ))}
+              </div>
+            </div>
+
+            {/* Content Skeleton */}
+            <div className="animate-pulse space-y-4 rounded-xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+              <div className="space-y-3">
+                <div className="h-6 w-48 rounded bg-gray-200 dark:bg-gray-700"></div>
+                <div className="h-4 w-full rounded bg-gray-200 dark:bg-gray-700"></div>
+                <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700"></div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="h-32 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                  <div className="h-32 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </RootLayout>
