@@ -183,7 +183,7 @@ export default function BusinessChatsPage() {
           <div className="mx-auto h-full w-full max-w-full p-4 md:p-6">
             <div className="grid h-full grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
               {/* Conversations List Skeleton */}
-              <div className="flex h-full min-h-0 flex-col animate-pulse rounded-2xl border border-gray-100 bg-white shadow dark:border-gray-700 dark:bg-gray-800 lg:col-span-1">
+              <div className="flex h-full min-h-0 animate-pulse flex-col rounded-2xl border border-gray-100 bg-white shadow dark:border-gray-700 dark:bg-gray-800 lg:col-span-1">
                 <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-100 p-4 dark:border-gray-700">
                   <div className="h-6 w-32 rounded bg-gray-200 dark:bg-gray-700"></div>
                   <div className="h-10 w-48 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
@@ -203,7 +203,7 @@ export default function BusinessChatsPage() {
               </div>
 
               {/* Chat Window Skeleton */}
-              <div className="flex h-full min-h-0 flex-col animate-pulse rounded-2xl border border-gray-100 bg-white shadow dark:border-gray-700 dark:bg-gray-800 lg:col-span-2">
+              <div className="flex h-full min-h-0 animate-pulse flex-col rounded-2xl border border-gray-100 bg-white shadow dark:border-gray-700 dark:bg-gray-800 lg:col-span-2">
                 <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-100 p-4 dark:border-gray-700">
                   <div className="space-y-2">
                     <div className="h-5 w-48 rounded bg-gray-200 dark:bg-gray-700"></div>

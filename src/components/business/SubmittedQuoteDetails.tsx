@@ -88,7 +88,7 @@ export function SubmittedQuoteDetails({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 md:p-0">
-      <div className="h-full w-full max-h-[90vh] max-w-3xl overflow-y-auto rounded-xl bg-white shadow-2xl dark:bg-gray-800 md:h-screen md:max-h-screen md:max-w-full md:rounded-none">
+      <div className="h-full max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-white shadow-2xl dark:bg-gray-800 md:h-screen md:max-h-screen md:max-w-full md:rounded-none">
         <div className="p-6 md:p-8">
           {/* Header */}
           <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-4 dark:border-gray-700 md:mb-8 md:pb-6">
@@ -261,7 +261,9 @@ export function SubmittedQuoteDetails({
             {/* Submission Info */}
             <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900 md:p-6">
               <div className="text-sm text-gray-500 dark:text-gray-400 md:text-base">
-                <p className="font-medium">Submitted: {formatDate(quote.created_at)}</p>
+                <p className="font-medium">
+                  Submitted: {formatDate(quote.created_at)}
+                </p>
                 {quote.updated_at !== quote.created_at && (
                   <p className="mt-2">
                     Last updated: {formatDate(quote.updated_at)}
