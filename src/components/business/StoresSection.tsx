@@ -81,8 +81,26 @@ export function StoresSection({
       </div>
 
       {loadingStores ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-green-600"></div>
+        <div className="grid grid-cols-1 gap-6 animate-pulse sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="group relative overflow-hidden rounded-2xl border-2 border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+            >
+              <div className="relative h-32 w-full bg-gray-200 dark:bg-gray-700 sm:h-40 md:h-48"></div>
+              <div className="p-4 sm:p-6">
+                <div className="space-y-3">
+                  <div className="h-6 w-3/4 rounded bg-gray-200 dark:bg-gray-700"></div>
+                  <div className="h-4 w-full rounded bg-gray-200 dark:bg-gray-700"></div>
+                  <div className="h-4 w-2/3 rounded bg-gray-200 dark:bg-gray-700"></div>
+                  <div className="flex gap-2 pt-2">
+                    <div className="h-8 w-20 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="h-8 w-20 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : userStores.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">

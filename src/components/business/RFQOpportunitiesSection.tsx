@@ -235,8 +235,30 @@ export function RFQOpportunitiesSection({
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="h-7 w-48 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+          <div className="h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+        </div>
+        <div className="space-y-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="animate-pulse rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
+            >
+              <div className="space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="h-6 w-64 rounded bg-gray-200 dark:bg-gray-700"></div>
+                  <div className="h-6 w-20 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                </div>
+                <div className="h-4 w-full rounded bg-gray-200 dark:bg-gray-700"></div>
+                <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700"></div>
+                <div className="flex gap-2">
+                  <div className="h-8 w-24 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                  <div className="h-8 w-24 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );

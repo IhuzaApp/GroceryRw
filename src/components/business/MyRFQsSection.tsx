@@ -148,8 +148,37 @@ export function MyRFQsSection({
   if (loading) {
     return (
       <div className={`space-y-8 ${className}`}>
-        <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
+        <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+          <div className="flex flex-col gap-3 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white p-4 dark:border-gray-700 dark:from-gray-700 dark:to-gray-800 sm:flex-row sm:items-center sm:justify-between sm:p-6 md:p-8">
+            <div className="animate-pulse space-y-2">
+              <div className="h-8 w-32 rounded bg-gray-200 dark:bg-gray-700"></div>
+              <div className="h-4 w-48 rounded bg-gray-200 dark:bg-gray-700"></div>
+            </div>
+            <div className="h-10 w-32 animate-pulse rounded-xl bg-gray-200 dark:bg-gray-700"></div>
+          </div>
+          <div className="p-4 sm:p-6 md:p-8">
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="animate-pulse rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="h-6 w-48 rounded bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="h-6 w-20 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                    </div>
+                    <div className="h-4 w-full rounded bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="flex gap-2">
+                      <div className="h-8 w-24 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="h-8 w-24 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
