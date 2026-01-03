@@ -38,6 +38,9 @@ export function RFQOpportunitiesSection({
   );
   const [isQuoteDetailsOpen, setIsQuoteDetailsOpen] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState<any>(null);
+  const [responseCounts, setResponseCounts] = useState<Record<string, number>>(
+    {}
+  );
 
   useEffect(() => {
     fetchRFQOpportunities();
@@ -47,6 +50,7 @@ export function RFQOpportunitiesSection({
   useEffect(() => {
     if (rfqs.length > 0) {
       checkExistingQuotes();
+      fetchResponseCounts();
     }
   }, [rfqs]);
 
@@ -74,6 +78,31 @@ export function RFQOpportunitiesSection({
       }
     });
     setSubmittedQuotes(quotesMap);
+  };
+
+  const fetchResponseCounts = async () => {
+    const countPromises = rfqs.map(async (rfq) => {
+      try {
+        const response = await fetch(
+          `/api/queries/rfq-details-and-responses?rfq_id=${rfq.id}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          const responses = data.responses || [];
+          return { rfqId: rfq.id, count: responses.length };
+        }
+      } catch (error) {
+        console.error(`Error fetching response count for RFQ ${rfq.id}:`, error);
+      }
+      return { rfqId: rfq.id, count: 0 };
+    });
+
+    const results = await Promise.all(countPromises);
+    const countsMap: Record<string, number> = {};
+    results.forEach(({ rfqId, count }) => {
+      countsMap[rfqId] = count;
+    });
+    setResponseCounts(countsMap);
   };
 
   const fetchRFQOpportunities = async () => {
@@ -162,7 +191,7 @@ export function RFQOpportunitiesSection({
       postedAt: getTimeAgo(rfq.created_at),
       deadline: formatDeadline(rfq.response_date),
       status: status,
-      responses: 0, // TODO: Get actual response count
+      responses: responseCounts[rfq.id] || 0,
       isInterested: false,
       ...rfq, // Include all original fields
     };
