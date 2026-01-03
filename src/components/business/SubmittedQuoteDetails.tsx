@@ -87,201 +87,264 @@ export function SubmittedQuoteDetails({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 md:p-0">
-      <div className="h-full max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-white shadow-2xl dark:bg-gray-800 md:h-screen md:max-h-screen md:max-w-full md:rounded-none">
-        <div className="p-6 md:p-8">
-          {/* Header */}
-          <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-4 dark:border-gray-700 md:mb-8 md:pb-6">
-            <div>
-              <h3 className="text-2xl font-semibold text-gray-900 dark:text-white md:text-3xl">
-                Submitted Quote Details
-              </h3>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 md:text-base">
-                RFQ: {rfqTitle}
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
-            >
-              <X className="h-5 w-5 md:h-6 md:w-6" />
-            </button>
-          </div>
-
-          {/* Status Badge */}
-          <div className="mb-6 md:mb-8">
-            <span
-              className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium md:px-4 md:py-2 md:text-base ${
-                quote.status === "accepted"
-                  ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
-                  : quote.status === "rejected"
-                  ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
-                  : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
-              }`}
-            >
-              <CheckCircle className="h-4 w-4 md:h-5 md:w-5" />
-              Status:{" "}
-              {quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
-            </span>
-          </div>
-
-          <div className="space-y-6 md:space-y-8">
-            {/* Quote Amount */}
-            <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-6 dark:border-gray-700 dark:from-gray-900 dark:to-gray-800 md:p-8">
-              <div className="flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400 md:text-base">
-                <DollarSign className="h-4 w-4 md:h-5 md:w-5" />
-                Quote Amount
-              </div>
-              <p className="mt-3 text-2xl font-bold text-gray-900 dark:text-white md:text-4xl">
-                {new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: quote.currency || "RWF",
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 2,
-                }).format(parseFloat(quote.qouteAmount))}
-              </p>
-            </div>
-
-            {/* Key Information Grid */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
-              <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800 md:p-6">
-                <div className="flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400 md:text-base">
-                  <Calendar className="h-4 w-4 md:h-5 md:w-5" />
-                  Delivery Time
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-md sm:items-center sm:bg-black/60 sm:p-4">
+      <div className="flex h-full max-h-screen w-full flex-col overflow-hidden rounded-t-[2rem] bg-white shadow-2xl dark:bg-gray-900 sm:h-auto sm:max-h-[90vh] sm:w-full sm:max-w-5xl sm:rounded-3xl sm:border sm:border-gray-200 dark:sm:border-gray-700">
+        {/* Header */}
+        <div className="relative flex-shrink-0 border-b border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:p-6 md:p-8">
+          <div className="relative z-10">
+            <div className="mb-4 flex items-start justify-between gap-3 sm:mb-0">
+              <div className="min-w-0 flex-1">
+                <div className="mb-3 flex items-center gap-2 sm:mb-2">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-md sm:h-12 sm:w-12 sm:rounded-2xl">
+                    <FileText className="h-5 w-5 text-white sm:h-6 sm:w-6" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="truncate text-xl font-bold leading-tight text-gray-900 dark:text-white sm:text-2xl md:text-3xl">
+                      Submitted Quote Details
+                    </h2>
+                  </div>
                 </div>
-                <p className="mt-2 text-base text-gray-900 dark:text-white md:text-lg">
-                  {quote.delivery_time || "Not specified"}
-                </p>
-              </div>
-
-              <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800 md:p-6">
-                <div className="flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400 md:text-base">
-                  <Calendar className="h-4 w-4 md:h-5 md:w-5" />
-                  Quote Validity
+                <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-800/50">
+                  <FileText className="h-4 w-4 flex-shrink-0 text-gray-500 dark:text-gray-400" />
+                  <span className="truncate text-sm font-medium text-gray-700 dark:text-gray-300">
+                    RFQ: {rfqTitle}
+                  </span>
                 </div>
-                <p className="mt-2 text-base text-gray-900 dark:text-white md:text-lg">
-                  {quote.quote_validity || "Not specified"}
-                </p>
               </div>
+              <button
+                onClick={onClose}
+                className="flex-shrink-0 rounded-xl bg-gray-100 p-2.5 text-gray-700 transition-all duration-200 hover:bg-gray-200 active:scale-95 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-800/50 sm:bg-white dark:sm:bg-gray-900">
+          <div className="space-y-4 sm:space-y-6 sm:p-6 md:space-y-8 md:p-8">
+
+            {/* Status Badge */}
+            <div className="mb-4 sm:mb-6">
+              <span
+                className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold sm:px-4 sm:py-2 ${
+                  quote.status === "accepted"
+                    ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                    : quote.status === "rejected"
+                    ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
+                    : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
+                }`}
+              >
+                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                Status:{" "}
+                {quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
+              </span>
             </div>
 
-            {/* Message */}
-            {quote.message && quote.message.trim() !== "" && (
-              <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 md:p-6">
-                <h4 className="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300 md:text-lg">
-                  Message
-                </h4>
-                <p className="whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-400 md:text-base">
-                  {quote.message}
-                </p>
-              </div>
-            )}
-
-            {/* Terms and Conditions */}
-            <div className="space-y-4 md:space-y-6">
-              <h4 className="text-xl font-semibold text-gray-900 dark:text-white md:text-2xl">
-                Terms & Conditions
-              </h4>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
-                {quote.PaymentTerms && quote.PaymentTerms.trim() !== "" && (
-                  <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 md:p-6">
-                    <h5 className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300 md:text-base">
-                      Payment Terms
-                    </h5>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 md:text-base">
-                      {quote.PaymentTerms}
-                    </p>
-                  </div>
-                )}
-
-                {quote.DeliveryTerms && quote.DeliveryTerms.trim() !== "" && (
-                  <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 md:p-6">
-                    <h5 className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300 md:text-base">
-                      Delivery Terms
-                    </h5>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 md:text-base">
-                      {quote.DeliveryTerms}
-                    </p>
-                  </div>
-                )}
-
-                {quote.warrantly && quote.warrantly.trim() !== "" && (
-                  <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 md:p-6">
-                    <h5 className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300 md:text-base">
-                      Warranty
-                    </h5>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 md:text-base">
-                      {quote.warrantly}
-                    </p>
-                  </div>
-                )}
-
-                {quote.cancellatioinTerms &&
-                  quote.cancellatioinTerms.trim() !== "" && (
-                    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 md:p-6">
-                      <h5 className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300 md:text-base">
-                        Cancellation Terms
-                      </h5>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 md:text-base">
-                        {quote.cancellatioinTerms}
+            <div className="space-y-4 sm:space-y-6">
+              {/* Quote Amount */}
+              <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl sm:shadow-lg">
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-5 py-4 dark:from-green-900/20 dark:to-emerald-900/20 sm:px-6 sm:py-5">
+                  <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white sm:text-xl">
+                    <DollarSign className="h-5 w-5 text-green-600" />
+                    Quote Amount
+                  </h3>
+                </div>
+                <div className="p-5 sm:p-6">
+                  <div className="rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 p-4 dark:from-green-900/20 dark:to-emerald-900/20">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-green-600 dark:text-green-400 sm:text-3xl">
+                        {new Intl.NumberFormat("en-US", {
+                          style: "currency",
+                          currency: quote.currency || "RWF",
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 2,
+                        }).format(parseFloat(quote.qouteAmount))}
                       </p>
                     </div>
-                  )}
-              </div>
-            </div>
-
-            {/* Attachments */}
-            {attachments.length > 0 && (
-              <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 md:p-6">
-                <h4 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white md:text-xl">
-                  <FileText className="h-5 w-5 md:h-6 md:w-6" />
-                  Attachments ({attachments.length})
-                </h4>
-                <div className="space-y-3 md:space-y-4">
-                  {attachments.map((attachment, index) => (
-                    <button
-                      key={index}
-                      onClick={() => downloadAttachment(attachment, index)}
-                      className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4 transition-all hover:border-gray-300 hover:bg-gray-100 hover:shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:hover:bg-gray-800 md:p-5"
-                    >
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-5 w-5 text-gray-400 md:h-6 md:w-6" />
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 md:text-base">
-                          Attachment {index + 1}
-                        </span>
-                      </div>
-                      <Download className="h-4 w-4 text-gray-400 transition-transform hover:scale-110 md:h-5 md:w-5" />
-                    </button>
-                  ))}
+                  </div>
                 </div>
               </div>
-            )}
 
-            {/* Submission Info */}
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900 md:p-6">
-              <div className="text-sm text-gray-500 dark:text-gray-400 md:text-base">
-                <p className="font-medium">
-                  Submitted: {formatDate(quote.created_at)}
-                </p>
-                {quote.updated_at !== quote.created_at && (
-                  <p className="mt-2">
-                    Last updated: {formatDate(quote.updated_at)}
+              {/* Key Information Grid */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:rounded-xl">
+                  <div className="p-4 sm:p-5">
+                    <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+                      <Calendar className="h-4 w-4" />
+                      Delivery Time
+                    </div>
+                    <p className="text-base font-semibold text-gray-900 dark:text-white sm:text-lg">
+                      {quote.delivery_time || "Not specified"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:rounded-xl">
+                  <div className="p-4 sm:p-5">
+                    <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+                      <Calendar className="h-4 w-4" />
+                      Quote Validity
+                    </div>
+                    <p className="text-base font-semibold text-gray-900 dark:text-white sm:text-lg">
+                      {quote.quote_validity || "Not specified"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Message */}
+              {quote.message && quote.message.trim() !== "" && (
+                <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl sm:shadow-lg">
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-5 py-4 dark:from-purple-900/20 dark:to-pink-900/20 sm:px-6 sm:py-5">
+                    <h3 className="flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white sm:text-lg">
+                      <FileText className="h-5 w-5 text-purple-600" />
+                      Message
+                    </h3>
+                  </div>
+                  <div className="p-5 sm:p-6">
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+                      {quote.message}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Terms and Conditions */}
+              <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl sm:shadow-lg">
+                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-5 py-4 dark:from-blue-900/20 dark:to-cyan-900/20 sm:px-6 sm:py-5">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white sm:text-xl">
+                    Terms & Conditions
+                  </h3>
+                </div>
+                <div className="p-5 sm:p-6">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                    {quote.PaymentTerms && quote.PaymentTerms.trim() !== "" && (
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
+                        <h5 className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          Payment Terms
+                        </h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {quote.PaymentTerms}
+                        </p>
+                      </div>
+                    )}
+
+                    {quote.DeliveryTerms && quote.DeliveryTerms.trim() !== "" && (
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
+                        <h5 className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          Delivery Terms
+                        </h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {quote.DeliveryTerms}
+                        </p>
+                      </div>
+                    )}
+
+                    {quote.warrantly && quote.warrantly.trim() !== "" && (
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
+                        <h5 className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          Warranty
+                        </h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {quote.warrantly}
+                        </p>
+                      </div>
+                    )}
+
+                    {quote.cancellatioinTerms &&
+                      quote.cancellatioinTerms.trim() !== "" && (
+                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
+                          <h5 className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            Cancellation Terms
+                          </h5>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {quote.cancellatioinTerms}
+                          </p>
+                        </div>
+                      )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Attachments */}
+              {attachments.length > 0 && (
+                <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl sm:shadow-lg">
+                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-5 py-4 dark:from-amber-900/20 dark:to-orange-900/20 sm:px-6 sm:py-5">
+                    <h3 className="flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white sm:text-lg">
+                      <FileText className="h-5 w-5 text-amber-600" />
+                      Attachments ({attachments.length})
+                    </h3>
+                  </div>
+                  <div className="space-y-2.5 p-5 sm:p-6">
+                    {attachments.map((attachment, index) => (
+                      <button
+                        key={index}
+                        onClick={() => downloadAttachment(attachment, index)}
+                        className="flex w-full items-center justify-between rounded-xl border-2 border-gray-200 bg-gray-50 p-4 transition-all duration-200 hover:border-green-300 hover:bg-green-50 active:scale-95 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-700 dark:hover:bg-green-900/20"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                            <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <span className="font-medium text-gray-700 dark:text-gray-300">
+                            Attachment {index + 1}
+                          </span>
+                        </div>
+                        <Download className="h-5 w-5 flex-shrink-0 text-gray-500 dark:text-gray-400" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Submission Info */}
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800 sm:p-5">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="font-medium">
+                    Submitted: {formatDate(quote.created_at)}
                   </p>
-                )}
+                  {quote.updated_at !== quote.created_at && (
+                    <p className="mt-2">
+                      Last updated: {formatDate(quote.updated_at)}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Close Button */}
-          <div className="mt-8 flex justify-end border-t border-gray-200 pt-6 dark:border-gray-700 md:mt-10 md:pt-8">
-            <button
-              onClick={onClose}
-              className="rounded-lg bg-gray-200 px-6 py-2.5 font-medium text-gray-700 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 md:px-8 md:py-3 md:text-base"
-            >
-              Close
-            </button>
+        {/* Footer */}
+        <div className="flex flex-shrink-0 flex-col gap-3 border-t border-gray-200 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-900 sm:flex-row sm:items-center sm:justify-between sm:p-6 md:p-8">
+          <div className="flex flex-col gap-2 text-xs sm:flex-row sm:items-center sm:gap-4 sm:text-sm">
+            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+              <Calendar className="h-4 w-4" />
+              <span>
+                Submitted on{" "}
+                <span className="font-semibold text-gray-900 dark:text-white">
+                  {formatDate(quote.created_at)}
+                </span>
+              </span>
+            </div>
+            <div className="hidden h-6 w-px bg-gray-300 dark:bg-gray-600 sm:block"></div>
+            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+              <FileText className="h-4 w-4" />
+              <span>
+                Quote ID:{" "}
+                <span className="font-mono font-semibold text-gray-900 dark:text-white">
+                  {quote.id?.slice(0, 8) || "N/A"}
+                </span>
+              </span>
+            </div>
           </div>
+          <button
+            onClick={onClose}
+            className="w-full rounded-xl bg-gradient-to-r from-gray-200 to-gray-300 px-6 py-3.5 text-sm font-semibold text-gray-700 shadow-sm transition-all duration-300 hover:from-gray-300 hover:to-gray-400 active:scale-95 dark:from-gray-700 dark:to-gray-600 dark:text-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 sm:w-auto sm:px-6 sm:py-3"
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>
