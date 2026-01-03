@@ -62,11 +62,10 @@ export default function QuoteDetailsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-md sm:items-center sm:bg-black/60 sm:p-4">
-      <div className="flex h-full max-h-screen w-full flex-col overflow-hidden rounded-t-[2rem] bg-white shadow-2xl dark:bg-gray-900 sm:h-auto sm:max-h-[90vh] sm:w-full sm:max-w-6xl sm:rounded-3xl sm:border sm:border-gray-200 dark:sm:border-gray-700">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-md sm:items-start sm:justify-start sm:bg-black/60 sm:p-0">
+      <div className="flex h-full max-h-screen w-full flex-col overflow-hidden rounded-t-[2rem] bg-white shadow-2xl dark:bg-gray-900 sm:h-full sm:w-full sm:rounded-none sm:border-0">
         {/* Header - Enhanced design */}
-        <div className="relative flex-shrink-0 border-b border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:border-0 sm:bg-gradient-to-br sm:from-green-600 sm:via-emerald-600 sm:to-teal-600 sm:p-6 sm:text-white sm:shadow-lg md:p-8">
-          <div className="absolute inset-0 hidden bg-gradient-to-br from-black/10 to-transparent sm:block"></div>
+        <div className="relative flex-shrink-0 border-b border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:p-6 md:p-8">
           <div className="relative z-10">
             {/* Top row with title and close button */}
             <div className="mb-4 flex items-start justify-between gap-3 sm:mb-0">
@@ -76,32 +75,33 @@ export default function QuoteDetailsModal({
                     <FileText className="h-5 w-5 text-white sm:h-6 sm:w-6" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h2 className="truncate text-xl font-bold leading-tight text-gray-900 dark:text-white sm:text-2xl sm:text-white md:text-3xl">
+                    <h2 className="truncate text-xl font-bold leading-tight text-gray-900 dark:text-white sm:text-2xl md:text-3xl">
                       {quote.title}
                     </h2>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-800/50 sm:bg-white/10 sm:backdrop-blur-sm">
-                  <Building className="h-4 w-4 flex-shrink-0 text-gray-500 dark:text-gray-400 sm:h-4 sm:w-4 sm:text-green-100" />
-                  <span className="truncate text-sm font-medium text-gray-700 dark:text-gray-300 sm:text-sm sm:text-green-50">
+                <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-800/50">
+                  <Building className="h-4 w-4 flex-shrink-0 text-gray-500 dark:text-gray-400" />
+                  <span className="truncate text-sm font-medium text-gray-700 dark:text-gray-300">
                     {quote.rfqRequester?.name || "Unknown Business"}
                   </span>
                 </div>
               </div>
               <button
                 onClick={onClose}
-                className="flex-shrink-0 rounded-xl bg-gray-100 p-2.5 text-gray-700 transition-all duration-200 hover:bg-gray-200 active:scale-95 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:rounded-xl sm:bg-white/20 sm:text-white sm:backdrop-blur-sm sm:hover:bg-white/30"
+                className="flex-shrink-0 rounded-xl bg-gray-100 p-2.5 text-gray-700 transition-all duration-200 hover:bg-gray-200 active:scale-95 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
               >
-                <X className="h-5 w-5 sm:h-5 sm:w-5" />
+                <X className="h-5 w-5" />
               </button>
             </div>
             {/* Message button */}
             <button
               onClick={handleMessage}
-              className="w-full rounded-xl border-2 border-gray-200 bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:from-green-600 hover:to-emerald-600 hover:shadow-lg active:scale-95 dark:border-gray-700 sm:w-auto sm:border-white/30 sm:bg-white/20 sm:from-transparent sm:to-transparent sm:text-white sm:backdrop-blur-sm sm:hover:bg-white/30 sm:hover:from-transparent sm:hover:to-transparent"
+              className="mt-4 w-full rounded-xl border-2 border-gray-200 bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3 text-sm font-semibold !text-white shadow-md transition-all duration-200 hover:from-green-600 hover:to-emerald-600 hover:shadow-lg active:scale-95 dark:border-gray-700 sm:mt-0 sm:w-auto"
+              style={{ color: "#ffffff" }}
             >
-              <MessageSquare className="mr-2 inline h-4 w-4" />
-              Message Supplier
+              <MessageSquare className="mr-2 inline h-4 w-4 !text-white" style={{ color: "#ffffff" }} />
+              <span className="!text-white" style={{ color: "#ffffff" }}>Message Supplier</span>
             </button>
           </div>
         </div>
@@ -865,7 +865,7 @@ export default function QuoteDetailsModal({
         </div>
 
         {/* Footer - Enhanced mobile design */}
-        <div className="flex flex-shrink-0 flex-col gap-3 border-t border-gray-200 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-900 sm:flex-row sm:items-center sm:justify-between sm:bg-gradient-to-r sm:from-gray-50 sm:to-white sm:p-6 dark:sm:from-gray-800 dark:sm:to-gray-700 md:p-8">
+        <div className="flex flex-shrink-0 flex-col gap-3 border-t border-gray-200 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-900 sm:flex-row sm:items-center sm:justify-between sm:p-6 md:p-8">
           <div className="flex flex-col gap-2 text-xs sm:flex-row sm:items-center sm:gap-4 sm:text-sm">
             <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
               <Calendar className="h-4 w-4" />
