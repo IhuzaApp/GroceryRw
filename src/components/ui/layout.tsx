@@ -22,7 +22,9 @@ export default function RootLayout({
   // Check if current page is the Reels page
   const isReelsPage = router.pathname === "/Reels";
   // Check if current page is the plasBusiness page (mobile full screen)
-  const isPlasBusinessPage = router.pathname === "/plasBusiness";
+  const isPlasBusinessPage =
+    router.pathname === "/plasBusiness" ||
+    router.pathname.startsWith("/plasBusiness/");
 
   return (
     <ThemeProvider>
@@ -51,10 +53,7 @@ export default function RootLayout({
               : {}
           }
         >
-          {!isChatPage &&
-            !isReelsPage &&
-            !isMessagesPage &&
-            !isPlasBusinessPage && <SideBar />}
+          {!isChatPage && !isReelsPage && !isMessagesPage && <SideBar />}
           <div
             className="[&_*]:text-inherit"
             style={
