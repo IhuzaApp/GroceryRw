@@ -96,7 +96,10 @@ export function RFQOpportunitiesSection({
           return { rfqId: rfq.id, count: responses.length };
         }
       } catch (error) {
-        console.error(`Error fetching response count for RFQ ${rfq.id}:`, error);
+        console.error(
+          `Error fetching response count for RFQ ${rfq.id}:`,
+          error
+        );
       }
       return { rfqId: rfq.id, count: 0 };
     });
@@ -443,8 +446,14 @@ export function RFQOpportunitiesSection({
                   className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-800 to-green-900 px-4 py-2.5 text-xs font-semibold text-white shadow-md shadow-green-900/40 transition-all duration-200 hover:from-green-900 hover:to-green-950 hover:shadow-lg hover:shadow-green-900/50 active:scale-95 sm:px-4 sm:py-2.5 sm:text-sm"
                   style={{ color: "#ffffff" }}
                 >
-                  <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" style={{ color: "#ffffff" }} />
-                  <span className="hidden sm:inline" style={{ color: "#ffffff" }}>
+                  <Eye
+                    className="h-3.5 w-3.5 sm:h-4 sm:w-4"
+                    style={{ color: "#ffffff" }}
+                  />
+                  <span
+                    className="hidden sm:inline"
+                    style={{ color: "#ffffff" }}
+                  >
                     View Details
                   </span>
                   <span className="sm:hidden" style={{ color: "#ffffff" }}>
