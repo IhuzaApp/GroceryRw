@@ -15,6 +15,7 @@ import {
   Send,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useSession } from "next-auth/react";
 
 // Lightweight signature pad using canvas that returns a data URL
 function SignaturePad({
@@ -348,8 +349,11 @@ export function ContractAssignmentModal({
   quoteResponseId,
   quoteResponse,
 }: ContractAssignmentModalProps) {
+  const { data: session } = useSession();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentUserBusinessId, setCurrentUserBusinessId] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<"client" | "supplier" | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{
     startDate?: boolean;
     endDate?: boolean;
@@ -412,6 +416,41 @@ export function ContractAssignmentModal({
   };
 
   const [contractData, setContractData] = useState<ContractData>(getInitialContractData());
+
+  // Determine user role (client or supplier) based on business account
+  useEffect(() => {
+    const determineUserRole = async () => {
+      if (!session?.user?.id) return;
+
+      try {
+        // Get current user's business account
+        const response = await fetch("/api/queries/check-business-account");
+        const data = await response.json();
+        
+        if (data.hasAccount && data.account?.id) {
+          const userBusinessId = data.account.id;
+          setCurrentUserBusinessId(userBusinessId);
+          
+          // Compare with supplier's business ID
+          // If user's business ID matches supplier's ID, they are the supplier
+          // Otherwise, they are the client (buyer)
+          if (userBusinessId === supplierData.id) {
+            setUserRole("supplier");
+          } else {
+            setUserRole("client");
+          }
+        }
+      } catch (error) {
+        console.error("Error determining user role:", error);
+        // Default to client if we can't determine
+        setUserRole("client");
+      }
+    };
+
+    if (isOpen && session?.user) {
+      determineUserRole();
+    }
+  }, [isOpen, session, supplierData.id]);
 
   // Update contract data when quote response changes
   useEffect(() => {
@@ -629,11 +668,9 @@ export function ContractAssignmentModal({
         missingFields.push(`Deliverable ${invalidDeliverables.map((_, i) => i + 1).join(", ")} (description and due date)`);
       }
 
-      // Validate signatures and photos
+      // Validate client signature and photo only
       if (!clientSignature) missingFields.push("Client signature");
-      if (!supplierSignature) missingFields.push("Supplier signature");
       if (!clientPhoto) missingFields.push("Client photo");
-      if (!supplierPhoto) missingFields.push("Supplier photo");
       if (!signatureConsent) missingFields.push("Signature consent");
 
       if (missingFields.length > 0) {
@@ -817,10 +854,10 @@ export function ContractAssignmentModal({
       
       case 4: // Signatures
         const missingSignatures: string[] = [];
+        
+        // Only validate client signature and photo
         if (!clientSignature) missingSignatures.push("Client signature");
-        if (!supplierSignature) missingSignatures.push("Supplier signature");
         if (!clientPhoto) missingSignatures.push("Client photo");
-        if (!supplierPhoto) missingSignatures.push("Supplier photo");
         if (!signatureConsent) missingSignatures.push("Signature consent");
         
         if (missingSignatures.length > 0) {
@@ -1596,14 +1633,13 @@ export function ContractAssignmentModal({
           {currentStep === 4 && (
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Signatures & Photo Verification
+                Client Signature & Photo Verification
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Both parties must sign and capture a photo at the time of
-                signing.
+                Please sign and capture a photo to complete the contract acceptance.
               </p>
 
-              {/* Client (Buyer) */}
+              {/* Client Signature and Photo */}
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-600">
                   <h4 className="mb-3 font-medium text-gray-900 dark:text-white">
@@ -1619,28 +1655,6 @@ export function ContractAssignmentModal({
                     Client Photo
                   </h4>
                   <PhotoCapture value={clientPhoto} onChange={setClientPhoto} />
-                </div>
-              </div>
-
-              {/* Supplier */}
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-600">
-                  <h4 className="mb-3 font-medium text-gray-900 dark:text-white">
-                    Supplier Signature
-                  </h4>
-                  <SignaturePad
-                    value={supplierSignature}
-                    onChange={setSupplierSignature}
-                  />
-                </div>
-                <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-600">
-                  <h4 className="mb-3 font-medium text-gray-900 dark:text-white">
-                    Supplier Photo
-                  </h4>
-                  <PhotoCapture
-                    value={supplierPhoto}
-                    onChange={setSupplierPhoto}
-                  />
                 </div>
               </div>
 
@@ -1758,48 +1772,30 @@ export function ContractAssignmentModal({
               </div>
 
               {/* Evidence preview */}
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-600">
-                  <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
-                    Client Evidence
-                  </h4>
-                  <div className="flex items-center gap-4">
-                    {clientSignature && (
-                      <img
-                        src={clientSignature}
-                        alt="Client signature"
-                        className="h-20 rounded border dark:border-gray-600"
-                      />
-                    )}
-                    {clientPhoto && (
-                      <img
-                        src={clientPhoto}
-                        alt="Client photo"
-                        className="h-20 w-20 rounded-full border object-cover dark:border-gray-600"
-                      />
-                    )}
-                  </div>
-                </div>
-                <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-600">
-                  <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
-                    Supplier Evidence
-                  </h4>
-                  <div className="flex items-center gap-4">
-                    {supplierSignature && (
-                      <img
-                        src={supplierSignature}
-                        alt="Supplier signature"
-                        className="h-20 rounded border dark:border-gray-600"
-                      />
-                    )}
-                    {supplierPhoto && (
-                      <img
-                        src={supplierPhoto}
-                        alt="Supplier photo"
-                        className="h-20 w-20 rounded-full border object-cover dark:border-gray-600"
-                      />
-                    )}
-                  </div>
+              <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-600">
+                <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
+                  Client Evidence
+                </h4>
+                <div className="flex items-center gap-4">
+                  {clientSignature && (
+                    <img
+                      src={clientSignature}
+                      alt="Client signature"
+                      className="h-20 rounded border dark:border-gray-600"
+                    />
+                  )}
+                  {clientPhoto && (
+                    <img
+                      src={clientPhoto}
+                      alt="Client photo"
+                      className="h-20 w-20 rounded-full border object-cover dark:border-gray-600"
+                    />
+                  )}
+                  {!clientSignature && !clientPhoto && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      No evidence captured yet
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
