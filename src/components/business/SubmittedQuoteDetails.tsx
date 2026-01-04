@@ -124,7 +124,6 @@ export function SubmittedQuoteDetails({
         {/* Content */}
         <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-800/50 sm:bg-white dark:sm:bg-gray-900">
           <div className="space-y-4 sm:space-y-6 sm:p-6 md:space-y-8 md:p-8">
-
             {/* Status Badge */}
             <div className="mb-4 sm:mb-6">
               <span

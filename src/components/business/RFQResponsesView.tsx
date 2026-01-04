@@ -1022,6 +1022,20 @@ export function RFQResponsesView({
             email: contractResponse.contactInfo.email,
             phone: contractResponse.contactInfo.phone,
           }}
+          quoteResponseId={contractResponse.id}
+          quoteResponse={{
+            id: contractResponse.id,
+            supplierId: contractResponse.supplierId,
+            supplierName: contractResponse.supplierName,
+            supplierCompany: contractResponse.supplierCompany,
+            quoteAmount: contractResponse.quoteAmount,
+            currency: contractResponse.currency,
+            deliveryTime: contractResponse.deliveryTime,
+            validity: contractResponse.validity,
+            message: contractResponse.message,
+            terms: contractResponse.terms,
+            contactInfo: contractResponse.contactInfo,
+          }}
         />
       )}
     </div>

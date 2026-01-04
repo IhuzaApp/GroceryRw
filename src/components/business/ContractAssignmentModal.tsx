@@ -14,6 +14,7 @@ import {
   Download,
   Send,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 // Lightweight signature pad using canvas that returns a data URL
 function SignaturePad({
@@ -278,6 +279,30 @@ interface ContractData {
   attachments: File[];
 }
 
+interface QuoteResponseData {
+  id: string;
+  supplierId: string;
+  supplierName: string;
+  supplierCompany: string;
+  quoteAmount: number;
+  currency: string;
+  deliveryTime: string;
+  validity: string;
+  message: string;
+  terms: {
+    payment: string;
+    warranty: string;
+    delivery: string;
+    cancellation: string;
+  };
+  contactInfo: {
+    name: string;
+    email: string;
+    phone: string;
+    position: string;
+  };
+}
+
 interface ContractAssignmentModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -295,6 +320,8 @@ interface ContractAssignmentModalProps {
     email: string;
     phone: string;
   };
+  quoteResponseId?: string; // The ID of the quote response being accepted
+  quoteResponse?: QuoteResponseData; // Full quote response data
 }
 
 const contractTypes = [
@@ -318,58 +345,109 @@ export function ContractAssignmentModal({
   onAssignContract,
   rfqData,
   supplierData,
+  quoteResponseId,
+  quoteResponse,
 }: ContractAssignmentModalProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [contractData, setContractData] = useState<ContractData>({
-    contractId: `CONTRACT-${Date.now()}`,
-    rfqId: rfqData.id,
-    supplierId: supplierData.id,
-    supplierName: supplierData.name,
-    supplierCompany: supplierData.company,
-    contractTitle: `Contract for ${rfqData.title}`,
-    contractType: "service",
-    startDate: "",
-    endDate: "",
-    duration: "",
-    totalValue: rfqData.budget.min,
-    currency: "USD",
-    paymentSchedule: "monthly",
-    deliverables: [
-      {
-        id: "1",
-        description: "Initial project setup and planning",
-        dueDate: "",
-        value: 0,
-        status: "pending",
+  const [fieldErrors, setFieldErrors] = useState<{
+    startDate?: boolean;
+    endDate?: boolean;
+    deliverables?: number[]; // indices of invalid deliverables
+    signatures?: string[]; // missing signature fields
+  }>({});
+  
+  // Initialize contract data with quote response data if available
+  const getInitialContractData = (): ContractData => {
+    const baseData: ContractData = {
+      contractId: `CONTRACT-${Date.now()}`,
+      rfqId: rfqData.id,
+      supplierId: supplierData.id,
+      supplierName: supplierData.name,
+      supplierCompany: supplierData.company,
+      contractTitle: `Contract for ${rfqData.title}`,
+      contractType: "service",
+      startDate: "",
+      endDate: "",
+      duration: "",
+      totalValue: quoteResponse?.quoteAmount || rfqData.budget.min,
+      currency: quoteResponse?.currency || "RWF",
+      paymentSchedule: "monthly",
+      deliverables: [
+        {
+          id: "1",
+          description: quoteResponse?.message || "Initial project setup and planning",
+          dueDate: "",
+          value: quoteResponse?.quoteAmount || 0,
+          status: "pending",
+        },
+      ],
+      terms: {
+        paymentTerms: quoteResponse?.terms?.payment || "Net 30 days",
+        deliveryTerms: quoteResponse?.terms?.delivery || "As per agreed schedule",
+        warrantyTerms: quoteResponse?.terms?.warranty || "12 months from delivery",
+        terminationTerms: quoteResponse?.terms?.cancellation || "30 days written notice",
+        forceMajeure: "Standard force majeure clause",
+        confidentiality: "Mutual confidentiality agreement",
+        intellectualProperty: "Client retains IP rights",
       },
-    ],
-    terms: {
-      paymentTerms: "Net 30 days",
-      deliveryTerms: "As per agreed schedule",
-      warrantyTerms: "12 months from delivery",
-      terminationTerms: "30 days written notice",
-      forceMajeure: "Standard force majeure clause",
-      confidentiality: "Mutual confidentiality agreement",
-      intellectualProperty: "Client retains IP rights",
-    },
-    contactInfo: {
-      clientContact: {
-        name: "",
-        email: "",
-        phone: "",
-        position: "",
+      contactInfo: {
+        clientContact: {
+          name: "",
+          email: "",
+          phone: "",
+          position: "",
+        },
+        supplierContact: {
+          name: quoteResponse?.contactInfo?.name || supplierData.name,
+          email: quoteResponse?.contactInfo?.email || supplierData.email,
+          phone: quoteResponse?.contactInfo?.phone || supplierData.phone,
+          position: quoteResponse?.contactInfo?.position || "Supplier Representative",
+        },
       },
-      supplierContact: {
-        name: supplierData.name,
-        email: supplierData.email,
-        phone: supplierData.phone,
-        position: "Supplier Representative",
-      },
-    },
-    specialConditions: "",
-    attachments: [],
-  });
+      specialConditions: "",
+      attachments: [],
+    };
+    return baseData;
+  };
+
+  const [contractData, setContractData] = useState<ContractData>(getInitialContractData());
+
+  // Update contract data when quote response changes
+  useEffect(() => {
+    if (quoteResponse && isOpen) {
+      setContractData((prev) => ({
+        ...prev,
+        totalValue: quoteResponse.quoteAmount,
+        currency: quoteResponse.currency,
+        supplierName: quoteResponse.supplierName,
+        supplierCompany: quoteResponse.supplierCompany,
+        terms: {
+          ...prev.terms,
+          paymentTerms: quoteResponse.terms.payment || prev.terms.paymentTerms,
+          deliveryTerms: quoteResponse.terms.delivery || prev.terms.deliveryTerms,
+          warrantyTerms: quoteResponse.terms.warranty || prev.terms.warrantyTerms,
+          terminationTerms: quoteResponse.terms.cancellation || prev.terms.terminationTerms,
+        },
+        contactInfo: {
+          ...prev.contactInfo,
+          supplierContact: {
+            name: quoteResponse.contactInfo.name,
+            email: quoteResponse.contactInfo.email,
+            phone: quoteResponse.contactInfo.phone,
+            position: quoteResponse.contactInfo.position || "Supplier Representative",
+          },
+        },
+        deliverables: prev.deliverables.map((del, index) => 
+          index === 0 ? {
+            ...del,
+            description: quoteResponse.message || del.description,
+            value: quoteResponse.quoteAmount || del.value,
+          } : del
+        ),
+      }));
+    }
+  }, [quoteResponse, isOpen]);
 
   // Signature and photo capture state
   const [clientSignature, setClientSignature] = useState<string>("");
@@ -485,30 +563,180 @@ export function ContractAssignmentModal({
     );
   };
 
+  const calculateDuration = (startDate: string, endDate: string): string => {
+    if (!startDate || !endDate) return "";
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    if (end <= start) return "";
+    
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    // Calculate years, months, weeks, and days
+    const years = Math.floor(diffDays / 365);
+    const months = Math.floor((diffDays % 365) / 30);
+    const weeks = Math.floor((diffDays % 30) / 7);
+    const days = diffDays % 7;
+    
+    // Format duration in a readable way
+    const parts: string[] = [];
+    if (years > 0) {
+      parts.push(`${years} ${years === 1 ? 'year' : 'years'}`);
+    }
+    if (months > 0) {
+      parts.push(`${months} ${months === 1 ? 'month' : 'months'}`);
+    }
+    if (weeks > 0 && years === 0) { // Only show weeks if less than a year
+      parts.push(`${weeks} ${weeks === 1 ? 'week' : 'weeks'}`);
+    }
+    if (days > 0 && years === 0 && months === 0) { // Only show days if less than a month
+      parts.push(`${days} ${days === 1 ? 'day' : 'days'}`);
+    }
+    
+    return parts.length > 0 ? parts.join(', ') : `${diffDays} days`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    
+    console.log("Form submitted, starting validation...");
     setIsSubmitting(true);
 
     try {
+      // Validate required fields and collect all missing fields
+      const missingFields: string[] = [];
+
+      if (!quoteResponseId) {
+        missingFields.push("Quote response ID");
+      }
+
+      if (!contractData.startDate) {
+        missingFields.push("Start date");
+      }
+
+      if (!contractData.endDate) {
+        missingFields.push("End date");
+      }
+
+      // Validate deliverables
+      const invalidDeliverables = contractData.deliverables.filter(
+        (del, index) => !del.description || !del.dueDate
+      );
+      if (invalidDeliverables.length > 0) {
+        missingFields.push(`Deliverable ${invalidDeliverables.map((_, i) => i + 1).join(", ")} (description and due date)`);
+      }
+
       // Validate signatures and photos
-      if (
-        !clientSignature ||
-        !supplierSignature ||
-        !clientPhoto ||
-        !supplierPhoto ||
-        !signatureConsent
-      ) {
-        alert(
-          "Please capture both signatures and photos and accept the consent before assigning the contract."
+      if (!clientSignature) missingFields.push("Client signature");
+      if (!supplierSignature) missingFields.push("Supplier signature");
+      if (!clientPhoto) missingFields.push("Client photo");
+      if (!supplierPhoto) missingFields.push("Supplier photo");
+      if (!signatureConsent) missingFields.push("Signature consent");
+
+      if (missingFields.length > 0) {
+        toast.error(
+          `Please complete the following: ${missingFields.join(", ")}`,
+          { duration: 5000 }
         );
         setIsSubmitting(false);
         return;
       }
+
       // Calculate total value from deliverables
       const totalValue = calculateTotalValue();
+      const contractValue = totalValue || contractData.totalValue;
+
+      if (!contractValue || contractValue <= 0) {
+        toast.error("Contract value must be greater than 0.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Prepare deliverables as JSON
+      const deliverablesJson = contractData.deliverables.map((deliverable) => ({
+        id: deliverable.id,
+        description: deliverable.description,
+        dueDate: deliverable.dueDate,
+        value: deliverable.value,
+        status: deliverable.status,
+      }));
+
+      console.log("Submitting contract with data:", {
+        rfq_response_id: quoteResponseId,
+        contract_Value: contractValue.toString(),
+        startDate: contractData.startDate,
+        endDate: contractData.endDate,
+        type: contractData.contractType,
+      });
+
+      // Call the API to create the contract
+      const requestBody = {
+        rfq_response_id: quoteResponseId,
+        contract_Value: contractValue.toString(),
+        value: contractValue.toString(),
+        type: contractData.contractType,
+        startDate: contractData.startDate,
+        endDate: contractData.endDate,
+        duration: contractData.duration || "",
+        dueDate: contractData.endDate, // Using endDate as dueDate if not specified separately
+        paymentSchedule: contractData.paymentSchedule,
+        paymentTerms: contractData.terms.paymentTerms || "",
+        terminationTerms: contractData.terms.terminationTerms || "",
+        specialConditions: contractData.specialConditions || "",
+        projecDeliverables: deliverablesJson,
+        clientSignature: clientSignature,
+        clientPhoto: clientPhoto,
+        supplierSignature: supplierSignature,
+        supplierPhoto: supplierPhoto,
+        proofAggred: signatureConsent,
+        status: "pending", // Contract starts as pending
+      };
+
+      console.log("API Request Body:", requestBody);
+
+      const response = await fetch("/api/mutations/add-contract", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log("API Response Status:", response.status);
+
+      let data;
+      try {
+        data = await response.json();
+        console.log("API Response Data:", data);
+      } catch (parseError) {
+        console.error("Error parsing response:", parseError);
+        const text = await response.text();
+        console.error("Response text:", text);
+        toast.error("Failed to parse server response. Please try again.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!response.ok) {
+        const errorMessage =
+          data.graphqlErrors ||
+          data.message ||
+          data.error ||
+          "Failed to create contract";
+        console.error("API Error:", errorMessage, data);
+        toast.error(errorMessage);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Prepare contract data for callback
       const updatedContractData: any = {
         ...contractData,
-        totalValue: totalValue || contractData.totalValue,
+        totalValue: contractValue,
+        rfqResponseId: quoteResponseId,
         // Attach evidence
         signatures: {
           clientSignature,
@@ -519,18 +747,102 @@ export function ContractAssignmentModal({
         },
       };
 
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API call
+      toast.success("Contract created successfully!");
+      
+      // Small delay to show success message
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      
       onAssignContract(updatedContractData);
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error assigning contract:", error);
+      const errorMessage = error?.message || "Failed to create contract. Please try again.";
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const validateCurrentStep = (): boolean => {
+    const errors: typeof fieldErrors = {};
+    let isValid = true;
+
+    switch (currentStep) {
+      case 1: // Contract Details
+        if (!contractData.startDate) {
+          errors.startDate = true;
+          isValid = false;
+        }
+        if (!contractData.endDate) {
+          errors.endDate = true;
+          isValid = false;
+        }
+        if (contractData.startDate && contractData.endDate) {
+          const start = new Date(contractData.startDate);
+          const end = new Date(contractData.endDate);
+          if (end <= start) {
+            toast.error("End date must be after start date", { duration: 3000 });
+            errors.endDate = true;
+            isValid = false;
+          }
+        }
+        if (!isValid) {
+          toast.error("Please complete all required fields", { duration: 3000 });
+        }
+        setFieldErrors(errors);
+        return isValid;
+      
+      case 2: // Terms & Conditions
+        // Terms are mostly optional or pre-filled, so no validation needed
+        setFieldErrors({});
+        return true;
+      
+      case 3: // Deliverables
+        const invalidIndices: number[] = [];
+        contractData.deliverables.forEach((del, index) => {
+          if (!del.description || !del.dueDate) {
+            invalidIndices.push(index);
+            isValid = false;
+          }
+        });
+        if (!isValid) {
+          errors.deliverables = invalidIndices;
+          toast.error(
+            `Please fill in description and due date for all deliverables`,
+            { duration: 4000 }
+          );
+        }
+        setFieldErrors(errors);
+        return isValid;
+      
+      case 4: // Signatures
+        const missingSignatures: string[] = [];
+        if (!clientSignature) missingSignatures.push("Client signature");
+        if (!supplierSignature) missingSignatures.push("Supplier signature");
+        if (!clientPhoto) missingSignatures.push("Client photo");
+        if (!supplierPhoto) missingSignatures.push("Supplier photo");
+        if (!signatureConsent) missingSignatures.push("Signature consent");
+        
+        if (missingSignatures.length > 0) {
+          errors.signatures = missingSignatures;
+          isValid = false;
+          toast.error(`Please complete: ${missingSignatures.join(", ")}`, { duration: 4000 });
+        }
+        setFieldErrors(errors);
+        return isValid;
+      
+      default:
+        setFieldErrors({});
+        return true;
+    }
+  };
+
   const nextStep = () => {
+    if (!validateCurrentStep()) {
+      return; // Don't proceed if validation fails
+    }
     if (currentStep < steps.length) {
+      setFieldErrors({}); // Clear errors when moving to next step
       setCurrentStep(currentStep + 1);
     }
   };
@@ -543,9 +855,22 @@ export function ContractAssignmentModal({
 
   if (!isOpen) return null;
 
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Only close if clicking the backdrop itself, not the modal content
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <div className="max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-800">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
+      onClick={handleBackdropClick}
+    >
+      <div 
+        className="max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-800"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700">
           <div>
@@ -557,8 +882,13 @@ export function ContractAssignmentModal({
             </p>
           </div>
           <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            aria-label="Close modal"
           >
             <X className="h-6 w-6" />
           </button>
@@ -612,8 +942,63 @@ export function ContractAssignmentModal({
         {/* Form Content */}
         <form
           onSubmit={handleSubmit}
+          noValidate
           className="max-h-[60vh] overflow-y-auto p-6"
+          onClick={(e) => e.stopPropagation()}
         >
+          {/* Quote Response Information Display */}
+          {quoteResponse && (
+            <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+              <h3 className="mb-3 text-lg font-semibold text-blue-900 dark:text-blue-200">
+                Quote Response Information
+              </h3>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                    Supplier:
+                  </span>
+                  <p className="text-blue-900 dark:text-blue-100">
+                    {quoteResponse.supplierCompany} ({quoteResponse.supplierName})
+                  </p>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                    Quote Amount:
+                  </span>
+                  <p className="text-blue-900 dark:text-blue-100">
+                    {contractData.currency} {quoteResponse.quoteAmount.toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                    Delivery Time:
+                  </span>
+                  <p className="text-blue-900 dark:text-blue-100">
+                    {quoteResponse.deliveryTime}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                    Quote Validity:
+                  </span>
+                  <p className="text-blue-900 dark:text-blue-100">
+                    {quoteResponse.validity}
+                  </p>
+                </div>
+                {quoteResponse.message && (
+                  <div className="md:col-span-2">
+                    <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                      Supplier Message:
+                    </span>
+                    <p className="text-blue-900 dark:text-blue-100">
+                      {quoteResponse.message}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Step 1: Contract Details */}
           {currentStep === 1 && (
             <div className="space-y-6">
@@ -663,12 +1048,28 @@ export function ContractAssignmentModal({
                     <input
                       type="date"
                       value={contractData.startDate}
-                      onChange={(e) =>
-                        handleInputChange("startDate", e.target.value)
-                      }
-                      className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      onChange={(e) => {
+                        const newStartDate = e.target.value;
+                        handleInputChange("startDate", newStartDate);
+                        if (fieldErrors.startDate) {
+                          setFieldErrors({ ...fieldErrors, startDate: false });
+                        }
+                        // Auto-calculate duration if end date is also set
+                        if (newStartDate && contractData.endDate) {
+                          const calculatedDuration = calculateDuration(newStartDate, contractData.endDate);
+                          handleInputChange("duration", calculatedDuration);
+                        }
+                      }}
+                      className={`w-full rounded-lg border py-3 pl-10 pr-4 focus:border-transparent focus:ring-2 ${
+                        fieldErrors.startDate
+                          ? "border-red-500 focus:ring-red-500"
+                          : "border-gray-300 focus:ring-green-500 dark:border-gray-600"
+                      } dark:bg-gray-700 dark:text-white`}
                       required
                     />
+                    {fieldErrors.startDate && (
+                      <p className="mt-1 text-xs text-red-500">Start date is required</p>
+                    )}
                   </div>
                 </div>
                 <div>
@@ -680,17 +1081,33 @@ export function ContractAssignmentModal({
                     <input
                       type="date"
                       value={contractData.endDate}
-                      onChange={(e) =>
-                        handleInputChange("endDate", e.target.value)
-                      }
-                      className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      onChange={(e) => {
+                        const newEndDate = e.target.value;
+                        handleInputChange("endDate", newEndDate);
+                        if (fieldErrors.endDate) {
+                          setFieldErrors({ ...fieldErrors, endDate: false });
+                        }
+                        // Auto-calculate duration if start date is also set
+                        if (contractData.startDate && newEndDate) {
+                          const calculatedDuration = calculateDuration(contractData.startDate, newEndDate);
+                          handleInputChange("duration", calculatedDuration);
+                        }
+                      }}
+                      className={`w-full rounded-lg border py-3 pl-10 pr-4 focus:border-transparent focus:ring-2 ${
+                        fieldErrors.endDate
+                          ? "border-red-500 focus:ring-red-500"
+                          : "border-gray-300 focus:ring-green-500 dark:border-gray-600"
+                      } dark:bg-gray-700 dark:text-white`}
                       required
                     />
+                    {fieldErrors.endDate && (
+                      <p className="mt-1 text-xs text-red-500">End date is required</p>
+                    )}
                   </div>
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Duration
+                    Duration {contractData.startDate && contractData.endDate && "(Auto-calculated)"}
                   </label>
                   <input
                     type="text"
@@ -698,32 +1115,128 @@ export function ContractAssignmentModal({
                     onChange={(e) =>
                       handleInputChange("duration", e.target.value)
                     }
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                    placeholder="e.g., 12 months"
+                    className={`w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 ${
+                      contractData.startDate && contractData.endDate
+                        ? "bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                        : "dark:bg-gray-700 dark:text-white"
+                    }`}
+                    placeholder={contractData.startDate && contractData.endDate ? "Calculated automatically" : "e.g., 12 months"}
+                    readOnly={!!(contractData.startDate && contractData.endDate)}
+                    title={contractData.startDate && contractData.endDate ? "Automatically calculated from start and end dates" : "Enter duration manually or select dates to auto-calculate"}
                   />
+                  {contractData.startDate && contractData.endDate && contractData.duration && (
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      ✓ Automatically calculated from selected dates
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Supplier Information - Read Only */}
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-700/50">
+                <h4 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Supplier Information (from Quote)
+                </h4>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                      Supplier Name
+                    </label>
+                    <input
+                      type="text"
+                      value={contractData.supplierName}
+                      readOnly
+                      className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                      Supplier Company
+                    </label>
+                    <input
+                      type="text"
+                      value={contractData.supplierCompany}
+                      readOnly
+                      className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Supplier Contact Information - Read Only */}
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-700/50">
+                <h4 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Supplier Contact Information (from Quote)
+                </h4>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                      Contact Name
+                    </label>
+                    <input
+                      type="text"
+                      value={contractData.contactInfo.supplierContact.name}
+                      readOnly
+                      className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={contractData.contactInfo.supplierContact.email}
+                      readOnly
+                      className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                      Phone
+                    </label>
+                    <input
+                      type="tel"
+                      value={contractData.contactInfo.supplierContact.phone}
+                      readOnly
+                      className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                      Position
+                    </label>
+                    <input
+                      type="text"
+                      value={contractData.contactInfo.supplierContact.position}
+                      readOnly
+                      className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+                    />
+                  </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Total Contract Value *
+                    Total Contract Value * (from Quote)
                   </label>
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
                     <input
                       type="number"
                       value={contractData.totalValue}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "totalValue",
-                          parseFloat(e.target.value) || 0
-                        )
-                      }
-                      className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      readOnly
+                      className="w-full rounded-lg border border-gray-300 bg-gray-50 py-3 pl-10 pr-4 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
                       required
                     />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 dark:text-gray-400">
+                      {contractData.currency}
+                    </span>
                   </div>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    This value comes from the accepted quote and cannot be changed
+                  </p>
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -751,14 +1264,58 @@ export function ContractAssignmentModal({
           {/* Step 2: Terms & Conditions */}
           {currentStep === 2 && (
             <div className="space-y-6">
+              {/* Quote Terms Display */}
+              {quoteResponse && (
+                <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+                  <h4 className="mb-3 text-sm font-semibold text-blue-900 dark:text-blue-200">
+                    Terms from Quote Response
+                  </h4>
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <div>
+                      <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                        Payment Terms:
+                      </span>
+                      <p className="text-sm text-blue-900 dark:text-blue-100">
+                        {quoteResponse.terms.payment}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                        Delivery Terms:
+                      </span>
+                      <p className="text-sm text-blue-900 dark:text-blue-100">
+                        {quoteResponse.terms.delivery}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                        Warranty Terms:
+                      </span>
+                      <p className="text-sm text-blue-900 dark:text-blue-100">
+                        {quoteResponse.terms.warranty}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                        Cancellation Terms:
+                      </span>
+                      <p className="text-sm text-blue-900 dark:text-blue-100">
+                        {quoteResponse.terms.cancellation}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Payment Terms
+                    Payment Terms (from Quote)
                   </label>
                   <input
                     type="text"
                     value={contractData.terms.paymentTerms}
+                    readOnly={!!quoteResponse}
                     onChange={(e) =>
                       handleNestedInputChange(
                         "terms",
@@ -766,16 +1323,26 @@ export function ContractAssignmentModal({
                         e.target.value
                       )
                     }
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className={`w-full rounded-lg border border-gray-300 px-4 py-3 ${
+                      quoteResponse
+                        ? "bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                        : "focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    }`}
                   />
+                  {quoteResponse && (
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      Pre-filled from quote response
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Delivery Terms
+                    Delivery Terms (from Quote)
                   </label>
                   <input
                     type="text"
                     value={contractData.terms.deliveryTerms}
+                    readOnly={!!quoteResponse}
                     onChange={(e) =>
                       handleNestedInputChange(
                         "terms",
@@ -783,19 +1350,29 @@ export function ContractAssignmentModal({
                         e.target.value
                       )
                     }
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className={`w-full rounded-lg border border-gray-300 px-4 py-3 ${
+                      quoteResponse
+                        ? "bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                        : "focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    }`}
                   />
+                  {quoteResponse && (
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      Pre-filled from quote response
+                    </p>
+                  )}
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Warranty Terms
+                    Warranty Terms (from Quote)
                   </label>
                   <input
                     type="text"
                     value={contractData.terms.warrantyTerms}
+                    readOnly={!!quoteResponse}
                     onChange={(e) =>
                       handleNestedInputChange(
                         "terms",
@@ -803,16 +1380,26 @@ export function ContractAssignmentModal({
                         e.target.value
                       )
                     }
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className={`w-full rounded-lg border border-gray-300 px-4 py-3 ${
+                      quoteResponse
+                        ? "bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                        : "focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    }`}
                   />
+                  {quoteResponse && (
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      Pre-filled from quote response
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Termination Terms
+                    Termination Terms (from Quote)
                   </label>
                   <input
                     type="text"
                     value={contractData.terms.terminationTerms}
+                    readOnly={!!quoteResponse}
                     onChange={(e) =>
                       handleNestedInputChange(
                         "terms",
@@ -820,8 +1407,17 @@ export function ContractAssignmentModal({
                         e.target.value
                       )
                     }
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className={`w-full rounded-lg border border-gray-300 px-4 py-3 ${
+                      quoteResponse
+                        ? "bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                        : "focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    }`}
                   />
+                  {quoteResponse && (
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      Pre-filled from quote response
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -859,12 +1455,25 @@ export function ContractAssignmentModal({
                 </button>
               </div>
 
+              {quoteResponse && contractData.deliverables.length > 0 && (
+                <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/20">
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    <strong>Note:</strong> The first deliverable has been pre-filled with information from the quote response. You can modify it or add additional deliverables.
+                  </p>
+                </div>
+              )}
+
               <div className="space-y-4">
                 {contractData.deliverables.map((deliverable, index) => (
                   <div
                     key={deliverable.id}
                     className="rounded-lg border border-gray-200 p-4 dark:border-gray-600"
                   >
+                    {index === 0 && quoteResponse && (
+                      <div className="mb-3 rounded bg-blue-50 px-3 py-1 text-xs text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
+                        Pre-filled from quote response
+                      </div>
+                    )}
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div className="md:col-span-2">
                         <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -873,16 +1482,29 @@ export function ContractAssignmentModal({
                         <input
                           type="text"
                           value={deliverable.description}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             handleDeliverableChange(
                               index,
                               "description",
                               e.target.value
-                            )
-                          }
-                          className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            );
+                            if (fieldErrors.deliverables?.includes(index)) {
+                              setFieldErrors({
+                                ...fieldErrors,
+                                deliverables: fieldErrors.deliverables.filter(i => i !== index),
+                              });
+                            }
+                          }}
+                          className={`w-full rounded-lg border px-4 py-3 focus:border-transparent focus:ring-2 ${
+                            fieldErrors.deliverables?.includes(index) && !deliverable.description
+                              ? "border-red-500 focus:ring-red-500"
+                              : "border-gray-300 focus:ring-green-500 dark:border-gray-600"
+                          } dark:bg-gray-700 dark:text-white`}
                           required
                         />
+                        {fieldErrors.deliverables?.includes(index) && !deliverable.description && (
+                          <p className="mt-1 text-xs text-red-500">Description is required</p>
+                        )}
                       </div>
                       <div>
                         <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -893,21 +1515,34 @@ export function ContractAssignmentModal({
                           <input
                             type="date"
                             value={deliverable.dueDate}
-                            onChange={(e) =>
+                            onChange={(e) => {
                               handleDeliverableChange(
                                 index,
                                 "dueDate",
                                 e.target.value
-                              )
-                            }
-                            className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                              );
+                              if (fieldErrors.deliverables?.includes(index)) {
+                                setFieldErrors({
+                                  ...fieldErrors,
+                                  deliverables: fieldErrors.deliverables.filter(i => i !== index),
+                                });
+                              }
+                            }}
+                            className={`w-full rounded-lg border py-3 pl-10 pr-4 focus:border-transparent focus:ring-2 ${
+                              fieldErrors.deliverables?.includes(index) && !deliverable.dueDate
+                                ? "border-red-500 focus:ring-red-500"
+                                : "border-gray-300 focus:ring-green-500 dark:border-gray-600"
+                            } dark:bg-gray-700 dark:text-white`}
                             required
                           />
                         </div>
+                        {fieldErrors.deliverables?.includes(index) && !deliverable.dueDate && (
+                          <p className="mt-1 text-xs text-red-500">Due date is required</p>
+                        )}
                       </div>
                       <div>
                         <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Value ($)
+                          Value ({contractData.currency})
                         </label>
                         <div className="relative">
                           <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
@@ -923,6 +1558,11 @@ export function ContractAssignmentModal({
                             }
                             className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                           />
+                          {index === 0 && quoteResponse && (
+                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                              Pre-filled from quote amount
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1004,19 +1644,40 @@ export function ContractAssignmentModal({
                 </div>
               </div>
 
-              <label className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
-                <input
-                  type="checkbox"
-                  checked={signatureConsent}
-                  onChange={(e) => setSignatureConsent(e.target.checked)}
-                  className="mt-1 h-4 w-4"
-                />
-                <span>
-                  I confirm that both parties have signed in person and the
-                  captured photos were taken at the time of signing. I consent
-                  to store the signature and photo as proof of agreement.
-                </span>
-              </label>
+              <div>
+                <label className={`flex items-start gap-2 text-sm ${
+                  fieldErrors.signatures?.includes("Signature consent")
+                    ? "text-red-600 dark:text-red-400"
+                    : "text-gray-700 dark:text-gray-300"
+                }`}>
+                  <input
+                    type="checkbox"
+                    checked={signatureConsent}
+                    onChange={(e) => {
+                      setSignatureConsent(e.target.checked);
+                      if (fieldErrors.signatures?.includes("Signature consent")) {
+                        setFieldErrors({
+                          ...fieldErrors,
+                          signatures: fieldErrors.signatures.filter(s => s !== "Signature consent"),
+                        });
+                      }
+                    }}
+                    className={`mt-1 h-4 w-4 ${
+                      fieldErrors.signatures?.includes("Signature consent")
+                        ? "border-red-500"
+                        : ""
+                    }`}
+                  />
+                  <span>
+                    I confirm that both parties have signed in person and the
+                    captured photos were taken at the time of signing. I consent
+                    to store the signature and photo as proof of agreement.
+                  </span>
+                </label>
+                {fieldErrors.signatures?.includes("Signature consent") && (
+                  <p className="mt-1 text-xs text-red-500">Please accept the signature consent</p>
+                )}
+              </div>
             </div>
           )}
 
@@ -1179,8 +1840,22 @@ export function ContractAssignmentModal({
               </button>
             ) : (
               <button
-                type="submit"
+                type="button"
                 disabled={isSubmitting}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log("Assign Contract button clicked directly");
+                  // Manually trigger form submission
+                  const form = e.currentTarget.closest("form");
+                  if (form) {
+                    const submitEvent = new Event("submit", { bubbles: true, cancelable: true });
+                    form.dispatchEvent(submitEvent);
+                  } else {
+                    // Fallback: call handleSubmit directly
+                    handleSubmit(e as any);
+                  }
+                }}
                 className="flex items-center gap-2 rounded-lg bg-green-500 px-6 py-2 font-medium text-white transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50"
                 style={{ color: "#ffffff" }}
               >
