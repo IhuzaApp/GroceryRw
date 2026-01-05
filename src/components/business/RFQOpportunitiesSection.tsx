@@ -711,6 +711,7 @@ export function RFQOpportunitiesSection({
           }}
           quote={selectedQuote}
           rfqTitle={selectedRFQForQuote.title || "RFQ"}
+          rfqId={selectedRFQForQuote.id}
         />
       )}
     </div>
