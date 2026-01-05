@@ -5,6 +5,7 @@ import { X, Calendar, DollarSign, FileText, CheckCircle, Clock, User, Building, 
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../utils/formatCurrency";
+import { downloadContractAsPdf } from "../../lib/contractUtils";
 
 // Signature Pad Component
 function SignaturePad({
@@ -282,6 +283,7 @@ export function ContractDetailDrawer({
   const [contract, setContract] = useState<ContractData | null>(null);
   const [loading, setLoading] = useState(false);
   const [accepting, setAccepting] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [currentUserBusinessId, setCurrentUserBusinessId] = useState<string | null>(null);
   const [isSupplier, setIsSupplier] = useState(false);
   const [showAcceptModal, setShowAcceptModal] = useState(false);
@@ -416,6 +418,69 @@ export function ContractDetailDrawer({
     }
   };
 
+  const handleDownload = async () => {
+    if (!contract) {
+      toast.error("Contract data not available");
+      return;
+    }
+
+    if (contract.status !== "active") {
+      toast.error("Only active contracts can be downloaded");
+      return;
+    }
+
+    try {
+      setDownloading(true);
+      // Map contract data to match the expected interface
+      const contractDataForPdf = {
+        id: contract.id,
+        contractId: contract.contractId,
+        title: contract.title,
+        supplierName: contract.supplierName,
+        supplierCompany: contract.supplierCompany,
+        supplierEmail: contract.supplierEmail,
+        supplierPhone: contract.supplierPhone,
+        supplierAddress: contract.supplierAddress,
+        clientName: contract.clientName,
+        clientCompany: contract.clientCompany,
+        clientEmail: contract.clientEmail,
+        clientPhone: contract.clientPhone,
+        clientAddress: contract.clientAddress,
+        contractType: contract.contractType,
+        status: contract.status,
+        startDate: contract.startDate,
+        endDate: contract.endDate,
+        totalValue: contract.totalValue,
+        currency: contract.currency,
+        paymentSchedule: contract.paymentSchedule,
+        duration: contract.duration,
+        paymentTerms: contract.paymentTerms,
+        terminationTerms: contract.terminationTerms,
+        specialConditions: contract.specialConditions,
+        deliverables: contract.deliverables.map((del) => ({
+          id: del.id || `del-${Math.random()}`,
+          description: del.description,
+          dueDate: del.dueDate,
+          value: del.value,
+          status: del.status || "pending",
+        })),
+        doneAt: contract.doneAt || undefined,
+        updateOn: contract.updateOn || undefined,
+        clientSignature: contract.clientSignature,
+        clientPhoto: contract.clientPhoto,
+        supplierSignature: contract.supplierSignature,
+        supplierPhoto: contract.supplierPhoto,
+      };
+      await downloadContractAsPdf(contractDataForPdf);
+      toast.success("Contract downloaded successfully!");
+    } catch (error) {
+      console.error("Error downloading contract:", error);
+      toast.error("Failed to download contract");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     if (!dateString) return "Not specified";
     try {
@@ -470,7 +535,7 @@ export function ContractDetailDrawer({
               {/* Document Header */}
               <div className="mb-8 text-center">
                 <h1 className="mb-2 text-3xl font-bold text-gray-900 dark:text-white md:text-4xl">
-                  MASTER SERVICES AGREEMENT
+                  PLAS BUSINESS SERVICES AGREEMENT
                 </h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   (Supplier–Client)
@@ -492,7 +557,7 @@ export function ContractDetailDrawer({
               {/* Introduction */}
               <div className="mb-8 text-sm leading-relaxed text-gray-800 dark:text-gray-200">
                 <p className="mb-4">
-                  This Master Services Agreement ("Agreement") is entered into and becomes effective as of{" "}
+                  This PLAS Business Services Agreement ("Agreement") is entered into and becomes effective as of{" "}
                   <span className="font-semibold">{formatDate(contract.startDate)}</span> ("Effective Date"), by and between:
                 </p>
               </div>
@@ -1030,7 +1095,7 @@ export function ContractDetailDrawer({
               <div className="mt-12 flex flex-col gap-3 border-t-2 border-gray-300 pt-8 dark:border-gray-600 sm:flex-row sm:justify-end">
                 {isSupplier && contract.status === "waiting_for_supplier" && (
                   <button
-                    onClick={handleAcceptContract}
+                    onClick={() => setShowAcceptModal(true)}
                     disabled={accepting}
                     className="flex items-center justify-center gap-2 rounded-lg bg-green-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-green-700 disabled:opacity-50 dark:bg-green-700 dark:hover:bg-green-800"
                   >
@@ -1043,6 +1108,25 @@ export function ContractDetailDrawer({
                       <>
                         <Check className="h-5 w-5" />
                         Accept Contract
+                      </>
+                    )}
+                  </button>
+                )}
+                {contract.status === "active" && (
+                  <button
+                    onClick={handleDownload}
+                    disabled={downloading}
+                    className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-700 dark:hover:bg-blue-800"
+                  >
+                    {downloading ? (
+                      <>
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                        Downloading...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="h-5 w-5" />
+                        Download Contract
                       </>
                     )}
                   </button>
