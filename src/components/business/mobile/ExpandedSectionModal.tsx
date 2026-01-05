@@ -1663,12 +1663,86 @@ export function ExpandedSectionModal({
                 {sectionId === "orders" && (
                   <>
                     {loadingOrderDetails ? (
-                      <div className="flex items-center justify-center py-16">
-                        <div className="flex flex-col items-center space-y-4">
-                          <div className="h-12 w-12 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
-                          <p className="text-gray-600 dark:text-gray-400">
-                            Loading order details...
-                          </p>
+                      <div className="space-y-4 animate-pulse">
+                        {/* Order Header Skeleton */}
+                        <div className="relative mb-4 overflow-hidden rounded-2xl bg-gradient-to-br from-gray-200 to-gray-300 p-5 dark:from-gray-700 dark:to-gray-800">
+                          <div className="mb-4 flex items-start justify-between">
+                            <div className="flex-1 space-y-3">
+                              <div className="h-6 w-32 rounded bg-gray-300 dark:bg-gray-600"></div>
+                              <div className="h-8 w-48 rounded bg-gray-300 dark:bg-gray-600"></div>
+                              <div className="h-4 w-40 rounded bg-gray-300 dark:bg-gray-600"></div>
+                            </div>
+                            <div className="h-8 w-24 rounded-xl bg-gray-300 dark:bg-gray-600"></div>
+                          </div>
+                        </div>
+
+                        {/* Customer Information Skeleton */}
+                        <div className="mb-4 rounded-2xl border-2 border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+                          <div className="mb-4 flex items-center gap-3">
+                            <div className="h-12 w-12 rounded-xl bg-gray-200 dark:bg-gray-700"></div>
+                            <div className="h-6 w-40 rounded bg-gray-200 dark:bg-gray-700"></div>
+                          </div>
+                          <div className="space-y-3">
+                            {[1, 2, 3].map((i) => (
+                              <div
+                                key={i}
+                                className="flex items-center gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50"
+                              >
+                                <div className="h-10 w-10 rounded-lg bg-gray-200 dark:bg-gray-600"></div>
+                                <div className="flex-1 space-y-2">
+                                  <div className="h-3 w-16 rounded bg-gray-200 dark:bg-gray-600"></div>
+                                  <div className="h-4 w-32 rounded bg-gray-200 dark:bg-gray-600"></div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Order Items Skeleton */}
+                        <div className="mb-4 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+                          <div className="mb-3 h-6 w-32 rounded bg-gray-200 dark:bg-gray-700"></div>
+                          <div className="space-y-3">
+                            {[1, 2].map((i) => (
+                              <div
+                                key={i}
+                                className="flex gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-600 dark:bg-gray-700/50"
+                              >
+                                <div className="h-16 w-16 rounded-lg bg-gray-200 dark:bg-gray-600"></div>
+                                <div className="flex-1 space-y-2">
+                                  <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-600"></div>
+                                  <div className="flex items-center justify-between">
+                                    <div className="h-3 w-16 rounded bg-gray-200 dark:bg-gray-600"></div>
+                                    <div className="h-4 w-20 rounded bg-gray-200 dark:bg-gray-600"></div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Order Summary Skeleton */}
+                        <div className="mb-4 rounded-2xl border-2 border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+                          <div className="mb-4 flex items-center gap-3">
+                            <div className="h-12 w-12 rounded-xl bg-gray-200 dark:bg-gray-700"></div>
+                            <div className="h-6 w-32 rounded bg-gray-200 dark:bg-gray-700"></div>
+                          </div>
+                          <div className="space-y-3">
+                            {[1, 2].map((i) => (
+                              <div
+                                key={i}
+                                className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50"
+                              >
+                                <div className="h-4 w-32 rounded bg-gray-200 dark:bg-gray-600"></div>
+                                <div className="h-4 w-24 rounded bg-gray-200 dark:bg-gray-600"></div>
+                              </div>
+                            ))}
+                            <div className="mt-4 border-t-2 border-gray-200 pt-4 dark:border-gray-700">
+                              <div className="flex items-center justify-between rounded-xl bg-gray-200 p-4 dark:bg-gray-700">
+                                <div className="h-5 w-28 rounded bg-gray-300 dark:bg-gray-600"></div>
+                                <div className="h-6 w-32 rounded bg-gray-300 dark:bg-gray-600"></div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ) : orderDetails ? (
@@ -2173,13 +2247,29 @@ export function ExpandedSectionModal({
 
                     {/* Products Grid - Main Focus */}
                     {loadingProducts ? (
-                      <div className="flex items-center justify-center py-16">
-                        <div className="flex flex-col items-center space-y-4">
-                          <div className="h-12 w-12 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
-                          <p className="text-gray-600 dark:text-gray-400">
-                            Loading products...
-                          </p>
-                        </div>
+                      <div className="grid grid-cols-2 gap-3 animate-pulse">
+                        {[1, 2, 3, 4, 5, 6].map((i) => (
+                          <div
+                            key={i}
+                            className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+                          >
+                            {/* Image Skeleton */}
+                            <div className="aspect-square w-full bg-gray-200 dark:bg-gray-700"></div>
+                            {/* Content Skeleton */}
+                            <div className="flex flex-1 flex-col p-3 space-y-2">
+                              <div className="h-4 w-full rounded bg-gray-200 dark:bg-gray-700"></div>
+                              <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700"></div>
+                              <div className="mt-2 flex items-baseline gap-1">
+                                <div className="h-4 w-16 rounded bg-gray-200 dark:bg-gray-700"></div>
+                                <div className="h-3 w-12 rounded bg-gray-200 dark:bg-gray-700"></div>
+                              </div>
+                              <div className="mt-auto flex justify-center gap-2 pt-2">
+                                <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                                <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     ) : storeProducts.length === 0 ? (
                       <div className="py-16 text-center">
@@ -2482,13 +2572,29 @@ export function ExpandedSectionModal({
         {/* Content */}
         <div className="flex-1 overflow-y-auto pb-24">
           {loading ? (
-            <div className="flex items-center justify-center py-16">
-              <div className="flex flex-col items-center space-y-4">
-                <div className="h-12 w-12 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Loading {title}...
-                </p>
-              </div>
+            <div className="space-y-3 p-4 animate-pulse">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-800"
+                >
+                  <div className="mb-3 flex items-start justify-between">
+                    <div className="flex-1 space-y-2">
+                      <div className="h-5 w-3/4 rounded bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="h-4 w-1/2 rounded bg-gray-200 dark:bg-gray-700"></div>
+                    </div>
+                    <div className="h-6 w-16 rounded-md bg-gray-200 dark:bg-gray-700"></div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-3 w-full rounded bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="h-3 w-5/6 rounded bg-gray-200 dark:bg-gray-700"></div>
+                  </div>
+                  <div className="mt-3 flex gap-4">
+                    <div className="h-3 w-20 rounded bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="h-3 w-24 rounded bg-gray-200 dark:bg-gray-700"></div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : filteredItems.length === 0 ? (
             <div className="p-8 text-center">
