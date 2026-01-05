@@ -729,7 +729,7 @@ export function ContractAssignmentModal({
         supplierSignature: supplierSignature,
         supplierPhoto: supplierPhoto,
         proofAggred: signatureConsent,
-        status: "pending", // Contract starts as pending
+        status: "waiting_for_supplier", // Contract starts as waiting for supplier to accept
       };
 
       console.log("API Request Body:", requestBody);

@@ -263,7 +263,7 @@ export default async function handler(
       supplierPhoto: supplierPhoto || "",
       proofAggred: proofAggred || false,
       done_at: doneAt || "",
-      status: status,
+      status: status || "waiting_for_supplier", // Default to waiting_for_supplier if not provided
     });
 
     // Update the quote response status to "accepted"
