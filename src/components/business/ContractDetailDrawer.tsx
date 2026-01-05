@@ -1,10 +1,221 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X, Calendar, DollarSign, FileText, CheckCircle, Clock, User, Building, Download, Check } from "lucide-react";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../utils/formatCurrency";
+
+// Signature Pad Component
+function SignaturePad({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (dataUrl: string) => void;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const isDrawingRef = useRef(false);
+  const lastPosRef = useRef<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.scale(dpr, dpr);
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#111827";
+  }, []);
+
+  const getPos = (
+    e: React.MouseEvent | React.TouchEvent,
+    canvas: HTMLCanvasElement
+  ) => {
+    const rect = canvas.getBoundingClientRect();
+    if ("touches" in e && e.touches[0]) {
+      return {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top,
+      };
+    }
+    const me = e as React.MouseEvent;
+    return { x: me.clientX - rect.left, y: me.clientY - rect.top };
+  };
+
+  const start = (e: React.MouseEvent | React.TouchEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    isDrawingRef.current = true;
+    lastPosRef.current = getPos(e, canvas);
+  };
+
+  const move = (e: React.MouseEvent | React.TouchEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas || !isDrawingRef.current) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const pos = getPos(e, canvas);
+    const last = lastPosRef.current;
+    if (!last) return;
+    ctx.beginPath();
+    ctx.moveTo(last.x, last.y);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+    lastPosRef.current = pos;
+  };
+
+  const end = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    isDrawingRef.current = false;
+    lastPosRef.current = null;
+    onChange(canvas.toDataURL("image/png"));
+  };
+
+  const clear = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    onChange("");
+  };
+
+  return (
+    <div>
+      <div
+        className="rounded-lg border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800"
+        style={{ width: "100%", height: 160 }}
+      >
+        <canvas
+          ref={canvasRef}
+          className="h-full w-full touch-none"
+          onMouseDown={start}
+          onMouseMove={move}
+          onMouseUp={end}
+          onMouseLeave={end}
+          onTouchStart={start}
+          onTouchMove={move}
+          onTouchEnd={end}
+        />
+      </div>
+      <div className="mt-2 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={clear}
+          className="rounded-lg border px-3 py-1 text-sm"
+        >
+          Clear
+        </button>
+        {value && (
+          <span className="text-xs text-green-600">Signature captured</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Photo Capture Component
+function PhotoCapture({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (dataUrl: string) => void;
+}) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [streamReady, setStreamReady] = useState(false);
+
+  useEffect(() => {
+    let stream: MediaStream;
+    const init = async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play();
+          setStreamReady(true);
+        }
+      } catch (e) {
+        console.error("Camera error", e);
+        toast.error("Failed to access camera");
+      }
+    };
+    init();
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach((t) => t.stop());
+      }
+    };
+  }, []);
+
+  const capture = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
+    const width = video.videoWidth;
+    const height = video.videoHeight;
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0, width, height);
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+    onChange(dataUrl);
+  };
+
+  return (
+    <div>
+      {!value && (
+        <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black/10">
+          <video
+            ref={videoRef}
+            className="h-full w-full object-cover"
+            playsInline
+            muted
+          />
+        </div>
+      )}
+      {value && (
+        <img
+          src={value}
+          alt="Captured"
+          className="aspect-video w-full rounded-lg object-cover"
+        />
+      )}
+      <div className="mt-2 flex items-center gap-2">
+        {!value && (
+          <button
+            type="button"
+            onClick={capture}
+            disabled={!streamReady}
+            className="rounded-lg border px-3 py-1 text-sm disabled:opacity-50"
+          >
+            Capture Photo
+          </button>
+        )}
+        {value && (
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            className="rounded-lg border px-3 py-1 text-sm"
+          >
+            Retake
+          </button>
+        )}
+        <canvas ref={canvasRef} className="hidden" />
+      </div>
+    </div>
+  );
+}
 
 interface ContractDetailDrawerProps {
   isOpen: boolean;
@@ -73,6 +284,10 @@ export function ContractDetailDrawer({
   const [accepting, setAccepting] = useState(false);
   const [currentUserBusinessId, setCurrentUserBusinessId] = useState<string | null>(null);
   const [isSupplier, setIsSupplier] = useState(false);
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
+  const [supplierSignature, setSupplierSignature] = useState("");
+  const [supplierPhoto, setSupplierPhoto] = useState("");
+  const [termsAgreed, setTermsAgreed] = useState(false);
 
   useEffect(() => {
     if (isOpen && contractId) {
@@ -143,8 +358,28 @@ export function ContractDetailDrawer({
     return Math.round((elapsed / total) * 100);
   };
 
-  const handleAcceptContract = async () => {
+  const handleAcceptContract = () => {
+    setShowAcceptModal(true);
+  };
+
+  const handleSubmitAcceptance = async () => {
     if (!contractId) return;
+
+    // Validate required fields
+    if (!supplierSignature) {
+      toast.error("Please provide your signature");
+      return;
+    }
+
+    if (!supplierPhoto) {
+      toast.error("Please capture your photo");
+      return;
+    }
+
+    if (!termsAgreed) {
+      toast.error("Please agree to the terms and conditions");
+      return;
+    }
 
     try {
       setAccepting(true);
@@ -155,12 +390,18 @@ export function ContractDetailDrawer({
         },
         body: JSON.stringify({
           contractId: contractId,
+          supplierSignature: supplierSignature,
+          supplierPhoto: supplierPhoto,
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
         toast.success("Contract accepted successfully!");
+        setShowAcceptModal(false);
+        setSupplierSignature("");
+        setSupplierPhoto("");
+        setTermsAgreed(false);
         await fetchContractDetails();
         onContractUpdated?.();
       } else {
@@ -823,6 +1064,118 @@ export function ContractDetailDrawer({
           </div>
         )}
       </div>
+
+      {/* Supplier Acceptance Modal */}
+      {showAcceptModal && (
+        <>
+          <div
+            className="fixed inset-0 z-[60] bg-black/50 transition-opacity"
+            onClick={() => {
+              setShowAcceptModal(false);
+              setSupplierSignature("");
+              setSupplierPhoto("");
+              setTermsAgreed(false);
+            }}
+          />
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-white shadow-2xl dark:bg-gray-900">
+              <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4 dark:border-gray-700 dark:bg-gray-900">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Accept Contract
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowAcceptModal(false);
+                    setSupplierSignature("");
+                    setSupplierPhoto("");
+                    setTermsAgreed(false);
+                  }}
+                  className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="p-6">
+                <div className="mb-6 space-y-6">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    To accept this contract, please provide your signature and capture a photo. By accepting, you agree to all terms and conditions outlined in this contract.
+                  </p>
+
+                  {/* Supplier Signature */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-900 dark:text-white">
+                      Your Signature <span className="text-red-500">*</span>
+                    </label>
+                    <SignaturePad
+                      value={supplierSignature}
+                      onChange={setSupplierSignature}
+                    />
+                  </div>
+
+                  {/* Supplier Photo */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-900 dark:text-white">
+                      Your Photo <span className="text-red-500">*</span>
+                    </label>
+                    <PhotoCapture
+                      value={supplierPhoto}
+                      onChange={setSupplierPhoto}
+                    />
+                  </div>
+
+                  {/* Terms Agreement */}
+                  <div className="mt-6">
+                    <label className="flex items-start gap-3 text-sm text-gray-700 dark:text-gray-300">
+                      <input
+                        type="checkbox"
+                        checked={termsAgreed}
+                        onChange={(e) => setTermsAgreed(e.target.checked)}
+                        className="mt-1 h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 dark:border-gray-600"
+                      />
+                      <span>
+                        I have read and agree to all terms and conditions of this contract. I understand that by signing and accepting this contract, I am legally bound to fulfill all obligations as the Supplier.
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col gap-3 border-t border-gray-200 pt-6 dark:border-gray-700 sm:flex-row sm:justify-end">
+                  <button
+                    onClick={() => {
+                      setShowAcceptModal(false);
+                      setSupplierSignature("");
+                      setSupplierPhoto("");
+                      setTermsAgreed(false);
+                    }}
+                    className="rounded-lg border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSubmitAcceptance}
+                    disabled={accepting || !supplierSignature || !supplierPhoto || !termsAgreed}
+                    className="flex items-center justify-center gap-2 rounded-lg bg-green-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-green-700 dark:hover:bg-green-800"
+                  >
+                    {accepting ? (
+                      <>
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                        Accepting...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="h-5 w-5" />
+                        Accept Contract
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }
