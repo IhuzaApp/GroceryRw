@@ -122,7 +122,8 @@ export default async function handler(
     if (contract.status !== "waiting_for_supplier") {
       return res.status(400).json({
         error: "Contract cannot be accepted",
-        message: "Only contracts with status 'waiting_for_supplier' can be accepted",
+        message:
+          "Only contracts with status 'waiting_for_supplier' can be accepted",
       });
     }
 
@@ -179,5 +180,3 @@ export default async function handler(
     });
   }
 }
-
-

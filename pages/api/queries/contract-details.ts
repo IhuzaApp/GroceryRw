@@ -181,7 +181,7 @@ export default async function handler(
         const GET_QUOTE_BY_RFQ = gql`
           query GetQuoteByRFQ($rfqId: uuid!) {
             BusinessQoute(
-              where: { 
+              where: {
                 businessRfq_id: { _eq: $rfqId }
                 status: { _in: ["accepted", "pending"] }
               }
@@ -243,9 +243,10 @@ export default async function handler(
         }>(GET_QUOTE_BY_RFQ, {
           rfqId: contract.rfq_response_id,
         });
-        quoteInfo = quoteResult.BusinessQoute && quoteResult.BusinessQoute.length > 0 
-          ? quoteResult.BusinessQoute[0] 
-          : null;
+        quoteInfo =
+          quoteResult.BusinessQoute && quoteResult.BusinessQoute.length > 0
+            ? quoteResult.BusinessQoute[0]
+            : null;
       } catch (error) {
         console.error("Error fetching quote:", error);
       }
@@ -256,7 +257,7 @@ export default async function handler(
     // Supplier is the one who responded to the quote (BusinessQoute.business_account)
     const clientAccount = rfq?.business_account || contract.business_account;
     const supplierAccount = quoteInfo?.business_account || null;
-    
+
     // Get additional client info from RFQ if available
     const clientContactName = rfq?.contact_name || null;
     const clientContactEmail = rfq?.email || null;
@@ -273,7 +274,8 @@ export default async function handler(
       supplierEmail: supplierAccount?.business_email || "",
       supplierPhone: supplierAccount?.business_phone || "",
       supplierAddress: supplierAccount?.business_location || "",
-      clientName: clientAccount?.business_name || clientContactName || "Client Company",
+      clientName:
+        clientAccount?.business_name || clientContactName || "Client Company",
       clientCompany: clientAccount?.business_name || "Client Company",
       clientEmail: clientAccount?.business_email || clientContactEmail || "",
       clientPhone: clientAccount?.business_phone || clientContactPhone || "",
@@ -326,5 +328,3 @@ export default async function handler(
     });
   }
 }
-
-

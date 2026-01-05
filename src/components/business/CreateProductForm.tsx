@@ -311,7 +311,7 @@ export function CreateProductForm({
         <div className="border-b border-gray-200 bg-gray-50 px-6 py-5 dark:border-gray-700 dark:bg-gray-800/50">
           <div className="flex items-center justify-between overflow-x-auto">
             {steps.map((step, index) => (
-              <div key={step.id} className="flex items-center flex-shrink-0">
+              <div key={step.id} className="flex flex-shrink-0 items-center">
                 <div className="flex flex-col items-center">
                   <div
                     className={`relative flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold shadow-sm transition-all duration-300 ${

@@ -69,7 +69,7 @@ export function ContractsSection({
         setContracts(data.contracts || []);
       } else {
         console.error("Failed to fetch contracts");
-      setContracts([]);
+        setContracts([]);
       }
     } catch (error) {
       console.error("Error fetching contracts:", error);
@@ -223,7 +223,8 @@ export function ContractsSection({
                 No contracts yet
               </h3>
               <p className="mb-4 text-sm text-gray-600 dark:text-gray-400 sm:mb-6 sm:text-base">
-                Contracts will appear here once you accept quotes and create contracts
+                Contracts will appear here once you accept quotes and create
+                contracts
               </p>
               <button
                 onClick={handleViewAcceptedQuotes}

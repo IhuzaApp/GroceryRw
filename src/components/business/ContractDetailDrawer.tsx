@@ -1,7 +1,18 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { X, Calendar, DollarSign, FileText, CheckCircle, Clock, User, Building, Download, Check } from "lucide-react";
+import {
+  X,
+  Calendar,
+  DollarSign,
+  FileText,
+  CheckCircle,
+  Clock,
+  User,
+  Building,
+  Download,
+  Check,
+} from "lucide-react";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../utils/formatCurrency";
@@ -285,7 +296,9 @@ export function ContractDetailDrawer({
   const [loading, setLoading] = useState(false);
   const [accepting, setAccepting] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const [currentUserBusinessId, setCurrentUserBusinessId] = useState<string | null>(null);
+  const [currentUserBusinessId, setCurrentUserBusinessId] = useState<
+    string | null
+  >(null);
   const [isSupplier, setIsSupplier] = useState(false);
   const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [supplierSignature, setSupplierSignature] = useState("");
@@ -305,7 +318,7 @@ export function ContractDetailDrawer({
     try {
       const response = await fetch("/api/queries/check-business-account");
       const data = await response.json();
-      
+
       if (data.hasAccount && data.account?.id) {
         const userBusinessId = data.account.id;
         setCurrentUserBusinessId(userBusinessId);
@@ -322,11 +335,13 @@ export function ContractDetailDrawer({
 
     try {
       setLoading(true);
-      const response = await fetch(`/api/queries/contract-details?id=${contractId}`);
+      const response = await fetch(
+        `/api/queries/contract-details?id=${contractId}`
+      );
       if (response.ok) {
         const data = await response.json();
         setContract(data.contract);
-        
+
         // Check if current user is the supplier
         const userBusinessId = await checkUserRole();
         if (userBusinessId && data.contract.supplierId === userBusinessId) {
@@ -347,17 +362,17 @@ export function ContractDetailDrawer({
 
   const calculateProgress = (startDate: string, endDate: string): number => {
     if (!startDate || !endDate) return 0;
-    
+
     const start = new Date(startDate);
     const end = new Date(endDate);
     const now = new Date();
-    
+
     if (now < start) return 0;
     if (now > end) return 100;
-    
+
     const total = end.getTime() - start.getTime();
     const elapsed = now.getTime() - start.getTime();
-    
+
     return Math.round((elapsed / total) * 100);
   };
 
@@ -496,7 +511,9 @@ export function ContractDetailDrawer({
     }
   };
 
-  const progress = contract ? calculateProgress(contract.startDate, contract.endDate) : 0;
+  const progress = contract
+    ? calculateProgress(contract.startDate, contract.endDate)
+    : 0;
 
   if (!isOpen) return null;
 
@@ -561,7 +578,7 @@ export function ContractDetailDrawer({
               </div>
 
               {/* Contract Sections Skeleton */}
-              <div className="space-y-6 animate-pulse">
+              <div className="animate-pulse space-y-6">
                 {[1, 2, 3, 4, 5].map((section) => (
                   <div key={section}>
                     <div className="mb-2 h-4 w-64 rounded bg-gray-300 dark:bg-gray-700 sm:h-5"></div>
@@ -630,19 +647,25 @@ export function ContractDetailDrawer({
               <div className="mb-6 border-b-2 border-gray-300 pb-3 dark:border-gray-600 sm:mb-8 sm:pb-4">
                 <p className="text-[10px] text-gray-500 dark:text-gray-400 sm:text-xs">
                   <span className="font-semibold">Contract Tracking ID:</span>{" "}
-                  <span className="font-mono break-all">{contract.id}</span>
+                  <span className="break-all font-mono">{contract.id}</span>
                 </p>
                 <p className="mt-1 text-[10px] text-gray-500 dark:text-gray-400 sm:text-xs">
                   <span className="font-semibold">Status:</span>{" "}
-                  <span className="capitalize">{contract.status.replace("_", " ")}</span>
+                  <span className="capitalize">
+                    {contract.status.replace("_", " ")}
+                  </span>
                 </p>
               </div>
 
               {/* Introduction */}
               <div className="mb-6 text-xs leading-relaxed text-gray-800 dark:text-gray-200 sm:mb-8 sm:text-sm">
                 <p className="mb-3 sm:mb-4">
-                  This PLAS Business Services Agreement ("Agreement") is entered into and becomes effective as of{" "}
-                  <span className="font-semibold">{formatDate(contract.startDate)}</span> ("Effective Date"), by and between:
+                  This PLAS Business Services Agreement ("Agreement") is entered
+                  into and becomes effective as of{" "}
+                  <span className="font-semibold">
+                    {formatDate(contract.startDate)}
+                  </span>{" "}
+                  ("Effective Date"), by and between:
                 </p>
               </div>
 
@@ -655,7 +678,9 @@ export function ContractDetailDrawer({
                   <div className="ml-2 space-y-1 text-[11px] leading-relaxed text-gray-800 dark:text-gray-200 sm:ml-4 sm:text-xs md:text-sm">
                     <p className="break-words">
                       <span className="font-semibold">Legal Name:</span>{" "}
-                      {contract.supplierCompany || contract.supplierName || "[Supplier Legal Name]"}
+                      {contract.supplierCompany ||
+                        contract.supplierName ||
+                        "[Supplier Legal Name]"}
                     </p>
                     <p className="break-words">
                       <span className="font-semibold">Registered Address:</span>{" "}
@@ -667,7 +692,8 @@ export function ContractDetailDrawer({
                     </p>
                     {contract.supplierPhone && (
                       <p className="break-words">
-                        <span className="font-semibold">Phone:</span> {contract.supplierPhone}
+                        <span className="font-semibold">Phone:</span>{" "}
+                        {contract.supplierPhone}
                       </p>
                     )}
                   </div>
@@ -683,7 +709,9 @@ export function ContractDetailDrawer({
                   <div className="ml-2 space-y-1 text-[11px] leading-relaxed text-gray-800 dark:text-gray-200 sm:ml-4 sm:text-xs md:text-sm">
                     <p className="break-words">
                       <span className="font-semibold">Legal Name:</span>{" "}
-                      {contract.clientCompany || contract.clientName || "[Client Legal Name]"}
+                      {contract.clientCompany ||
+                        contract.clientName ||
+                        "[Client Legal Name]"}
                     </p>
                     <p className="break-words">
                       <span className="font-semibold">Business Address:</span>{" "}
@@ -695,15 +723,19 @@ export function ContractDetailDrawer({
                     </p>
                     {contract.clientPhone && (
                       <p className="break-words">
-                        <span className="font-semibold">Phone:</span> {contract.clientPhone}
+                        <span className="font-semibold">Phone:</span>{" "}
+                        {contract.clientPhone}
                       </p>
                     )}
                   </div>
-                  <p className="mt-1 text-[11px] italic text-gray-700 dark:text-gray-300 sm:mt-2 sm:text-xs md:text-sm">("Client")</p>
+                  <p className="mt-1 text-[11px] italic text-gray-700 dark:text-gray-300 sm:mt-2 sm:text-xs md:text-sm">
+                    ("Client")
+                  </p>
                 </div>
 
                 <p className="text-[11px] leading-relaxed text-gray-800 dark:text-gray-200 sm:text-xs md:text-sm">
-                  Supplier and Client may be referred to individually as a "Party" and collectively as the "Parties."
+                  Supplier and Client may be referred to individually as a
+                  "Party" and collectively as the "Parties."
                 </p>
               </div>
 
@@ -715,7 +747,12 @@ export function ContractDetailDrawer({
                     1. PURPOSE OF AGREEMENT
                   </h3>
                   <p className="ml-2 sm:ml-4">
-                    This Agreement establishes the general terms and conditions under which Supplier will provide services to Client. Specific services, pricing, timelines, and deliverables may be further detailed in Service Orders, Statements of Work (SOWs), or online checkout descriptions, which shall be incorporated into this Agreement by reference.
+                    This Agreement establishes the general terms and conditions
+                    under which Supplier will provide services to Client.
+                    Specific services, pricing, timelines, and deliverables may
+                    be further detailed in Service Orders, Statements of Work
+                    (SOWs), or online checkout descriptions, which shall be
+                    incorporated into this Agreement by reference.
                   </p>
                 </div>
 
@@ -726,39 +763,60 @@ export function ContractDetailDrawer({
                   </h3>
                   <div className="ml-2 space-y-2 sm:ml-4">
                     <div>
-                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">2.1 Services Description</p>
+                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">
+                        2.1 Services Description
+                      </p>
                       <p className="mt-1">
-                        Supplier agrees to provide professional services including, but not limited to:
+                        Supplier agrees to provide professional services
+                        including, but not limited to:
                       </p>
                       <ul className="ml-3 mt-2 list-disc space-y-1 sm:ml-4 md:ml-6">
-                        <li className="break-words">{contract.title || "[Detailed description of services]"}</li>
+                        <li className="break-words">
+                          {contract.title ||
+                            "[Detailed description of services]"}
+                        </li>
                         {contract.estimatedQuantity && (
-                          <li className="break-words">Quantity: {contract.estimatedQuantity}</li>
+                          <li className="break-words">
+                            Quantity: {contract.estimatedQuantity}
+                          </li>
                         )}
                         {contract.rfqDescription && (
-                          <li className="break-words">{contract.rfqDescription}</li>
+                          <li className="break-words">
+                            {contract.rfqDescription}
+                          </li>
                         )}
-                        {contract.deliverables && contract.deliverables.length > 0 && (
-                          <>
-                            {contract.deliverables.map((del, idx) => (
-                              <li key={idx} className="break-words">
-                                {del.description} - Due: {formatDate(del.dueDate)} ({formatCurrencySync(del.value)} {contract.currency})
-                              </li>
-                            ))}
-                          </>
-                        )}
+                        {contract.deliverables &&
+                          contract.deliverables.length > 0 && (
+                            <>
+                              {contract.deliverables.map((del, idx) => (
+                                <li key={idx} className="break-words">
+                                  {del.description} - Due:{" "}
+                                  {formatDate(del.dueDate)} (
+                                  {formatCurrencySync(del.value)}{" "}
+                                  {contract.currency})
+                                </li>
+                              ))}
+                            </>
+                          )}
                       </ul>
                     </div>
                     <div>
-                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">2.2 Changes to Services</p>
+                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">
+                        2.2 Changes to Services
+                      </p>
                       <p className="mt-1">
-                        Any modification, expansion, or reduction of Services must be agreed upon in writing or accepted electronically via the website.
+                        Any modification, expansion, or reduction of Services
+                        must be agreed upon in writing or accepted
+                        electronically via the website.
                       </p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">2.3 No Guaranteed Results</p>
+                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">
+                        2.3 No Guaranteed Results
+                      </p>
                       <p className="mt-1">
-                        Supplier does not guarantee specific results unless explicitly stated in writing.
+                        Supplier does not guarantee specific results unless
+                        explicitly stated in writing.
                       </p>
                     </div>
                   </div>
@@ -771,16 +829,24 @@ export function ContractDetailDrawer({
                   </h3>
                   <div className="ml-2 space-y-2 sm:ml-4">
                     <div>
-                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">3.1 Initial Term</p>
+                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">
+                        3.1 Initial Term
+                      </p>
                       <p className="mt-1">
-                        This Agreement shall commence on the Effective Date ({formatDate(contract.startDate)}) and continue until {formatDate(contract.endDate)}.
+                        This Agreement shall commence on the Effective Date (
+                        {formatDate(contract.startDate)}) and continue until{" "}
+                        {formatDate(contract.endDate)}.
                         {contract.duration && ` Duration: ${contract.duration}`}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">3.2 Renewal</p>
+                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">
+                        3.2 Renewal
+                      </p>
                       <p className="mt-1">
-                        Unless otherwise stated, this Agreement shall automatically renew on a monthly basis unless terminated.
+                        Unless otherwise stated, this Agreement shall
+                        automatically renew on a monthly basis unless
+                        terminated.
                       </p>
                     </div>
                   </div>
@@ -793,30 +859,48 @@ export function ContractDetailDrawer({
                   </h3>
                   <div className="ml-2 space-y-2 sm:ml-4">
                     <div>
-                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">4.1 Fees</p>
+                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">
+                        4.1 Fees
+                      </p>
                       <p className="mt-1">
-                        Client agrees to pay Supplier the fees of <span className="font-semibold">{formatCurrencySync(contract.totalValue)} {contract.currency}</span> as displayed on the website, invoice, or agreed Service Order.
+                        Client agrees to pay Supplier the fees of{" "}
+                        <span className="font-semibold">
+                          {formatCurrencySync(contract.totalValue)}{" "}
+                          {contract.currency}
+                        </span>{" "}
+                        as displayed on the website, invoice, or agreed Service
+                        Order.
                       </p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">4.2 Payment Terms</p>
-                      <p className="mt-1">
-                        {contract.paymentTerms || "Payments are due as specified in the payment schedule."}
+                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">
+                        4.2 Payment Terms
                       </p>
                       <p className="mt-1">
-                        Payment Schedule: {contract.paymentSchedule || "Not specified"}
+                        {contract.paymentTerms ||
+                          "Payments are due as specified in the payment schedule."}
                       </p>
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">4.3 Late Payments</p>
                       <p className="mt-1">
-                        Overdue payments may incur late fees and suspension of Services until payment is received.
+                        Payment Schedule:{" "}
+                        {contract.paymentSchedule || "Not specified"}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">4.4 Taxes</p>
+                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">
+                        4.3 Late Payments
+                      </p>
                       <p className="mt-1">
-                        Client is responsible for all applicable taxes, duties, or levies, excluding Supplier's income tax.
+                        Overdue payments may incur late fees and suspension of
+                        Services until payment is received.
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">
+                        4.4 Taxes
+                      </p>
+                      <p className="mt-1">
+                        Client is responsible for all applicable taxes, duties,
+                        or levies, excluding Supplier's income tax.
                       </p>
                     </div>
                   </div>
@@ -828,7 +912,11 @@ export function ContractDetailDrawer({
                     5. CLIENT OBLIGATIONS
                   </h3>
                   <p className="ml-2 sm:ml-4">
-                    Client agrees to: provide accurate, complete, and lawful information; cooperate reasonably with Supplier; ensure it has rights to all materials provided; and not use Services for unlawful, fraudulent, or abusive purposes. Failure to meet obligations may delay or suspend Services.
+                    Client agrees to: provide accurate, complete, and lawful
+                    information; cooperate reasonably with Supplier; ensure it
+                    has rights to all materials provided; and not use Services
+                    for unlawful, fraudulent, or abusive purposes. Failure to
+                    meet obligations may delay or suspend Services.
                   </p>
                 </div>
 
@@ -838,7 +926,9 @@ export function ContractDetailDrawer({
                     6. SUPPLIER OBLIGATIONS
                   </h3>
                   <p className="ml-2 sm:ml-4">
-                    Supplier agrees to: perform Services professionally and in good faith; use reasonable skill and care; and comply with applicable laws and regulations.
+                    Supplier agrees to: perform Services professionally and in
+                    good faith; use reasonable skill and care; and comply with
+                    applicable laws and regulations.
                   </p>
                 </div>
 
@@ -848,7 +938,9 @@ export function ContractDetailDrawer({
                     7. INDEPENDENT CONTRACTOR STATUS
                   </h3>
                   <p className="ml-2 sm:ml-4">
-                    Supplier is an independent contractor. Nothing in this Agreement creates an employment relationship, partnership, joint venture, or agency.
+                    Supplier is an independent contractor. Nothing in this
+                    Agreement creates an employment relationship, partnership,
+                    joint venture, or agency.
                   </p>
                 </div>
 
@@ -859,21 +951,31 @@ export function ContractDetailDrawer({
                   </h3>
                   <div className="ml-2 space-y-2 sm:ml-4">
                     <div>
-                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">8.1 Confidential Information</p>
+                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">
+                        8.1 Confidential Information
+                      </p>
                       <p className="mt-1">
-                        Includes business data, pricing, trade secrets, client data, technical information, and non-public information.
+                        Includes business data, pricing, trade secrets, client
+                        data, technical information, and non-public information.
                       </p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">8.2 Obligations</p>
+                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">
+                        8.2 Obligations
+                      </p>
                       <p className="mt-1">
-                        Each Party agrees to protect confidential information, not disclose it to third parties, and use it solely for purposes of this Agreement.
+                        Each Party agrees to protect confidential information,
+                        not disclose it to third parties, and use it solely for
+                        purposes of this Agreement.
                       </p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">8.3 Survival</p>
+                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">
+                        8.3 Survival
+                      </p>
                       <p className="mt-1">
-                        Confidentiality obligations survive termination for 3 years.
+                        Confidentiality obligations survive termination for 3
+                        years.
                       </p>
                     </div>
                   </div>
@@ -885,8 +987,14 @@ export function ContractDetailDrawer({
                     9. DATA PROTECTION & PRIVACY
                   </h3>
                   <div className="ml-2 space-y-2 sm:ml-4">
-                    <p>9.1 Client acknowledges that Supplier may collect and process data in accordance with its Privacy Policy.</p>
-                    <p>9.2 Client warrants compliance with all data protection laws applicable to Client-provided data.</p>
+                    <p>
+                      9.1 Client acknowledges that Supplier may collect and
+                      process data in accordance with its Privacy Policy.
+                    </p>
+                    <p>
+                      9.2 Client warrants compliance with all data protection
+                      laws applicable to Client-provided data.
+                    </p>
                   </div>
                 </div>
 
@@ -897,21 +1005,32 @@ export function ContractDetailDrawer({
                   </h3>
                   <div className="ml-2 space-y-2 sm:ml-4">
                     <div>
-                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">10.1 Pre-Existing IP</p>
+                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">
+                        10.1 Pre-Existing IP
+                      </p>
                       <p className="mt-1">
-                        Each Party retains ownership of intellectual property owned prior to this Agreement.
+                        Each Party retains ownership of intellectual property
+                        owned prior to this Agreement.
                       </p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">10.2 Work Product</p>
+                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">
+                        10.2 Work Product
+                      </p>
                       <p className="mt-1">
-                        Unless otherwise stated: Supplier retains ownership of tools, methods, and frameworks. Client receives a limited, non-transferable license to use deliverables for internal business purposes.
+                        Unless otherwise stated: Supplier retains ownership of
+                        tools, methods, and frameworks. Client receives a
+                        limited, non-transferable license to use deliverables
+                        for internal business purposes.
                       </p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">10.3 Restrictions</p>
+                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">
+                        10.3 Restrictions
+                      </p>
                       <p className="mt-1">
-                        Client may not resell, sublicense, or reverse engineer Supplier materials.
+                        Client may not resell, sublicense, or reverse engineer
+                        Supplier materials.
                       </p>
                     </div>
                   </div>
@@ -923,7 +1042,9 @@ export function ContractDetailDrawer({
                     11. REPRESENTATIONS AND WARRANTIES
                   </h3>
                   <p className="ml-2 sm:ml-4">
-                    Each Party represents that: it has authority to enter this Agreement; execution does not violate other agreements; and Services will not knowingly infringe third-party rights.
+                    Each Party represents that: it has authority to enter this
+                    Agreement; execution does not violate other agreements; and
+                    Services will not knowingly infringe third-party rights.
                   </p>
                 </div>
 
@@ -933,7 +1054,9 @@ export function ContractDetailDrawer({
                     12. DISCLAIMER OF WARRANTIES
                   </h3>
                   <p className="ml-2 sm:ml-4">
-                    Except as expressly stated, Supplier disclaims all warranties, including implied warranties of merchantability and fitness for a particular purpose.
+                    Except as expressly stated, Supplier disclaims all
+                    warranties, including implied warranties of merchantability
+                    and fitness for a particular purpose.
                   </p>
                 </div>
 
@@ -943,7 +1066,10 @@ export function ContractDetailDrawer({
                     13. LIMITATION OF LIABILITY
                   </h3>
                   <p className="ml-2 sm:ml-4">
-                    To the maximum extent permitted by law: Supplier shall not be liable for indirect, incidental, or consequential damages. Total liability shall not exceed fees paid in the preceding 12 months.
+                    To the maximum extent permitted by law: Supplier shall not
+                    be liable for indirect, incidental, or consequential
+                    damages. Total liability shall not exceed fees paid in the
+                    preceding 12 months.
                   </p>
                 </div>
 
@@ -953,9 +1079,13 @@ export function ContractDetailDrawer({
                     14. INDEMNIFICATION
                   </h3>
                   <div className="ml-4">
-                    <p className="text-[11px] font-semibold sm:text-xs md:text-sm">14.1 By Client</p>
+                    <p className="text-[11px] font-semibold sm:text-xs md:text-sm">
+                      14.1 By Client
+                    </p>
                     <p className="mt-1">
-                      Client agrees to indemnify Supplier against claims arising from: Client's misuse of Services; Client-provided content; and violation of laws or third-party rights.
+                      Client agrees to indemnify Supplier against claims arising
+                      from: Client's misuse of Services; Client-provided
+                      content; and violation of laws or third-party rights.
                     </p>
                   </div>
                 </div>
@@ -967,26 +1097,38 @@ export function ContractDetailDrawer({
                   </h3>
                   <div className="ml-2 space-y-2 sm:ml-4">
                     <div>
-                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">15.1 Termination for Convenience</p>
+                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">
+                        15.1 Termination for Convenience
+                      </p>
                       <p className="mt-1">
                         Either Party may terminate with 30 days' notice.
                       </p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">15.2 Termination for Cause</p>
+                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">
+                        15.2 Termination for Cause
+                      </p>
                       <p className="mt-1">
-                        Immediate termination if the other Party: breaches this Agreement; fails to pay fees; or engages in illegal activity.
+                        Immediate termination if the other Party: breaches this
+                        Agreement; fails to pay fees; or engages in illegal
+                        activity.
                       </p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">15.3 Effect of Termination</p>
+                      <p className="text-[11px] font-semibold sm:text-xs md:text-sm">
+                        15.3 Effect of Termination
+                      </p>
                       <p className="mt-1">
-                        Outstanding payments become immediately due. Licenses granted to Client terminate. Confidentiality obligations remain.
+                        Outstanding payments become immediately due. Licenses
+                        granted to Client terminate. Confidentiality obligations
+                        remain.
                       </p>
                     </div>
                     {contract.terminationTerms && (
                       <div className="mt-2">
-                        <p className="text-[11px] font-semibold sm:text-xs md:text-sm">Additional Termination Terms:</p>
+                        <p className="text-[11px] font-semibold sm:text-xs md:text-sm">
+                          Additional Termination Terms:
+                        </p>
                         <p className="mt-1">{contract.terminationTerms}</p>
                       </div>
                     )}
@@ -999,7 +1141,9 @@ export function ContractDetailDrawer({
                     16. SUSPENSION OF SERVICES
                   </h3>
                   <p className="ml-2 sm:ml-4">
-                    Supplier may suspend Services without liability if: payments are overdue; Client violates this Agreement; or legal or security risks arise.
+                    Supplier may suspend Services without liability if: payments
+                    are overdue; Client violates this Agreement; or legal or
+                    security risks arise.
                   </p>
                 </div>
 
@@ -1009,7 +1153,9 @@ export function ContractDetailDrawer({
                     17. FORCE MAJEURE
                   </h3>
                   <p className="ml-2 sm:ml-4">
-                    Neither Party shall be liable for delays caused by events beyond reasonable control, including acts of God, war, pandemics, government actions, or internet failures.
+                    Neither Party shall be liable for delays caused by events
+                    beyond reasonable control, including acts of God, war,
+                    pandemics, government actions, or internet failures.
                   </p>
                 </div>
 
@@ -1019,7 +1165,9 @@ export function ContractDetailDrawer({
                     18. GOVERNING LAW AND JURISDICTION
                   </h3>
                   <p className="ml-2 sm:ml-4">
-                    This Agreement shall be governed by the laws of Rwanda. Courts located in Rwanda shall have exclusive jurisdiction unless arbitration is specified.
+                    This Agreement shall be governed by the laws of Rwanda.
+                    Courts located in Rwanda shall have exclusive jurisdiction
+                    unless arbitration is specified.
                   </p>
                 </div>
 
@@ -1029,7 +1177,8 @@ export function ContractDetailDrawer({
                     19. DISPUTE RESOLUTION
                   </h3>
                   <p className="ml-2 sm:ml-4">
-                    Disputes shall be resolved through: good-faith negotiation; mediation; and court action if unresolved.
+                    Disputes shall be resolved through: good-faith negotiation;
+                    mediation; and court action if unresolved.
                   </p>
                 </div>
 
@@ -1039,7 +1188,8 @@ export function ContractDetailDrawer({
                     20. ASSIGNMENT
                   </h3>
                   <p className="ml-2 sm:ml-4">
-                    Client may not assign this Agreement without Supplier's prior written consent.
+                    Client may not assign this Agreement without Supplier's
+                    prior written consent.
                   </p>
                 </div>
 
@@ -1049,7 +1199,8 @@ export function ContractDetailDrawer({
                     21. SEVERABILITY
                   </h3>
                   <p className="ml-2 sm:ml-4">
-                    If any provision is found invalid, the remaining provisions shall remain in full force.
+                    If any provision is found invalid, the remaining provisions
+                    shall remain in full force.
                   </p>
                 </div>
 
@@ -1059,7 +1210,8 @@ export function ContractDetailDrawer({
                     22. WAIVER
                   </h3>
                   <p className="ml-2 sm:ml-4">
-                    Failure to enforce any provision shall not constitute a waiver of future enforcement.
+                    Failure to enforce any provision shall not constitute a
+                    waiver of future enforcement.
                   </p>
                 </div>
 
@@ -1069,7 +1221,8 @@ export function ContractDetailDrawer({
                     23. ENTIRE AGREEMENT
                   </h3>
                   <p className="ml-2 sm:ml-4">
-                    This Agreement constitutes the entire agreement between the Parties and supersedes all prior agreements.
+                    This Agreement constitutes the entire agreement between the
+                    Parties and supersedes all prior agreements.
                   </p>
                 </div>
 
@@ -1079,7 +1232,9 @@ export function ContractDetailDrawer({
                     24. ELECTRONIC ACCEPTANCE & SIGNATURE
                   </h3>
                   <p className="ml-2 sm:ml-4">
-                    By clicking "I Agree," signing electronically, or using Supplier's Services, Client agrees to be legally bound by this Agreement.
+                    By clicking "I Agree," signing electronically, or using
+                    Supplier's Services, Client agrees to be legally bound by
+                    this Agreement.
                   </p>
                 </div>
 
@@ -1108,7 +1263,7 @@ export function ContractDetailDrawer({
                           <img
                             src={contract.supplierSignature}
                             alt="Supplier signature"
-                            className="max-h-16 w-auto object-contain sm:max-h-20 dark:brightness-0 dark:invert"
+                            className="max-h-16 w-auto object-contain dark:brightness-0 dark:invert sm:max-h-20"
                           />
                         </div>
                       ) : (
@@ -1117,17 +1272,26 @@ export function ContractDetailDrawer({
                       <div className="space-y-3 sm:space-y-4">
                         <div>
                           <p className="text-[11px] text-gray-800 dark:text-gray-200 sm:text-xs md:text-sm">
-                            Name: <span className="break-words">{contract.supplierCompany || contract.supplierName || (
-                              <span className="text-gray-500 dark:text-gray-400">. . . . . . . . . . . . . . . . . . . .</span>
-                            )}</span>
+                            Name:{" "}
+                            <span className="break-words">
+                              {contract.supplierCompany ||
+                                contract.supplierName || (
+                                  <span className="text-gray-500 dark:text-gray-400">
+                                    . . . . . . . . . . . . . . . . . . . .
+                                  </span>
+                                )}
+                            </span>
                           </p>
                         </div>
                         <div>
                           <p className="text-[11px] text-gray-800 dark:text-gray-200 sm:text-xs md:text-sm">
-                            Date: {contract.updateOn ? (
+                            Date:{" "}
+                            {contract.updateOn ? (
                               formatDate(contract.updateOn)
                             ) : (
-                              <span className="text-gray-500 dark:text-gray-400">. . . . . . . . . . . . . . . . . . . .</span>
+                              <span className="text-gray-500 dark:text-gray-400">
+                                . . . . . . . . . . . . . . . . . . . .
+                              </span>
                             )}
                           </p>
                         </div>
@@ -1144,7 +1308,7 @@ export function ContractDetailDrawer({
                           <img
                             src={contract.clientSignature}
                             alt="Client signature"
-                            className="max-h-16 w-auto object-contain sm:max-h-20 dark:brightness-0 dark:invert"
+                            className="max-h-16 w-auto object-contain dark:brightness-0 dark:invert sm:max-h-20"
                           />
                         </div>
                       ) : (
@@ -1153,17 +1317,26 @@ export function ContractDetailDrawer({
                       <div className="space-y-3 sm:space-y-4">
                         <div>
                           <p className="text-[11px] text-gray-800 dark:text-gray-200 sm:text-xs md:text-sm">
-                            Name: <span className="break-words">{contract.clientCompany || contract.clientName || (
-                              <span className="text-gray-500 dark:text-gray-400">. . . . . . . . . . . . . . . . . . . .</span>
-                            )}</span>
+                            Name:{" "}
+                            <span className="break-words">
+                              {contract.clientCompany ||
+                                contract.clientName || (
+                                  <span className="text-gray-500 dark:text-gray-400">
+                                    . . . . . . . . . . . . . . . . . . . .
+                                  </span>
+                                )}
+                            </span>
                           </p>
                         </div>
                         <div>
                           <p className="text-[11px] text-gray-800 dark:text-gray-200 sm:text-xs md:text-sm">
-                            Date: {contract.doneAt ? (
+                            Date:{" "}
+                            {contract.doneAt ? (
                               formatDate(contract.doneAt)
                             ) : (
-                              <span className="text-gray-500 dark:text-gray-400">. . . . . . . . . . . . . . . . . . . .</span>
+                              <span className="text-gray-500 dark:text-gray-400">
+                                . . . . . . . . . . . . . . . . . . . .
+                              </span>
                             )}
                           </p>
                         </div>
@@ -1175,7 +1348,12 @@ export function ContractDetailDrawer({
                 {/* Legal Notice */}
                 <div className="mt-6 border-t-2 border-gray-300 pt-4 dark:border-gray-600 sm:mt-8 sm:pt-6">
                   <p className="text-[10px] leading-relaxed text-gray-600 dark:text-gray-400 sm:text-xs">
-                    This contract is legally binding and enforceable under the laws governing the Plas Platform. For any disputes or issues, please reference the Contract Tracking ID: <span className="font-mono font-semibold break-all">{contract.id}</span>
+                    This contract is legally binding and enforceable under the
+                    laws governing the Plas Platform. For any disputes or
+                    issues, please reference the Contract Tracking ID:{" "}
+                    <span className="break-all font-mono font-semibold">
+                      {contract.id}
+                    </span>
                   </p>
                 </div>
               </div>
@@ -1232,7 +1410,9 @@ export function ContractDetailDrawer({
         ) : (
           <div className="flex h-full items-center justify-center">
             <div className="text-center">
-              <p className="text-gray-600 dark:text-gray-400">Contract not found</p>
+              <p className="text-gray-600 dark:text-gray-400">
+                Contract not found
+              </p>
             </div>
           </div>
         )}
@@ -1251,7 +1431,7 @@ export function ContractDetailDrawer({
             }}
           />
           <div className="fixed inset-0 z-[10003] flex items-center justify-center p-3 sm:p-4">
-            <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-white shadow-2xl dark:bg-gray-900">
+            <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white shadow-2xl dark:bg-gray-900">
               <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-900 sm:px-6 sm:py-4">
                 <h2 className="text-base font-bold text-gray-900 dark:text-white sm:text-lg md:text-xl">
                   Accept Contract
@@ -1272,7 +1452,9 @@ export function ContractDetailDrawer({
               <div className="p-4 sm:p-6">
                 <div className="mb-4 space-y-4 sm:mb-6 sm:space-y-6">
                   <p className="text-xs leading-relaxed text-gray-600 dark:text-gray-400 sm:text-sm">
-                    To accept this contract, please provide your signature and capture a photo. By accepting, you agree to all terms and conditions outlined in this contract.
+                    To accept this contract, please provide your signature and
+                    capture a photo. By accepting, you agree to all terms and
+                    conditions outlined in this contract.
                   </p>
 
                   {/* Supplier Signature */}
@@ -1307,7 +1489,10 @@ export function ContractDetailDrawer({
                         className="mt-0.5 h-3.5 w-3.5 rounded border-gray-300 text-green-600 focus:ring-green-500 dark:border-gray-600 sm:mt-1 sm:h-4 sm:w-4"
                       />
                       <span>
-                        I have read and agree to all terms and conditions of this contract. I understand that by signing and accepting this contract, I am legally bound to fulfill all obligations as the Supplier.
+                        I have read and agree to all terms and conditions of
+                        this contract. I understand that by signing and
+                        accepting this contract, I am legally bound to fulfill
+                        all obligations as the Supplier.
                       </span>
                     </label>
                   </div>
@@ -1328,8 +1513,13 @@ export function ContractDetailDrawer({
                   </button>
                   <button
                     onClick={handleSubmitAcceptance}
-                    disabled={accepting || !supplierSignature || !supplierPhoto || !termsAgreed}
-                    className="flex items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-green-700 dark:hover:bg-green-800 sm:px-6 sm:py-3"
+                    disabled={
+                      accepting ||
+                      !supplierSignature ||
+                      !supplierPhoto ||
+                      !termsAgreed
+                    }
+                    className="flex items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-green-700 dark:hover:bg-green-800 sm:px-6 sm:py-3"
                   >
                     {accepting ? (
                       <>
@@ -1352,4 +1542,3 @@ export function ContractDetailDrawer({
     </>
   );
 }
-

@@ -383,7 +383,7 @@ export function RFQOpportunitiesSection({
                     {rfq.description}
                   </p>
 
-                  <div className="grid grid-cols-1 gap-2.5 text-xs sm:grid-cols-2 lg:grid-cols-4 sm:gap-4 sm:text-sm">
+                  <div className="grid grid-cols-1 gap-2.5 text-xs sm:grid-cols-2 sm:gap-4 sm:text-sm lg:grid-cols-4">
                     <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
                       <DollarSign className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
                       <span className="truncate font-medium">{rfq.budget}</span>
@@ -391,7 +391,9 @@ export function RFQOpportunitiesSection({
                     {rfq.estimated_quantity && (
                       <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
                         <Package className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
-                        <span className="truncate font-medium">Qty: {rfq.estimated_quantity}</span>
+                        <span className="truncate font-medium">
+                          Qty: {rfq.estimated_quantity}
+                        </span>
                       </div>
                     )}
                     <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
@@ -551,9 +553,13 @@ export function RFQOpportunitiesSection({
                 {/* Date, RFQ Reference, Response Deadline */}
                 <div className="mb-8 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
                   <div>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">Date: </span>
+                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                      Date:{" "}
+                    </span>
                     <span className="text-gray-900 dark:text-white">
-                      {new Date(selectedRFQ.created_at || Date.now()).toLocaleDateString("en-US", {
+                      {new Date(
+                        selectedRFQ.created_at || Date.now()
+                      ).toLocaleDateString("en-US", {
                         year: "numeric",
                         month: "long",
                         day: "numeric",
@@ -561,15 +567,21 @@ export function RFQOpportunitiesSection({
                     </span>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">RFQ Reference Number: </span>
+                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                      RFQ Reference Number:{" "}
+                    </span>
                     <span className="font-mono text-gray-900 dark:text-white">
                       {selectedRFQ.id?.slice(0, 8).toUpperCase() || "N/A"}
                     </span>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">Response Deadline: </span>
+                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                      Response Deadline:{" "}
+                    </span>
                     <span className="text-gray-900 dark:text-white">
-                      {selectedRFQ.deadline || selectedRFQ.response_date || "Not specified"}
+                      {selectedRFQ.deadline ||
+                        selectedRFQ.response_date ||
+                        "Not specified"}
                     </span>
                   </div>
                 </div>
@@ -577,7 +589,9 @@ export function RFQOpportunitiesSection({
                 {/* Subject */}
                 <div className="mb-8">
                   <div className="text-sm font-medium text-gray-900 dark:text-white">
-                    Subject: Request for Quotation for {selectedRFQ.title || "[Insert Description of Goods/Services]"}
+                    Subject: Request for Quotation for{" "}
+                    {selectedRFQ.title ||
+                      "[Insert Description of Goods/Services]"}
                   </div>
                 </div>
 
@@ -585,7 +599,10 @@ export function RFQOpportunitiesSection({
                 <div className="mb-8 text-sm text-gray-700 dark:text-gray-300">
                   <p>Dear [Supplier's Contact Name],</p>
                   <p className="mt-2">
-                    We hope this message finds you well. We are reaching out to request a formal quotation for the following products and/or services that we need for an upcoming project. Below, you will find the specific requirements for this request.
+                    We hope this message finds you well. We are reaching out to
+                    request a formal quotation for the following products and/or
+                    services that we need for an upcoming project. Below, you
+                    will find the specific requirements for this request.
                   </p>
                 </div>
 
@@ -596,41 +613,70 @@ export function RFQOpportunitiesSection({
                   </h3>
                   <div className="space-y-3 text-sm">
                     <div>
-                      <span className="font-medium text-gray-700 dark:text-gray-300">RFQ Title: </span>
-                      <span className="text-gray-900 dark:text-white">{selectedRFQ.title || "[Insert Title Here]"}</span>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-700 dark:text-gray-300">Business ID: </span>
-                      <span className="font-mono text-gray-900 dark:text-white">
-                        {selectedRFQ.business_id?.slice(0, 8).toUpperCase() || selectedRFQ.id?.slice(0, 8).toUpperCase() || "[Insert Business ID Here]"}
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        RFQ Title:{" "}
+                      </span>
+                      <span className="text-gray-900 dark:text-white">
+                        {selectedRFQ.title || "[Insert Title Here]"}
                       </span>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700 dark:text-gray-300">Category: </span>
-                      <span className="text-gray-900 dark:text-white">{selectedRFQ.category || "[Insert Category Here]"}</span>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        Business ID:{" "}
+                      </span>
+                      <span className="font-mono text-gray-900 dark:text-white">
+                        {selectedRFQ.business_id?.slice(0, 8).toUpperCase() ||
+                          selectedRFQ.id?.slice(0, 8).toUpperCase() ||
+                          "[Insert Business ID Here]"}
+                      </span>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700 dark:text-gray-300">Location: </span>
-                      <span className="text-gray-900 dark:text-white">{selectedRFQ.location || "[Insert Location Here]"}</span>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-700 dark:text-gray-300">Urgency Level: </span>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        Category:{" "}
+                      </span>
                       <span className="text-gray-900 dark:text-white">
-                        {selectedRFQ.urgency_level || selectedRFQ.status || "[Insert Urgency Level Here]"}
-                        {selectedRFQ.urgency_level && " (For example: High, Medium, Low)"}
+                        {selectedRFQ.category || "[Insert Category Here]"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        Location:{" "}
+                      </span>
+                      <span className="text-gray-900 dark:text-white">
+                        {selectedRFQ.location || "[Insert Location Here]"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        Urgency Level:{" "}
+                      </span>
+                      <span className="text-gray-900 dark:text-white">
+                        {selectedRFQ.urgency_level ||
+                          selectedRFQ.status ||
+                          "[Insert Urgency Level Here]"}
+                        {selectedRFQ.urgency_level &&
+                          " (For example: High, Medium, Low)"}
                       </span>
                     </div>
                     {selectedRFQ.estimated_quantity && (
                       <div>
-                        <span className="font-medium text-gray-700 dark:text-gray-300">Estimated Quantity Needed: </span>
-                        <span className="text-gray-900 dark:text-white">{selectedRFQ.estimated_quantity}</span>
+                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                          Estimated Quantity Needed:{" "}
+                        </span>
+                        <span className="text-gray-900 dark:text-white">
+                          {selectedRFQ.estimated_quantity}
+                        </span>
                       </div>
                     )}
                     {selectedRFQ.expected_delivery_date && (
                       <div>
-                        <span className="font-medium text-gray-700 dark:text-gray-300">Expected Delivery Date: </span>
+                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                          Expected Delivery Date:{" "}
+                        </span>
                         <span className="text-gray-900 dark:text-white">
-                          {new Date(selectedRFQ.expected_delivery_date).toLocaleDateString("en-US", {
+                          {new Date(
+                            selectedRFQ.expected_delivery_date
+                          ).toLocaleDateString("en-US", {
                             year: "numeric",
                             month: "long",
                             day: "numeric",
@@ -639,9 +685,23 @@ export function RFQOpportunitiesSection({
                       </div>
                     )}
                     <div>
-                      <span className="font-medium text-gray-700 dark:text-gray-300">Budget Range: </span>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        Budget Range:{" "}
+                      </span>
                       <span className="text-gray-900 dark:text-white">
-                        We expect the total cost to be between RWF {selectedRFQ.min_budget ? formatCurrencySync(parseFloat(selectedRFQ.min_budget)).replace(/[^\d,]/g, "") : "[Insert Min Budget Here]"} and RWF {selectedRFQ.max_budget ? formatCurrencySync(parseFloat(selectedRFQ.max_budget)).replace(/[^\d,]/g, "") : "[Insert Max Budget Here]"}.
+                        We expect the total cost to be between RWF{" "}
+                        {selectedRFQ.min_budget
+                          ? formatCurrencySync(
+                              parseFloat(selectedRFQ.min_budget)
+                            ).replace(/[^\d,]/g, "")
+                          : "[Insert Min Budget Here]"}{" "}
+                        and RWF{" "}
+                        {selectedRFQ.max_budget
+                          ? formatCurrencySync(
+                              parseFloat(selectedRFQ.max_budget)
+                            ).replace(/[^\d,]/g, "")
+                          : "[Insert Max Budget Here]"}
+                        .
                       </span>
                     </div>
                   </div>
@@ -657,62 +717,83 @@ export function RFQOpportunitiesSection({
                   </p>
                   <div className="space-y-3 text-sm">
                     <div>
-                      <div className="font-medium text-gray-700 dark:text-gray-300">Goods/Services Description:</div>
+                      <div className="font-medium text-gray-700 dark:text-gray-300">
+                        Goods/Services Description:
+                      </div>
                       <p className="mt-1 text-gray-900 dark:text-white">
-                        {selectedRFQ.description || "[Insert Detailed Description of the Products/Services Here]"}
+                        {selectedRFQ.description ||
+                          "[Insert Detailed Description of the Products/Services Here]"}
                       </p>
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        (Example: Office furniture, computers, or equipment, etc.)
+                        (Example: Office furniture, computers, or equipment,
+                        etc.)
                       </p>
                     </div>
-                    {selectedRFQ.requirements && (() => {
-                      let requirementsList: string[] = [];
-                      try {
-                        if (typeof selectedRFQ.requirements === 'string') {
-                          if (selectedRFQ.requirements.startsWith('[')) {
-                            requirementsList = JSON.parse(selectedRFQ.requirements);
+                    {selectedRFQ.requirements &&
+                      (() => {
+                        let requirementsList: string[] = [];
+                        try {
+                          if (typeof selectedRFQ.requirements === "string") {
+                            if (selectedRFQ.requirements.startsWith("[")) {
+                              requirementsList = JSON.parse(
+                                selectedRFQ.requirements
+                              );
+                            } else {
+                              // If it's a plain string, split by common delimiters
+                              requirementsList = selectedRFQ.requirements
+                                .split(/[,;]\s*/)
+                                .filter((req) => req.trim().length > 0);
+                            }
+                          } else if (Array.isArray(selectedRFQ.requirements)) {
+                            requirementsList = selectedRFQ.requirements;
                           } else {
-                            // If it's a plain string, split by common delimiters
-                            requirementsList = selectedRFQ.requirements
-                              .split(/[,;]\s*/)
-                              .filter(req => req.trim().length > 0);
+                            requirementsList = [
+                              String(selectedRFQ.requirements),
+                            ];
                           }
-                        } else if (Array.isArray(selectedRFQ.requirements)) {
-                          requirementsList = selectedRFQ.requirements;
-                        } else {
+                        } catch (error) {
+                          // If parsing fails, treat as single string
                           requirementsList = [String(selectedRFQ.requirements)];
                         }
-                      } catch (error) {
-                        // If parsing fails, treat as single string
-                        requirementsList = [String(selectedRFQ.requirements)];
-                      }
 
-                      return (
-                        <div>
-                          <div className="font-medium text-gray-700 dark:text-gray-300">Specific Requirements:</div>
-                          <ul className="ml-6 mt-1 list-disc space-y-1 text-gray-900 dark:text-white">
-                            {requirementsList.map((req, index) => (
-                              <li key={index}>{req.trim()}</li>
-                            ))}
-                          </ul>
-                          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            (Example: Must meet international quality standards, must be energy-efficient, etc.)
-                          </p>
-                        </div>
-                      );
-                    })()}
+                        return (
+                          <div>
+                            <div className="font-medium text-gray-700 dark:text-gray-300">
+                              Specific Requirements:
+                            </div>
+                            <ul className="ml-6 mt-1 list-disc space-y-1 text-gray-900 dark:text-white">
+                              {requirementsList.map((req, index) => (
+                                <li key={index}>{req.trim()}</li>
+                              ))}
+                            </ul>
+                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                              (Example: Must meet international quality
+                              standards, must be energy-efficient, etc.)
+                            </p>
+                          </div>
+                        );
+                      })()}
                     {selectedRFQ.estimated_quantity && (
                       <div>
-                        <div className="font-medium text-gray-700 dark:text-gray-300">Quantity Required:</div>
-                        <p className="mt-1 text-gray-900 dark:text-white">{selectedRFQ.estimated_quantity}</p>
+                        <div className="font-medium text-gray-700 dark:text-gray-300">
+                          Quantity Required:
+                        </div>
+                        <p className="mt-1 text-gray-900 dark:text-white">
+                          {selectedRFQ.estimated_quantity}
+                        </p>
                       </div>
                     )}
                     {selectedRFQ.notes && (
                       <div>
-                        <div className="font-medium text-gray-700 dark:text-gray-300">Packaging/Delivery Requirements:</div>
-                        <p className="mt-1 text-gray-900 dark:text-white">{selectedRFQ.notes}</p>
+                        <div className="font-medium text-gray-700 dark:text-gray-300">
+                          Packaging/Delivery Requirements:
+                        </div>
+                        <p className="mt-1 text-gray-900 dark:text-white">
+                          {selectedRFQ.notes}
+                        </p>
                         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                          (Example: Items must be delivered fully assembled and packaged to prevent damage during transport.)
+                          (Example: Items must be delivered fully assembled and
+                          packaged to prevent damage during transport.)
                         </p>
                       </div>
                     )}
@@ -725,40 +806,54 @@ export function RFQOpportunitiesSection({
                     3. Terms and Conditions
                   </h3>
                   <p className="mb-3 text-sm text-gray-700 dark:text-gray-300">
-                    We kindly request that the following conditions are considered when submitting your quotation:
+                    We kindly request that the following conditions are
+                    considered when submitting your quotation:
                   </p>
                   <div className="space-y-3 text-sm">
                     <div>
-                      <div className="font-medium text-gray-700 dark:text-gray-300">Payment Terms:</div>
+                      <div className="font-medium text-gray-700 dark:text-gray-300">
+                        Payment Terms:
+                      </div>
                       <p className="mt-1 text-gray-900 dark:text-white">
-                        {selectedRFQ.payment_terms || "[Insert Payment Terms Here]"}
+                        {selectedRFQ.payment_terms ||
+                          "[Insert Payment Terms Here]"}
                       </p>
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        (For example: 50% advance, 50% upon delivery, 100% upfront, etc.)
+                        (For example: 50% advance, 50% upon delivery, 100%
+                        upfront, etc.)
                       </p>
                     </div>
                     <div>
-                      <div className="font-medium text-gray-700 dark:text-gray-300">Delivery Terms:</div>
+                      <div className="font-medium text-gray-700 dark:text-gray-300">
+                        Delivery Terms:
+                      </div>
                       <p className="mt-1 text-gray-900 dark:text-white">
-                        {selectedRFQ.delivery_terms || "[Insert Delivery Terms Here]"}
+                        {selectedRFQ.delivery_terms ||
+                          "[Insert Delivery Terms Here]"}
                       </p>
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                         (For example: EXW, DDP, etc.)
                       </p>
                     </div>
                     <div>
-                      <div className="font-medium text-gray-700 dark:text-gray-300">Warranty Information:</div>
+                      <div className="font-medium text-gray-700 dark:text-gray-300">
+                        Warranty Information:
+                      </div>
                       <p className="mt-1 text-gray-900 dark:text-white">
-                        {selectedRFQ.warranty_information || "[Insert Warranty Terms Here]"}
+                        {selectedRFQ.warranty_information ||
+                          "[Insert Warranty Terms Here]"}
                       </p>
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                         (For example: 1-year warranty on all items, etc.)
                       </p>
                     </div>
                     <div>
-                      <div className="font-medium text-gray-700 dark:text-gray-300">Cancellation Terms:</div>
+                      <div className="font-medium text-gray-700 dark:text-gray-300">
+                        Cancellation Terms:
+                      </div>
                       <p className="mt-1 text-gray-900 dark:text-white">
-                        {selectedRFQ.cancellation_terms || "[Insert Cancellation Terms Here]"}
+                        {selectedRFQ.cancellation_terms ||
+                          "[Insert Cancellation Terms Here]"}
                       </p>
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                         (For example: 7 days notice required for cancellation.)
@@ -776,10 +871,23 @@ export function RFQOpportunitiesSection({
                     Please ensure your quotation includes the following:
                   </p>
                   <ul className="ml-6 list-disc space-y-2 text-sm text-gray-900 dark:text-white">
-                    <li>A detailed breakdown of costs, including the unit price, total price, delivery costs, taxes, and any applicable fees.</li>
-                    <li>Lead time for delivery and any available options for expedited shipping, if applicable.</li>
-                    <li>Product specifications, including make, model, and relevant certifications.</li>
-                    <li>Validity period for the quote (minimum 30 days is preferred).</li>
+                    <li>
+                      A detailed breakdown of costs, including the unit price,
+                      total price, delivery costs, taxes, and any applicable
+                      fees.
+                    </li>
+                    <li>
+                      Lead time for delivery and any available options for
+                      expedited shipping, if applicable.
+                    </li>
+                    <li>
+                      Product specifications, including make, model, and
+                      relevant certifications.
+                    </li>
+                    <li>
+                      Validity period for the quote (minimum 30 days is
+                      preferred).
+                    </li>
                     <li>Payment terms as agreed upon.</li>
                   </ul>
                 </div>
@@ -797,7 +905,8 @@ export function RFQOpportunitiesSection({
                       <div>Attachment 1: [Download/View Attachment]</div>
                     </div>
                     <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                      (Feel free to attach your product catalog, pricing list, or any other relevant documents.)
+                      (Feel free to attach your product catalog, pricing list,
+                      or any other relevant documents.)
                     </p>
                   </div>
                 )}
@@ -808,7 +917,13 @@ export function RFQOpportunitiesSection({
                     6. Response Deadline
                   </h3>
                   <p className="text-sm text-gray-900 dark:text-white">
-                    We kindly ask that you submit your quotation by <span className="font-medium">{selectedRFQ.deadline || selectedRFQ.response_date || "[Insert Response Date Here]"}</span>. Late submissions may not be considered.
+                    We kindly ask that you submit your quotation by{" "}
+                    <span className="font-medium">
+                      {selectedRFQ.deadline ||
+                        selectedRFQ.response_date ||
+                        "[Insert Response Date Here]"}
+                    </span>
+                    . Late submissions may not be considered.
                   </p>
                 </div>
 
@@ -818,25 +933,38 @@ export function RFQOpportunitiesSection({
                     Contact Information
                   </h3>
                   <p className="mb-3 text-sm text-gray-700 dark:text-gray-300">
-                    For any inquiries or clarifications regarding this request, please contact:
+                    For any inquiries or clarifications regarding this request,
+                    please contact:
                   </p>
                   <div className="space-y-2 text-sm">
                     <div>
-                      <span className="font-medium text-gray-700 dark:text-gray-300">Name: </span>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        Name:{" "}
+                      </span>
                       <span className="text-gray-900 dark:text-white">
-                        {selectedRFQ.contact_name || selectedRFQ.business_account?.business_name || "[Insert Your Contact Name Here]"}
+                        {selectedRFQ.contact_name ||
+                          selectedRFQ.business_account?.business_name ||
+                          "[Insert Your Contact Name Here]"}
                       </span>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700 dark:text-gray-300">Phone: </span>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        Phone:{" "}
+                      </span>
                       <span className="text-gray-900 dark:text-white">
-                        {selectedRFQ.phone || selectedRFQ.business_account?.business_phone || "[Insert Your Phone Number Here]"}
+                        {selectedRFQ.phone ||
+                          selectedRFQ.business_account?.business_phone ||
+                          "[Insert Your Phone Number Here]"}
                       </span>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700 dark:text-gray-300">Email: </span>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        Email:{" "}
+                      </span>
                       <span className="text-gray-900 dark:text-white">
-                        {selectedRFQ.email || selectedRFQ.business_account?.business_email || "[Insert Your Email Address Here]"}
+                        {selectedRFQ.email ||
+                          selectedRFQ.business_account?.business_email ||
+                          "[Insert Your Email Address Here]"}
                       </span>
                     </div>
                   </div>
@@ -845,14 +973,28 @@ export function RFQOpportunitiesSection({
                 {/* Closing */}
                 <div className="mb-8 text-sm text-gray-700 dark:text-gray-300">
                   <p className="mb-2">
-                    We look forward to receiving your quotation and thank you for your time and attention to this request. Should you have any questions or need further information, do not hesitate to contact us.
+                    We look forward to receiving your quotation and thank you
+                    for your time and attention to this request. Should you have
+                    any questions or need further information, do not hesitate
+                    to contact us.
                   </p>
                   <div className="mt-4">
-                    <div className="font-medium text-gray-900 dark:text-white">Kind regards,</div>
-                    <div className="mt-1">{selectedRFQ.contact_name || selectedRFQ.business_account?.business_name || "[Your Name]"}</div>
-                    <div className="mt-1">{selectedRFQ.business_account?.business_name || "[Your Company Name]"}</div>
+                    <div className="font-medium text-gray-900 dark:text-white">
+                      Kind regards,
+                    </div>
                     <div className="mt-1">
-                      {selectedRFQ.email || selectedRFQ.business_account?.business_email || "[Your Contact Information]"}
+                      {selectedRFQ.contact_name ||
+                        selectedRFQ.business_account?.business_name ||
+                        "[Your Name]"}
+                    </div>
+                    <div className="mt-1">
+                      {selectedRFQ.business_account?.business_name ||
+                        "[Your Company Name]"}
+                    </div>
+                    <div className="mt-1">
+                      {selectedRFQ.email ||
+                        selectedRFQ.business_account?.business_email ||
+                        "[Your Contact Information]"}
                     </div>
                   </div>
                 </div>

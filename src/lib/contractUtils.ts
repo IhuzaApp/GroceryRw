@@ -156,7 +156,11 @@ export const downloadContractAsPdf = async (
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     doc.text(
-      `Legal Name: ${contractData.supplierCompany || contractData.supplierName || "Not specified"}`,
+      `Legal Name: ${
+        contractData.supplierCompany ||
+        contractData.supplierName ||
+        "Not specified"
+      }`,
       margin + 5,
       yPos
     );
@@ -191,7 +195,9 @@ export const downloadContractAsPdf = async (
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     doc.text(
-      `Legal Name: ${contractData.clientCompany || contractData.clientName || "Not specified"}`,
+      `Legal Name: ${
+        contractData.clientCompany || contractData.clientName || "Not specified"
+      }`,
       margin + 5,
       yPos
     );
@@ -234,19 +240,31 @@ export const downloadContractAsPdf = async (
       },
       {
         title: "2. SCOPE OF SERVICES",
-        content: `Supplier agrees to provide professional services including: ${contractData.title || "Services as specified"}.`,
+        content: `Supplier agrees to provide professional services including: ${
+          contractData.title || "Services as specified"
+        }.`,
       },
       {
         title: "3. TERM AND DURATION",
-        content: `This Agreement shall commence on ${formatDate(contractData.startDate)} and continue until ${formatDate(contractData.endDate)}. Duration: ${contractData.duration || "Not specified"}.`,
+        content: `This Agreement shall commence on ${formatDate(
+          contractData.startDate
+        )} and continue until ${formatDate(contractData.endDate)}. Duration: ${
+          contractData.duration || "Not specified"
+        }.`,
       },
       {
         title: "4. FEES, PAYMENTS, AND TAXES",
-        content: `Client agrees to pay Supplier ${formatCurrencySync(contractData.totalValue)} ${contractData.currency || "RWF"}. Payment Schedule: ${contractData.paymentSchedule || "Not specified"}. Payment Terms: ${contractData.paymentTerms || "Not specified"}.`,
+        content: `Client agrees to pay Supplier ${formatCurrencySync(
+          contractData.totalValue
+        )} ${contractData.currency || "RWF"}. Payment Schedule: ${
+          contractData.paymentSchedule || "Not specified"
+        }. Payment Terms: ${contractData.paymentTerms || "Not specified"}.`,
       },
       {
         title: "5. TERMINATION",
-        content: `Termination Terms: ${contractData.terminationTerms || "As per standard terms"}.`,
+        content: `Termination Terms: ${
+          contractData.terminationTerms || "As per standard terms"
+        }.`,
       },
     ];
 
@@ -297,7 +315,11 @@ export const downloadContractAsPdf = async (
         );
         yPos += 5;
         doc.text(
-          `   Due Date: ${formatDate(deliverable.dueDate)} | Value: ${formatCurrencySync(deliverable.value)} ${contractData.currency || "RWF"}`,
+          `   Due Date: ${formatDate(
+            deliverable.dueDate
+          )} | Value: ${formatCurrencySync(deliverable.value)} ${
+            contractData.currency || "RWF"
+          }`,
           margin + 5,
           yPos
         );
@@ -365,13 +387,19 @@ export const downloadContractAsPdf = async (
       yPos += 6;
     }
     doc.text(
-      `Name: ${contractData.supplierCompany || contractData.supplierName || "Not specified"}`,
+      `Name: ${
+        contractData.supplierCompany ||
+        contractData.supplierName ||
+        "Not specified"
+      }`,
       margin,
       yPos
     );
     yPos += 6;
     doc.text(
-      `Date: ${contractData.updateOn ? formatDate(contractData.updateOn) : "Not signed"}`,
+      `Date: ${
+        contractData.updateOn ? formatDate(contractData.updateOn) : "Not signed"
+      }`,
       margin,
       yPos
     );
@@ -386,14 +414,7 @@ export const downloadContractAsPdf = async (
     doc.setFont("helvetica", "normal");
     if (contractData.clientSignature) {
       try {
-        doc.addImage(
-          contractData.clientSignature,
-          "PNG",
-          margin,
-          yPos,
-          40,
-          15
-        );
+        doc.addImage(contractData.clientSignature, "PNG", margin, yPos, 40, 15);
         yPos += 18;
       } catch (error) {
         doc.text("Signature: [Signed]", margin, yPos);
@@ -404,13 +425,17 @@ export const downloadContractAsPdf = async (
       yPos += 6;
     }
     doc.text(
-      `Name: ${contractData.clientCompany || contractData.clientName || "Not specified"}`,
+      `Name: ${
+        contractData.clientCompany || contractData.clientName || "Not specified"
+      }`,
       margin,
       yPos
     );
     yPos += 6;
     doc.text(
-      `Date: ${contractData.doneAt ? formatDate(contractData.doneAt) : "Not signed"}`,
+      `Date: ${
+        contractData.doneAt ? formatDate(contractData.doneAt) : "Not signed"
+      }`,
       margin,
       yPos
     );
@@ -479,10 +504,11 @@ export const downloadContractAsPdf = async (
     }
 
     // Save the PDF
-    doc.save(`contract-${contractData.contractId}-${contractData.id.slice(0, 8)}.pdf`);
+    doc.save(
+      `contract-${contractData.contractId}-${contractData.id.slice(0, 8)}.pdf`
+    );
   } catch (error) {
     console.error("Error generating contract PDF:", error);
     throw error;
   }
 };
-

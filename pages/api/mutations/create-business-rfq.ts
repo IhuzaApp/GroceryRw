@@ -243,7 +243,9 @@ export default async function handler(
         : "",
       payment_terms: payment_terms ? payment_terms.trim() : "",
       delivery_terms: delivery_terms ? delivery_terms.trim() : "",
-      warranty_information: warranty_information ? warranty_information.trim() : "",
+      warranty_information: warranty_information
+        ? warranty_information.trim()
+        : "",
       cancellation_terms: cancellation_terms ? cancellation_terms.trim() : "",
       requirements: requirementsJson || "[]",
       notes: notes ? notes.trim() : "",

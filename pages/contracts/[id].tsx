@@ -48,14 +48,14 @@ interface ContractData {
 
 function calculateProgress(startDate: string, endDate: string): number {
   if (!startDate || !endDate) return 0;
-  
+
   const start = new Date(startDate).getTime();
   const end = new Date(endDate).getTime();
   const now = new Date().getTime();
-  
+
   if (now < start) return 0;
   if (now > end) return 100;
-  
+
   const total = end - start;
   const elapsed = now - start;
   return Math.round((elapsed / total) * 100);
@@ -90,7 +90,9 @@ export default function ContractViewPage() {
         setLoading(true);
         setError(null);
 
-        const response = await fetch(`/api/queries/public-contract-details?id=${id}`);
+        const response = await fetch(
+          `/api/queries/public-contract-details?id=${id}`
+        );
 
         if (!response.ok) {
           if (response.status === 404) {
@@ -108,7 +110,9 @@ export default function ContractViewPage() {
         }
       } catch (err) {
         console.error("Error fetching contract:", err);
-        setError(err instanceof Error ? err.message : "Failed to load contract");
+        setError(
+          err instanceof Error ? err.message : "Failed to load contract"
+        );
       } finally {
         setLoading(false);
       }
@@ -117,15 +121,22 @@ export default function ContractViewPage() {
     fetchContract();
   }, [id, router.isReady]);
 
-  const progress = contract ? calculateProgress(contract.startDate, contract.endDate) : 0;
+  const progress = contract
+    ? calculateProgress(contract.startDate, contract.endDate)
+    : 0;
 
   return (
     <RootLayout>
       <Head>
         <title>
-          {contract ? `Contract ${contract.contractId} - PLAS` : "Contract - PLAS"}
+          {contract
+            ? `Contract ${contract.contractId} - PLAS`
+            : "Contract - PLAS"}
         </title>
-        <meta name="description" content="View contract details on PLAS platform" />
+        <meta
+          name="description"
+          content="View contract details on PLAS platform"
+        />
       </Head>
 
       <div className="min-h-screen bg-gray-50 py-8 dark:bg-gray-900">
@@ -134,7 +145,9 @@ export default function ContractViewPage() {
             <div className="flex min-h-[60vh] items-center justify-center">
               <div className="text-center">
                 <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-green-500 border-r-transparent"></div>
-                <p className="text-gray-600 dark:text-gray-400">Loading contract...</p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Loading contract...
+                </p>
               </div>
             </div>
           ) : error ? (
@@ -187,8 +200,12 @@ export default function ContractViewPage() {
               {/* Introduction */}
               <div className="mb-8">
                 <p className="text-sm text-gray-800 dark:text-gray-200">
-                  This PLAS Business Services Agreement ("Agreement") is entered into and becomes effective as of{" "}
-                  <span className="font-semibold">{formatDate(contract.startDate)}</span> ("Effective Date"), by and between:
+                  This PLAS Business Services Agreement ("Agreement") is entered
+                  into and becomes effective as of{" "}
+                  <span className="font-semibold">
+                    {formatDate(contract.startDate)}
+                  </span>{" "}
+                  ("Effective Date"), by and between:
                 </p>
               </div>
 
@@ -199,16 +216,25 @@ export default function ContractViewPage() {
                 </h2>
                 <div className="ml-4 space-y-1 text-sm text-gray-800 dark:text-gray-200">
                   <p>
-                    <span className="font-semibold">Legal Name:</span> {contract.supplierCompany || contract.supplierName || ". . . . . . . . . . . . . . . . . . . ."}
+                    <span className="font-semibold">Legal Name:</span>{" "}
+                    {contract.supplierCompany ||
+                      contract.supplierName ||
+                      ". . . . . . . . . . . . . . . . . . . ."}
                   </p>
                   <p>
-                    <span className="font-semibold">Registered Address:</span> {contract.supplierAddress || ". . . . . . . . . . . . . . . . . . . ."}
+                    <span className="font-semibold">Registered Address:</span>{" "}
+                    {contract.supplierAddress ||
+                      ". . . . . . . . . . . . . . . . . . . ."}
                   </p>
                   <p>
-                    <span className="font-semibold">Email:</span> {contract.supplierEmail || ". . . . . . . . . . . . . . . . . . . ."}
+                    <span className="font-semibold">Email:</span>{" "}
+                    {contract.supplierEmail ||
+                      ". . . . . . . . . . . . . . . . . . . ."}
                   </p>
                   <p>
-                    <span className="font-semibold">Phone:</span> {contract.supplierPhone || ". . . . . . . . . . . . . . . . . . . ."}
+                    <span className="font-semibold">Phone:</span>{" "}
+                    {contract.supplierPhone ||
+                      ". . . . . . . . . . . . . . . . . . . ."}
                   </p>
                 </div>
               </div>
@@ -220,16 +246,25 @@ export default function ContractViewPage() {
                 </h2>
                 <div className="ml-4 space-y-1 text-sm text-gray-800 dark:text-gray-200">
                   <p>
-                    <span className="font-semibold">Legal Name:</span> {contract.clientCompany || contract.clientName || ". . . . . . . . . . . . . . . . . . . ."}
+                    <span className="font-semibold">Legal Name:</span>{" "}
+                    {contract.clientCompany ||
+                      contract.clientName ||
+                      ". . . . . . . . . . . . . . . . . . . ."}
                   </p>
                   <p>
-                    <span className="font-semibold">Business Address:</span> {contract.clientAddress || ". . . . . . . . . . . . . . . . . . . ."}
+                    <span className="font-semibold">Business Address:</span>{" "}
+                    {contract.clientAddress ||
+                      ". . . . . . . . . . . . . . . . . . . ."}
                   </p>
                   <p>
-                    <span className="font-semibold">Email:</span> {contract.clientEmail || ". . . . . . . . . . . . . . . . . . . ."}
+                    <span className="font-semibold">Email:</span>{" "}
+                    {contract.clientEmail ||
+                      ". . . . . . . . . . . . . . . . . . . ."}
                   </p>
                   <p>
-                    <span className="font-semibold">Phone:</span> {contract.clientPhone || ". . . . . . . . . . . . . . . . . . . ."}
+                    <span className="font-semibold">Phone:</span>{" "}
+                    {contract.clientPhone ||
+                      ". . . . . . . . . . . . . . . . . . . ."}
                   </p>
                 </div>
               </div>
@@ -241,7 +276,10 @@ export default function ContractViewPage() {
                     1. PURPOSE OF AGREEMENT
                   </h3>
                   <p className="ml-4 text-sm text-gray-800 dark:text-gray-200">
-                    This Agreement establishes the general terms and conditions under which Supplier will provide services to Client. Specific services, pricing, timelines, and deliverables are detailed below.
+                    This Agreement establishes the general terms and conditions
+                    under which Supplier will provide services to Client.
+                    Specific services, pricing, timelines, and deliverables are
+                    detailed below.
                   </p>
                 </div>
 
@@ -250,11 +288,13 @@ export default function ContractViewPage() {
                     2. SCOPE OF SERVICES
                   </h3>
                   <p className="ml-4 text-sm text-gray-800 dark:text-gray-200">
-                    Supplier agrees to provide professional services including: {contract.title || "Services as specified"}.
+                    Supplier agrees to provide professional services including:{" "}
+                    {contract.title || "Services as specified"}.
                   </p>
                   {contract.estimatedQuantity && (
                     <p className="ml-4 mt-2 text-sm text-gray-800 dark:text-gray-200">
-                      <span className="font-semibold">Quantity:</span> {contract.estimatedQuantity}
+                      <span className="font-semibold">Quantity:</span>{" "}
+                      {contract.estimatedQuantity}
                     </p>
                   )}
                 </div>
@@ -264,7 +304,15 @@ export default function ContractViewPage() {
                     3. TERM AND DURATION
                   </h3>
                   <p className="ml-4 text-sm text-gray-800 dark:text-gray-200">
-                    This Agreement shall commence on <span className="font-semibold">{formatDate(contract.startDate)}</span> and continue until <span className="font-semibold">{formatDate(contract.endDate)}</span>. Duration: {contract.duration || "Not specified"}.
+                    This Agreement shall commence on{" "}
+                    <span className="font-semibold">
+                      {formatDate(contract.startDate)}
+                    </span>{" "}
+                    and continue until{" "}
+                    <span className="font-semibold">
+                      {formatDate(contract.endDate)}
+                    </span>
+                    . Duration: {contract.duration || "Not specified"}.
                   </p>
                 </div>
 
@@ -273,7 +321,14 @@ export default function ContractViewPage() {
                     4. FEES, PAYMENTS, AND TAXES
                   </h3>
                   <p className="ml-4 text-sm text-gray-800 dark:text-gray-200">
-                    Client agrees to pay Supplier <span className="font-semibold">{formatCurrencySync(contract.totalValue)} {contract.currency || "RWF"}</span>. Payment Schedule: {contract.paymentSchedule || "Not specified"}. Payment Terms: {contract.paymentTerms || "Not specified"}.
+                    Client agrees to pay Supplier{" "}
+                    <span className="font-semibold">
+                      {formatCurrencySync(contract.totalValue)}{" "}
+                      {contract.currency || "RWF"}
+                    </span>
+                    . Payment Schedule:{" "}
+                    {contract.paymentSchedule || "Not specified"}. Payment
+                    Terms: {contract.paymentTerms || "Not specified"}.
                   </p>
                 </div>
 
@@ -282,7 +337,8 @@ export default function ContractViewPage() {
                     5. TERMINATION
                   </h3>
                   <p className="ml-4 text-sm text-gray-800 dark:text-gray-200">
-                    Termination Terms: {contract.terminationTerms || "As per standard terms"}.
+                    Termination Terms:{" "}
+                    {contract.terminationTerms || "As per standard terms"}.
                   </p>
                 </div>
               </div>
@@ -295,12 +351,18 @@ export default function ContractViewPage() {
                   </h3>
                   <div className="ml-4 space-y-3">
                     {contract.deliverables.map((deliverable, index) => (
-                      <div key={deliverable.id || index} className="text-sm text-gray-800 dark:text-gray-200">
+                      <div
+                        key={deliverable.id || index}
+                        className="text-sm text-gray-800 dark:text-gray-200"
+                      >
                         <p className="font-semibold">
-                          {index + 1}. {deliverable.description || "Not specified"}
+                          {index + 1}.{" "}
+                          {deliverable.description || "Not specified"}
                         </p>
                         <p className="ml-4 text-xs text-gray-600 dark:text-gray-400">
-                          Due Date: {formatDate(deliverable.dueDate)} | Value: {formatCurrencySync(deliverable.value)} {contract.currency || "RWF"}
+                          Due Date: {formatDate(deliverable.dueDate)} | Value:{" "}
+                          {formatCurrencySync(deliverable.value)}{" "}
+                          {contract.currency || "RWF"}
                         </p>
                       </div>
                     ))}
@@ -339,10 +401,12 @@ export default function ContractViewPage() {
                 </div>
                 <div className="mt-2 grid grid-cols-2 gap-4 text-xs text-gray-600 dark:text-gray-400">
                   <div>
-                    <span className="font-semibold">Start:</span> {formatDate(contract.startDate)}
+                    <span className="font-semibold">Start:</span>{" "}
+                    {formatDate(contract.startDate)}
                   </div>
                   <div>
-                    <span className="font-semibold">End:</span> {formatDate(contract.endDate)}
+                    <span className="font-semibold">End:</span>{" "}
+                    {formatDate(contract.endDate)}
                   </div>
                 </div>
               </div>
@@ -365,25 +429,36 @@ export default function ContractViewPage() {
                       </div>
                     ) : (
                       <div className="mb-6 flex h-24 items-center justify-center bg-gray-100 dark:bg-gray-700">
-                        <span className="text-xs text-gray-400 dark:text-gray-500">No signature</span>
+                        <span className="text-xs text-gray-400 dark:text-gray-500">
+                          No signature
+                        </span>
                       </div>
                     )}
                     <div className="space-y-3 border-t border-gray-200 pt-4 dark:border-gray-700">
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Name</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Name
+                        </p>
                         <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">
-                          {contract.supplierCompany || contract.supplierName || (
-                            <span className="text-gray-400 dark:text-gray-500">. . . . . . . . . . . . . . . . . . . .</span>
-                          )}
+                          {contract.supplierCompany ||
+                            contract.supplierName || (
+                              <span className="text-gray-400 dark:text-gray-500">
+                                . . . . . . . . . . . . . . . . . . . .
+                              </span>
+                            )}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Date</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Date
+                        </p>
                         <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">
                           {contract.updateOn ? (
                             formatDate(contract.updateOn)
                           ) : (
-                            <span className="text-gray-400 dark:text-gray-500">. . . . . . . . . . . . . . . . . . . .</span>
+                            <span className="text-gray-400 dark:text-gray-500">
+                              . . . . . . . . . . . . . . . . . . . .
+                            </span>
                           )}
                         </p>
                       </div>
@@ -405,25 +480,35 @@ export default function ContractViewPage() {
                       </div>
                     ) : (
                       <div className="mb-6 flex h-24 items-center justify-center bg-gray-100 dark:bg-gray-700">
-                        <span className="text-xs text-gray-400 dark:text-gray-500">No signature</span>
+                        <span className="text-xs text-gray-400 dark:text-gray-500">
+                          No signature
+                        </span>
                       </div>
                     )}
                     <div className="space-y-3 border-t border-gray-200 pt-4 dark:border-gray-700">
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Name</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Name
+                        </p>
                         <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">
                           {contract.clientCompany || contract.clientName || (
-                            <span className="text-gray-400 dark:text-gray-500">. . . . . . . . . . . . . . . . . . . .</span>
+                            <span className="text-gray-400 dark:text-gray-500">
+                              . . . . . . . . . . . . . . . . . . . .
+                            </span>
                           )}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Date</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Date
+                        </p>
                         <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">
                           {contract.doneAt ? (
                             formatDate(contract.doneAt)
                           ) : (
-                            <span className="text-gray-400 dark:text-gray-500">. . . . . . . . . . . . . . . . . . . .</span>
+                            <span className="text-gray-400 dark:text-gray-500">
+                              . . . . . . . . . . . . . . . . . . . .
+                            </span>
                           )}
                         </p>
                       </div>
@@ -435,7 +520,10 @@ export default function ContractViewPage() {
               {/* Legal Notice */}
               <div className="mt-8 border-t-2 border-gray-300 pt-6 dark:border-gray-600">
                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                  This contract is legally binding and enforceable under the laws governing the Plas Platform. For any disputes or issues, please reference the Contract Tracking ID: <span className="font-mono font-semibold">{contract.id}</span>
+                  This contract is legally binding and enforceable under the
+                  laws governing the Plas Platform. For any disputes or issues,
+                  please reference the Contract Tracking ID:{" "}
+                  <span className="font-mono font-semibold">{contract.id}</span>
                 </p>
               </div>
 
@@ -455,4 +543,3 @@ export default function ContractViewPage() {
     </RootLayout>
   );
 }
-

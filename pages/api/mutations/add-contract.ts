@@ -213,7 +213,8 @@ export default async function handler(
       console.error("Error verifying quote response:", verifyError);
       return res.status(400).json({
         error: "Failed to verify quote response",
-        message: verifyError.message || "Could not verify quote response exists",
+        message:
+          verifyError.message || "Could not verify quote response exists",
       });
     }
 
@@ -235,7 +236,7 @@ export default async function handler(
     // instead of the quote response ID (BusinessQoute.id). Let's try using businessRfqId if available.
     // If the foreign key points to bussines_RFQ table, we should use businessRfqId
     const rfqIdToUse = businessRfqId || rfq_response_id;
-    
+
     console.log("Using RFQ ID for foreign key:", rfqIdToUse);
 
     const result = await hasuraClient.request<{
@@ -308,4 +309,3 @@ export default async function handler(
     });
   }
 }
-

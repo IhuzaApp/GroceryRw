@@ -240,7 +240,9 @@ function BuyerDashboardContent({
   // Service provider status should come from user data/API
   // For now, only business accounts can be service providers
   const [isServiceProvider, setIsServiceProvider] = useState(isBusinessAccount);
-  const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
+  const [selectedContractId, setSelectedContractId] = useState<string | null>(
+    null
+  );
   const [isContractDrawerOpen, setIsContractDrawerOpen] = useState(false);
 
   useEffect(() => {
