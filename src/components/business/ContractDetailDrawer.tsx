@@ -504,13 +504,13 @@ export function ContractDetailDrawer({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/50 transition-opacity"
+        className="fixed inset-0 z-[10000] bg-black/50 transition-opacity"
         onClick={onClose}
       />
 
       {/* Drawer */}
       <div
-        className={`fixed right-0 top-0 z-50 h-full w-full max-w-4xl transform overflow-y-auto bg-white shadow-2xl transition-transform duration-300 ease-in-out dark:bg-gray-900 ${
+        className={`fixed right-0 top-0 z-[10001] h-full w-full max-w-4xl transform overflow-y-auto bg-white shadow-2xl transition-transform duration-300 ease-in-out dark:bg-gray-900 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -526,13 +526,14 @@ export function ContractDetailDrawer({
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="fixed right-4 top-4 z-10 rounded-lg bg-white p-2 text-gray-400 shadow-lg hover:bg-gray-100 hover:text-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+              className="fixed right-4 top-4 z-[10002] rounded-lg bg-white p-2.5 text-gray-400 shadow-lg transition-all hover:bg-gray-100 hover:text-gray-600 active:scale-95 dark:bg-gray-800 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+              aria-label="Close contract details"
             >
               <X className="h-6 w-6" />
             </button>
 
             {/* Paper-like Contract Document */}
-            <div className="mx-auto max-w-4xl bg-[#faf9f6] px-8 py-12 shadow-2xl dark:bg-[#1a1814] md:px-16 md:py-16">
+            <div className="mx-auto max-w-4xl bg-[#faf9f6] px-4 py-8 shadow-2xl dark:bg-[#1a1814] sm:px-8 sm:py-12 md:px-16 md:py-16">
               {/* Document Header */}
               <div className="mb-8 text-center">
                 <h1 className="mb-2 text-3xl font-bold text-gray-900 dark:text-white md:text-4xl">
@@ -1157,7 +1158,7 @@ export function ContractDetailDrawer({
       {showAcceptModal && (
         <>
           <div
-            className="fixed inset-0 z-[60] bg-black/50 transition-opacity"
+            className="fixed inset-0 z-[10002] bg-black/50 transition-opacity"
             onClick={() => {
               setShowAcceptModal(false);
               setSupplierSignature("");
@@ -1165,7 +1166,7 @@ export function ContractDetailDrawer({
               setTermsAgreed(false);
             }}
           />
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[10003] flex items-center justify-center p-4">
             <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-white shadow-2xl dark:bg-gray-900">
               <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4 dark:border-gray-700 dark:bg-gray-900">
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">
