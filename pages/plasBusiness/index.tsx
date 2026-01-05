@@ -35,6 +35,7 @@ import { ServicesSection } from "../../src/components/business/ServicesSection";
 import { StoresSection } from "../../src/components/business/StoresSection";
 import BusinessChatDrawer from "../../src/components/business/BusinessChatDrawer";
 import { MobilePlasBusinessPage } from "../../src/components/business/mobile/MobilePlasBusinessPage";
+import { ContractDetailDrawer } from "../../src/components/business/ContractDetailDrawer";
 import toast from "react-hot-toast";
 
 // Data moved to individual components
@@ -239,6 +240,8 @@ function BuyerDashboardContent({
   // Service provider status should come from user data/API
   // For now, only business accounts can be service providers
   const [isServiceProvider, setIsServiceProvider] = useState(isBusinessAccount);
+  const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
+  const [isContractDrawerOpen, setIsContractDrawerOpen] = useState(false);
 
   useEffect(() => {
     // Only business accounts can be service providers
@@ -280,6 +283,8 @@ function BuyerDashboardContent({
   };
 
   const handleViewContract = (contractId: string) => {
+    setSelectedContractId(contractId);
+    setIsContractDrawerOpen(true);
     // Handle view contract logic
   };
 
@@ -507,6 +512,20 @@ function BuyerDashboardContent({
       <BusinessChatDrawer
         isOpen={isChatDrawerOpen}
         onClose={() => setIsChatDrawerOpen(false)}
+      />
+
+      {/* Contract Detail Drawer */}
+      <ContractDetailDrawer
+        isOpen={isContractDrawerOpen}
+        onClose={() => {
+          setIsContractDrawerOpen(false);
+          setSelectedContractId(null);
+        }}
+        contractId={selectedContractId}
+        onContractUpdated={() => {
+          // Refresh contracts if needed
+          window.location.reload();
+        }}
       />
     </div>
   );
