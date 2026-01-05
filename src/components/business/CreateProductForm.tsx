@@ -279,71 +279,90 @@ export function CreateProductForm({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
       <div className="max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-800">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {editingProduct
-                ? `Edit ${isService ? "Service" : "Product"}`
-                : `Create ${isService ? "Service" : "Product"}`}
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400">
-              {editingProduct
-                ? `Edit ${
-                    isService ? "service" : "product"
-                  } details - Step ${currentStep} of`
-                : `Add a new ${
-                    isService ? "service" : "product"
-                  } - Step ${currentStep} of`}{" "}
-              {steps.length}
-            </p>
+        <div className="sticky top-0 z-10 border-b border-gray-200 bg-white px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                {editingProduct
+                  ? `Edit ${isService ? "Service" : "Product"}`
+                  : `Create ${isService ? "Service" : "Product"}`}
+              </h2>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                {editingProduct
+                  ? `Edit ${
+                      isService ? "service" : "product"
+                    } details - Step ${currentStep} of`
+                  : `Add a new ${
+                      isService ? "service" : "product"
+                    } - Step ${currentStep} of`}{" "}
+                {steps.length}
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
+            >
+              <X className="h-6 w-6" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <X className="h-6 w-6" />
-          </button>
         </div>
 
         {/* Progress Steps */}
-        <div className="bg-gray-50 px-6 py-4 dark:bg-gray-700">
-          <div className="flex items-center justify-between">
+        <div className="border-b border-gray-200 bg-gray-50 px-6 py-5 dark:border-gray-700 dark:bg-gray-800/50">
+          <div className="flex items-center justify-between overflow-x-auto">
             {steps.map((step, index) => (
-              <div key={step.id} className="flex items-center">
-                <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
-                    currentStep >= step.id
-                      ? "bg-green-500 text-white"
-                      : "bg-gray-200 text-gray-600 dark:bg-gray-600 dark:text-gray-400"
-                  }`}
-                  style={
-                    currentStep >= step.id ? { color: "#ffffff" } : undefined
-                  }
-                >
-                  {step.id}
-                </div>
-                <div className="ml-3 hidden sm:block">
-                  <p
-                    className={`text-sm font-medium ${
+              <div key={step.id} className="flex items-center flex-shrink-0">
+                <div className="flex flex-col items-center">
+                  <div
+                    className={`relative flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold shadow-sm transition-all duration-300 ${
                       currentStep >= step.id
-                        ? "text-gray-900 dark:text-white"
-                        : "text-gray-500 dark:text-gray-400"
+                        ? "bg-gradient-to-br from-green-500 to-emerald-500 text-white ring-2 ring-green-500/20 ring-offset-2"
+                        : "bg-white text-gray-500 ring-1 ring-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:ring-gray-600"
                     }`}
                   >
-                    {step.title}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {step.description}
-                  </p>
+                    {currentStep > step.id ? (
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={3}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    ) : (
+                      <span>{step.id}</span>
+                    )}
+                  </div>
+                  <div className="mt-2 hidden text-center sm:block">
+                    <p
+                      className={`text-xs font-semibold transition-colors ${
+                        currentStep >= step.id
+                          ? "text-gray-900 dark:text-white"
+                          : "text-gray-500 dark:text-gray-400"
+                      }`}
+                    >
+                      {step.title}
+                    </p>
+                    <p className="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400">
+                      {step.description}
+                    </p>
+                  </div>
                 </div>
                 {index < steps.length - 1 && (
-                  <div
-                    className={`mx-4 h-0.5 w-12 ${
-                      currentStep > step.id
-                        ? "bg-green-500"
-                        : "bg-gray-200 dark:bg-gray-600"
-                    }`}
-                  />
+                  <div className="mx-3 flex-1 sm:mx-6">
+                    <div
+                      className={`h-1 rounded-full transition-all duration-500 ${
+                        currentStep > step.id
+                          ? "bg-gradient-to-r from-green-500 to-emerald-500"
+                          : "bg-gray-200 dark:bg-gray-600"
+                      }`}
+                    />
+                  </div>
                 )}
               </div>
             ))}
@@ -359,14 +378,15 @@ export function CreateProductForm({
           {currentStep === 1 && (
             <div className="space-y-6">
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {isService ? "Service Name *" : "Product Name *"}
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  {isService ? "Service Name" : "Product Name"}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
                   placeholder={
                     isService
                       ? "e.g., Corporate Catering Service"
@@ -377,8 +397,8 @@ export function CreateProductForm({
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Description *
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Description <span className="text-red-500">*</span>
                 </label>
                 <RichTextEditor
                   value={formData.description}
@@ -393,22 +413,24 @@ export function CreateProductForm({
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                   {isService ? "Service Attachment Documents" : "Product Image"}
                 </label>
-                <div className="rounded-lg border-2 border-dashed border-gray-300 p-6 dark:border-gray-600">
+                <div className="rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-6 transition-all duration-200 hover:border-green-400 hover:bg-green-50/30 dark:border-gray-600 dark:bg-gray-700/50 dark:hover:border-green-500">
                   {formData.image ? (
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Package className="h-5 w-5 text-gray-400" />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                    <div className="flex items-center justify-between rounded-lg bg-white p-3 shadow-sm dark:bg-gray-800">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-emerald-500">
+                          <Package className="h-5 w-5 text-white" />
+                        </div>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                           {formData.image.name}
                         </span>
                       </div>
                       <button
                         type="button"
                         onClick={removeImage}
-                        className="text-red-500 hover:text-red-700 dark:hover:text-red-400"
+                        className="rounded-lg p-1 text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -430,13 +452,15 @@ export function CreateProductForm({
                         htmlFor="image-upload"
                         className="flex cursor-pointer flex-col items-center justify-center"
                       >
-                        <Upload className="mb-2 h-8 w-8 text-gray-400" />
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-emerald-500">
+                          <Upload className="h-6 w-6 text-white" />
+                        </div>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                           {isService
                             ? "Click to upload documents or drag and drop"
                             : "Click to upload image or drag and drop"}
                         </span>
-                        <span className="mt-1 text-xs text-gray-500">
+                        <span className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                           {isService
                             ? "PDF, DOC, DOCX, TXT, JPG, PNG (max 5MB)"
                             : "PNG, JPG, WEBP (max 5MB)"}
@@ -453,15 +477,15 @@ export function CreateProductForm({
           {currentStep === 2 && (
             <div className="space-y-6">
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Category *
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Category <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={formData.category}
                   onChange={(e) =>
                     handleInputChange("category", e.target.value)
                   }
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
                   required
                 >
                   <option value="">Select a category</option>
@@ -475,18 +499,18 @@ export function CreateProductForm({
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Price *
+                  <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Price <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+                    <DollarSign className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
                     <input
                       type="number"
                       value={formData.price}
                       onChange={(e) =>
                         handleInputChange("price", e.target.value)
                       }
-                      className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      className="w-full rounded-xl border-2 border-gray-200 bg-white py-3 pl-12 pr-4 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
                       placeholder="45"
                       min="0"
                       step="0.01"
@@ -495,15 +519,15 @@ export function CreateProductForm({
                   </div>
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Price Unit *
+                  <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Price Unit <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formData.priceUnit}
                     onChange={(e) =>
                       handleInputChange("priceUnit", e.target.value)
                     }
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
                     required
                   >
                     {priceUnits.map((unit) => (
@@ -527,11 +551,11 @@ export function CreateProductForm({
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Status *
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Status <span className="text-red-500">*</span>
                 </label>
                 <div className="flex gap-4">
-                  <label className="flex cursor-pointer items-center gap-2">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border-2 border-gray-200 px-4 py-2 transition-all duration-200 hover:border-green-400 dark:border-gray-600">
                     <input
                       type="radio"
                       value="Active"
@@ -541,11 +565,11 @@ export function CreateProductForm({
                       }
                       className="h-4 w-4 text-green-500 focus:ring-green-500"
                     />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Active
                     </span>
                   </label>
-                  <label className="flex cursor-pointer items-center gap-2">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border-2 border-gray-200 px-4 py-2 transition-all duration-200 hover:border-green-400 dark:border-gray-600">
                     <input
                       type="radio"
                       value="Draft"
@@ -555,12 +579,12 @@ export function CreateProductForm({
                       }
                       className="h-4 w-4 text-green-500 focus:ring-green-500"
                     />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Draft
                     </span>
                   </label>
                 </div>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                   {isService
                     ? "Active services are visible to buyers, Draft services are saved but not published"
                     : "Active products are visible to buyers, Draft products are saved but not published"}
@@ -574,18 +598,18 @@ export function CreateProductForm({
             <div className="space-y-6">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Minimum Order *
+                  <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Minimum Order <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <Users className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+                    <Users className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
                     <input
                       type="number"
                       value={formData.minOrder}
                       onChange={(e) =>
                         handleInputChange("minOrder", e.target.value)
                       }
-                      className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      className="w-full rounded-xl border-2 border-gray-200 bg-white py-3 pl-12 pr-4 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
                       placeholder="1"
                       min="1"
                       required
@@ -593,18 +617,18 @@ export function CreateProductForm({
                   </div>
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Maximum Order *
+                  <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Maximum Order <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <Users className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+                    <Users className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
                     <input
                       type="number"
                       value={formData.maxOrder}
                       onChange={(e) =>
                         handleInputChange("maxOrder", e.target.value)
                       }
-                      className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      className="w-full rounded-xl border-2 border-gray-200 bg-white py-3 pl-12 pr-4 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
                       placeholder="100"
                       min="1"
                       required
@@ -614,18 +638,18 @@ export function CreateProductForm({
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Delivery Area *
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Delivery Area <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+                  <MapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
                   <input
                     type="text"
                     value={formData.deliveryArea}
                     onChange={(e) =>
                       handleInputChange("deliveryArea", e.target.value)
                     }
-                    className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="w-full rounded-xl border-2 border-gray-200 bg-white py-3 pl-12 pr-4 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
                     placeholder="e.g., Downtown & Surrounding Areas, City-wide"
                     required
                   />
@@ -638,7 +662,7 @@ export function CreateProductForm({
           {currentStep === 4 && (
             <div className="space-y-6">
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                   Specialties
                 </label>
                 <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
@@ -650,14 +674,14 @@ export function CreateProductForm({
                   {formData.specialties.map((specialty, index) => (
                     <div key={index} className="flex gap-2">
                       <div className="relative flex-1">
-                        <Tag className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+                        <Tag className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
                         <input
                           type="text"
                           value={specialty}
                           onChange={(e) =>
                             handleSpecialtyChange(index, e.target.value)
                           }
-                          className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                          className="w-full rounded-xl border-2 border-gray-200 bg-white py-3 pl-12 pr-4 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
                           placeholder={`Specialty ${index + 1}`}
                         />
                       </div>
@@ -665,7 +689,7 @@ export function CreateProductForm({
                         <button
                           type="button"
                           onClick={() => removeSpecialty(index)}
-                          className="px-3 py-3 text-red-500 hover:text-red-700 dark:hover:text-red-400"
+                          className="rounded-lg px-3 py-3 text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                         >
                           <X className="h-4 w-4" />
                         </button>
@@ -675,7 +699,7 @@ export function CreateProductForm({
                   <button
                     type="button"
                     onClick={addSpecialty}
-                    className="flex items-center gap-2 rounded-lg border border-green-300 px-4 py-2 text-green-600 hover:bg-green-50 hover:text-green-700 dark:border-green-600 dark:hover:bg-green-900/20 dark:hover:text-green-400"
+                    className="flex items-center gap-2 rounded-xl border-2 border-green-300 bg-white px-4 py-2 font-medium text-green-600 transition-all duration-200 hover:border-green-500 hover:bg-green-50 hover:text-green-700 dark:border-green-600 dark:bg-gray-700 dark:hover:bg-green-900/20 dark:hover:text-green-400"
                   >
                     <Plus className="h-4 w-4" />
                     Add Specialty
@@ -792,7 +816,7 @@ export function CreateProductForm({
               <button
                 type="button"
                 onClick={prevStep}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-800 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                className="rounded-xl border-2 border-gray-300 bg-white px-6 py-2.5 font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md active:scale-95 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               >
                 Previous
               </button>
@@ -803,7 +827,7 @@ export function CreateProductForm({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-800 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+              className="rounded-xl border-2 border-gray-300 bg-white px-6 py-2.5 font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md active:scale-95 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
             >
               Cancel
             </button>
@@ -812,8 +836,7 @@ export function CreateProductForm({
               <button
                 type="button"
                 onClick={nextStep}
-                className="rounded-lg bg-green-500 px-6 py-2 font-medium text-white transition-colors hover:bg-green-600"
-                style={{ color: "#ffffff" }}
+                className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-2.5 font-semibold text-white shadow-lg shadow-green-500/30 transition-all duration-200 hover:shadow-xl hover:shadow-green-500/40 active:scale-95"
               >
                 Next
               </button>
@@ -821,8 +844,7 @@ export function CreateProductForm({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex items-center gap-2 rounded-lg bg-green-500 px-6 py-2 font-medium text-white transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50"
-                style={{ color: "#ffffff" }}
+                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-2.5 font-semibold text-white shadow-lg shadow-green-500/30 transition-all duration-200 hover:shadow-xl hover:shadow-green-500/40 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                 onClick={handleSubmit}
               >
                 {isSubmitting ? (
