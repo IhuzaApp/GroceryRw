@@ -13,6 +13,7 @@ import {
   Send,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import rfqTermsOptions from "../../lib/rfqTermsOptions.json";
 
 interface CreateRFQFormProps {
   isOpen: boolean;
@@ -697,12 +698,11 @@ export function CreateRFQForm({
                   className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
                 >
                   <option value="">Select delivery terms</option>
-                  <option value="EXW">EXW (Ex Works)</option>
-                  <option value="FOB">FOB (Free On Board)</option>
-                  <option value="CIF">CIF (Cost, Insurance and Freight)</option>
-                  <option value="DDP">DDP (Delivered Duty Paid)</option>
-                  <option value="DDU">DDU (Delivered Duty Unpaid)</option>
-                  <option value="FCA">FCA (Free Carrier)</option>
+                  {rfqTermsOptions.deliveryTermsOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -710,30 +710,40 @@ export function CreateRFQForm({
                 <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                   Warranty Information
                 </label>
-                <input
-                  type="text"
+                <select
                   value={formData.warrantyInformation}
                   onChange={(e) =>
                     handleInputChange("warrantyInformation", e.target.value)
                   }
-                  className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
-                  placeholder="e.g., 1-year warranty on all items"
-                />
+                  className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
+                >
+                  <option value="">Select warranty</option>
+                  {rfqTermsOptions.warrantyOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                   Cancellation Terms
                 </label>
-                <input
-                  type="text"
+                <select
                   value={formData.cancellationTerms}
                   onChange={(e) =>
                     handleInputChange("cancellationTerms", e.target.value)
                   }
-                  className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
-                  placeholder="e.g., 7 days notice required for cancellation"
-                />
+                  className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
+                >
+                  <option value="">Select cancellation terms</option>
+                  {rfqTermsOptions.cancellationTermsOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
