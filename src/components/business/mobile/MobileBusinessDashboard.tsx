@@ -51,6 +51,7 @@ import { ExpandedSectionModal } from "./ExpandedSectionModal";
 import { ProductEditModal } from "./ProductEditModal";
 import { QuoteSubmissionForm } from "../QuoteSubmissionForm";
 import { SubmittedQuoteDetails } from "../SubmittedQuoteDetails";
+import { ContractDetailDrawer } from "../ContractDetailDrawer";
 import { formatCurrencySync } from "../../../utils/formatCurrency";
 import toast from "react-hot-toast";
 
@@ -288,6 +289,10 @@ export function MobileBusinessDashboard({
   // Product edit modal state
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [editingStoreId, setEditingStoreId] = useState<string | null>(null);
+
+  // Contract detail drawer state
+  const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
+  const [isContractDrawerOpen, setIsContractDrawerOpen] = useState(false);
 
   const businessFeatures = [
     {
@@ -532,8 +537,13 @@ export function MobileBusinessDashboard({
           }
           break;
         case "contracts":
-          // TODO: Add contracts API endpoint
-          setContracts([]);
+          const contractsRes = await fetch("/api/queries/business-contracts");
+          if (contractsRes.ok) {
+            const contractsData = await contractsRes.json();
+            setContracts(contractsData.contracts || []);
+          } else {
+            setContracts([]);
+          }
           break;
       }
     } catch (error) {
@@ -817,6 +827,10 @@ export function MobileBusinessDashboard({
           onMessageCustomer={(customerId) => {
             router.push(`/plasBusiness/BusinessChats?supplier=${customerId}`);
           }}
+          onViewContract={(contractId) => {
+            setSelectedContractId(contractId);
+            setIsContractDrawerOpen(true);
+          }}
         />
       )}
 
@@ -1008,6 +1022,22 @@ export function MobileBusinessDashboard({
           }}
         />
       )}
+
+      {/* Contract Detail Drawer */}
+      <ContractDetailDrawer
+        isOpen={isContractDrawerOpen}
+        onClose={() => {
+          setIsContractDrawerOpen(false);
+          setSelectedContractId(null);
+        }}
+        contractId={selectedContractId}
+        onContractUpdated={() => {
+          // Refresh contracts when updated
+          if (expandedSection === "contracts") {
+            fetchSectionData("contracts");
+          }
+        }}
+      />
     </div>
   );
 }
