@@ -728,32 +728,38 @@ export function RFQOpportunitiesSection({
                     We kindly request that the following conditions are considered when submitting your quotation:
                   </p>
                   <div className="space-y-3 text-sm">
-                    {selectedRFQ.payment_terms && (
-                      <div>
-                        <div className="font-medium text-gray-700 dark:text-gray-300">Payment Terms:</div>
-                        <p className="mt-1 text-gray-900 dark:text-white">{selectedRFQ.payment_terms}</p>
-                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                          (For example: 50% advance, 50% upon delivery, 100% upfront, etc.)
-                        </p>
-                      </div>
-                    )}
+                    <div>
+                      <div className="font-medium text-gray-700 dark:text-gray-300">Payment Terms:</div>
+                      <p className="mt-1 text-gray-900 dark:text-white">
+                        {selectedRFQ.payment_terms || "[Insert Payment Terms Here]"}
+                      </p>
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        (For example: 50% advance, 50% upon delivery, 100% upfront, etc.)
+                      </p>
+                    </div>
                     <div>
                       <div className="font-medium text-gray-700 dark:text-gray-300">Delivery Terms:</div>
-                      <p className="mt-1 text-gray-900 dark:text-white">[Insert Delivery Terms Here]</p>
+                      <p className="mt-1 text-gray-900 dark:text-white">
+                        {selectedRFQ.delivery_terms || "[Insert Delivery Terms Here]"}
+                      </p>
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                         (For example: EXW, DDP, etc.)
                       </p>
                     </div>
                     <div>
                       <div className="font-medium text-gray-700 dark:text-gray-300">Warranty Information:</div>
-                      <p className="mt-1 text-gray-900 dark:text-white">[Insert Warranty Terms Here]</p>
+                      <p className="mt-1 text-gray-900 dark:text-white">
+                        {selectedRFQ.warranty_information || "[Insert Warranty Terms Here]"}
+                      </p>
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                         (For example: 1-year warranty on all items, etc.)
                       </p>
                     </div>
                     <div>
                       <div className="font-medium text-gray-700 dark:text-gray-300">Cancellation Terms:</div>
-                      <p className="mt-1 text-gray-900 dark:text-white">[Insert Cancellation Terms Here]</p>
+                      <p className="mt-1 text-gray-900 dark:text-white">
+                        {selectedRFQ.cancellation_terms || "[Insert Cancellation Terms Here]"}
+                      </p>
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                         (For example: 7 days notice required for cancellation.)
                       </p>

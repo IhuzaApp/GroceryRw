@@ -22,6 +22,9 @@ const GET_RFQ_OPPORTUNITIES = gql`
       estimated_quantity
       expected_delivery_date
       payment_terms
+      delivery_terms
+      warranty_information
+      cancellation_terms
       requirements
       notes
       contact_name
@@ -95,6 +98,9 @@ export default async function handler(
         estimated_quantity: string;
         expected_delivery_date: string;
         payment_terms: string;
+        delivery_terms: string | null;
+        warranty_information: string | null;
+        cancellation_terms: string | null;
         requirements: any;
         notes: string;
         contact_name: string;

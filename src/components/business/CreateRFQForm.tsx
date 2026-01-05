@@ -41,6 +41,9 @@ interface RFQFormData {
   estimatedQuantity: string;
   deliveryDate: string;
   paymentTerms: string;
+  deliveryTerms: string;
+  warrantyInformation: string;
+  cancellationTerms: string;
   additionalNotes: string;
 }
 
@@ -83,6 +86,9 @@ export function CreateRFQForm({
     estimatedQuantity: "",
     deliveryDate: "",
     paymentTerms: "",
+    deliveryTerms: "",
+    warrantyInformation: "",
+    cancellationTerms: "",
     additionalNotes: "",
   });
 
@@ -120,13 +126,19 @@ export function CreateRFQForm({
     childField: string,
     value: any
   ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [parentField]: {
-        ...prev[parentField as keyof RFQFormData],
-        [childField]: value,
-      },
-    }));
+    setFormData((prev) => {
+      const parentValue = prev[parentField as keyof RFQFormData];
+      if (typeof parentValue === 'object' && parentValue !== null && !Array.isArray(parentValue)) {
+        return {
+          ...prev,
+          [parentField]: {
+            ...parentValue,
+            [childField]: value,
+          },
+        };
+      }
+      return prev;
+    });
   };
 
   const handleRequirementChange = (index: number, value: string) => {
@@ -202,6 +214,11 @@ export function CreateRFQForm({
         (r) => r.trim() !== ""
       );
 
+      // Combine all notes into a structured format
+      const notesContent = formData.additionalNotes 
+        ? `${formData.additionalNotes}\n\nTerms & Conditions:\nPayment Terms: ${formData.paymentTerms || "Not specified"}\nDelivery Terms: ${formData.deliveryTerms || "Not specified"}\nWarranty: ${formData.warrantyInformation || "Not specified"}\nCancellation Terms: ${formData.cancellationTerms || "Not specified"}`
+        : `Terms & Conditions:\nPayment Terms: ${formData.paymentTerms || "Not specified"}\nDelivery Terms: ${formData.deliveryTerms || "Not specified"}\nWarranty: ${formData.warrantyInformation || "Not specified"}\nCancellation Terms: ${formData.cancellationTerms || "Not specified"}`;
+
       // Call the API
       const response = await fetch("/api/mutations/create-business-rfq", {
         method: "POST",
@@ -220,8 +237,11 @@ export function CreateRFQForm({
           estimated_quantity: formData.estimatedQuantity || "",
           expected_delivery_date: formData.deliveryDate || "",
           payment_terms: formData.paymentTerms || "",
+          delivery_terms: formData.deliveryTerms || "",
+          warranty_information: formData.warrantyInformation || "",
+          cancellation_terms: formData.cancellationTerms || "",
           requirements: requirementsArray,
-          notes: formData.additionalNotes || "",
+          notes: notesContent,
           contact_name: formData.contactInfo.name,
           email: formData.contactInfo.email,
           phone: formData.contactInfo.phone || "",
@@ -259,6 +279,9 @@ export function CreateRFQForm({
         estimatedQuantity: "",
         deliveryDate: "",
         paymentTerms: "",
+        deliveryTerms: "",
+        warrantyInformation: "",
+        cancellationTerms: "",
         additionalNotes: "",
       });
       setCurrentStep(1);
@@ -647,13 +670,66 @@ export function CreateRFQForm({
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 >
                   <option value="">Select payment terms</option>
+                  <option value="cod">Cash on Delivery (COD)</option>
                   <option value="net30">Net 30 days</option>
                   <option value="net15">Net 15 days</option>
                   <option value="net60">Net 60 days</option>
-                  <option value="cod">Cash on Delivery</option>
                   <option value="advance">Advance payment</option>
                   <option value="milestone">Milestone-based</option>
+                  <option value="50advance50delivery">50% advance, 50% upon delivery</option>
+                  <option value="100upfront">100% upfront</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Delivery Terms
+                </label>
+                <select
+                  value={formData.deliveryTerms}
+                  onChange={(e) =>
+                    handleInputChange("deliveryTerms", e.target.value)
+                  }
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">Select delivery terms</option>
+                  <option value="EXW">EXW (Ex Works)</option>
+                  <option value="FOB">FOB (Free On Board)</option>
+                  <option value="CIF">CIF (Cost, Insurance and Freight)</option>
+                  <option value="DDP">DDP (Delivered Duty Paid)</option>
+                  <option value="DDU">DDU (Delivered Duty Unpaid)</option>
+                  <option value="FCA">FCA (Free Carrier)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Warranty Information
+                </label>
+                <input
+                  type="text"
+                  value={formData.warrantyInformation}
+                  onChange={(e) =>
+                    handleInputChange("warrantyInformation", e.target.value)
+                  }
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  placeholder="e.g., 1-year warranty on all items"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Cancellation Terms
+                </label>
+                <input
+                  type="text"
+                  value={formData.cancellationTerms}
+                  onChange={(e) =>
+                    handleInputChange("cancellationTerms", e.target.value)
+                  }
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  placeholder="e.g., 7 days notice required for cancellation"
+                />
               </div>
 
               <div>

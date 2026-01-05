@@ -23,6 +23,9 @@ const CREATE_BUSINESS_RFQ = gql`
     $response_date: String = ""
     $phone: String = ""
     $payment_terms: String = ""
+    $delivery_terms: String = ""
+    $warranty_information: String = ""
+    $cancellation_terms: String = ""
     $urgency_level: String = ""
     $user_id: uuid = ""
   ) {
@@ -45,6 +48,9 @@ const CREATE_BUSINESS_RFQ = gql`
         response_date: $response_date
         phone: $phone
         payment_terms: $payment_terms
+        delivery_terms: $delivery_terms
+        warranty_information: $warranty_information
+        cancellation_terms: $cancellation_terms
         urgency_level: $urgency_level
         user_id: $user_id
       }
@@ -86,6 +92,9 @@ interface CreateBusinessRFQInput {
   estimated_quantity?: string;
   expected_delivery_date?: string;
   payment_terms?: string;
+  delivery_terms?: string;
+  warranty_information?: string;
+  cancellation_terms?: string;
   requirements?: any;
   notes?: string;
   contact_name: string;
@@ -131,6 +140,9 @@ export default async function handler(
       estimated_quantity,
       expected_delivery_date,
       payment_terms,
+      delivery_terms,
+      warranty_information,
+      cancellation_terms,
       requirements,
       notes,
       contact_name,
@@ -230,6 +242,9 @@ export default async function handler(
         ? expected_delivery_date.trim()
         : "",
       payment_terms: payment_terms ? payment_terms.trim() : "",
+      delivery_terms: delivery_terms ? delivery_terms.trim() : "",
+      warranty_information: warranty_information ? warranty_information.trim() : "",
+      cancellation_terms: cancellation_terms ? cancellation_terms.trim() : "",
       requirements: requirementsJson || "[]",
       notes: notes ? notes.trim() : "",
       phone: phone ? phone.trim() : "",
