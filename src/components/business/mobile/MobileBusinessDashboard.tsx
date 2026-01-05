@@ -52,6 +52,7 @@ import { ProductEditModal } from "./ProductEditModal";
 import { QuoteSubmissionForm } from "../QuoteSubmissionForm";
 import { SubmittedQuoteDetails } from "../SubmittedQuoteDetails";
 import { ContractDetailDrawer } from "../ContractDetailDrawer";
+import { CreateRFQForm } from "../CreateRFQForm";
 import { formatCurrencySync } from "../../../utils/formatCurrency";
 import toast from "react-hot-toast";
 
@@ -294,6 +295,9 @@ export function MobileBusinessDashboard({
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
   const [isContractDrawerOpen, setIsContractDrawerOpen] = useState(false);
 
+  // Create RFQ form state
+  const [isCreateRFQOpen, setIsCreateRFQOpen] = useState(false);
+
   const businessFeatures = [
     {
       id: "rfqs",
@@ -350,7 +354,7 @@ export function MobileBusinessDashboard({
       label: "Create RFQ",
       color: "text-green-500",
       bgColor: "bg-green-50 dark:bg-green-900/20",
-      action: () => router.push("/plasBusiness?createRFQ=true"),
+      action: () => setIsCreateRFQOpen(true),
     },
   ];
 
@@ -1038,6 +1042,33 @@ export function MobileBusinessDashboard({
           }
         }}
       />
+
+      {/* Create RFQ Form Modal */}
+      {isCreateRFQOpen && (
+        <div className="fixed inset-0 z-[10000]">
+          <CreateRFQForm
+            isOpen={isCreateRFQOpen}
+            onClose={() => setIsCreateRFQOpen(false)}
+            onSubmit={async (rfqData) => {
+              try {
+                // The CreateRFQForm handles the submission internally
+                // We just need to close the modal and refresh data
+                setIsCreateRFQOpen(false);
+                toast.success("RFQ created successfully!");
+                // Refresh stats and RFQs if the section is open
+                if (businessAccount?.id) {
+                  fetchStats();
+                }
+                if (expandedSection === "rfqs") {
+                  fetchSectionData("rfqs");
+                }
+              } catch (error) {
+                console.error("Error handling RFQ submission:", error);
+              }
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }
