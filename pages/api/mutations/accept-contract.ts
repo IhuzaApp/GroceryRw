@@ -5,13 +5,27 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
 const ACCEPT_CONTRACT = gql`
-  mutation AcceptContract($contractId: uuid!, $status: String!) {
+  mutation AcceptContract(
+    $contractId: uuid!
+    $status: String!
+    $supplierSignature: String
+    $supplierPhoto: String
+    $updateOn: timestamptz
+  ) {
     update_BusinessContracts_by_pk(
       pk_columns: { id: $contractId }
-      _set: { status: $status }
+      _set: {
+        status: $status
+        supplierSignature: $supplierSignature
+        supplierPhoto: $supplierPhoto
+        update_on: $updateOn
+      }
     ) {
       id
       status
+      supplierSignature
+      supplierPhoto
+      update_on
     }
   }
 `;
@@ -74,10 +88,18 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    const { contractId } = req.body;
+    const { contractId, supplierSignature, supplierPhoto } = req.body;
 
     if (!contractId) {
       return res.status(400).json({ error: "Contract ID is required" });
+    }
+
+    if (!supplierSignature) {
+      return res.status(400).json({ error: "Supplier signature is required" });
+    }
+
+    if (!supplierPhoto) {
+      return res.status(400).json({ error: "Supplier photo is required" });
     }
 
     // Get contract to find quote ID
@@ -104,15 +126,22 @@ export default async function handler(
       });
     }
 
-    // Update contract status to "active"
+    // Update contract status to "active" with supplier signature and photo
+    const currentTimestamp = new Date().toISOString();
     const updateResult = await hasuraClient.request<{
       update_BusinessContracts_by_pk: {
         id: string;
         status: string;
+        supplierSignature: string | null;
+        supplierPhoto: string | null;
+        update_on: string | null;
       } | null;
     }>(ACCEPT_CONTRACT, {
       contractId: contractId,
       status: "active",
+      supplierSignature: supplierSignature || null,
+      supplierPhoto: supplierPhoto || null,
+      updateOn: currentTimestamp,
     });
 
     if (!updateResult.update_BusinessContracts_by_pk) {
