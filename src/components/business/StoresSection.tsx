@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 import { Store, Plus, ExternalLink, MapPin, Eye } from "lucide-react";
 import Image from "next/image";
 import toast from "react-hot-toast";
+import { CreateStoreForm } from "./CreateStoreForm";
 
 interface StoresSectionProps {
   businessAccount?: any;
@@ -18,6 +19,7 @@ export function StoresSection({
   const router = useRouter();
   const [userStores, setUserStores] = useState<any[]>([]);
   const [loadingStores, setLoadingStores] = useState(false);
+  const [isCreateStoreModalOpen, setIsCreateStoreModalOpen] = useState(false);
 
   useEffect(() => {
     if (businessAccount?.id) {
@@ -49,7 +51,13 @@ export function StoresSection({
   };
 
   const handleCreateStore = () => {
-    router.push("/plasBusiness/store/create");
+    setIsCreateStoreModalOpen(true);
+  };
+
+  const handleStoreCreated = (storeData: any) => {
+    // Refresh the stores list
+    fetchUserStores();
+    setIsCreateStoreModalOpen(false);
   };
 
   const handleViewStore = (storeId: string) => {
@@ -218,6 +226,13 @@ export function StoresSection({
           </button>
         </div>
       )}
+
+      {/* Create Store Modal */}
+      <CreateStoreForm
+        isOpen={isCreateStoreModalOpen}
+        onClose={() => setIsCreateStoreModalOpen(false)}
+        onSubmit={handleStoreCreated}
+      />
     </div>
   );
 }
