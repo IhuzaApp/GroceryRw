@@ -119,7 +119,8 @@ export default async function handler(
     if (contract.status !== "waiting_for_supplier") {
       return res.status(400).json({
         error: "Contract cannot be edited",
-        message: "Only contracts with status 'waiting_for_supplier' can be edited",
+        message:
+          "Only contracts with status 'waiting_for_supplier' can be edited",
       });
     }
 
@@ -229,4 +230,3 @@ export default async function handler(
     });
   }
 }
-

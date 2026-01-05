@@ -211,7 +211,10 @@ export function CreateStoreForm({
         </div>
 
         {/* Form Content */}
-        <form onSubmit={handleSubmit} className="max-h-[60vh] overflow-y-auto p-6">
+        <form
+          onSubmit={handleSubmit}
+          className="max-h-[60vh] overflow-y-auto p-6"
+        >
           <div className="space-y-6">
             {/* Store Name */}
             <div>
@@ -376,4 +379,3 @@ export function CreateStoreForm({
     </div>
   );
 }
-

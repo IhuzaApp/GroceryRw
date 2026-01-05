@@ -5,7 +5,10 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
 const GET_BUSINESS_CONTRACTS = gql`
-  query GetBusinessContracts($businessProfileId: uuid!, $supplierBusinessId: uuid!) {
+  query GetBusinessContracts(
+    $businessProfileId: uuid!
+    $supplierBusinessId: uuid!
+  ) {
     # Contracts where user is the client (created the contract)
     BusinessContracts_Client: BusinessContracts(
       where: { bussinessProfile_id: { _eq: $businessProfileId } }
@@ -287,7 +290,7 @@ export default async function handler(
     const supplierRfqIds = new Set(
       (result.SupplierQuotes || []).map((q) => q.businessRfq_id)
     );
-    
+
     // Create a map of RFQ ID to quote data for supplier quotes
     const supplierQuoteMap = new Map(
       (result.SupplierQuotes || []).map((q) => [q.businessRfq_id, q])
@@ -324,16 +327,15 @@ export default async function handler(
       // For client contracts, use business_account from contract
       const rfqId = rfq?.id;
       const supplierQuote = rfqId ? supplierQuoteMap.get(rfqId) : null;
-      const supplierAccount = supplierQuote?.business_account || contract.business_account;
+      const supplierAccount =
+        supplierQuote?.business_account || contract.business_account;
 
       return {
         id: contract.id,
         contractId: contract.id.slice(0, 8).toUpperCase(),
         title: rfq?.title || "Contract",
-        supplierName:
-          supplierAccount?.business_name || "Unknown Supplier",
-        supplierCompany:
-          supplierAccount?.business_name || "Unknown Company",
+        supplierName: supplierAccount?.business_name || "Unknown Supplier",
+        supplierCompany: supplierAccount?.business_name || "Unknown Company",
         contractType: contract.type || "Service Agreement",
         status: (contract.status || "pending") as
           | "draft"
@@ -346,7 +348,9 @@ export default async function handler(
           | "rejected",
         startDate: contract.startDate,
         endDate: contract.endDate,
-        totalValue: parseFloat(contract.contract_Value || contract.value || "0"),
+        totalValue: parseFloat(
+          contract.contract_Value || contract.value || "0"
+        ),
         currency: supplierQuote?.currency || "RWF",
         paymentSchedule: contract.paymentSchedule || "Not specified",
         progress: 0, // Can be calculated based on deliverables if needed
@@ -380,4 +384,3 @@ export default async function handler(
     });
   }
 }
-

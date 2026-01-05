@@ -1663,7 +1663,7 @@ export function ExpandedSectionModal({
                 {sectionId === "orders" && (
                   <>
                     {loadingOrderDetails ? (
-                      <div className="space-y-4 animate-pulse">
+                      <div className="animate-pulse space-y-4">
                         {/* Order Header Skeleton */}
                         <div className="relative mb-4 overflow-hidden rounded-2xl bg-gradient-to-br from-gray-200 to-gray-300 p-5 dark:from-gray-700 dark:to-gray-800">
                           <div className="mb-4 flex items-start justify-between">
@@ -2247,7 +2247,7 @@ export function ExpandedSectionModal({
 
                     {/* Products Grid - Main Focus */}
                     {loadingProducts ? (
-                      <div className="grid grid-cols-2 gap-3 animate-pulse">
+                      <div className="grid animate-pulse grid-cols-2 gap-3">
                         {[1, 2, 3, 4, 5, 6].map((i) => (
                           <div
                             key={i}
@@ -2256,7 +2256,7 @@ export function ExpandedSectionModal({
                             {/* Image Skeleton */}
                             <div className="aspect-square w-full bg-gray-200 dark:bg-gray-700"></div>
                             {/* Content Skeleton */}
-                            <div className="flex flex-1 flex-col p-3 space-y-2">
+                            <div className="flex flex-1 flex-col space-y-2 p-3">
                               <div className="h-4 w-full rounded bg-gray-200 dark:bg-gray-700"></div>
                               <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700"></div>
                               <div className="mt-2 flex items-baseline gap-1">
@@ -2572,7 +2572,7 @@ export function ExpandedSectionModal({
         {/* Content */}
         <div className="flex-1 overflow-y-auto pb-24">
           {loading ? (
-            <div className="space-y-3 p-4 animate-pulse">
+            <div className="animate-pulse space-y-3 p-4">
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
@@ -2674,12 +2674,13 @@ export function ExpandedSectionModal({
                   <ContractCard
                     key={contract.id}
                     contract={contract}
-                    onView={onViewContract 
-                      ? () => {
-                          // Directly open the contract drawer, matching desktop behavior
-                          onViewContract(contract.id);
-                        }
-                      : handleItemClick
+                    onView={
+                      onViewContract
+                        ? () => {
+                            // Directly open the contract drawer, matching desktop behavior
+                            onViewContract(contract.id);
+                          }
+                        : handleItemClick
                     }
                   />
                 ))}
@@ -3132,17 +3133,23 @@ function ContractCard({
   onView: (item: any) => void;
 }) {
   const statusColors: Record<string, string> = {
-    active: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-    pending: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-    waiting_for_supplier: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
-    completed: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    active:
+      "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+    pending:
+      "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+    waiting_for_supplier:
+      "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+    completed:
+      "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
     terminated: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
     expired: "bg-gray-100 text-gray-600 dark:bg-gray-600 dark:text-gray-400",
     rejected: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
     draft: "bg-gray-100 text-gray-600 dark:bg-gray-600 dark:text-gray-400",
   };
 
-  const statusColor = statusColors[contract.status?.toLowerCase() || "active"] || statusColors.active;
+  const statusColor =
+    statusColors[contract.status?.toLowerCase() || "active"] ||
+    statusColors.active;
 
   return (
     <div
@@ -3150,12 +3157,12 @@ function ContractCard({
       className="cursor-pointer rounded-xl border border-gray-200 bg-gray-50 p-4 transition-all hover:border-green-300 hover:shadow-md active:scale-[0.98] dark:border-gray-600 dark:bg-gray-800 dark:hover:border-green-600"
     >
       <div className="mb-2 flex items-start justify-between gap-2">
-        <div className="flex-1 min-w-0">
-          <h4 className="text-base font-bold text-gray-900 dark:text-white truncate">
+        <div className="min-w-0 flex-1">
+          <h4 className="truncate text-base font-bold text-gray-900 dark:text-white">
             {contract.title || `Contract #${contract.id?.slice(0, 8) || "N/A"}`}
           </h4>
           {contract.supplierCompany && (
-            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 truncate">
+            <p className="mt-1 truncate text-sm text-gray-600 dark:text-gray-400">
               {contract.supplierCompany}
             </p>
           )}
@@ -3176,7 +3183,10 @@ function ContractCard({
         {contract.totalValue && (
           <div className="flex items-center gap-1">
             <DollarSign className="h-3 w-3" />
-            <span>{formatCurrencySync(contract.totalValue)} {contract.currency || "RWF"}</span>
+            <span>
+              {formatCurrencySync(contract.totalValue)}{" "}
+              {contract.currency || "RWF"}
+            </span>
           </div>
         )}
       </div>

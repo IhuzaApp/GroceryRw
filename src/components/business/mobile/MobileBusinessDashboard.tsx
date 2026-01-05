@@ -292,7 +292,9 @@ export function MobileBusinessDashboard({
   const [editingStoreId, setEditingStoreId] = useState<string | null>(null);
 
   // Contract detail drawer state
-  const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
+  const [selectedContractId, setSelectedContractId] = useState<string | null>(
+    null
+  );
   const [isContractDrawerOpen, setIsContractDrawerOpen] = useState(false);
 
   // Create RFQ form state

@@ -130,35 +130,41 @@ export function ContractsManagement({
       if (response.ok) {
         const data = await response.json();
         // Transform API data to match Contract interface
-        const transformedContracts: Contract[] = (data.contracts || []).map((contract: any) => ({
-          id: contract.id,
-          contractId: contract.contractId,
-          title: contract.title,
-          supplierName: contract.supplierName,
-          supplierCompany: contract.supplierCompany,
-          supplierId: contract.supplierId || "",
-          contractType: contract.contractType,
-          status: contract.status,
-          startDate: contract.startDate,
-          endDate: contract.endDate,
-          totalValue: contract.totalValue,
-          currency: contract.currency,
-          paymentSchedule: contract.paymentSchedule,
-          progress: contract.progress || 0,
-          deliverables: Array.isArray(contract.deliverables) 
-            ? contract.deliverables.map((del: any, idx: number) => ({
-                id: del.id || `del-${idx}`,
-                description: del.description || "",
-                dueDate: del.dueDate || "",
-                value: del.value || 0,
-                status: (del.status || "pending") as "pending" | "in-progress" | "completed" | "overdue",
-              }))
-            : [],
-          lastActivity: contract.updated_at || contract.created_at || "",
-          created: contract.created_at || "",
-          signedByClient: !!contract.clientSignature,
-          signedBySupplier: !!contract.supplierSignature,
-        }));
+        const transformedContracts: Contract[] = (data.contracts || []).map(
+          (contract: any) => ({
+            id: contract.id,
+            contractId: contract.contractId,
+            title: contract.title,
+            supplierName: contract.supplierName,
+            supplierCompany: contract.supplierCompany,
+            supplierId: contract.supplierId || "",
+            contractType: contract.contractType,
+            status: contract.status,
+            startDate: contract.startDate,
+            endDate: contract.endDate,
+            totalValue: contract.totalValue,
+            currency: contract.currency,
+            paymentSchedule: contract.paymentSchedule,
+            progress: contract.progress || 0,
+            deliverables: Array.isArray(contract.deliverables)
+              ? contract.deliverables.map((del: any, idx: number) => ({
+                  id: del.id || `del-${idx}`,
+                  description: del.description || "",
+                  dueDate: del.dueDate || "",
+                  value: del.value || 0,
+                  status: (del.status || "pending") as
+                    | "pending"
+                    | "in-progress"
+                    | "completed"
+                    | "overdue",
+                }))
+              : [],
+            lastActivity: contract.updated_at || contract.created_at || "",
+            created: contract.created_at || "",
+            signedByClient: !!contract.clientSignature,
+            signedBySupplier: !!contract.supplierSignature,
+          })
+        );
         setContracts(transformedContracts);
       } else {
         console.error("Failed to fetch contracts");
@@ -240,7 +246,9 @@ export function ContractsManagement({
 
     try {
       // Fetch full contract details for PDF generation
-      const response = await fetch(`/api/queries/contract-details?id=${contract.id}`);
+      const response = await fetch(
+        `/api/queries/contract-details?id=${contract.id}`
+      );
       if (!response.ok) {
         throw new Error("Failed to fetch contract details");
       }
@@ -251,7 +259,7 @@ export function ContractsManagement({
       }
 
       const contractData = data.contract;
-      
+
       // Map contract data to match the expected interface
       const contractDataForPdf = {
         id: contractData.id,
@@ -317,7 +325,10 @@ export function ContractsManagement({
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
           <div className="animate-pulse space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-32 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+              <div
+                key={i}
+                className="h-32 rounded-lg bg-gray-200 dark:bg-gray-700"
+              ></div>
             ))}
           </div>
         </div>
@@ -415,12 +426,16 @@ export function ContractsManagement({
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
                     <span>
-                      {formatDate(contract.startDate)} - {formatDate(contract.endDate)}
+                      {formatDate(contract.startDate)} -{" "}
+                      {formatDate(contract.endDate)}
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
                     <DollarSign className="h-4 w-4" />
-                    <span>{formatCurrencySync(contract.totalValue)} {contract.currency}</span>
+                    <span>
+                      {formatCurrencySync(contract.totalValue)}{" "}
+                      {contract.currency}
+                    </span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
@@ -470,7 +485,8 @@ export function ContractsManagement({
                     </span>
                     <div className="flex items-center gap-2">
                       <span className="text-gray-500 dark:text-gray-400">
-                        {formatCurrencySync(deliverable.value)} {contract.currency}
+                        {formatCurrencySync(deliverable.value)}{" "}
+                        {contract.currency}
                       </span>
                       <span
                         className={`rounded-full px-2 py-1 text-xs ${getDeliverableStatusColor(
@@ -499,7 +515,8 @@ export function ContractsManagement({
                   </span>
                   <div className="text-right">
                     <div className="font-semibold text-blue-900 dark:text-blue-100">
-                      {formatCurrencySync(contract.nextPayment.amount)} {contract.currency}
+                      {formatCurrencySync(contract.nextPayment.amount)}{" "}
+                      {contract.currency}
                     </div>
                     <div className="text-blue-600 dark:text-blue-400">
                       Due {contract.nextPayment.dueDate}
