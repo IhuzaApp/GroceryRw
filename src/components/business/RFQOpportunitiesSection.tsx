@@ -515,39 +515,11 @@ export function RFQOpportunitiesSection({
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-md sm:items-center sm:bg-black/60 sm:p-4">
           <div className="flex h-full max-h-screen w-full flex-col overflow-hidden rounded-t-[2rem] bg-white shadow-2xl dark:bg-gray-900 sm:h-auto sm:max-h-[90vh] sm:w-full sm:max-w-5xl sm:rounded-3xl sm:border sm:border-gray-200 dark:sm:border-gray-700">
             {/* Header */}
-            <div className="flex-shrink-0 border-b border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
-              <div className="mb-4 flex items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <h2 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white sm:text-2xl">
-                    {selectedRFQ.title}
-                  </h2>
-                  <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <span
-                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
-                        selectedRFQ.status === "Urgent"
-                          ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
-                          : selectedRFQ.status === "Closed"
-                          ? "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-                          : "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
-                      }`}
-                    >
-                      {selectedRFQ.status === "Urgent" && (
-                        <Clock className="h-3 w-3" />
-                      )}
-                      {selectedRFQ.status}
-                    </span>
-                    <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300">
-                      {selectedRFQ.category}
-                    </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {selectedRFQ.responses || 0} responses
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    <Building className="mr-1.5 inline h-4 w-4" />
-                    {selectedRFQ.postedBy}
-                  </p>
-                </div>
+            <div className="flex-shrink-0 bg-white p-6 dark:bg-gray-900">
+              <div className="flex items-start justify-between gap-4">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white sm:text-2xl">
+                  Request for Quotation
+                </h2>
                 <button
                   onClick={() => setIsQuoteModalOpen(false)}
                   className="flex-shrink-0 rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
@@ -555,8 +527,335 @@ export function RFQOpportunitiesSection({
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              {/* Action buttons */}
-              <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-900">
+              <div className="p-6 md:p-8">
+                {/* To: Supplier Section */}
+                <div className="mb-8">
+                  <div className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    To:
+                  </div>
+                  <div className="text-sm text-gray-900 dark:text-white">
+                    [Supplier's Company Name]
+                  </div>
+                  <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    [Supplier's Address]
+                  </div>
+                  <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    [City, Country]
+                  </div>
+                </div>
+
+                {/* Date, RFQ Reference, Response Deadline */}
+                <div className="mb-8 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                  <div>
+                    <span className="font-medium text-gray-700 dark:text-gray-300">Date: </span>
+                    <span className="text-gray-900 dark:text-white">
+                      {new Date(selectedRFQ.created_at || Date.now()).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700 dark:text-gray-300">RFQ Reference Number: </span>
+                    <span className="font-mono text-gray-900 dark:text-white">
+                      {selectedRFQ.id?.slice(0, 8).toUpperCase() || "N/A"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700 dark:text-gray-300">Response Deadline: </span>
+                    <span className="text-gray-900 dark:text-white">
+                      {selectedRFQ.deadline || selectedRFQ.response_date || "Not specified"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Subject */}
+                <div className="mb-8">
+                  <div className="text-sm font-medium text-gray-900 dark:text-white">
+                    Subject: Request for Quotation for {selectedRFQ.title || "[Insert Description of Goods/Services]"}
+                  </div>
+                </div>
+
+                {/* Greeting */}
+                <div className="mb-8 text-sm text-gray-700 dark:text-gray-300">
+                  <p>Dear [Supplier's Contact Name],</p>
+                  <p className="mt-2">
+                    We hope this message finds you well. We are reaching out to request a formal quotation for the following products and/or services that we need for an upcoming project. Below, you will find the specific requirements for this request.
+                  </p>
+                </div>
+
+                {/* 1. RFQ Summary */}
+                <div className="mb-8">
+                  <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">
+                    1. RFQ Summary
+                  </h3>
+                  <div className="space-y-3 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">RFQ Title: </span>
+                      <span className="text-gray-900 dark:text-white">{selectedRFQ.title || "[Insert Title Here]"}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Business ID: </span>
+                      <span className="font-mono text-gray-900 dark:text-white">
+                        {selectedRFQ.business_id?.slice(0, 8).toUpperCase() || selectedRFQ.id?.slice(0, 8).toUpperCase() || "[Insert Business ID Here]"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Category: </span>
+                      <span className="text-gray-900 dark:text-white">{selectedRFQ.category || "[Insert Category Here]"}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Location: </span>
+                      <span className="text-gray-900 dark:text-white">{selectedRFQ.location || "[Insert Location Here]"}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Urgency Level: </span>
+                      <span className="text-gray-900 dark:text-white">
+                        {selectedRFQ.urgency_level || selectedRFQ.status || "[Insert Urgency Level Here]"}
+                        {selectedRFQ.urgency_level && " (For example: High, Medium, Low)"}
+                      </span>
+                    </div>
+                    {selectedRFQ.estimated_quantity && (
+                      <div>
+                        <span className="font-medium text-gray-700 dark:text-gray-300">Estimated Quantity Needed: </span>
+                        <span className="text-gray-900 dark:text-white">{selectedRFQ.estimated_quantity}</span>
+                      </div>
+                    )}
+                    {selectedRFQ.expected_delivery_date && (
+                      <div>
+                        <span className="font-medium text-gray-700 dark:text-gray-300">Expected Delivery Date: </span>
+                        <span className="text-gray-900 dark:text-white">
+                          {new Date(selectedRFQ.expected_delivery_date).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </span>
+                      </div>
+                    )}
+                    <div>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Budget Range: </span>
+                      <span className="text-gray-900 dark:text-white">
+                        We expect the total cost to be between RWF {selectedRFQ.min_budget ? formatCurrencySync(parseFloat(selectedRFQ.min_budget)).replace(/[^\d,]/g, "") : "[Insert Min Budget Here]"} and RWF {selectedRFQ.max_budget ? formatCurrencySync(parseFloat(selectedRFQ.max_budget)).replace(/[^\d,]/g, "") : "[Insert Max Budget Here]"}.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Description of Goods/Services */}
+                <div className="mb-8">
+                  <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">
+                    2. Description of Goods/Services
+                  </h3>
+                  <p className="mb-3 text-sm text-gray-700 dark:text-gray-300">
+                    We are requesting quotations for the following:
+                  </p>
+                  <div className="space-y-3 text-sm">
+                    <div>
+                      <div className="font-medium text-gray-700 dark:text-gray-300">Goods/Services Description:</div>
+                      <p className="mt-1 text-gray-900 dark:text-white">
+                        {selectedRFQ.description || "[Insert Detailed Description of the Products/Services Here]"}
+                      </p>
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        (Example: Office furniture, computers, or equipment, etc.)
+                      </p>
+                    </div>
+                    {selectedRFQ.requirements && (() => {
+                      let requirementsList: string[] = [];
+                      try {
+                        if (typeof selectedRFQ.requirements === 'string') {
+                          if (selectedRFQ.requirements.startsWith('[')) {
+                            requirementsList = JSON.parse(selectedRFQ.requirements);
+                          } else {
+                            // If it's a plain string, split by common delimiters
+                            requirementsList = selectedRFQ.requirements
+                              .split(/[,;]\s*/)
+                              .filter(req => req.trim().length > 0);
+                          }
+                        } else if (Array.isArray(selectedRFQ.requirements)) {
+                          requirementsList = selectedRFQ.requirements;
+                        } else {
+                          requirementsList = [String(selectedRFQ.requirements)];
+                        }
+                      } catch (error) {
+                        // If parsing fails, treat as single string
+                        requirementsList = [String(selectedRFQ.requirements)];
+                      }
+
+                      return (
+                        <div>
+                          <div className="font-medium text-gray-700 dark:text-gray-300">Specific Requirements:</div>
+                          <ul className="ml-6 mt-1 list-disc space-y-1 text-gray-900 dark:text-white">
+                            {requirementsList.map((req, index) => (
+                              <li key={index}>{req.trim()}</li>
+                            ))}
+                          </ul>
+                          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            (Example: Must meet international quality standards, must be energy-efficient, etc.)
+                          </p>
+                        </div>
+                      );
+                    })()}
+                    {selectedRFQ.estimated_quantity && (
+                      <div>
+                        <div className="font-medium text-gray-700 dark:text-gray-300">Quantity Required:</div>
+                        <p className="mt-1 text-gray-900 dark:text-white">{selectedRFQ.estimated_quantity}</p>
+                      </div>
+                    )}
+                    {selectedRFQ.notes && (
+                      <div>
+                        <div className="font-medium text-gray-700 dark:text-gray-300">Packaging/Delivery Requirements:</div>
+                        <p className="mt-1 text-gray-900 dark:text-white">{selectedRFQ.notes}</p>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                          (Example: Items must be delivered fully assembled and packaged to prevent damage during transport.)
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 3. Terms and Conditions */}
+                <div className="mb-8">
+                  <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">
+                    3. Terms and Conditions
+                  </h3>
+                  <p className="mb-3 text-sm text-gray-700 dark:text-gray-300">
+                    We kindly request that the following conditions are considered when submitting your quotation:
+                  </p>
+                  <div className="space-y-3 text-sm">
+                    {selectedRFQ.payment_terms && (
+                      <div>
+                        <div className="font-medium text-gray-700 dark:text-gray-300">Payment Terms:</div>
+                        <p className="mt-1 text-gray-900 dark:text-white">{selectedRFQ.payment_terms}</p>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                          (For example: 50% advance, 50% upon delivery, 100% upfront, etc.)
+                        </p>
+                      </div>
+                    )}
+                    <div>
+                      <div className="font-medium text-gray-700 dark:text-gray-300">Delivery Terms:</div>
+                      <p className="mt-1 text-gray-900 dark:text-white">[Insert Delivery Terms Here]</p>
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        (For example: EXW, DDP, etc.)
+                      </p>
+                    </div>
+                    <div>
+                      <div className="font-medium text-gray-700 dark:text-gray-300">Warranty Information:</div>
+                      <p className="mt-1 text-gray-900 dark:text-white">[Insert Warranty Terms Here]</p>
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        (For example: 1-year warranty on all items, etc.)
+                      </p>
+                    </div>
+                    <div>
+                      <div className="font-medium text-gray-700 dark:text-gray-300">Cancellation Terms:</div>
+                      <p className="mt-1 text-gray-900 dark:text-white">[Insert Cancellation Terms Here]</p>
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        (For example: 7 days notice required for cancellation.)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. Submission Instructions */}
+                <div className="mb-8">
+                  <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">
+                    4. Submission Instructions
+                  </h3>
+                  <p className="mb-3 text-sm text-gray-700 dark:text-gray-300">
+                    Please ensure your quotation includes the following:
+                  </p>
+                  <ul className="ml-6 list-disc space-y-2 text-sm text-gray-900 dark:text-white">
+                    <li>A detailed breakdown of costs, including the unit price, total price, delivery costs, taxes, and any applicable fees.</li>
+                    <li>Lead time for delivery and any available options for expedited shipping, if applicable.</li>
+                    <li>Product specifications, including make, model, and relevant certifications.</li>
+                    <li>Validity period for the quote (minimum 30 days is preferred).</li>
+                    <li>Payment terms as agreed upon.</li>
+                  </ul>
+                </div>
+
+                {/* 5. Attachments */}
+                {selectedRFQ.attachment && (
+                  <div className="mb-8">
+                    <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">
+                      5. Attachments
+                    </h3>
+                    <p className="mb-3 text-sm text-gray-700 dark:text-gray-300">
+                      If applicable, please include any relevant documentation:
+                    </p>
+                    <div className="space-y-2 text-sm text-gray-900 dark:text-white">
+                      <div>Attachment 1: [Download/View Attachment]</div>
+                    </div>
+                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                      (Feel free to attach your product catalog, pricing list, or any other relevant documents.)
+                    </p>
+                  </div>
+                )}
+
+                {/* 6. Response Deadline */}
+                <div className="mb-8">
+                  <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">
+                    6. Response Deadline
+                  </h3>
+                  <p className="text-sm text-gray-900 dark:text-white">
+                    We kindly ask that you submit your quotation by <span className="font-medium">{selectedRFQ.deadline || selectedRFQ.response_date || "[Insert Response Date Here]"}</span>. Late submissions may not be considered.
+                  </p>
+                </div>
+
+                {/* Contact Information */}
+                <div className="mb-8">
+                  <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-white">
+                    Contact Information
+                  </h3>
+                  <p className="mb-3 text-sm text-gray-700 dark:text-gray-300">
+                    For any inquiries or clarifications regarding this request, please contact:
+                  </p>
+                  <div className="space-y-2 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Name: </span>
+                      <span className="text-gray-900 dark:text-white">
+                        {selectedRFQ.contact_name || selectedRFQ.business_account?.business_name || "[Insert Your Contact Name Here]"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Phone: </span>
+                      <span className="text-gray-900 dark:text-white">
+                        {selectedRFQ.phone || selectedRFQ.business_account?.business_phone || "[Insert Your Phone Number Here]"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Email: </span>
+                      <span className="text-gray-900 dark:text-white">
+                        {selectedRFQ.email || selectedRFQ.business_account?.business_email || "[Insert Your Email Address Here]"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Closing */}
+                <div className="mb-8 text-sm text-gray-700 dark:text-gray-300">
+                  <p className="mb-2">
+                    We look forward to receiving your quotation and thank you for your time and attention to this request. Should you have any questions or need further information, do not hesitate to contact us.
+                  </p>
+                  <div className="mt-4">
+                    <div className="font-medium text-gray-900 dark:text-white">Kind regards,</div>
+                    <div className="mt-1">{selectedRFQ.contact_name || selectedRFQ.business_account?.business_name || "[Your Name]"}</div>
+                    <div className="mt-1">{selectedRFQ.business_account?.business_name || "[Your Company Name]"}</div>
+                    <div className="mt-1">
+                      {selectedRFQ.email || selectedRFQ.business_account?.business_email || "[Your Contact Information]"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer with Action Buttons */}
+            <div className="flex-shrink-0 bg-white p-4 dark:bg-gray-900 sm:p-6">
+              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:gap-3">
                 <button
                   onClick={() => {
                     setIsQuoteModalOpen(false);
@@ -582,101 +881,9 @@ export function RFQOpportunitiesSection({
                   <MessageSquare className="h-4 w-4" />
                   <span>Message Customer</span>
                 </button>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-900">
-              <div className="p-6 md:p-8">
-                {/* Description */}
-                <div className="mb-6">
-                  <h3 className="mb-3 text-base font-semibold text-gray-900 dark:text-white">
-                    Description
-                  </h3>
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700 dark:text-gray-300">
-                    {selectedRFQ.description}
-                  </p>
-                </div>
-
-                {/* Key Information */}
-                <div className="mb-6 space-y-4 border-t border-gray-200 pt-6 dark:border-gray-700">
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
-                      <div className="mb-1 flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400">
-                        <DollarSign className="h-4 w-4" />
-                        <span>Budget Range</span>
-                      </div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {selectedRFQ.budget}
-                      </p>
-                    </div>
-                    {selectedRFQ.estimated_quantity && (
-                      <div>
-                        <div className="mb-1 flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400">
-                          <Package className="h-4 w-4" />
-                          <span>Quantity</span>
-                        </div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          {selectedRFQ.estimated_quantity}
-                        </p>
-                      </div>
-                    )}
-                    <div>
-                      <div className="mb-1 flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400">
-                        <MapPin className="h-4 w-4" />
-                        <span>Location</span>
-                      </div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {selectedRFQ.location}
-                      </p>
-                    </div>
-                    <div>
-                      <div className="mb-1 flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400">
-                        <Calendar className="h-4 w-4" />
-                        <span>Response Deadline</span>
-                      </div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {selectedRFQ.deadline}
-                      </p>
-                    </div>
-                    <div>
-                      <div className="mb-1 flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400">
-                        <User className="h-4 w-4" />
-                        <span>Posted By</span>
-                      </div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {selectedRFQ.postedBy}
-                      </p>
-                    </div>
-                    <div>
-                      <div className="mb-1 flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400">
-                        <Clock className="h-4 w-4" />
-                        <span>Posted</span>
-                      </div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {selectedRFQ.postedAt}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="flex-shrink-0 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900 sm:p-6">
-              <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
-                <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
-                  <span>
-                    Posted: {selectedRFQ.postedAt}
-                  </span>
-                  <span className="hidden sm:inline">•</span>
-                  <span>
-                    RFQ ID: <span className="font-mono">{selectedRFQ.id?.slice(0, 8) || "N/A"}</span>
-                  </span>
-                </div>
                 <button
                   onClick={() => setIsQuoteModalOpen(false)}
-                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                  className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                 >
                   Close
                 </button>
