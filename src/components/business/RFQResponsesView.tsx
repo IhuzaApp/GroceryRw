@@ -82,6 +82,7 @@ interface RFQDetails {
   status: string;
   created: string;
   requirements: string[];
+  estimated_quantity?: string;
 }
 
 interface RFQResponsesViewProps {
@@ -312,6 +313,7 @@ export function RFQResponsesView({
           status: rfq.open ? "Open" : "Closed",
           created: rfq.created_at,
           requirements: requirements,
+          estimated_quantity: rfq.estimated_quantity || undefined,
         };
         setRfqDetails(transformedRFQ);
 
@@ -1014,6 +1016,7 @@ export function RFQResponsesView({
             title: rfqDetails.title,
             description: rfqDetails.description,
             budget: rfqDetails.budget,
+            estimated_quantity: rfqDetails.estimated_quantity,
           }}
           supplierData={{
             id: contractResponse.supplierId,

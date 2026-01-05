@@ -90,34 +90,36 @@ export function SubmittedQuoteDetails({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-md sm:items-center sm:bg-black/60 sm:p-4">
       <div className="flex h-full max-h-screen w-full flex-col overflow-hidden rounded-t-[2rem] bg-white shadow-2xl dark:bg-gray-900 sm:h-auto sm:max-h-[90vh] sm:w-full sm:max-w-5xl sm:rounded-3xl sm:border sm:border-gray-200 dark:sm:border-gray-700">
         {/* Header */}
-        <div className="relative flex-shrink-0 border-b border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:p-6 md:p-8">
-          <div className="relative z-10">
-            <div className="mb-4 flex items-start justify-between gap-3 sm:mb-0">
-              <div className="min-w-0 flex-1">
-                <div className="mb-3 flex items-center gap-2 sm:mb-2">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-md sm:h-12 sm:w-12 sm:rounded-2xl">
-                    <FileText className="h-5 w-5 text-white sm:h-6 sm:w-6" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h2 className="truncate text-xl font-bold leading-tight text-gray-900 dark:text-white sm:text-2xl md:text-3xl">
-                      Submitted Quote Details
-                    </h2>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-800/50">
-                  <FileText className="h-4 w-4 flex-shrink-0 text-gray-500 dark:text-gray-400" />
-                  <span className="truncate text-sm font-medium text-gray-700 dark:text-gray-300">
-                    RFQ: {rfqTitle}
-                  </span>
-                </div>
+        <div className="flex-shrink-0 border-b border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+          <div className="mb-4 flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <h2 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white sm:text-2xl">
+                Submitted Quote Details
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                RFQ: {rfqTitle}
+              </p>
+              <div className="mt-3">
+                <span
+                  className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-medium ${
+                    quote.status === "accepted"
+                      ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                      : quote.status === "rejected"
+                      ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
+                      : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
+                  }`}
+                >
+                  <CheckCircle className="h-3 w-3" />
+                  {quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
+                </span>
               </div>
-              <button
-                onClick={onClose}
-                className="flex-shrink-0 rounded-xl bg-gray-100 p-2.5 text-gray-700 transition-all duration-200 hover:bg-gray-200 active:scale-95 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-              >
-                <X className="h-5 w-5" />
-              </button>
             </div>
+            <button
+              onClick={onClose}
+              className="flex-shrink-0 rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
         </div>
 

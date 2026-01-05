@@ -46,6 +46,7 @@ const GET_CONTRACT_DETAILS = gql`
         email
         phone
         location
+        estimated_quantity
         business_account {
           id
           business_name
@@ -273,6 +274,7 @@ export default async function handler(
       quoteId: quoteInfo?.id || "",
       rfqId: rfq?.id || "",
       rfqDescription: rfq?.description || "",
+      estimatedQuantity: rfq?.estimated_quantity || null,
       lastActivity: contract.update_on || "",
       created: contract.update_on || "",
       doneAt: contract.done_at || null,

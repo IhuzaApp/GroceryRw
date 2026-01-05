@@ -359,8 +359,12 @@ export default async function handler(
         supplierId: supplierAccount?.id || "",
         quoteId: supplierQuote?.id || "",
         rfqId: rfq?.id || "",
-        lastActivity: contract.update_on || "",
-        created: contract.update_on || "",
+        lastActivity: contract.update_on || contract.done_at || "",
+        created: contract.update_on || contract.done_at || "",
+        clientSignature: contract.clientSignature,
+        supplierSignature: contract.supplierSignature,
+        updated_at: contract.update_on,
+        created_at: contract.done_at || contract.update_on,
       };
     });
 
