@@ -263,6 +263,7 @@ interface ContractData {
   quoteId: string;
   rfqId: string;
   rfqDescription?: string;
+  estimatedQuantity?: string | null;
   lastActivity: string;
   created: string;
   doneAt?: string | null;
@@ -648,6 +649,9 @@ export function ContractDetailDrawer({
                       </p>
                       <ul className="ml-6 mt-2 list-disc space-y-1">
                         <li>{contract.title || "[Detailed description of services]"}</li>
+                        {contract.estimatedQuantity && (
+                          <li>Quantity: {contract.estimatedQuantity}</li>
+                        )}
                         {contract.rfqDescription && (
                           <li>{contract.rfqDescription}</li>
                         )}

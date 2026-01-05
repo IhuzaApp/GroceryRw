@@ -13,6 +13,7 @@ import {
   AlertCircle,
   Download,
   Send,
+  Package,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
@@ -313,6 +314,7 @@ interface ContractAssignmentModalProps {
     title: string;
     description: string;
     budget: { min: number; max: number };
+    estimated_quantity?: string;
   };
   supplierData: {
     id: string;
@@ -364,53 +366,53 @@ export function ContractAssignmentModal({
   // Initialize contract data with quote response data if available
   const getInitialContractData = (): ContractData => {
     const baseData: ContractData = {
-      contractId: `CONTRACT-${Date.now()}`,
-      rfqId: rfqData.id,
-      supplierId: supplierData.id,
-      supplierName: supplierData.name,
-      supplierCompany: supplierData.company,
-      contractTitle: `Contract for ${rfqData.title}`,
-      contractType: "service",
-      startDate: "",
-      endDate: "",
-      duration: "",
+    contractId: `CONTRACT-${Date.now()}`,
+    rfqId: rfqData.id,
+    supplierId: supplierData.id,
+    supplierName: supplierData.name,
+    supplierCompany: supplierData.company,
+    contractTitle: `Contract for ${rfqData.title}`,
+    contractType: "service",
+    startDate: "",
+    endDate: "",
+    duration: "",
       totalValue: quoteResponse?.quoteAmount || rfqData.budget.min,
       currency: quoteResponse?.currency || "RWF",
-      paymentSchedule: "monthly",
-      deliverables: [
-        {
-          id: "1",
+    paymentSchedule: "monthly",
+    deliverables: [
+      {
+        id: "1",
           description: quoteResponse?.message || "Initial project setup and planning",
-          dueDate: "",
+        dueDate: "",
           value: quoteResponse?.quoteAmount || 0,
-          status: "pending",
-        },
-      ],
-      terms: {
+        status: "pending",
+      },
+    ],
+    terms: {
         paymentTerms: quoteResponse?.terms?.payment || "Net 30 days",
         deliveryTerms: quoteResponse?.terms?.delivery || "As per agreed schedule",
         warrantyTerms: quoteResponse?.terms?.warranty || "12 months from delivery",
         terminationTerms: quoteResponse?.terms?.cancellation || "30 days written notice",
-        forceMajeure: "Standard force majeure clause",
-        confidentiality: "Mutual confidentiality agreement",
-        intellectualProperty: "Client retains IP rights",
+      forceMajeure: "Standard force majeure clause",
+      confidentiality: "Mutual confidentiality agreement",
+      intellectualProperty: "Client retains IP rights",
+    },
+    contactInfo: {
+      clientContact: {
+        name: "",
+        email: "",
+        phone: "",
+        position: "",
       },
-      contactInfo: {
-        clientContact: {
-          name: "",
-          email: "",
-          phone: "",
-          position: "",
-        },
-        supplierContact: {
+      supplierContact: {
           name: quoteResponse?.contactInfo?.name || supplierData.name,
           email: quoteResponse?.contactInfo?.email || supplierData.email,
           phone: quoteResponse?.contactInfo?.phone || supplierData.phone,
           position: quoteResponse?.contactInfo?.position || "Supplier Representative",
-        },
       },
-      specialConditions: "",
-      attachments: [],
+    },
+    specialConditions: "",
+    attachments: [],
     };
     return baseData;
   };
@@ -1095,7 +1097,7 @@ export function ContractAssignmentModal({
                         if (newStartDate && contractData.endDate) {
                           const calculatedDuration = calculateDuration(newStartDate, contractData.endDate);
                           handleInputChange("duration", calculatedDuration);
-                        }
+                      }
                       }}
                       className={`w-full rounded-lg border py-3 pl-10 pr-4 focus:border-transparent focus:ring-2 ${
                         fieldErrors.startDate
@@ -1128,7 +1130,7 @@ export function ContractAssignmentModal({
                         if (contractData.startDate && newEndDate) {
                           const calculatedDuration = calculateDuration(contractData.startDate, newEndDate);
                           handleInputChange("duration", calculatedDuration);
-                        }
+                      }
                       }}
                       className={`w-full rounded-lg border py-3 pl-10 pr-4 focus:border-transparent focus:ring-2 ${
                         fieldErrors.endDate
@@ -1275,25 +1277,67 @@ export function ContractAssignmentModal({
                     This value comes from the accepted quote and cannot be changed
                   </p>
                 </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Payment Schedule *
-                  </label>
-                  <select
-                    value={contractData.paymentSchedule}
-                    onChange={(e) =>
-                      handleInputChange("paymentSchedule", e.target.value)
-                    }
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                    required
-                  >
-                    {paymentSchedules.map((schedule) => (
-                      <option key={schedule.value} value={schedule.value}>
-                        {schedule.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {rfqData.estimated_quantity && (
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Quantity (from RFQ)
+                    </label>
+                    <div className="relative">
+                      <Package className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+                      <input
+                        type="text"
+                        value={rfqData.estimated_quantity}
+                        readOnly
+                        className="w-full rounded-lg border border-gray-300 bg-gray-50 py-3 pl-10 pr-4 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+                      />
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      Estimated quantity from the RFQ
+                    </p>
+                  </div>
+                )}
+                {!rfqData.estimated_quantity && (
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Payment Schedule *
+                    </label>
+                    <select
+                      value={contractData.paymentSchedule}
+                      onChange={(e) =>
+                        handleInputChange("paymentSchedule", e.target.value)
+                      }
+                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      required
+                    >
+                      {paymentSchedules.map((schedule) => (
+                        <option key={schedule.value} value={schedule.value}>
+                          {schedule.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {rfqData.estimated_quantity && (
+                  <div className="md:col-span-2">
+                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Payment Schedule *
+                    </label>
+                    <select
+                      value={contractData.paymentSchedule}
+                      onChange={(e) =>
+                        handleInputChange("paymentSchedule", e.target.value)
+                      }
+                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      required
+                    >
+                      {paymentSchedules.map((schedule) => (
+                        <option key={schedule.value} value={schedule.value}>
+                          {schedule.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1664,9 +1708,9 @@ export function ContractAssignmentModal({
                     ? "text-red-600 dark:text-red-400"
                     : "text-gray-700 dark:text-gray-300"
                 }`}>
-                  <input
-                    type="checkbox"
-                    checked={signatureConsent}
+                <input
+                  type="checkbox"
+                  checked={signatureConsent}
                     onChange={(e) => {
                       setSignatureConsent(e.target.checked);
                       if (fieldErrors.signatures?.includes("Signature consent")) {
@@ -1681,13 +1725,13 @@ export function ContractAssignmentModal({
                         ? "border-red-500"
                         : ""
                     }`}
-                  />
-                  <span>
-                    I confirm that both parties have signed in person and the
-                    captured photos were taken at the time of signing. I consent
-                    to store the signature and photo as proof of agreement.
-                  </span>
-                </label>
+                />
+                <span>
+                  I confirm that both parties have signed in person and the
+                  captured photos were taken at the time of signing. I consent
+                  to store the signature and photo as proof of agreement.
+                </span>
+              </label>
                 {fieldErrors.signatures?.includes("Signature consent") && (
                   <p className="mt-1 text-xs text-red-500">Please accept the signature consent</p>
                 )}
@@ -1772,30 +1816,30 @@ export function ContractAssignmentModal({
               </div>
 
               {/* Evidence preview */}
-              <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-600">
-                <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
-                  Client Evidence
-                </h4>
-                <div className="flex items-center gap-4">
-                  {clientSignature && (
-                    <img
-                      src={clientSignature}
-                      alt="Client signature"
-                      className="h-20 rounded border dark:border-gray-600"
-                    />
-                  )}
-                  {clientPhoto && (
-                    <img
-                      src={clientPhoto}
-                      alt="Client photo"
-                      className="h-20 w-20 rounded-full border object-cover dark:border-gray-600"
-                    />
-                  )}
+                <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-600">
+                  <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
+                    Client Evidence
+                  </h4>
+                  <div className="flex items-center gap-4">
+                    {clientSignature && (
+                      <img
+                        src={clientSignature}
+                        alt="Client signature"
+                        className="h-20 rounded border dark:border-gray-600"
+                      />
+                    )}
+                    {clientPhoto && (
+                      <img
+                        src={clientPhoto}
+                        alt="Client photo"
+                        className="h-20 w-20 rounded-full border object-cover dark:border-gray-600"
+                      />
+                    )}
                   {!clientSignature && !clientPhoto && (
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       No evidence captured yet
                     </p>
-                  )}
+                    )}
                 </div>
               </div>
             </div>

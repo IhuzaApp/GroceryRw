@@ -21,6 +21,8 @@ import {
   SortAsc,
 } from "lucide-react";
 import { formatCurrencySync } from "../../utils/formatCurrency";
+import { downloadContractAsPdf } from "../../lib/contractUtils";
+import toast from "react-hot-toast";
 
 interface Contract {
   id: string;
@@ -227,6 +229,75 @@ export function ContractsManagement({
       });
     } catch {
       return dateString;
+    }
+  };
+
+  const handleDownload = async (contract: Contract) => {
+    if (contract.status !== "active") {
+      toast.error("Only active contracts can be downloaded");
+      return;
+    }
+
+    try {
+      // Fetch full contract details for PDF generation
+      const response = await fetch(`/api/queries/contract-details?id=${contract.id}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch contract details");
+      }
+
+      const data = await response.json();
+      if (!data.success || !data.contract) {
+        throw new Error("Invalid contract data");
+      }
+
+      const contractData = data.contract;
+      
+      // Map contract data to match the expected interface
+      const contractDataForPdf = {
+        id: contractData.id,
+        contractId: contractData.contractId,
+        title: contractData.title,
+        supplierName: contractData.supplierName,
+        supplierCompany: contractData.supplierCompany,
+        supplierEmail: contractData.supplierEmail,
+        supplierPhone: contractData.supplierPhone,
+        supplierAddress: contractData.supplierAddress,
+        clientName: contractData.clientName,
+        clientCompany: contractData.clientCompany,
+        clientEmail: contractData.clientEmail,
+        clientPhone: contractData.clientPhone,
+        clientAddress: contractData.clientAddress,
+        contractType: contractData.contractType,
+        status: contractData.status,
+        startDate: contractData.startDate,
+        endDate: contractData.endDate,
+        totalValue: contractData.totalValue,
+        currency: contractData.currency,
+        paymentSchedule: contractData.paymentSchedule,
+        duration: contractData.duration,
+        paymentTerms: contractData.paymentTerms,
+        terminationTerms: contractData.terminationTerms,
+        specialConditions: contractData.specialConditions,
+        deliverables: contractData.deliverables.map((del: any) => ({
+          id: del.id || `del-${Math.random()}`,
+          description: del.description,
+          dueDate: del.dueDate,
+          value: del.value,
+          status: del.status || "pending",
+        })),
+        doneAt: contractData.doneAt || undefined,
+        updateOn: contractData.updateOn || undefined,
+        clientSignature: contractData.clientSignature,
+        clientPhoto: contractData.clientPhoto,
+        supplierSignature: contractData.supplierSignature,
+        supplierPhoto: contractData.supplierPhoto,
+      };
+
+      await downloadContractAsPdf(contractDataForPdf);
+      toast.success("Contract downloaded successfully!");
+    } catch (error) {
+      console.error("Error downloading contract:", error);
+      toast.error("Failed to download contract");
     }
   };
 
@@ -441,10 +512,21 @@ export function ContractsManagement({
             {/* Actions */}
             <div className="flex flex-col gap-3 border-t border-gray-200 pt-4 dark:border-gray-600 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
               <div className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 sm:gap-2 sm:text-sm">
-                <span className="whitespace-nowrap">
-                  Last activity: {contract.lastActivity}
-                </span>
-                <span className="hidden sm:inline">•</span>
+                {contract.lastActivity ? (
+                  <>
+                    <span className="whitespace-nowrap">
+                      Last activity: {formatDate(contract.lastActivity)}
+                    </span>
+                    <span className="hidden sm:inline">•</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="whitespace-nowrap text-gray-400 dark:text-gray-500">
+                      Last activity: Not available
+                    </span>
+                    <span className="hidden sm:inline">•</span>
+                  </>
+                )}
                 <div className="flex items-center gap-1">
                   <span>Client:</span>
                   {contract.signedByClient ? (
@@ -466,24 +548,35 @@ export function ContractsManagement({
               <div className="flex flex-wrap gap-2 sm:flex-nowrap">
                 <button
                   onClick={() => onViewContract(contract.id)}
-                  className="flex-1 rounded-lg border border-blue-300 px-2.5 py-1.5 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700 active:scale-95 dark:border-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 sm:flex-none sm:px-3 sm:py-1 sm:text-sm"
+                  className="group flex items-center justify-center gap-1.5 rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 shadow-sm transition-all hover:bg-blue-100 hover:shadow-md active:scale-95 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50 sm:px-4 sm:py-2 sm:text-sm"
                 >
-                  <Eye className="mr-1 inline h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  View
+                  <Eye className="h-4 w-4 transition-transform group-hover:scale-110" />
+                  <span>View</span>
                 </button>
-                <button
-                  onClick={() => onEditContract(contract.id)}
-                  className="flex-1 rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800 active:scale-95 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200 sm:flex-none sm:px-3 sm:py-1 sm:text-sm"
-                >
-                  <Edit className="mr-1 inline h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  Edit
-                </button>
+                {contract.status === "waiting_for_supplier" && (
+                  <button
+                    onClick={() => onEditContract(contract.id)}
+                    className="group flex items-center justify-center gap-1.5 rounded-lg bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700 shadow-sm transition-all hover:bg-amber-100 hover:shadow-md active:scale-95 dark:bg-amber-900/30 dark:text-amber-300 dark:hover:bg-amber-900/50 sm:px-4 sm:py-2 sm:text-sm"
+                  >
+                    <Edit className="h-4 w-4 transition-transform group-hover:scale-110" />
+                    <span>Edit</span>
+                  </button>
+                )}
+                {contract.status === "active" && (
+                  <button
+                    onClick={() => handleDownload(contract)}
+                    className="group flex items-center justify-center gap-1.5 rounded-lg bg-green-50 px-3 py-2 text-xs font-semibold text-green-700 shadow-sm transition-all hover:bg-green-100 hover:shadow-md active:scale-95 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50 sm:px-4 sm:py-2 sm:text-sm"
+                  >
+                    <Download className="h-4 w-4 transition-transform group-hover:scale-110" />
+                    <span>Download</span>
+                  </button>
+                )}
                 <button
                   onClick={() => onMessageSupplier(contract.supplierId)}
-                  className="flex-1 rounded-lg border border-green-300 px-2.5 py-1.5 text-xs font-medium text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 active:scale-95 dark:border-green-600 dark:hover:bg-green-900/20 dark:hover:text-green-400 sm:flex-none sm:px-3 sm:py-1 sm:text-sm"
+                  className="group flex items-center justify-center gap-1.5 rounded-lg bg-purple-50 px-3 py-2 text-xs font-semibold text-purple-700 shadow-sm transition-all hover:bg-purple-100 hover:shadow-md active:scale-95 dark:bg-purple-900/30 dark:text-purple-300 dark:hover:bg-purple-900/50 sm:px-4 sm:py-2 sm:text-sm"
                 >
-                  <MessageSquare className="mr-1 inline h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  Message
+                  <MessageSquare className="h-4 w-4 transition-transform group-hover:scale-110" />
+                  <span>Message</span>
                 </button>
               </div>
             </div>

@@ -37,6 +37,7 @@ interface ContractData {
     value: number;
     status?: string;
   }>;
+  estimatedQuantity?: string | null;
   doneAt?: string | null;
   updateOn?: string | null;
   clientSignature?: string;
@@ -251,6 +252,11 @@ export default function ContractViewPage() {
                   <p className="ml-4 text-sm text-gray-800 dark:text-gray-200">
                     Supplier agrees to provide professional services including: {contract.title || "Services as specified"}.
                   </p>
+                  {contract.estimatedQuantity && (
+                    <p className="ml-4 mt-2 text-sm text-gray-800 dark:text-gray-200">
+                      <span className="font-semibold">Quantity:</span> {contract.estimatedQuantity}
+                    </p>
+                  )}
                 </div>
 
                 <div>
