@@ -157,7 +157,7 @@ export function MobileServiceList({
   };
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-white dark:bg-gray-800">
+    <div className="flex h-full flex-col overflow-hidden ">
       {/* Category Filter Buttons */}
       {categories.length > 1 && (
         <div className="flex-shrink-0 border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
@@ -306,7 +306,7 @@ export function MobileServiceList({
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                     Available Services
                   </h2>
-                  <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                  <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600 dark:text-gray-400">
                     {filteredServices.length}
                   </span>
                 </div>
@@ -315,7 +315,7 @@ export function MobileServiceList({
                     <div
                       key={service.id}
                       onClick={() => handleServiceClick(service.id)}
-                      className="group cursor-pointer rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-green-300 hover:shadow-lg active:scale-[0.98] dark:border-gray-600 dark:bg-gray-700 dark:hover:border-green-600"
+                      className="group cursor-pointer rounded-xl border border-gray-200  p-4 shadow-sm transition-all duration-200 hover:border-green-300 hover:shadow-lg active:scale-[0.98] dark:border-gray-600 dark:bg-gray-700 dark:hover:border-green-600"
                     >
                       <div className="flex gap-3">
                         <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 shadow-sm ring-1 ring-gray-200 dark:from-gray-600 dark:to-gray-700 dark:ring-gray-600">
@@ -392,7 +392,7 @@ export function MobileServiceList({
 
             {filteredServices.length === 0 && rfqs.length === 0 && !loading && (
               <div className="py-16 text-center">
-                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
+                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full ">
                   <Package className="h-10 w-10 text-gray-400 dark:text-gray-500" />
                 </div>
                 <p className="mb-1 text-lg font-semibold text-gray-600 dark:text-gray-400">
