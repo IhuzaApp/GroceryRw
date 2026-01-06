@@ -6,6 +6,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { MobileServiceList } from "./MobileServiceList";
 import { MobileBusinessDashboard } from "./MobileBusinessDashboard";
 import { MobileServiceDetail } from "./MobileServiceDetail";
+import { MobilePlasBusinessExplorer } from "./MobilePlasBusinessExplorer";
 
 type View = "list" | "dashboard" | "detail";
 
@@ -127,6 +128,17 @@ export function MobilePlasBusinessPage({
         businessAccount={businessAccount}
         userName={user?.name || "User"}
         userProfilePicture={user?.profilePicture || undefined}
+      />
+    );
+  }
+
+  // Show explorer if user doesn't have business account
+  if (!hasBusinessAccount) {
+    return (
+      <MobilePlasBusinessExplorer
+        onAccountCreated={() => {
+          checkBusinessAccount();
+        }}
       />
     );
   }
