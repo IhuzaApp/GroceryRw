@@ -28,25 +28,52 @@ interface Service {
 interface MobileServiceListProps {
   onServiceClick?: (serviceId: string) => void;
   hasBusinessAccount?: boolean;
+  searchTerm?: string;
 }
 
 export function MobileServiceList({
   onServiceClick,
   hasBusinessAccount = false,
+  searchTerm: externalSearchTerm = "",
 }: MobileServiceListProps) {
   const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState("");
+  const [internalSearchTerm, setInternalSearchTerm] = useState("");
+  const searchTerm = externalSearchTerm || internalSearchTerm;
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [services, setServices] = useState<Service[]>([]);
+  const [selectedSpecialty, setSelectedSpecialty] = useState("all");
+  const [services, setServices] = useState<any[]>([]);
   const [rfqs, setRfqs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Extract unique categories and specialties from services
   const categories = [
-    { id: "all", label: "All Services", icon: Grid },
-    { id: "cleaning", label: "Cleaning", icon: Package },
-    { id: "technology", label: "Technology", icon: Briefcase },
-    { id: "marketing", label: "Marketing", icon: Package },
-    { id: "financial", label: "Financial", icon: DollarSign },
+    "all",
+    ...Array.from(
+      new Set(
+        services
+          .map((s) => s.category || s.service_category)
+          .filter(Boolean)
+      )
+    ),
+  ];
+
+  // Extract unique specialties from services
+  const specialties = [
+    "all",
+    ...Array.from(
+      new Set(
+        services
+          .flatMap((s) => {
+            const serviceSpecialties = s.specialties || s.skills || [];
+            return Array.isArray(serviceSpecialties)
+              ? serviceSpecialties
+              : typeof serviceSpecialties === "string"
+              ? serviceSpecialties.split(",").map((sp: string) => sp.trim())
+              : [];
+          })
+          .filter(Boolean)
+      )
+    ),
   ];
 
   useEffect(() => {
@@ -89,16 +116,37 @@ export function MobileServiceList({
   };
 
   const filteredServices = services.filter((service) => {
+    const serviceName = service.name || service.service_name || "";
+    const serviceDescription = service.description || service.service_description || "";
+    const serviceLocation = service.location || service.service_location || "";
+    const serviceCategory = service.category || service.service_category || "";
+    const serviceSpecialties = service.specialties || service.skills || [];
+    const specialtiesArray = Array.isArray(serviceSpecialties)
+      ? serviceSpecialties
+      : typeof serviceSpecialties === "string"
+      ? serviceSpecialties.split(",").map((sp: string) => sp.trim())
+      : [];
+
     const matchesSearch =
-      service.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.location?.toLowerCase().includes(searchTerm.toLowerCase());
+      serviceName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      serviceDescription.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      serviceLocation.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      specialtiesArray.some((sp: string) =>
+        sp.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
     const matchesCategory =
       selectedCategory === "all" ||
-      service.category?.toLowerCase().includes(selectedCategory.toLowerCase());
+      serviceCategory.toLowerCase() === selectedCategory.toLowerCase();
 
-    return matchesSearch && matchesCategory;
+    const matchesSpecialty =
+      selectedSpecialty === "all" ||
+      specialtiesArray.some(
+        (sp: string) =>
+          sp.toLowerCase() === selectedSpecialty.toLowerCase()
+      );
+
+    return matchesSearch && matchesCategory && matchesSpecialty;
   });
 
   const handleServiceClick = (serviceId: string) => {
@@ -111,50 +159,93 @@ export function MobileServiceList({
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-white dark:bg-gray-800">
-      {/* Search Bar */}
-      <div className="flex-shrink-0 border-b border-gray-200 bg-gradient-to-b from-white to-gray-50 px-4 py-4 pt-5 shadow-sm dark:border-gray-700 dark:from-gray-800 dark:to-gray-900">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search services, products, or suppliers..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-full border border-gray-200 bg-white px-4 py-3.5 pl-4 pr-14 text-sm text-gray-900 placeholder-gray-500 shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:ring-offset-gray-800"
-          />
-          <button className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 p-2.5 text-white shadow-lg transition-all duration-200 hover:scale-110 hover:shadow-xl active:scale-95">
-            <Search className="h-4 w-4" />
-          </button>
+      {/* Search Bar - Only show if not controlled externally */}
+      {!externalSearchTerm && (
+        <div className="sticky top-0 z-10 flex-shrink-0 border-b border-gray-200 bg-gradient-to-b from-white to-gray-50 px-4 py-3 shadow-sm dark:border-gray-700 dark:from-gray-800 dark:to-gray-900">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search services, products, or suppliers..."
+              value={internalSearchTerm}
+              onChange={(e) => setInternalSearchTerm(e.target.value)}
+              className="w-full rounded-full border border-gray-200 bg-white px-4 py-3 pl-4 pr-14 text-sm text-gray-900 placeholder-gray-500 shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:ring-offset-gray-800"
+            />
+            <button className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 p-2.5 text-white shadow-lg transition-all duration-200 hover:scale-110 hover:shadow-xl active:scale-95">
+              <Search className="h-4 w-4" />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Category Filter Buttons */}
-      <div className="flex-shrink-0 border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
-        <div className="scrollbar-hide flex gap-2.5 overflow-x-auto pb-1">
-          {categories.map((category) => {
-            const Icon = category.icon;
-            return (
+      {categories.length > 1 && (
+        <div className="flex-shrink-0 border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+          <div className="scrollbar-hide flex gap-2.5 overflow-x-auto pb-1">
+            {categories.map((category) => (
               <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
+                key={category}
+                onClick={() => {
+                  setSelectedCategory(category);
+                  setSelectedSpecialty("all"); // Reset specialty when category changes
+                }}
                 className={`flex flex-shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm transition-all duration-200 ${
-                  selectedCategory === category.id
+                  selectedCategory === category
                     ? "scale-105 bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md hover:shadow-lg"
                     : "border border-gray-200 bg-white text-gray-700 hover:border-green-300 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-gray-600"
                 }`}
+                style={
+                  selectedCategory === category
+                    ? { color: "#ffffff" }
+                    : undefined
+                }
               >
-                <Icon
+                <Grid
                   className={`h-4 w-4 ${
-                    selectedCategory === category.id
+                    selectedCategory === category
                       ? ""
                       : "text-gray-500 dark:text-gray-400"
                   }`}
+                  style={
+                    selectedCategory === category
+                      ? { color: "#ffffff" }
+                      : undefined
+                  }
                 />
-                {category.label}
+                {category === "all" ? "All Services" : category}
               </button>
-            );
-          })}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Specialty Filter Buttons */}
+      {specialties.length > 1 && selectedCategory !== "all" && (
+        <div className="flex-shrink-0 border-b border-gray-200 bg-white px-4 py-2 dark:border-gray-700 dark:bg-gray-800">
+          <div className="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">
+            Filter by Specialty:
+          </div>
+          <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1">
+            {specialties.map((specialty) => (
+              <button
+                key={specialty}
+                onClick={() => setSelectedSpecialty(specialty)}
+                className={`flex flex-shrink-0 items-center whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+                  selectedSpecialty === specialty
+                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-sm"
+                    : "border border-gray-200 bg-white text-gray-600 hover:border-green-300 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-400 dark:hover:border-green-600 dark:hover:bg-gray-600"
+                }`}
+                style={
+                  selectedSpecialty === specialty
+                    ? { color: "#ffffff" }
+                    : undefined
+                }
+              >
+                {specialty === "all" ? "All Specialties" : specialty}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Services List */}
       <div className="flex-1 overflow-y-auto pb-24">
@@ -259,23 +350,54 @@ export function MobileServiceList({
                         </div>
                         <div className="min-w-0 flex-1">
                           <h3 className="mb-1.5 truncate text-base font-bold text-gray-900 dark:text-white">
-                            {service.name}
+                            {service.name || service.service_name || "Unnamed Service"}
                           </h3>
-                          <div className="mb-2 flex items-center gap-2">
-                            <span className="rounded-md bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-600 dark:bg-green-900/30 dark:text-green-400">
-                              {service.category || "Service"}
-                            </span>
+                          <div className="mb-2 flex flex-wrap items-center gap-2">
+                            {(service.category || service.service_category) && (
+                              <span className="rounded-md bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-600 dark:bg-green-900/30 dark:text-green-400">
+                                {service.category || service.service_category}
+                              </span>
+                            )}
+                            {(service.specialties || service.skills) && (
+                              <>
+                                {Array.isArray(service.specialties || service.skills)
+                                  ? (service.specialties || service.skills)
+                                      .slice(0, 2)
+                                      .map((specialty: string, idx: number) => (
+                                        <span
+                                          key={idx}
+                                          className="rounded-md bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+                                        >
+                                          {specialty}
+                                        </span>
+                                      ))
+                                  : typeof (service.specialties || service.skills) ===
+                                    "string"
+                                  ? (service.specialties || service.skills)
+                                      .split(",")
+                                      .slice(0, 2)
+                                      .map((specialty: string, idx: number) => (
+                                        <span
+                                          key={idx}
+                                          className="rounded-md bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+                                        >
+                                          {specialty.trim()}
+                                        </span>
+                                      ))
+                                  : null}
+                              </>
+                            )}
                           </div>
-                          {service.price && (
+                          {(service.price_range || service.priceRange || service.price) && (
                             <p className="mb-1.5 text-sm font-bold text-gray-900 dark:text-white">
-                              {service.price}
+                              {service.price_range || service.priceRange || service.price}
                             </p>
                           )}
-                          {service.location && (
+                          {(service.location || service.service_location) && (
                             <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
                               <MapPin className="h-3.5 w-3.5" />
                               <span className="truncate">
-                                {service.location}
+                                {service.location || service.service_location}
                               </span>
                             </div>
                           )}

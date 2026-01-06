@@ -29,7 +29,7 @@ import { ProductsBidsSection } from "../../src/components/business/ProductsBidsS
 import { RFQOpportunitiesSection } from "../../src/components/business/RFQOpportunitiesSection";
 import { CreateRFQForm } from "../../src/components/business/CreateRFQForm";
 import { ContractsManagement } from "../../src/components/business/ContractsManagement";
-import PlasBusinessOnboarding from "../../src/components/business/PlasBusinessOnboarding";
+import PlasBusinessExplorer from "../../src/components/business/PlasBusinessExplorer";
 import { BusinessOverview } from "../../src/components/business/BusinessOverview";
 import { ServicesSection } from "../../src/components/business/ServicesSection";
 import { StoresSection } from "../../src/components/business/StoresSection";
@@ -174,11 +174,11 @@ export default function PlasBusinessPage() {
     );
   }
 
-  // Desktop view - show onboarding if user doesn't have business account
+  // Desktop view - show explorer if user doesn't have business account
   if (!hasBusinessAccount) {
     return (
       <RootLayout>
-        <PlasBusinessOnboarding onAccountCreated={handleAccountCreated} />
+        <PlasBusinessExplorer onAccountCreated={handleAccountCreated} />
       </RootLayout>
     );
   }
