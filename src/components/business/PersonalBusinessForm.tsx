@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ArrowLeft, Camera, X, Check } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useAuth } from "../../context/AuthContext";
@@ -10,11 +10,13 @@ import CameraCapture from "../ui/CameraCapture";
 interface PersonalBusinessFormProps {
   onBack: () => void;
   onSuccess: () => void;
+  onSubmitRef?: (submitFn: () => void) => void;
 }
 
 export default function PersonalBusinessForm({
   onBack,
   onSuccess,
+  onSubmitRef,
 }: PersonalBusinessFormProps) {
   const { data: session } = useSession();
   const { user } = useAuth();
@@ -77,7 +79,7 @@ export default function PersonalBusinessForm({
     setShowCamera(null);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!businessName.trim()) {
       toast.error("Business name is required");
       return;
@@ -122,10 +124,16 @@ export default function PersonalBusinessForm({
     } finally {
       setLoading(false);
     }
-  };
+  }, [businessName, faceImage, idImage, businessLocation, businessDescription, defaultAddress, userDetails, session, user, onSuccess]);
+
+  useEffect(() => {
+    if (onSubmitRef) {
+      onSubmitRef(handleSubmit);
+    }
+  }, [onSubmitRef, handleSubmit]);
 
   return (
-    <div className="space-y-4 sm:space-y-6 pb-20 sm:pb-0">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-gray-200 pb-3 dark:border-gray-700 sm:pb-4">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
@@ -313,41 +321,6 @@ export default function PersonalBusinessForm({
         mirrorVideo={false}
       />
 
-      {/* Submit Button - Fixed Footer */}
-      <div className="sticky bottom-0 z-10 flex items-center justify-between border-t border-gray-200 bg-white px-6 py-4 shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:relative sm:bottom-auto sm:z-auto sm:shadow-none">
-        <button
-          type="button"
-          onClick={onBack}
-          className="rounded-xl border-2 border-gray-300 bg-white px-6 py-2.5 font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md active:scale-95 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={
-            loading ||
-            !businessName.trim() ||
-            !faceImage ||
-            !idImage ||
-            !businessLocation.trim()
-          }
-          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-2.5 font-semibold text-white shadow-lg shadow-green-500/30 transition-all duration-200 hover:shadow-xl hover:shadow-green-500/40 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-          style={{ color: "#ffffff" }}
-        >
-          {loading ? (
-            <>
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-              <span style={{ color: "#ffffff" }}>Submitting...</span>
-            </>
-          ) : (
-            <>
-              <Check className="h-4 w-4" style={{ color: "#ffffff" }} />
-              <span style={{ color: "#ffffff" }}>Submit for Review</span>
-            </>
-          )}
-        </button>
-      </div>
     </div>
   );
 }
