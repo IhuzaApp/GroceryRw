@@ -165,6 +165,13 @@ export const authOptions: NextAuthOptions = {
     signIn: "/Auth/Login",
     signOut: "/",
   },
+  events: {
+    async signOut() {
+      // This event is called when the user signs out
+      // We can use this to clear any server-side session data if needed
+      console.log("User signed out");
+    },
+  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -200,6 +207,11 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
+      // If token is null or invalid, return null session
+      if (!token || !token.id) {
+        return null as any;
+      }
+      
       if (token && session.user) {
         (session.user as any).id = token.id as string;
         (session.user as any).phone = (token as any).phone;

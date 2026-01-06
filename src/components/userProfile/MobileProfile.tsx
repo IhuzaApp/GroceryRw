@@ -77,7 +77,7 @@ export default function MobileProfile({
   loadingReferral,
 }: MobileProfileProps) {
   const router = useRouter();
-  const { role, toggleRole } = useAuth();
+  const { role, toggleRole, logout } = useAuth();
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("");
 
@@ -869,26 +869,8 @@ export default function MobileProfile({
           className="flex w-full items-center justify-center rounded-none bg-gradient-to-r from-red-500 to-red-600 px-4 py-3 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
           onClick={async () => {
             try {
-              // Call our custom logout API
-              const response = await authenticatedFetch("/api/logout", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              });
-
-              if (response.ok) {
-                // Clear local storage
-                localStorage.clear();
-                sessionStorage.clear();
-
-                toast.success("Logged out successfully");
-
-                // Redirect to login page
-                router.push("/");
-              } else {
-                throw new Error("Logout failed");
-              }
+              toast.success("Logging out...");
+              await logout();
             } catch (error) {
               console.error("Logout error:", error);
               toast.error("Failed to logout");

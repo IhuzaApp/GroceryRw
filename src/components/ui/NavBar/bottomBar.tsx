@@ -5,7 +5,8 @@ import { useCart } from "../../../context/CartContext";
 import { useTheme } from "../../../context/ThemeContext";
 import { useLanguage } from "../../../context/LanguageContext";
 import { Input, Modal, Button, Loader } from "rsuite";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { useAuth } from "../../../context/AuthContext";
 import { Briefcase } from "lucide-react";
 
 interface NavItemProps {
@@ -126,6 +127,7 @@ export default function BottomBar() {
   const [open, setOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const router = useRouter();
+  const { logout } = useAuth();
   const { count } = useCart();
   const { theme, setTheme } = useTheme();
   const { t } = useLanguage();
@@ -1040,30 +1042,11 @@ export default function BottomBar() {
                     href="#"
                     onClick={async () => {
                       setMoreOpen(false);
-
-                      // Clear all localStorage data
-                      localStorage.clear();
-
-                      // Clear all sessionStorage data
-                      sessionStorage.clear();
-
-                      // Clear NextAuth cookies manually
-                      document.cookie.split(";").forEach((c) => {
-                        const eqPos = c.indexOf("=");
-                        const name = eqPos > -1 ? c.substr(0, eqPos) : c;
-                        document.cookie = `${name.trim()}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-                        document.cookie = `${name.trim()}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${
-                          window.location.hostname
-                        }`;
-                        document.cookie = `${name.trim()}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.${
-                          window.location.hostname
-                        }`;
-                      });
-
-                      // Use NextAuth signOut function with redirect
-                      await signOut({
-                        redirect: true,
-                      });
+                      try {
+                        await logout();
+                      } catch (error) {
+                        console.error("Logout error:", error);
+                      }
                     }}
                   />
                 )}

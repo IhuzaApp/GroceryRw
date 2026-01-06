@@ -26,6 +26,8 @@ import ShopperDashboard from "@components/shopper/dashboard/ShopperDashboard";
 import ResponsiveUserDashboard from "@components/user/dashboard/ResponsiveUserDashboard";
 import MainBanners from "@components/ui/banners";
 import LoadingScreen from "@components/ui/LoadingScreen";
+import LandingPage from "@components/ui/LandingPage";
+import { isMobileDevice } from "../src/lib/formatters";
 
 // Loading screen component is now imported from @components/ui/LoadingScreen
 
@@ -56,6 +58,17 @@ export default function Home({ initialData }: { initialData: Data }) {
   const [dataLoaded, setDataLoaded] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // Check if mobile device
+    const checkMobile = () => {
+      setIsMobile(isMobileDevice());
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     // Allow guest access - don't wait for auth to be ready
@@ -66,6 +79,11 @@ export default function Home({ initialData }: { initialData: Data }) {
 
   if (!dataLoaded) {
     return <LoadingScreen />;
+  }
+
+  // Show landing page for non-logged-in users on desktop
+  if (!isLoggedIn && !isMobile) {
+    return <LandingPage />;
   }
 
   // Show shopper dashboard only for authenticated shoppers
