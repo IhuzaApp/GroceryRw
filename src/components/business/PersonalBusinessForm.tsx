@@ -161,39 +161,36 @@ export default function PersonalBusinessForm({
       )}
 
       {/* Business Name */}
-      <div className="space-y-2 sm:space-y-3">
+      <div>
         <label
           htmlFor="businessName"
-          className="block text-xs font-medium text-gray-900 dark:text-white sm:text-sm"
+          className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300"
         >
           Business Name <span className="text-red-500">*</span>
         </label>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          Enter the name of your personal business
-        </p>
-        <input
-          id="businessName"
-          type="text"
-          value={businessName}
-          onChange={(e) => setBusinessName(e.target.value)}
-          placeholder="e.g., John's Grocery Store"
-          className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 sm:px-4 sm:text-base"
-          required
-        />
+        <div className="relative">
+          <input
+            id="businessName"
+            type="text"
+            value={businessName}
+            onChange={(e) => setBusinessName(e.target.value)}
+            placeholder="e.g., John's Grocery Store"
+            className="w-full rounded-xl border-2 border-gray-200 bg-white py-3 pl-4 pr-4 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
+            required
+          />
+        </div>
       </div>
 
       {/* Operating Address */}
-      <div className="space-y-2 sm:space-y-3">
+      <div>
         <label
           htmlFor="businessLocation"
-          className="block text-xs font-medium text-gray-900 dark:text-white sm:text-sm"
+          className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300"
         >
           Operating Address <span className="text-red-500">*</span>
         </label>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          Enter the address where you will be operating your business
-        </p>
         <textarea
+          id="businessLocation"
           value={businessLocation}
           onChange={(e) => setBusinessLocation(e.target.value)}
           placeholder={
@@ -207,12 +204,12 @@ export default function PersonalBusinessForm({
                   .replace(/^,\s*|,\s*$/g, "")
               : "Enter your operating address (e.g., Street, City, Postal Code)"
           }
-          rows={3}
-          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+          rows={4}
+          className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
           required
         />
         {defaultAddress && (
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
             <span className="font-medium">Default address:</span>{" "}
             {defaultAddress.street}, {defaultAddress.city}
             {defaultAddress.postal_code && `, ${defaultAddress.postal_code}`}
@@ -221,11 +218,11 @@ export default function PersonalBusinessForm({
       </div>
 
       {/* Face Image Capture */}
-      <div className="space-y-2 sm:space-y-3">
-        <label className="block text-xs font-medium text-gray-900 dark:text-white sm:text-sm">
+      <div>
+        <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
           Face Photo <span className="text-red-500">*</span>
         </label>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
           Take a clear photo of your face for verification
         </p>
         <div className="flex items-center space-x-3 sm:space-x-4">
@@ -260,11 +257,11 @@ export default function PersonalBusinessForm({
       </div>
 
       {/* ID Image Capture */}
-      <div className="space-y-2 sm:space-y-3">
-        <label className="block text-xs font-medium text-gray-900 dark:text-white sm:text-sm">
+      <div>
+        <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
           ID Photo <span className="text-red-500">*</span>
         </label>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
           Take a clear photo of your ID card (front side)
         </p>
         <div className="flex items-center space-x-3 sm:space-x-4">
@@ -317,14 +314,16 @@ export default function PersonalBusinessForm({
       />
 
       {/* Submit Button */}
-      <div className="flex justify-end space-x-4 border-t border-gray-200 pt-4 dark:border-gray-700">
+      <div className="flex items-center justify-between border-t border-gray-200 pt-4 dark:border-gray-700">
         <button
+          type="button"
           onClick={onBack}
-          className="rounded-lg border border-gray-300 px-6 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+          className="rounded-xl border-2 border-gray-300 bg-white px-6 py-2.5 font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md active:scale-95 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
         >
           Cancel
         </button>
         <button
+          type="button"
           onClick={handleSubmit}
           disabled={
             loading ||
@@ -333,18 +332,18 @@ export default function PersonalBusinessForm({
             !idImage ||
             !businessLocation.trim()
           }
-          className="flex items-center space-x-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-2 font-semibold text-white transition-all hover:from-green-600 hover:to-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-2.5 font-semibold text-white shadow-lg shadow-green-500/30 transition-all duration-200 hover:shadow-xl hover:shadow-green-500/40 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
           style={{ color: "#ffffff" }}
         >
           {loading ? (
             <>
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-              <span>Submitting...</span>
+              <span style={{ color: "#ffffff" }}>Submitting...</span>
             </>
           ) : (
             <>
-              <Check className="h-5 w-5" />
-              <span>Submit for Review</span>
+              <Check className="h-4 w-4" style={{ color: "#ffffff" }} />
+              <span style={{ color: "#ffffff" }}>Submit for Review</span>
             </>
           )}
         </button>
