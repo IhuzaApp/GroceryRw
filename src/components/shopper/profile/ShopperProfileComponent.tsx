@@ -18,7 +18,8 @@ import {
   List,
 } from "rsuite";
 import Cookies from "js-cookie";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { useAuth } from "../../../context/AuthContext";
 import { useTheme } from "../../../context/ThemeContext";
 import { useRouter } from "next/router";
 import { useGoogleMap } from "../../../context/GoogleMapProvider";
@@ -46,6 +47,7 @@ interface ShopperStats {
 
 export default function ShopperProfileComponent() {
   const { data: session } = useSession();
+  const { logout } = useAuth();
   const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState("account");
   // User data state
@@ -621,13 +623,8 @@ export default function ShopperProfileComponent() {
 
       const result = await response.json();
 
-      // Sign out without redirect
-      await signOut({
-        redirect: false,
-      });
-
-      // Manually redirect to login page
-      router.push("/Auth/Login");
+      // Logout completely (clears all caches and redirects)
+      await logout();
     } catch (error: unknown) {
       logger.error(
         "Error updating shopper information:",
