@@ -146,33 +146,31 @@ export function MobilePlasBusinessExplorer({
             }}
           >
             {/* Animated Highlight Shimmer Effect */}
-            <div 
+            <div
               className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
               style={{
                 transform: "translateX(-100%)",
                 animation: "shimmer 3s ease-in-out infinite",
               }}
             ></div>
-            
+
             {/* Pulsing Glow Ring */}
-            <div 
+            <div
               className="absolute -inset-1 rounded-lg bg-gradient-to-r from-green-400/30 to-emerald-400/30 blur-sm"
               style={{
-                animation: "pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+                animation:
+                  "pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
               }}
             ></div>
 
             {/* Icon Container */}
             <div
-              className="relative z-10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 via-green-600 to-emerald-600 text-white shadow-md shadow-green-500/50 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-lg group-hover:shadow-green-500/70"
-              style={{ 
+              className="relative z-10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 via-green-600 to-emerald-600 text-white shadow-md shadow-green-500/50 transition-all duration-300 group-hover:rotate-3 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-green-500/70"
+              style={{
                 color: "#ffffff",
               }}
             >
-              <Briefcase
-                className="h-5 w-5"
-                style={{ color: "#ffffff" }}
-              />
+              <Briefcase className="h-5 w-5" style={{ color: "#ffffff" }} />
             </div>
 
             {/* Content */}
@@ -188,7 +186,7 @@ export function MobilePlasBusinessExplorer({
             {/* CTA Arrow with Pulse */}
             <div
               className="relative z-10 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-md shadow-green-500/50 transition-all duration-300 group-hover:translate-x-1 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-green-500/70"
-              style={{ 
+              style={{
                 color: "#ffffff",
                 animation: "arrow-pulse 1.5s ease-in-out infinite",
               }}
@@ -202,8 +200,9 @@ export function MobilePlasBusinessExplorer({
         </div>
 
         {/* Add CSS animations via style tag */}
-        <style dangerouslySetInnerHTML={{
-          __html: `
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
             @keyframes pulse-ring {
               0%, 100% {
                 box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4), 0 0 0 0 rgba(16, 185, 129, 0.4);
@@ -241,8 +240,9 @@ export function MobilePlasBusinessExplorer({
                 transform: scale(1.15);
               }
             }
-          `
-        }} />
+          `,
+          }}
+        />
 
         {/* Tabs Section */}
         <div className="border-b border-gray-200 bg-white px-4 py-2 dark:border-gray-700 dark:bg-gray-800">
@@ -261,9 +261,7 @@ export function MobilePlasBusinessExplorer({
               <Package
                 className="h-4 w-4"
                 style={
-                  activeTab === "services"
-                    ? { color: "#ffffff" }
-                    : undefined
+                  activeTab === "services" ? { color: "#ffffff" } : undefined
                 }
               />
               <span>Services</span>
@@ -279,9 +277,7 @@ export function MobilePlasBusinessExplorer({
             >
               <FileText
                 className="h-4 w-4"
-                style={
-                  activeTab === "rfqs" ? { color: "#ffffff" } : undefined
-                }
+                style={activeTab === "rfqs" ? { color: "#ffffff" } : undefined}
               />
               <span>RFQ Opportunities</span>
             </button>
@@ -321,8 +317,12 @@ export function MobilePlasBusinessExplorer({
               ) : (
                 <div className="space-y-3">
                   {filteredRFQs.map((rfq) => {
-                    const minBudget = rfq.min_budget ? parseFloat(rfq.min_budget) : 0;
-                    const maxBudget = rfq.max_budget ? parseFloat(rfq.max_budget) : 0;
+                    const minBudget = rfq.min_budget
+                      ? parseFloat(rfq.min_budget)
+                      : 0;
+                    const maxBudget = rfq.max_budget
+                      ? parseFloat(rfq.max_budget)
+                      : 0;
                     const budgetDisplay =
                       minBudget > 0 && maxBudget > 0
                         ? `$${minBudget.toLocaleString()} - $${maxBudget.toLocaleString()}`
@@ -363,7 +363,9 @@ export function MobilePlasBusinessExplorer({
                             {rfq.response_date && (
                               <span className="flex items-center gap-1">
                                 <span>📅</span>
-                                {new Date(rfq.response_date).toLocaleDateString()}
+                                {new Date(
+                                  rfq.response_date
+                                ).toLocaleDateString()}
                               </span>
                             )}
                           </div>
@@ -415,4 +417,3 @@ export function MobilePlasBusinessExplorer({
     </>
   );
 }
-

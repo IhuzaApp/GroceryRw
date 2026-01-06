@@ -49,9 +49,7 @@ export function MobileServiceList({
     "all",
     ...Array.from(
       new Set(
-        services
-          .map((s) => s.category || s.service_category)
-          .filter(Boolean)
+        services.map((s) => s.category || s.service_category).filter(Boolean)
       )
     ),
   ];
@@ -116,7 +114,8 @@ export function MobileServiceList({
 
   const filteredServices = services.filter((service) => {
     const serviceName = service.name || service.service_name || "";
-    const serviceDescription = service.description || service.service_description || "";
+    const serviceDescription =
+      service.description || service.service_description || "";
     const serviceLocation = service.location || service.service_location || "";
     const serviceCategory = service.category || service.service_category || "";
     const serviceSpecialties = service.specialties || service.skills || [];
@@ -141,8 +140,7 @@ export function MobileServiceList({
     const matchesSpecialty =
       selectedSpecialty === "all" ||
       specialtiesArray.some(
-        (sp: string) =>
-          sp.toLowerCase() === selectedSpecialty.toLowerCase()
+        (sp: string) => sp.toLowerCase() === selectedSpecialty.toLowerCase()
       );
 
     return matchesSearch && matchesCategory && matchesSpecialty;
@@ -351,7 +349,9 @@ export function MobileServiceList({
                         </div>
                         <div className="min-w-0 flex-1">
                           <h3 className="mb-1.5 truncate text-base font-bold text-gray-900 dark:text-white">
-                            {service.name || service.service_name || "Unnamed Service"}
+                            {service.name ||
+                              service.service_name ||
+                              "Unnamed Service"}
                           </h3>
                           <div className="mb-2 flex flex-wrap items-center gap-2">
                             {(service.category || service.service_category) && (
@@ -361,7 +361,9 @@ export function MobileServiceList({
                             )}
                             {(service.specialties || service.skills) && (
                               <>
-                                {Array.isArray(service.specialties || service.skills)
+                                {Array.isArray(
+                                  service.specialties || service.skills
+                                )
                                   ? (service.specialties || service.skills)
                                       .slice(0, 2)
                                       .map((specialty: string, idx: number) => (
@@ -372,8 +374,9 @@ export function MobileServiceList({
                                           {specialty}
                                         </span>
                                       ))
-                                  : typeof (service.specialties || service.skills) ===
-                                    "string"
+                                  : typeof (
+                                      service.specialties || service.skills
+                                    ) === "string"
                                   ? (service.specialties || service.skills)
                                       .split(",")
                                       .slice(0, 2)
@@ -389,9 +392,13 @@ export function MobileServiceList({
                               </>
                             )}
                           </div>
-                          {(service.price_range || service.priceRange || service.price) && (
+                          {(service.price_range ||
+                            service.priceRange ||
+                            service.price) && (
                             <p className="mb-1.5 text-sm font-bold text-gray-900 dark:text-white">
-                              {service.price_range || service.priceRange || service.price}
+                              {service.price_range ||
+                                service.priceRange ||
+                                service.price}
                             </p>
                           )}
                           {(service.location || service.service_location) && (

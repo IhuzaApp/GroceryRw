@@ -58,13 +58,16 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
   const categories = [
     "all",
     ...Array.from(
-      new Set(services.map((s) => s.category || s.service_category).filter(Boolean))
+      new Set(
+        services.map((s) => s.category || s.service_category).filter(Boolean)
+      )
     ),
   ];
 
   const filteredServices = services.filter((service) => {
     const serviceName = service.name || service.service_name || "";
-    const serviceDescription = service.description || service.service_description || "";
+    const serviceDescription =
+      service.description || service.service_description || "";
     const providerName = service.provider_name || service.business_name || "";
     const serviceCategory = service.category || service.service_category || "";
 
@@ -166,12 +169,22 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
         /* Services Grid */
         <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredServices.map((service) => {
-            const serviceName = service.name || service.service_name || "Unnamed Service";
-            const serviceDescription = service.description || service.service_description || "";
-            const providerName = service.provider_name || service.business_name || "Unknown Provider";
-            const serviceCategory = service.category || service.service_category || "Uncategorized";
-            const location = service.location || service.service_location || "Not specified";
-            const priceRange = service.price_range || service.priceRange || "Contact for pricing";
+            const serviceName =
+              service.name || service.service_name || "Unnamed Service";
+            const serviceDescription =
+              service.description || service.service_description || "";
+            const providerName =
+              service.provider_name ||
+              service.business_name ||
+              "Unknown Provider";
+            const serviceCategory =
+              service.category || service.service_category || "Uncategorized";
+            const location =
+              service.location || service.service_location || "Not specified";
+            const priceRange =
+              service.price_range ||
+              service.priceRange ||
+              "Contact for pricing";
             const rating = service.rating || service.average_rating || 0;
             const serviceId = service.id || service.service_id;
 
@@ -258,7 +271,9 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
             <div className="sticky top-0 border-b border-gray-200 bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-4 dark:border-gray-700">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold text-white">
-                  {selectedService.name || selectedService.service_name || "Service Details"}
+                  {selectedService.name ||
+                    selectedService.service_name ||
+                    "Service Details"}
                 </h3>
                 <button
                   onClick={() => setIsServiceModalOpen(false)}
@@ -287,7 +302,9 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
                   Service Provider
                 </h4>
                 <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {selectedService.provider_name || selectedService.business_name || "Unknown Provider"}
+                  {selectedService.provider_name ||
+                    selectedService.business_name ||
+                    "Unknown Provider"}
                 </p>
               </div>
 
@@ -296,7 +313,9 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
                   Description
                 </h4>
                 <p className="text-sm text-gray-700 dark:text-gray-300">
-                  {selectedService.description || selectedService.service_description || "No description available"}
+                  {selectedService.description ||
+                    selectedService.service_description ||
+                    "No description available"}
                 </p>
               </div>
 
@@ -306,7 +325,9 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
                     Category
                   </h4>
                   <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {selectedService.category || selectedService.service_category || "Uncategorized"}
+                    {selectedService.category ||
+                      selectedService.service_category ||
+                      "Uncategorized"}
                   </p>
                 </div>
                 <div>
@@ -314,7 +335,9 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
                     Price Range
                   </h4>
                   <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {selectedService.price_range || selectedService.priceRange || "Contact for pricing"}
+                    {selectedService.price_range ||
+                      selectedService.priceRange ||
+                      "Contact for pricing"}
                   </p>
                 </div>
                 <div>
@@ -322,7 +345,9 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
                     Location
                   </h4>
                   <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {selectedService.location || selectedService.service_location || "Not specified"}
+                    {selectedService.location ||
+                      selectedService.service_location ||
+                      "Not specified"}
                   </p>
                 </div>
                 <div>
@@ -330,7 +355,9 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
                     Response Time
                   </h4>
                   <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {selectedService.response_time || selectedService.responseTime || "Contact provider"}
+                    {selectedService.response_time ||
+                      selectedService.responseTime ||
+                      "Contact provider"}
                   </p>
                 </div>
               </div>
@@ -341,21 +368,25 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
                     Specialties
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {(selectedService.specialties || selectedService.skills || []).map(
-                      (specialty: string, idx: number) => (
-                        <span
-                          key={idx}
-                          className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                        >
-                          {specialty}
-                        </span>
-                      )
-                    )}
+                    {(
+                      selectedService.specialties ||
+                      selectedService.skills ||
+                      []
+                    ).map((specialty: string, idx: number) => (
+                      <span
+                        key={idx}
+                        className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                      >
+                        {specialty}
+                      </span>
+                    ))}
                   </div>
                 </div>
               )}
 
-              {(selectedService.contact || selectedService.email || selectedService.phone) && (
+              {(selectedService.contact ||
+                selectedService.email ||
+                selectedService.phone) && (
                 <div>
                   <h4 className="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">
                     Contact Information

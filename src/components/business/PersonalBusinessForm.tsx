@@ -124,7 +124,18 @@ export default function PersonalBusinessForm({
     } finally {
       setLoading(false);
     }
-  }, [businessName, faceImage, idImage, businessLocation, businessDescription, defaultAddress, userDetails, session, user, onSuccess]);
+  }, [
+    businessName,
+    faceImage,
+    idImage,
+    businessLocation,
+    businessDescription,
+    defaultAddress,
+    userDetails,
+    session,
+    user,
+    onSuccess,
+  ]);
 
   useEffect(() => {
     if (onSubmitRef) {
@@ -320,7 +331,6 @@ export default function PersonalBusinessForm({
         title="Capture ID Photo"
         mirrorVideo={false}
       />
-
     </div>
   );
 }

@@ -162,7 +162,15 @@ export default function BusinessAccountForm({
     } finally {
       setLoading(false);
     }
-  }, [businessName, businessEmail, businessPhone, businessLocation, rdbCertificate, faceImage, onSuccess]);
+  }, [
+    businessName,
+    businessEmail,
+    businessPhone,
+    businessLocation,
+    rdbCertificate,
+    faceImage,
+    onSuccess,
+  ]);
 
   useEffect(() => {
     if (onSubmitRef) {
@@ -373,7 +381,6 @@ export default function BusinessAccountForm({
         title="Capture Face Photo"
         mirrorVideo={true}
       />
-
     </div>
   );
 }

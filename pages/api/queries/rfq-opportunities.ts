@@ -79,10 +79,18 @@ export default async function handler(
       )) as Session | null;
     } catch (authError: any) {
       // Log but don't fail - allow unauthenticated access for explorer view
-      if (authError?.message?.includes("timeout") || authError?.code === "UND_ERR_CONNECT_TIMEOUT") {
-        console.warn("Auth timeout - allowing unauthenticated access to RFQ opportunities");
+      if (
+        authError?.message?.includes("timeout") ||
+        authError?.code === "UND_ERR_CONNECT_TIMEOUT"
+      ) {
+        console.warn(
+          "Auth timeout - allowing unauthenticated access to RFQ opportunities"
+        );
       } else {
-        console.warn("Auth error - allowing unauthenticated access:", authError?.message);
+        console.warn(
+          "Auth error - allowing unauthenticated access:",
+          authError?.message
+        );
       }
     }
 
