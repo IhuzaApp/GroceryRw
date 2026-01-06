@@ -23,6 +23,9 @@ export default function CreateBusinessAccountModal({
   const [accountType, setAccountType] = useState<
     "personal" | "business" | null
   >(null);
+  const [personalFormSubmit, setPersonalFormSubmit] = useState<(() => void) | null>(null);
+  const [businessFormSubmit, setBusinessFormSubmit] = useState<(() => void) | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
@@ -86,9 +89,9 @@ export default function CreateBusinessAccountModal({
             </div>
           </div>
 
-          {/* Content */}
+          {/* Content - Scrollable */}
           <div className="flex-1 overflow-y-auto">
-            <div className="p-6 pb-24">
+            <div className="p-6">
             {step === "description" && (
               <div className="space-y-4 sm:space-y-6">
                 {/* Description */}
@@ -217,19 +220,6 @@ export default function CreateBusinessAccountModal({
                     </span>
                   </label>
                 </div>
-
-                {/* Continue Button - Fixed Footer */}
-                <div className="sticky bottom-0 z-10 flex items-center justify-end border-t border-gray-200 bg-white px-6 py-4 shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:relative sm:bottom-auto sm:z-auto sm:border-t-0 sm:shadow-none sm:pt-2">
-                  <button
-                    type="button"
-                    onClick={handleAcceptTerms}
-                    disabled={!acceptedTerms || !accountType}
-                    className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-2.5 font-semibold text-white shadow-lg shadow-green-500/30 transition-all duration-200 hover:shadow-xl hover:shadow-green-500/40 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                    style={{ color: "#ffffff" }}
-                  >
-                    <span style={{ color: "#ffffff" }}>Continue</span>
-                  </button>
-                </div>
               </div>
             )}
 
@@ -237,6 +227,7 @@ export default function CreateBusinessAccountModal({
               <PersonalBusinessForm
                 onBack={handleBack}
                 onSuccess={handleAccountCreated}
+                onSubmitRef={setPersonalFormSubmit}
               />
             )}
 
@@ -244,9 +235,73 @@ export default function CreateBusinessAccountModal({
               <BusinessAccountForm
                 onBack={handleBack}
                 onSuccess={handleAccountCreated}
+                onSubmitRef={setBusinessFormSubmit}
               />
             )}
             </div>
+          </div>
+
+          {/* Footer - Fixed at Bottom */}
+          <div className="flex-shrink-0 border-t border-gray-200 bg-white px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
+            {step === "description" && (
+              <div className="flex items-center justify-end">
+                <button
+                  type="button"
+                  onClick={handleAcceptTerms}
+                  disabled={!acceptedTerms || !accountType}
+                  className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-2.5 font-semibold text-white shadow-lg shadow-green-500/30 transition-all duration-200 hover:shadow-xl hover:shadow-green-500/40 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                  style={{ color: "#ffffff" }}
+                >
+                  <span style={{ color: "#ffffff" }}>Continue</span>
+                </button>
+              </div>
+            )}
+            {(step === "personal" || step === "business") && (
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  className="rounded-xl border-2 border-gray-300 bg-white px-6 py-2.5 font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md active:scale-95 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (step === "personal" && personalFormSubmit) {
+                      setIsSubmitting(true);
+                      try {
+                        await personalFormSubmit();
+                      } finally {
+                        setIsSubmitting(false);
+                      }
+                    } else if (step === "business" && businessFormSubmit) {
+                      setIsSubmitting(true);
+                      try {
+                        await businessFormSubmit();
+                      } finally {
+                        setIsSubmitting(false);
+                      }
+                    }
+                  }}
+                  disabled={isSubmitting}
+                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-2.5 font-semibold text-white shadow-lg shadow-green-500/30 transition-all duration-200 hover:shadow-xl hover:shadow-green-500/40 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                  style={{ color: "#ffffff" }}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                      <span style={{ color: "#ffffff" }}>Submitting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="h-4 w-4" style={{ color: "#ffffff" }} />
+                      <span style={{ color: "#ffffff" }}>Submit for Review</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
