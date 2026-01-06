@@ -163,7 +163,7 @@ export default function BusinessAccountForm({
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6 pb-20 sm:pb-0">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-gray-200 pb-3 dark:border-gray-700 sm:pb-4">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
@@ -366,8 +366,8 @@ export default function BusinessAccountForm({
         mirrorVideo={true}
       />
 
-      {/* Submit Button */}
-      <div className="flex items-center justify-between border-t border-gray-200 pt-4 dark:border-gray-700">
+      {/* Submit Button - Fixed Footer */}
+      <div className="sticky bottom-0 z-10 flex items-center justify-between border-t border-gray-200 bg-white px-6 py-4 shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:relative sm:bottom-auto sm:z-auto sm:shadow-none">
         <button
           type="button"
           onClick={onBack}
