@@ -37,8 +37,7 @@ export function MobileServiceList({
   searchTerm: externalSearchTerm = "",
 }: MobileServiceListProps) {
   const router = useRouter();
-  const [internalSearchTerm, setInternalSearchTerm] = useState("");
-  const searchTerm = externalSearchTerm || internalSearchTerm;
+  const searchTerm = externalSearchTerm;
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedSpecialty, setSelectedSpecialty] = useState("all");
   const [services, setServices] = useState<any[]>([]);
@@ -159,24 +158,6 @@ export function MobileServiceList({
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-white dark:bg-gray-800">
-      {/* Search Bar - Only show if not controlled externally */}
-      {!externalSearchTerm && (
-        <div className="sticky top-0 z-10 flex-shrink-0 border-b border-gray-200 bg-gradient-to-b from-white to-gray-50 px-4 py-3 shadow-sm dark:border-gray-700 dark:from-gray-800 dark:to-gray-900">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search services, products, or suppliers..."
-              value={internalSearchTerm}
-              onChange={(e) => setInternalSearchTerm(e.target.value)}
-              className="w-full rounded-full border border-gray-200 bg-white px-4 py-3 pl-4 pr-14 text-sm text-gray-900 placeholder-gray-500 shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:ring-offset-gray-800"
-            />
-            <button className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 p-2.5 text-white shadow-lg transition-all duration-200 hover:scale-110 hover:shadow-xl active:scale-95">
-              <Search className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Category Filter Buttons */}
       {categories.length > 1 && (
         <div className="flex-shrink-0 border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">

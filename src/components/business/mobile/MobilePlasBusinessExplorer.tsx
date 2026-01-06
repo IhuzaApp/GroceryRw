@@ -137,57 +137,112 @@ export function MobilePlasBusinessExplorer({
         </div>
 
         {/* Create Business Account Card */}
-        <div className="border-b border-gray-200 bg-white px-4 py-4 dark:border-gray-700 dark:bg-gray-800">
-          {/* Create Business Account Card */}
+        <div className="border-b border-gray-200 bg-white px-4 py-2 dark:border-gray-700 dark:bg-gray-800">
           <div
             onClick={() => setIsModalOpen(true)}
-            className="group relative flex cursor-pointer flex-col justify-between overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800"
+            className="group relative flex cursor-pointer items-center gap-3 overflow-hidden rounded-lg border-2 border-green-400 bg-gradient-to-r from-green-50 to-emerald-50 p-3 shadow-lg ring-2 ring-green-300/50 ring-offset-2 transition-all duration-300 hover:border-green-500 hover:shadow-xl hover:ring-green-400/70 active:scale-[0.98] dark:border-green-500 dark:from-green-900/20 dark:to-emerald-900/20 dark:ring-green-600/50"
+            style={{
+              animation: "pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+            }}
           >
-            {/* Gradient Background Effect */}
-            <div className="absolute inset-0 bg-gradient-to-br from-green-50/50 via-transparent to-emerald-50/30 opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:from-green-900/10 dark:to-emerald-900/10"></div>
+            {/* Animated Highlight Shimmer Effect */}
+            <div 
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+              style={{
+                transform: "translateX(-100%)",
+                animation: "shimmer 3s ease-in-out infinite",
+              }}
+            ></div>
+            
+            {/* Pulsing Glow Ring */}
+            <div 
+              className="absolute -inset-1 rounded-lg bg-gradient-to-r from-green-400/30 to-emerald-400/30 blur-sm"
+              style={{
+                animation: "pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+              }}
+            ></div>
 
-            {/* Decorative Elements */}
-            <div className="absolute right-0 top-0 h-20 w-20 -translate-y-1/2 translate-x-1/2 rounded-full bg-gradient-to-br from-green-100/20 to-emerald-100/20 blur-2xl dark:from-green-800/10 dark:to-emerald-800/10"></div>
-
-            <div className="relative z-10">
-              {/* Icon Container */}
-              <div
-                className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 via-green-600 to-emerald-600 text-white shadow-md shadow-green-500/30 transition-all duration-300 group-hover:rotate-3 group-hover:scale-105 group-hover:shadow-lg group-hover:shadow-green-500/50"
+            {/* Icon Container */}
+            <div
+              className="relative z-10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 via-green-600 to-emerald-600 text-white shadow-md shadow-green-500/50 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-lg group-hover:shadow-green-500/70"
+              style={{ 
+                color: "#ffffff",
+              }}
+            >
+              <Briefcase
+                className="h-5 w-5"
                 style={{ color: "#ffffff" }}
-              >
-                <Briefcase
-                  className="h-6 w-6"
-                  style={{ color: "#ffffff" }}
-                />
-              </div>
+              />
+            </div>
 
-              {/* Content */}
-              <h2 className="mb-2 text-lg font-bold text-gray-900 transition-colors duration-300 group-hover:text-green-600 dark:text-white dark:group-hover:text-green-400">
+            {/* Content */}
+            <div className="relative z-10 min-w-0 flex-1">
+              <h2 className="mb-0.5 text-sm font-bold text-gray-900 transition-colors duration-200 group-hover:text-green-600 dark:text-white dark:group-hover:text-green-400">
                 Create Business Account
               </h2>
-              <p className="mb-3 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
-                Start your business journey with PlasBusiness. Create RFQs,
-                find suppliers, manage contracts, and grow your business.
+              <p className="line-clamp-1 text-xs text-gray-600 dark:text-gray-300">
+                Start your business journey with PlasBusiness
               </p>
             </div>
 
-            {/* CTA Button */}
-            <div className="relative z-10 flex items-center justify-between border-t border-gray-100 pt-3 transition-colors duration-300 group-hover:border-green-200 dark:border-gray-700 dark:group-hover:border-green-800">
-              <span className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-sm font-semibold text-transparent dark:from-green-400 dark:to-emerald-400">
-                Get Started
-              </span>
-              <div
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-sm shadow-green-500/30 transition-all duration-300 group-hover:translate-x-1 group-hover:shadow-md group-hover:shadow-green-500/50"
+            {/* CTA Arrow with Pulse */}
+            <div
+              className="relative z-10 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-md shadow-green-500/50 transition-all duration-300 group-hover:translate-x-1 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-green-500/70"
+              style={{ 
+                color: "#ffffff",
+                animation: "arrow-pulse 1.5s ease-in-out infinite",
+              }}
+            >
+              <ArrowRight
+                className="h-3.5 w-3.5"
                 style={{ color: "#ffffff" }}
-              >
-                <ArrowRight
-                  className="h-4 w-4"
-                  style={{ color: "#ffffff" }}
-                />
-              </div>
+              />
             </div>
           </div>
         </div>
+
+        {/* Add CSS animations via style tag */}
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            @keyframes pulse-ring {
+              0%, 100% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4), 0 0 0 0 rgba(16, 185, 129, 0.4);
+              }
+              50% {
+                box-shadow: 0 0 0 6px rgba(34, 197, 94, 0), 0 0 0 10px rgba(16, 185, 129, 0);
+              }
+            }
+
+            @keyframes pulse-glow {
+              0%, 100% {
+                opacity: 0.3;
+                transform: scale(1);
+              }
+              50% {
+                opacity: 0.6;
+                transform: scale(1.05);
+              }
+            }
+
+            @keyframes shimmer {
+              0% {
+                transform: translateX(-100%);
+              }
+              100% {
+                transform: translateX(200%);
+              }
+            }
+
+            @keyframes arrow-pulse {
+              0%, 100% {
+                transform: scale(1);
+              }
+              50% {
+                transform: scale(1.15);
+              }
+            }
+          `
+        }} />
 
         {/* Tabs Section */}
         <div className="border-b border-gray-200 bg-white px-4 py-2 dark:border-gray-700 dark:bg-gray-800">
