@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Briefcase, CreditCard, ArrowRight, Package, FileText } from "lucide-react";
+import {
+  Briefcase,
+  CreditCard,
+  ArrowRight,
+  Package,
+  FileText,
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import CreateBusinessAccountModal from "./CreateBusinessAccountModal";
 import { ServicesSection } from "./ServicesSection";
@@ -254,4 +260,3 @@ export default function PlasBusinessExplorer({
     </>
   );
 }
-

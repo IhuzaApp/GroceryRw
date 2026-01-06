@@ -23,8 +23,12 @@ export default function CreateBusinessAccountModal({
   const [accountType, setAccountType] = useState<
     "personal" | "business" | null
   >(null);
-  const [personalFormSubmit, setPersonalFormSubmit] = useState<(() => void) | null>(null);
-  const [businessFormSubmit, setBusinessFormSubmit] = useState<(() => void) | null>(null);
+  const [personalFormSubmit, setPersonalFormSubmit] = useState<
+    (() => void) | null
+  >(null);
+  const [businessFormSubmit, setBusinessFormSubmit] = useState<
+    (() => void) | null
+  >(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
@@ -92,152 +96,154 @@ export default function CreateBusinessAccountModal({
           {/* Content - Scrollable */}
           <div className="flex-1 overflow-y-auto">
             <div className="p-6">
-            {step === "description" && (
-              <div className="space-y-4 sm:space-y-6">
-                {/* Description */}
-                <div className="space-y-3 sm:space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
-                    About PlasBusiness
-                  </h3>
-                  <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300 sm:space-y-3 sm:text-base">
-                    <p>
-                      PlasBusiness is a comprehensive B2B marketplace platform
-                      designed to connect businesses with suppliers, streamline
-                      procurement processes, and manage business relationships
-                      efficiently.
-                    </p>
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
-                        Key Features:
-                      </h4>
-                      <ul className="ml-4 list-disc space-y-1 text-sm sm:ml-6 sm:text-base">
-                        <li>Create and manage Request for Quotations (RFQs)</li>
-                        <li>Connect with verified suppliers</li>
-                        <li>Receive and compare quotes</li>
-                        <li>Manage contracts and orders</li>
-                        <li>Track business transactions</li>
-                        <li>Secure business communications</li>
-                      </ul>
-                    </div>
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
-                        Account Types:
-                      </h4>
-                      <ul className="ml-4 list-disc space-y-1 text-sm sm:ml-6 sm:text-base">
-                        <li>
-                          <strong>Personal:</strong> For individual
-                          entrepreneurs and freelancers
-                        </li>
-                        <li>
-                          <strong>Business:</strong> For registered businesses
-                          and companies
-                        </li>
-                      </ul>
+              {step === "description" && (
+                <div className="space-y-4 sm:space-y-6">
+                  {/* Description */}
+                  <div className="space-y-3 sm:space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
+                      About PlasBusiness
+                    </h3>
+                    <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300 sm:space-y-3 sm:text-base">
+                      <p>
+                        PlasBusiness is a comprehensive B2B marketplace platform
+                        designed to connect businesses with suppliers,
+                        streamline procurement processes, and manage business
+                        relationships efficiently.
+                      </p>
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
+                          Key Features:
+                        </h4>
+                        <ul className="ml-4 list-disc space-y-1 text-sm sm:ml-6 sm:text-base">
+                          <li>
+                            Create and manage Request for Quotations (RFQs)
+                          </li>
+                          <li>Connect with verified suppliers</li>
+                          <li>Receive and compare quotes</li>
+                          <li>Manage contracts and orders</li>
+                          <li>Track business transactions</li>
+                          <li>Secure business communications</li>
+                        </ul>
+                      </div>
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
+                          Account Types:
+                        </h4>
+                        <ul className="ml-4 list-disc space-y-1 text-sm sm:ml-6 sm:text-base">
+                          <li>
+                            <strong>Personal:</strong> For individual
+                            entrepreneurs and freelancers
+                          </li>
+                          <li>
+                            <strong>Business:</strong> For registered businesses
+                            and companies
+                          </li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Account Type Selection */}
-                <div className="space-y-3 sm:space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
-                    Select Account Type
-                  </h3>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-                    <button
-                      type="button"
-                      onClick={() => handleAccountTypeSelect("personal")}
-                      className={`rounded-xl border-2 p-4 text-left shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.98] sm:p-6 ${
-                        accountType === "personal"
-                          ? "border-green-500 bg-green-50 shadow-md dark:bg-green-900/20"
-                          : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600"
-                      }`}
-                    >
-                      <div className="mb-2 flex items-center">
-                        {accountType === "personal" && (
-                          <Check className="mr-2 h-5 w-5 flex-shrink-0 text-green-600 dark:text-green-400" />
-                        )}
-                        <h4 className="text-base font-semibold text-gray-900 dark:text-white sm:text-lg">
-                          Personal Account
-                        </h4>
-                      </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        For individual entrepreneurs and freelancers. Quick
-                        verification process.
-                      </p>
-                    </button>
+                  {/* Account Type Selection */}
+                  <div className="space-y-3 sm:space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
+                      Select Account Type
+                    </h3>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+                      <button
+                        type="button"
+                        onClick={() => handleAccountTypeSelect("personal")}
+                        className={`rounded-xl border-2 p-4 text-left shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.98] sm:p-6 ${
+                          accountType === "personal"
+                            ? "border-green-500 bg-green-50 shadow-md dark:bg-green-900/20"
+                            : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600"
+                        }`}
+                      >
+                        <div className="mb-2 flex items-center">
+                          {accountType === "personal" && (
+                            <Check className="mr-2 h-5 w-5 flex-shrink-0 text-green-600 dark:text-green-400" />
+                          )}
+                          <h4 className="text-base font-semibold text-gray-900 dark:text-white sm:text-lg">
+                            Personal Account
+                          </h4>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          For individual entrepreneurs and freelancers. Quick
+                          verification process.
+                        </p>
+                      </button>
 
-                    <button
-                      type="button"
-                      onClick={() => handleAccountTypeSelect("business")}
-                      className={`rounded-xl border-2 p-4 text-left shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.98] sm:p-6 ${
-                        accountType === "business"
-                          ? "border-green-500 bg-green-50 shadow-md dark:bg-green-900/20"
-                          : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600"
-                      }`}
-                    >
-                      <div className="mb-2 flex items-center">
-                        {accountType === "business" && (
-                          <Check className="mr-2 h-5 w-5 flex-shrink-0 text-green-600 dark:text-green-400" />
-                        )}
-                        <h4 className="text-base font-semibold text-gray-900 dark:text-white sm:text-lg">
-                          Business Account
-                        </h4>
-                      </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        For registered businesses. Requires business
-                        documentation.
-                      </p>
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => handleAccountTypeSelect("business")}
+                        className={`rounded-xl border-2 p-4 text-left shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.98] sm:p-6 ${
+                          accountType === "business"
+                            ? "border-green-500 bg-green-50 shadow-md dark:bg-green-900/20"
+                            : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600"
+                        }`}
+                      >
+                        <div className="mb-2 flex items-center">
+                          {accountType === "business" && (
+                            <Check className="mr-2 h-5 w-5 flex-shrink-0 text-green-600 dark:text-green-400" />
+                          )}
+                          <h4 className="text-base font-semibold text-gray-900 dark:text-white sm:text-lg">
+                            Business Account
+                          </h4>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          For registered businesses. Requires business
+                          documentation.
+                        </p>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Terms and Conditions */}
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900 sm:p-4">
+                    <label className="flex cursor-pointer items-start space-x-2 sm:space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={acceptedTerms}
+                        onChange={(e) => setAcceptedTerms(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-gray-300 text-green-600 focus:ring-green-500 sm:mt-1 sm:h-5 sm:w-5"
+                        disabled={!accountType}
+                      />
+                      <span className="text-xs text-gray-700 dark:text-gray-300 sm:text-sm">
+                        I accept the{" "}
+                        <a
+                          href="#"
+                          className="text-green-600 hover:underline dark:text-green-400"
+                        >
+                          Terms and Conditions
+                        </a>{" "}
+                        and{" "}
+                        <a
+                          href="#"
+                          className="text-green-600 hover:underline dark:text-green-400"
+                        >
+                          Privacy Policy
+                        </a>{" "}
+                        of PlasBusiness
+                      </span>
+                    </label>
                   </div>
                 </div>
+              )}
 
-                {/* Terms and Conditions */}
-                <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900 sm:p-4">
-                  <label className="flex cursor-pointer items-start space-x-2 sm:space-x-3">
-                    <input
-                      type="checkbox"
-                      checked={acceptedTerms}
-                      onChange={(e) => setAcceptedTerms(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-gray-300 text-green-600 focus:ring-green-500 sm:mt-1 sm:h-5 sm:w-5"
-                      disabled={!accountType}
-                    />
-                    <span className="text-xs text-gray-700 dark:text-gray-300 sm:text-sm">
-                      I accept the{" "}
-                      <a
-                        href="#"
-                        className="text-green-600 hover:underline dark:text-green-400"
-                      >
-                        Terms and Conditions
-                      </a>{" "}
-                      and{" "}
-                      <a
-                        href="#"
-                        className="text-green-600 hover:underline dark:text-green-400"
-                      >
-                        Privacy Policy
-                      </a>{" "}
-                      of PlasBusiness
-                    </span>
-                  </label>
-                </div>
-              </div>
-            )}
+              {step === "personal" && (
+                <PersonalBusinessForm
+                  onBack={handleBack}
+                  onSuccess={handleAccountCreated}
+                  onSubmitRef={setPersonalFormSubmit}
+                />
+              )}
 
-            {step === "personal" && (
-              <PersonalBusinessForm
-                onBack={handleBack}
-                onSuccess={handleAccountCreated}
-                onSubmitRef={setPersonalFormSubmit}
-              />
-            )}
-
-            {step === "business" && (
-              <BusinessAccountForm
-                onBack={handleBack}
-                onSuccess={handleAccountCreated}
-                onSubmitRef={setBusinessFormSubmit}
-              />
-            )}
+              {step === "business" && (
+                <BusinessAccountForm
+                  onBack={handleBack}
+                  onSuccess={handleAccountCreated}
+                  onSubmitRef={setBusinessFormSubmit}
+                />
+              )}
             </div>
           </div>
 
@@ -296,7 +302,9 @@ export default function CreateBusinessAccountModal({
                   ) : (
                     <>
                       <Check className="h-4 w-4" style={{ color: "#ffffff" }} />
-                      <span style={{ color: "#ffffff" }}>Submit for Review</span>
+                      <span style={{ color: "#ffffff" }}>
+                        Submit for Review
+                      </span>
                     </>
                   )}
                 </button>
