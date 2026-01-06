@@ -205,64 +205,76 @@ export default function BusinessAccountForm({
         </h4>
 
         <div>
-          <label className="block text-xs font-medium text-gray-900 dark:text-white sm:text-sm">
+          <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
             Business Name <span className="text-red-500">*</span>
           </label>
-          <input
-            type="text"
-            value={businessName}
-            onChange={(e) => setBusinessName(e.target.value)}
-            placeholder="Enter business name"
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:px-4 sm:text-base"
-          />
+          <div className="relative">
+            <input
+              type="text"
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+              placeholder="Enter business name"
+              className="w-full rounded-xl border-2 border-gray-200 bg-white py-3 pl-4 pr-4 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
+              required
+            />
+          </div>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-900 dark:text-white sm:text-sm">
+          <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
             Business Email <span className="text-red-500">*</span>
           </label>
-          <input
-            type="email"
-            value={businessEmail}
-            onChange={(e) => setBusinessEmail(e.target.value)}
-            placeholder="Enter business email"
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:px-4 sm:text-base"
-          />
+          <div className="relative">
+            <input
+              type="email"
+              value={businessEmail}
+              onChange={(e) => setBusinessEmail(e.target.value)}
+              placeholder="Enter business email"
+              className="w-full rounded-xl border-2 border-gray-200 bg-white py-3 pl-4 pr-4 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
+              required
+            />
+          </div>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-900 dark:text-white sm:text-sm">
+          <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
             Business Phone <span className="text-red-500">*</span>
           </label>
-          <input
-            type="tel"
-            value={businessPhone}
-            onChange={(e) => setBusinessPhone(e.target.value)}
-            placeholder="Enter business phone"
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:px-4 sm:text-base"
-          />
+          <div className="relative">
+            <input
+              type="tel"
+              value={businessPhone}
+              onChange={(e) => setBusinessPhone(e.target.value)}
+              placeholder="Enter business phone"
+              className="w-full rounded-xl border-2 border-gray-200 bg-white py-3 pl-4 pr-4 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
+              required
+            />
+          </div>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-900 dark:text-white sm:text-sm">
+          <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
             Business Location <span className="text-red-500">*</span>
           </label>
-          <input
-            type="text"
-            value={businessLocation}
-            onChange={(e) => setBusinessLocation(e.target.value)}
-            placeholder="Enter business location/address"
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:px-4 sm:text-base"
-          />
+          <div className="relative">
+            <input
+              type="text"
+              value={businessLocation}
+              onChange={(e) => setBusinessLocation(e.target.value)}
+              placeholder="Enter business location/address"
+              className="w-full rounded-xl border-2 border-gray-200 bg-white py-3 pl-4 pr-4 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
+              required
+            />
+          </div>
         </div>
       </div>
 
       {/* RDB Certificate Upload */}
-      <div className="space-y-2 sm:space-y-3">
-        <label className="block text-xs font-medium text-gray-900 dark:text-white sm:text-sm">
+      <div>
+        <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
           RDB Certificate <span className="text-red-500">*</span>
         </label>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
           Upload a clear photo or PDF of your RDB (Rwanda Development Board)
           certificate (Max 5MB)
         </p>
@@ -306,11 +318,11 @@ export default function BusinessAccountForm({
       </div>
 
       {/* Face Image Capture */}
-      <div className="space-y-2 sm:space-y-3">
-        <label className="block text-xs font-medium text-gray-900 dark:text-white sm:text-sm">
+      <div>
+        <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
           Face Photo <span className="text-red-500">*</span>
         </label>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
           Take a clear face photo for verification
         </p>
         <div className="flex items-center space-x-3 sm:space-x-4">
@@ -355,28 +367,30 @@ export default function BusinessAccountForm({
       />
 
       {/* Submit Button */}
-      <div className="flex flex-col justify-end gap-3 border-t border-gray-200 pt-4 dark:border-gray-700 sm:flex-row sm:space-x-4 sm:pt-6">
+      <div className="flex items-center justify-between border-t border-gray-200 pt-4 dark:border-gray-700">
         <button
+          type="button"
           onClick={onBack}
-          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:w-auto sm:px-6 sm:text-base"
+          className="rounded-xl border-2 border-gray-300 bg-white px-6 py-2.5 font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md active:scale-95 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
         >
           Cancel
         </button>
         <button
+          type="button"
           onClick={handleSubmit}
           disabled={loading}
-          className="flex w-full items-center justify-center space-x-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:from-green-600 hover:to-emerald-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-6 sm:text-base"
+          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-2.5 font-semibold text-white shadow-lg shadow-green-500/30 transition-all duration-200 hover:shadow-xl hover:shadow-green-500/40 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
           style={{ color: "#ffffff" }}
         >
           {loading ? (
             <>
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-              <span>Submitting...</span>
+              <span style={{ color: "#ffffff" }}>Submitting...</span>
             </>
           ) : (
             <>
-              <Check className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span>Submit for Review</span>
+              <Check className="h-4 w-4" style={{ color: "#ffffff" }} />
+              <span style={{ color: "#ffffff" }}>Submit for Review</span>
             </>
           )}
         </button>

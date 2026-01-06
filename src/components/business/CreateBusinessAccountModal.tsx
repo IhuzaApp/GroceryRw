@@ -58,31 +58,37 @@ export default function CreateBusinessAccountModal({
 
   return (
     <div
-      className="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4"
+      className="fixed inset-0 z-[10000] flex items-end justify-center bg-black bg-opacity-50 sm:items-center sm:p-4"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
       <div
-        className="relative flex h-[95vh] max-h-[95vh] w-full max-w-5xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl dark:bg-gray-800 sm:h-[85vh] sm:max-h-[85vh] sm:rounded-2xl md:h-[90vh] md:max-h-[90vh]"
+        className="relative flex h-[95vh] max-h-[95vh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl dark:bg-gray-800 sm:h-[90vh] sm:max-h-[90vh] sm:w-full sm:max-w-2xl sm:rounded-2xl"
         style={{ marginBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute right-2 top-2 z-10 rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300 sm:right-4 sm:top-4"
-        >
-          <X className="h-5 w-5 sm:h-6 sm:w-6" />
-        </button>
-
         <div className="flex h-full flex-col overflow-hidden">
           {/* Header */}
-          <div className="flex-shrink-0 border-b border-gray-200 bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3 dark:border-gray-700 sm:px-6 sm:py-4">
-            <h2 className="text-lg font-bold text-white sm:text-2xl">
-              Create PlasBusiness Account
-            </h2>
+          <div className="sticky top-0 z-10 flex-shrink-0 border-b border-gray-200 bg-white px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Create PlasBusiness Account
+                </h2>
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                  Get started with your business account
+                </p>
+              </div>
+              <button
+                onClick={onClose}
+                className="text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+          <form className="flex-1 overflow-y-auto p-6">
+            <div className="max-h-[60vh] space-y-6">
             {step === "description" && (
               <div className="space-y-4 sm:space-y-6">
                 {/* Description */}
@@ -135,44 +141,46 @@ export default function CreateBusinessAccountModal({
                   </h3>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                     <button
+                      type="button"
                       onClick={() => handleAccountTypeSelect("personal")}
-                      className={`rounded-lg border-2 p-4 text-left transition-all sm:rounded-xl sm:p-6 ${
+                      className={`rounded-xl border-2 p-4 text-left shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.98] sm:p-6 ${
                         accountType === "personal"
-                          ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-                          : "border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600"
+                          ? "border-green-500 bg-green-50 shadow-md dark:bg-green-900/20"
+                          : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600"
                       }`}
                     >
                       <div className="mb-2 flex items-center">
                         {accountType === "personal" && (
-                          <Check className="mr-2 h-4 w-4 flex-shrink-0 text-green-500 sm:h-5 sm:w-5" />
+                          <Check className="mr-2 h-5 w-5 flex-shrink-0 text-green-600 dark:text-green-400" />
                         )}
                         <h4 className="text-base font-semibold text-gray-900 dark:text-white sm:text-lg">
                           Personal Account
                         </h4>
                       </div>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 sm:text-sm">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
                         For individual entrepreneurs and freelancers. Quick
                         verification process.
                       </p>
                     </button>
 
                     <button
+                      type="button"
                       onClick={() => handleAccountTypeSelect("business")}
-                      className={`rounded-lg border-2 p-4 text-left transition-all sm:rounded-xl sm:p-6 ${
+                      className={`rounded-xl border-2 p-4 text-left shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.98] sm:p-6 ${
                         accountType === "business"
-                          ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-                          : "border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600"
+                          ? "border-green-500 bg-green-50 shadow-md dark:bg-green-900/20"
+                          : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600"
                       }`}
                     >
                       <div className="mb-2 flex items-center">
                         {accountType === "business" && (
-                          <Check className="mr-2 h-4 w-4 flex-shrink-0 text-green-500 sm:h-5 sm:w-5" />
+                          <Check className="mr-2 h-5 w-5 flex-shrink-0 text-green-600 dark:text-green-400" />
                         )}
                         <h4 className="text-base font-semibold text-gray-900 dark:text-white sm:text-lg">
                           Business Account
                         </h4>
                       </div>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 sm:text-sm">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
                         For registered businesses. Requires business
                         documentation.
                       </p>
@@ -211,11 +219,12 @@ export default function CreateBusinessAccountModal({
                 </div>
 
                 {/* Continue Button */}
-                <div className="flex justify-end pt-2 sm:pt-0">
+                <div className="flex justify-end pt-2">
                   <button
+                    type="button"
                     onClick={handleAcceptTerms}
                     disabled={!acceptedTerms || !accountType}
-                    className="w-full rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-2.5 text-sm font-semibold text-white transition-all hover:from-green-600 hover:to-emerald-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8 sm:py-3 sm:text-base"
+                    className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-2.5 font-semibold text-white shadow-lg shadow-green-500/30 transition-all duration-200 hover:shadow-xl hover:shadow-green-500/40 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                     style={{ color: "#ffffff" }}
                   >
                     <span style={{ color: "#ffffff" }}>Continue</span>
@@ -237,7 +246,8 @@ export default function CreateBusinessAccountModal({
                 onSuccess={handleAccountCreated}
               />
             )}
-          </div>
+            </div>
+          </form>
         </div>
       </div>
     </div>
