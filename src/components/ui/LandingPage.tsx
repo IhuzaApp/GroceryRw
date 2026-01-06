@@ -88,9 +88,9 @@ export default function LandingPage() {
         }`}
       >
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             {/* Logo */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <Image
                 src="/assets/logos/PlasIcon.png"
                 alt="Plas Logo"
@@ -114,13 +114,38 @@ export default function LandingPage() {
               </span>
             </div>
 
+            {/* Address Input - Only shown when scrolled */}
+            {isScrolled && (
+              <div className="flex-1 max-w-2xl mx-4 hidden md:flex">
+                <form onSubmit={handleAddressSubmit} className="flex w-full gap-3">
+                  <div className="relative flex-1">
+                    <MapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      placeholder="What's your address?"
+                      className="w-full rounded-lg border-0 bg-gray-50 px-12 py-2.5 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00D9A5]"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleUseCurrentLocation}
+                    className="rounded-lg bg-[#00D9A5] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#00C896] whitespace-nowrap"
+                  >
+                    Use current location
+                  </button>
+                </form>
+              </div>
+            )}
+
             {/* Login Button */}
             <button
               onClick={() => router.push("/Auth/Login")}
-              className="flex items-center gap-2 rounded-full bg-[#00D9A5] px-6 py-2.5 font-medium text-white transition-colors hover:bg-[#00C896]"
+              className="flex items-center gap-2 rounded-full bg-[#00D9A5] px-6 py-2.5 font-medium text-white transition-colors hover:bg-[#00C896] flex-shrink-0"
             >
               <User className="h-5 w-5" />
-              <span>Login</span>
+              <span className="hidden sm:inline">Login</span>
             </button>
           </div>
         </div>
