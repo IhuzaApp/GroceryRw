@@ -70,7 +70,7 @@ export default function PlasBusinessExplorer({
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 md:ml-16">
+      <div className="min-h-screen  from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 md:ml-16">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           {/* Header Section with Two Cards */}
           <div className="mb-8">
@@ -180,7 +180,7 @@ export default function PlasBusinessExplorer({
                   onClick={() => setActiveTab("services")}
                   className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-300 sm:rounded-xl sm:px-6 sm:py-3 sm:text-base ${
                     activeTab === "services"
-                      ? "scale-105 transform bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
+                      ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
                       : "text-gray-500 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
                   }`}
                   style={
@@ -201,7 +201,7 @@ export default function PlasBusinessExplorer({
                   onClick={() => setActiveTab("rfqs")}
                   className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-300 sm:rounded-xl sm:px-6 sm:py-3 sm:text-base ${
                     activeTab === "rfqs"
-                      ? "scale-105 transform bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
+                      ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
                       : "text-gray-500 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
                   }`}
                   style={
