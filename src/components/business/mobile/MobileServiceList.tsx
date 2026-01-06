@@ -231,13 +231,33 @@ export function MobileServiceList({
       {/* Services List */}
       <div className="flex-1 overflow-y-auto pb-24">
         {loading ? (
-          <div className="flex h-full items-center justify-center">
-            <div className="flex flex-col items-center space-y-4">
-              <div className="h-12 w-12 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
-              <p className="text-gray-600 dark:text-gray-400">
-                Loading services...
-              </p>
-            </div>
+          <div className="space-y-4 px-4 py-4">
+            {/* Skeleton Service Cards */}
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="animate-pulse rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-600 dark:bg-gray-700"
+              >
+                <div className="flex gap-3">
+                  {/* Skeleton Image */}
+                  <div className="h-16 w-16 flex-shrink-0 rounded-xl bg-gray-200 dark:bg-gray-600"></div>
+                  {/* Skeleton Content */}
+                  <div className="min-w-0 flex-1 space-y-2">
+                    {/* Skeleton Title */}
+                    <div className="h-5 w-3/4 rounded-md bg-gray-200 dark:bg-gray-600"></div>
+                    {/* Skeleton Badges */}
+                    <div className="flex gap-2">
+                      <div className="h-5 w-20 rounded-md bg-gray-200 dark:bg-gray-600"></div>
+                      <div className="h-5 w-24 rounded-md bg-gray-200 dark:bg-gray-600"></div>
+                    </div>
+                    {/* Skeleton Price */}
+                    <div className="h-4 w-24 rounded-md bg-gray-200 dark:bg-gray-600"></div>
+                    {/* Skeleton Location */}
+                    <div className="h-3 w-32 rounded-md bg-gray-200 dark:bg-gray-600"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <div className="space-y-4 px-4 py-4">
