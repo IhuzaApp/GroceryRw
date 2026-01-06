@@ -87,8 +87,8 @@ export default function CreateBusinessAccountModal({
           </div>
 
           {/* Content */}
-          <form className="flex-1 overflow-y-auto p-6">
-            <div className="max-h-[60vh] space-y-6">
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-6 pb-24">
             {step === "description" && (
               <div className="space-y-4 sm:space-y-6">
                 {/* Description */}
@@ -218,13 +218,13 @@ export default function CreateBusinessAccountModal({
                   </label>
                 </div>
 
-                {/* Continue Button */}
-                <div className="flex justify-end pt-2">
+                {/* Continue Button - Fixed Footer */}
+                <div className="sticky bottom-0 z-10 flex items-center justify-end border-t border-gray-200 bg-white px-6 py-4 shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:relative sm:bottom-auto sm:z-auto sm:border-t-0 sm:shadow-none sm:pt-2">
                   <button
                     type="button"
                     onClick={handleAcceptTerms}
                     disabled={!acceptedTerms || !accountType}
-                    className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-2.5 font-semibold text-white shadow-lg shadow-green-500/30 transition-all duration-200 hover:shadow-xl hover:shadow-green-500/40 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-2.5 font-semibold text-white shadow-lg shadow-green-500/30 transition-all duration-200 hover:shadow-xl hover:shadow-green-500/40 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                     style={{ color: "#ffffff" }}
                   >
                     <span style={{ color: "#ffffff" }}>Continue</span>
@@ -247,7 +247,7 @@ export default function CreateBusinessAccountModal({
               />
             )}
             </div>
-          </form>
+          </div>
         </div>
       </div>
     </div>
