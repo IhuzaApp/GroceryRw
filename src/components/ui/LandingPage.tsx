@@ -176,8 +176,10 @@ export default function LandingPage() {
     }
   };
 
-  const handleAddressSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddressSubmit = (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
     if (address.trim()) {
       // Store address and redirect
       router.push("/");
@@ -337,10 +339,10 @@ export default function LandingPage() {
                     />
                     <button
                       type="button"
-                      onClick={handleUseCurrentLocation}
+                      onClick={address ? handleAddressSubmit : handleUseCurrentLocation}
                       className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-xl bg-[#A8E6CF] px-3 py-1.5 text-xs font-bold text-[#00A67E] transition-colors hover:bg-[#90D9B8] whitespace-nowrap"
                     >
-                      Use current location
+                      {address ? "Continue" : "Use current location"}
                     </button>
                   </div>
                 </form>
@@ -410,10 +412,10 @@ export default function LandingPage() {
                   />
                   <button
                     type="button"
-                    onClick={handleUseCurrentLocation}
+                    onClick={address ? handleAddressSubmit : handleUseCurrentLocation}
                     className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl bg-[#A8E6CF] px-4 py-2.5 text-sm font-bold text-[#00A67E] transition-colors hover:bg-[#90D9B8] whitespace-nowrap"
                   >
-                    Use current location
+                    {address ? "Continue" : "Use current location"}
                   </button>
                 </div>
               </form>
