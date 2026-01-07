@@ -37,7 +37,7 @@ export default function HeaderLayout() {
     // Try loading the delivery address from cookie first (works for both logged in and guest users)
     const saved = Cookies.get("delivery_address");
     const tempAddress = Cookies.get("temp_address");
-    
+
     if (saved) {
       try {
         const parsedAddress = JSON.parse(saved);
@@ -87,7 +87,7 @@ export default function HeaderLayout() {
     const handleAddrChange = () => {
       const updated = Cookies.get("delivery_address");
       const tempAddr = Cookies.get("temp_address");
-      
+
       if (updated) {
         try {
           const parsedAddress = JSON.parse(updated);
@@ -174,7 +174,10 @@ export default function HeaderLayout() {
           {/* Left section (address + icon) - Desktop only */}
           <div className="flex items-center gap-3">
             {!session?.user ? (
-              <Link href="/" className="flex h-8 w-8 items-center justify-center cursor-pointer hover:opacity-80 transition-opacity">
+              <Link
+                href="/"
+                className="flex h-8 w-8 cursor-pointer items-center justify-center transition-opacity hover:opacity-80"
+              >
                 <Image
                   src="/assets/logos/PlasIcon.png"
                   alt="Plas Logo"

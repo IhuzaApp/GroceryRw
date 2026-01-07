@@ -219,7 +219,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             "Content-Type": "application/json",
           },
         });
-        
+
         if (!logoutResponse.ok) {
           console.error("Logout API returned error:", logoutResponse.status);
         }
@@ -230,11 +230,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       // Sign out from NextAuth - this is critical for clearing the session
       try {
         // First, clear the session from NextAuth
-        await signOut({ 
+        await signOut({
           redirect: false,
-          callbackUrl: "/"
+          callbackUrl: "/",
         });
-        
+
         // Verify session is cleared by checking it
         const clearedSession = await getSession();
         if (clearedSession) {
@@ -247,7 +247,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       // Wait a bit to ensure all async operations complete
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Force a hard reload to ensure everything is cleared and redirect
       // Use window.location.replace to prevent back button issues
@@ -268,19 +268,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             document.cookie = `${name}=;${basePath};Secure;SameSite=Strict`;
           }
         });
-        
+
         // Clear IndexedDB if used by NextAuth
-        if ('indexedDB' in window) {
+        if ("indexedDB" in window) {
           try {
-            const deleteReq = indexedDB.deleteDatabase('next-auth');
+            const deleteReq = indexedDB.deleteDatabase("next-auth");
             deleteReq.onsuccess = () => {
-              console.log('NextAuth IndexedDB cleared');
+              console.log("NextAuth IndexedDB cleared");
             };
           } catch (e) {
             // Ignore IndexedDB errors
           }
         }
-        
+
         // Use replace instead of href to prevent back button from going to logged-in state
         // Add a timestamp to prevent caching
         window.location.replace(`/?_=${Date.now()}`);
