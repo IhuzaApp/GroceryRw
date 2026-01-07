@@ -24,6 +24,396 @@ A comprehensive grocery delivery platform with advanced revenue tracking, wallet
 
 ### 9. PlasBusiness Management System
 
+### 10. Landing Page & Desktop User Dashboard System
+
+---
+
+# Landing Page & Desktop User Dashboard System
+
+## Overview
+
+The Landing Page and Desktop User Dashboard System provides a seamless user experience for both logged-in and non-logged-in users. The system features a Glovo-style landing page for desktop users who haven't logged in, with location selection, category browsing, and smooth transition to the full shopping experience. Once a location and category are selected, users are automatically directed to the Desktop User Dashboard where they can explore shops and stores.
+
+## Key Features
+
+### Landing Page Features
+
+- **Glovo-Style Design**: Modern, clean landing page with green color scheme (#00D9A5)
+- **Location Selection**: Google Maps Places Autocomplete for address input
+- **Current Location Support**: One-click location detection using browser geolocation
+- **Animated Illustrations**: Rotating product illustrations with fade/zoom effects
+- **Category Preview**: Display of active categories after location selection
+- **Sticky Header**: Dynamic header that changes appearance on scroll
+- **Cookie-Based Location Storage**: Saves selected location for session persistence
+- **Guest Access**: Allows non-logged-in users to browse and explore
+
+### Desktop User Dashboard Features
+
+- **Category Browsing**: Horizontal scrollable category list with upside-down avocado-shaped containers
+- **Shop Grid Display**: 4-column grid layout showing shop cards with images
+- **Category Filtering**: Click categories to filter shops by type
+- **Shop Cards**: Image-focused cards with logo, pricing, delivery time, and ratings
+- **Guest Mode**: Non-logged-in users can browse shops after selecting location
+- **Responsive Design**: Optimized for desktop viewing experience
+
+## System Architecture
+
+```mermaid
+graph TB
+    A[User Visits Home Page] --> B{Is Logged In?}
+    B -->|No & Desktop| C[Show Landing Page]
+    B -->|Yes| D[Show Dashboard]
+    
+    C --> E[User Selects Location]
+    E --> F[Categories Loaded]
+    F --> G[User Clicks Category]
+    G --> H[Redirect to Dashboard with Category]
+    
+    H --> I[Desktop User Dashboard]
+    D --> I
+    
+    I --> J[Display Filtered Shops]
+    J --> K[User Browses Shops]
+```
+
+## Components
+
+### 1. Landing Page (`LandingPage.tsx`)
+
+**Location**: `src/components/ui/LandingPage.tsx`
+
+**Key Features**:
+- Sticky header with dynamic styling on scroll
+- Google Maps Places Autocomplete integration
+- Geolocation API for current location
+- Animated illustrations component
+- Category display after location selection
+- Address display in header
+
+**State Management**:
+- `address`: Current address string
+- `displayAddress`: Short address for header display
+- `categories`: Array of active categories
+- `isScrolled`: Boolean for header styling
+- `autocomplete`: Google Places Autocomplete instance
+
+**Key Functions**:
+- `handleUseCurrentLocation()`: Gets user's current location via geolocation API
+- `handleAddressSubmit()`: Processes address selection
+- `fetchCategories()`: Fetches active categories from API
+- Cookie management for location persistence
+
+### 2. Desktop User Dashboard (`DesktopUserDashboard.tsx`)
+
+**Location**: `src/components/user/dashboard/DesktopUserDashboard.tsx`
+
+**Key Features**:
+- Category grid with horizontal scrolling
+- Upside-down avocado-shaped category containers
+- 4-column shop grid layout
+- Category filtering
+- Shop card display with images
+
+**Layout Structure**:
+```
+┌─────────────────────────────────────┐
+│  Groceries (Heading)                │
+│  [Category Scroll Row]              │
+│  ┌───┐ ┌───┐ ┌───┐ ┌───┐          │
+│  │ 🛒│ │ 🥖│ │ 🥩│ │ 🍽│ ...       │
+│  └───┘ └───┘ └───┘ └───┘          │
+│                                     │
+│  All Stores (Heading)               │
+│  ┌────┐ ┌────┐ ┌────┐ ┌────┐      │
+│  │Shop│ │Shop│ │Shop│ │Shop│      │
+│  │Card│ │Card│ │Card│ │Card│      │
+│  └────┘ └────┘ └────┘ └────┘      │
+│  ┌────┐ ┌────┐ ┌────┐ ┌────┐      │
+│  │Shop│ │Shop│ │Shop│ │Shop│      │
+│  │Card│ │Card│ │Card│ │Card│      │
+│  └────┘ └────┘ └────┘ └────┘      │
+└─────────────────────────────────────┘
+```
+
+### 3. User Dashboard Logic (`UserDashboardLogic.tsx`)
+
+**Location**: `src/components/user/dashboard/shared/UserDashboardLogic.tsx`
+
+**Key Features**:
+- Category selection from URL query parameters
+- Shop filtering by category
+- Guest user support (non-logged-in users)
+- Data fetching and caching
+- Location-based shop dynamics
+
+**Key Functions**:
+- `handleCategoryClick()`: Filters shops by selected category
+- `filteredShops`: Computed memoized array of filtered shops
+- URL query parameter reading for category selection
+- Guest mode support (doesn't require authentication)
+
+### 4. Shop Card (`ShopCard.tsx`)
+
+**Location**: `src/components/user/dashboard/ShopCard.tsx`
+
+**Key Features**:
+- Image-focused design with 160px height
+- Logo positioned at bottom-left of image
+- Price, delivery time, and rating display
+- Promo badges for stores
+- Open/Closed status indicators
+
+**Card Structure**:
+```
+┌─────────────────────┐
+│   [Shop Image]      │
+│   [Logo] [Status]   │
+├─────────────────────┤
+│ Shop Name           │
+│ Price • Time • Rating│
+└─────────────────────┘
+```
+
+## User Flow
+
+### For Non-Logged-In Users (Desktop)
+
+1. **Initial Visit**: User sees landing page with hero section
+   - Animated illustrations on left
+   - "Grocery delivery" heading
+   - Address input field
+   - "Use current location" button
+
+2. **Location Selection**: User selects location via:
+   - Google Maps Autocomplete
+   - Current location button
+   - Location stored in cookies (`temp_address`, `user_latitude`, `user_longitude`)
+
+3. **Category Display**: After location selection:
+   - Hero content replaced with category grid
+   - Categories displayed in green section
+   - "What can we get you?" heading
+
+4. **Category Selection**: User clicks a category:
+   - URL updates: `/?category={categoryId}`
+   - Page redirects to dashboard view
+   - Dashboard shows filtered shops
+
+5. **Shop Browsing**: User can:
+   - Browse shops in selected category
+   - Click shops to view details
+   - Change category by clicking another
+   - Clear filter to see all shops
+
+### For Logged-In Users
+
+1. **Direct Access**: User goes directly to dashboard
+2. **Full Features**: Access to all dashboard features
+3. **Personalization**: User-specific data and preferences
+
+## Routing Logic
+
+**File**: `pages/index.tsx`
+
+The routing logic determines what to show:
+
+```typescript
+// Check if user has location and category
+const hasLocationAndCategory = categoryParam && hasAddress;
+
+// Show landing page for non-logged-in desktop users without location/category
+if (!isLoggedIn && !isMobile && !hasLocationAndCategory) {
+  return <LandingPage />;
+}
+
+// Show dashboard for all other cases
+return <ResponsiveUserDashboard />;
+```
+
+## Location Management
+
+### Cookie Storage
+
+Location data is stored in cookies:
+- `temp_address`: Full formatted address string
+- `user_latitude`: Latitude coordinate
+- `user_longitude`: Longitude coordinate
+
+### Google Maps Integration
+
+**API Requirements**:
+- Google Maps Places API key
+- Autocomplete library enabled
+- Geocoding API for reverse geocoding
+
+**Configuration**:
+- Restricted to Rwanda (`country: "rw"`)
+- Address type filtering
+- Custom styled dropdown
+
+## Category System
+
+### Category Display
+
+Categories are displayed with:
+- **Shape**: Upside-down avocado (wider at top, narrower at bottom)
+- **Background**: Gray-50 (light) / Gray-700 (dark)
+- **Icons**: CategoryIcon component with SVG icons
+- **Layout**: Horizontal scrollable row
+- **Selection**: Visual feedback on selected category
+
+### Category Filtering
+
+When a category is selected:
+1. URL updates with `?category={id}` parameter
+2. Dashboard filters shops by category
+3. Selected category highlighted
+4. "Clear Filter" button appears
+
+## Shop Card Design
+
+### Visual Elements
+
+- **Image Height**: 160px (h-40)
+- **Logo Position**: Bottom-left of image
+- **Promo Badge**: Yellow badge for stores (top-left)
+- **Status Badge**: Green (Open) / Red (Closed) (top-right)
+- **Details Format**: "Price • Delivery Time • Rating"
+
+### Data Display
+
+- **Price**: Delivery fee or "Free"
+- **Time**: Estimated delivery time
+- **Rating**: Percentage with review count (e.g., "96% (39)")
+
+## Styling & Design
+
+### Color Scheme
+
+- **Primary Green**: `#00D9A5` (Plas green)
+- **Light Green**: `#A8E6CF`
+- **Dark Green**: `#00A67E`
+- **Category Background**: Gray-50 / Gray-700
+
+### Typography
+
+- **Font Family**: Nunito (body), Poppins (headings)
+- **Headings**: Bold, large sizes (3xl, 4xl, 5xl)
+- **Category Labels**: Small (xs), medium weight
+
+### Animations
+
+- **Category Hover**: Scale and shadow effects
+- **Shop Card Hover**: Translate up with shadow
+- **Image Hover**: Scale effect
+- **Illustrations**: Fade and zoom transitions
+
+## API Integration
+
+### Categories API
+
+**Endpoint**: `/api/queries/categories`
+
+**Response**:
+```json
+{
+  "categories": [
+    {
+      "id": "string",
+      "name": "string",
+      "description": "string",
+      "image": "string",
+      "is_active": boolean
+    }
+  ]
+}
+```
+
+### Shops API
+
+**Endpoint**: `/api/queries/shops`
+
+**Response**:
+```json
+{
+  "shops": [
+    {
+      "id": "string",
+      "name": "string",
+      "image": "string",
+      "logo": "string",
+      "category_id": "string",
+      "latitude": number,
+      "longitude": number
+    }
+  ]
+}
+```
+
+## Guest User Support
+
+The system allows non-logged-in users to:
+- Browse categories
+- View shops
+- Select locations
+- Filter by category
+
+**Limitations for Guests**:
+- Cannot place orders (redirected to login)
+- Limited personalization
+- No saved addresses
+
+## Configuration
+
+### Environment Variables
+
+```env
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key
+NEXT_PUBLIC_GOOGLE_MAP_API=your_api_key
+```
+
+### Google Maps Setup
+
+1. Enable Places API
+2. Enable Geocoding API
+3. Add API key to environment variables
+4. Configure API restrictions (optional)
+
+## Files Structure
+
+```
+src/components/
+├── ui/
+│   ├── LandingPage.tsx          # Main landing page component
+│   └── AnimatedIllustrations.tsx # Rotating product illustrations
+└── user/dashboard/
+    ├── DesktopUserDashboard.tsx # Desktop dashboard layout
+    ├── ShopCard.tsx             # Individual shop card component
+    └── shared/
+        ├── UserDashboardLogic.tsx # Business logic hook
+        └── SharedComponents.tsx   # Shared UI components
+
+pages/
+└── index.tsx                    # Main routing logic
+```
+
+## Key Dependencies
+
+- `next/router`: URL routing and query parameters
+- `google.maps.places.Autocomplete`: Address autocomplete
+- `js-cookie`: Cookie management
+- `lucide-react`: Icons
+- `next/image`: Optimized images
+
+## Future Enhancements
+
+- [ ] Add actual rating data from shops
+- [ ] Implement search functionality
+- [ ] Add filters (price range, delivery time)
+- [ ] Save favorite categories
+- [ ] Recent searches
+- [ ] Location history
+
 ---
 
 # Smart Notification & Assignment System
