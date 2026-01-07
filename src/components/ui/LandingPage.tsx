@@ -18,6 +18,26 @@ export default function LandingPage() {
   const [stickyAutocomplete, setStickyAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
   const addressInputRef = useRef<HTMLInputElement>(null);
   const stickyAddressInputRef = useRef<HTMLInputElement>(null);
+  const [categories, setCategories] = useState<Array<{id: string; name: string; description: string; image: string}>>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [displayAddress, setDisplayAddress] = useState("");
+
+  const fetchCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const response = await fetch("/api/queries/categories");
+      const data = await response.json();
+      if (data.categories) {
+        // Filter only active categories
+        const activeCategories = data.categories.filter((cat: any) => cat.is_active);
+        setCategories(activeCategories);
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
 
   useEffect(() => {
     const checkMobile = () => {
@@ -38,6 +58,24 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Load address from cookies on mount and fetch categories if address exists
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Check for address in cookies
+      const cookies = document.cookie.split(';');
+      const tempAddress = cookies.find(c => c.trim().startsWith('temp_address='));
+      if (tempAddress) {
+        const addressValue = tempAddress.split('=')[1];
+        if (addressValue && addressValue !== 'undefined') {
+          setAddress(decodeURIComponent(addressValue));
+          const shortAddress = decodeURIComponent(addressValue).split(',')[0] || decodeURIComponent(addressValue);
+          setDisplayAddress(shortAddress);
+          fetchCategories();
+        }
+      }
+    }
+  }, []);
+
   // Initialize Google Places Autocomplete for main input
   useEffect(() => {
     const initializeAutocomplete = () => {
@@ -54,6 +92,11 @@ export default function LandingPage() {
           const place = autocompleteInstance.getPlace();
           if (place.formatted_address) {
             setAddress(place.formatted_address);
+            // Extract short address for display (street name or first part)
+            const shortAddress = place.formatted_address.split(',')[0] || place.formatted_address;
+            setDisplayAddress(shortAddress);
+            // Store address in cookie
+            document.cookie = `temp_address=${encodeURIComponent(place.formatted_address)}; path=/`;
             // Store coordinates if available
             if (place.geometry?.location) {
               const lat = place.geometry.location.lat();
@@ -61,6 +104,8 @@ export default function LandingPage() {
               document.cookie = `user_latitude=${lat}; path=/`;
               document.cookie = `user_longitude=${lng}; path=/`;
             }
+            // Fetch categories after location is set
+            fetchCategories();
           }
         });
 
@@ -103,12 +148,19 @@ export default function LandingPage() {
           const place = autocompleteInstance.getPlace();
           if (place.formatted_address) {
             setAddress(place.formatted_address);
+            // Extract short address for display
+            const shortAddress = place.formatted_address.split(',')[0] || place.formatted_address;
+            setDisplayAddress(shortAddress);
+            // Store address in cookie
+            document.cookie = `temp_address=${encodeURIComponent(place.formatted_address)}; path=/`;
             if (place.geometry?.location) {
               const lat = place.geometry.location.lat();
               const lng = place.geometry.location.lng();
               document.cookie = `user_latitude=${lat}; path=/`;
               document.cookie = `user_longitude=${lng}; path=/`;
             }
+            // Fetch categories after location is set
+            fetchCategories();
           }
         });
 
@@ -145,13 +197,22 @@ export default function LandingPage() {
               { location: { lat, lng } },
               (results: google.maps.GeocoderResult[] | null, status: google.maps.GeocoderStatus) => {
                 if (status === "OK" && results && results[0]) {
-                  setAddress(results[0].formatted_address);
+                  const formattedAddress = results[0].formatted_address;
+                  setAddress(formattedAddress);
+                  const shortAddress = formattedAddress.split(',')[0] || formattedAddress;
+                  setDisplayAddress(shortAddress);
+                  // Store address in cookie
+                  document.cookie = `temp_address=${encodeURIComponent(formattedAddress)}; path=/`;
+                  // Fetch categories after location is set
+                  fetchCategories();
                   // Small delay before redirect to show the address
                   setTimeout(() => {
                     router.push("/");
                   }, 500);
                 } else {
                   setAddress("Current Location");
+                  setDisplayAddress("Current Location");
+                  document.cookie = `temp_address=Current Location; path=/`;
                   router.push("/");
                 }
               }
@@ -298,29 +359,60 @@ export default function LandingPage() {
       >
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between gap-4">
-            {/* Logo */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <Image
-                src="/assets/logos/PlasIcon.png"
-                alt="Plas Logo"
-                width={40}
-                height={40}
-                className="h-10 w-10"
-              />
-              <span
-                className={`text-2xl font-bold transition-colors ${
-                  isScrolled ? "text-[#00D9A5]" : "text-white"
-                }`}
-              >
-                Plas
-              </span>
-              <span
-                className={`text-2xl font-bold transition-colors ${
-                  isScrolled ? "text-[#00D9A5]" : "text-white"
-                }`}
-              >
-                ?
-              </span>
+            {/* Logo and Location */}
+            <div className="flex items-center gap-4 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <Image
+                  src="/assets/logos/PlasIcon.png"
+                  alt="Plas Logo"
+                  width={40}
+                  height={40}
+                  className="h-10 w-10"
+                />
+                <span
+                  className={`text-2xl font-bold transition-colors ${
+                    isScrolled ? "text-[#00D9A5]" : "text-white"
+                  }`}
+                >
+                  Plas
+                </span>
+                <span
+                  className={`text-2xl font-bold transition-colors ${
+                    isScrolled ? "text-[#00D9A5]" : "text-white"
+                  }`}
+                >
+                  ?
+                </span>
+              </div>
+              {/* Location Display */}
+              {displayAddress && (
+                <button
+                  onClick={() => {
+                    addressInputRef.current?.focus();
+                    if (!isScrolled) {
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                  }}
+                  className={`hidden md:flex items-center gap-2 rounded-full px-4 py-2 border-2 transition-all ${
+                    isScrolled
+                      ? "bg-white border-gray-300 text-gray-900 hover:border-[#00D9A5]"
+                      : "bg-white/10 border-white/30 text-white hover:bg-white/20"
+                  }`}
+                >
+                  <MapPin className={`h-4 w-4 ${isScrolled ? "text-gray-600" : "text-white"}`} />
+                  <span className="text-sm font-medium max-w-[200px] truncate">
+                    {displayAddress}
+                  </span>
+                  <svg
+                    className={`h-4 w-4 ${isScrolled ? "text-gray-600" : "text-white"}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              )}
             </div>
 
             {/* Address Input - Only shown when scrolled */}
@@ -383,44 +475,84 @@ export default function LandingPage() {
 
         {/* Main Content */}
         <div className="container mx-auto px-4">
-          <div className="mt-12 flex flex-col items-center justify-center gap-12 md:mt-20 md:flex-row md:items-center md:justify-center md:gap-16 lg:gap-20">
-            {/* Left: Animated Illustrations */}
-            <div className="w-full md:w-auto md:flex-1 md:flex md:justify-center lg:flex-none lg:max-w-md">
-              <AnimatedIllustrations />
-            </div>
-
-            {/* Right: Text and Input */}
-            <div className="flex-1 text-center md:text-left md:max-w-xl">
-              <h1 className="mb-4 text-4xl font-bold text-white md:text-5xl lg:text-6xl">
-                Grocery delivery
-              </h1>
-              <p className="mb-8 text-lg text-white md:text-xl">
-                Food, pharmacies, markets, stores, services, bids, anything!
-              </p>
-
-              {/* Address Input - Button Inside */}
-              <form onSubmit={handleAddressSubmit} className="w-full max-w-2xl">
-                <div className="relative rounded-2xl bg-white shadow-lg">
-                  <MapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 z-10" />
-                  <input
-                    ref={addressInputRef}
-                    type="text"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder="What's your address?"
-                    className="w-full rounded-2xl border-0 bg-transparent pl-12 pr-40 py-4 text-gray-900 focus:outline-none"
-                  />
+          {displayAddress && categories.length > 0 ? (
+            /* Categories Grid - Replace hero content when location is selected */
+            <div className="mt-12 md:mt-20">
+              <h2 className="mb-8 text-center text-3xl font-bold text-white md:text-4xl lg:text-5xl">
+                What can we get you?
+              </h2>
+              <div className="grid grid-cols-3 gap-6 md:grid-cols-6 max-w-6xl mx-auto">
+                {categories.slice(0, 6).map((category) => (
                   <button
-                    type="button"
-                    onClick={address ? handleAddressSubmit : handleUseCurrentLocation}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl bg-[#A8E6CF] px-4 py-2.5 text-sm font-bold text-[#00A67E] transition-colors hover:bg-[#90D9B8] whitespace-nowrap"
+                    key={category.id}
+                    onClick={() => router.push(`/?category=${category.id}`)}
+                    className="flex flex-col items-center gap-3 group"
                   >
-                    {address ? "Continue" : "Use current location"}
+                    <div className="w-20 h-20 md:w-28 md:h-28 rounded-full border-2 border-white bg-white flex items-center justify-center shadow-lg transition-all hover:scale-110 hover:shadow-xl overflow-hidden">
+                      {category.image ? (
+                        <Image
+                          src={category.image}
+                          alt={category.name}
+                          width={112}
+                          height={112}
+                          className="w-full h-full object-cover rounded-full"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-white to-gray-100 flex items-center justify-center">
+                          <span className="text-3xl md:text-4xl text-[#00D9A5] font-bold">
+                            {category.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-sm md:text-base font-medium text-white group-hover:text-gray-100 transition-colors text-center">
+                      {category.name}
+                    </span>
                   </button>
-                </div>
-              </form>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : (
+            /* Hero Content - Show when no location is selected */
+            <div className="mt-12 flex flex-col items-center justify-center gap-12 md:mt-20 md:flex-row md:items-center md:justify-center md:gap-16 lg:gap-20">
+              {/* Left: Animated Illustrations */}
+              <div className="w-full md:w-auto md:flex-1 md:flex md:justify-center lg:flex-none lg:max-w-md">
+                <AnimatedIllustrations />
+              </div>
+
+              {/* Right: Text and Input */}
+              <div className="flex-1 text-center md:text-left md:max-w-xl">
+                <h1 className="mb-4 text-4xl font-bold text-white md:text-5xl lg:text-6xl">
+                  Grocery delivery
+                </h1>
+                <p className="mb-8 text-lg text-white md:text-xl">
+                  Food, pharmacies, markets, stores, services, bids, anything!
+                </p>
+
+                {/* Address Input - Button Inside */}
+                <form onSubmit={handleAddressSubmit} className="w-full max-w-2xl">
+                  <div className="relative rounded-2xl bg-white shadow-lg">
+                    <MapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 z-10" />
+                    <input
+                      ref={addressInputRef}
+                      type="text"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      placeholder="What's your address?"
+                      className="w-full rounded-2xl border-0 bg-transparent pl-12 pr-40 py-4 text-gray-900 focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={address ? handleAddressSubmit : handleUseCurrentLocation}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl bg-[#A8E6CF] px-4 py-2.5 text-sm font-bold text-[#00A67E] transition-colors hover:bg-[#90D9B8] whitespace-nowrap"
+                    >
+                      {address ? "Continue" : "Use current location"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
