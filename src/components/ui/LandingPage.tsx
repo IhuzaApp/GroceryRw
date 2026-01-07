@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 import Image from "next/image";
 import { MapPin, User } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import AnimatedIllustrations from "./AnimatedIllustrations";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -68,13 +69,45 @@ export default function LandingPage() {
 
   return (
     <>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;500;600;700&family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       <style dangerouslySetInnerHTML={{__html: `
+        * {
+          font-family: 'Quicksand', sans-serif;
+        }
+        h1, h2, h3, h4, h5, h6, .font-cartoon {
+          font-family: 'Comfortaa', cursive;
+          font-weight: 500;
+        }
         @keyframes float {
           0%, 100% {
-            transform: translateX(-50%) translateY(0px);
+            transform: translateY(0px);
           }
           50% {
-            transform: translateX(-50%) translateY(-20px);
+            transform: translateY(-20px);
+          }
+        }
+        @keyframes fadeInZoom {
+          0% {
+            opacity: 0;
+            transform: scale(0.8);
+          }
+          50% {
+            opacity: 0.7;
+            transform: scale(1.05);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        @keyframes glow {
+          0%, 100% {
+            filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.2)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.15));
+          }
+          50% {
+            filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.3)) drop-shadow(0 0 12px rgba(255, 255, 255, 0.2));
           }
         }
       `}} />
@@ -154,97 +187,38 @@ export default function LandingPage() {
       {/* Top Green Section */}
       <div className="relative bg-[#00D9A5] pb-20 md:pb-32 pt-20 md:pt-24">
         {/* Wave separator */}
-        <div className="absolute bottom-0 left-0 right-0">
+        <div className="absolute bottom-0 left-0 right-0" style={{ transform: 'translateY(1px)' }}>
           <svg
-            viewBox="0 0 1440 120"
+            viewBox="0 0 1440 121"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             className="w-full"
             preserveAspectRatio="none"
+            style={{ display: 'block' }}
           >
             <path
-              d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z"
+              d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90L1440 121L0 121Z"
               fill="white"
+              stroke="none"
             />
           </svg>
         </div>
 
         {/* Main Content */}
         <div className="container mx-auto px-4">
-          <div className="mt-12 flex flex-col items-center justify-between gap-8 md:mt-20 md:flex-row md:gap-12">
-            {/* Left: Burger Image */}
-            <div className="flex-1">
-              <div className="relative h-64 w-full md:h-96">
-                {/* Deconstructed Burger - Using CSS to create floating effect */}
-                <div className="relative h-full w-full">
-                  {/* Bun Top */}
-                  <div className="absolute left-1/2 top-0 -translate-x-1/2 transform" style={{ animation: "float 3s ease-in-out infinite" }}>
-                    <div className="h-16 w-32 rounded-t-full bg-amber-200 shadow-lg"></div>
-                    <div className="mx-auto mt-1 flex gap-1">
-                      {[...Array(9)].map((_, i) => (
-                        <div key={i} className="h-1 w-1 rounded-full bg-amber-400"></div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Patty 1 */}
-                  <div className="absolute left-1/2 top-20 -translate-x-1/2 transform" style={{ animation: "float 3.2s ease-in-out infinite 0.2s" }}>
-                    <div className="h-8 w-28 rounded-full bg-amber-800 shadow-lg"></div>
-                  </div>
-                  
-                  {/* Cheese */}
-                  <div className="absolute left-1/2 top-32 -translate-x-1/2 transform" style={{ animation: "float 3.1s ease-in-out infinite 0.1s" }}>
-                    <div className="h-4 w-32 rounded bg-yellow-300 shadow-md"></div>
-                  </div>
-                  
-                  {/* Patty 2 */}
-                  <div className="absolute left-1/2 top-40 -translate-x-1/2 transform" style={{ animation: "float 3.3s ease-in-out infinite 0.3s" }}>
-                    <div className="h-8 w-28 rounded-full bg-amber-800 shadow-lg"></div>
-                  </div>
-                  
-                  {/* Onion */}
-                  <div className="absolute left-1/2 top-52 -translate-x-1/2 transform" style={{ animation: "float 3s ease-in-out infinite 0.4s" }}>
-                    <div className="flex gap-2">
-                      {[...Array(3)].map((_, i) => (
-                        <div key={i} className="h-6 w-6 rounded-full border-2 border-purple-200 bg-purple-100"></div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Arugula */}
-                  <div className="absolute left-1/2 top-60 -translate-x-1/2 transform" style={{ animation: "float 2.9s ease-in-out infinite 0.5s" }}>
-                    <div className="flex gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <div key={i} className="h-3 w-8 rounded-full bg-green-400"></div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Tomato */}
-                  <div className="absolute left-1/2 top-68 -translate-x-1/2 transform" style={{ animation: "float 3.1s ease-in-out infinite 0.6s" }}>
-                    <div className="h-6 w-20 rounded-full bg-red-400 shadow-md"></div>
-                  </div>
-                  
-                  {/* Cucumber */}
-                  <div className="absolute left-1/2 top-76 -translate-x-1/2 transform" style={{ animation: "float 3.2s ease-in-out infinite 0.7s" }}>
-                    <div className="h-4 w-16 rounded-full bg-green-300"></div>
-                  </div>
-                  
-                  {/* Bun Bottom */}
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 transform" style={{ animation: "float 3s ease-in-out infinite 0.8s" }}>
-                    <div className="h-12 w-32 rounded-b-full bg-amber-200 shadow-lg"></div>
-                  </div>
-                </div>
-              </div>
+          <div className="mt-12 flex flex-col items-center justify-center gap-12 md:mt-20 md:flex-row md:items-center md:justify-center md:gap-16 lg:gap-20">
+            {/* Left: Animated Illustrations */}
+            <div className="w-full md:w-auto md:flex-1 md:flex md:justify-center lg:flex-none lg:max-w-md">
+              <AnimatedIllustrations />
             </div>
 
             {/* Right: Text and Input */}
-            <div className="flex-1 text-center md:text-left">
+            <div className="flex-1 text-center md:text-left md:max-w-xl">
               <h1 className="mb-4 text-4xl font-bold text-white md:text-5xl lg:text-6xl">
-                Food delivery and more
+                Delivery and other more
               </h1>
               <p className="mb-8 text-lg text-white md:text-xl">
-                Groceries, shops, pharmacies, anything!
+                Groceries, shops, pharmacies, markets, stores, services, bids, anything!
               </p>
 
               {/* Address Input - Button Inside */}
@@ -427,76 +401,68 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-6">
             {/* Your city's top restaurants */}
             <div className="flex flex-col items-center text-center">
-              <div className="mb-6 flex h-32 w-32 items-center justify-center rounded-full bg-[#00D9A5]">
-                <svg
-                  className="h-20 w-20 text-black"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                  />
-                </svg>
+              <div className="mb-6 flex h-32 w-32 items-center justify-center rounded-full bg-[#00D9A5] overflow-hidden">
+                <Image
+                  src="/images/restaurantDish.png"
+                  alt="Restaurant"
+                  width={80}
+                  height={80}
+                  className="h-20 w-20 object-contain"
+                />
               </div>
               <h3 className="mb-4 text-2xl font-bold text-black">
-                Your city&apos;s top restaurants
+                Your city&apos;s top restaurants, supermarkets, stores & more
               </h3>
               <p className="text-gray-700">
-                With a great variety of restaurants you can order your favourite food or{" "}
-                <span className="bg-[#00D9A5] font-bold">explore new restaurants nearby!</span>
+                With a great variety of restaurants, supermarkets, stores, and more you can order your favourite food or{" "}
+                <span className="relative inline-block font-bold">
+                  <span className="absolute inset-0 -rotate-1 bg-[#00D9A5] opacity-60 rounded-sm" style={{ transform: 'skew(-2deg, 1deg)', filter: 'blur(2px)' }}></span>
+                  <span className="absolute inset-0 rotate-1 bg-[#A8E6CF] opacity-40 rounded-sm" style={{ transform: 'skew(1deg, -1deg)', filter: 'blur(1px)' }}></span>
+                  <span className="relative">explore new places nearby!</span>
+                </span>
               </p>
             </div>
 
-            {/* Fast delivery */}
-            <div className="flex flex-col items-center text-center">
-              <div className="mb-6 flex h-32 w-32 items-center justify-center rounded-full bg-[#00D9A5]">
-                <svg
-                  className="h-20 w-20 text-black"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
+              {/* Fast delivery */}
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-6 flex h-32 w-32 items-center justify-center rounded-full bg-[#00D9A5] overflow-hidden">
+                  <Image
+                    src="/images/mainPageIcons/fast-shipping.png"
+                    alt="Fast Delivery"
+                    width={80}
+                    height={80}
+                    className="h-20 w-20 object-contain"
                   />
-                </svg>
-              </div>
+                </div>
               <h3 className="mb-4 text-2xl font-bold text-black">Fast delivery</h3>
               <p className="text-gray-700">
                 Like a flash! Order or send anything in your city and{" "}
-                <span className="bg-[#00D9A5] font-bold">receive it in minutes</span>
+                <span className="relative inline-block font-bold">
+                  <span className="absolute inset-0 -rotate-1 bg-[#00D9A5] opacity-60 rounded-sm" style={{ transform: 'skew(-2deg, 1deg)', filter: 'blur(2px)' }}></span>
+                  <span className="absolute inset-0 rotate-1 bg-[#A8E6CF] opacity-40 rounded-sm" style={{ transform: 'skew(1deg, -1deg)', filter: 'blur(1px)' }}></span>
+                  <span className="relative">receive it in minutes</span>
+                </span>
               </p>
             </div>
 
             {/* Groceries delivery & more */}
             <div className="flex flex-col items-center text-center">
-              <div className="mb-6 flex h-32 w-32 items-center justify-center rounded-full bg-[#00D9A5]">
-                <svg
-                  className="h-20 w-20 text-black"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                  />
-                </svg>
+              <div className="mb-6 flex h-32 w-32 items-center justify-center rounded-full bg-[#00D9A5] overflow-hidden">
+                <Image
+                  src="/images/mainPageIcons/groceries.png"
+                  alt="Groceries"
+                  width={80}
+                  height={80}
+                  className="h-20 w-20 object-contain"
+                />
               </div>
               <h3 className="mb-4 text-2xl font-bold text-black">Groceries delivery & more</h3>
               <p className="text-gray-700">
                 Find anything you need! From{" "}
-                <span className="bg-[#00D9A5] font-bold">
-                  supermarkets to shops, pharmacies to florists
+                <span className="relative inline-block font-bold">
+                  <span className="absolute inset-0 -rotate-1 bg-[#00D9A5] opacity-60 rounded-sm" style={{ transform: 'skew(-2deg, 1deg)', filter: 'blur(2px)' }}></span>
+                  <span className="absolute inset-0 rotate-1 bg-[#A8E6CF] opacity-40 rounded-sm" style={{ transform: 'skew(1deg, -1deg)', filter: 'blur(1px)' }}></span>
+                  <span className="relative">supermarkets to shops, pharmacies to florists</span>
                 </span>{" "}
                 — if it&apos;s in your city order it and receive it.
               </p>
