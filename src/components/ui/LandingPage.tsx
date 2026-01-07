@@ -250,7 +250,7 @@ export default function LandingPage() {
       <div className="bg-white py-16">
         <div className="container mx-auto px-4">
           <h2 className="mb-12 text-center text-3xl font-bold text-black md:text-4xl">
-            Top restaurants and more in Plas
+            Top shops and more in Plas
           </h2>
 
           {/* Brand Logos - 2 rows of 4 */}
@@ -265,7 +265,11 @@ export default function LandingPage() {
                   className="object-cover"
                   style={{ borderRadius: '45% 45% 60% 45% / 40% 40% 70% 50%' }}
                 />
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-md bg-purple-600 px-2 py-1 shadow-md">
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 shadow-md" style={{
+                  clipPath: 'polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)',
+                  backgroundColor: '#00D9A5',
+                  padding: '4px 12px 4px 8px',
+                }}>
                   <span className="text-[10px] font-bold text-white md:text-xs">McDonald&apos;s</span>
                 </div>
               </div>
@@ -281,7 +285,11 @@ export default function LandingPage() {
                   className="object-cover"
                   style={{ borderRadius: '45% 45% 60% 45% / 40% 40% 70% 50%' }}
                 />
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-md bg-purple-600 px-2 py-1 shadow-md">
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 shadow-md" style={{
+                  clipPath: 'polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)',
+                  backgroundColor: '#00D9A5',
+                  padding: '4px 12px 4px 8px',
+                }}>
                   <span className="text-[10px] font-bold text-white md:text-xs">KFC</span>
                 </div>
               </div>
@@ -297,7 +305,11 @@ export default function LandingPage() {
                   className="object-cover"
                   style={{ borderRadius: '45% 45% 60% 45% / 40% 40% 70% 50%' }}
                 />
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-md bg-purple-600 px-2 py-1 shadow-md">
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 shadow-md" style={{
+                  clipPath: 'polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)',
+                  backgroundColor: '#00D9A5',
+                  padding: '4px 12px 4px 8px',
+                }}>
                   <span className="text-[10px] font-bold text-white md:text-xs">BurgerKing</span>
                 </div>
               </div>
@@ -313,7 +325,11 @@ export default function LandingPage() {
                   className="object-cover"
                   style={{ borderRadius: '45% 45% 60% 45% / 40% 40% 70% 50%' }}
                 />
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-md bg-purple-600 px-2 py-1 shadow-md">
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 shadow-md" style={{
+                  clipPath: 'polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)',
+                  backgroundColor: '#00D9A5',
+                  padding: '4px 12px 4px 8px',
+                }}>
                   <span className="text-[10px] font-bold text-white md:text-xs">Carrefour</span>
                 </div>
               </div>
@@ -329,7 +345,11 @@ export default function LandingPage() {
                   className="object-cover"
                   style={{ borderRadius: '45% 45% 60% 45% / 40% 40% 70% 50%' }}
                 />
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-md bg-purple-600 px-2 py-1 shadow-md">
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 shadow-md" style={{
+                  clipPath: 'polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)',
+                  backgroundColor: '#00D9A5',
+                  padding: '4px 12px 4px 8px',
+                }}>
                   <span className="text-[10px] font-bold text-white md:text-xs">PizzaHut</span>
                 </div>
               </div>
@@ -345,7 +365,11 @@ export default function LandingPage() {
                   className="object-cover"
                   style={{ borderRadius: '45% 45% 60% 45% / 40% 40% 70% 50%' }}
                 />
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-md bg-purple-600 px-2 py-1 shadow-md">
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 shadow-md" style={{
+                  clipPath: 'polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)',
+                  backgroundColor: '#00D9A5',
+                  padding: '4px 12px 4px 8px',
+                }}>
                   <span className="text-[10px] font-bold text-white md:text-xs">Papa John&apos;s</span>
                 </div>
               </div>
@@ -361,7 +385,11 @@ export default function LandingPage() {
                   className="object-cover"
                   style={{ borderRadius: '45% 45% 60% 45% / 40% 40% 70% 50%' }}
                 />
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-md bg-purple-600 px-2 py-1 shadow-md">
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 shadow-md" style={{
+                  clipPath: 'polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)',
+                  backgroundColor: '#00D9A5',
+                  padding: '4px 12px 4px 8px',
+                }}>
                   <span className="text-[10px] font-bold text-white md:text-xs">Subway</span>
                 </div>
               </div>
@@ -377,7 +405,11 @@ export default function LandingPage() {
                   className="object-cover"
                   style={{ borderRadius: '45% 45% 60% 45% / 40% 40% 70% 50%' }}
                 />
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-md bg-purple-600 px-2 py-1 shadow-md">
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 shadow-md" style={{
+                  clipPath: 'polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)',
+                  backgroundColor: '#00D9A5',
+                  padding: '4px 12px 4px 8px',
+                }}>
                   <span className="text-[10px] font-bold text-white md:text-xs">TacoBell</span>
                 </div>
               </div>
@@ -401,13 +433,38 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-6">
             {/* Your city's top restaurants */}
             <div className="flex flex-col items-center text-center">
-              <div className="mb-6 flex h-32 w-32 items-center justify-center rounded-full bg-[#00D9A5] overflow-hidden">
+              <div className="mb-6 flex h-32 w-32 items-center justify-center overflow-hidden relative" style={{
+                borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
+                clipPath: 'ellipse(45% 55% at 50% 50%)',
+              }}>
+                {/* Watercolor splattered background */}
+                <div className="absolute inset-0" style={{
+                  borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
+                  background: `
+                    radial-gradient(circle at 20% 30%, rgba(147, 51, 234, 0.6) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 70%, rgba(168, 85, 247, 0.5) 0%, transparent 50%),
+                    radial-gradient(circle at 50% 50%, rgba(192, 132, 252, 0.4) 0%, transparent 60%),
+                    radial-gradient(circle at 10% 80%, rgba(139, 92, 246, 0.5) 0%, transparent 45%),
+                    radial-gradient(circle at 90% 20%, rgba(167, 139, 250, 0.4) 0%, transparent 55%),
+                    radial-gradient(circle at 60% 10%, rgba(196, 181, 253, 0.3) 0%, transparent 50%)
+                  `,
+                  filter: 'blur(8px)',
+                  transform: 'scale(1.2)',
+                }}></div>
+                <div className="absolute inset-0" style={{
+                  borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
+                  background: `
+                    radial-gradient(ellipse at 30% 40%, rgba(147, 51, 234, 0.4) 0%, transparent 40%),
+                    radial-gradient(ellipse at 70% 60%, rgba(168, 85, 247, 0.3) 0%, transparent 45%)
+                  `,
+                  filter: 'blur(4px)',
+                }}></div>
                 <Image
-                  src="/images/restaurantDish.png"
+                  src="/images/mainPageIcons/restaurant.png"
                   alt="Restaurant"
                   width={80}
                   height={80}
-                  className="h-20 w-20 object-contain"
+                  className="h-20 w-20 object-contain relative z-10"
                 />
               </div>
               <h3 className="mb-4 text-2xl font-bold text-black">
@@ -425,13 +482,38 @@ export default function LandingPage() {
 
               {/* Fast delivery */}
               <div className="flex flex-col items-center text-center">
-                <div className="mb-6 flex h-32 w-32 items-center justify-center rounded-full bg-[#00D9A5] overflow-hidden">
+                <div className="mb-6 flex h-32 w-32 items-center justify-center overflow-hidden relative" style={{
+                  borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
+                  clipPath: 'ellipse(45% 55% at 50% 50%)',
+                }}>
+                  {/* Watercolor splattered background */}
+                  <div className="absolute inset-0" style={{
+                    borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
+                    background: `
+                      radial-gradient(circle at 25% 35%, rgba(147, 51, 234, 0.6) 0%, transparent 50%),
+                      radial-gradient(circle at 75% 65%, rgba(168, 85, 247, 0.5) 0%, transparent 50%),
+                      radial-gradient(circle at 45% 55%, rgba(192, 132, 252, 0.4) 0%, transparent 60%),
+                      radial-gradient(circle at 15% 75%, rgba(139, 92, 246, 0.5) 0%, transparent 45%),
+                      radial-gradient(circle at 85% 25%, rgba(167, 139, 250, 0.4) 0%, transparent 55%),
+                      radial-gradient(circle at 55% 15%, rgba(196, 181, 253, 0.3) 0%, transparent 50%)
+                    `,
+                    filter: 'blur(8px)',
+                    transform: 'scale(1.2)',
+                  }}></div>
+                  <div className="absolute inset-0" style={{
+                    borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
+                    background: `
+                      radial-gradient(ellipse at 35% 45%, rgba(147, 51, 234, 0.4) 0%, transparent 40%),
+                      radial-gradient(ellipse at 65% 55%, rgba(168, 85, 247, 0.3) 0%, transparent 45%)
+                    `,
+                    filter: 'blur(4px)',
+                  }}></div>
                   <Image
                     src="/images/mainPageIcons/fast-shipping.png"
                     alt="Fast Delivery"
                     width={80}
                     height={80}
-                    className="h-20 w-20 object-contain"
+                    className="h-20 w-20 object-contain relative z-10"
                   />
                 </div>
               <h3 className="mb-4 text-2xl font-bold text-black">Fast delivery</h3>
@@ -447,13 +529,38 @@ export default function LandingPage() {
 
             {/* Groceries delivery & more */}
             <div className="flex flex-col items-center text-center">
-              <div className="mb-6 flex h-32 w-32 items-center justify-center rounded-full bg-[#00D9A5] overflow-hidden">
+              <div className="mb-6 flex h-32 w-32 items-center justify-center overflow-hidden relative" style={{
+                borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
+                clipPath: 'ellipse(45% 55% at 50% 50%)',
+              }}>
+                {/* Watercolor splattered background */}
+                <div className="absolute inset-0" style={{
+                  borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
+                  background: `
+                    radial-gradient(circle at 22% 32%, rgba(147, 51, 234, 0.6) 0%, transparent 50%),
+                    radial-gradient(circle at 78% 68%, rgba(168, 85, 247, 0.5) 0%, transparent 50%),
+                    radial-gradient(circle at 48% 52%, rgba(192, 132, 252, 0.4) 0%, transparent 60%),
+                    radial-gradient(circle at 12% 78%, rgba(139, 92, 246, 0.5) 0%, transparent 45%),
+                    radial-gradient(circle at 88% 22%, rgba(167, 139, 250, 0.4) 0%, transparent 55%),
+                    radial-gradient(circle at 58% 12%, rgba(196, 181, 253, 0.3) 0%, transparent 50%)
+                  `,
+                  filter: 'blur(8px)',
+                  transform: 'scale(1.2)',
+                }}></div>
+                <div className="absolute inset-0" style={{
+                  borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
+                  background: `
+                    radial-gradient(ellipse at 32% 42%, rgba(147, 51, 234, 0.4) 0%, transparent 40%),
+                    radial-gradient(ellipse at 68% 58%, rgba(168, 85, 247, 0.3) 0%, transparent 45%)
+                  `,
+                  filter: 'blur(4px)',
+                }}></div>
                 <Image
                   src="/images/mainPageIcons/groceries.png"
                   alt="Groceries"
                   width={80}
                   height={80}
-                  className="h-20 w-20 object-contain"
+                  className="h-20 w-20 object-contain relative z-10"
                 />
               </div>
               <h3 className="mb-4 text-2xl font-bold text-black">Groceries delivery & more</h3>
