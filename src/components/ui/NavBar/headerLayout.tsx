@@ -173,15 +173,27 @@ export default function HeaderLayout() {
         <div className="flex items-center justify-between gap-4 px-2 sm:px-4">
           {/* Left section (address + icon) - Desktop only */}
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center">
-              <Image
-                src="/assets/logos/PlasIcon.png"
-                alt="Plas Logo"
-                width={32}
-                height={32}
-                className="h-8 w-8"
-              />
-            </div>
+            {!session?.user ? (
+              <Link href="/" className="flex h-8 w-8 items-center justify-center cursor-pointer hover:opacity-80 transition-opacity">
+                <Image
+                  src="/assets/logos/PlasIcon.png"
+                  alt="Plas Logo"
+                  width={32}
+                  height={32}
+                  className="h-8 w-8"
+                />
+              </Link>
+            ) : (
+              <div className="flex h-8 w-8 items-center justify-center">
+                <Image
+                  src="/assets/logos/PlasIcon.png"
+                  alt="Plas Logo"
+                  width={32}
+                  height={32}
+                  className="h-8 w-8"
+                />
+              </div>
+            )}
             <div>
               <h6 className="font-medium text-inherit">
                 {defaultAddress
