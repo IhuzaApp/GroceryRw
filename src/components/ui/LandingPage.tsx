@@ -71,14 +71,14 @@ export default function LandingPage() {
     <>
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;500;600;700&family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       <style dangerouslySetInnerHTML={{__html: `
         * {
-          font-family: 'Quicksand', sans-serif;
+          font-family: 'Nunito', sans-serif;
         }
         h1, h2, h3, h4, h5, h6, .font-cartoon {
-          font-family: 'Comfortaa', cursive;
-          font-weight: 500;
+          font-family: 'Poppins', sans-serif;
+          font-weight: 600;
         }
         @keyframes float {
           0%, 100% {
@@ -624,7 +624,7 @@ export default function LandingPage() {
                 />
               </svg>
             </div>
-            <h2 className="mb-8 text-3xl font-bold text-black md:mb-10 md:text-4xl lg:text-5xl">
+            <h2 className="mb-8 text-3xl font-bold text-white md:mb-10 md:text-4xl lg:text-5xl">
               Cities we deliver in
             </h2>
 
