@@ -34,13 +34,10 @@ export default function HeaderLayout() {
   const [unreadMessages, setUnreadMessages] = useState<number>(0);
 
   useEffect(() => {
-    // Only fetch addresses if user is authenticated
-    if (!session?.user?.id) {
-      return;
-    }
-
-    // Try loading the delivery address from cookie first
+    // Try loading the delivery address from cookie first (works for both logged in and guest users)
     const saved = Cookies.get("delivery_address");
+    const tempAddress = Cookies.get("temp_address");
+    
     if (saved) {
       try {
         const parsedAddress = JSON.parse(saved);
@@ -59,8 +56,19 @@ export default function HeaderLayout() {
           setDefaultAddress(parsedAddress);
         }
       } catch {}
-    } else {
-      // Fall back to default address from API
+    } else if (tempAddress) {
+      // For guest users with temp address, create address object
+      const lat = Cookies.get("user_latitude");
+      const lng = Cookies.get("user_longitude");
+      setDefaultAddress({
+        street: tempAddress,
+        city: "",
+        postal_code: "",
+        latitude: lat || "",
+        longitude: lng || "",
+      });
+    } else if (session?.user?.id) {
+      // Only fetch addresses from API if user is authenticated and no cookie exists
       authenticatedFetch("/api/queries/addresses")
         .then((res) => res.json())
         .then((data) => {
@@ -78,6 +86,8 @@ export default function HeaderLayout() {
     // Listen for address changes and update
     const handleAddrChange = () => {
       const updated = Cookies.get("delivery_address");
+      const tempAddr = Cookies.get("temp_address");
+      
       if (updated) {
         try {
           const parsedAddress = JSON.parse(updated);
@@ -96,8 +106,19 @@ export default function HeaderLayout() {
             setDefaultAddress(parsedAddress);
           }
         } catch {}
-      } else {
-        // If no cookie, try to fetch default address from API
+      } else if (tempAddr) {
+        // For guest users with temp address
+        const lat = Cookies.get("user_latitude");
+        const lng = Cookies.get("user_longitude");
+        setDefaultAddress({
+          street: tempAddr,
+          city: "",
+          postal_code: "",
+          latitude: lat || "",
+          longitude: lng || "",
+        });
+      } else if (session?.user?.id) {
+        // If no cookie, try to fetch default address from API (only for authenticated users)
         fetch("/api/queries/addresses")
           .then((res) => res.json())
           .then((data) => {
