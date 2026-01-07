@@ -25,7 +25,7 @@ import {
 
 import ShopperDashboard from "@components/shopper/dashboard/ShopperDashboard";
 import ResponsiveUserDashboard from "@components/user/dashboard/ResponsiveUserDashboard";
-import MainBanners from "@components/ui/banners";
+// import MainBanners from "@components/ui/banners"; // Temporarily hidden
 import LoadingScreen from "@components/ui/LoadingScreen";
 import LandingPage from "@components/ui/LandingPage";
 import { isMobileDevice } from "../src/lib/formatters";
@@ -143,7 +143,7 @@ export default function Home({ initialData }: { initialData: Data }) {
 
   return (
     <RootLayout>
-      <MainBanners />
+      {/* <MainBanners /> Temporarily hidden */}
       <ResponsiveUserDashboard
         initialData={safeInitialData}
         searchOpen={searchOpen}
