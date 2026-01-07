@@ -1,13 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { Search, User, Linkedin, Youtube, Facebook, Instagram, Globe, Briefcase, Store, Package } from "lucide-react";
+import { Search, User, Linkedin, Youtube, Facebook, Instagram, Globe, Briefcase, Store, Package, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 
 export default function AboutPage() {
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  const [currentJob, setCurrentJob] = useState(0);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  const jobs = [
+    { title: "Delivery Rider - Kenya", location: "Nairobi, Kenya", pronouns: "(They/She/He)" },
+    { title: "Account Manager - Uganda", location: "Kampala, Uganda", pronouns: "(She/He/They)" },
+    { title: "Junior Developer - Rwanda", location: "Kigali, Rwanda", pronouns: "(They/She/He)" },
+    { title: "Operations Manager - Rwanda", location: "Gasabo, Rwanda", pronouns: "(She/He/They)" },
+    { title: "Marketing Specialist - Rwanda", location: "Nyarugenge, Rwanda", pronouns: "(They/She/He)" },
+    { title: "Customer Support - Kenya", location: "Nairobi, Kenya", pronouns: "(She/He/They)" },
+  ];
 
   if (typeof window !== "undefined") {
     window.addEventListener("scroll", () => {
@@ -341,7 +353,7 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Our Yellow Book Section */}
+        {/* Our Green Book Section */}
         <div className="bg-white py-16 md:py-24">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16 items-center">
@@ -349,7 +361,7 @@ export default function AboutPage() {
               <div className="flex flex-col space-y-6">
                 <div className="flex items-center gap-3">
                   <h2 className="text-4xl font-bold text-gray-800 md:text-5xl">
-                    Our Yellow Book
+                    Our Green Book
                   </h2>
                   <svg
                     className="h-8 w-8 text-[#00D9A5]"
@@ -368,16 +380,16 @@ export default function AboutPage() {
                 </p>
                 <button
                   onClick={() => {
-                    // Add link to Yellow Book PDF or page
+                    // Add link to Green Book PDF or page
                     window.open("#", "_blank");
                   }}
                   className="self-start rounded-lg bg-[#00D9A5] px-6 py-3 font-medium text-white transition-colors hover:bg-[#00C896]"
                 >
-                  Read our Yellow Book here
+                  Read our Green Book here
                 </button>
               </div>
 
-              {/* Right Side - Yellow Book Graphic */}
+              {/* Right Side - Green Book Graphic */}
               <div className="flex items-center justify-center">
                 <div className="relative">
                   {/* Main Book */}
@@ -387,7 +399,7 @@ export default function AboutPage() {
                       {/* Title */}
                       <div className="mb-6">
                         <h3 className="text-4xl font-bold text-gray-800 leading-tight">
-                          YELLOW BO
+                          GREEN BO
                           <span className="relative inline-block mx-1">
                             <span className="absolute -top-2 -right-2 h-8 w-8 rounded-full bg-white shadow-md flex items-center justify-center">
                               <svg
@@ -496,9 +508,10 @@ export default function AboutPage() {
           <div className="container mx-auto px-4">
             {/* Main Heading */}
             <div className="mb-12 text-center">
-              <h2 className="text-3xl font-bold text-white md:text-4xl lg:text-5xl">
-                Our core values are the north star that guide our behaviors,
-                processes and mindset
+              <h2 className="text-2xl font-bold text-white md:text-3xl lg:text-4xl">
+                Our core values are the north star that guide our
+                <br />
+                behaviors, processes and mindset
               </h2>
             </div>
 
@@ -605,6 +618,662 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
+
+        {/* What our people say Section */}
+        <div className="bg-white py-16 md:py-24">
+          <div className="container mx-auto px-4">
+            {/* Section Title */}
+            <h2 className="mb-12 text-center text-4xl font-bold text-gray-800 md:text-5xl">
+              What our people say
+            </h2>
+
+            {/* Testimonials Carousel */}
+            <div className="relative">
+              <div className="overflow-hidden">
+                <div
+                  className="flex transition-transform duration-500 ease-in-out"
+                  style={{
+                    transform: `translateX(-${currentTestimonial * 100}%)`,
+                  }}
+                >
+                  {/* Testimonial 1 */}
+                  <div className="min-w-full px-4">
+                    <div className="mx-auto max-w-2xl rounded-2xl bg-white p-8 shadow-lg">
+                      {/* Quote Icon */}
+                      <div className="mb-4">
+                        <svg
+                          className="h-12 w-12 text-gray-800"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.996 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.984zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+                        </svg>
+                      </div>
+                      {/* Testimonial Text */}
+                      <p className="mb-6 text-lg italic leading-relaxed text-gray-700">
+                        I&apos;ve been giving my 110% on projects that have helped me
+                        develop my skills and grow day after day. From three fundraising
+                        processes to several M&A opportunities across different verticals
+                        and geographies, I certainly feel that being part of such
+                        transformational work at Plas has been a unique lifetime
+                        opportunity and I&apos;m very excited about what&apos;s to come!
+                      </p>
+                      {/* Author Info */}
+                      <div className="flex items-center gap-4">
+                        <div className="h-16 w-16 overflow-hidden rounded-full bg-gray-200">
+                          <Image
+                            src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop"
+                            alt="Laura Martín"
+                            width={64}
+                            height={64}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-800">Laura Martín</p>
+                          <p className="text-sm text-gray-600">
+                            Head of International Strategy
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Testimonial 2 */}
+                  <div className="min-w-full px-4">
+                    <div className="mx-auto max-w-2xl rounded-2xl bg-white p-8 shadow-lg">
+                      {/* Quote Icon */}
+                      <div className="mb-4">
+                        <svg
+                          className="h-12 w-12 text-gray-800"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.996 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.984zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+                        </svg>
+                      </div>
+                      {/* Testimonial Text */}
+                      <p className="mb-6 text-lg italic leading-relaxed text-gray-700">
+                        I feel very grateful because they have become more than some
+                        colleagues. The trust they place in me is making me grow every
+                        day, I have learned to work as a team and I have more and more
+                        responsibilities.
+                      </p>
+                      {/* Author Info */}
+                      <div className="flex items-center gap-4">
+                        <div className="h-16 w-16 overflow-hidden rounded-full bg-gray-200">
+                          <Image
+                            src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop"
+                            alt="Jordi Sevillano"
+                            width={64}
+                            height={64}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-800">Jordi Sevillano</p>
+                          <p className="text-sm text-gray-600">
+                            People Experience Team
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Testimonial 3 */}
+                  <div className="min-w-full px-4">
+                    <div className="mx-auto max-w-2xl rounded-2xl bg-white p-8 shadow-lg">
+                      {/* Quote Icon */}
+                      <div className="mb-4">
+                        <svg
+                          className="h-12 w-12 text-gray-800"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.996 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.984zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+                        </svg>
+                      </div>
+                      {/* Testimonial Text */}
+                      <p className="mb-6 text-lg italic leading-relaxed text-gray-700">
+                        I joined Plas at a very early stage of the company. My biggest
+                        challenge during these 4 years has been adapting to the growth
+                        and changes and giving my best during this adventure. We started
+                        building tripods with cereal boxes for shootings, and now we
+                        launch TVC campaigns almost every quarter around the world! This
+                        amazing journey has been so intense that now I have green blood
+                        inside my veins.
+                      </p>
+                      {/* Author Info */}
+                      <div className="flex items-center gap-4">
+                        <div className="h-16 w-16 overflow-hidden rounded-full bg-gray-200">
+                          <Image
+                            src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop"
+                            alt="María Herraiz Sabate"
+                            width={64}
+                            height={64}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-800">
+                            María Herraiz Sabate
+                          </p>
+                          <p className="text-sm text-gray-600">Sr. Designer</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Navigation Dots */}
+              <div className="mt-8 flex justify-center gap-2">
+                {[0, 1, 2].map((index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentTestimonial(index)}
+                    className={`h-3 w-3 rounded-full transition-colors ${
+                      currentTestimonial === index
+                        ? "bg-[#00D9A5]"
+                        : "bg-gray-300"
+                    }`}
+                    aria-label={`Go to testimonial ${index + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Your next job is on the way Section */}
+        <div className="bg-[#F0FDF4] py-16 md:py-24">
+          <div className="container mx-auto px-4">
+            {/* Section Title */}
+            <h2 className="mb-12 text-center text-4xl font-bold text-gray-800 md:text-5xl lg:text-6xl">
+              Your next job is on the way
+            </h2>
+
+            {/* Job Cards Carousel */}
+            <div className="relative">
+              {/* Navigation Arrow Left */}
+              <button
+                onClick={() =>
+                  setCurrentJob((prev) => {
+                    const newIndex = prev - 3;
+                    return newIndex < 0 ? Math.max(0, jobs.length - 3) : newIndex;
+                  })
+                }
+                className="absolute left-0 top-1/2 z-10 -translate-y-1/2 rounded-lg bg-white p-3 shadow-lg transition-colors hover:bg-gray-50 md:left-4"
+                aria-label="Previous jobs"
+              >
+                <ChevronLeft className="h-6 w-6 text-gray-700" />
+              </button>
+
+              {/* Navigation Arrow Right */}
+              <button
+                onClick={() =>
+                  setCurrentJob((prev) => {
+                    const newIndex = prev + 3;
+                    return newIndex >= jobs.length ? 0 : newIndex;
+                  })
+                }
+                className="absolute right-0 top-1/2 z-10 -translate-y-1/2 rounded-lg bg-white p-3 shadow-lg transition-colors hover:bg-gray-50 md:right-4"
+                aria-label="Next jobs"
+              >
+                <ChevronRight className="h-6 w-6 text-gray-700" />
+              </button>
+
+              {/* Job Cards Container */}
+              <div className="overflow-hidden px-12">
+                <div
+                  className="flex transition-transform duration-500 ease-in-out"
+                  style={{
+                    transform: `translateX(-${Math.floor(currentJob / 3) * 100}%)`,
+                  }}
+                >
+                  {jobs.map((job, index) => (
+                    <div key={index} className="min-w-[33.333%] px-4">
+                      <div className="rounded-2xl bg-[#D1FAE5] p-6 shadow-md transition-transform hover:scale-105">
+                        <h3 className="mb-2 text-xl font-bold text-gray-800">
+                          {job.title} {job.pronouns}
+                        </h3>
+                        <p className="text-gray-600">{job.location}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Pagination Dots */}
+              <div className="mt-8 flex justify-center gap-2">
+                {Array.from({ length: Math.ceil(jobs.length / 3) }).map((_, index) => {
+                  const pageStart = index * 3;
+                  const isActive = Math.floor(currentJob / 3) === index;
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentJob(pageStart)}
+                      className={`h-3 w-3 rounded-full transition-colors ${
+                        isActive ? "bg-gray-800" : "bg-gray-300"
+                      }`}
+                      aria-label={`Go to page ${index + 1}`}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Ask Plas FAQ Section */}
+        <div className="bg-white py-16 md:py-24">
+          <div className="container mx-auto px-4">
+            {/* Section Title */}
+            <h2 className="mb-4 text-center text-4xl font-bold text-gray-800 md:text-5xl lg:text-6xl">
+              Ask Plas
+            </h2>
+            
+            {/* Description */}
+            <p className="mb-12 text-center text-lg text-gray-700 md:text-xl">
+              Our vision is to give everyone easy access to anything in their city.
+              We also want to give you all the answers about Plas.
+            </p>
+
+            {/* FAQ Items */}
+            <div className="mx-auto max-w-3xl space-y-4">
+              {[
+                {
+                  question: "When will I receive the information for my onboarding?",
+                  answer: "You will receive all onboarding information via email within 24-48 hours after accepting your offer. This includes your start date, required documents, and access credentials.",
+                },
+                {
+                  question: "What are Plas's values?",
+                  answer: "Our core values are Gas, Good Vibes, Stay Humble, Deep Dive, Glownership, and High Bar. These values guide our behaviors, processes, and mindset every day.",
+                },
+                {
+                  question: "What does a typical day look like at Plas?",
+                  answer: "A typical day at Plas is dynamic and fast-paced. You'll collaborate with talented colleagues, work on impactful projects, and have opportunities to learn and grow. We value work-life balance and provide flexibility to help you perform at your best.",
+                },
+                {
+                  question: "Do you offer health insurance?",
+                  answer: "Yes, we offer comprehensive health insurance coverage for all full-time employees, including medical, dental, and vision benefits. Coverage begins on your first day of employment.",
+                },
+                {
+                  question: "Is the onboarding process done remotely?",
+                  answer: "The onboarding process can be done both remotely and in-person, depending on your role and location. We provide comprehensive virtual onboarding resources and support for all new team members.",
+                },
+                {
+                  question: "Where can I get more information about working at Plas?",
+                  answer: "You can find more information about working at Plas on our careers page, read our Green Book, or reach out to our People Experience team. We also encourage you to check out our social media channels for insights into our culture.",
+                },
+                {
+                  question: "What's it like to work at Plas?",
+                  answer: "Working at Plas is an exciting journey! We're a fast-growing company with a non-vanilla culture built on talent. You'll work with passionate people, tackle challenging projects, and make a real impact on millions of people's lives. It's truly the ride of your life!",
+                },
+              ].map((faq, index) => (
+                <div
+                  key={index}
+                  className="rounded-lg border-2 border-gray-200 bg-white transition-all hover:border-[#00D9A5]"
+                >
+                  <button
+                    onClick={() => setOpenFaq(openFaq === index ? null : index)}
+                    className="flex w-full items-center justify-between p-6 text-left"
+                  >
+                    <span className="flex-1 text-lg font-medium text-gray-800">
+                      {faq.question}
+                    </span>
+                    <div
+                      className={`ml-4 flex-shrink-0 transition-transform ${
+                        openFaq === index ? "rotate-45" : ""
+                      }`}
+                    >
+                      <Plus className="h-6 w-6 text-[#00D9A5]" />
+                    </div>
+                  </button>
+                  {openFaq === index && (
+                    <div className="border-t border-gray-200 px-6 pb-6 pt-4">
+                      <p className="text-gray-700 leading-relaxed">
+                        {faq.answer}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Ask Plas Button */}
+            <div className="mt-12 flex justify-center">
+              <button
+                onClick={() => {
+                  // Add link to contact or support page
+                  router.push("#contact");
+                }}
+                className="rounded-lg bg-[#00D9A5] px-8 py-4 text-lg font-medium text-white transition-colors hover:bg-[#00C896]"
+              >
+                Ask Plas
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer className="relative bg-[#282828] text-white">
+          {/* Curved white transition at top */}
+          <div className="absolute left-0 right-0 top-0 -translate-y-px">
+            <svg
+              viewBox="0 0 1440 120"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-full"
+              preserveAspectRatio="none"
+            >
+              <path
+                d="M0 0L60 10C120 20 240 40 360 50C480 60 600 60 720 55C840 50 960 40 1080 35C1200 30 1320 30 1380 30L1440 30V0H1380C1320 0 1200 0 1080 0C960 0 840 0 720 0C600 0 480 0 360 0C240 0 120 0 60 0H0Z"
+                fill="white"
+              />
+            </svg>
+          </div>
+
+          <div className="container mx-auto px-4 pt-20 pb-8">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-5">
+              {/* Plas Logo */}
+              <div className="lg:col-span-1">
+                <div className="flex items-center gap-2 mb-6">
+                  <Image
+                    src="/assets/logos/PlasIcon.png"
+                    alt="Plas Logo"
+                    width={32}
+                    height={32}
+                    className="h-8 w-8"
+                  />
+                  <span className="text-2xl font-bold text-white">Plas</span>
+                </div>
+              </div>
+
+              {/* About us Column */}
+              <div className="space-y-3">
+                <h3 className="font-bold text-white">About us</h3>
+                <ul className="space-y-2">
+                  <li>
+                    <a
+                      href="#"
+                      className="text-gray-300 transition-colors hover:text-white"
+                    >
+                      Life at Plas
+                    </a>
+                  </li>
+                  <li className="ml-4">
+                    <a
+                      href="#"
+                      className="text-gray-300 transition-colors hover:text-white text-sm"
+                    >
+                      Plas Cares
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      className="text-gray-300 transition-colors hover:text-white"
+                    >
+                      Diversity & Inclusion
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      className="text-gray-300 transition-colors hover:text-white"
+                    >
+                      Our teams
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Careers at Plas Column */}
+              <div className="space-y-3">
+                <h3 className="font-bold text-white">Careers at Plas</h3>
+                <ul className="space-y-2">
+                  <li>
+                    <a
+                      href="#"
+                      className="text-gray-300 transition-colors hover:text-white"
+                    >
+                      Find your ride
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      className="text-gray-300 transition-colors hover:text-white"
+                    >
+                      Students
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      className="text-gray-300 transition-colors hover:text-white"
+                    >
+                      Woman in tech
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      className="text-gray-300 transition-colors hover:text-white"
+                    >
+                      Business Process
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      className="text-gray-300 transition-colors hover:text-white"
+                    >
+                      Tech Process
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Our Stories & Locations Column */}
+              <div className="space-y-3">
+                <h3 className="font-bold text-white">Our Stories</h3>
+                <h3 className="font-bold text-white mt-6">Our Locations</h3>
+                <ul className="space-y-2">
+                  <li>
+                    <a
+                      href="#"
+                      className="text-gray-300 transition-colors hover:text-white"
+                    >
+                      Kigali
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      className="text-gray-300 transition-colors hover:text-white"
+                    >
+                      Gasabo
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      className="text-gray-300 transition-colors hover:text-white"
+                    >
+                      Nyarugenge
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      className="text-gray-300 transition-colors hover:text-white"
+                    >
+                      Kampala
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      className="text-gray-300 transition-colors hover:text-white"
+                    >
+                      Nairobi
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Contact & Social Media Column */}
+              <div className="space-y-3">
+                <h3 className="font-bold text-white">Contact us</h3>
+                <h3 className="font-bold text-white mt-6">Sign In</h3>
+                <div className="flex gap-3 mt-2">
+                  <a
+                    href="#"
+                    className="text-gray-300 transition-colors hover:text-white"
+                    aria-label="Instagram"
+                  >
+                    <Instagram className="h-5 w-5" />
+                  </a>
+                  <a
+                    href="#"
+                    className="text-gray-300 transition-colors hover:text-white"
+                    aria-label="LinkedIn"
+                  >
+                    <Linkedin className="h-5 w-5" />
+                  </a>
+                  <a
+                    href="#"
+                    className="text-gray-300 transition-colors hover:text-white"
+                    aria-label="YouTube"
+                  >
+                    <Youtube className="h-5 w-5" />
+                  </a>
+                  <a
+                    href="#"
+                    className="text-gray-300 transition-colors hover:text-white"
+                    aria-label="Facebook"
+                  >
+                    <Facebook className="h-5 w-5" />
+                  </a>
+                </div>
+              </div>
+
+              {/* App Downloads & Glassdoor Column */}
+              <div className="space-y-4">
+                {/* App Store Button */}
+                <button className="flex w-full items-center gap-2 rounded-lg bg-black px-4 py-3 text-white transition-opacity hover:opacity-90">
+                  <svg
+                    className="h-6 w-6"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+                  </svg>
+                  <span className="text-sm font-medium">
+                    Download on the App Store
+                  </span>
+                </button>
+
+                {/* Google Play Button */}
+                <button className="flex w-full items-center gap-2 rounded-lg bg-black px-4 py-3 text-white transition-opacity hover:opacity-90">
+                  <svg
+                    className="h-6 w-6"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.5,12.92 20.16,13.19L6.05,21.34L14.54,12.85L20.16,10.81M6.05,2.66L14.54,11.15L16.81,8.88L6.05,2.66Z" />
+                  </svg>
+                  <span className="text-sm font-medium">
+                    GET IT ON Google Play
+                  </span>
+                </button>
+
+                {/* Glassdoor Rating */}
+                <div className="mt-6">
+                  <div className="mb-2 text-sm font-medium text-[#00D9A5]">
+                    glassdoor®
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-lg font-bold text-white">4.0</span>
+                    <div className="flex gap-0.5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <svg
+                          key={star}
+                          className="h-5 w-5"
+                          fill={star <= 4 ? "#00D9A5" : "none"}
+                          stroke={star <= 4 ? "#00D9A5" : "#00D9A5"}
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                          />
+                        </svg>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Footer Bar */}
+            <div className="mt-8 border-t border-gray-700 pt-6">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="text-sm text-gray-400">
+                  Plas © {new Date().getFullYear()}
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-gray-400">
+                  <a
+                    href="#"
+                    className="transition-colors hover:text-white"
+                  >
+                    Cookie Settings
+                  </a>
+                  <a
+                    href="#"
+                    className="transition-colors hover:text-white"
+                  >
+                    Corporate Site
+                  </a>
+                  <a
+                    href="#"
+                    className="transition-colors hover:text-white"
+                  >
+                    Couriers
+                  </a>
+                  <a
+                    href="#"
+                    className="transition-colors hover:text-white"
+                  >
+                    Sitemap
+                  </a>
+                  <a
+                    href="#"
+                    className="transition-colors hover:text-white"
+                  >
+                    Cookies
+                  </a>
+                  <a
+                    href="#"
+                    className="transition-colors hover:text-white"
+                  >
+                    Privacy Policy
+                  </a>
+                  <a
+                    href="#"
+                    className="transition-colors hover:text-white"
+                  >
+                    Contact us
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </footer>
       </div>
     </>
   );
