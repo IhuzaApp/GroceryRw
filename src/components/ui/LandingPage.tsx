@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import React from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import { MapPin, User } from "lucide-react";
@@ -13,6 +14,10 @@ export default function LandingPage() {
   const [address, setAddress] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+  const [stickyAutocomplete, setStickyAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+  const addressInputRef = useRef<HTMLInputElement>(null);
+  const stickyAddressInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -33,20 +38,137 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Initialize Google Places Autocomplete for main input
+  useEffect(() => {
+    const initializeAutocomplete = () => {
+      if (typeof window !== "undefined" && window.google && addressInputRef.current) {
+        const autocompleteInstance = new window.google.maps.places.Autocomplete(
+          addressInputRef.current,
+          {
+            types: ["address"],
+            componentRestrictions: { country: "rw" }, // Restrict to Rwanda
+          }
+        );
+
+        autocompleteInstance.addListener("place_changed", () => {
+          const place = autocompleteInstance.getPlace();
+          if (place.formatted_address) {
+            setAddress(place.formatted_address);
+            // Store coordinates if available
+            if (place.geometry?.location) {
+              const lat = place.geometry.location.lat();
+              const lng = place.geometry.location.lng();
+              document.cookie = `user_latitude=${lat}; path=/`;
+              document.cookie = `user_longitude=${lng}; path=/`;
+            }
+          }
+        });
+
+        setAutocomplete(autocompleteInstance);
+      }
+    };
+
+    // Load Google Maps API if not already loaded
+    if (typeof window !== "undefined" && !window.google) {
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAP_API}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = initializeAutocomplete;
+      document.head.appendChild(script);
+    } else {
+      initializeAutocomplete();
+    }
+
+    return () => {
+      if (autocomplete) {
+        window.google?.maps?.event?.clearInstanceListeners(autocomplete);
+      }
+    };
+  }, []);
+
+  // Initialize Google Places Autocomplete for sticky header input
+  useEffect(() => {
+    const initializeStickyAutocomplete = () => {
+      if (typeof window !== "undefined" && window.google && stickyAddressInputRef.current) {
+        const autocompleteInstance = new window.google.maps.places.Autocomplete(
+          stickyAddressInputRef.current,
+          {
+            types: ["address"],
+            componentRestrictions: { country: "rw" },
+          }
+        );
+
+        autocompleteInstance.addListener("place_changed", () => {
+          const place = autocompleteInstance.getPlace();
+          if (place.formatted_address) {
+            setAddress(place.formatted_address);
+            if (place.geometry?.location) {
+              const lat = place.geometry.location.lat();
+              const lng = place.geometry.location.lng();
+              document.cookie = `user_latitude=${lat}; path=/`;
+              document.cookie = `user_longitude=${lng}; path=/`;
+            }
+          }
+        });
+
+        setStickyAutocomplete(autocompleteInstance);
+      }
+    };
+
+    if (typeof window !== "undefined" && window.google) {
+      initializeStickyAutocomplete();
+    }
+
+    return () => {
+      if (stickyAutocomplete) {
+        window.google?.maps?.event?.clearInstanceListeners(stickyAutocomplete);
+      }
+    };
+  }, [isScrolled]);
+
   const handleUseCurrentLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          // Store location in cookies or state
-          document.cookie = `user_latitude=${position.coords.latitude}; path=/`;
-          document.cookie = `user_longitude=${position.coords.longitude}; path=/`;
-          setAddress("Current Location");
-          // Redirect to main page after setting location
-          router.push("/");
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          
+          // Store location in cookies
+          document.cookie = `user_latitude=${lat}; path=/`;
+          document.cookie = `user_longitude=${lng}; path=/`;
+          
+          // Reverse geocode to get address
+          if (typeof window !== "undefined" && window.google) {
+            const geocoder = new window.google.maps.Geocoder();
+            geocoder.geocode(
+              { location: { lat, lng } },
+              (results: google.maps.GeocoderResult[] | null, status: google.maps.GeocoderStatus) => {
+                if (status === "OK" && results && results[0]) {
+                  setAddress(results[0].formatted_address);
+                  // Small delay before redirect to show the address
+                  setTimeout(() => {
+                    router.push("/");
+                  }, 500);
+                } else {
+                  setAddress("Current Location");
+                  router.push("/");
+                }
+              }
+            );
+          } else {
+            setAddress("Current Location");
+            router.push("/");
+          }
         },
         (error) => {
           console.error("Error getting location:", error);
           alert("Unable to get your location. Please enter your address manually.");
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
         }
       );
     } else {
@@ -110,6 +232,58 @@ export default function LandingPage() {
             filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.3)) drop-shadow(0 0 12px rgba(255, 255, 255, 0.2));
           }
         }
+        /* Google Places Autocomplete Dropdown Styling */
+        .pac-container {
+          background-color: white !important;
+          border-radius: 16px !important;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1) !important;
+          border: 2px solid #00D9A5 !important;
+          margin-top: 8px !important;
+          padding: 8px 0 !important;
+          font-family: 'Nunito', sans-serif !important;
+          overflow: hidden !important;
+        }
+        .pac-item {
+          padding: 12px 16px !important;
+          cursor: pointer !important;
+          border: none !important;
+          border-bottom: 1px solid #f0f0f0 !important;
+          transition: all 0.2s ease !important;
+          font-size: 14px !important;
+          color: #333 !important;
+        }
+        .pac-item:last-child {
+          border-bottom: none !important;
+        }
+        .pac-item:hover {
+          background-color: #f0fdf4 !important;
+          padding-left: 20px !important;
+        }
+        .pac-item-selected {
+          background-color: #A8E6CF !important;
+          color: #00A67E !important;
+          font-weight: 600 !important;
+        }
+        .pac-item-selected:hover {
+          background-color: #90D9B8 !important;
+        }
+        .pac-icon {
+          margin-right: 12px !important;
+          width: 20px !important;
+          height: 20px !important;
+        }
+        .pac-matched {
+          font-weight: 600 !important;
+          color: #00D9A5 !important;
+        }
+        .pac-item-query {
+          color: #333 !important;
+          font-size: 14px !important;
+        }
+        .pac-item-query .pac-matched {
+          color: #00D9A5 !important;
+          font-weight: 700 !important;
+        }
       `}} />
       <div className="min-h-screen bg-white">
       {/* Sticky Header */}
@@ -154,6 +328,7 @@ export default function LandingPage() {
                   <div className="relative rounded-2xl bg-white shadow-sm border-2 border-[#00D9A5]">
                     <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 z-10" />
                     <input
+                      ref={stickyAddressInputRef}
                       type="text"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
@@ -226,6 +401,7 @@ export default function LandingPage() {
                 <div className="relative rounded-2xl bg-white shadow-lg">
                   <MapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 z-10" />
                   <input
+                    ref={addressInputRef}
                     type="text"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
