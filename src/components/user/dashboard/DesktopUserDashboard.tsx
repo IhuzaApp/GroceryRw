@@ -74,7 +74,7 @@ export default function DesktopUserDashboard({
 
           {/* Horizontal Scrollable Categories */}
           <div className="overflow-x-auto pb-4">
-            <div className="flex gap-4 min-w-max">
+            <div className="flex min-w-max gap-4">
               {isLoading
                 ? Array(15)
                     .fill(0)
@@ -98,21 +98,21 @@ export default function DesktopUserDashboard({
                       }`}
                     >
                       <div
-                        className={`flex h-16 w-16 items-center justify-center bg-gray-50 dark:bg-gray-700 transition-all duration-200 overflow-visible ${
+                        className={`flex h-16 w-16 items-center justify-center overflow-visible bg-gray-50 transition-all duration-200 dark:bg-gray-700 ${
                           selectedCategory === category.id
-                            ? "shadow-md scale-110"
+                            ? "scale-110 shadow-md"
                             : "group-hover:shadow-sm"
                         }`}
                         style={{
-                          borderRadius: '50% 50% 50% 50% / 40% 40% 60% 60%',
-                          clipPath: 'ellipse(55% 45% at 50% 50%)',
+                          borderRadius: "50% 50% 50% 50% / 40% 40% 60% 60%",
+                          clipPath: "ellipse(55% 45% at 50% 50%)",
                         }}
                       >
                         <div className="scale-75">
                           <CategoryIcon category={category.name} />
                         </div>
                       </div>
-                      <span className="text-center text-xs font-medium text-gray-900 dark:text-gray-100 max-w-[80px] truncate">
+                      <span className="max-w-[80px] truncate text-center text-xs font-medium text-gray-900 dark:text-gray-100">
                         {category.name}
                       </span>
                     </div>

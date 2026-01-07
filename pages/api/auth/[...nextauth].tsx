@@ -211,7 +211,7 @@ export const authOptions: NextAuthOptions = {
       if (!token || !token.id) {
         return null as any;
       }
-      
+
       if (token && session.user) {
         (session.user as any).id = token.id as string;
         (session.user as any).phone = (token as any).phone;

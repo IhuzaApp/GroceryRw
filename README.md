@@ -63,15 +63,15 @@ graph TB
     A[User Visits Home Page] --> B{Is Logged In?}
     B -->|No & Desktop| C[Show Landing Page]
     B -->|Yes| D[Show Dashboard]
-    
+
     C --> E[User Selects Location]
     E --> F[Categories Loaded]
     F --> G[User Clicks Category]
     G --> H[Redirect to Dashboard with Category]
-    
+
     H --> I[Desktop User Dashboard]
     D --> I
-    
+
     I --> J[Display Filtered Shops]
     J --> K[User Browses Shops]
 ```
@@ -83,6 +83,7 @@ graph TB
 **Location**: `src/components/ui/LandingPage.tsx`
 
 **Key Features**:
+
 - Sticky header with dynamic styling on scroll
 - Google Maps Places Autocomplete integration
 - Geolocation API for current location
@@ -91,6 +92,7 @@ graph TB
 - Address display in header
 
 **State Management**:
+
 - `address`: Current address string
 - `displayAddress`: Short address for header display
 - `categories`: Array of active categories
@@ -98,6 +100,7 @@ graph TB
 - `autocomplete`: Google Places Autocomplete instance
 
 **Key Functions**:
+
 - `handleUseCurrentLocation()`: Gets user's current location via geolocation API
 - `handleAddressSubmit()`: Processes address selection
 - `fetchCategories()`: Fetches active categories from API
@@ -108,6 +111,7 @@ graph TB
 **Location**: `src/components/user/dashboard/DesktopUserDashboard.tsx`
 
 **Key Features**:
+
 - Category grid with horizontal scrolling
 - Upside-down avocado-shaped category containers
 - 4-column shop grid layout
@@ -115,6 +119,7 @@ graph TB
 - Shop card display with images
 
 **Layout Structure**:
+
 ```
 ┌─────────────────────────────────────┐
 │  Groceries (Heading)                │
@@ -140,6 +145,7 @@ graph TB
 **Location**: `src/components/user/dashboard/shared/UserDashboardLogic.tsx`
 
 **Key Features**:
+
 - Category selection from URL query parameters
 - Shop filtering by category
 - Guest user support (non-logged-in users)
@@ -147,6 +153,7 @@ graph TB
 - Location-based shop dynamics
 
 **Key Functions**:
+
 - `handleCategoryClick()`: Filters shops by selected category
 - `filteredShops`: Computed memoized array of filtered shops
 - URL query parameter reading for category selection
@@ -157,6 +164,7 @@ graph TB
 **Location**: `src/components/user/dashboard/ShopCard.tsx`
 
 **Key Features**:
+
 - Image-focused design with 160px height
 - Logo positioned at bottom-left of image
 - Price, delivery time, and rating display
@@ -164,6 +172,7 @@ graph TB
 - Open/Closed status indicators
 
 **Card Structure**:
+
 ```
 ┌─────────────────────┐
 │   [Shop Image]      │
@@ -179,22 +188,26 @@ graph TB
 ### For Non-Logged-In Users (Desktop)
 
 1. **Initial Visit**: User sees landing page with hero section
+
    - Animated illustrations on left
    - "Grocery delivery" heading
    - Address input field
    - "Use current location" button
 
 2. **Location Selection**: User selects location via:
+
    - Google Maps Autocomplete
    - Current location button
    - Location stored in cookies (`temp_address`, `user_latitude`, `user_longitude`)
 
 3. **Category Display**: After location selection:
+
    - Hero content replaced with category grid
    - Categories displayed in green section
    - "What can we get you?" heading
 
 4. **Category Selection**: User clicks a category:
+
    - URL updates: `/?category={categoryId}`
    - Page redirects to dashboard view
    - Dashboard shows filtered shops
@@ -235,6 +248,7 @@ return <ResponsiveUserDashboard />;
 ### Cookie Storage
 
 Location data is stored in cookies:
+
 - `temp_address`: Full formatted address string
 - `user_latitude`: Latitude coordinate
 - `user_longitude`: Longitude coordinate
@@ -242,11 +256,13 @@ Location data is stored in cookies:
 ### Google Maps Integration
 
 **API Requirements**:
+
 - Google Maps Places API key
 - Autocomplete library enabled
 - Geocoding API for reverse geocoding
 
 **Configuration**:
+
 - Restricted to Rwanda (`country: "rw"`)
 - Address type filtering
 - Custom styled dropdown
@@ -256,6 +272,7 @@ Location data is stored in cookies:
 ### Category Display
 
 Categories are displayed with:
+
 - **Shape**: Upside-down avocado (wider at top, narrower at bottom)
 - **Background**: Gray-50 (light) / Gray-700 (dark)
 - **Icons**: CategoryIcon component with SVG icons
@@ -265,6 +282,7 @@ Categories are displayed with:
 ### Category Filtering
 
 When a category is selected:
+
 1. URL updates with `?category={id}` parameter
 2. Dashboard filters shops by category
 3. Selected category highlighted
@@ -315,6 +333,7 @@ When a category is selected:
 **Endpoint**: `/api/queries/categories`
 
 **Response**:
+
 ```json
 {
   "categories": [
@@ -334,6 +353,7 @@ When a category is selected:
 **Endpoint**: `/api/queries/shops`
 
 **Response**:
+
 ```json
 {
   "shops": [
@@ -353,12 +373,14 @@ When a category is selected:
 ## Guest User Support
 
 The system allows non-logged-in users to:
+
 - Browse categories
 - View shops
 - Select locations
 - Filter by category
 
 **Limitations for Guests**:
+
 - Cannot place orders (redirected to login)
 - Limited personalization
 - No saved addresses

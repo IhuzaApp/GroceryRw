@@ -78,12 +78,17 @@ export default function Home({ initialData }: { initialData: Data }) {
     const checkLocationAndCategory = () => {
       if (typeof window !== "undefined") {
         const categoryParam = router.query.category as string;
-        
+
         // Check for location in cookies
-        const cookies = document.cookie.split(';');
-        const tempAddress = cookies.find(c => c.trim().startsWith('temp_address='));
-        const hasAddress = tempAddress && tempAddress.split('=')[1] && tempAddress.split('=')[1] !== 'undefined';
-        
+        const cookies = document.cookie.split(";");
+        const tempAddress = cookies.find((c) =>
+          c.trim().startsWith("temp_address=")
+        );
+        const hasAddress =
+          tempAddress &&
+          tempAddress.split("=")[1] &&
+          tempAddress.split("=")[1] !== "undefined";
+
         // If both category and address exist, show dashboard
         if (categoryParam && hasAddress) {
           setHasLocationAndCategory(true);
@@ -95,10 +100,10 @@ export default function Home({ initialData }: { initialData: Data }) {
 
     checkLocationAndCategory();
     // Listen to route changes
-    router.events?.on('routeChangeComplete', checkLocationAndCategory);
-    
+    router.events?.on("routeChangeComplete", checkLocationAndCategory);
+
     return () => {
-      router.events?.off('routeChangeComplete', checkLocationAndCategory);
+      router.events?.off("routeChangeComplete", checkLocationAndCategory);
     };
   }, [router.query.category, router.events]);
 

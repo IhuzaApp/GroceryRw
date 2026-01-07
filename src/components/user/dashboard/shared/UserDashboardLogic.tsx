@@ -107,7 +107,7 @@ export function useUserDashboardLogic(initialData: Data) {
 
   // Read category from URL query parameter
   useEffect(() => {
-    if (router.query.category && typeof router.query.category === 'string') {
+    if (router.query.category && typeof router.query.category === "string") {
       setSelectedCategory(router.query.category);
     }
   }, [router.query.category]);
