@@ -26,6 +26,7 @@ export default function DesktopUserDashboard({
     dataLoaded,
     isFetchingData,
     authReady,
+    isLoggedIn,
     filteredShops,
     handleCategoryClick,
     clearFilter,
@@ -34,7 +35,8 @@ export default function DesktopUserDashboard({
     handleRefreshData,
   } = useUserDashboardLogic(initialData);
 
-  if (!authReady || !dataLoaded) {
+  // Allow guests (non-logged-in users) to proceed without waiting for auth
+  if ((!authReady && isLoggedIn) || !dataLoaded) {
     return <LoadingScreen />;
   }
 
