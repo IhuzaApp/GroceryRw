@@ -215,10 +215,10 @@ export default function LandingPage() {
             {/* Right: Text and Input */}
             <div className="flex-1 text-center md:text-left md:max-w-xl">
               <h1 className="mb-4 text-4xl font-bold text-white md:text-5xl lg:text-6xl">
-                Delivery and other more
+                Grocery delivery
               </h1>
               <p className="mb-8 text-lg text-white md:text-xl">
-                Groceries, shops, pharmacies, markets, stores, services, bids, anything!
+                Food, pharmacies, markets, stores, services, bids, anything!
               </p>
 
               {/* Address Input - Button Inside */}
@@ -717,22 +717,17 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
             {/* Become a Partner */}
             <div className="flex flex-col items-center text-center">
-              <div className="mb-6 flex h-48 w-48 items-center justify-center overflow-hidden rounded-full bg-white shadow-lg">
-                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-red-50 to-orange-50">
-                  <svg
-                    className="h-24 w-24 text-red-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                    />
-                  </svg>
-                </div>
+              <div className="mb-6 flex h-48 w-48 items-center justify-center overflow-hidden bg-white shadow-lg relative" style={{
+                borderRadius: '50% 50% 50% 50% / 40% 40% 60% 60%',
+                clipPath: 'ellipse(55% 45% at 50% 50%)',
+              }}>
+                <Image
+                  src="/assets/images/becomePatern.jpg"
+                  alt="Become a Partner"
+                  fill
+                  className="object-cover"
+                  style={{ borderRadius: '50% 50% 50% 50% / 40% 40% 60% 60%' }}
+                />
               </div>
               <h3 className="mb-3 text-2xl font-bold text-[#1A1A1A]">
                 Become a partner
@@ -750,22 +745,17 @@ export default function LandingPage() {
 
             {/* Careers */}
             <div className="flex flex-col items-center text-center">
-              <div className="mb-6 flex h-48 w-48 items-center justify-center overflow-hidden rounded-full bg-white shadow-lg">
-                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
-                  <svg
-                    className="h-24 w-24 text-blue-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                    />
-                  </svg>
-                </div>
+              <div className="mb-6 flex h-48 w-48 items-center justify-center overflow-hidden bg-white shadow-lg relative" style={{
+                borderRadius: '50% 50% 50% 50% / 40% 40% 60% 60%',
+                clipPath: 'ellipse(55% 45% at 50% 50%)',
+              }}>
+                <Image
+                  src="/assets/images/carreer.jpg"
+                  alt="Careers"
+                  fill
+                  className="object-cover"
+                  style={{ borderRadius: '50% 50% 50% 50% / 40% 40% 60% 60%' }}
+                />
               </div>
               <h3 className="mb-3 text-2xl font-bold text-[#1A1A1A]">Careers</h3>
               <p className="mb-6 text-gray-700">
