@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/router";
 import { useAuth } from "../../../../context/AuthContext";
 import Cookies from "js-cookie";
 import { Data } from "../../../../types";
@@ -24,7 +25,8 @@ function getDistanceFromLatLonInKm(
 }
 
 export function useUserDashboardLogic(initialData: Data) {
-  const { role, authReady } = useAuth();
+  const router = useRouter();
+  const { role, authReady, isLoggedIn } = useAuth();
   const [data, setData] = useState<Data>(
     initialData || {
       users: [],
@@ -103,11 +105,19 @@ export function useUserDashboardLogic(initialData: Data) {
     fetchData();
   }, [data.shops, data.categories, data.restaurants, isFetchingData]);
 
+  // Read category from URL query parameter
   useEffect(() => {
-    if (authReady) {
+    if (router.query.category && typeof router.query.category === 'string') {
+      setSelectedCategory(router.query.category);
+    }
+  }, [router.query.category]);
+
+  useEffect(() => {
+    // Allow guests (non-logged-in users) to proceed without waiting for auth
+    if (authReady || !isLoggedIn) {
       setDataLoaded(true);
     }
-  }, [data, authReady]);
+  }, [data, authReady, isLoggedIn]);
 
   const handleNearbyClick = async () => {
     if (isNearbyActive) {
@@ -185,7 +195,8 @@ export function useUserDashboardLogic(initialData: Data) {
   };
 
   const filteredShops = useMemo(() => {
-    if (!authReady || role === "shopper" || !data) return [];
+    // Allow guests (non-logged-in users) to see shops, but block shoppers
+    if ((!authReady && isLoggedIn) || role === "shopper" || !data) return [];
 
     let shops = data.shops || [];
     let restaurants = data.restaurants || [];
@@ -318,7 +329,8 @@ export function useUserDashboardLogic(initialData: Data) {
   ]);
 
   const shopsWithoutDynamics = useMemo(() => {
-    if (!authReady || role === "shopper" || !data) return [];
+    // Allow guests (non-logged-in users) to see shops, but block shoppers
+    if ((!authReady && isLoggedIn) || role === "shopper" || !data) return [];
 
     let shops = data.shops || [];
     let restaurants = data.restaurants || [];
@@ -418,7 +430,8 @@ export function useUserDashboardLogic(initialData: Data) {
   ]);
 
   useEffect(() => {
-    if (!authReady || role === "shopper") return;
+    // Allow guests (non-logged-in users) to compute dynamics, but block shoppers
+    if ((!authReady && isLoggedIn) || role === "shopper") return;
 
     const computeDynamics = () => {
       const cookie = Cookies.get("delivery_address");
@@ -596,6 +609,7 @@ export function useUserDashboardLogic(initialData: Data) {
     isFetchingData,
     authReady,
     role,
+    isLoggedIn,
 
     // Computed values
     filteredShops,
