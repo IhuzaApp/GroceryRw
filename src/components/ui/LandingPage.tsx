@@ -1226,7 +1226,6 @@ export default function LandingPage() {
                   <span className="text-2xl font-bold text-[#00D9A5]">
                     Plas
                   </span>
-                  <span className="text-2xl font-bold text-[#FFC107]">?</span>
                 </div>
                 {/* Slogan */}
                 <p className="font-bold text-white">

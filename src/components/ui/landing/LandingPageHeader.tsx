@@ -52,13 +52,6 @@ export default function LandingPageHeader({
               >
                 Plas
               </span>
-              <span
-                className={`text-2xl font-bold transition-colors ${
-                  isScrolled ? "text-[#00D9A5]" : "text-white"
-                }`}
-              >
-                ?
-              </span>
             </div>
             {/* Location Display */}
             {displayAddress && (
