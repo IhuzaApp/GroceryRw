@@ -4,10 +4,12 @@ import { useState, useEffect, useRef } from "react";
 import React from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
-import { MapPin, User } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import AnimatedIllustrations from "./AnimatedIllustrations";
-import { CategoryIcon } from "../user/dashboard/shared/SharedComponents";
+import LandingPageHeader from "./landing/LandingPageHeader";
+import HeroSection from "./landing/HeroSection";
+import HeroSectionSkeleton from "./landing/HeroSectionSkeleton";
+import CategoriesSection from "./landing/CategoriesSection";
+import CategoriesSectionSkeleton from "./landing/CategoriesSectionSkeleton";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -351,108 +353,17 @@ export default function LandingPage() {
       `}} />
       <div className="min-h-screen bg-white">
       {/* Sticky Header */}
-      <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled
-            ? "bg-white shadow-lg"
-            : "bg-transparent"
-        }`}
-      >
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-4">
-            {/* Logo and Location */}
-            <div className="flex items-center gap-4 flex-shrink-0">
-              <div className="flex items-center gap-2">
-                <Image
-                  src="/assets/logos/PlasIcon.png"
-                  alt="Plas Logo"
-                  width={40}
-                  height={40}
-                  className="h-10 w-10"
-                />
-                <span
-                  className={`text-2xl font-bold transition-colors ${
-                    isScrolled ? "text-[#00D9A5]" : "text-white"
-                  }`}
-                >
-                  Plas
-                </span>
-                <span
-                  className={`text-2xl font-bold transition-colors ${
-                    isScrolled ? "text-[#00D9A5]" : "text-white"
-                  }`}
-                >
-                  ?
-                </span>
-              </div>
-              {/* Location Display */}
-              {displayAddress && (
-                <button
-                  onClick={() => {
-                    addressInputRef.current?.focus();
-                    if (!isScrolled) {
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }
-                  }}
-                  className={`hidden md:flex items-center gap-2 rounded-full px-4 py-2 border-2 transition-all ${
-                    isScrolled
-                      ? "bg-white border-gray-300 text-gray-900 hover:border-[#00D9A5]"
-                      : "bg-white/10 border-white/30 text-white hover:bg-white/20"
-                  }`}
-                >
-                  <MapPin className={`h-4 w-4 ${isScrolled ? "text-gray-600" : "text-white"}`} />
-                  <span className="text-sm font-medium max-w-[200px] truncate">
-                    {displayAddress}
-                  </span>
-                  <svg
-                    className={`h-4 w-4 ${isScrolled ? "text-gray-600" : "text-white"}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-              )}
-            </div>
-
-            {/* Address Input - Only shown when scrolled */}
-            {isScrolled && (
-              <div className="flex-1 max-w-xl mx-4 hidden md:flex">
-                <form onSubmit={handleAddressSubmit} className="w-full">
-                  <div className="relative rounded-2xl bg-white shadow-sm border-2 border-[#00D9A5]">
-                    <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 z-10" />
-                    <input
-                      ref={stickyAddressInputRef}
-                      type="text"
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      placeholder="What's your address?"
-                      className="w-full rounded-2xl border-0 bg-transparent pl-10 pr-36 py-2 text-sm text-gray-900 focus:outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={address ? handleAddressSubmit : handleUseCurrentLocation}
-                      className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-xl bg-[#A8E6CF] px-3 py-1.5 text-xs font-bold text-[#00A67E] transition-colors hover:bg-[#90D9B8] whitespace-nowrap"
-                    >
-                      {address ? "Continue" : "Use current location"}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-
-            {/* Login Button */}
-            <button
-              onClick={() => router.push("/Auth/Login")}
-              className="flex items-center gap-2 rounded-full bg-[#00D9A5] px-6 py-2.5 font-medium text-white transition-colors hover:bg-[#00C896] flex-shrink-0"
-            >
-              <User className="h-5 w-5" />
-              <span className="hidden sm:inline">Login</span>
-            </button>
-          </div>
-        </div>
-      </header>
+      <LandingPageHeader
+        isScrolled={isScrolled}
+        address={address}
+        displayAddress={displayAddress}
+        addressInputRef={addressInputRef}
+        stickyAddressInputRef={stickyAddressInputRef}
+        onAddressChange={setAddress}
+        onAddressSubmit={handleAddressSubmit}
+        onUseCurrentLocation={handleUseCurrentLocation}
+        isMobile={isMobile}
+      />
 
       {/* Top Green Section */}
       <div className="relative bg-[#00D9A5] pb-20 md:pb-32 pt-20 md:pt-24">
@@ -476,78 +387,24 @@ export default function LandingPage() {
 
         {/* Main Content */}
         <div className="container mx-auto px-4">
-          {displayAddress && categories.length > 0 ? (
+          {loadingCategories && displayAddress ? (
+            /* Loading Skeleton for Categories */
+            <CategoriesSectionSkeleton />
+          ) : displayAddress && categories.length > 0 ? (
             /* Categories Grid - Replace hero content when location is selected */
-            <div className="mt-12 md:mt-20">
-              <h2 className="mb-8 text-center text-3xl font-bold text-white md:text-4xl lg:text-5xl">
-                What can we get you?
-              </h2>
-              <div className="grid grid-cols-3 gap-6 md:grid-cols-6 max-w-6xl mx-auto">
-                {categories.slice(0, 6).map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => router.push(`/?category=${category.id}`)}
-                    className="flex flex-col items-center gap-3 group"
-                  >
-                    <div 
-                      className="w-16 h-20 md:w-24 md:h-32 border-2 border-white bg-white flex items-center justify-center transition-all hover:scale-110 overflow-visible relative"
-                      style={{
-                        borderRadius: '50% 50% 50% 50% / 70% 70% 30% 30%',
-                        clipPath: 'ellipse(55% 65% at 50% 50%)',
-                        boxShadow: '0 0 15px rgba(0, 100, 50, 0.6), 0 0 30px rgba(0, 80, 40, 0.4), 0 0 45px rgba(0, 60, 30, 0.3), inset 0 0 10px rgba(0, 120, 60, 0.2)',
-                      }}
-                    >
-                      <div className="absolute inset-0 flex items-center justify-center" style={{ transform: 'scale(1.8)', zIndex: 10 }}>
-                        <CategoryIcon category={category.name} />
-                      </div>
-                    </div>
-                    <span className="text-sm md:text-base font-medium text-white group-hover:text-gray-100 transition-colors text-center">
-                      {category.name}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
+            <CategoriesSection categories={categories} loading={false} />
+          ) : loadingCategories ? (
+            /* Loading Skeleton for Hero */
+            <HeroSectionSkeleton />
           ) : (
             /* Hero Content - Show when no location is selected */
-            <div className="mt-12 flex flex-col items-center justify-center gap-12 md:mt-20 md:flex-row md:items-center md:justify-center md:gap-16 lg:gap-20">
-              {/* Left: Animated Illustrations */}
-              <div className="w-full md:w-auto md:flex-1 md:flex md:justify-center lg:flex-none lg:max-w-md">
-                <AnimatedIllustrations />
-              </div>
-
-              {/* Right: Text and Input */}
-              <div className="flex-1 text-center md:text-left md:max-w-xl">
-                <h1 className="mb-4 text-4xl font-bold text-white md:text-5xl lg:text-6xl">
-                  Grocery delivery
-                </h1>
-                <p className="mb-8 text-lg text-white md:text-xl">
-                  Food, pharmacies, markets, stores, services, bids, anything!
-                </p>
-
-                {/* Address Input - Button Inside */}
-                <form onSubmit={handleAddressSubmit} className="w-full max-w-2xl">
-                  <div className="relative rounded-2xl bg-white shadow-lg">
-                    <MapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 z-10" />
-                    <input
-                      ref={addressInputRef}
-                      type="text"
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      placeholder="What's your address?"
-                      className="w-full rounded-2xl border-0 bg-transparent pl-12 pr-40 py-4 text-gray-900 focus:outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={address ? handleAddressSubmit : handleUseCurrentLocation}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl bg-[#A8E6CF] px-4 py-2.5 text-sm font-bold text-[#00A67E] transition-colors hover:bg-[#90D9B8] whitespace-nowrap"
-                    >
-                      {address ? "Continue" : "Use current location"}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
+            <HeroSection
+              address={address}
+              addressInputRef={addressInputRef}
+              onAddressChange={setAddress}
+              onAddressSubmit={handleAddressSubmit}
+              onUseCurrentLocation={handleUseCurrentLocation}
+            />
           )}
         </div>
       </div>
