@@ -7,6 +7,7 @@ import Image from "next/image";
 import { MapPin, User } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import AnimatedIllustrations from "./AnimatedIllustrations";
+import { CategoryIcon } from "../user/dashboard/shared/SharedComponents";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -488,22 +489,17 @@ export default function LandingPage() {
                     onClick={() => router.push(`/?category=${category.id}`)}
                     className="flex flex-col items-center gap-3 group"
                   >
-                    <div className="w-20 h-20 md:w-28 md:h-28 rounded-full border-2 border-white bg-white flex items-center justify-center shadow-lg transition-all hover:scale-110 hover:shadow-xl overflow-hidden">
-                      {category.image ? (
-                        <Image
-                          src={category.image}
-                          alt={category.name}
-                          width={112}
-                          height={112}
-                          className="w-full h-full object-cover rounded-full"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-white to-gray-100 flex items-center justify-center">
-                          <span className="text-3xl md:text-4xl text-[#00D9A5] font-bold">
-                            {category.name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                      )}
+                    <div 
+                      className="w-16 h-20 md:w-24 md:h-32 border-2 border-white bg-white flex items-center justify-center transition-all hover:scale-110 overflow-visible relative"
+                      style={{
+                        borderRadius: '50% 50% 50% 50% / 70% 70% 30% 30%',
+                        clipPath: 'ellipse(55% 65% at 50% 50%)',
+                        boxShadow: '0 0 15px rgba(0, 100, 50, 0.6), 0 0 30px rgba(0, 80, 40, 0.4), 0 0 45px rgba(0, 60, 30, 0.3), inset 0 0 10px rgba(0, 120, 60, 0.2)',
+                      }}
+                    >
+                      <div className="absolute inset-0 flex items-center justify-center" style={{ transform: 'scale(1.8)', zIndex: 10 }}>
+                        <CategoryIcon category={category.name} />
+                      </div>
                     </div>
                     <span className="text-sm md:text-base font-medium text-white group-hover:text-gray-100 transition-colors text-center">
                       {category.name}
