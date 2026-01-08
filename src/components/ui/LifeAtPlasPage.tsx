@@ -2,15 +2,19 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/router";
-import { Search, Linkedin, Youtube, Facebook, Instagram, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import AboutTopBar from "./landing/AboutTopBar";
+import AboutHeader from "./landing/AboutHeader";
+import AboutFooter from "./landing/AboutFooter";
 
 export default function LifeAtPlasPage() {
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const [currentBenefit, setCurrentBenefit] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [activeSection, setActiveSection] = useState<'talent-house' | 'office-life'>('talent-house');
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   const benefits = [
     "Competitive Pay and Enticing Equity Plan",
@@ -62,130 +66,11 @@ export default function LifeAtPlasPage() {
         }}
       />
       <div className="min-h-screen bg-white">
+        {/* Top Bar */}
+        <AboutTopBar />
+
         {/* Header */}
-        <header
-          className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${
-            isScrolled
-              ? "bg-white shadow-md"
-              : "bg-transparent"
-          }`}
-        >
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between gap-4">
-              {/* Logo */}
-              <div className="flex items-center gap-2">
-                <Image
-                  src="/assets/logos/PlasIcon.png"
-                  alt="Plas Logo"
-                  width={40}
-                  height={40}
-                  className="h-10 w-10"
-                />
-                <span
-                  className={`text-2xl font-bold transition-colors ${
-                    isScrolled ? "text-[#00D9A5]" : "text-white"
-                  }`}
-                >
-                  Plas
-                </span>
-              </div>
-
-              {/* Navigation Links */}
-              <nav className="hidden items-center gap-6 md:flex">
-                <Link
-                  href="/about"
-                  className={`font-medium transition-colors ${
-                    isScrolled ? "text-gray-700 hover:text-[#00D9A5]" : "text-white/90 hover:text-white"
-                  }`}
-                >
-                  About us
-                </Link>
-                <Link
-                  href="/life-at-plas"
-                  className={`border-b-2 pb-1 font-medium transition-colors ${
-                    isScrolled
-                      ? "border-[#00D9A5] text-[#00D9A5]"
-                      : "border-[#00D9A5] text-white"
-                  }`}
-                >
-                  Life at Plas
-                </Link>
-                <a
-                  href="#"
-                  className={`font-medium transition-colors ${
-                    isScrolled ? "text-gray-700 hover:text-[#00D9A5]" : "text-white/90 hover:text-white"
-                  }`}
-                >
-                  Diversity & Inclusion
-                </a>
-                <a
-                  href="#"
-                  className={`font-medium transition-colors ${
-                    isScrolled ? "text-gray-700 hover:text-[#00D9A5]" : "text-white/90 hover:text-white"
-                  }`}
-                >
-                  Our teams
-                </a>
-                <Link
-                  href="/careers"
-                  className={`font-medium transition-colors ${
-                    isScrolled ? "text-gray-700 hover:text-[#00D9A5]" : "text-white/90 hover:text-white"
-                  }`}
-                >
-                  Careers at Plas
-                </Link>
-                <a
-                  href="#"
-                  className={`font-medium transition-colors ${
-                    isScrolled ? "text-gray-700 hover:text-[#00D9A5]" : "text-white/90 hover:text-white"
-                  }`}
-                >
-                  Stories
-                </a>
-                <a
-                  href="#"
-                  className={`font-medium transition-colors ${
-                    isScrolled ? "text-gray-700 hover:text-[#00D9A5]" : "text-white/90 hover:text-white"
-                  }`}
-                >
-                  Our locations
-                </a>
-                <a
-                  href="#"
-                  className={`font-medium transition-colors ${
-                    isScrolled ? "text-gray-700 hover:text-[#00D9A5]" : "text-white/90 hover:text-white"
-                  }`}
-                >
-                  Contact us
-                </a>
-              </nav>
-
-              {/* Action Buttons */}
-              <div className="flex items-center gap-3">
-                <button
-                  className={`hidden items-center gap-2 rounded-lg border-2 px-4 py-2 font-medium transition-colors md:flex ${
-                    isScrolled
-                      ? "border-gray-300 bg-white text-gray-900 hover:border-[#00D9A5]"
-                      : "border-white bg-transparent text-white hover:bg-white/10"
-                  }`}
-                  onClick={() => router.push("/Auth/Login")}
-                >
-                  Sign in
-                </button>
-                <button
-                  className={`rounded-lg p-2 transition-colors ${
-                    isScrolled
-                      ? "text-gray-700 hover:bg-gray-100"
-                      : "text-white hover:bg-white/10"
-                  }`}
-                  aria-label="Search"
-                >
-                  <Search className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </header>
+        <AboutHeader activePage="life-at-plas" />
 
         {/* Upper Section - Dark Olive Green with Pattern */}
         <div className="relative bg-[#2D5016] py-24 md:py-32">
@@ -311,18 +196,18 @@ export default function LifeAtPlasPage() {
             <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16 items-center mb-16">
               {/* Left Side - Text Content with Decorative Elements */}
               <div className="relative flex flex-col space-y-6">
-                {/* Decorative Yellow Circles */}
+                {/* Decorative Green Circles */}
                 <div className="absolute -left-8 top-0 hidden lg:block">
                   <div className="relative">
-                    <div className="absolute w-16 h-16 border-2 border-yellow-400 rounded-full"></div>
-                    <div className="absolute left-4 top-4 w-16 h-16 border-2 border-yellow-400 rounded-full"></div>
+                    <div className="absolute w-16 h-16 border-2 border-[#00D9A5] rounded-full"></div>
+                    <div className="absolute left-4 top-4 w-16 h-16 border-2 border-[#00D9A5] rounded-full"></div>
                   </div>
                 </div>
                 
                 <div className="relative z-10">
                   <h2 className="text-4xl font-bold text-gray-800 md:text-5xl lg:text-6xl mb-4">
                     Perks & benefits
-                    <span className="block w-24 h-1 bg-yellow-400 mt-2"></span>
+                    <span className="block w-24 h-1 bg-[#00D9A5] mt-2"></span>
                   </h2>
                   <div className="space-y-4 text-lg leading-relaxed text-gray-800">
                     <p>
@@ -457,212 +342,297 @@ export default function LifeAtPlasPage() {
           </div>
         </div>
 
-        {/* Footer */}
-        <footer className="relative bg-[#282828] text-white">
-          {/* Curved white transition at top */}
-          <div className="absolute left-0 right-0 top-0 -translate-y-px">
-            <svg
-              viewBox="0 0 1440 120"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-full"
-              preserveAspectRatio="none"
-            >
-              <path
-                d="M0 0L60 10C120 20 240 40 360 50C480 60 600 60 720 55C840 50 960 40 1080 35C1200 30 1320 30 1380 30L1440 30V0H1380C1320 0 1200 0 1080 0C960 0 840 0 720 0C600 0 480 0 360 0C240 0 120 0 60 0H0Z"
-                fill="white"
-              />
+        {/* Talent House / Office Life Section with Toggle */}
+        <div className="relative bg-[#2C2C2C] py-16 md:py-24 overflow-hidden">
+          {/* Decorative circular line graphics */}
+          <div className="absolute top-8 right-8 opacity-20">
+            <svg width="150" height="150" viewBox="0 0 150 150" fill="none">
+              <circle cx="75" cy="75" r="70" stroke="#00D9A5" strokeWidth="1" />
+              <circle cx="75" cy="75" r="50" stroke="#00D9A5" strokeWidth="1" />
+            </svg>
+          </div>
+          <div className="absolute bottom-8 left-8 opacity-20">
+            <svg width="100" height="100" viewBox="0 0 100 100" fill="none">
+              <circle cx="50" cy="50" r="45" stroke="#00D9A5" strokeWidth="1" />
+              <circle cx="50" cy="50" r="30" stroke="#00D9A5" strokeWidth="1" />
             </svg>
           </div>
 
-          <div className="container mx-auto px-4 pt-20 pb-8">
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-5">
-              {/* Plas Logo */}
-              <div className="lg:col-span-1">
-                <div className="flex items-center gap-2 mb-6">
-                  <Image
-                    src="/assets/logos/PlasIcon.png"
-                    alt="Plas Logo"
-                    width={32}
-                    height={32}
-                    className="h-8 w-8"
-                  />
-                  <span className="text-2xl font-bold text-white">Plas</span>
-                </div>
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16 items-center">
+              {/* Left Side - Image (changes based on active section) */}
+              <div className="flex items-center justify-center">
+                {activeSection === 'office-life' ? (
+                  <div 
+                    className="relative h-[550px] w-[450px] overflow-hidden shadow-2xl"
+                    style={{
+                      borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%'
+                    }}
+                  >
+                    <Image
+                      src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=800&fit=crop"
+                      alt="Plas Office Life"
+                      fill
+                      className="object-cover"
+                    />
+                    {/* Green accent strip */}
+                    <div className="absolute bottom-0 left-0 right-0 h-4 bg-[#00D9A5]"></div>
+                  </div>
+                ) : (
+                  <div 
+                    className="relative h-[550px] w-[450px] overflow-hidden shadow-2xl"
+                    style={{
+                      borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%'
+                    }}
+                  >
+                    <Image
+                      src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=800&fit=crop"
+                      alt="Plas Talent House"
+                      fill
+                      className="object-cover"
+                    />
+                    {/* Green accent strip */}
+                    <div className="absolute bottom-0 left-0 right-0 h-4 bg-[#00D9A5]"></div>
+                  </div>
+                )}
               </div>
 
-              {/* About us Column */}
-              <div className="space-y-3">
-                <h3 className="font-bold text-white">About us</h3>
-                <ul className="space-y-2">
-                  <li>
-                    <Link
-                      href="/life-at-plas"
-                      className="text-gray-300 transition-colors hover:text-white"
-                    >
-                      Life at Plas
-                    </Link>
-                  </li>
-                  <li className="ml-4">
-                    <a
-                      href="#"
-                      className="text-gray-300 transition-colors hover:text-white text-sm"
-                    >
-                      Plas Cares
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-gray-300 transition-colors hover:text-white"
-                    >
-                      Diversity & Inclusion
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-gray-300 transition-colors hover:text-white"
-                    >
-                      Our teams
-                    </a>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Careers at Plas Column */}
-              <div className="space-y-3">
-                <h3 className="font-bold text-white">Careers at Plas</h3>
-                <ul className="space-y-2">
-                  <li>
-                    <a
-                      href="#"
-                      className="text-gray-300 transition-colors hover:text-white"
-                    >
-                      Find your ride
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-gray-300 transition-colors hover:text-white"
-                    >
-                      Students
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-gray-300 transition-colors hover:text-white"
-                    >
-                      Woman in tech
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-gray-300 transition-colors hover:text-white"
-                    >
-                      Business Process
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-gray-300 transition-colors hover:text-white"
-                    >
-                      Tech Process
-                    </a>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Our Stories & Locations Column */}
-              <div className="space-y-3">
-                <h3 className="font-bold text-white">Our Stories</h3>
-                <h3 className="font-bold text-white mt-6">Our Locations</h3>
-                <ul className="space-y-2">
-                  <li>
-                    <a
-                      href="#"
-                      className="text-gray-300 transition-colors hover:text-white"
-                    >
-                      Kigali
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-gray-300 transition-colors hover:text-white"
-                    >
-                      Gasabo
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-gray-300 transition-colors hover:text-white"
-                    >
-                      Nyarugenge
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-gray-300 transition-colors hover:text-white"
-                    >
-                      Kampala
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-gray-300 transition-colors hover:text-white"
-                    >
-                      Nairobi
-                    </a>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Contact & Social Media Column */}
-              <div className="space-y-3">
-                <h3 className="font-bold text-white">Contact us</h3>
-                <h3 className="font-bold text-white mt-6">Sign In</h3>
-                <div className="flex gap-3 mt-2">
-                  <a
-                    href="#"
-                    className="text-gray-300 transition-colors hover:text-white"
-                    aria-label="Instagram"
+              {/* Right Side - Text Content (changes based on active section) */}
+              <div className="flex flex-col space-y-6 text-white">
+                {activeSection === 'office-life' ? (
+                  <>
+                    <h2 className="text-4xl font-bold md:text-5xl lg:text-6xl">
+                      Office Life
+                    </h2>
+                    <p className="text-lg leading-relaxed md:text-xl">
+                      We have an <strong>office-first culture</strong> where
+                      collaboration and relationships are placed at the center. We
+                      believe <strong>our culture comes alive and thrives when we get
+                      together and collaborate!</strong>
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="text-4xl font-bold md:text-5xl lg:text-6xl">
+                      The Talent House
+                    </h2>
+                    <p className="text-lg leading-relaxed md:text-xl">
+                      At Plas we are building a talent house of high performing teams and future leaders. We believe that talent is our biggest asset, and being surrounded by top talent will help us raise the bar and create high performing teams, shaping the leaders of tomorrow.
+                    </p>
+                  </>
+                )}
+                
+                {/* Bottom Navigation - Toggle Buttons */}
+                <div className="flex items-center gap-4 text-sm uppercase">
+                  <button
+                    onClick={() => setActiveSection('talent-house')}
+                    className={`transition-colors ${
+                      activeSection === 'talent-house' 
+                        ? 'font-bold text-[#00D9A5]' 
+                        : 'text-gray-400 hover:text-gray-300'
+                    }`}
                   >
-                    <Instagram className="h-5 w-5" />
-                  </a>
-                  <a
-                    href="#"
-                    className="text-gray-300 transition-colors hover:text-white"
-                    aria-label="LinkedIn"
+                    THE TALENT HOUSE
+                  </button>
+                  <button
+                    onClick={() => setActiveSection('office-life')}
+                    className={`transition-colors ${
+                      activeSection === 'office-life' 
+                        ? 'font-bold text-[#00D9A5]' 
+                        : 'text-gray-400 hover:text-gray-300'
+                    }`}
                   >
-                    <Linkedin className="h-5 w-5" />
-                  </a>
-                  <a
-                    href="#"
-                    className="text-gray-300 transition-colors hover:text-white"
-                    aria-label="YouTube"
-                  >
-                    <Youtube className="h-5 w-5" />
-                  </a>
-                  <a
-                    href="#"
-                    className="text-gray-300 transition-colors hover:text-white"
-                    aria-label="Facebook"
-                  >
-                    <Facebook className="h-5 w-5" />
-                  </a>
+                    OFFICE LIFE
+                  </button>
                 </div>
               </div>
             </div>
           </div>
-        </footer>
+        </div>
+
+        {/* Empowering Communities Section */}
+        <div className="bg-white py-16 md:py-24">
+          <div className="container mx-auto px-4">
+            {/* Section Header */}
+            <div className="mb-12 text-center">
+              <div className="mb-4 flex items-center justify-center gap-3">
+                <div className="text-[#00D9A5]">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                  </svg>
+                </div>
+                <h2 className="text-3xl font-bold text-gray-800 md:text-4xl lg:text-5xl">
+                  Empowering communities in the digital world
+                </h2>
+              </div>
+              <p className="mx-auto max-w-3xl text-lg text-gray-700">
+                Find out how Plas is committed to making a positive impact on society, by shaping a social-responsible and eco-friendly growth model!
+              </p>
+            </div>
+
+            {/* Carousel */}
+            <div className="relative max-w-7xl mx-auto">
+              {/* Navigation Arrows */}
+              <button
+                onClick={() => setCurrentSlide((prev) => (prev === 0 ? 3 : prev - 1))}
+                className="absolute left-4 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-gray-200 text-gray-700 transition-colors hover:bg-gray-300"
+                aria-label="Previous slide"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+
+              <button
+                onClick={() => setCurrentSlide((prev) => (prev === 3 ? 0 : prev + 1))}
+                className="absolute right-4 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-gray-200 text-gray-700 transition-colors hover:bg-gray-300"
+                aria-label="Next slide"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+
+              {/* Slides Container */}
+              <div className="overflow-hidden">
+                <div
+                  className="flex transition-transform duration-500 ease-in-out"
+                  style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+                >
+                  {/* Slide 1 - Couriers */}
+                  <div className="min-w-full flex-shrink-0 px-20 py-16">
+                    <div className="flex items-center justify-center gap-16">
+                      {/* Image */}
+                      <div className="flex-shrink-0">
+                        <div className="relative h-[400px] w-[400px] overflow-hidden rounded-full shadow-xl">
+                          <Image
+                            src="https://images.unsplash.com/photo-1526367790999-0150786686a2?w=800&h=800&fit=crop"
+                            alt="Plas Plasers"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      </div>
+                      {/* Text */}
+                      <div className="flex flex-1 flex-col justify-center space-y-6 max-w-md">
+                        <h3 className="text-4xl font-bold text-gray-800 lg:text-5xl">
+                          Plasers
+                        </h3>
+                        <p className="text-lg text-gray-700 leading-relaxed">
+                          Plas is leading the way in improving Plasers' experience by adding extra benefits. By connecting to the platform, Plasers are able to access numerous upskilling and learning opportunities.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Slide 2 - Local Commerce */}
+                  <div className="min-w-full flex-shrink-0 px-20 py-16">
+                    <div className="flex items-center justify-center gap-16">
+                      {/* Text */}
+                      <div className="flex flex-1 flex-col justify-center space-y-6 max-w-md">
+                        <h3 className="text-4xl font-bold text-gray-800 lg:text-5xl">
+                          Local Commerce
+                        </h3>
+                        <p className="text-lg text-gray-700 leading-relaxed">
+                          Small businesses should be able to thrive through our platform. That's why we're safeguarding the city's local commerce and being an enabler for small businesses to grow.
+                        </p>
+                      </div>
+                      {/* Image - Blob Shape */}
+                      <div className="flex-shrink-0">
+                        <div 
+                          className="relative h-[400px] w-[400px] overflow-hidden shadow-xl"
+                          style={{
+                            borderRadius: '63% 37% 54% 46% / 55% 48% 52% 45%'
+                          }}
+                        >
+                          <Image
+                            src="https://images.unsplash.com/photo-1556740758-90de374c12ad?w=800&h=800&fit=crop"
+                            alt="Plas Local Commerce"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Slide 3 - Social Logistics */}
+                  <div className="min-w-full flex-shrink-0 px-20 py-16">
+                    <div className="flex items-center justify-center gap-16">
+                      {/* Text */}
+                      <div className="flex flex-1 flex-col justify-center space-y-6 max-w-md">
+                        <h3 className="text-4xl font-bold text-gray-800 lg:text-5xl">
+                          Social Logistics
+                        </h3>
+                        <p className="text-lg text-gray-700 leading-relaxed">
+                          At Plas, we aim to use our technologies to contribute to society. With the goal of reducing hunger in the communities around us, we support NGOs by means of our technological tools, by helping the food surplus produced by our partners, and by delivering essential goods and social meals.
+                        </p>
+                      </div>
+                      {/* Image */}
+                      <div className="flex-shrink-0">
+                        <div className="relative h-[400px] w-[400px] overflow-hidden rounded-full shadow-xl">
+                          <Image
+                            src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800&h=800&fit=crop"
+                            alt="Plas Social Logistics"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Slide 4 - Environment */}
+                  <div className="min-w-full flex-shrink-0 px-20 py-16">
+                    <div className="flex items-center justify-center gap-16">
+                      {/* Image */}
+                      <div className="flex-shrink-0">
+                        <div className="relative h-[400px] w-[400px] overflow-hidden rounded-full shadow-xl">
+                          <Image
+                            src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&h=800&fit=crop"
+                            alt="Plas Environment"
+                            fill
+                            className="object-cover"
+                          />
+                          {/* Overlay logo */}
+                          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20">
+                            <div className="text-center">
+                              <div className="text-6xl font-bold text-[#00D9A5] drop-shadow-lg">
+                                Plas
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      {/* Text */}
+                      <div className="flex flex-1 flex-col justify-center space-y-6 max-w-md">
+                        <h3 className="text-4xl font-bold text-gray-800 lg:text-5xl">
+                          Environment
+                        </h3>
+                        <p className="text-lg text-gray-700 leading-relaxed">
+                          Plas has been carbon neutral since 2024. Yet, we keep accelerating the transition towards environmental sustainability, by boosting sustainable packaging, reducing CO2 emissions from vehicles, and eradicating food waste.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pagination Dots */}
+              <div className="mt-8 flex justify-center gap-2">
+                {[0, 1, 2, 3].map((index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentSlide(index)}
+                    className={`h-3 w-3 rounded-full transition-colors ${
+                      index === currentSlide ? "bg-[#00D9A5]" : "bg-gray-300"
+                    }`}
+                    aria-label={`Go to slide ${index + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <AboutFooter />
       </div>
     </>
   );

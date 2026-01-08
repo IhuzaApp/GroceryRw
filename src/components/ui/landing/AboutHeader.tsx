@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { Search } from "lucide-react";
 
-export default function AboutHeader() {
+interface AboutHeaderProps {
+  activePage?: "about" | "life-at-plas" | "diversity" | "teams" | "careers" | "stories" | "locations" | "contact";
+}
+
+export default function AboutHeader({ activePage = "about" }: AboutHeaderProps) {
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -47,18 +51,28 @@ export default function AboutHeader() {
           <nav className="hidden items-center gap-6 md:flex">
             <Link
               href="/about"
-              className={`border-b-2 pb-1 font-medium transition-colors ${
-                isScrolled
-                  ? "border-[#00D9A5] text-[#00D9A5]"
-                  : "border-[#00D9A5] text-white"
+              className={`${activePage === "about" ? "border-b-2 pb-1" : ""} font-medium transition-colors ${
+                activePage === "about"
+                  ? isScrolled
+                    ? "border-[#00D9A5] text-[#00D9A5]"
+                    : "border-[#00D9A5] text-white"
+                  : isScrolled
+                    ? "text-gray-700 hover:text-[#00D9A5]"
+                    : "text-white/90 hover:text-white"
               }`}
             >
               About us
             </Link>
             <Link
               href="/life-at-plas"
-              className={`font-medium transition-colors ${
-                isScrolled ? "text-gray-700 hover:text-[#00D9A5]" : "text-white/90 hover:text-white"
+              className={`${activePage === "life-at-plas" ? "border-b-2 pb-1" : ""} font-medium transition-colors ${
+                activePage === "life-at-plas"
+                  ? isScrolled
+                    ? "border-[#00D9A5] text-[#00D9A5]"
+                    : "border-[#00D9A5] text-white"
+                  : isScrolled
+                    ? "text-gray-700 hover:text-[#00D9A5]"
+                    : "text-white/90 hover:text-white"
               }`}
             >
               Life at Plas
