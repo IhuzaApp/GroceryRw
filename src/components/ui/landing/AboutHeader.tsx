@@ -117,14 +117,20 @@ export default function AboutHeader({ activePage = "about" }: AboutHeaderProps) 
             >
               Our locations
             </a>
-            <a
-              href="#"
-              className={`font-medium transition-colors ${
-                isScrolled ? "text-gray-700 hover:text-[#00D9A5]" : "text-white/90 hover:text-white"
+            <Link
+              href="/contact"
+              className={`${activePage === "contact" ? "border-b-2 pb-1" : ""} font-medium transition-colors ${
+                activePage === "contact"
+                  ? isScrolled
+                    ? "border-[#00D9A5] text-[#00D9A5]"
+                    : "border-[#00D9A5] text-white"
+                  : isScrolled
+                    ? "text-gray-700 hover:text-[#00D9A5]"
+                    : "text-white/90 hover:text-white"
               }`}
             >
               Contact us
-            </a>
+            </Link>
           </nav>
 
           {/* Action Buttons */}
