@@ -5,12 +5,36 @@ export default function JobsCarouselSection() {
   const [currentJob, setCurrentJob] = useState(0);
 
   const jobs = [
-    { title: "Delivery Rider - Kenya", location: "Nairobi, Kenya", pronouns: "(They/She/He)" },
-    { title: "Account Manager - Uganda", location: "Kampala, Uganda", pronouns: "(She/He/They)" },
-    { title: "Junior Developer - Rwanda", location: "Kigali, Rwanda", pronouns: "(They/She/He)" },
-    { title: "Operations Manager - Rwanda", location: "Gasabo, Rwanda", pronouns: "(She/He/They)" },
-    { title: "Marketing Specialist - Rwanda", location: "Nyarugenge, Rwanda", pronouns: "(They/She/He)" },
-    { title: "Customer Support - Kenya", location: "Nairobi, Kenya", pronouns: "(She/He/They)" },
+    {
+      title: "Delivery Rider - Kenya",
+      location: "Nairobi, Kenya",
+      pronouns: "(They/She/He)",
+    },
+    {
+      title: "Account Manager - Uganda",
+      location: "Kampala, Uganda",
+      pronouns: "(She/He/They)",
+    },
+    {
+      title: "Junior Developer - Rwanda",
+      location: "Kigali, Rwanda",
+      pronouns: "(They/She/He)",
+    },
+    {
+      title: "Operations Manager - Rwanda",
+      location: "Gasabo, Rwanda",
+      pronouns: "(She/He/They)",
+    },
+    {
+      title: "Marketing Specialist - Rwanda",
+      location: "Nyarugenge, Rwanda",
+      pronouns: "(They/She/He)",
+    },
+    {
+      title: "Customer Support - Kenya",
+      location: "Nairobi, Kenya",
+      pronouns: "(She/He/They)",
+    },
   ];
 
   return (
@@ -74,24 +98,25 @@ export default function JobsCarouselSection() {
 
           {/* Pagination Dots */}
           <div className="mt-8 flex justify-center gap-2">
-            {Array.from({ length: Math.ceil(jobs.length / 3) }).map((_, index) => {
-              const pageStart = index * 3;
-              const isActive = Math.floor(currentJob / 3) === index;
-              return (
-                <button
-                  key={index}
-                  onClick={() => setCurrentJob(pageStart)}
-                  className={`h-3 w-3 rounded-full transition-colors ${
-                    isActive ? "bg-gray-800" : "bg-gray-300"
-                  }`}
-                  aria-label={`Go to page ${index + 1}`}
-                />
-              );
-            })}
+            {Array.from({ length: Math.ceil(jobs.length / 3) }).map(
+              (_, index) => {
+                const pageStart = index * 3;
+                const isActive = Math.floor(currentJob / 3) === index;
+                return (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentJob(pageStart)}
+                    className={`h-3 w-3 rounded-full transition-colors ${
+                      isActive ? "bg-gray-800" : "bg-gray-300"
+                    }`}
+                    aria-label={`Go to page ${index + 1}`}
+                  />
+                );
+              }
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 }
-

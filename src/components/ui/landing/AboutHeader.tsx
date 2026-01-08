@@ -5,10 +5,20 @@ import { useRouter } from "next/router";
 import { Search } from "lucide-react";
 
 interface AboutHeaderProps {
-  activePage?: "about" | "life-at-plas" | "diversity" | "teams" | "careers" | "stories" | "locations" | "contact";
+  activePage?:
+    | "about"
+    | "life-at-plas"
+    | "diversity"
+    | "teams"
+    | "careers"
+    | "stories"
+    | "locations"
+    | "contact";
 }
 
-export default function AboutHeader({ activePage = "about" }: AboutHeaderProps) {
+export default function AboutHeader({
+  activePage = "about",
+}: AboutHeaderProps) {
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -51,28 +61,32 @@ export default function AboutHeader({ activePage = "about" }: AboutHeaderProps) 
           <nav className="hidden items-center gap-6 md:flex">
             <Link
               href="/about"
-              className={`${activePage === "about" ? "border-b-2 pb-1" : ""} font-medium transition-colors ${
+              className={`${
+                activePage === "about" ? "border-b-2 pb-1" : ""
+              } font-medium transition-colors ${
                 activePage === "about"
                   ? isScrolled
                     ? "border-[#00D9A5] text-[#00D9A5]"
                     : "border-[#00D9A5] text-white"
                   : isScrolled
-                    ? "text-gray-700 hover:text-[#00D9A5]"
-                    : "text-white/90 hover:text-white"
+                  ? "text-gray-700 hover:text-[#00D9A5]"
+                  : "text-white/90 hover:text-white"
               }`}
             >
               About us
             </Link>
             <Link
               href="/life-at-plas"
-              className={`${activePage === "life-at-plas" ? "border-b-2 pb-1" : ""} font-medium transition-colors ${
+              className={`${
+                activePage === "life-at-plas" ? "border-b-2 pb-1" : ""
+              } font-medium transition-colors ${
                 activePage === "life-at-plas"
                   ? isScrolled
                     ? "border-[#00D9A5] text-[#00D9A5]"
                     : "border-[#00D9A5] text-white"
                   : isScrolled
-                    ? "text-gray-700 hover:text-[#00D9A5]"
-                    : "text-white/90 hover:text-white"
+                  ? "text-gray-700 hover:text-[#00D9A5]"
+                  : "text-white/90 hover:text-white"
               }`}
             >
               Life at Plas
@@ -80,7 +94,9 @@ export default function AboutHeader({ activePage = "about" }: AboutHeaderProps) 
             <a
               href="#"
               className={`font-medium transition-colors ${
-                isScrolled ? "text-gray-700 hover:text-[#00D9A5]" : "text-white/90 hover:text-white"
+                isScrolled
+                  ? "text-gray-700 hover:text-[#00D9A5]"
+                  : "text-white/90 hover:text-white"
               }`}
             >
               Diversity & Inclusion
@@ -88,7 +104,9 @@ export default function AboutHeader({ activePage = "about" }: AboutHeaderProps) 
             <a
               href="#"
               className={`font-medium transition-colors ${
-                isScrolled ? "text-gray-700 hover:text-[#00D9A5]" : "text-white/90 hover:text-white"
+                isScrolled
+                  ? "text-gray-700 hover:text-[#00D9A5]"
+                  : "text-white/90 hover:text-white"
               }`}
             >
               Our teams
@@ -96,7 +114,9 @@ export default function AboutHeader({ activePage = "about" }: AboutHeaderProps) 
             <Link
               href="/careers"
               className={`font-medium transition-colors ${
-                isScrolled ? "text-gray-700 hover:text-[#00D9A5]" : "text-white/90 hover:text-white"
+                isScrolled
+                  ? "text-gray-700 hover:text-[#00D9A5]"
+                  : "text-white/90 hover:text-white"
               }`}
             >
               Careers at Plas
@@ -104,7 +124,9 @@ export default function AboutHeader({ activePage = "about" }: AboutHeaderProps) 
             <a
               href="#"
               className={`font-medium transition-colors ${
-                isScrolled ? "text-gray-700 hover:text-[#00D9A5]" : "text-white/90 hover:text-white"
+                isScrolled
+                  ? "text-gray-700 hover:text-[#00D9A5]"
+                  : "text-white/90 hover:text-white"
               }`}
             >
               Stories
@@ -112,21 +134,25 @@ export default function AboutHeader({ activePage = "about" }: AboutHeaderProps) 
             <a
               href="#"
               className={`font-medium transition-colors ${
-                isScrolled ? "text-gray-700 hover:text-[#00D9A5]" : "text-white/90 hover:text-white"
+                isScrolled
+                  ? "text-gray-700 hover:text-[#00D9A5]"
+                  : "text-white/90 hover:text-white"
               }`}
             >
               Our locations
             </a>
             <Link
               href="/contact"
-              className={`${activePage === "contact" ? "border-b-2 pb-1" : ""} font-medium transition-colors ${
+              className={`${
+                activePage === "contact" ? "border-b-2 pb-1" : ""
+              } font-medium transition-colors ${
                 activePage === "contact"
                   ? isScrolled
                     ? "border-[#00D9A5] text-[#00D9A5]"
                     : "border-[#00D9A5] text-white"
                   : isScrolled
-                    ? "text-gray-700 hover:text-[#00D9A5]"
-                    : "text-white/90 hover:text-white"
+                  ? "text-gray-700 hover:text-[#00D9A5]"
+                  : "text-white/90 hover:text-white"
               }`}
             >
               Contact us
@@ -161,4 +187,3 @@ export default function AboutHeader({ activePage = "about" }: AboutHeaderProps) 
     </header>
   );
 }
-

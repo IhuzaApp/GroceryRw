@@ -9,31 +9,38 @@ export default function FAQSection() {
   const faqs = [
     {
       question: "When will I receive the information for my onboarding?",
-      answer: "You will receive all onboarding information via email within 24-48 hours after accepting your offer. This includes your start date, required documents, and access credentials.",
+      answer:
+        "You will receive all onboarding information via email within 24-48 hours after accepting your offer. This includes your start date, required documents, and access credentials.",
     },
     {
       question: "What are Plas's values?",
-      answer: "Our core values are Gas, Good Vibes, Stay Humble, Deep Dive, Glownership, and High Bar. These values guide our behaviors, processes, and mindset every day.",
+      answer:
+        "Our core values are Gas, Good Vibes, Stay Humble, Deep Dive, Glownership, and High Bar. These values guide our behaviors, processes, and mindset every day.",
     },
     {
       question: "What does a typical day look like at Plas?",
-      answer: "A typical day at Plas is dynamic and fast-paced. You'll collaborate with talented colleagues, work on impactful projects, and have opportunities to learn and grow. We value work-life balance and provide flexibility to help you perform at your best.",
+      answer:
+        "A typical day at Plas is dynamic and fast-paced. You'll collaborate with talented colleagues, work on impactful projects, and have opportunities to learn and grow. We value work-life balance and provide flexibility to help you perform at your best.",
     },
     {
       question: "Do you offer health insurance?",
-      answer: "Yes, we offer comprehensive health insurance coverage for all full-time employees, including medical, dental, and vision benefits. Coverage begins on your first day of employment.",
+      answer:
+        "Yes, we offer comprehensive health insurance coverage for all full-time employees, including medical, dental, and vision benefits. Coverage begins on your first day of employment.",
     },
     {
       question: "Is the onboarding process done remotely?",
-      answer: "The onboarding process can be done both remotely and in-person, depending on your role and location. We provide comprehensive virtual onboarding resources and support for all new team members.",
+      answer:
+        "The onboarding process can be done both remotely and in-person, depending on your role and location. We provide comprehensive virtual onboarding resources and support for all new team members.",
     },
     {
       question: "Where can I get more information about working at Plas?",
-      answer: "You can find more information about working at Plas on our careers page, read our Green Book, or reach out to our People Experience team. We also encourage you to check out our social media channels for insights into our culture.",
+      answer:
+        "You can find more information about working at Plas on our careers page, read our Green Book, or reach out to our People Experience team. We also encourage you to check out our social media channels for insights into our culture.",
     },
     {
       question: "What's it like to work at Plas?",
-      answer: "Working at Plas is an exciting journey! We're a fast-growing company with a non-vanilla culture built on talent. You'll work with passionate people, tackle challenging projects, and make a real impact on millions of people's lives. It's truly the ride of your life!",
+      answer:
+        "Working at Plas is an exciting journey! We're a fast-growing company with a non-vanilla culture built on talent. You'll work with passionate people, tackle challenging projects, and make a real impact on millions of people's lives. It's truly the ride of your life!",
     },
   ];
 
@@ -44,7 +51,7 @@ export default function FAQSection() {
         <h2 className="mb-4 text-center text-4xl font-bold text-gray-800 md:text-5xl lg:text-6xl">
           Ask Plas
         </h2>
-        
+
         {/* Description */}
         <p className="mb-12 text-center text-lg text-gray-700 md:text-xl">
           Our vision is to give everyone easy access to anything in their city.
@@ -75,9 +82,7 @@ export default function FAQSection() {
               </button>
               {openFaq === index && (
                 <div className="border-t border-gray-200 px-6 pb-6 pt-4">
-                  <p className="text-gray-700 leading-relaxed">
-                    {faq.answer}
-                  </p>
+                  <p className="leading-relaxed text-gray-700">{faq.answer}</p>
                 </div>
               )}
             </div>
@@ -100,4 +105,3 @@ export default function FAQSection() {
     </div>
   );
 }
-
