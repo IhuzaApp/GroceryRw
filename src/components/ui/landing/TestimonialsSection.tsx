@@ -9,19 +9,22 @@ export default function TestimonialsSection() {
       text: "I've been giving my 110% on projects that have helped me develop my skills and grow day after day. From three fundraising processes to several M&A opportunities across different verticals and geographies, I certainly feel that being part of such transformational work at Plas has been a unique lifetime opportunity and I'm very excited about what's to come!",
       author: "Laura Martín",
       role: "Head of International Strategy",
-      image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
+      image:
+        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
     },
     {
       text: "I feel very grateful because they have become more than some colleagues. The trust they place in me is making me grow every day, I have learned to work as a team and I have more and more responsibilities.",
       author: "Jordi Sevillano",
       role: "People Experience Team",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
+      image:
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
     },
     {
       text: "I joined Plas at a very early stage of the company. My biggest challenge during these 4 years has been adapting to the growth and changes and giving my best during this adventure. We started building tripods with cereal boxes for shootings, and now we launch TVC campaigns almost every quarter around the world! This amazing journey has been so intense that now I have green blood inside my veins.",
       author: "María Herraiz Sabate",
       role: "Sr. Designer",
-      image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop",
+      image:
+        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop",
     },
   ];
 
@@ -71,8 +74,12 @@ export default function TestimonialsSection() {
                         />
                       </div>
                       <div>
-                        <p className="font-bold text-gray-800">{testimonial.author}</p>
-                        <p className="text-sm text-gray-600">{testimonial.role}</p>
+                        <p className="font-bold text-gray-800">
+                          {testimonial.author}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {testimonial.role}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -88,9 +95,7 @@ export default function TestimonialsSection() {
                 key={index}
                 onClick={() => setCurrentTestimonial(index)}
                 className={`h-3 w-3 rounded-full transition-colors ${
-                  currentTestimonial === index
-                    ? "bg-[#00D9A5]"
-                    : "bg-gray-300"
+                  currentTestimonial === index ? "bg-[#00D9A5]" : "bg-gray-300"
                 }`}
                 aria-label={`Go to testimonial ${index + 1}`}
               />
@@ -101,4 +106,3 @@ export default function TestimonialsSection() {
     </div>
   );
 }
-

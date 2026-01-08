@@ -15,11 +15,11 @@ export default function CompanyStatisticsSection() {
                 </div>
               </div>
             </div>
-            <div className="mb-2 text-5xl font-bold text-gray-800">23</div>
+            <div className="mb-2 text-5xl font-bold text-gray-800">4</div>
             <div className="text-lg text-gray-700">Countries</div>
           </div>
 
-          {/* 120K Active Couriers */}
+          {/* 120K Active Plasers */}
           <div className="flex flex-col items-center text-center">
             <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-md">
               <div className="relative">
@@ -27,8 +27,8 @@ export default function CompanyStatisticsSection() {
                 <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-[#00D9A5]"></div>
               </div>
             </div>
-            <div className="mb-2 text-5xl font-bold text-gray-800">120K</div>
-            <div className="text-lg text-gray-700">Active Couriers</div>
+            <div className="mb-2 text-5xl font-bold text-gray-800">125</div>
+            <div className="text-lg text-gray-700">Active Plasers</div>
           </div>
 
           {/* 150K Shops & Restaurants */}
@@ -36,10 +36,10 @@ export default function CompanyStatisticsSection() {
             <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-md">
               <div className="relative">
                 <Store className="h-10 w-10 text-gray-800" />
-                <div className="absolute -top-1 left-1/2 -translate-x-1/2 h-4 w-8 rounded-t-full bg-[#00D9A5]"></div>
+                <div className="absolute -top-1 left-1/2 h-4 w-8 -translate-x-1/2 rounded-t-full bg-[#00D9A5]"></div>
               </div>
             </div>
-            <div className="mb-2 text-5xl font-bold text-gray-800">150K</div>
+            <div className="mb-2 text-5xl font-bold text-gray-800">98</div>
             <div className="text-lg text-gray-700">Shops & Restaurants</div>
           </div>
 
@@ -48,10 +48,10 @@ export default function CompanyStatisticsSection() {
             <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-md">
               <div className="relative">
                 <Briefcase className="h-10 w-10 text-gray-800" />
-                <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-[#00D9A5]"></div>
+                <div className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-[#00D9A5]"></div>
               </div>
             </div>
-            <div className="mb-2 text-5xl font-bold text-gray-800">3K</div>
+            <div className="mb-2 text-5xl font-bold text-gray-800">37</div>
             <div className="text-lg text-gray-700">Employees</div>
           </div>
         </div>
@@ -59,4 +59,3 @@ export default function CompanyStatisticsSection() {
     </div>
   );
 }
-

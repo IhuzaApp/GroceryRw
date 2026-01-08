@@ -44,8 +44,8 @@ export default function RideOfYourLifeSection() {
             </h2>
             <div className="space-y-4 text-lg leading-relaxed text-gray-800">
               <p>
-                If you&apos;re here, it&apos;s because you&apos;re looking for an{" "}
-                <span className="font-bold">exciting ride.</span>
+                If you&apos;re here, it&apos;s because you&apos;re looking for
+                an <span className="font-bold">exciting ride.</span>
               </p>
               <p>
                 A ride that will fuel up your ambitions to take on a{" "}
@@ -57,14 +57,13 @@ export default function RideOfYourLifeSection() {
               <p>
                 We&apos;ll deliver a{" "}
                 <span className="font-bold">
-                  non-vanilla culture built on talent, where we work to
-                  amplify the impact on millions of people,
+                  non-vanilla culture built on talent, where we work to amplify
+                  the impact on millions of people,
                 </span>{" "}
                 paving the way forward together.
               </p>
               <p>
-                So, ready to take the wheel and make this The Ride of your
-                Life?
+                So, ready to take the wheel and make this The Ride of your Life?
               </p>
             </div>
           </div>
@@ -73,4 +72,3 @@ export default function RideOfYourLifeSection() {
     </div>
   );
 }
-

@@ -21,11 +21,11 @@ export default function AboutFooter() {
         </svg>
       </div>
 
-      <div className="container mx-auto px-4 pt-20 pb-8">
+      <div className="container mx-auto px-4 pb-8 pt-20">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-5">
           {/* Plas Logo */}
           <div className="lg:col-span-1">
-            <div className="flex items-center gap-2 mb-6">
+            <div className="mb-6 flex items-center gap-2">
               <Image
                 src="/assets/logos/PlasIcon.png"
                 alt="Plas Logo"
@@ -52,7 +52,7 @@ export default function AboutFooter() {
               <li className="ml-4">
                 <a
                   href="#"
-                  className="text-gray-300 transition-colors hover:text-white text-sm"
+                  className="text-sm text-gray-300 transition-colors hover:text-white"
                 >
                   Plas Cares
                 </a>
@@ -126,7 +126,7 @@ export default function AboutFooter() {
           {/* Our Stories & Locations Column */}
           <div className="space-y-3">
             <h3 className="font-bold text-white">Our Stories</h3>
-            <h3 className="font-bold text-white mt-6">Our Locations</h3>
+            <h3 className="mt-6 font-bold text-white">Our Locations</h3>
             <ul className="space-y-2">
               <li>
                 <a
@@ -174,8 +174,8 @@ export default function AboutFooter() {
           {/* Contact & Social Media Column */}
           <div className="space-y-3">
             <h3 className="font-bold text-white">Contact us</h3>
-            <h3 className="font-bold text-white mt-6">Sign In</h3>
-            <div className="flex gap-3 mt-2">
+            <h3 className="mt-6 font-bold text-white">Sign In</h3>
+            <div className="mt-2 flex gap-3">
               <a
                 href="#"
                 className="text-gray-300 transition-colors hover:text-white"
@@ -211,4 +211,3 @@ export default function AboutFooter() {
     </footer>
   );
 }
-
