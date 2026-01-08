@@ -111,23 +111,23 @@ export default function ContactPage() {
                 const iconIndex = index % 5;
                 const iconComponents = [
                   // Burger
-                  <svg key={`burger-${index}`} className="h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg key={`burger-${index}`} color="white" className="h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>,
                   // Shopping bag
-                  <svg key={`bag-${index}`} className="h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg key={`bag-${index}`} color="white" className="h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                   </svg>,
                   // Scooter
-                  <svg key={`scooter-${index}`} className="h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg key={`scooter-${index}`} color="white" className="h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>,
                   // Phone
-                  <svg key={`phone-${index}`} className="h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg key={`phone-${index}`} color="white" className="h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>,
                   // Package
-                  <svg key={`package-${index}`} className="h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg key={`package-${index}`} color="white" className="h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>,
                 ];
@@ -303,7 +303,7 @@ export default function ContactPage() {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full rounded-lg bg-dark-green px-8 py-4 text-lg font-medium text-gray-700 transition-colors hover:bg-[#00C896] disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
+                      className="w-full rounded-lg bg-[#00D9A5] px-8 py-4 text-lg font-medium text-gray-700 transition-colors hover:bg-[#00C896] disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
                     >
                       {isSubmitting ? "Sending..." : "Ask"}
                     </button>
