@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import { Search, User, Linkedin, Youtube, Facebook, Instagram, Globe, Briefcase, Store, Package, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 
@@ -118,7 +119,7 @@ export default function AboutPage() {
 
               {/* Navigation Links */}
               <nav className="hidden items-center gap-6 md:flex">
-                <a
+                <Link
                   href="/about"
                   className={`border-b-2 pb-1 font-medium transition-colors ${
                     isScrolled
@@ -127,15 +128,15 @@ export default function AboutPage() {
                   }`}
                 >
                   About us
-                </a>
-                <a
-                  href="#"
+                </Link>
+                <Link
+                  href="/life-at-plas"
                   className={`font-medium transition-colors ${
                     isScrolled ? "text-gray-700 hover:text-[#00D9A5]" : "text-white/90 hover:text-white"
                   }`}
                 >
                   Life at Plas
-                </a>
+                </Link>
                 <a
                   href="#"
                   className={`font-medium transition-colors ${
@@ -152,14 +153,14 @@ export default function AboutPage() {
                 >
                   Our teams
                 </a>
-                <a
+                <Link
                   href="/careers"
                   className={`font-medium transition-colors ${
                     isScrolled ? "text-gray-700 hover:text-[#00D9A5]" : "text-white/90 hover:text-white"
                   }`}
                 >
                   Careers at Plas
-                </a>
+                </Link>
                 <a
                   href="#"
                   className={`font-medium transition-colors ${
@@ -995,12 +996,12 @@ export default function AboutPage() {
                 <h3 className="font-bold text-white">About us</h3>
                 <ul className="space-y-2">
                   <li>
-                    <a
-                      href="#"
+                    <Link
+                      href="/life-at-plas"
                       className="text-gray-300 transition-colors hover:text-white"
                     >
                       Life at Plas
-                    </a>
+                    </Link>
                   </li>
                   <li className="ml-4">
                     <a
