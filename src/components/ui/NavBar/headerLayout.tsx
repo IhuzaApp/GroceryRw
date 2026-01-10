@@ -17,10 +17,12 @@ import {
 import { db } from "../../../lib/firebase";
 import SearchBar from "../SearchBar/SearchBar";
 import { authenticatedFetch } from "../../../lib/authenticatedFetch";
+import { useAuth } from "../../../hooks/useAuth";
 
 export default function HeaderLayout() {
   const { count } = useCart();
   const { data: session } = useSession();
+  const { isGuest } = useAuth();
   const { theme, setTheme } = useTheme();
   const [defaultAddress, setDefaultAddress] = useState<{
     street: string;
@@ -225,6 +227,28 @@ export default function HeaderLayout() {
 
           {/* Right actions - Desktop only */}
           <div className="flex items-center gap-4">
+            {/* Guest Badge */}
+            {isGuest && (
+              <div className="flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-100 to-yellow-100 px-3 py-1.5 dark:from-orange-900/30 dark:to-yellow-900/30">
+                <svg
+                  className="h-4 w-4 text-orange-600 dark:text-orange-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+                <span className="text-sm font-semibold text-orange-700 dark:text-orange-300">
+                  Guest
+                </span>
+              </div>
+            )}
+
             {/* Theme Switch */}
             <button
               onClick={handleThemeToggle}

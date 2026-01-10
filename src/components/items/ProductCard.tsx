@@ -6,6 +6,7 @@ import { useCart } from "../../context/CartContext";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import toast from "react-hot-toast";
+import GuestAuthModal, { GuestUserData } from "../ui/GuestAuthModal";
 
 interface ProductCardProps {
   id: string;
@@ -48,25 +49,23 @@ export default function ProductCard({
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showGuestModal, setShowGuestModal] = useState(false);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [isModalTransitioning, setIsModalTransitioning] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{
+    type: "quick" | "modal";
+    quantity: number;
+  } | null>(null);
 
   const handleQuickAdd = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
     if (status === "loading") return;
     if (status === "unauthenticated") {
-      localStorage.setItem(
-        "pendingCartAction",
-        JSON.stringify({
-          shopId,
-          productId: id,
-          quantity: 1,
-          price: final_price, // Add price to pending action
-        })
-      );
-      router.push(`/auth/login?redirect=${encodeURIComponent(router.asPath)}`);
+      // Show guest modal instead of redirecting
+      setPendingAction({ type: "quick", quantity: 1 });
+      setShowGuestModal(true);
       return;
     }
 
@@ -110,6 +109,12 @@ export default function ProductCard({
     } finally {
       setIsAdding(false);
     }
+  };
+
+  const handleGuestContinue = async (guestData: GuestUserData) => {
+    // Guest account created and logged in
+    // The modal will handle the auto-login and page refresh
+    // After refresh, the session will be available
   };
 
   return (
@@ -329,19 +334,13 @@ export default function ProductCard({
                   e.stopPropagation();
                   if (status === "loading") return;
                   if (status === "unauthenticated") {
-                    localStorage.setItem(
-                      "pendingCartAction",
-                      JSON.stringify({
-                        shopId,
-                        productId: id,
-                        quantity: selectedQuantity,
-                      })
-                    );
-                    router.push(
-                      `/auth/login?redirect=${encodeURIComponent(
-                        router.asPath
-                      )}`
-                    );
+                    // Show guest modal instead of redirecting
+                    setPendingAction({
+                      type: "modal",
+                      quantity: selectedQuantity,
+                    });
+                    setShowModal(false);
+                    setShowGuestModal(true);
                     return;
                   }
 
@@ -606,6 +605,16 @@ export default function ProductCard({
           </div>
         </div>
       )}
+
+      {/* Guest Auth Modal */}
+      <GuestAuthModal
+        isOpen={showGuestModal}
+        onClose={() => {
+          setShowGuestModal(false);
+          setPendingAction(null);
+        }}
+        onGuestContinue={handleGuestContinue}
+      />
     </>
   );
 }

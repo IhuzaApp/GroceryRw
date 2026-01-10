@@ -77,7 +77,7 @@ export default function CategoriesSection({
                   filter: "drop-shadow(0 2px 4px rgba(255, 255, 255, 0.2))",
                 }}
               />
-              
+
               {/* Basket Body */}
               <div
                 className="relative mx-auto flex h-16 w-20 items-center justify-center overflow-hidden rounded-lg border-2 border-white bg-gradient-to-b from-white to-gray-50 transition-all duration-300 md:h-20 md:w-24"
@@ -92,7 +92,7 @@ export default function CategoriesSection({
                   className="absolute left-0 right-0 top-0 h-1 bg-gradient-to-b from-gray-200 to-transparent opacity-50"
                   style={{ borderRadius: "8px 8px 0 0" }}
                 />
-                
+
                 {/* Subtle Basket Texture */}
                 <div
                   className="absolute inset-0 opacity-5"
@@ -115,7 +115,7 @@ export default function CategoriesSection({
                     `,
                   }}
                 />
-                
+
                 {/* Category Icon */}
                 <div className="relative z-10 flex scale-110 items-center justify-center transition-transform duration-300 group-hover:scale-125">
                   <CategoryIcon category={category.name} />

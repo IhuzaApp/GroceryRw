@@ -49,6 +49,7 @@ export const authOptions: NextAuthOptions = {
                 is_active
                 profile_picture
                 updated_at
+                is_guest
               }
             }
           `;
@@ -72,6 +73,7 @@ export const authOptions: NextAuthOptions = {
                 is_active
                 profile_picture
                 updated_at
+                is_guest
               }
             }
           `;
@@ -92,6 +94,7 @@ export const authOptions: NextAuthOptions = {
                 is_active
                 profile_picture
                 updated_at
+                is_guest
               }
             }
           `;
@@ -107,6 +110,7 @@ export const authOptions: NextAuthOptions = {
             phone: string;
             gender: string;
             role: string;
+            is_guest?: boolean;
           }>;
         }>(query, variables);
         const user = res.Users[0];
@@ -124,6 +128,7 @@ export const authOptions: NextAuthOptions = {
           phone: user.phone,
           gender: user.gender,
           role: user.role,
+          is_guest: user.is_guest || false,
         } as any;
       },
     }),
@@ -179,29 +184,32 @@ export const authOptions: NextAuthOptions = {
         token.phone = (user as any).phone;
         token.gender = (user as any).gender;
         token.role = (user as any).role;
+        token.is_guest = (user as any).is_guest || false;
       } else if (token.id) {
         // If no user but we have a token ID, fetch the latest user data
-        // This ensures we always have the latest role
+        // This ensures we always have the latest role and guest status
         try {
           const query = gql`
             query GetUserById($id: uuid!) {
               Users_by_pk(id: $id) {
                 id
                 role
+                is_guest
               }
             }
           `;
 
           const res = await hasuraClient.request<{
-            Users_by_pk: { id: string; role: string };
+            Users_by_pk: { id: string; role: string; is_guest?: boolean };
           }>(query, { id: token.id });
 
           if (res.Users_by_pk) {
-            // Update the role in the token
+            // Update the role and guest status in the token
             token.role = res.Users_by_pk.role;
+            token.is_guest = res.Users_by_pk.is_guest || false;
           }
         } catch (error) {
-          console.error("Error fetching user role:", error);
+          console.error("Error fetching user data:", error);
         }
       }
       return token;
@@ -217,6 +225,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).phone = (token as any).phone;
         (session.user as any).gender = (token as any).gender;
         (session.user as any).role = (token as any).role;
+        (session.user as any).is_guest = (token as any).is_guest || false;
       }
       return session;
     },

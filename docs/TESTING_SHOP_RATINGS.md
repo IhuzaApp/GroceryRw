@@ -1,36 +1,45 @@
 # Testing Shop Ratings & Delivery Fees - Debug Guide
 
 ## Issue
+
 Shop cards were showing "N/A" for ratings even though ratings exist in the database.
 
 ## Fixes Applied
 
 ### 1. Fixed API Query Structure
+
 **Before:** Querying Orders and trying to get Ratings as nested relationship
 **After:** Querying Ratings directly and getting Order.shop_id relationship
 
 ### 2. Added Default Values
+
 Fixed TypeScript errors by adding `rating: 0` and `ratingCount: 0` to default dynamics object in:
+
 - `DesktopUserDashboard.tsx`
 - `MobileUserDashboard.tsx`
 - `UserDashboard.tsx`
 
 ### 3. Added Debug Logging
+
 Added console logs to help identify issues:
+
 - In `/api/queries/shop-ratings` - logs number of ratings processed
 - In `UserDashboardLogic` - logs fetched ratings and shop IDs
 
 ## How to Test
 
 ### Step 1: Check API Endpoint
+
 Open your browser console and run:
+
 ```javascript
-fetch('/api/queries/shop-ratings')
-  .then(r => r.json())
-  .then(data => console.log('Ratings API:', data));
+fetch("/api/queries/shop-ratings")
+  .then((r) => r.json())
+  .then((data) => console.log("Ratings API:", data));
 ```
 
 **Expected Output:**
+
 ```json
 {
   "ratings": [
@@ -45,7 +54,9 @@ fetch('/api/queries/shop-ratings')
 ```
 
 ### Step 2: Check Shop IDs Match
+
 In the browser console, look for these logs when the page loads:
+
 ```
 Fetched shop ratings: [...]
 Ratings map created: {...}
@@ -59,17 +70,22 @@ Calculated Rating: X Count: Y
 ```
 
 **What to Check:**
+
 1. Does the "Shop ID" match any of the IDs in "All Shop Ratings available"?
 2. If NO match → The shop_id in Orders table doesn't match the shop.id
 3. If YES match → Ratings should display correctly
 
 ### Step 3: Verify Display
+
 Look at shop cards on the dashboard:
+
 - **Before fix:** "N/A (0)"
 - **After fix:** "75% (8)" or "New (0)" if no ratings
 
 ### Step 4: Check Server Logs
+
 In your terminal (where Next.js is running), look for:
+
 ```
 Processing X ratings...
 First rating data: {
@@ -83,12 +99,15 @@ Found X shops with ratings: [...]
 ## Common Issues & Solutions
 
 ### Issue 1: "No ratings data received"
+
 **Cause:** API endpoint is failing
 **Solution:** Check Hasura connection and GraphQL query
 
 ### Issue 2: Shop IDs Don't Match
+
 **Cause:** Orders.shop_id might be null or different from Shops.id
 **Solution:** Check your database:
+
 ```sql
 -- Check if shop_id exists in Orders
 SELECT DISTINCT shop_id FROM "Orders" WHERE shop_id IS NOT NULL;
@@ -100,12 +119,15 @@ SELECT id, name FROM "Shops" WHERE id IN (
 ```
 
 ### Issue 3: Still Showing "N/A" or "New"
+
 **Possible Causes:**
+
 1. No ratings for that specific shop
 2. Shop IDs don't match between Orders and Shops tables
 3. Ratings query is not returning Order.shop_id correctly
 
 **Debug Steps:**
+
 1. Check console logs for shop IDs
 2. Verify the shop_id in database matches
 3. Test the API endpoint directly
@@ -113,6 +135,7 @@ SELECT id, name FROM "Shops" WHERE id IN (
 ## Database Structure Verification
 
 Your ratings structure should look like:
+
 ```
 Ratings
 ├── id (uuid)

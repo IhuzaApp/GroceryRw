@@ -8,10 +8,12 @@ import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { LogIn } from "lucide-react";
 import { authenticatedFetch } from "../../lib/authenticatedFetch";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function SideBar() {
   const router = useRouter();
   const { data: session } = useSession();
+  const { isGuest } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
   const [pendingOrders, setPendingOrders] = useState([]);
@@ -182,7 +184,7 @@ export default function SideBar() {
             </Link>
           )}
 
-          {/* Orders - Only show if user is signed in */}
+          {/* Orders - Show for all signed in users including guests */}
           {session?.user && (
             <Link
               className="relative rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
@@ -324,8 +326,8 @@ export default function SideBar() {
             </svg>
           </Link>
 
-          {/* Business - Only show for users (not shoppers) */}
-          {session?.user && (
+          {/* Business - Only show for full users (not guests) */}
+          {session?.user && !isGuest && (
             <Link
               className="relative rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
               href={"/plasBusiness"}
@@ -386,8 +388,8 @@ export default function SideBar() {
             </Link>
           )}
 
-          {/* Chat - Only show if user is signed in */}
-          {session?.user && (
+          {/* Chat - Only show if user is signed in and not a guest */}
+          {session?.user && !isGuest && (
             <Link
               className="relative rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
               href={"/Messages"}

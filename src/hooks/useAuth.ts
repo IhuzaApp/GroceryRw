@@ -10,20 +10,33 @@ export const useAuth = () => {
   const isLoading = status === "loading";
   const user = session?.user;
   const role = (user as any)?.role || "user";
+  const isGuest = (user as any)?.is_guest || false;
 
   // Simple redirect function
-  const requireAuth = (redirectTo?: string) => {
+  const requireAuth = (redirectTo?: string, allowGuest: boolean = false) => {
     if (!isLoggedIn && !isLoading) {
       const callbackUrl = redirectTo || router.asPath;
       router.push(`/Auth/Login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
       return false;
     }
+
+    // If guest is not allowed and user is a guest, redirect to login
+    if (!allowGuest && isGuest && isLoggedIn) {
+      const callbackUrl = redirectTo || router.asPath;
+      router.push(
+        `/Auth/Login?callbackUrl=${encodeURIComponent(
+          callbackUrl
+        )}&message=Please sign in with a full account`
+      );
+      return false;
+    }
+
     return true;
   };
 
-  // Check if user has required role
+  // Check if user has required role (guests are not allowed for role-based access)
   const requireRole = (requiredRole: string) => {
-    if (!requireAuth()) return false;
+    if (!requireAuth(undefined, false)) return false;
     if (role !== requiredRole) {
       router.push("/Auth/Login?error=insufficient_permissions");
       return false;
@@ -36,6 +49,7 @@ export const useAuth = () => {
     isLoading,
     user,
     role,
+    isGuest,
     session,
     status,
     requireAuth,
