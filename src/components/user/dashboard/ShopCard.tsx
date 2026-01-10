@@ -122,9 +122,9 @@ const ShopCard: React.FC<ShopCardProps> = ({
   };
 
   // Format rating from dynamics (real data from database)
-  // Rating is on a scale of 1-5, convert to percentage (e.g., 4 = 80%, 5 = 100%)
+  // Rating is on a scale of 1-5, show as stars
   const hasRating = dynamics.rating > 0 && dynamics.ratingCount > 0;
-  const rating = hasRating ? `${(dynamics.rating * 20).toFixed(0)}%` : "New";
+  const rating = hasRating ? `⭐ ${dynamics.rating.toFixed(1)}` : "New";
   const ratingCount = hasRating ? dynamics.ratingCount.toString() : "0";
 
   return (
