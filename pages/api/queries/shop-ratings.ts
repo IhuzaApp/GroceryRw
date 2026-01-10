@@ -54,21 +54,10 @@ export default async function handler(
       string,
       { totalRating: number; count: number; shopName?: string }
     > = {};
-
-    console.log(`Processing ${data.Ratings.length} ratings...`);
     
-    data.Ratings.forEach((ratingData, index) => {
+    data.Ratings.forEach((ratingData) => {
       if (ratingData.Order && ratingData.Order.shop_id) {
         const shopId = ratingData.Order.shop_id;
-        
-        // Log first rating for debugging
-        if (index === 0) {
-          console.log("First rating data:", {
-            rating: ratingData.rating,
-            shop_id: shopId,
-            shop_name: ratingData.Order.Shop?.name
-          });
-        }
         
         if (!shopRatingsMap[shopId]) {
           shopRatingsMap[shopId] = { 
@@ -80,8 +69,6 @@ export default async function handler(
         
         shopRatingsMap[shopId].totalRating += ratingData.rating;
         shopRatingsMap[shopId].count += 1;
-      } else {
-        console.log(`Rating at index ${index} has no order or shop_id`);
       }
     });
 
@@ -93,8 +80,6 @@ export default async function handler(
       totalRatings: shopRatingsMap[shop_id].count,
       shopName: shopRatingsMap[shop_id].shopName,
     }));
-
-    console.log(`Found ${ratings.length} shops with ratings:`, ratings);
 
     return res.status(200).json({ ratings });
   } catch (error: any) {

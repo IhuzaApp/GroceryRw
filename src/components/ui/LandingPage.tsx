@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import React from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
+import Cookies from "js-cookie";
 import { useAuth } from "../../context/AuthContext";
 import LandingPageHeader from "./landing/LandingPageHeader";
 import HeroSection from "./landing/HeroSection";
@@ -174,17 +175,36 @@ export default function LandingPage() {
             const shortAddress =
               place.formatted_address.split(",")[0] || place.formatted_address;
             setDisplayAddress(shortAddress);
-            // Store address in cookie
-            document.cookie = `temp_address=${encodeURIComponent(
-              place.formatted_address
-            )}; path=/`;
+            
             // Store coordinates if available
+            let lat = "";
+            let lng = "";
             if (place.geometry?.location) {
-              const lat = place.geometry.location.lat();
-              const lng = place.geometry.location.lng();
+              lat = place.geometry.location.lat().toString();
+              lng = place.geometry.location.lng().toString();
               document.cookie = `user_latitude=${lat}; path=/`;
               document.cookie = `user_longitude=${lng}; path=/`;
             }
+            
+            // Store address in temp_address cookie (for backward compatibility)
+            document.cookie = `temp_address=${encodeURIComponent(
+              place.formatted_address
+            )}; path=/`;
+            
+            // Store in delivery_address cookie (proper format for header)
+            const addressData = {
+              street: shortAddress,
+              city: place.formatted_address.split(",")[1]?.trim() || "",
+              postal_code: "",
+              latitude: lat,
+              longitude: lng,
+              altitude: "0",
+            };
+            Cookies.set("delivery_address", JSON.stringify(addressData));
+            
+            // Dispatch event to notify header to update
+            window.dispatchEvent(new Event("addressChanged"));
+            
             // Fetch categories after location is set
             fetchCategories();
           }
@@ -267,16 +287,36 @@ export default function LandingPage() {
             const shortAddress =
               place.formatted_address.split(",")[0] || place.formatted_address;
             setDisplayAddress(shortAddress);
-            // Store address in cookie
-            document.cookie = `temp_address=${encodeURIComponent(
-              place.formatted_address
-            )}; path=/`;
+            
+            // Store coordinates if available
+            let lat = "";
+            let lng = "";
             if (place.geometry?.location) {
-              const lat = place.geometry.location.lat();
-              const lng = place.geometry.location.lng();
+              lat = place.geometry.location.lat().toString();
+              lng = place.geometry.location.lng().toString();
               document.cookie = `user_latitude=${lat}; path=/`;
               document.cookie = `user_longitude=${lng}; path=/`;
             }
+            
+            // Store address in temp_address cookie (for backward compatibility)
+            document.cookie = `temp_address=${encodeURIComponent(
+              place.formatted_address
+            )}; path=/`;
+            
+            // Store in delivery_address cookie (proper format for header)
+            const addressData = {
+              street: shortAddress,
+              city: place.formatted_address.split(",")[1]?.trim() || "",
+              postal_code: "",
+              latitude: lat,
+              longitude: lng,
+              altitude: "0",
+            };
+            Cookies.set("delivery_address", JSON.stringify(addressData));
+            
+            // Dispatch event to notify header to update
+            window.dispatchEvent(new Event("addressChanged"));
+            
             // Fetch categories after location is set
             fetchCategories();
           }
@@ -354,10 +394,26 @@ export default function LandingPage() {
                   const shortAddress =
                     formattedAddress.split(",")[0] || formattedAddress;
                   setDisplayAddress(shortAddress);
-                  // Store address in cookie
+                  
+                  // Store address in temp_address cookie (for backward compatibility)
                   document.cookie = `temp_address=${encodeURIComponent(
                     formattedAddress
                   )}; path=/`;
+                  
+                  // Store in delivery_address cookie (proper format for header)
+                  const addressData = {
+                    street: shortAddress,
+                    city: formattedAddress.split(",")[1]?.trim() || "",
+                    postal_code: "",
+                    latitude: position.coords.latitude.toString(),
+                    longitude: position.coords.longitude.toString(),
+                    altitude: "0",
+                  };
+                  Cookies.set("delivery_address", JSON.stringify(addressData));
+                  
+                  // Dispatch event to notify header to update
+                  window.dispatchEvent(new Event("addressChanged"));
+                  
                   // Fetch categories after location is set
                   fetchCategories();
                   // Small delay before redirect to show the address
@@ -367,13 +423,48 @@ export default function LandingPage() {
                 } else {
                   setAddress("Current Location");
                   setDisplayAddress("Current Location");
+                  
+                  // Store in cookies
                   document.cookie = `temp_address=Current Location; path=/`;
+                  
+                  // Store in delivery_address cookie (proper format for header)
+                  const addressData = {
+                    street: "Current Location",
+                    city: "GPS Coordinates",
+                    postal_code: "",
+                    latitude: position.coords.latitude.toString(),
+                    longitude: position.coords.longitude.toString(),
+                    altitude: "0",
+                  };
+                  Cookies.set("delivery_address", JSON.stringify(addressData));
+                  
+                  // Dispatch event to notify header to update
+                  window.dispatchEvent(new Event("addressChanged"));
+                  
                   router.push("/");
                 }
               }
             );
           } else {
+            // Fallback if geocoder fails
             setAddress("Current Location");
+            
+            // Store in cookies with coordinates
+            document.cookie = `temp_address=Current Location; path=/`;
+            
+            const addressData = {
+              street: "Current Location",
+              city: "GPS Coordinates",
+              postal_code: "",
+              latitude: position.coords.latitude.toString(),
+              longitude: position.coords.longitude.toString(),
+              altitude: "0",
+            };
+            Cookies.set("delivery_address", JSON.stringify(addressData));
+            
+            // Dispatch event to notify header to update
+            window.dispatchEvent(new Event("addressChanged"));
+            
             router.push("/");
           }
         },
