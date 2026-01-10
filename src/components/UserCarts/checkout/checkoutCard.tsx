@@ -6,6 +6,7 @@ import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { useTheme } from "../../../context/ThemeContext";
 import { useAuth } from "../../../context/AuthContext";
+import { useAuth as useAuthHook } from "../../../hooks/useAuth";
 import {
   useFoodCart,
   FoodCartRestaurant,
@@ -103,6 +104,7 @@ export default function CheckoutItems({
   const { theme } = useTheme();
   const router = useRouter();
   const { clearRestaurant } = useFoodCart();
+  const { isGuest } = useAuthHook();
   // Re-render when the address cookie changes
   const [, setTick] = useState(0);
   // Mobile checkout card expand/collapse state
@@ -340,7 +342,16 @@ export default function CheckoutItems({
   useEffect(() => {
     const fetchPaymentData = async () => {
       try {
-        // Fetch payment methods
+        // For guest users, skip fetching payment methods and just set up phone payment
+        if (isGuest) {
+          setSelectedPaymentValue("one-time-phone");
+          setShowOneTimePhoneInput(true);
+          setSelectedPaymentMethod({ type: "momo", number: oneTimePhoneNumber });
+          setLoadingPayment(false);
+          return;
+        }
+
+        // Fetch payment methods for regular users
         const paymentResponse = await fetch("/api/queries/payment-methods");
         const paymentData = await paymentResponse.json();
         const methods = paymentData.paymentMethods || [];
@@ -390,7 +401,7 @@ export default function CheckoutItems({
     };
 
     fetchPaymentData();
-  }, []);
+  }, [isGuest]);
 
   // Fetch addresses on component mount
   useEffect(() => {
@@ -1188,6 +1199,17 @@ export default function CheckoutItems({
       value: string;
       methodType?: string;
     }> = [];
+
+    // For guest users, only show one-time phone number option
+    if (isGuest) {
+      options.push({
+        label: "Pay with Phone Number (MTN Mobile Money)",
+        value: "one-time-phone",
+      });
+      return options;
+    }
+
+    // For regular users, show all payment options
     const canUseRefund = refundBalance >= finalTotal;
     const canUseWallet = walletBalance >= finalTotal;
 
@@ -1245,6 +1267,28 @@ export default function CheckoutItems({
       }`,
       value: address.id,
     }));
+  };
+
+  // Check if checkout can proceed (all required fields filled)
+  const canProceedToCheckout = () => {
+    // Must have items in cart
+    if (totalUnits <= 0) return false;
+
+    // Must have delivery address selected
+    if (!selectedAddressId) return false;
+
+    // Must have payment method selected
+    if (!selectedPaymentMethod) return false;
+
+    // For guest users or when using one-time phone
+    if (isGuest || showOneTimePhoneInput) {
+      // Phone number must be provided and valid (at least 10 digits)
+      if (!oneTimePhoneNumber || oneTimePhoneNumber.replace(/\D/g, "").length < 10) {
+        return false;
+      }
+    }
+
+    return true;
   };
 
   // Update the payment method display section
@@ -1456,8 +1500,9 @@ export default function CheckoutItems({
               block
               size="lg"
               loading={isCheckoutLoading}
+              disabled={!canProceedToCheckout() || isCheckoutLoading}
               onClick={handleProceedToCheckout}
-              className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
+              className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
             >
               Proceed to Checkout
             </Button>
@@ -1484,7 +1529,11 @@ export default function CheckoutItems({
                   value={discountCode}
                   onChange={(e) => setDiscountCode(e.target.value)}
                   placeholder="Enter promo or referral code"
-                  className="flex-1 border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20"
+                  className={`flex-1 rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+                    theme === "dark"
+                      ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                      : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                  }`}
                 />
                 <Button
                   appearance="primary"
@@ -1679,15 +1728,18 @@ export default function CheckoutItems({
                   </>
                 )}
               </div>
-              <button
-                type="button"
-                className="mt-1 w-full rounded-lg border-2 border-green-500 bg-transparent px-2 py-1 text-xs font-medium text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20"
-                onClick={() => {
-                  setShowAddressModal(true);
-                }}
-              >
-                + Add New Address
-              </button>
+              {/* Hide "Add New Address" button for guest users who already have an address */}
+              {(!isGuest || !selectedAddressId) && (
+                <button
+                  type="button"
+                  className="mt-1 w-full rounded-lg border-2 border-green-500 bg-transparent px-2 py-1 text-xs font-medium text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20"
+                  onClick={() => {
+                    setShowAddressModal(true);
+                  }}
+                >
+                  + Add New Address
+                </button>
+              )}
             </div>
             <div className="mt-2">
               <h4
@@ -1697,100 +1749,130 @@ export default function CheckoutItems({
               >
                 Payment Method
               </h4>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowPaymentDropdown(!showPaymentDropdown);
-                    setShowAddressDropdown(false);
-                  }}
-                  className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
-                    selectedPaymentValue
-                      ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
-                      : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
-                  }`}
-                >
-                  {selectedPaymentValue
-                    ? getPaymentMethodOptions().find(
-                        (opt) => opt.value === selectedPaymentValue
-                      )?.label || "Select payment method"
-                    : "Select payment method"}
-                  <svg
-                    className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
-                      showPaymentDropdown ? "rotate-180" : ""
+              
+              {/* For guest users, show only phone input */}
+              {isGuest ? (
+                <div>
+                  <p className={`mb-2 text-xs ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-600"
+                  }`}>
+                    Pay with MTN Mobile Money
+                  </p>
+                  <input
+                    type="tel"
+                    placeholder="Enter phone number (e.g., 078XXXXXXX)"
+                    value={oneTimePhoneNumber}
+                    onChange={(e) => handleOneTimePhoneChange(e.target.value)}
+                    className={`w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+                      theme === "dark"
+                        ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                        : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
                     }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
+                  />
+                </div>
+              ) : (
+                <>
+                  {/* For regular users, show payment method dropdown */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowPaymentDropdown(!showPaymentDropdown);
+                        setShowAddressDropdown(false);
+                      }}
+                      className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
+                        selectedPaymentValue
+                          ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
+                          : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                      }`}
+                    >
+                      {selectedPaymentValue
+                        ? getPaymentMethodOptions().find(
+                            (opt) => opt.value === selectedPaymentValue
+                          )?.label || "Select payment method"
+                        : "Select payment method"}
+                      <svg
+                        className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
+                          showPaymentDropdown ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+                    {showPaymentDropdown && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-10"
+                          onClick={() => setShowPaymentDropdown(false)}
+                        />
+                        <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                          {getPaymentMethodOptions().map((option) => {
+                            const isWalletInsufficient =
+                              option.value === "wallet" &&
+                              walletBalance < finalTotal;
+                            return (
+                              <button
+                                key={option.value}
+                                type="button"
+                                onClick={() => {
+                                  if (!isWalletInsufficient) {
+                                    handlePaymentMethodChange(option.value);
+                                    setShowPaymentDropdown(false);
+                                  }
+                                }}
+                                disabled={isWalletInsufficient}
+                                className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                                  isWalletInsufficient
+                                    ? "cursor-not-allowed bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
+                                    : selectedPaymentValue === option.value
+                                    ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                                    : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+                                }`}
+                              >
+                                <span
+                                  className={`flex-shrink-0 ${
+                                    isWalletInsufficient
+                                      ? "text-red-500 dark:text-red-400"
+                                      : selectedPaymentValue === option.value
+                                      ? "text-green-600 dark:text-green-400"
+                                      : "text-gray-500 dark:text-gray-400"
+                                  }`}
+                                >
+                                  {getPaymentMethodIcon(
+                                    option.value,
+                                    option.methodType
+                                  )}
+                                </span>
+                                <span className="flex-1">{option.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  {showOneTimePhoneInput && (
+                    <input
+                      type="tel"
+                      placeholder="Enter phone number"
+                      value={oneTimePhoneNumber}
+                      onChange={(e) => handleOneTimePhoneChange(e.target.value)}
+                      className={`mt-2 w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+                        theme === "dark"
+                          ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                          : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                      }`}
                     />
-                  </svg>
-                </button>
-                {showPaymentDropdown && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={() => setShowPaymentDropdown(false)}
-                    />
-                    <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                      {getPaymentMethodOptions().map((option) => {
-                        const isWalletInsufficient =
-                          option.value === "wallet" &&
-                          walletBalance < finalTotal;
-                        return (
-                          <button
-                            key={option.value}
-                            type="button"
-                            onClick={() => {
-                              if (!isWalletInsufficient) {
-                                handlePaymentMethodChange(option.value);
-                                setShowPaymentDropdown(false);
-                              }
-                            }}
-                            disabled={isWalletInsufficient}
-                            className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                              isWalletInsufficient
-                                ? "cursor-not-allowed bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
-                                : selectedPaymentValue === option.value
-                                ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                                : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
-                            }`}
-                          >
-                            <span
-                              className={`flex-shrink-0 ${
-                                isWalletInsufficient
-                                  ? "text-red-500 dark:text-red-400"
-                                  : selectedPaymentValue === option.value
-                                  ? "text-green-600 dark:text-green-400"
-                                  : "text-gray-500 dark:text-gray-400"
-                              }`}
-                            >
-                              {getPaymentMethodIcon(
-                                option.value,
-                                option.methodType
-                              )}
-                            </span>
-                            <span className="flex-1">{option.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
-              </div>
-              {showOneTimePhoneInput && (
-                <input
-                  type="tel"
-                  placeholder="Enter phone number"
-                  value={oneTimePhoneNumber}
-                  onChange={(e) => handleOneTimePhoneChange(e.target.value)}
-                  className="mt-2 w-full rounded-lg border-2 border-gray-300 px-4 py-2.5 text-sm transition-all focus:border-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-green-400"
-                />
+                  )}
+                </>
               )}
             </div>
             {/* Delivery Notes Input */}
@@ -1808,7 +1890,11 @@ export default function CheckoutItems({
                 onChange={(e) => setDeliveryNotes(e.target.value)}
                 placeholder="Enter any delivery instructions or notes"
                 onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on input
-                className="w-full border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-400 dark:focus:ring-green-400/20"
+                className={`w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+                  theme === "dark"
+                    ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                    : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                }`}
               />
             </div>
             {/* Proceed to Checkout Button */}
@@ -1819,8 +1905,9 @@ export default function CheckoutItems({
                 block
                 size="lg"
                 loading={isCheckoutLoading}
+                disabled={!canProceedToCheckout() || isCheckoutLoading}
                 onClick={handleProceedToCheckout}
-                className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
+                className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
               >
                 Proceed to Checkout
               </Button>
@@ -2013,115 +2100,138 @@ export default function CheckoutItems({
                   </>
                 )}
               </div>
-              <button
-                type="button"
-                className="mt-2 w-full rounded-lg border-2 border-green-500 bg-transparent px-4 py-2 text-sm font-medium text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20"
-                onClick={() => {
-                  setShowAddressModal(true);
-                }}
-              >
-                + Add New Address
-              </button>
+              {/* Hide "Add New Address" button for guest users who already have an address */}
+              {(!isGuest || !selectedAddressId) && (
+                <button
+                  type="button"
+                  className="mt-2 w-full rounded-lg border-2 border-green-500 bg-transparent px-4 py-2 text-sm font-medium text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20"
+                  onClick={() => {
+                    setShowAddressModal(true);
+                  }}
+                >
+                  + Add New Address
+                </button>
+              )}
             </div>
 
             <div className="mt-2">
               <h4 className="mb-0.5 text-sm font-semibold text-gray-900 dark:text-white">
                 Payment Method
               </h4>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowPaymentDropdown(!showPaymentDropdown);
-                    setShowAddressDropdown(false);
-                  }}
-                  className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
-                    selectedPaymentValue
-                      ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
-                      : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
-                  }`}
-                >
-                  {selectedPaymentValue
-                    ? getPaymentMethodOptions().find(
-                        (opt) => opt.value === selectedPaymentValue
-                      )?.label || "Select payment method"
-                    : "Select payment method"}
-                  <svg
-                    className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
-                      showPaymentDropdown ? "rotate-180" : ""
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
+              
+              {/* For guest users, show only phone input */}
+              {isGuest ? (
+                <div>
+                  <p className="mb-2 text-xs text-gray-600 dark:text-gray-400">
+                    Pay with MTN Mobile Money
+                  </p>
+                  <input
+                    type="tel"
+                    placeholder="Enter phone number (e.g., 078XXXXXXX)"
+                    value={oneTimePhoneNumber}
+                    onChange={(e) => handleOneTimePhoneChange(e.target.value)}
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm text-gray-900 placeholder-gray-400 transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20"
+                  />
+                </div>
+              ) : (
+                <>
+                  {/* For regular users, show payment method dropdown */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowPaymentDropdown(!showPaymentDropdown);
+                        setShowAddressDropdown(false);
+                      }}
+                      className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
+                        selectedPaymentValue
+                          ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
+                          : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                      }`}
+                    >
+                      {selectedPaymentValue
+                        ? getPaymentMethodOptions().find(
+                            (opt) => opt.value === selectedPaymentValue
+                          )?.label || "Select payment method"
+                        : "Select payment method"}
+                      <svg
+                        className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
+                          showPaymentDropdown ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+                    {showPaymentDropdown && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-10"
+                          onClick={() => setShowPaymentDropdown(false)}
+                        />
+                        <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                          {getPaymentMethodOptions().map((option) => {
+                            const isWalletInsufficient =
+                              option.value === "wallet" &&
+                              walletBalance < finalTotal;
+                            return (
+                              <button
+                                key={option.value}
+                                type="button"
+                                onClick={() => {
+                                  if (!isWalletInsufficient) {
+                                    handlePaymentMethodChange(option.value);
+                                    setShowPaymentDropdown(false);
+                                  }
+                                }}
+                                disabled={isWalletInsufficient}
+                                className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                                  isWalletInsufficient
+                                    ? "cursor-not-allowed bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
+                                    : selectedPaymentValue === option.value
+                                    ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                                    : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+                                }`}
+                              >
+                                <span
+                                  className={`flex-shrink-0 ${
+                                    isWalletInsufficient
+                                      ? "text-red-500 dark:text-red-400"
+                                      : selectedPaymentValue === option.value
+                                      ? "text-green-600 dark:text-green-400"
+                                      : "text-gray-500 dark:text-gray-400"
+                                  }`}
+                                >
+                                  {getPaymentMethodIcon(
+                                    option.value,
+                                    option.methodType
+                                  )}
+                                </span>
+                                <span className="flex-1">{option.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  {showOneTimePhoneInput && (
+                    <input
+                      type="tel"
+                      placeholder="Enter phone number"
+                      value={oneTimePhoneNumber}
+                      onChange={(e) => handleOneTimePhoneChange(e.target.value)}
+                      className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm text-gray-900 placeholder-gray-400 transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20"
                     />
-                  </svg>
-                </button>
-                {showPaymentDropdown && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={() => setShowPaymentDropdown(false)}
-                    />
-                    <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                      {getPaymentMethodOptions().map((option) => {
-                        const isWalletInsufficient =
-                          option.value === "wallet" &&
-                          walletBalance < finalTotal;
-                        return (
-                          <button
-                            key={option.value}
-                            type="button"
-                            onClick={() => {
-                              if (!isWalletInsufficient) {
-                                handlePaymentMethodChange(option.value);
-                                setShowPaymentDropdown(false);
-                              }
-                            }}
-                            disabled={isWalletInsufficient}
-                            className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                              isWalletInsufficient
-                                ? "cursor-not-allowed bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
-                                : selectedPaymentValue === option.value
-                                ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                                : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
-                            }`}
-                          >
-                            <span
-                              className={`flex-shrink-0 ${
-                                isWalletInsufficient
-                                  ? "text-red-500 dark:text-red-400"
-                                  : selectedPaymentValue === option.value
-                                  ? "text-green-600 dark:text-green-400"
-                                  : "text-gray-500 dark:text-gray-400"
-                              }`}
-                            >
-                              {getPaymentMethodIcon(
-                                option.value,
-                                option.methodType
-                              )}
-                            </span>
-                            <span className="flex-1">{option.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
-              </div>
-              {showOneTimePhoneInput && (
-                <input
-                  type="tel"
-                  placeholder="Enter phone number"
-                  value={oneTimePhoneNumber}
-                  onChange={(e) => handleOneTimePhoneChange(e.target.value)}
-                  className="mt-2 w-full rounded-lg border-2 border-gray-300 px-4 py-2.5 text-sm transition-all focus:border-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-green-400"
-                />
+                  )}
+                </>
               )}
             </div>
 
@@ -2136,7 +2246,7 @@ export default function CheckoutItems({
                     value={discountCode}
                     onChange={(e) => setDiscountCode(e.target.value)}
                     placeholder="Enter promo or referral code"
-                    className="flex-1 border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20"
+                    className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm text-gray-900 placeholder-gray-400 transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20"
                   />
                   <Button
                     appearance="primary"
@@ -2160,7 +2270,7 @@ export default function CheckoutItems({
                 value={deliveryNotes}
                 onChange={(e) => setDeliveryNotes(e.target.value)}
                 placeholder="Enter any delivery instructions or notes"
-                className="w-full border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-400 dark:focus:ring-green-400/20"
+                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm text-gray-900 placeholder-gray-400 transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20"
               />
             </div>
 
@@ -2169,9 +2279,10 @@ export default function CheckoutItems({
               appearance="primary"
               block
               size="lg"
-              className="mt-6 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
+              className="mt-6 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
               onClick={handleProceedToCheckout}
               loading={isCheckoutLoading}
+              disabled={!canProceedToCheckout() || isCheckoutLoading}
             >
               Proceed to Checkout
             </Button>
