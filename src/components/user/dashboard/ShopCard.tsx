@@ -18,6 +18,8 @@ interface ShopCardProps {
     time: string;
     fee: string;
     open: boolean;
+    rating: number;
+    ratingCount: number;
   };
   getShopImageUrl: (imageUrl: string | undefined) => string;
 }
@@ -119,9 +121,11 @@ const ShopCard: React.FC<ShopCardProps> = ({
     return "/images/shop-placeholder.jpg";
   };
 
-  // Format rating (mock for now, should come from shop data)
-  const rating = "96%";
-  const ratingCount = "39";
+  // Format rating from dynamics (real data from database)
+  // Rating is on a scale of 1-5, convert to percentage (e.g., 4 = 80%, 5 = 100%)
+  const hasRating = dynamics.rating > 0 && dynamics.ratingCount > 0;
+  const rating = hasRating ? `${(dynamics.rating * 20).toFixed(0)}%` : "New";
+  const ratingCount = hasRating ? dynamics.ratingCount.toString() : "0";
 
   return (
     <Link href={getNavigationPath()} className="no-underline">

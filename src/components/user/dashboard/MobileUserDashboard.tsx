@@ -665,6 +665,8 @@ export default function MobileUserDashboard({
                   time: "N/A",
                   fee: "N/A",
                   open: false,
+                  rating: 0,
+                  ratingCount: 0,
                 };
                 return (
                   <MobileShopCard

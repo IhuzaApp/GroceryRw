@@ -24,6 +24,24 @@ function getDistanceFromLatLonInKm(
   return R * c;
 }
 
+// System configuration interface
+interface SystemConfig {
+  baseDeliveryFee: string;
+  serviceFee: string;
+  shoppingTime: string;
+  unitsSurcharge: string;
+  extraUnits: string;
+  cappedDistanceFee: string;
+  distanceSurcharge: string;
+}
+
+// Shop ratings interface
+interface ShopRating {
+  shop_id: string;
+  averageRating: number;
+  totalRatings: number;
+}
+
 export function useUserDashboardLogic(initialData: Data) {
   const router = useRouter();
   const { role, authReady, isLoggedIn } = useAuth();
@@ -57,11 +75,59 @@ export function useUserDashboardLogic(initialData: Data) {
   const [shopDynamics, setShopDynamics] = useState<
     Record<
       string,
-      { distance: string; time: string; fee: string; open: boolean }
+      { 
+        distance: string; 
+        time: string; 
+        fee: string; 
+        open: boolean;
+        rating: number;
+        ratingCount: number;
+      }
     >
   >({});
   const [dataLoaded, setDataLoaded] = useState(false);
   const [isFetchingData, setIsFetchingData] = useState(false);
+  const [systemConfig, setSystemConfig] = useState<SystemConfig | null>(null);
+  const [shopRatings, setShopRatings] = useState<Record<string, ShopRating>>({});
+
+  // Fetch system configuration and ratings on mount
+  useEffect(() => {
+    const fetchSystemConfig = async () => {
+      try {
+        const response = await fetch("/api/queries/system-config");
+        const data = await response.json();
+        if (data.config) {
+          setSystemConfig(data.config);
+        }
+      } catch (error) {
+        console.error("Error fetching system config:", error);
+      }
+    };
+
+    const fetchRatings = async () => {
+      try {
+        const response = await fetch("/api/queries/shop-ratings");
+        const data = await response.json();
+        if (data.ratings) {
+          console.log("Fetched shop ratings:", data.ratings);
+          // Convert array to object keyed by shop_id for easy lookup
+          const ratingsMap: Record<string, ShopRating> = {};
+          data.ratings.forEach((rating: ShopRating) => {
+            ratingsMap[rating.shop_id] = rating;
+          });
+          console.log("Ratings map created:", ratingsMap);
+          setShopRatings(ratingsMap);
+        } else {
+          console.log("No ratings data received:", data);
+        }
+      } catch (error) {
+        console.error("Error fetching shop ratings:", error);
+      }
+    };
+
+    fetchSystemConfig();
+    fetchRatings();
+  }, []);
 
   // Fetch data if initialData is empty or missing
   useEffect(() => {
@@ -464,17 +530,40 @@ export function useUserDashboardLogic(initialData: Data) {
             const dist3D = Math.sqrt(distKm * distKm + altKm * altKm);
             const distance = `${Math.round(dist3D * 10) / 10} km`;
             const travelTime = Math.ceil(dist3D);
-            const totalTime = travelTime + 40;
+            const shoppingTime = systemConfig ? parseInt(systemConfig.shoppingTime) : 40;
+            const totalTime = travelTime + shoppingTime;
             let time = `${totalTime} mins`;
             if (totalTime >= 60) {
               const hours = Math.floor(totalTime / 60);
               const mins = totalTime % 60;
               time = `${hours}h ${mins}m`;
             }
-            const fee =
-              distKm <= 3
-                ? "1000 frw"
-                : `${1000 + Math.round((distKm - 3) * 300)} frw`;
+            
+            // Calculate delivery fee using same logic as checkout
+            const baseDeliveryFee = systemConfig ? parseInt(systemConfig.baseDeliveryFee) : 1000;
+            const extraDistance = Math.max(0, distKm - 3);
+            const distanceSurcharge = Math.ceil(extraDistance) * 
+              (systemConfig ? parseInt(systemConfig.distanceSurcharge) : 300);
+            const rawDistanceFee = baseDeliveryFee + distanceSurcharge;
+            const cappedDistanceFee = systemConfig ? parseInt(systemConfig.cappedDistanceFee) : 3000;
+            const finalDistanceFee = rawDistanceFee > cappedDistanceFee ? cappedDistanceFee : rawDistanceFee;
+            const fee = `${finalDistanceFee} frw`;
+            
+            // Get shop ratings
+            const shopRating = shopRatings[shop.id];
+            const rating = shopRating ? shopRating.averageRating : 0;
+            const ratingCount = shopRating ? shopRating.totalRatings : 0;
+            
+            // Debug logging for first shop
+            if (Object.keys(newDyn).length === 0) {
+              console.log("=== First Shop Debug ===");
+              console.log("Shop ID:", shop.id);
+              console.log("Shop Name:", shop.name);
+              console.log("All Shop Ratings available:", Object.keys(shopRatings));
+              console.log("Shop Rating for this shop:", shopRating);
+              console.log("Calculated Rating:", rating, "Count:", ratingCount);
+              console.log("=======================");
+            }
 
             let isOpen = false;
             const hoursObj = shop.operating_hours;
@@ -518,7 +607,7 @@ export function useUserDashboardLogic(initialData: Data) {
                 isOpen = false;
               }
             }
-            newDyn[shop.id] = { distance, time, fee, open: isOpen };
+            newDyn[shop.id] = { distance, time, fee, open: isOpen, rating, ratingCount };
           }
         });
         setShopDynamics(newDyn);
@@ -530,7 +619,7 @@ export function useUserDashboardLogic(initialData: Data) {
     computeDynamics();
     window.addEventListener("addressChanged", computeDynamics);
     return () => window.removeEventListener("addressChanged", computeDynamics);
-  }, [shopsWithoutDynamics, authReady, role]);
+  }, [shopsWithoutDynamics, authReady, role, systemConfig, shopRatings]);
 
   const handleCategoryClick = (categoryId: string) => {
     setIsLoading(true);
