@@ -1,13 +1,4 @@
 import React, { useState, useEffect } from "react";
-import {
-  Modal,
-  Button,
-  Form,
-  Input,
-  InputGroup,
-  Message,
-  Divider,
-} from "rsuite";
 import { useTheme } from "../../context/ThemeContext";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 
@@ -23,6 +14,7 @@ interface PaymentModalProps {
   deliveryFee: number;
   paymentLoading: boolean;
   externalId?: string; // Order or batch ID for reference
+  orderPin?: string; // Generated order PIN to display
   // OTP related props
   otp: string;
   setOtp: (value: string) => void;
@@ -43,6 +35,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   deliveryFee,
   paymentLoading,
   externalId,
+  orderPin,
   otp,
   setOtp,
   otpLoading,
@@ -57,7 +50,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     null
   );
   const [statusMessage, setStatusMessage] = useState<string>("");
-  const [currentStep, setCurrentStep] = useState<"momo" | "otp">("momo");
+  const [currentStep, setCurrentStep] = useState<"momo" | "otp" | "success">("momo");
 
   const formattedCurrency = (amount: number) => {
     return formatCurrencySync(amount);
@@ -118,9 +111,22 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       setPaymentStatus("idle");
       setPaymentReferenceId(null);
       setStatusMessage("");
-      setCurrentStep("momo");
+      // If orderPin is already available, go directly to success
+      if (orderPin) {
+        setCurrentStep("success");
+      } else {
+        setCurrentStep("momo");
+      }
     }
-  }, [open]);
+  }, [open, orderPin]);
+
+  // Watch for orderPin to show success screen
+  useEffect(() => {
+    if (orderPin && open) {
+      setCurrentStep("success");
+      setPaymentStatus("success");
+    }
+  }, [orderPin, open]);
 
   // Debug log to check button state
   useEffect(() => {
@@ -133,20 +139,25 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     });
   }, [momoCode, paymentLoading, paymentStatus]);
 
+  if (!open) return null;
+
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      size="sm"
-      className={`${theme === "dark" ? "dark-theme" : ""} rounded-2xl`}
-    >
-      <Modal.Header
-        className={`${
+    <div className="fixed inset-0 z-[10001] flex items-center justify-center bg-black/60 px-0 backdrop-blur-sm md:px-4">
+      <div
+        className={`flex h-full w-full flex-col overflow-hidden shadow-2xl md:h-auto md:max-h-[90vh] md:max-w-2xl md:rounded-2xl ${
           theme === "dark"
-            ? "border-b border-gray-700 bg-gray-800"
-            : "border-b border-gray-200 bg-gradient-to-r from-green-50 to-blue-50"
-        } rounded-t-2xl px-4 py-3`}
+            ? "border-gray-700 bg-gray-800"
+            : "border-gray-200 bg-white"
+        } md:border`}
       >
+        {/* Header */}
+        <div
+          className={`flex flex-shrink-0 items-center justify-between border-b p-4 md:p-5 ${
+            theme === "dark"
+              ? "border-gray-700 bg-gray-800"
+              : "border-gray-200 bg-gradient-to-r from-green-50 to-blue-50"
+          }`}
+        >
         <div className="flex items-center gap-3">
           <div
             className={`rounded-full p-2 ${
@@ -169,20 +180,48 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               />
             </svg>
           </div>
-          <Modal.Title
+          <h2
             className={`text-xl font-bold ${
               theme === "dark" ? "text-gray-100" : "text-gray-800"
             }`}
           >
-            {currentStep === "momo" ? "Process Payment" : "Verify OTP"}
-          </Modal.Title>
+            {currentStep === "momo" 
+              ? "Process Payment" 
+              : currentStep === "otp" 
+              ? "Verify OTP" 
+              : "Order Complete!"}
+          </h2>
+          <button
+            onClick={onClose}
+            className={`rounded-xl p-2 transition-colors ${
+              theme === "dark"
+                ? "hover:bg-gray-700 text-gray-400"
+                : "hover:bg-gray-100 text-gray-500"
+            }`}
+            disabled={paymentStatus === "processing" || otpLoading}
+          >
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
         </div>
-      </Modal.Header>
-      <Modal.Body
-        className={`${
-          theme === "dark" ? "bg-gray-800 text-gray-100" : "bg-white"
-        } px-4 py-4`}
-      >
+
+        {/* Body */}
+        <div
+          className={`flex-1 overflow-y-auto p-4 md:p-6 ${
+            theme === "dark" ? "bg-gray-800 text-gray-100" : "bg-white"
+          }`}
+        >
         {currentStep === "momo" ? (
           <>
             {/* MoMo Step Content */}
@@ -511,7 +550,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               </div>
             </div>
           </>
-        ) : (
+        ) : currentStep === "otp" ? (
           <>
             {/* OTP Step Content */}
             <div
@@ -769,15 +808,138 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               </div>
             </div>
           </>
+        ) : (
+          <>
+            {/* Success Step Content - Show Order PIN */}
+            <div
+              className={`mb-6 rounded-xl border-2 p-6 text-center ${
+                theme === "dark"
+                  ? "border-green-600 bg-green-900/20"
+                  : "border-green-200 bg-green-50"
+              }`}
+            >
+              <div className="mb-4 flex justify-center">
+                <div
+                  className={`rounded-full p-4 ${
+                    theme === "dark" ? "bg-green-600" : "bg-green-100"
+                  }`}
+                >
+                  <svg
+                    className={`h-12 w-12 ${
+                      theme === "dark" ? "text-white" : "text-green-600"
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <h3
+                className={`mb-2 text-2xl font-bold ${
+                  theme === "dark" ? "text-green-300" : "text-green-700"
+                }`}
+              >
+                Payment Successful!
+              </h3>
+              <p
+                className={`mb-6 text-sm ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                }`}
+              >
+                Your order has been placed successfully
+              </p>
+
+              {/* Order PIN Display */}
+              <div
+                className={`mx-auto mb-4 max-w-sm rounded-2xl border-2 p-6 ${
+                  theme === "dark"
+                    ? "border-gray-600 bg-gray-800"
+                    : "border-gray-300 bg-white"
+                }`}
+              >
+                <p
+                  className={`mb-3 text-sm font-semibold ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Your Order PIN
+                </p>
+                <div
+                  className={`mb-3 rounded-xl p-4 ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-100"
+                  }`}
+                >
+                  <p
+                    className={`font-mono text-5xl font-bold tracking-widest ${
+                      theme === "dark" ? "text-green-400" : "text-green-600"
+                    }`}
+                  >
+                    {orderPin || "00"}
+                  </p>
+                </div>
+                <p
+                  className={`text-xs ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
+                  Please share this PIN with the delivery person to confirm your
+                  order delivery
+                </p>
+              </div>
+
+              {/* Information Box */}
+              <div
+                className={`rounded-xl border-l-4 p-4 text-left ${
+                  theme === "dark"
+                    ? "border-blue-500 bg-blue-900/20 text-blue-300"
+                    : "border-blue-500 bg-blue-50 text-blue-800"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <svg
+                    className={`mt-0.5 h-5 w-5 flex-shrink-0 ${
+                      theme === "dark" ? "text-blue-400" : "text-blue-600"
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <div className="flex-1">
+                    <p className="mb-1 text-sm font-semibold">Important</p>
+                    <p className="text-xs">
+                      Keep this PIN safe. You will need to share it with the
+                      delivery person when they arrive to verify the delivery.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
         )}
-      </Modal.Body>
-      <Modal.Footer
-        className={`${
-          theme === "dark"
-            ? "border-t border-gray-700 bg-gray-800"
-            : "border-t border-gray-200 bg-gray-50"
-        } rounded-b-2xl px-4 py-3`}
-      >
+        </div>
+
+        {/* Footer */}
+        <div
+          className={`flex flex-shrink-0 items-center justify-end gap-3 border-t p-4 md:p-5 ${
+            theme === "dark"
+              ? "border-gray-700 bg-gray-800"
+              : "border-gray-200 bg-white"
+          }`}
+        >
         <div className="flex w-full gap-3">
           {currentStep === "momo" ? (
             <>
@@ -854,7 +1016,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 Cancel
               </button>
             </>
-          ) : (
+          ) : currentStep === "otp" ? (
             <>
               <button
                 onClick={handleOtpVerification}
@@ -925,8 +1087,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             </>
           )}
         </div>
-      </Modal.Footer>
-    </Modal>
+        </div>
+      </div>
+    </div>
   );
 };
 
