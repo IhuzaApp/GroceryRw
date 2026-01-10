@@ -164,12 +164,11 @@ export default function UserRecentOrders({
   // Apply filter and search
   const filteredOrders = orders.filter((order: Order) => {
     // Apply status filter
-    // For "Ongoing" (pending filter): show only assigned orders that are not delivered
+    // For "Ongoing" (pending filter): show all orders that are not delivered (includes unassigned)
     // For "Completed" (done filter): show only delivered orders
-    const isAssigned = !!order?.shopper_id || !!order?.assignedTo;
     const matchesFilter =
       filter === "pending"
-        ? order.status !== "delivered" && isAssigned
+        ? order.status !== "delivered"
         : order.status === "delivered";
 
     // Apply search filter
@@ -195,6 +194,8 @@ export default function UserRecentOrders({
   const startIndex = (currentPage - 1) * ordersPerPage;
   const endIndex = startIndex + ordersPerPage;
   const visibleOrders = filteredOrders.slice(startIndex, endIndex);
+
+  console.log(`📊 Filter: "${filter}" | Total orders: ${orders.length} | Filtered: ${filteredOrders.length} | Visible: ${visibleOrders.length}`);
 
   // Reset to page 1 when search changes
   useEffect(() => {
