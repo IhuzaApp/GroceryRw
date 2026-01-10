@@ -52,22 +52,25 @@ function CartItem({
 
   return (
     <div
-      className={`relative mb-2 rounded-lg p-3 transition-all hover:bg-gray-50/50 dark:hover:bg-gray-800/30 md:grid md:grid-cols-12 md:items-center md:gap-4 md:bg-transparent md:py-3 md:hover:bg-transparent ${
-        theme === "dark" ? "bg-gray-800/20" : "bg-white"
+      className={`relative mb-3 rounded-xl p-4 shadow-sm transition-all border md:grid md:grid-cols-12 md:items-center md:gap-4 ${
+        theme === "dark" 
+          ? "bg-gray-800/50 border-gray-700 hover:shadow-md" 
+          : "bg-white border-gray-200 hover:shadow-md"
       }`}
     >
-      {/* Delete Button - Top Right */}
+      {/* Delete Button - Top Right (Mobile Only) */}
       <button
         onClick={onRemove}
         disabled={loading}
-        className={`absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+        className={`absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center transition-all disabled:cursor-not-allowed disabled:opacity-50 md:hidden ${
           theme === "dark"
-            ? "bg-gray-700/80 text-gray-400 hover:bg-red-500/20 hover:text-red-400"
-            : "bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500"
+            ? "text-gray-500 hover:text-red-400"
+            : "text-gray-400 hover:text-red-500"
         }`}
+        title="Remove item"
       >
         {loading ? (
-          <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+          <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
             <circle
               className="opacity-25"
               cx="12"
@@ -84,78 +87,72 @@ function CartItem({
           </svg>
         ) : (
           <svg
-            className="h-4 w-4"
-            viewBox="0 0 24 24"
+            className="h-5 w-5"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
           >
-            <path d="M18 6L6 18M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+            />
           </svg>
         )}
       </button>
 
       {/* Mobile Layout */}
       <div className="flex items-center gap-3 pr-8 md:hidden">
-        <div className="relative flex-shrink-0 overflow-hidden rounded-lg">
+        <div className="relative flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-700">
           <Image
             src={image || "/images/groceryPlaceholder.png"}
             alt={name}
-            width={70}
-            height={70}
+            width={60}
+            height={60}
             className="rounded-lg object-cover"
           />
         </div>
         <div className="min-w-0 flex-1">
           <h3
-            className={`truncate text-base font-semibold ${
+            className={`text-sm font-semibold leading-tight ${
               theme === "dark" ? "text-white" : "text-gray-900"
             }`}
           >
             {name}
           </h3>
-          <span
-            className={`mt-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-              theme === "dark"
-                ? "bg-green-900/30 text-green-300"
-                : "bg-green-100 text-green-700"
-            }`}
-          >
-            {size}
-          </span>
           <p
-            className={`mt-2 text-sm font-bold ${
-              theme === "dark" ? "text-green-400" : "text-green-600"
+            className={`mt-1 text-xs ${
+              theme === "dark" ? "text-gray-400" : "text-gray-600"
             }`}
           >
-            {formatCurrency(parseFloat(price || "0"))}
+            Color: {size}
+          </p>
+          <p
+            className={`mt-2 text-base font-bold ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}
+          >
+            {formatCurrency(parseFloat(subtotal))}
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
-          <div className="flex items-center gap-0 rounded-lg bg-gray-100 p-0.5 dark:bg-gray-800/50">
+          <div className={`flex items-center gap-0 rounded-lg px-1 py-1 ${
+            theme === "dark" ? "bg-gray-700/50" : "bg-gray-100"
+          }`}>
             <button
               onClick={onDecrease}
               disabled={quantity <= 1 || loading}
-              className={`flex h-7 w-7 items-center justify-center rounded-l-lg transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
+              className={`flex h-7 w-7 items-center justify-center rounded-md transition-all disabled:cursor-not-allowed disabled:opacity-40 font-semibold text-base ${
                 theme === "dark"
-                  ? "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  ? "text-gray-300 hover:bg-gray-600 hover:text-white"
+                  : "text-gray-700 hover:bg-gray-200"
               }`}
             >
-              <svg
-                className="h-4 w-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <path d="M5 12h14" strokeLinecap="round" />
-              </svg>
+              −
             </button>
             <span
-              className={`flex h-7 min-w-[32px] items-center justify-center bg-white px-2 text-sm font-semibold dark:bg-gray-800 ${
+              className={`flex h-7 min-w-[36px] items-center justify-center px-2 text-sm font-semibold ${
                 theme === "dark" ? "text-white" : "text-gray-900"
               }`}
             >
@@ -164,31 +161,14 @@ function CartItem({
             <button
               onClick={onIncrease}
               disabled={loading}
-              className={`flex h-7 w-7 items-center justify-center rounded-r-lg transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
+              className={`flex h-7 w-7 items-center justify-center rounded-md transition-all disabled:cursor-not-allowed disabled:opacity-40 font-semibold text-base ${
                 theme === "dark"
-                  ? "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  ? "text-gray-300 hover:bg-gray-600 hover:text-white"
+                  : "text-gray-700 hover:bg-gray-200"
               }`}
             >
-              <svg
-                className="h-4 w-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-              </svg>
+              +
             </button>
-          </div>
-          <div className="text-right">
-            <div
-              className={`text-sm font-bold ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}
-            >
-              {formatCurrency(parseFloat(subtotal))}
-            </div>
           </div>
         </div>
       </div>
@@ -199,60 +179,45 @@ function CartItem({
           <Image
             src={image || "/images/groceryPlaceholder.png"}
             alt={name}
-            width={80}
-            height={80}
-            className="rounded-lg object-cover"
+            width={60}
+            height={60}
+            className="rounded-lg object-cover bg-gray-100 dark:bg-gray-700"
           />
         </div>
       </div>
       <div className="hidden md:col-span-5 md:block">
         <h3
-          className={`font-semibold ${
+          className={`font-semibold text-base leading-tight ${
             theme === "dark" ? "text-white" : "text-gray-900"
           }`}
         >
           {name}
         </h3>
-        <span
-          className={`mt-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-            theme === "dark"
-              ? "bg-green-900/30 text-green-300"
-              : "bg-green-100 text-green-700"
+        <p
+          className={`mt-1 text-sm ${
+            theme === "dark" ? "text-gray-400" : "text-gray-600"
           }`}
         >
-          {size}
-        </span>
+          Color: {size}
+        </p>
       </div>
-      <div
-        className={`hidden font-bold md:col-span-2 md:flex md:justify-center ${
-          theme === "dark" ? "text-green-400" : "text-green-600"
-        }`}
-      >
-        {formatCurrency(parseFloat(price || "0"))}
-      </div>
-      <div className="hidden md:col-span-2 md:flex md:items-center md:justify-center md:gap-2">
-        <div className="flex items-center gap-0 rounded-lg bg-gray-100 p-0.5 dark:bg-gray-800/50">
+      <div className="hidden md:col-span-3 md:flex md:items-center md:justify-center md:gap-2">
+        <div className={`flex items-center gap-0 rounded-lg px-1 py-1 ${
+          theme === "dark" ? "bg-gray-700/50" : "bg-gray-100"
+        }`}>
           <button
             onClick={onDecrease}
             disabled={quantity <= 1 || loading}
-            className={`flex h-8 w-8 items-center justify-center rounded-l-lg transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
+            className={`flex h-8 w-8 items-center justify-center rounded-md transition-all disabled:cursor-not-allowed disabled:opacity-40 font-semibold text-base ${
               theme === "dark"
-                ? "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white"
-                : "bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                ? "text-gray-300 hover:bg-gray-600 hover:text-white"
+                : "text-gray-700 hover:bg-gray-200"
             }`}
           >
-            <svg
-              className="h-4 w-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            >
-              <path d="M5 12h14" strokeLinecap="round" />
-            </svg>
+            −
           </button>
           <span
-            className={`flex h-8 min-w-[36px] items-center justify-center bg-white px-3 text-sm font-semibold dark:bg-gray-800 ${
+            className={`flex h-8 min-w-[40px] items-center justify-center px-3 text-sm font-semibold ${
               theme === "dark" ? "text-white" : "text-gray-900"
             }`}
           >
@@ -261,48 +226,38 @@ function CartItem({
           <button
             onClick={onIncrease}
             disabled={loading}
-            className={`flex h-8 w-8 items-center justify-center rounded-r-lg transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
+            className={`flex h-8 w-8 items-center justify-center rounded-md transition-all disabled:cursor-not-allowed disabled:opacity-40 font-semibold text-base ${
               theme === "dark"
-                ? "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white"
-                : "bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                ? "text-gray-300 hover:bg-gray-600 hover:text-white"
+                : "text-gray-700 hover:bg-gray-200"
             }`}
           >
-            <svg
-              className="h-4 w-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            >
-              <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-            </svg>
+            +
           </button>
         </div>
       </div>
-      <div className="hidden md:col-span-2 md:block md:text-right">
+      <div className="hidden md:col-span-3 md:flex md:items-center md:justify-end md:gap-4">
         <div
-          className={`font-bold ${
+          className={`text-lg font-bold ${
             theme === "dark" ? "text-white" : "text-gray-900"
           }`}
         >
           {formatCurrency(parseFloat(subtotal))}
         </div>
-      </div>
-
-      {/* Delete Button - Desktop (in grid) */}
-      <div className="hidden md:col-span-1 md:flex md:justify-end">
+        {/* Delete Button - Desktop (inline with price) */}
         <button
           onClick={onRemove}
           disabled={loading}
-          className={`flex h-8 w-8 items-center justify-center rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+          className={`flex h-8 w-8 items-center justify-center transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
             theme === "dark"
-              ? "bg-gray-700/80 text-gray-400 hover:bg-red-500/20 hover:text-red-400"
-              : "bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500"
+              ? "text-gray-500 hover:text-red-400"
+              : "text-gray-400 hover:text-red-500"
           }`}
+          title="Remove item"
         >
           {loading ? (
             <svg
-              className="h-4 w-4 animate-spin"
+              className="h-5 w-5 animate-spin"
               viewBox="0 0 24 24"
               fill="none"
             >
@@ -322,15 +277,17 @@ function CartItem({
             </svg>
           ) : (
             <svg
-              className="h-4 w-4"
-              viewBox="0 0 24 24"
+              className="h-5 w-5"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
             >
-              <path d="M18 6L6 18M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
             </svg>
           )}
         </button>
@@ -358,6 +315,7 @@ export default function ItemCartTable({
   const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
   const [isLoadingItems, setIsLoadingItems] = useState<boolean>(true);
   const { removeItem: removeFoodItem, updateQuantity } = useFoodCart();
+  const { theme } = useTheme();
 
   // Use ref to store the callback to avoid dependency issues
   const onLoadingChangeRef = useRef(onLoadingChange);
@@ -553,12 +511,12 @@ export default function ItemCartTable({
 
   return (
     <>
-      <div className="mb-4 hidden pb-2 font-medium text-gray-500 md:grid md:grid-cols-12">
+      <div className={`mb-4 hidden pb-3 font-semibold md:grid md:grid-cols-12 md:gap-4 ${
+        theme === "dark" ? "text-gray-300" : "text-gray-900"
+      }`}>
         <div className="md:col-span-6">Product</div>
-        <div className="text-center md:col-span-2">Price</div>
-        <div className="text-center md:col-span-2">Quantity</div>
-        <div className="text-right md:col-span-1">Total</div>
-        <div className="md:col-span-1"></div>
+        <div className="text-center md:col-span-3">Quantity</div>
+        <div className="text-right md:col-span-3">Price</div>
       </div>
 
       <div className="space-y-2 md:space-y-0">
