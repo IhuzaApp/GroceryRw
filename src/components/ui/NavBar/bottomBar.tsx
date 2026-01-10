@@ -51,9 +51,9 @@ function MoreMenuItem({ icon, label, href, onClick }: MoreMenuItemProps) {
 
   return (
     <Link href={href} passHref onClick={handleClick}>
-      <div className="flex items-center space-x-3 rounded-lg px-4 py-3 text-sm text-gray-700 transition-colors duration-200 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">
-        <span className="text-lg">{icon}</span>
-        <span>{label}</span>
+      <div className="mx-2 flex items-center space-x-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-gray-100 hover:shadow-sm dark:text-gray-200 dark:hover:bg-gray-700">
+        <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center text-lg">{icon}</span>
+        <span className="flex-1">{label}</span>
       </div>
     </Link>
   );
@@ -382,61 +382,64 @@ export default function BottomBar() {
               href="/map"
               bgColor="bg-[#E6F7FF]  hover:bg-blue-100"
             />
-            <DesktopActionButton
-              icon={
-                <svg
-                  width="30px"
-                  height="30px"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                  <g
-                    id="SVGRepo_tracerCarrier"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></g>
-                  <g id="SVGRepo_iconCarrier">
-                    {" "}
-                    <path
-                      d="M4 8C4 5.17157 4 3.75736 4.87868 2.87868C5.75736 2 7.17157 2 10 2H14C16.8284 2 18.2426 2 19.1213 2.87868C20 3.75736 20 5.17157 20 8V16C20 18.8284 20 20.2426 19.1213 21.1213C18.2426 22 16.8284 22 14 22H10C7.17157 22 5.75736 22 4.87868 21.1213C4 20.2426 4 18.8284 4 16V8Z"
-                      stroke="#c2ab51"
-                      strokeWidth="1.5"
-                    ></path>{" "}
-                    <path
-                      d="M19.8978 16H7.89778C6.96781 16 6.50282 16 6.12132 16.1022C5.08604 16.3796 4.2774 17.1883 4 18.2235"
-                      stroke="#c2ab51"
-                      strokeWidth="1.5"
-                    ></path>{" "}
-                    <path
-                      opacity="0.5"
-                      d="M8 7H16"
-                      stroke="#c2ab51"
-                      strokeWidth="1.5"
+            {/* Recipes - Only show for non-guest logged-in users */}
+            {session?.user && !isGuest && (
+              <DesktopActionButton
+                icon={
+                  <svg
+                    width="30px"
+                    height="30px"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                    <g
+                      id="SVGRepo_tracerCarrier"
                       strokeLinecap="round"
-                    ></path>{" "}
-                    <path
-                      opacity="0.5"
-                      d="M8 10.5H13"
-                      stroke="#c2ab51"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                    ></path>{" "}
-                    <path
-                      opacity="0.5"
-                      d="M13 16V19.5309C13 19.8065 13 19.9443 12.9051 20C12.8103 20.0557 12.6806 19.9941 12.4211 19.8708L11.1789 19.2808C11.0911 19.2391 11.0472 19.2182 11 19.2182C10.9528 19.2182 10.9089 19.2391 10.8211 19.2808L9.57889 19.8708C9.31943 19.9941 9.18971 20.0557 9.09485 20C9 19.9443 9 19.8065 9 19.5309V16.45"
-                      stroke="#c2ab51"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                    ></path>{" "}
-                  </g>
-                </svg>
-              }
-              tooltip="Recipes"
-              href="/Recipes"
-              bgColor="bg-[#FFFAE6]  hover:bg-yellow-100"
-            />
+                      strokeLinejoin="round"
+                    ></g>
+                    <g id="SVGRepo_iconCarrier">
+                      {" "}
+                      <path
+                        d="M4 8C4 5.17157 4 3.75736 4.87868 2.87868C5.75736 2 7.17157 2 10 2H14C16.8284 2 18.2426 2 19.1213 2.87868C20 3.75736 20 5.17157 20 8V16C20 18.8284 20 20.2426 19.1213 21.1213C18.2426 22 16.8284 22 14 22H10C7.17157 22 5.75736 22 4.87868 21.1213C4 20.2426 4 18.8284 4 16V8Z"
+                        stroke="#c2ab51"
+                        strokeWidth="1.5"
+                      ></path>{" "}
+                      <path
+                        d="M19.8978 16H7.89778C6.96781 16 6.50282 16 6.12132 16.1022C5.08604 16.3796 4.2774 17.1883 4 18.2235"
+                        stroke="#c2ab51"
+                        strokeWidth="1.5"
+                      ></path>{" "}
+                      <path
+                        opacity="0.5"
+                        d="M8 7H16"
+                        stroke="#c2ab51"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      ></path>{" "}
+                      <path
+                        opacity="0.5"
+                        d="M8 10.5H13"
+                        stroke="#c2ab51"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      ></path>{" "}
+                      <path
+                        opacity="0.5"
+                        d="M13 16V19.5309C13 19.8065 13 19.9443 12.9051 20C12.8103 20.0557 12.6806 19.9941 12.4211 19.8708L11.1789 19.2808C11.0911 19.2391 11.0472 19.2182 11 19.2182C10.9528 19.2182 10.9089 19.2391 10.8211 19.2808L9.57889 19.8708C9.31943 19.9941 9.18971 20.0557 9.09485 20C9 19.9443 9 19.8065 9 19.5309V16.45"
+                        stroke="#c2ab51"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      ></path>{" "}
+                    </g>
+                  </svg>
+                }
+                tooltip="Recipes"
+                href="/Recipes"
+                bgColor="bg-[#FFFAE6]  hover:bg-yellow-100"
+              />
+            )}
           </div>
         )}
         {/* Main Floating Button (desktop) */}
@@ -480,8 +483,54 @@ export default function BottomBar() {
       {/* Bottom Navigation Bar */}
       {router.pathname !== "/Reels" && (
         <nav className="fixed bottom-0 left-0 z-[9999] flex w-full items-center justify-around border-t border-gray-200 bg-white py-4 shadow-lg transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800 md:hidden">
-          {/* Business - Only show for non-guest users */}
-          {!isGuest && (
+          {/* Recipes - Only show for logged-out users or guest users */}
+          {(!session?.user || isGuest) && (
+            <NavItem
+              href="/Recipes"
+              icon={
+                <svg
+                  fill="currentColor"
+                  height="30px"
+                  width="30px"
+                  version="1.1"
+                  id="Layer_1"
+                  xmlns="http://www.w3.org/2000/svg"
+                  xmlnsXlink="http://www.w3.org/1999/xlink"
+                  viewBox="0 0 511.999 511.999"
+                  xmlSpace="preserve"
+                  className="text-gray-600 transition-colors duration-200 dark:text-white"
+                >
+                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                  <g
+                    id="SVGRepo_tracerCarrier"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  ></g>
+                  <g id="SVGRepo_iconCarrier">
+                    <g>
+                      <g>
+                        <path d="M324.799,68.799c-103.222,0-187.2,83.978-187.2,187.2s83.978,187.2,187.2,187.2s187.2-83.978,187.2-187.2 S428.022,68.799,324.799,68.799z M324.799,407.169c-83.354,0-151.168-67.814-151.168-151.168s67.814-151.17,151.168-151.17 s151.168,67.814,151.168,151.168S408.154,407.169,324.799,407.169z"></path>
+                      </g>
+                    </g>
+                    <g>
+                      <g>
+                        <path d="M324.799,148.019c-59.541,0-107.981,48.44-107.981,107.981s48.44,107.981,107.981,107.981S432.78,315.54,432.78,255.999 S384.34,148.019,324.799,148.019z M324.799,327.95c-39.673,0-71.949-32.276-71.949-71.949s32.276-71.949,71.949-71.949 c39.673,0,71.949,32.276,71.949,71.949S364.472,327.95,324.799,327.95z"></path>
+                      </g>
+                    </g>
+                    <g>
+                      <g>
+                        <path d="M110.491,68.799c-9.95,0-18.016,8.066-18.016,18.016v96.161H81.959V86.815c0-9.95-8.066-18.016-18.016-18.016 c-9.95,0-18.016,8.066-18.016,18.016v96.161h-9.896V86.815c0-9.95-8.066-18.016-18.016-18.016S0,76.866,0,86.815v99.764 c0,17.881,14.547,32.428,32.428,32.428h12.298v206.175c0,9.95,8.066,18.016,18.016,18.016s18.016-8.066,18.016-18.016V219.009 h15.321c17.881,0,32.428-14.547,32.428-32.428V86.815C128.507,76.866,120.441,68.799,110.491,68.799z"></path>
+                      </g>
+                    </g>
+                  </g>
+                </svg>
+              }
+              label="Recipes"
+            />
+          )}
+          
+          {/* Business - Only show for non-guest logged-in users */}
+          {session?.user && !isGuest && (
             <NavItem
               href="/plasBusiness"
               icon={
@@ -722,10 +771,40 @@ export default function BottomBar() {
             {/* More Dropdown Menu */}
             {moreOpen && (
               <div
-                className="absolute bottom-full left-1/2 mb-2 w-64 -translate-x-1/2 transform rounded-lg border border-gray-200 bg-white py-2 shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                className="fixed bottom-20 left-1/2 z-[10000] w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 transform rounded-xl border border-gray-200 bg-white py-2 shadow-2xl dark:border-gray-700 dark:bg-gray-800"
                 ref={moreRef}
               >
-                {session?.user && (
+                {/* Guest Badge - Show for guest users */}
+                {isGuest && (
+                  <div className="mx-3 mb-3 mt-2">
+                    <div className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-orange-100 to-yellow-100 px-4 py-3.5 shadow-sm dark:from-orange-900/30 dark:to-yellow-900/30">
+                      <svg
+                        className="h-6 w-6 flex-shrink-0 text-orange-600 dark:text-orange-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <span className="text-sm font-bold text-orange-700 dark:text-orange-300">
+                          Guest User
+                        </span>
+                        <span className="text-xs text-orange-600/90 dark:text-orange-400/90">
+                          Limited access mode
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Profile - Only show for non-guest users */}
+                {session?.user && !isGuest && (
                   <MoreMenuItem
                     icon={
                       <svg
@@ -765,48 +844,51 @@ export default function BottomBar() {
                   />
                 )}
 
-                <MoreMenuItem
-                  icon={
-                    <svg
-                      fill="currentColor"
-                      height="20px"
-                      width="20px"
-                      version="1.1"
-                      id="Layer_1"
-                      xmlns="http://www.w3.org/2000/svg"
-                      xmlnsXlink="http://www.w3.org/1999/xlink"
-                      viewBox="0 0 511.999 511.999"
-                      xmlSpace="preserve"
-                    >
-                      <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                      <g
-                        id="SVGRepo_tracerCarrier"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      ></g>
-                      <g id="SVGRepo_iconCarrier">
-                        <g>
+                {/* Recipes - Only show for non-guest logged-in users */}
+                {session?.user && !isGuest && (
+                  <MoreMenuItem
+                    icon={
+                      <svg
+                        fill="currentColor"
+                        height="20px"
+                        width="20px"
+                        version="1.1"
+                        id="Layer_1"
+                        xmlns="http://www.w3.org/2000/svg"
+                        xmlnsXlink="http://www.w3.org/1999/xlink"
+                        viewBox="0 0 511.999 511.999"
+                        xmlSpace="preserve"
+                      >
+                        <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                        <g
+                          id="SVGRepo_tracerCarrier"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        ></g>
+                        <g id="SVGRepo_iconCarrier">
                           <g>
-                            <path d="M324.799,68.799c-103.222,0-187.2,83.978-187.2,187.2s83.978,187.2,187.2,187.2s187.2-83.978,187.2-187.2 S428.022,68.799,324.799,68.799z M324.799,407.169c-83.354,0-151.168-67.814-151.168-151.168s67.814-151.17,151.168-151.17 s151.168,67.814,151.168,151.168S408.154,407.169,324.799,407.169z"></path>
+                            <g>
+                              <path d="M324.799,68.799c-103.222,0-187.2,83.978-187.2,187.2s83.978,187.2,187.2,187.2s187.2-83.978,187.2-187.2 S428.022,68.799,324.799,68.799z M324.799,407.169c-83.354,0-151.168-67.814-151.168-151.168s67.814-151.17,151.168-151.17 s151.168,67.814,151.168,151.168S408.154,407.169,324.799,407.169z"></path>
+                            </g>
+                          </g>
+                          <g>
+                            <g>
+                              <path d="M324.799,148.019c-59.541,0-107.981,48.44-107.981,107.981s48.44,107.981,107.981,107.981S432.78,315.54,432.78,255.999 S384.34,148.019,324.799,148.019z M324.799,327.95c-39.673,0-71.949-32.276-71.949-71.949s32.276-71.949,71.949-71.949 c39.673,0,71.949,32.276,71.949,71.949S364.472,327.95,324.799,327.95z"></path>
+                            </g>
+                          </g>
+                          <g>
+                            <g>
+                              <path d="M110.491,68.799c-9.95,0-18.016,8.066-18.016,18.016v96.161H81.959V86.815c0-9.95-8.066-18.016-18.016-18.016 c-9.95,0-18.016,8.066-18.016,18.016v96.161h-9.896V86.815c0-9.95-8.066-18.016-18.016-18.016S0,76.866,0,86.815v99.764 c0,17.881,14.547,32.428,32.428,32.428h12.298v206.175c0,9.95,8.066,18.016,18.016,18.016s18.016-8.066,18.016-18.016V219.009 h15.321c17.881,0,32.428-14.547,32.428-32.428V86.815C128.507,76.866,120.441,68.799,110.491,68.799z"></path>
+                            </g>
                           </g>
                         </g>
-                        <g>
-                          <g>
-                            <path d="M324.799,148.019c-59.541,0-107.981,48.44-107.981,107.981s48.44,107.981,107.981,107.981S432.78,315.54,432.78,255.999 S384.34,148.019,324.799,148.019z M324.799,327.95c-39.673,0-71.949-32.276-71.949-71.949s32.276-71.949,71.949-71.949 c39.673,0,71.949,32.276,71.949,71.949S364.472,327.95,324.799,327.95z"></path>
-                          </g>
-                        </g>
-                        <g>
-                          <g>
-                            <path d="M110.491,68.799c-9.95,0-18.016,8.066-18.016,18.016v96.161H81.959V86.815c0-9.95-8.066-18.016-18.016-18.016 c-9.95,0-18.016,8.066-18.016,18.016v96.161h-9.896V86.815c0-9.95-8.066-18.016-18.016-18.016S0,76.866,0,86.815v99.764 c0,17.881,14.547,32.428,32.428,32.428h12.298v206.175c0,9.95,8.066,18.016,18.016,18.016s18.016-8.066,18.016-18.016V219.009 h15.321c17.881,0,32.428-14.547,32.428-32.428V86.815C128.507,76.866,120.441,68.799,110.491,68.799z"></path>
-                          </g>
-                        </g>
-                      </g>
-                    </svg>
-                  }
-                  label="Recipes"
-                  href="/Recipes"
-                  onClick={() => setMoreOpen(false)}
-                />
+                      </svg>
+                    }
+                    label="Recipes"
+                    href="/Recipes"
+                    onClick={() => setMoreOpen(false)}
+                  />
+                )}
 
                 {/* Messages - Only show for non-guest users */}
                 {session?.user && !isGuest && (
@@ -854,7 +936,7 @@ export default function BottomBar() {
                   />
                 )}
 
-                <div className="my-1 border-t border-gray-200 dark:border-gray-700"></div>
+                <div className="mx-2 my-2 border-t border-gray-200 dark:border-gray-700"></div>
 
                 {!session?.user && (
                   <MoreMenuItem
@@ -909,9 +991,9 @@ export default function BottomBar() {
                     handleThemeToggle();
                     setMoreOpen(false);
                   }}
-                  className="flex w-full items-center space-x-3 rounded-lg px-4 py-3 text-sm text-gray-700 transition-colors duration-200 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                  className="mx-2 flex w-auto items-center space-x-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-gray-100 hover:shadow-sm dark:text-gray-200 dark:hover:bg-gray-700"
                 >
-                  <span className="text-lg">
+                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center text-lg">
                     {theme === "dark" ? (
                       <svg
                         width="20px"
@@ -1004,10 +1086,11 @@ export default function BottomBar() {
                       </svg>
                     )}
                   </span>
-                  <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+                  <span className="flex-1">{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
                 </button>
 
-                {session?.user && (
+                {/* Logout - Only show for non-guest users */}
+                {session?.user && !isGuest && (
                   <MoreMenuItem
                     icon={
                       <svg
