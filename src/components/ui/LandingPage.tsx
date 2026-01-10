@@ -32,14 +32,72 @@ export default function LandingPage() {
   const fetchCategories = async () => {
     try {
       setLoadingCategories(true);
-      const response = await fetch("/api/queries/categories");
-      const data = await response.json();
-      if (data.categories) {
-        // Filter only active categories
-        const activeCategories = data.categories.filter(
+      
+      // Fetch categories, restaurants, and stores
+      const [categoriesRes, restaurantsRes, storesRes] = await Promise.all([
+        fetch("/api/queries/categories"),
+        fetch("/api/queries/restaurants"),
+        fetch("/api/queries/all-stores"),
+      ]);
+
+      const [categoriesData, restaurantsData, storesData] = await Promise.all([
+        categoriesRes.json(),
+        restaurantsRes.json(),
+        storesRes.json(),
+      ]);
+
+      if (categoriesData.categories) {
+        const activeCategories = categoriesData.categories.filter(
           (cat: any) => cat.is_active
         );
-        setCategories(activeCategories);
+
+        // Process categories to combine Super Market and Public Markets into Markets
+        const superMarketCategory = activeCategories.find(
+          (cat: any) => cat.name === "Super Market"
+        );
+        const publicMarketsCategory = activeCategories.find(
+          (cat: any) => cat.name === "Public Markets"
+        );
+
+        // Remove Super Market and Public Markets from the list
+        let processedCategories = activeCategories.filter(
+          (cat: any) => cat.name !== "Super Market" && cat.name !== "Public Markets"
+        );
+
+        // Add Markets category if either Super Market or Public Markets exists
+        if (superMarketCategory || publicMarketsCategory) {
+          processedCategories.push({
+            id: "markets-category",
+            name: "Markets",
+            description: "Super Markets and Public Markets",
+            image: "",
+            is_active: true,
+          });
+        }
+
+        // Add Restaurant category if restaurants exist
+        if (restaurantsData.restaurants && restaurantsData.restaurants.length > 0) {
+          processedCategories.push({
+            id: "restaurant-category",
+            name: "Restaurant",
+            description: "Restaurants and dining",
+            image: "",
+            is_active: true,
+          });
+        }
+
+        // Add Stores category if stores exist
+        if (storesData.stores && storesData.stores.length > 0) {
+          processedCategories.push({
+            id: "store-category",
+            name: "Stores",
+            description: "Business stores",
+            image: "",
+            is_active: true,
+          });
+        }
+
+        setCategories(processedCategories);
       }
     } catch (error) {
       console.error("Error fetching categories:", error);
