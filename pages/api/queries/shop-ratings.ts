@@ -54,19 +54,19 @@ export default async function handler(
       string,
       { totalRating: number; count: number; shopName?: string }
     > = {};
-    
+
     data.Ratings.forEach((ratingData) => {
       if (ratingData.Order && ratingData.Order.shop_id) {
         const shopId = ratingData.Order.shop_id;
-        
+
         if (!shopRatingsMap[shopId]) {
-          shopRatingsMap[shopId] = { 
-            totalRating: 0, 
+          shopRatingsMap[shopId] = {
+            totalRating: 0,
             count: 0,
-            shopName: ratingData.Order.Shop?.name 
+            shopName: ratingData.Order.Shop?.name,
           };
         }
-        
+
         shopRatingsMap[shopId].totalRating += ratingData.rating;
         shopRatingsMap[shopId].count += 1;
       }

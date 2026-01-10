@@ -33,7 +33,7 @@ export default function LandingPage() {
   const fetchCategories = async () => {
     try {
       setLoadingCategories(true);
-      
+
       // Fetch categories, restaurants, and stores
       const [categoriesRes, restaurantsRes, storesRes] = await Promise.all([
         fetch("/api/queries/categories"),
@@ -62,7 +62,8 @@ export default function LandingPage() {
 
         // Remove Super Market and Public Markets from the list
         let processedCategories = activeCategories.filter(
-          (cat: any) => cat.name !== "Super Market" && cat.name !== "Public Markets"
+          (cat: any) =>
+            cat.name !== "Super Market" && cat.name !== "Public Markets"
         );
 
         // Add Markets category if either Super Market or Public Markets exists
@@ -77,7 +78,10 @@ export default function LandingPage() {
         }
 
         // Add Restaurant category if restaurants exist
-        if (restaurantsData.restaurants && restaurantsData.restaurants.length > 0) {
+        if (
+          restaurantsData.restaurants &&
+          restaurantsData.restaurants.length > 0
+        ) {
           processedCategories.push({
             id: "restaurant-category",
             name: "Restaurant",
@@ -175,7 +179,7 @@ export default function LandingPage() {
             const shortAddress =
               place.formatted_address.split(",")[0] || place.formatted_address;
             setDisplayAddress(shortAddress);
-            
+
             // Store coordinates if available
             let lat = "";
             let lng = "";
@@ -185,12 +189,12 @@ export default function LandingPage() {
               document.cookie = `user_latitude=${lat}; path=/`;
               document.cookie = `user_longitude=${lng}; path=/`;
             }
-            
+
             // Store address in temp_address cookie (for backward compatibility)
             document.cookie = `temp_address=${encodeURIComponent(
               place.formatted_address
             )}; path=/`;
-            
+
             // Store in delivery_address cookie (proper format for header)
             const addressData = {
               street: shortAddress,
@@ -201,10 +205,10 @@ export default function LandingPage() {
               altitude: "0",
             };
             Cookies.set("delivery_address", JSON.stringify(addressData));
-            
+
             // Dispatch event to notify header to update
             window.dispatchEvent(new Event("addressChanged"));
-            
+
             // Fetch categories after location is set
             fetchCategories();
           }
@@ -235,11 +239,7 @@ export default function LandingPage() {
     } else {
       // Google Maps is loading, wait for it
       const checkGoogleMapsLoaded = setInterval(() => {
-        if (
-          window.google &&
-          window.google.maps &&
-          window.google.maps.places
-        ) {
+        if (window.google && window.google.maps && window.google.maps.places) {
           clearInterval(checkGoogleMapsLoaded);
           initializeAutocomplete();
         }
@@ -287,7 +287,7 @@ export default function LandingPage() {
             const shortAddress =
               place.formatted_address.split(",")[0] || place.formatted_address;
             setDisplayAddress(shortAddress);
-            
+
             // Store coordinates if available
             let lat = "";
             let lng = "";
@@ -297,12 +297,12 @@ export default function LandingPage() {
               document.cookie = `user_latitude=${lat}; path=/`;
               document.cookie = `user_longitude=${lng}; path=/`;
             }
-            
+
             // Store address in temp_address cookie (for backward compatibility)
             document.cookie = `temp_address=${encodeURIComponent(
               place.formatted_address
             )}; path=/`;
-            
+
             // Store in delivery_address cookie (proper format for header)
             const addressData = {
               street: shortAddress,
@@ -313,10 +313,10 @@ export default function LandingPage() {
               altitude: "0",
             };
             Cookies.set("delivery_address", JSON.stringify(addressData));
-            
+
             // Dispatch event to notify header to update
             window.dispatchEvent(new Event("addressChanged"));
-            
+
             // Fetch categories after location is set
             fetchCategories();
           }
@@ -336,11 +336,7 @@ export default function LandingPage() {
     } else {
       // Wait for Google Maps to load
       const checkGoogleMapsLoaded = setInterval(() => {
-        if (
-          window.google &&
-          window.google.maps &&
-          window.google.maps.places
-        ) {
+        if (window.google && window.google.maps && window.google.maps.places) {
           clearInterval(checkGoogleMapsLoaded);
           initializeStickyAutocomplete();
         }
@@ -394,12 +390,12 @@ export default function LandingPage() {
                   const shortAddress =
                     formattedAddress.split(",")[0] || formattedAddress;
                   setDisplayAddress(shortAddress);
-                  
+
                   // Store address in temp_address cookie (for backward compatibility)
                   document.cookie = `temp_address=${encodeURIComponent(
                     formattedAddress
                   )}; path=/`;
-                  
+
                   // Store in delivery_address cookie (proper format for header)
                   const addressData = {
                     street: shortAddress,
@@ -410,10 +406,10 @@ export default function LandingPage() {
                     altitude: "0",
                   };
                   Cookies.set("delivery_address", JSON.stringify(addressData));
-                  
+
                   // Dispatch event to notify header to update
                   window.dispatchEvent(new Event("addressChanged"));
-                  
+
                   // Fetch categories after location is set
                   fetchCategories();
                   // Small delay before redirect to show the address
@@ -423,10 +419,10 @@ export default function LandingPage() {
                 } else {
                   setAddress("Current Location");
                   setDisplayAddress("Current Location");
-                  
+
                   // Store in cookies
                   document.cookie = `temp_address=Current Location; path=/`;
-                  
+
                   // Store in delivery_address cookie (proper format for header)
                   const addressData = {
                     street: "Current Location",
@@ -437,10 +433,10 @@ export default function LandingPage() {
                     altitude: "0",
                   };
                   Cookies.set("delivery_address", JSON.stringify(addressData));
-                  
+
                   // Dispatch event to notify header to update
                   window.dispatchEvent(new Event("addressChanged"));
-                  
+
                   router.push("/");
                 }
               }
@@ -448,10 +444,10 @@ export default function LandingPage() {
           } else {
             // Fallback if geocoder fails
             setAddress("Current Location");
-            
+
             // Store in cookies with coordinates
             document.cookie = `temp_address=Current Location; path=/`;
-            
+
             const addressData = {
               street: "Current Location",
               city: "GPS Coordinates",
@@ -461,10 +457,10 @@ export default function LandingPage() {
               altitude: "0",
             };
             Cookies.set("delivery_address", JSON.stringify(addressData));
-            
+
             // Dispatch event to notify header to update
             window.dispatchEvent(new Event("addressChanged"));
-            
+
             router.push("/");
           }
         },

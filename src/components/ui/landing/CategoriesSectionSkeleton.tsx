@@ -17,7 +17,7 @@ export default function CategoriesSectionSkeleton() {
                     background: "transparent",
                   }}
                 />
-                
+
                 {/* Basket Body Skeleton */}
                 <div
                   className="relative mx-auto h-16 w-20 animate-pulse overflow-hidden rounded-lg border-2 border-white bg-white/10 md:h-20 md:w-24"

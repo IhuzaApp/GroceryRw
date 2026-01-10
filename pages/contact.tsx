@@ -650,9 +650,7 @@ export default function ContactPage() {
 
                             {/* Answer - Only show if expanded */}
                             {expandedFAQ === faq.id && (
-                              <p className="mb-4 text-gray-600">
-                                {faq.answer}
-                              </p>
+                              <p className="mb-4 text-gray-600">{faq.answer}</p>
                             )}
 
                             {/* Metadata */}

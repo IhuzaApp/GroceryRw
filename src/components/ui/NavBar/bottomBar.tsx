@@ -7,6 +7,7 @@ import { useLanguage } from "../../../context/LanguageContext";
 import { Input, Modal, Button, Loader } from "rsuite";
 import { useSession } from "next-auth/react";
 import { useAuth } from "../../../context/AuthContext";
+import { useAuth as useAuthHook } from "../../../hooks/useAuth";
 import { Briefcase } from "lucide-react";
 
 interface NavItemProps {
@@ -128,6 +129,7 @@ export default function BottomBar() {
   const [moreOpen, setMoreOpen] = useState(false);
   const router = useRouter();
   const { logout } = useAuth();
+  const { isGuest } = useAuthHook();
   const { count } = useCart();
   const { theme, setTheme } = useTheme();
   const { t } = useLanguage();
@@ -276,72 +278,75 @@ export default function BottomBar() {
       <div className="fixed bottom-6 right-4 z-50 hidden flex-col items-end gap-2 md:flex">
         {open && (
           <div className="mb-2 flex flex-col items-end gap-2">
-            <DesktopActionButton
-              icon={
-                <svg
-                  width="30px"
-                  height="30px"
-                  viewBox="-0.5 0 25 25"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                  <g
-                    id="SVGRepo_tracerCarrier"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></g>
-                  <g id="SVGRepo_iconCarrier">
-                    {" "}
-                    <path
-                      d="M6.72266 5.47968C6.81011 4.6032 7.11663 3.7628 7.61402 3.03585C8.11141 2.30889 8.78368 1.71874 9.56895 1.31971C10.3542 0.920684 11.2272 0.725607 12.1077 0.752437C12.9881 0.779267 13.8476 1.02714 14.6071 1.47324C15.3666 1.91935 16.0017 2.54934 16.4539 3.30524C16.9061 4.06113 17.1609 4.91863 17.1948 5.79881C17.2287 6.67899 17.0407 7.55355 16.648 8.342C16.2627 9.11563 15.6925 9.78195 14.9883 10.2821"
-                      stroke="#5b428a"
-                      strokeWidth="1.5"
+            {/* AI Support - Only show for non-guest users */}
+            {session?.user && !isGuest && (
+              <DesktopActionButton
+                icon={
+                  <svg
+                    width="30px"
+                    height="30px"
+                    viewBox="-0.5 0 25 25"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                    <g
+                      id="SVGRepo_tracerCarrier"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                    ></path>{" "}
-                    <path
-                      d="M7.43945 3.35268C8.25207 4.19161 9.22512 4.85854 10.3007 5.31379C11.3763 5.76904 12.5325 6.00332 13.7005 6.00268C14.8492 6.00382 15.9865 5.77762 17.0469 5.33742"
-                      stroke="#5b428a"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></path>{" "}
-                    <path
-                      d="M10.8232 9.75268C10.5266 9.75268 10.2366 9.84065 9.98989 10.0055C9.74321 10.1703 9.55096 10.4046 9.43742 10.6787C9.32389 10.9527 9.29419 11.2543 9.35206 11.5453C9.40994 11.8363 9.5528 12.1036 9.76258 12.3133C9.97236 12.5231 10.2396 12.666 10.5306 12.7239C10.8216 12.7817 11.1232 12.752 11.3973 12.6385C11.6714 12.525 11.9056 12.3327 12.0704 12.086C12.2353 11.8394 12.3232 11.5493 12.3232 11.2527C12.3232 10.8549 12.1652 10.4733 11.8839 10.192C11.6026 9.91071 11.2211 9.75268 10.8232 9.75268Z"
-                      stroke="#5b428a"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></path>{" "}
-                    <path
-                      d="M4.82324 7.17467V8.25268C4.82324 9.04832 5.13931 9.81139 5.70192 10.374C6.26453 10.9366 7.02759 11.2527 7.82324 11.2527H9.24649"
-                      stroke="#5b428a"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></path>{" "}
-                    <path
-                      d="M21.7005 23.2527C21.7006 21.4693 21.211 19.7202 20.2852 18.196C19.3632 16.6779 18.0438 15.4409 16.4697 14.6187"
-                      stroke="#5b428a"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></path>{" "}
-                    <path
-                      d="M2.2002 23.2527C2.2 21.4695 2.68926 19.7206 3.61465 18.1963C4.53542 16.6797 5.85284 15.4435 7.42453 14.621"
-                      stroke="#5b428a"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></path>{" "}
-                  </g>
-                </svg>
-              }
-              tooltip="AI Support"
-              onClick={() => {}}
-              bgColor="bg-[#c2a2ff] hover:bg-[#c6aafc]"
-            />
+                    ></g>
+                    <g id="SVGRepo_iconCarrier">
+                      {" "}
+                      <path
+                        d="M6.72266 5.47968C6.81011 4.6032 7.11663 3.7628 7.61402 3.03585C8.11141 2.30889 8.78368 1.71874 9.56895 1.31971C10.3542 0.920684 11.2272 0.725607 12.1077 0.752437C12.9881 0.779267 13.8476 1.02714 14.6071 1.47324C15.3666 1.91935 16.0017 2.54934 16.4539 3.30524C16.9061 4.06113 17.1609 4.91863 17.1948 5.79881C17.2287 6.67899 17.0407 7.55355 16.648 8.342C16.2627 9.11563 15.6925 9.78195 14.9883 10.2821"
+                        stroke="#5b428a"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      ></path>{" "}
+                      <path
+                        d="M7.43945 3.35268C8.25207 4.19161 9.22512 4.85854 10.3007 5.31379C11.3763 5.76904 12.5325 6.00332 13.7005 6.00268C14.8492 6.00382 15.9865 5.77762 17.0469 5.33742"
+                        stroke="#5b428a"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      ></path>{" "}
+                      <path
+                        d="M10.8232 9.75268C10.5266 9.75268 10.2366 9.84065 9.98989 10.0055C9.74321 10.1703 9.55096 10.4046 9.43742 10.6787C9.32389 10.9527 9.29419 11.2543 9.35206 11.5453C9.40994 11.8363 9.5528 12.1036 9.76258 12.3133C9.97236 12.5231 10.2396 12.666 10.5306 12.7239C10.8216 12.7817 11.1232 12.752 11.3973 12.6385C11.6714 12.525 11.9056 12.3327 12.0704 12.086C12.2353 11.8394 12.3232 11.5493 12.3232 11.2527C12.3232 10.8549 12.1652 10.4733 11.8839 10.192C11.6026 9.91071 11.2211 9.75268 10.8232 9.75268Z"
+                        stroke="#5b428a"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      ></path>{" "}
+                      <path
+                        d="M4.82324 7.17467V8.25268C4.82324 9.04832 5.13931 9.81139 5.70192 10.374C6.26453 10.9366 7.02759 11.2527 7.82324 11.2527H9.24649"
+                        stroke="#5b428a"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      ></path>{" "}
+                      <path
+                        d="M21.7005 23.2527C21.7006 21.4693 21.211 19.7202 20.2852 18.196C19.3632 16.6779 18.0438 15.4409 16.4697 14.6187"
+                        stroke="#5b428a"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      ></path>{" "}
+                      <path
+                        d="M2.2002 23.2527C2.2 21.4695 2.68926 19.7206 3.61465 18.1963C4.53542 16.6797 5.85284 15.4435 7.42453 14.621"
+                        stroke="#5b428a"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      ></path>{" "}
+                    </g>
+                  </svg>
+                }
+                tooltip="AI Support"
+                onClick={() => {}}
+                bgColor="bg-[#c2a2ff] hover:bg-[#c6aafc]"
+              />
+            )}
             <DesktopActionButton
               icon={
                 <svg
@@ -475,10 +480,12 @@ export default function BottomBar() {
       {/* Bottom Navigation Bar */}
       {router.pathname !== "/Reels" && (
         <nav className="fixed bottom-0 left-0 z-[9999] flex w-full items-center justify-around border-t border-gray-200 bg-white py-4 shadow-lg transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800 md:hidden">
-          <NavItem
-            href="/plasBusiness"
-            icon={
-              <div className="relative">
+          {/* Business - Only show for non-guest users */}
+          {!isGuest && (
+            <NavItem
+              href="/plasBusiness"
+              icon={
+                <div className="relative">
                 <svg
                   width="30px"
                   height="30px"
@@ -532,9 +539,12 @@ export default function BottomBar() {
                   </span>
                 )}
               </div>
-            }
-            label={t("nav.marketplace") || "Marketplace"}
-          />
+              }
+              label={t("nav.marketplace") || "Marketplace"}
+            />
+          )}
+          
+          {/* Orders - Show for all signed in users including guests */}
           <NavItem
             href="/CurrentPendingOrders"
             icon={
@@ -798,7 +808,8 @@ export default function BottomBar() {
                   onClick={() => setMoreOpen(false)}
                 />
 
-                {session?.user && (
+                {/* Messages - Only show for non-guest users */}
+                {session?.user && !isGuest && (
                   <MoreMenuItem
                     icon={
                       <svg

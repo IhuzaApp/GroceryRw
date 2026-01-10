@@ -75,10 +75,10 @@ export function useUserDashboardLogic(initialData: Data) {
   const [shopDynamics, setShopDynamics] = useState<
     Record<
       string,
-      { 
-        distance: string; 
-        time: string; 
-        fee: string; 
+      {
+        distance: string;
+        time: string;
+        fee: string;
         open: boolean;
         rating: number;
         ratingCount: number;
@@ -88,7 +88,9 @@ export function useUserDashboardLogic(initialData: Data) {
   const [dataLoaded, setDataLoaded] = useState(false);
   const [isFetchingData, setIsFetchingData] = useState(false);
   const [systemConfig, setSystemConfig] = useState<SystemConfig | null>(null);
-  const [shopRatings, setShopRatings] = useState<Record<string, ShopRating>>({});
+  const [shopRatings, setShopRatings] = useState<Record<string, ShopRating>>(
+    {}
+  );
 
   // Fetch system configuration and ratings on mount
   useEffect(() => {
@@ -526,7 +528,9 @@ export function useUserDashboardLogic(initialData: Data) {
             const dist3D = Math.sqrt(distKm * distKm + altKm * altKm);
             const distance = `${Math.round(dist3D * 10) / 10} km`;
             const travelTime = Math.ceil(dist3D);
-            const shoppingTime = systemConfig ? parseInt(systemConfig.shoppingTime) : 40;
+            const shoppingTime = systemConfig
+              ? parseInt(systemConfig.shoppingTime)
+              : 40;
             const totalTime = travelTime + shoppingTime;
             let time = `${totalTime} mins`;
             if (totalTime >= 60) {
@@ -534,17 +538,25 @@ export function useUserDashboardLogic(initialData: Data) {
               const mins = totalTime % 60;
               time = `${hours}h ${mins}m`;
             }
-            
+
             // Calculate delivery fee using same logic as checkout
-            const baseDeliveryFee = systemConfig ? parseInt(systemConfig.baseDeliveryFee) : 1000;
+            const baseDeliveryFee = systemConfig
+              ? parseInt(systemConfig.baseDeliveryFee)
+              : 1000;
             const extraDistance = Math.max(0, distKm - 3);
-            const distanceSurcharge = Math.ceil(extraDistance) * 
+            const distanceSurcharge =
+              Math.ceil(extraDistance) *
               (systemConfig ? parseInt(systemConfig.distanceSurcharge) : 300);
             const rawDistanceFee = baseDeliveryFee + distanceSurcharge;
-            const cappedDistanceFee = systemConfig ? parseInt(systemConfig.cappedDistanceFee) : 3000;
-            const finalDistanceFee = rawDistanceFee > cappedDistanceFee ? cappedDistanceFee : rawDistanceFee;
+            const cappedDistanceFee = systemConfig
+              ? parseInt(systemConfig.cappedDistanceFee)
+              : 3000;
+            const finalDistanceFee =
+              rawDistanceFee > cappedDistanceFee
+                ? cappedDistanceFee
+                : rawDistanceFee;
             const fee = `${finalDistanceFee} frw`;
-            
+
             // Get shop ratings
             const shopRating = shopRatings[shop.id];
             const rating = shopRating ? shopRating.averageRating : 0;
@@ -592,7 +604,14 @@ export function useUserDashboardLogic(initialData: Data) {
                 isOpen = false;
               }
             }
-            newDyn[shop.id] = { distance, time, fee, open: isOpen, rating, ratingCount };
+            newDyn[shop.id] = {
+              distance,
+              time,
+              fee,
+              open: isOpen,
+              rating,
+              ratingCount,
+            };
           }
         });
         setShopDynamics(newDyn);
