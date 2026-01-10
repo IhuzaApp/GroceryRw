@@ -9,6 +9,7 @@ import { useSession } from "next-auth/react";
 import { useAuth } from "../../../context/AuthContext";
 import { useAuth as useAuthHook } from "../../../hooks/useAuth";
 import { Briefcase } from "lucide-react";
+import GuestUpgradeModal from "../GuestUpgradeModal";
 
 interface NavItemProps {
   icon: React.ReactNode;
@@ -137,6 +138,7 @@ export default function BottomBar() {
   const moreRef = useRef<HTMLDivElement>(null);
   const [marketplaceNotificationCount, setMarketplaceNotificationCount] =
     useState(0);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const handleThemeToggle = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
@@ -777,29 +779,50 @@ export default function BottomBar() {
                 {/* Guest Badge - Show for guest users */}
                 {isGuest && (
                   <div className="mx-3 mb-3 mt-2">
-                    <div className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-orange-100 to-yellow-100 px-4 py-3.5 shadow-sm dark:from-orange-900/30 dark:to-yellow-900/30">
-                      <svg
-                        className="h-6 w-6 flex-shrink-0 text-orange-600 dark:text-orange-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                        />
-                      </svg>
-                      <div className="flex flex-col flex-1 min-w-0">
-                        <span className="text-sm font-bold text-orange-700 dark:text-orange-300">
-                          Guest User
-                        </span>
-                        <span className="text-xs text-orange-600/90 dark:text-orange-400/90">
-                          Limited access mode
-                        </span>
+                    <button
+                      onClick={() => {
+                        setMoreOpen(false);
+                        setShowUpgradeModal(true);
+                      }}
+                      className="w-full transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      <div className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-orange-100 to-yellow-100 px-4 py-3.5 shadow-sm dark:from-orange-900/30 dark:to-yellow-900/30">
+                        <svg
+                          className="h-6 w-6 flex-shrink-0 text-orange-600 dark:text-orange-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                        <div className="flex flex-col flex-1 min-w-0 text-left">
+                          <span className="text-sm font-bold text-orange-700 dark:text-orange-300">
+                            Guest User
+                          </span>
+                          <span className="text-xs text-orange-600/90 dark:text-orange-400/90">
+                            Tap to become a Plas member
+                          </span>
+                        </div>
+                        <svg
+                          className="h-5 w-5 flex-shrink-0 text-orange-600 dark:text-orange-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
                       </div>
-                    </div>
+                    </button>
                   </div>
                 )}
                 
@@ -1149,6 +1172,12 @@ export default function BottomBar() {
           </div>
         </nav>
       )}
+
+      {/* Guest Upgrade Modal */}
+      <GuestUpgradeModal
+        open={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+      />
     </>
   );
 }
