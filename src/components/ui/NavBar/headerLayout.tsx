@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import { Input, InputGroup, Modal } from "rsuite";
+import { useRouter } from "next/router";
 import { useCart } from "../../../context/CartContext";
 import AddressManagementModal from "../../userProfile/AddressManagementModal";
 import Cookies from "js-cookie";
@@ -18,8 +19,10 @@ import { db } from "../../../lib/firebase";
 import SearchBar from "../SearchBar/SearchBar";
 import { authenticatedFetch } from "../../../lib/authenticatedFetch";
 import { useAuth } from "../../../hooks/useAuth";
+import GuestUpgradeModal from "../GuestUpgradeModal";
 
 export default function HeaderLayout() {
+  const router = useRouter();
   const { count } = useCart();
   const { data: session } = useSession();
   const { isGuest } = useAuth();
@@ -34,6 +37,7 @@ export default function HeaderLayout() {
   } | null>(null);
   const [showAddressModal, setShowAddressModal] = useState<boolean>(false);
   const [unreadMessages, setUnreadMessages] = useState<number>(0);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   useEffect(() => {
     // Try loading the delivery address from cookie first (works for both logged in and guest users)
@@ -229,7 +233,11 @@ export default function HeaderLayout() {
           <div className="flex items-center gap-4">
             {/* Guest Badge */}
             {isGuest && (
-              <div className="flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-100 to-yellow-100 px-3 py-1.5 dark:from-orange-900/30 dark:to-yellow-900/30">
+              <button
+                onClick={() => setShowUpgradeModal(true)}
+                className="flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-100 to-yellow-100 px-3 py-1.5 shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md dark:from-orange-900/30 dark:to-yellow-900/30"
+                title="Upgrade to full member"
+              >
                 <svg
                   className="h-4 w-4 text-orange-600 dark:text-orange-400"
                   fill="none"
@@ -246,7 +254,20 @@ export default function HeaderLayout() {
                 <span className="text-sm font-semibold text-orange-700 dark:text-orange-300">
                   Guest
                 </span>
-              </div>
+                <svg
+                  className="h-3 w-3 text-orange-600 dark:text-orange-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
             )}
 
             {/* Theme Switch */}
@@ -401,6 +422,12 @@ export default function HeaderLayout() {
           window.dispatchEvent(new Event("addressChanged"));
           setShowAddressModal(false);
         }}
+      />
+
+      {/* Guest Upgrade Modal */}
+      <GuestUpgradeModal
+        open={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
       />
     </>
   );
