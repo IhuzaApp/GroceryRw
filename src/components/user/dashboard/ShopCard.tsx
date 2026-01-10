@@ -150,16 +150,20 @@ const ShopCard: React.FC<ShopCardProps> = ({
 
           {/* Shop Logo - Positioned on image */}
           {shop.logo && shop.logo.trim() !== "" && (
-            <div className="absolute bottom-4 left-4 h-12 w-12 overflow-hidden rounded-lg border-2 border-white bg-white shadow-lg">
-              <img
-                src={shop.logo}
-                alt={`${shop.name} logo`}
-                className="h-full w-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-                onLoad={() => {}}
-              />
+            <div className="absolute bottom-4 left-4">
+              <div className="h-14 w-14 rounded-full bg-gradient-to-br from-green-400 via-blue-500 to-purple-600 p-[3px] shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+                <div className="h-full w-full overflow-hidden rounded-full bg-white">
+                  <img
+                    src={shop.logo}
+                    alt={`${shop.name} logo`}
+                    className="h-full w-full rounded-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                    onLoad={() => {}}
+                  />
+                </div>
+              </div>
             </div>
           )}
 
@@ -172,11 +176,11 @@ const ShopCard: React.FC<ShopCardProps> = ({
 
           {/* Open/Closed Status - Top Right */}
           {isShopOpen ? (
-            <span className="absolute right-3 top-3 rounded-full bg-green-500 px-2 py-1 text-xs font-bold text-white shadow-md">
+            <span className="absolute right-3 top-3 rounded-full bg-green-500 px-2 py-1 text-xs font-bold !text-white shadow-md">
               Open
             </span>
           ) : (
-            <span className="absolute right-3 top-3 rounded-full bg-red-500 px-2 py-1 text-xs font-bold text-white shadow-md">
+            <span className="absolute right-3 top-3 rounded-full bg-red-500 px-2 py-1 text-xs font-bold !text-white shadow-md">
               Closed
             </span>
           )}
