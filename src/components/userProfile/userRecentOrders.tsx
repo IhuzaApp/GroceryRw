@@ -11,6 +11,7 @@ type Order = {
   created_at: string;
   delivery_time: string;
   total: number;
+  pin?: string;
   user: {
     id: string;
     name: string;
@@ -194,8 +195,6 @@ export default function UserRecentOrders({
   const startIndex = (currentPage - 1) * ordersPerPage;
   const endIndex = startIndex + ordersPerPage;
   const visibleOrders = filteredOrders.slice(startIndex, endIndex);
-
-  console.log(`📊 Filter: "${filter}" | Total orders: ${orders.length} | Filtered: ${filteredOrders.length} | Visible: ${visibleOrders.length}`);
 
   // Reset to page 1 when search changes
   useEffect(() => {
@@ -390,7 +389,7 @@ export default function UserRecentOrders({
             ) : null}
 
             {/* Order Info */}
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-gray-900 dark:text-white">
                   Order #{formatOrderID(order?.OrderID)}
@@ -399,6 +398,19 @@ export default function UserRecentOrders({
                   {timeAgo(order?.created_at)}
                 </span>
               </div>
+              
+              {/* PIN Display */}
+              {order?.pin && (
+                <div className="flex flex-col items-center gap-0.5 rounded-lg border-2 border-dashed border-green-400 bg-gradient-to-br from-green-50 to-green-100 px-3 py-1.5 shadow-sm dark:border-green-600 dark:from-green-900/30 dark:to-green-800/20">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-green-600 dark:text-green-400">
+                    PICKUP PIN
+                  </span>
+                  <span className="text-2xl font-black leading-none tracking-wider text-green-700 dark:text-green-300">
+                    {order.pin}
+                  </span>
+                </div>
+              )}
+              
               {/* Shopper Details or Status Badge */}
               {(() => {
                 const isDone = order.status === "delivered";

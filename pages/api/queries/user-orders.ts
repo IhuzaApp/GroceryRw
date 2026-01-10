@@ -24,6 +24,7 @@ const GET_USER_ORDERS = gql`
       shop_id
       shopper_id
       delivery_time
+      pin
       Order_Items_aggregate {
         aggregate {
           count
@@ -63,6 +64,7 @@ interface OrdersResponse {
     shop_id: string;
     shopper_id: string | null;
     delivery_time: string;
+    pin: string;
     Order_Items_aggregate: {
       aggregate: {
         count: number;
@@ -91,40 +93,20 @@ export default async function handler(
     )) as Session | null;
 
     if (!session?.user) {
-      console.log("❌ No session or user found");
       return res.status(401).json({ error: "Unauthorized" });
     }
 
     const userId = (session.user as any).id;
-    const isGuest = (session.user as any).is_guest || false;
     
-    console.log("✅ User Session Details:", {
-      userId,
-      userName: session.user.name,
-      userEmail: session.user.email,
-      isGuest,
-    });
-
     if (!userId) {
-      console.log("❌ User ID not found in session");
       return res.status(400).json({ error: "User ID not found in session" });
     }
 
     // Fetch orders for this specific user only
-    console.log(`🔍 Fetching orders for user: ${userId}`);
     const data = await hasuraClient.request<OrdersResponse>(GET_USER_ORDERS, {
       user_id: userId,
     });
     const orders = data.Orders;
-    
-    console.log(`📦 Found ${orders?.length || 0} orders for user ${userId}:`, 
-      orders?.map(o => ({ 
-        OrderID: o.OrderID, 
-        status: o.status, 
-        total: o.total,
-        created_at: o.created_at 
-      }))
-    );
 
     // If no orders found, return empty array
     if (!orders || orders.length === 0) {
@@ -146,6 +128,7 @@ export default async function handler(
         status: o.status,
         created_at: o.created_at,
         delivery_time: o.delivery_time,
+        pin: o.pin,
         total:
           parseFloat(o.total || "0") +
           parseFloat(o.service_fee || "0") +
@@ -189,6 +172,7 @@ export default async function handler(
         status: o.status,
         created_at: o.created_at,
         delivery_time: o.delivery_time,
+        pin: o.pin,
         total: grandTotal,
         shop_id: o.shop_id,
         shopper_id: o.shopper_id,
@@ -198,10 +182,8 @@ export default async function handler(
       };
     });
 
-    console.log(`✅ Returning ${enriched.length} enriched orders to client`);
     res.status(200).json({ orders: enriched });
   } catch (error) {
-    console.error("❌ Error fetching user orders:", error);
     logger.error("Error fetching user orders", "UserOrdersAPI", error);
     res.status(500).json({ error: "Failed to fetch user orders" });
   }
