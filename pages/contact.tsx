@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/router";
+import { User, Calendar, Plus, Minus } from "lucide-react";
 import AboutTopBar from "../src/components/ui/landing/AboutTopBar";
 import AboutHeader from "../src/components/ui/landing/AboutHeader";
 import AboutFooter from "../src/components/ui/landing/AboutFooter";
@@ -31,6 +32,97 @@ export default function ContactPage() {
     "Business Accounts",
     "Other",
   ];
+
+  // FAQ Section State
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
+
+  const faqCategories = [
+    "All",
+    "Recruitment process",
+    "Tech process",
+    "Business process",
+    "Internships",
+    "Plas life",
+    "Diversity & Inclusion",
+  ];
+
+  const faqData = [
+    {
+      id: 1,
+      category: "Recruitment process",
+      question: "When will I receive the information for my onboarding?",
+      answer:
+        "Once you've accepted your offer, you'll receive onboarding information within 5-7 business days before your start date. This will include all necessary details about your first day, required documents, and what to expect.",
+      author: "Ricardo Muriel",
+      date: "10.10.2022",
+    },
+    {
+      id: 2,
+      category: "Tech process",
+      question:
+        "What is the technical interview about? Even if the role doesn't have tech requirements, should I prepare something in advance?",
+      answer:
+        "Our technical interviews assess problem-solving abilities and technical knowledge relevant to your role. Even for non-technical positions, we may assess your approach to challenges. We'll always provide guidance on what to prepare beforehand.",
+      author: "Maria Fernandez",
+      date: "26.10.2022",
+    },
+    {
+      id: 3,
+      category: "Business process",
+      question: "How can I become a courier?",
+      answer:
+        "To become a Plas courier, visit our 'Become a Partner' page and select the courier option. You'll need a valid driver's license, a vehicle, and to pass our background check. The application process typically takes 1-2 weeks.",
+      author: "Anonymous",
+      date: "26.08.2022",
+    },
+    {
+      id: 4,
+      category: "Diversity & Inclusion",
+      question:
+        "What is the process to start an Employee Resource Group (ERG)?",
+      answer:
+        "Starting an ERG at Plas requires at least 5 founding members and a clear mission statement. Submit your proposal to the D&I team, outlining your group's purpose, planned activities, and expected impact. We'll review and provide support for approved groups.",
+      author: "Robert Baxter",
+      date: "16.12.2021",
+    },
+    {
+      id: 5,
+      category: "Diversity & Inclusion",
+      question: "What is an Employee Resource Group (ERG)?",
+      answer:
+        "Employee Resource Groups are voluntary, employee-led groups that foster a diverse and inclusive workplace. They're organized around shared characteristics, life experiences, or interests, and serve as a resource for members and the organization.",
+      author: "Anonymous",
+      date: "10.1.2022",
+    },
+    {
+      id: 6,
+      category: "Plas life",
+      question: "What benefits does Plas offer to employees?",
+      answer:
+        "Plas offers comprehensive benefits including health insurance, flexible working hours, remote work options, professional development programs, wellness initiatives, and employee discounts on our platform.",
+      author: "Sarah Johnson",
+      date: "15.03.2023",
+    },
+    {
+      id: 7,
+      category: "Internships",
+      question: "Does Plas offer internship programs?",
+      answer:
+        "Yes! We offer internship programs throughout the year across various departments. Internships typically last 3-6 months and provide hands-on experience, mentorship, and potential pathways to full-time positions.",
+      author: "John Smith",
+      date: "20.05.2023",
+    },
+  ];
+
+  const filteredFAQs =
+    activeCategory === "All"
+      ? faqData
+      : faqData.filter((faq) => faq.category === activeCategory);
+
+  const toggleFAQ = (id: number) => {
+    setExpandedFAQ(expandedFAQ === id ? null : id);
+  };
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -497,6 +589,112 @@ export default function ContactPage() {
                         you'll be sent a link to the answer.
                       </p>
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* FAQ Section - Other questions answered */}
+        <div className="bg-white py-16 md:py-24">
+          <div className="container mx-auto px-4">
+            <div className="mx-auto max-w-7xl">
+              <h2 className="mb-12 text-4xl font-bold text-gray-800 md:text-5xl">
+                Other questions answered
+              </h2>
+
+              <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
+                {/* Left Column - Categories */}
+                <div className="lg:col-span-1">
+                  <nav className="space-y-2">
+                    {faqCategories.map((category) => (
+                      <button
+                        key={category}
+                        onClick={() => setActiveCategory(category)}
+                        className={`w-full text-left font-bold transition-colors ${
+                          activeCategory === category
+                            ? "text-gray-800"
+                            : "text-gray-500 hover:text-gray-700"
+                        }`}
+                      >
+                        <div
+                          className={`py-2 ${
+                            activeCategory === category
+                              ? "border-b-3 border-[#00D9A5]"
+                              : ""
+                          }`}
+                        >
+                          {category}
+                        </div>
+                      </button>
+                    ))}
+                  </nav>
+                </div>
+
+                {/* Right Column - Questions */}
+                <div className="lg:col-span-3">
+                  <div className="space-y-4">
+                    {filteredFAQs.map((faq) => (
+                      <div
+                        key={faq.id}
+                        className="cursor-pointer rounded-lg bg-white p-6 shadow-md transition-shadow hover:shadow-lg"
+                        onClick={() => toggleFAQ(faq.id)}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            {/* Question */}
+                            <h3 className="mb-3 text-lg font-semibold text-gray-800">
+                              {faq.question}
+                            </h3>
+
+                            {/* Answer - Only show if expanded */}
+                            {expandedFAQ === faq.id && (
+                              <p className="mb-4 text-gray-600">
+                                {faq.answer}
+                              </p>
+                            )}
+
+                            {/* Metadata */}
+                            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                              <div className="flex items-center gap-2">
+                                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#00D9A5]">
+                                  <User className="h-3 w-3 text-white" />
+                                </div>
+                                <span>{faq.author}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4" />
+                                <span>{faq.date}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Expand/Collapse Icon */}
+                          <button
+                            className="flex-shrink-0 text-[#00D9A5] transition-transform"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFAQ(faq.id);
+                            }}
+                          >
+                            {expandedFAQ === faq.id ? (
+                              <Minus className="h-6 w-6" />
+                            ) : (
+                              <Plus className="h-6 w-6" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+
+                    {filteredFAQs.length === 0 && (
+                      <div className="py-12 text-center text-gray-500">
+                        <p className="text-lg">
+                          No questions available for this category yet.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

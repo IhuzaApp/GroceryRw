@@ -95,6 +95,9 @@ export default function LandingPage() {
       if (
         typeof window !== "undefined" &&
         window.google &&
+        window.google.maps &&
+        window.google.maps.places &&
+        window.google.maps.places.Autocomplete &&
         addressInputRef.current
       ) {
         const autocompleteInstance = new window.google.maps.places.Autocomplete(
@@ -144,8 +147,32 @@ export default function LandingPage() {
       script.defer = true;
       script.onload = initializeAutocomplete;
       document.head.appendChild(script);
-    } else {
+    } else if (
+      window.google &&
+      window.google.maps &&
+      window.google.maps.places
+    ) {
+      // Google Maps is already loaded with places library
       initializeAutocomplete();
+    } else {
+      // Google Maps is loading, wait for it
+      const checkGoogleMapsLoaded = setInterval(() => {
+        if (
+          window.google &&
+          window.google.maps &&
+          window.google.maps.places
+        ) {
+          clearInterval(checkGoogleMapsLoaded);
+          initializeAutocomplete();
+        }
+      }, 100);
+
+      return () => {
+        clearInterval(checkGoogleMapsLoaded);
+        if (autocomplete) {
+          window.google?.maps?.event?.clearInstanceListeners(autocomplete);
+        }
+      };
     }
 
     return () => {
@@ -161,6 +188,9 @@ export default function LandingPage() {
       if (
         typeof window !== "undefined" &&
         window.google &&
+        window.google.maps &&
+        window.google.maps.places &&
+        window.google.maps.places.Autocomplete &&
         stickyAddressInputRef.current
       ) {
         const autocompleteInstance = new window.google.maps.places.Autocomplete(
@@ -198,8 +228,34 @@ export default function LandingPage() {
       }
     };
 
-    if (typeof window !== "undefined" && window.google) {
+    if (
+      typeof window !== "undefined" &&
+      window.google &&
+      window.google.maps &&
+      window.google.maps.places
+    ) {
       initializeStickyAutocomplete();
+    } else {
+      // Wait for Google Maps to load
+      const checkGoogleMapsLoaded = setInterval(() => {
+        if (
+          window.google &&
+          window.google.maps &&
+          window.google.maps.places
+        ) {
+          clearInterval(checkGoogleMapsLoaded);
+          initializeStickyAutocomplete();
+        }
+      }, 100);
+
+      return () => {
+        clearInterval(checkGoogleMapsLoaded);
+        if (stickyAutocomplete) {
+          window.google?.maps?.event?.clearInstanceListeners(
+            stickyAutocomplete
+          );
+        }
+      };
     }
 
     return () => {
@@ -221,7 +277,12 @@ export default function LandingPage() {
           document.cookie = `user_longitude=${lng}; path=/`;
 
           // Reverse geocode to get address
-          if (typeof window !== "undefined" && window.google) {
+          if (
+            typeof window !== "undefined" &&
+            window.google &&
+            window.google.maps &&
+            window.google.maps.Geocoder
+          ) {
             const geocoder = new window.google.maps.Geocoder();
             geocoder.geocode(
               { location: { lat, lng } },

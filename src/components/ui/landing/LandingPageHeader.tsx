@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { MapPin, User } from "lucide-react";
 import { useRouter } from "next/router";
 
@@ -37,7 +38,7 @@ export default function LandingPageHeader({
         <div className="flex items-center justify-between gap-4">
           {/* Logo and Location */}
           <div className="flex flex-shrink-0 items-center gap-4">
-            <div className="flex items-center gap-2">
+            <Link href="/" className="flex cursor-pointer items-center gap-2">
               <Image
                 src="/assets/logos/PlasIcon.png"
                 alt="Plas Logo"
@@ -52,7 +53,7 @@ export default function LandingPageHeader({
               >
                 Plas
               </span>
-            </div>
+            </Link>
             {/* Location Display */}
             {displayAddress && (
               <button
