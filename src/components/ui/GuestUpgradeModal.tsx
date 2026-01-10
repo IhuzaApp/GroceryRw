@@ -100,7 +100,7 @@ export default function GuestUpgradeModal({
   return (
     <div className="fixed inset-0 z-[10001] flex items-center justify-center bg-black/60 px-0 backdrop-blur-sm md:px-4">
       <div
-        className={`flex h-[calc(100vh-80px)] max-h-[calc(100vh-80px)] w-full flex-col overflow-hidden shadow-2xl md:h-auto md:max-h-[90vh] md:max-w-2xl md:rounded-2xl ${
+        className={`flex h-full w-full flex-col overflow-hidden shadow-2xl md:h-auto md:max-h-[90vh] md:max-w-2xl md:rounded-2xl ${
           theme === "dark"
             ? "border-gray-700 bg-gray-800"
             : "border-gray-200 bg-white"
