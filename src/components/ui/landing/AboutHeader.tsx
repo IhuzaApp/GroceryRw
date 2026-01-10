@@ -40,7 +40,7 @@ export default function AboutHeader({
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between gap-4">
           {/* Logo */}
-          <div className="flex items-center gap-2">
+          <Link href="/" className="flex cursor-pointer items-center gap-2">
             <Image
               src="/assets/logos/PlasIcon.png"
               alt="Plas Logo"
@@ -55,7 +55,7 @@ export default function AboutHeader({
             >
               Plas
             </span>
-          </div>
+          </Link>
 
           {/* Navigation Links */}
           <nav className="hidden items-center gap-6 md:flex">
