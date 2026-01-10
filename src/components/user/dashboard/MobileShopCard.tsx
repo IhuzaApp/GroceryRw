@@ -18,6 +18,8 @@ interface MobileShopCardProps {
     time: string;
     fee: string;
     open: boolean;
+    rating: number;
+    ratingCount: number;
   };
   getShopImageUrl: (imageUrl: string | undefined) => string;
 }
@@ -145,15 +147,19 @@ const MobileShopCard: React.FC<MobileShopCardProps> = ({
 
           {/* Shop Logo - Top Left */}
           {shop.logo && shop.logo.trim() !== "" && (
-            <div className="absolute left-2 top-2 z-20 h-12 w-12 overflow-hidden rounded-full border-2 border-white bg-white shadow-sm">
-              <img
-                src={shop.logo}
-                alt={`${shop.name} logo`}
-                className="h-full w-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
+            <div className="absolute left-2 top-2 z-20">
+              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-green-400 via-blue-500 to-purple-600 p-[2px] shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+                <div className="h-full w-full overflow-hidden rounded-full bg-white">
+                  <img
+                    src={shop.logo}
+                    alt={`${shop.name} logo`}
+                    className="h-full w-full rounded-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                </div>
+              </div>
             </div>
           )}
 
@@ -171,11 +177,11 @@ const MobileShopCard: React.FC<MobileShopCardProps> = ({
           {/* Status badge */}
           <div className="absolute right-2 top-2 z-20">
             {isShopOpen ? (
-              <span className="inline-flex items-center rounded-full bg-green-500 px-2 py-1 text-xs font-semibold text-white shadow-sm">
+              <span className="inline-flex items-center rounded-full bg-green-500 px-2 py-1 text-xs font-semibold !text-white shadow-sm">
                 Open
               </span>
             ) : (
-              <span className="inline-flex items-center rounded-full bg-red-500 px-2 py-1 text-xs font-semibold text-white shadow-sm">
+              <span className="inline-flex items-center rounded-full bg-red-500 px-2 py-1 text-xs font-semibold !text-white shadow-sm">
                 Closed
               </span>
             )}

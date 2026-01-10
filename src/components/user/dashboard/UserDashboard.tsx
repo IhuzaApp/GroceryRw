@@ -1471,6 +1471,8 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
                     time: "N/A",
                     fee: "N/A",
                     open: false,
+                    rating: 0,
+                    ratingCount: 0,
                   };
                   return (
                     <ShopCard
