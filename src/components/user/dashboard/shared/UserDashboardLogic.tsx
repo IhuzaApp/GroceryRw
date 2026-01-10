@@ -109,16 +109,12 @@ export function useUserDashboardLogic(initialData: Data) {
         const response = await fetch("/api/queries/shop-ratings");
         const data = await response.json();
         if (data.ratings) {
-          console.log("Fetched shop ratings:", data.ratings);
           // Convert array to object keyed by shop_id for easy lookup
           const ratingsMap: Record<string, ShopRating> = {};
           data.ratings.forEach((rating: ShopRating) => {
             ratingsMap[rating.shop_id] = rating;
           });
-          console.log("Ratings map created:", ratingsMap);
           setShopRatings(ratingsMap);
-        } else {
-          console.log("No ratings data received:", data);
         }
       } catch (error) {
         console.error("Error fetching shop ratings:", error);
@@ -553,17 +549,6 @@ export function useUserDashboardLogic(initialData: Data) {
             const shopRating = shopRatings[shop.id];
             const rating = shopRating ? shopRating.averageRating : 0;
             const ratingCount = shopRating ? shopRating.totalRatings : 0;
-            
-            // Debug logging for first shop
-            if (Object.keys(newDyn).length === 0) {
-              console.log("=== First Shop Debug ===");
-              console.log("Shop ID:", shop.id);
-              console.log("Shop Name:", shop.name);
-              console.log("All Shop Ratings available:", Object.keys(shopRatings));
-              console.log("Shop Rating for this shop:", shopRating);
-              console.log("Calculated Rating:", rating, "Count:", ratingCount);
-              console.log("=======================");
-            }
 
             let isOpen = false;
             const hoursObj = shop.operating_hours;
