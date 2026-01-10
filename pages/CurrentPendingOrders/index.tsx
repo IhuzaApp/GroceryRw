@@ -15,22 +15,31 @@ function CurrentOrdersPage() {
   const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
-      const userId = session?.user?.id;
-      const res = await authenticatedFetch(
-        `/api/queries/all-orders${userId ? `?user_id=${userId}` : ""}`
-      );
+      console.log("🚀 Fetching user orders from /api/queries/user-orders");
+      // Use the new user-orders endpoint that properly filters by user_id
+      const res = await authenticatedFetch(`/api/queries/user-orders`);
       const data = await res.json();
+      console.log("📦 Received orders data:", data);
+      console.log(`✅ Total orders received: ${data.orders?.length || 0}`);
       setOrders(data.orders || []);
     } catch (error) {
-      console.error("Error fetching orders:", error);
+      console.error("❌ Error fetching orders:", error);
     } finally {
       setLoading(false);
     }
   }, [session]);
 
   useEffect(() => {
+    if (session?.user) {
+      console.log("👤 Current user session:", {
+        userId: (session.user as any).id,
+        userName: session.user.name,
+        userEmail: session.user.email,
+        isGuest: (session.user as any).is_guest || false,
+      });
+    }
     fetchOrders();
-  }, [fetchOrders]);
+  }, [fetchOrders, session]);
 
   if (!session) {
     return (
@@ -87,10 +96,9 @@ function CurrentOrdersPage() {
     );
   }
 
-  // Count only assigned orders that are not delivered for "Ongoing"
+  // Count all orders that are not delivered for "Ongoing" (includes unassigned orders)
   const pendingCount = orders.filter((o) => {
-    const isAssigned = !!o?.shopper_id || !!o?.assignedTo;
-    return o.status !== "delivered" && isAssigned;
+    return o.status !== "delivered";
   }).length;
   const completedCount = orders.filter((o) => o.status === "delivered").length;
 
