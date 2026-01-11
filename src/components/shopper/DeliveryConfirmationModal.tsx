@@ -575,7 +575,12 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                           Verifying PIN...
                         </>
                       ) : (
-                        "🔓 Verify PIN"
+                        <>
+                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                          </svg>
+                          Confirm Pin For Delviery
+                        </>
                       )}
                     </button>
                   </div>
@@ -624,9 +629,13 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                     <div className="mt-4">
                       <button
                         onClick={() => setShowCameraCapture(true)}
-                        className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-700 hover:to-blue-800 hover:shadow-blue-500/25"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-700 hover:to-blue-800 hover:shadow-blue-500/25"
                       >
-                        📷 Take Photo
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Take Photo
                       </button>
                     </div>
                   )}
@@ -634,8 +643,11 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                   {capturedImage && !photoUploading && (
                     <div className="mt-4 text-center">
                       <div className={`rounded-lg border p-4 ${theme === "dark" ? "border-gray-700 bg-gray-700" : "bg-gray-50"}`}>
-                        <p className="mb-2 font-medium text-green-600 dark:text-green-400">
-                          ✓ Photo captured successfully!
+                        <p className="mb-2 flex items-center justify-center gap-2 font-medium text-green-600 dark:text-green-400">
+                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Photo captured successfully!
                         </p>
                         <div className="relative mx-auto mt-2 h-32 w-48 overflow-hidden rounded-lg sm:h-48 sm:w-64">
                           <Image src={capturedImage} alt="Delivery proof" fill className="object-cover" />
@@ -687,7 +699,12 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                         Confirming Delivery...
                       </>
                     ) : (
-                      "✅ Confirm Delivery"
+                      <>
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Confirm Delivery
+                      </>
                     )}
                   </button>
                   <p className="mt-2 text-sm text-gray-500">
