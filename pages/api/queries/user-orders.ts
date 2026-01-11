@@ -25,6 +25,7 @@ const GET_USER_ORDERS = gql`
       shopper_id
       delivery_time
       pin
+      combined_order_id
       Order_Items_aggregate {
         aggregate {
           count
@@ -65,6 +66,7 @@ interface OrdersResponse {
     shopper_id: string | null;
     delivery_time: string;
     pin: string;
+    combined_order_id: string | null;
     Order_Items_aggregate: {
       aggregate: {
         count: number;
@@ -129,6 +131,7 @@ export default async function handler(
         created_at: o.created_at,
         delivery_time: o.delivery_time,
         pin: o.pin,
+        combined_order_id: o.combined_order_id,
         total:
           parseFloat(o.total || "0") +
           parseFloat(o.service_fee || "0") +
@@ -173,6 +176,7 @@ export default async function handler(
         created_at: o.created_at,
         delivery_time: o.delivery_time,
         pin: o.pin,
+        combined_order_id: o.combined_order_id,
         total: grandTotal,
         shop_id: o.shop_id,
         shopper_id: o.shopper_id,

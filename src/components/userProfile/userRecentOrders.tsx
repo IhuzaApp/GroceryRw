@@ -12,6 +12,7 @@ type Order = {
   delivery_time: string;
   total: number;
   pin?: string;
+  combined_order_id?: string | null;
   user: {
     id: string;
     name: string;
@@ -56,6 +57,16 @@ type Order = {
   discount?: number;
   voucher_code?: string;
   found?: boolean;
+};
+
+// Type for grouped orders (either single or combined)
+type OrderGroup = {
+  id: string; // For single orders, this is order.id; for combined, it's combined_order_id
+  is_combined: boolean;
+  orders: Order[];
+  total: number;
+  created_at: string;
+  status: string;
 };
 
 // Props for the UserRecentOrders component
@@ -161,6 +172,20 @@ export default function UserRecentOrders({
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 4;
   const [searchQuery, setSearchQuery] = useState("");
+  // State for expanded combined orders
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  const toggleGroupExpansion = (groupId: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
+  };
 
   // Apply filter and search
   const filteredOrders = orders.filter((order: Order) => {
@@ -190,11 +215,69 @@ export default function UserRecentOrders({
     );
   });
 
+  // Group orders by combined_order_id
+  const groupOrders = (orders: Order[]): OrderGroup[] => {
+    const grouped: { [key: string]: Order[] } = {};
+    const singles: Order[] = [];
+
+    orders.forEach((order) => {
+      if (order.combined_order_id) {
+        if (!grouped[order.combined_order_id]) {
+          grouped[order.combined_order_id] = [];
+        }
+        grouped[order.combined_order_id].push(order);
+      } else {
+        singles.push(order);
+      }
+    });
+
+    // Convert grouped orders to OrderGroup format
+    const groupedOrders: OrderGroup[] = Object.entries(grouped).map(
+      ([combinedId, groupOrders]) => {
+        const totalAmount = groupOrders.reduce((sum, o) => sum + o.total, 0);
+        const earliestDate = groupOrders.reduce((earliest, o) =>
+          new Date(o.created_at) < new Date(earliest.created_at) ? o : earliest
+        ).created_at;
+        // Combined order status is "delivered" only if ALL orders are delivered
+        const allDelivered = groupOrders.every((o) => o.status === "delivered");
+        return {
+          id: combinedId,
+          is_combined: true,
+          orders: groupOrders.sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          ),
+          total: totalAmount,
+          created_at: earliestDate,
+          status: allDelivered ? "delivered" : "pending",
+        };
+      }
+    );
+
+    // Add single orders
+    const singleOrders: OrderGroup[] = singles.map((order) => ({
+      id: order.id,
+      is_combined: false,
+      orders: [order],
+      total: order.total,
+      created_at: order.created_at,
+      status: order.status,
+    }));
+
+    // Combine and sort by date (newest first)
+    return [...groupedOrders, ...singleOrders].sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+  };
+
+  const orderGroups = groupOrders(filteredOrders);
+
   // Calculate pagination
-  const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
+  const totalPages = Math.ceil(orderGroups.length / ordersPerPage);
   const startIndex = (currentPage - 1) * ordersPerPage;
   const endIndex = startIndex + ordersPerPage;
-  const visibleOrders = filteredOrders.slice(startIndex, endIndex);
+  const visibleOrderGroups = orderGroups.slice(startIndex, endIndex);
 
   // Reset to page 1 when search changes
   useEffect(() => {
@@ -295,7 +378,137 @@ export default function UserRecentOrders({
       ) : orders.length === 0 ? (
         <p className="text-gray-600 dark:text-gray-400">No orders found.</p>
       ) : (
-        visibleOrders.map((order: Order) => (
+        visibleOrderGroups.map((group: OrderGroup) =>
+          group.is_combined ? (
+            // Combined Orders Group
+            <div
+              key={group.id}
+              className="group mb-3 overflow-hidden rounded-xl border-2 border-green-200 bg-gradient-to-br from-green-50/50 to-emerald-50/50 shadow-md transition-all duration-300 hover:border-green-300 hover:shadow-xl dark:border-green-700 dark:from-green-900/10 dark:to-emerald-900/10"
+            >
+              {/* Combined Order Header */}
+              <div className="border-b border-green-200 bg-gradient-to-r from-green-100 to-emerald-100 p-4 dark:border-green-700 dark:from-green-900/30 dark:to-emerald-900/30">
+                <div className="mb-2 flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-500 shadow-md">
+                    <svg
+                      className="h-5 w-5 !text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                      />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-gray-900 dark:text-white">
+                        Combined Order ({group.orders.length} stores)
+                      </span>
+                      <span className="rounded-full bg-green-500 px-2 py-0.5 text-xs font-bold !text-white">
+                        BULK
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-600 dark:text-gray-400">
+                      {timeAgo(group.created_at)} • {formatCurrency(group.total)}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => toggleGroupExpansion(group.id)}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/50 transition-colors hover:bg-white dark:bg-gray-800/50 dark:hover:bg-gray-800"
+                  >
+                    <svg
+                      className={`h-5 w-5 text-gray-700 transition-transform dark:text-gray-300 ${
+                        expandedGroups.has(group.id) ? "rotate-180" : ""
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Combined Orders List */}
+              {expandedGroups.has(group.id) && (
+                <div className="divide-y divide-green-100 dark:divide-green-800/30">
+                  {group.orders.map((order: Order) => (
+                    <div
+                      key={order.id}
+                      className="bg-white p-4 transition-colors hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-750"
+                    >
+                      {/* Render individual order (reuse existing order display logic) */}
+                      {order.shop && (
+                        <div className="mb-2 flex items-center gap-2">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30">
+                            <svg
+                              className="h-4 w-4 text-green-600 dark:text-green-400"
+                              viewBox="0 0 0.6 0.6"
+                              fill="currentColor"
+                            >
+                              <path d="M0.138 0.125 0.125 0.075H0.031a0.025 0.025 0 0 0 0 0.05h0.056L0.168 0.45H0.5v-0.05H0.207l-0.008 -0.034L0.525 0.304V0.125ZM0.475 0.263 0.186 0.318 0.15 0.175h0.325ZM0.175 0.475a0.038 0.038 0 1 0 0.038 0.038A0.038 0.038 0 0 0 0.175 0.475m0.3 0a0.038 0.038 0 1 0 0.038 0.038A0.038 0.038 0 0 0 0.475 0.475" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-sm font-bold text-gray-900 dark:text-white">
+                              {order?.shop?.name}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              Order #{formatOrderID(order?.OrderID)} • {formatCurrency(order.total)}
+                            </div>
+                          </div>
+                          {order.status === "delivered" ? (
+                            <div className="flex items-center gap-1.5 rounded-full bg-green-100 px-2 py-1 dark:bg-green-900/30">
+                              <div className="h-1.5 w-1.5 rounded-full bg-green-500"></div>
+                              <span className="text-xs font-semibold text-green-700 dark:text-green-300">
+                                Delivered
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5 rounded-full bg-yellow-100 px-2 py-1 dark:bg-yellow-900/30">
+                              <div className="h-1.5 w-1.5 rounded-full bg-yellow-500"></div>
+                              <span className="text-xs font-semibold text-yellow-700 dark:text-yellow-300">
+                                {order.shopper_id ? "In Progress" : "Pending"}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {isPendingOrdersPage && (
+                        <Link
+                          href={`/CurrentPendingOrders/viewOrderDetails/${order.id}`}
+                          className="mt-2 inline-block rounded-lg bg-green-500 px-3 py-1.5 text-xs font-semibold !text-white transition-colors hover:bg-green-600"
+                        >
+                          View Details
+                        </Link>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Summary when collapsed */}
+              {!expandedGroups.has(group.id) && (
+                <div className="p-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Click to expand and view all {group.orders.length} orders
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : (
+            // Single Order (Original Display)
+            group.orders.map((order: Order) => (
           <div
             key={order.id}
             className="group mb-2 overflow-hidden rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-all duration-300 hover:border-green-200 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-700"
@@ -605,7 +818,9 @@ export default function UserRecentOrders({
               )}
             </div>
           </div>
-        ))
+            ))
+          )
+        )
       )}
       {/* Pagination */}
       {totalPages > 1 && (
