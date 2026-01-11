@@ -1,4 +1,5 @@
 import { formatCurrencySync } from "../../../utils/formatCurrency";
+import { useRouter } from "next/router";
 
 interface SearchResult {
   id: string;
@@ -33,19 +34,24 @@ export default function SearchModal({
   searchResults,
   isSearching,
 }: SearchModalProps) {
+  const router = useRouter();
+
   const handleResultClick = (result: SearchResult) => {
     // If the result has a shop_id, it's a product - redirect to the shop
     if (result.shop_id) {
-      window.location.href = `/shops/${result.shop_id}`;
+      router.push(`/shops/${result.shop_id}`);
     } else if (result.type === "product") {
-      window.location.href = `/shops/${result.shop_id}`;
+      router.push(`/shops/${result.shop_id}`);
     } else if (result.type === "shop") {
-      window.location.href = `/shops/${result.id}`;
+      router.push(`/shops/${result.id}`);
     } else if (result.type === "recipe") {
-      window.location.href = `/Recipes/${result.id}`;
+      router.push(`/Recipes/${result.id}`);
     } else if (result.type === "restaurant") {
-      window.location.href = `/restaurant/${result.id}`;
+      router.push(`/restaurant/${result.id}`);
     }
+    
+    // Close the modal after navigation
+    onClose();
   };
 
   if (!isOpen) return null;
