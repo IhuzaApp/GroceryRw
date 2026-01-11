@@ -144,14 +144,22 @@ export default function SearchBar() {
                 className="flex w-full cursor-pointer items-center gap-3 border-b border-gray-100 px-4 py-3 text-left last:border-b-0 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700"
               >
                 {/* Product/Shop Image */}
-                <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg">
+                <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-700">
                   <img
-                    src={result.type === "product" ? result.image : result.logo}
+                    src={
+                      result.type === "product"
+                        ? result.image || "/images/groceryPlaceholder.png"
+                        : result.logo || "/images/groceryPlaceholder.png"
+                    }
                     alt={result.name}
                     className="h-full w-full object-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      target.src = "/assets/images/placeholder-product.png";
+                      // Prevent infinite loop if placeholder fails
+                      if (target.src.includes("groceryPlaceholder.png")) {
+                        return;
+                      }
+                      target.src = "/images/groceryPlaceholder.png";
                     }}
                   />
                 </div>
@@ -168,15 +176,20 @@ export default function SearchBar() {
                       {/* Supermarket Name */}
                       {result.shopName && (
                         <div className="flex items-center gap-2">
-                          <div className="h-4 w-4 overflow-hidden rounded">
+                          <div className="h-4 w-4 overflow-hidden rounded bg-gray-100 dark:bg-gray-700">
                             <img
-                              src={result.shopImage}
+                              src={
+                                result.shopImage || "/images/groceryPlaceholder.png"
+                              }
                               alt={result.shopName}
                               className="h-full w-full object-cover"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
-                                target.src =
-                                  "/assets/images/placeholder-shop.png";
+                                // Prevent infinite loop if placeholder fails
+                                if (target.src.includes("groceryPlaceholder.png")) {
+                                  return;
+                                }
+                                target.src = "/images/groceryPlaceholder.png";
                               }}
                             />
                           </div>
