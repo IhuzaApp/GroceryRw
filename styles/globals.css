@@ -470,3 +470,17 @@ a:visited {
     outline: none; /* Remove outline when not using keyboard */
   }
 }
+
+/* Toast notifications positioning */
+/* Mobile: top-center (default) */
+.mobile-toast-container {
+  top: 1rem !important;
+}
+
+/* Desktop: bottom-center */
+@media (min-width: 768px) {
+  .mobile-toast-container {
+    top: auto !important;
+    bottom: 2rem !important;
+  }
+}
