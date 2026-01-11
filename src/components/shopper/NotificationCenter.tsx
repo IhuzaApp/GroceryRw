@@ -9,6 +9,9 @@ interface NotificationItem {
   timestamp: number;
   type: string;
   read: boolean;
+  orderId?: string;
+  conversationId?: string;
+  senderName?: string;
 }
 
 export default function NotificationCenter() {
@@ -30,8 +33,15 @@ export default function NotificationCenter() {
       const history = JSON.parse(
         localStorage.getItem('fcm_notification_history') || '[]'
       );
-      setNotifications(history);
-      setUnreadCount(history.filter((n: NotificationItem) => !n.read).length);
+      // Filter to only show chat messages and order notifications
+      const relevantNotifications = history.filter(
+        (n: NotificationItem) => 
+          n.type === 'chat_message' || 
+          n.type === 'new_order' || 
+          n.type === 'batch_orders'
+      );
+      setNotifications(relevantNotifications);
+      setUnreadCount(relevantNotifications.filter((n: NotificationItem) => !n.read).length);
     } catch (error) {
       console.error("Error loading notification history:", error);
     }
@@ -48,9 +58,48 @@ export default function NotificationCenter() {
   };
 
   const clearAll = () => {
-    localStorage.removeItem('fcm_notification_history');
+    // Only clear chat and order notifications, keep other types
+    const allHistory = JSON.parse(
+      localStorage.getItem('fcm_notification_history') || '[]'
+    );
+    const otherNotifications = allHistory.filter(
+      (n: NotificationItem) => 
+        n.type !== 'chat_message' && 
+        n.type !== 'new_order' && 
+        n.type !== 'batch_orders'
+    );
+    localStorage.setItem(
+      'fcm_notification_history',
+      JSON.stringify(otherNotifications)
+    );
     setNotifications([]);
     setUnreadCount(0);
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'chat_message':
+        return '💬';
+      case 'new_order':
+        return '📦';
+      case 'batch_orders':
+        return '📋';
+      default:
+        return '🔔';
+    }
+  };
+
+  const getNotificationColor = (type: string) => {
+    switch (type) {
+      case 'chat_message':
+        return theme === 'dark' ? 'text-blue-400' : 'text-blue-600';
+      case 'new_order':
+        return theme === 'dark' ? 'text-green-400' : 'text-green-600';
+      case 'batch_orders':
+        return theme === 'dark' ? 'text-purple-400' : 'text-purple-600';
+      default:
+        return theme === 'dark' ? 'text-gray-400' : 'text-gray-600';
+    }
   };
 
   const formatTime = (timestamp: number) => {
@@ -125,9 +174,14 @@ export default function NotificationCenter() {
                 theme === "dark" ? "border-gray-700" : "border-gray-200"
               }`}
             >
-              <h3 className="text-lg font-semibold">
-                Notifications {unreadCount > 0 && `(${unreadCount})`}
-              </h3>
+              <div>
+                <h3 className="text-lg font-semibold">
+                  Messages & Orders {unreadCount > 0 && `(${unreadCount})`}
+                </h3>
+                <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                  Chat messages and order notifications
+                </p>
+              </div>
               <div className="flex gap-2">
                 {notifications.length > 0 && (
                   <>
@@ -162,30 +216,65 @@ export default function NotificationCenter() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                      d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
                     />
                   </svg>
-                  <p className="mt-2">No notifications yet</p>
-                  <p className="text-xs">You'll see your notifications here</p>
+                  <p className="mt-2">No messages or orders yet</p>
+                  <p className="text-xs">Chat messages and new orders will appear here</p>
                 </div>
               ) : (
                 notifications.map((notification, index) => (
                   <div
                     key={index}
-                    className={`border-b p-4 transition-colors ${
+                    className={`border-b p-4 transition-colors cursor-pointer ${
                       theme === "dark"
                         ? "border-gray-700 hover:bg-gray-700"
                         : "border-gray-100 hover:bg-gray-50"
                     } ${!notification.read ? "bg-blue-50 dark:bg-blue-900/20" : ""}`}
+                    onClick={() => {
+                      // Mark as read when clicked
+                      if (!notification.read) {
+                        const updatedNotifications = [...notifications];
+                        updatedNotifications[index].read = true;
+                        const allHistory = JSON.parse(
+                          localStorage.getItem('fcm_notification_history') || '[]'
+                        );
+                        const updatedHistory = allHistory.map((n: NotificationItem) =>
+                          n.timestamp === notification.timestamp ? { ...n, read: true } : n
+                        );
+                        localStorage.setItem(
+                          'fcm_notification_history',
+                          JSON.stringify(updatedHistory)
+                        );
+                        loadNotifications();
+                      }
+                      
+                      // Navigate to relevant page
+                      if (notification.type === 'chat_message' && notification.orderId) {
+                        window.location.href = `/Messages/${notification.orderId}`;
+                      } else if (notification.type === 'new_order' && notification.orderId) {
+                        window.location.href = `/Plasa/active-batches`;
+                      }
+                    }}
                   >
                     <div className="flex items-start gap-3">
-                      <div
-                        className={`mt-1 h-2 w-2 rounded-full ${
-                          !notification.read ? "bg-blue-500" : "bg-gray-400"
-                        }`}
-                      />
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`h-2 w-2 rounded-full ${
+                            !notification.read ? "bg-blue-500 animate-pulse" : "bg-gray-400"
+                          }`}
+                        />
+                        <span className={`text-2xl ${getNotificationColor(notification.type)}`}>
+                          {getNotificationIcon(notification.type)}
+                        </span>
+                      </div>
                       <div className="flex-1">
-                        <h4 className="font-medium">{notification.title}</h4>
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium">{notification.title}</h4>
+                          <span className="text-xs text-gray-500">
+                            {formatTime(notification.timestamp)}
+                          </span>
+                        </div>
                         <p
                           className={`mt-1 text-sm ${
                             theme === "dark" ? "text-gray-400" : "text-gray-600"
@@ -193,9 +282,11 @@ export default function NotificationCenter() {
                         >
                           {notification.body}
                         </p>
-                        <p className="mt-2 text-xs text-gray-500">
-                          {formatTime(notification.timestamp)}
-                        </p>
+                        {notification.type === 'chat_message' && notification.senderName && (
+                          <p className="mt-1 text-xs text-gray-500">
+                            From: {notification.senderName}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>

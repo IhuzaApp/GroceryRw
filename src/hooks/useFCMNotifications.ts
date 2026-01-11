@@ -46,6 +46,7 @@ export const useFCMNotifications = (): FCMNotificationHook => {
                   timestamp: Date.now(),
                   type: 'new_order',
                   read: false,
+                  orderId: data.orderId,
                 });
                 if (notificationHistory.length > 50) {
                   notificationHistory.pop();
@@ -54,6 +55,7 @@ export const useFCMNotifications = (): FCMNotificationHook => {
                   'fcm_notification_history',
                   JSON.stringify(notificationHistory)
                 );
+                console.log("✅ New order saved to notification history");
               }
               
               window.dispatchEvent(
@@ -98,6 +100,7 @@ export const useFCMNotifications = (): FCMNotificationHook => {
                   'fcm_notification_history',
                   JSON.stringify(notificationHistory)
                 );
+                console.log("✅ Batch orders saved to notification history");
               }
               
               window.dispatchEvent(
@@ -123,6 +126,31 @@ export const useFCMNotifications = (): FCMNotificationHook => {
               break;
 
             case "chat_message":
+              // Save chat message to notification history
+              if (notification && typeof window !== 'undefined') {
+                const notificationHistory = JSON.parse(
+                  localStorage.getItem('fcm_notification_history') || '[]'
+                );
+                notificationHistory.unshift({
+                  title: notification.title,
+                  body: notification.body,
+                  timestamp: Date.now(),
+                  type: 'chat_message',
+                  read: false,
+                  orderId: data.orderId,
+                  conversationId: data.conversationId,
+                  senderName: data.senderName,
+                });
+                if (notificationHistory.length > 50) {
+                  notificationHistory.pop();
+                }
+                localStorage.setItem(
+                  'fcm_notification_history',
+                  JSON.stringify(notificationHistory)
+                );
+                console.log("✅ Chat message saved to notification history");
+              }
+              
               window.dispatchEvent(
                 new CustomEvent("fcm-chat-message", {
                   detail: {
@@ -136,63 +164,21 @@ export const useFCMNotifications = (): FCMNotificationHook => {
               break;
 
             case "test":
-              // Show browser notification for test
-              if (notification) {
-                console.log("✅ Test notification received:", notification);
-                
-                // Show a visual toast to confirm receipt
-                if (typeof window !== 'undefined') {
-                  // Try to import and use toast dynamically
-                  import('react-hot-toast').then(({ default: toast }) => {
-                    toast.success(
-                      `${notification.title}\n${notification.body}`,
-                      {
-                        duration: 8000, // Show for 8 seconds
-                        style: {
-                          background: '#10B981',
-                          color: '#fff',
-                          fontSize: '16px',
-                          padding: '20px',
-                          maxWidth: '500px',
-                        },
-                        icon: '🔔',
-                      }
-                    );
-                  });
-                  
-                  // Store in notification history
-                  const notificationHistory = JSON.parse(
-                    localStorage.getItem('fcm_notification_history') || '[]'
+              // Test notifications received - these will show as native notifications
+              console.log("✅ Test notification received:", notification);
+              console.log("   This will appear as a native system notification!");
+              
+              // Show a toast to confirm
+              if (typeof window !== 'undefined') {
+                import('react-hot-toast').then(({ default: toast }) => {
+                  toast.success(
+                    "Native notification sent! Check your system notification center.",
+                    {
+                      duration: 5000,
+                      icon: '🔔',
+                    }
                   );
-                  notificationHistory.unshift({
-                    title: notification.title,
-                    body: notification.body,
-                    timestamp: Date.now(),
-                    type: data.type,
-                    read: false,
-                  });
-                  // Keep only last 50 notifications
-                  if (notificationHistory.length > 50) {
-                    notificationHistory.pop();
-                  }
-                  localStorage.setItem(
-                    'fcm_notification_history',
-                    JSON.stringify(notificationHistory)
-                  );
-                  
-                  console.log("✅ Notification saved to history");
-                }
-                
-                // Dispatch event for any listeners
-                window.dispatchEvent(
-                  new CustomEvent("fcm-test-notification", {
-                    detail: {
-                      title: notification.title,
-                      body: notification.body,
-                      timestamp: data.timestamp,
-                    },
-                  })
-                );
+                });
               }
               break;
 
