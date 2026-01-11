@@ -59,10 +59,6 @@ export default function UserOrderDetails({
     const fetchCombinedOrders = async () => {
       // If combinedOrders prop is provided and not empty, use it
       if (propCombinedOrders && propCombinedOrders.length > 0) {
-        console.log(
-          "Using provided combined orders:",
-          propCombinedOrders.length
-        );
         setCombinedOrders(propCombinedOrders);
         return;
       }
@@ -73,25 +69,17 @@ export default function UserOrderDetails({
       }
 
       if (!order?.combinedOrderId) {
-        console.log("No combined order ID, using single order");
         setCombinedOrders([order]);
         return;
       }
 
       // Only fetch if prop wasn't provided
       try {
-        console.log("Fetching combined orders for ID:", order.combinedOrderId);
         const response = await fetch(
           `/api/queries/combined-orders?combined_order_id=${order.combinedOrderId}`
         );
         if (response.ok) {
           const data = await response.json();
-          console.log(
-            "Combined orders fetched:",
-            data.orders,
-            "Count:",
-            data.orders?.length
-          );
           setCombinedOrders(data.orders || [order]);
         } else {
           console.error("Failed to fetch combined orders:", response.status);
@@ -193,29 +181,19 @@ export default function UserOrderDetails({
             </svg>
           </Link>
           <h1 className="text-2xl font-bold">
-            {(() => {
-              console.log(
-                "Header render - combinedOrderId:",
-                order?.combinedOrderId,
-                "combinedOrders.length:",
-                combinedOrders.length,
-                "combinedOrders:",
-                combinedOrders
-              );
-              return order?.combinedOrderId && combinedOrders.length > 1 ? (
-                <>
-                  Orders{" "}
-                  {combinedOrders.map((ord: any, idx: number) => (
-                    <span key={ord.id}>
-                      #{formatOrderID(ord.OrderID)}
-                      {idx < combinedOrders.length - 1 ? " & " : ""}
-                    </span>
-                  ))}
-                </>
-              ) : (
-                <>Order #{formatOrderID(order.OrderID)}</>
-              );
-            })()}
+            {order?.combinedOrderId && combinedOrders.length > 1 ? (
+              <>
+                Orders{" "}
+                {combinedOrders.map((ord: any, idx: number) => (
+                  <span key={ord.id}>
+                    #{formatOrderID(ord.OrderID)}
+                    {idx < combinedOrders.length - 1 ? " & " : ""}
+                  </span>
+                ))}
+              </>
+            ) : (
+              <>Order #{formatOrderID(order.OrderID)}</>
+            )}
           </h1>
           <span className="ml-2 text-gray-500">Placed on {order.placedAt}</span>
         </div>
@@ -509,18 +487,6 @@ export default function UserOrderDetails({
               )}
             </div>
             <div className="space-y-6">
-              {(() => {
-                console.log("Rendering combined orders:", {
-                  count: combinedOrders.length,
-                  orders: combinedOrders.map((o: any) => ({
-                    id: o.id,
-                    OrderID: o.OrderID,
-                    shop: o.shop?.name,
-                    itemCount: o.Order_Items?.length || 0,
-                  })),
-                });
-                return null;
-              })()}
               {combinedOrders.map((ord: any, orderIndex: number) => (
                 <div
                   key={ord.id || orderIndex}
