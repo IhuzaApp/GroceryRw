@@ -271,6 +271,7 @@ export default function BatchDetails({
   const [invoiceData, setInvoiceData] = useState<any>(null);
   const [invoiceLoading, setInvoiceLoading] = useState(false);
   const [showInvoiceProofModal, setShowInvoiceProofModal] = useState(false);
+  const [invoiceProofUploaded, setInvoiceProofUploaded] = useState(false);
   const [walletData, setWalletData] = useState<any>(null);
   const [walletLoading, setWalletLoading] = useState(false);
   const [newMessage, setNewMessage] = useState("");
@@ -861,7 +862,19 @@ export default function BatchDetails({
         setOtp("");
         setGeneratedOtp("");
 
-        // Show invoice proof modal instead of updating status immediately
+        // Update order status to on_the_way immediately after payment
+        await onUpdateStatus(order.id, "on_the_way");
+
+        // Update local state
+        setOrder({
+          ...order,
+          status: "on_the_way",
+        });
+
+        // Update step
+        setCurrentStep(2);
+
+        // Show invoice proof modal for proof upload
         setShowInvoiceProofModal(true);
 
         // Show success notification
@@ -870,6 +883,8 @@ export default function BatchDetails({
             ✅ MoMo payment successful
             <br />
             ✅ Wallet balance updated
+            <br />
+            ✅ Status updated to On The Way
             <br />✅ Next: Add invoice proof
           </Notification>,
           { placement: "topEnd", duration: 5000 }
@@ -1080,47 +1095,20 @@ export default function BatchDetails({
         throw new Error("Invalid invoice data returned from API");
       }
 
+      // Mark invoice proof as uploaded
+      setInvoiceProofUploaded(true);
+
       // Close invoice proof modal
       setShowInvoiceProofModal(false);
 
-      // Update order status to on_the_way
-      await onUpdateStatus(order.id, "on_the_way");
-
-      // Update local state
-      setOrder({
-        ...order,
-        status: "on_the_way",
-      });
-
-      // Update step
-      setCurrentStep(2);
-
-      // Notify customer that shopper is on the way
-      try {
-        await fetch("/api/fcm/send-notification", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            recipientId: order.orderedBy?.id || order.customerId,
-            senderName: session?.user?.name || "Your Shopper",
-            message: "Plasa is on the way",
-            orderId: order.id,
-            conversationId: order.id,
-          }),
-        });
-      } catch (notificationError) {
-        // Error sending on-the-way notification
-        console.error("Error sending notification:", notificationError);
-      }
-
       // Show success notification
       toaster.push(
-        <Notification type="success" header="Success" closable>
-          Invoice generated and you're now on the way!
+        <Notification type="success" header="Invoice Proof Uploaded" closable>
+          ✅ Invoice proof uploaded successfully
+          <br />
+          ✅ You can now confirm delivery
         </Notification>,
-        { placement: "topEnd" }
+        { placement: "topEnd", duration: 5000 }
       );
     } catch (error) {
       console.error("Error processing invoice proof:", error);
@@ -1384,10 +1372,13 @@ export default function BatchDetails({
   // Determine if we should show order items and summary
   const shouldShowOrderDetails = () => {
     if (!order) return false;
-    // For reel orders, always show details
-    if (order.orderType === "reel") return true;
-    // For regular orders, show details for all statuses except delivered
-    return order.status !== "delivered";
+    
+    // Hide order items when on the way, at customer, or delivered
+    const hideStatuses = ["on_the_way", "at_customer", "delivered"];
+    if (hideStatuses.includes(order.status)) return false;
+    
+    // Show for all other statuses (accepted, shopping, paid)
+    return true;
   };
 
   // Function to get the right action button based on current status
@@ -1483,6 +1474,32 @@ export default function BatchDetails({
         );
       case "on_the_way":
       case "at_customer":
+        // Only show Confirm Delivery button if invoice proof has been uploaded
+        if (!invoiceProofUploaded) {
+          return (
+            <div className={`rounded-xl border-2 p-6 text-center ${theme === "dark" ? "border-yellow-600 bg-yellow-900/20" : "border-yellow-400 bg-yellow-50"}`}>
+              <svg className={`mx-auto h-12 w-12 mb-3 ${theme === "dark" ? "text-yellow-400" : "text-yellow-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <p className={`text-lg font-semibold ${theme === "dark" ? "text-yellow-300" : "text-yellow-800"}`}>
+                Invoice Proof Required
+              </p>
+              <p className={`mt-2 text-sm ${theme === "dark" ? "text-yellow-400" : "text-yellow-700"}`}>
+                Please add invoice/receipt proof before you can confirm delivery
+              </p>
+              <Button
+                appearance="primary"
+                color="orange"
+                size="lg"
+                block
+                onClick={() => setShowInvoiceProofModal(true)}
+                className="mt-4 rounded-lg py-3 text-lg font-semibold"
+              >
+                Add Invoice Proof
+              </Button>
+            </div>
+          );
+        }
         return (
           <Button
             appearance="primary"
@@ -1625,6 +1642,42 @@ export default function BatchDetails({
         return <Tag color={isReelOrder ? "violet" : "cyan"}>{status}</Tag>;
     }
   };
+
+  // Check if invoice proof exists when order loads or status changes
+  useEffect(() => {
+    const checkInvoiceProof = async () => {
+      if (order?.id && (order?.status === "on_the_way" || order?.status === "at_customer")) {
+        try {
+          // Check if invoice with proof exists for this order
+          const response = await fetch(`/api/invoices/check-proof?orderId=${order.id}`);
+          if (response.ok) {
+            const data = await response.json();
+            console.log("🔍 [Invoice Proof Check]", {
+              orderId: order.id,
+              status: order.status,
+              hasProof: data.hasProof,
+            });
+            setInvoiceProofUploaded(data.hasProof || false);
+          } else {
+            // If API fails, default to false to show the upload button
+            console.warn("⚠️ [Invoice Proof Check] API failed, defaulting to false");
+            setInvoiceProofUploaded(false);
+          }
+        } catch (error) {
+          console.error("❌ [Invoice Proof Check] Error:", error);
+          setInvoiceProofUploaded(false);
+        }
+      } else if (order?.status === "paid") {
+        // Reset invoice proof uploaded status when in paid status
+        setInvoiceProofUploaded(false);
+      } else if (order?.status === "delivered") {
+        // If delivered, proof must have been uploaded
+        setInvoiceProofUploaded(true);
+      }
+    };
+
+    checkInvoiceProof();
+  }, [order?.id, order?.status]);
 
   // Fetch complete order data when component mounts
   useEffect(() => {

@@ -72,8 +72,8 @@ const InvoiceProofModal: React.FC<InvoiceProofModalProps> = ({
   };
 
   const handleClose = () => {
-    if (uploading) {
-      return; // Don't allow closing while uploading
+    if (uploading || showCameraCapture) {
+      return; // Don't allow closing while uploading or camera is open
     }
     onClose();
   };
@@ -146,9 +146,13 @@ const InvoiceProofModal: React.FC<InvoiceProofModalProps> = ({
                   </p>
                   <button
                     onClick={() => setShowCameraCapture(true)}
-                    className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-700 hover:to-purple-700 hover:shadow-blue-500/25"
+                    className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-700 hover:to-purple-700 hover:shadow-blue-500/25"
                   >
-                    📷 Take Invoice Photo
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Take Invoice Photo
                   </button>
                 </div>
               )}
@@ -175,7 +179,10 @@ const InvoiceProofModal: React.FC<InvoiceProofModalProps> = ({
                       }}
                       className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold transition-all duration-200 ${theme === "dark" ? "border border-gray-600 text-gray-300 hover:bg-gray-700" : "border border-gray-300 text-gray-700 hover:bg-gray-100"}`}
                     >
-                      🔄 Retake Photo
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Retake Photo
                     </button>
                   </div>
                 </div>
@@ -212,7 +219,10 @@ const InvoiceProofModal: React.FC<InvoiceProofModalProps> = ({
                 onClick={handleConfirm}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-green-700 px-6 py-4 text-lg font-bold text-white shadow-lg transition-all duration-200 hover:from-green-700 hover:to-green-800 hover:shadow-green-500/25"
               >
-                ✅ Confirm & Generate Invoice
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Confirm & Generate Invoice
               </button>
               <p className="mt-2 text-center text-xs text-gray-500">
                 This will generate the invoice and proceed to delivery
