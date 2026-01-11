@@ -92,7 +92,7 @@ interface BatchOrderDetailsType {
     latitude: string;
     longitude: string;
   };
-  assignedTo: {
+  Shoppers: {
     id: string;
     name: string;
     profile_picture: string;
@@ -334,7 +334,7 @@ export const getServerSideProps: GetServerSideProps<
           latitude
           longitude
         }
-        assignedTo: User {
+        Shoppers {
           id
           name
           profile_picture
@@ -431,7 +431,7 @@ export const getServerSideProps: GetServerSideProps<
           user_id
           is_default
         }
-        assignedTo: User {
+        Shoppers {
           id
           name
           email
@@ -580,7 +580,7 @@ export const getServerSideProps: GetServerSideProps<
     // Check if the user is authorized to view this order
     // User can view if they are assigned to the order or if they are the customer
     const isAssignedShopper =
-      order.assignedTo?.id === session.user.id ||
+      order.Shoppers?.id === session.user.id ||
       order.shopper?.id === session.user.id;
     const isCustomer = order.orderedBy?.id === session.user.id;
 
@@ -608,7 +608,7 @@ export const getServerSideProps: GetServerSideProps<
       isRestaurantShopper,
       isRestaurantCustomer,
       orderType,
-      assignedToId: order.assignedTo?.id,
+      assignedToId: order.Shoppers?.id,
       shopperId: order.shopper?.id,
       sessionUserId: session.user.id,
     });

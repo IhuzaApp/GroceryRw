@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useTheme } from "../../context/ThemeContext";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 
@@ -53,6 +54,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   const [currentStep, setCurrentStep] = useState<"momo" | "otp" | "success">(
     "momo"
   );
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Check if component is mounted (for SSR compatibility)
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const formattedCurrency = (amount: number) => {
     return formatCurrencySync(amount);
@@ -141,10 +148,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     });
   }, [momoCode, paymentLoading, paymentStatus]);
 
-  if (!open) return null;
+  if (!open || !isMounted) return null;
 
-  return (
-    <div className="fixed inset-0 z-[10001] flex items-center justify-center bg-black/60 px-0 backdrop-blur-sm md:px-4">
+  const modalContent = (
+    <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/70 px-0 backdrop-blur-md md:px-4">
       <div
         className={`flex h-full w-full flex-col overflow-hidden shadow-2xl md:h-auto md:max-h-[90vh] md:max-w-2xl md:rounded-2xl ${
           theme === "dark"
@@ -1094,6 +1101,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default PaymentModal;
