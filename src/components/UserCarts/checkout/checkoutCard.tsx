@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Button, Panel, Modal, toaster, Notification } from "rsuite";
+import { Button, Panel, toaster, Notification } from "rsuite";
 import Link from "next/link";
 import { formatCurrency } from "../../../lib/formatCurrency";
 import Cookies from "js-cookie";
@@ -12,6 +12,7 @@ import {
   FoodCartRestaurant,
 } from "../../../context/FoodCartContext";
 import AddressManagementModal from "../../userProfile/AddressManagementModal";
+import CombineCartsModal from "./CombineCartsModal";
 
 // Cookie name for system configuration cache
 const SYSTEM_CONFIG_COOKIE = "system_configuration";
@@ -1502,6 +1503,24 @@ export default function CheckoutItems({
     setIsExpanded(!isExpanded);
   };
 
+  // Hide/show bottom bar when modal is expanded
+  useEffect(() => {
+    if (isExpanded) {
+      // Hide bottom navigation bar
+      document.body.style.setProperty("--hide-bottom-bar", "none");
+      document.body.classList.add("hide-bottom-bar");
+    } else {
+      // Show bottom navigation bar
+      document.body.style.removeProperty("--hide-bottom-bar");
+      document.body.classList.remove("hide-bottom-bar");
+    }
+    
+    return () => {
+      document.body.style.removeProperty("--hide-bottom-bar");
+      document.body.classList.remove("hide-bottom-bar");
+    };
+  }, [isExpanded]);
+
   // Handle payment method selection
   const handlePaymentMethodChange = (value: string | null) => {
     setSelectedPaymentValue(value);
@@ -1873,60 +1892,105 @@ export default function CheckoutItems({
       )}
 
       {/* Mobile View - Only visible on small devices */}
-      {/* Backdrop overlay when expanded */}
+      {/* Backdrop overlay when expanded - Full screen */}
       {isExpanded && (
         <div
-          className="fixed inset-0 z-40 bg-black/80 backdrop-blur-lg transition-all duration-300 md:hidden"
+          className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm md:hidden"
           onClick={toggleExpand}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: "100vw",
+            height: "100vh",
+          }}
         />
       )}
 
       <div
-        className={`fixed bottom-16 left-0 right-0 z-50 w-full rounded-2xl transition-all duration-300 md:hidden ${
+        className={`fixed z-[10000] w-full transition-all duration-300 md:hidden ${
           theme === "dark" ? "bg-gray-900" : "bg-white"
-        } ${isExpanded ? "shadow-2xl" : "shadow-xl"}`}
+        } ${isExpanded ? "inset-0 mt-[5vh] h-[95vh] rounded-t-3xl shadow-2xl flex flex-col" : "bottom-16 left-0 right-0 rounded-t-2xl shadow-xl"}`}
         style={{
-          maxHeight: isExpanded ? "calc(90vh - 64px)" : "160px",
-          overflow: "hidden",
+          maxHeight: isExpanded ? "95vh" : "160px",
+          overflow: isExpanded ? "visible" : "hidden",
         }}
+        onClick={isExpanded ? (e) => e.stopPropagation() : undefined}
       >
         {/* Header with toggle button */}
-        <div className="p-4 shadow-sm">
+        <div className={`p-4 ${isExpanded ? "border-b" : ""} ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}>
           <div
             className="flex items-center justify-between"
-            onClick={toggleExpand}
+            onClick={!isExpanded ? toggleExpand : undefined}
           >
-            <div className="flex items-center">
-              <span
-                className={`text-lg font-bold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                Order Summary
-              </span>
-              <span className="ml-2 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/20 dark:text-green-300">
-                {grandTotalUnits} items
-              </span>
-              {selectedCartIds.size > 0 && (
-                <span className="ml-2 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
-                  {selectedCartIds.size + 1} carts
-                </span>
+            <div className="flex items-center gap-3">
+              {isExpanded && (
+                <div className={`rounded-lg p-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-100"}`}>
+                  <svg
+                    className={`h-6 w-6 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                    />
+                  </svg>
+                </div>
               )}
+              <div>
+                <span
+                  className={`${isExpanded ? "text-xl" : "text-lg"} font-bold ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  Order Summary
+                </span>
+                {isExpanded && (
+                  <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                    {grandTotalUnits} items
+                    {selectedCartIds.size > 0 && ` • ${selectedCartIds.size + 1} carts`}
+                  </p>
+                )}
+                {!isExpanded && (
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/20 dark:text-green-300">
+                      {grandTotalUnits} items
+                    </span>
+                    {selectedCartIds.size > 0 && (
+                      <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+                        {selectedCartIds.size + 1} carts
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-2">
-              <span
-                className={`font-bold text-green-600 ${
-                  theme === "dark" ? "text-green-400" : "text-green-600"
-                }`}
-              >
-                {formatCurrency(finalTotal)}
-              </span>
+              {!isExpanded && (
+                <span
+                  className={`font-bold text-green-600 ${
+                    theme === "dark" ? "text-green-400" : "text-green-600"
+                  }`}
+                >
+                  {formatCurrency(finalTotal)}
+                </span>
+              )}
               <button
-                className={`flex h-8 w-8 items-center justify-center rounded-full ${
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleExpand();
+                }}
+                className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
                   theme === "dark"
-                    ? "bg-gray-700 text-gray-300"
-                    : "bg-gray-100 text-gray-600"
-                }`}
+                    ? "text-gray-300 hover:bg-gray-700"
+                    : "text-gray-600 hover:bg-gray-100"
+                } ${isExpanded ? "active:scale-95" : ""}`}
               >
                 {isExpanded ? (
                   <svg
@@ -1934,9 +1998,9 @@ export default function CheckoutItems({
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2"
-                    className="h-5 w-5"
+                    className="h-6 w-6"
                   >
-                    <polyline points="18 15 12 9 6 15"></polyline>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 ) : (
                   <svg
@@ -1952,44 +2016,6 @@ export default function CheckoutItems({
               </button>
             </div>
           </div>
-
-          {/* Combine button - Mobile */}
-          {!loadingCarts && availableCarts.length > 0 && (
-            <Button
-            appearance="primary"
-            color="green"
-            block
-            onClick={(e) => {
-              e.stopPropagation();
-              // Clear cart details and trigger refetch
-              setCartDetails({});
-              setRefetchCartDetails((prev) => prev + 1);
-              setShowCombineModal(true);
-            }}
-            className="mt-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
-          >
-            <span className="flex items-center justify-center gap-2">
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
-              {selectedCartIds.size > 0
-                ? `${selectedCartIds.size} Cart${
-                    selectedCartIds.size !== 1 ? "s" : ""
-                  } Combined`
-                : "Combine with Other Carts"}
-            </span>
-            </Button>
-          )}
         </div>
 
         {/* Checkout button when collapsed */}
@@ -2012,10 +2038,48 @@ export default function CheckoutItems({
 
         {/* Expanded content */}
         <div
-          className={`p-4 ${isExpanded ? "block" : "hidden"} overflow-y-auto`}
-          style={{ maxHeight: "calc(90vh - 124px)" }}
+          className={`flex-1 ${isExpanded ? "flex flex-col" : "hidden"} overflow-hidden`}
         >
-          {discountsEnabled && (
+          <div className="flex-1 overflow-y-auto p-4">
+            {/* Combine button - Mobile (only show when expanded) */}
+            {!loadingCarts && availableCarts.length > 0 && (
+              <Button
+                appearance="primary"
+                color="green"
+                block
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Clear cart details and trigger refetch
+                  setCartDetails({});
+                  setRefetchCartDetails((prev) => prev + 1);
+                  setShowCombineModal(true);
+                }}
+                className="mb-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
+                  {selectedCartIds.size > 0
+                    ? `${selectedCartIds.size} Cart${
+                        selectedCartIds.size !== 1 ? "s" : ""
+                      } Combined`
+                    : "Combine with Other Carts"}
+                </span>
+              </Button>
+            )}
+
+            {discountsEnabled && (
             <div>
               <p
                 className={`mb-0.5 ${
@@ -2047,12 +2111,12 @@ export default function CheckoutItems({
                 </Button>
               </div>
             </div>
-          )}
+            )}
 
-          <div className="my-1.5 h-px bg-gray-200 dark:bg-gray-700"></div>
+            <div className="my-1.5 h-px bg-gray-200 dark:bg-gray-700"></div>
 
-          <div className="flex flex-col gap-1.5">
-            <div className="flex justify-between py-1">
+            <div className="flex flex-col gap-1.5">
+              <div className="flex justify-between py-1">
               <span
                 className={`text-sm ${
                   theme === "dark" ? "text-gray-300" : "text-gray-600"
@@ -2069,99 +2133,100 @@ export default function CheckoutItems({
               >
                 {formatCurrency(grandSubtotal)}
               </span>
-            </div>
-            {discount > 0 && codeType === "promo" && (
+              </div>
+              {discount > 0 && codeType === "promo" && (
               <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
                 <span className="text-sm">Discount ({appliedCode})</span>
                 <span className="text-sm font-medium">
                   -{formatCurrency(discount)}
                 </span>
               </div>
-            )}
-            {referralDiscount > 0 && codeType === "referral" && (
+              )}
+              {referralDiscount > 0 && codeType === "referral" && (
               <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
                 <span className="text-sm">
                   Referral Discount ({appliedCode})
                 </span>
                 <span className="text-sm font-medium">17% off</span>
               </div>
-            )}
-            <div className="flex justify-between py-1">
-              <span
-                className={`text-sm ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
-                Units
-              </span>
-              <span
-                className={`text-sm font-medium ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                {grandTotalUnits}
-              </span>
-            </div>
-            <div className="flex justify-between py-1">
-              <span
-                className={`text-sm ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
-                Service Fee
-              </span>
-              <span
-                className={`text-sm font-medium ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                {formatCurrency(finalServiceFee)}
-              </span>
-            </div>
-            <div className="flex justify-between py-1">
-              <span
-                className={`text-sm ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
-                Delivery Fee{" "}
-                {selectedCartIds.size > 0 &&
-                  `(+${selectedCartIds.size} at 70%)`}
-              </span>
-              <span
-                className={`text-sm font-medium ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                {formatCurrency(finalDeliveryFee)}
-              </span>
-            </div>
-            <div className="my-3 h-px bg-gray-200 dark:bg-gray-700"></div>
-            <div className="flex justify-between py-1">
-              <span
-                className={`text-lg font-bold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                Total
-              </span>
-              <span className="text-lg font-bold text-green-500 dark:text-green-400">
-                {formatCurrency(finalTotal)}
-              </span>
-            </div>
-            <div className="flex justify-between py-1">
-              <span
-                className={`text-sm ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
-                Delivery Time
-              </span>
-              <span
-                className={`text-sm font-medium text-green-600 dark:text-green-400`}
-              >
-                {deliveryTime}
-              </span>
+              )}
+              <div className="flex justify-between py-1">
+                <span
+                  className={`text-sm ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Units
+                </span>
+                <span
+                  className={`text-sm font-medium ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  {grandTotalUnits}
+                </span>
+              </div>
+              <div className="flex justify-between py-1">
+                <span
+                  className={`text-sm ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Service Fee
+                </span>
+                <span
+                  className={`text-sm font-medium ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  {formatCurrency(finalServiceFee)}
+                </span>
+              </div>
+              <div className="flex justify-between py-1">
+                <span
+                  className={`text-sm ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Delivery Fee{" "}
+                  {selectedCartIds.size > 0 &&
+                    `(+${selectedCartIds.size} at 70%)`}
+                </span>
+                <span
+                  className={`text-sm font-medium ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  {formatCurrency(finalDeliveryFee)}
+                </span>
+              </div>
+              <div className="my-3 h-px bg-gray-200 dark:bg-gray-700"></div>
+              <div className="flex justify-between py-1">
+                <span
+                  className={`text-lg font-bold ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  Total
+                </span>
+                <span className="text-lg font-bold text-green-500 dark:text-green-400">
+                  {formatCurrency(finalTotal)}
+                </span>
+              </div>
+              <div className="flex justify-between py-1">
+                <span
+                  className={`text-sm ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Delivery Time
+                </span>
+                <span
+                  className={`text-sm font-medium text-green-600 dark:text-green-400`}
+                >
+                  {deliveryTime}
+                </span>
+              </div>
             </div>
             <div className="mt-2">
               <h4
@@ -2404,21 +2469,21 @@ export default function CheckoutItems({
                 }`}
               />
             </div>
-            {/* Proceed to Checkout Button */}
-            <div className="mt-4">
-              <Button
-                appearance="primary"
-                color="green"
-                block
-                size="lg"
-                loading={isCheckoutLoading}
-                disabled={!canProceedToCheckout() || isCheckoutLoading}
-                onClick={handleProceedToCheckout}
-                className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
-              >
-                Proceed to Checkout
-              </Button>
-            </div>
+          </div>
+          {/* Proceed to Checkout Button - Fixed at bottom */}
+          <div className={`border-t p-4 ${theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"}`}>
+            <Button
+              appearance="primary"
+              color="green"
+              block
+              size="lg"
+              loading={isCheckoutLoading}
+              disabled={!canProceedToCheckout() || isCheckoutLoading}
+              onClick={handleProceedToCheckout}
+              className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+            >
+              Proceed to Checkout
+            </Button>
           </div>
         </div>
       </div>
@@ -2880,193 +2945,16 @@ export default function CheckoutItems({
       />
 
       {/* Combine Carts Modal */}
-      <Modal
-        open={showCombineModal}
+      <CombineCartsModal
+        isOpen={showCombineModal}
         onClose={() => setShowCombineModal(false)}
-        size="md"
-      >
-        <Modal.Header>
-          <Modal.Title
-            className={theme === "dark" ? "text-white" : "text-gray-900"}
-          >
-            🛒 Combine with Other Carts
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div className={theme === "dark" ? "text-gray-300" : "text-gray-700"}>
-            <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-              Select additional carts to checkout together.{" "}
-              <span className="font-semibold text-green-600 dark:text-green-400">
-                Delivery fee is 30% off
-              </span>{" "}
-              for each additional cart!
-            </p>
-
-            {loadingCarts ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-green-500"></div>
-              </div>
-            ) : availableCarts.length === 0 ? (
-              <div className="py-8 text-center text-gray-500 dark:text-gray-400">
-                No other carts available to combine
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {availableCarts.map((cart) => {
-                  const details = cartDetails[cart.id];
-                  const isSelected = selectedCartIds.has(cart.id);
-
-                  return (
-                    <div
-                      key={cart.id}
-                      onClick={() => toggleCartSelection(cart.id)}
-                      className={`cursor-pointer rounded-xl border-2 p-4 transition-all ${
-                        isSelected
-                          ? "border-green-500 bg-green-50 dark:border-green-600 dark:bg-green-900/20"
-                          : "border-gray-200 bg-white hover:border-green-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-700"
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            toggleCartSelection(cart.id);
-                          }}
-                          className="mt-1 h-5 w-5 rounded border-gray-300 text-green-600 focus:ring-2 focus:ring-green-500"
-                        />
-                        <div className="flex-1">
-                          <div className="mb-2 flex items-center justify-between">
-                            <h4 className="text-base font-bold text-gray-900 dark:text-white">
-                              {cart.name}
-                            </h4>
-                            {isSelected && (
-                              <span className="rounded-full bg-green-500 px-2 py-0.5 text-xs font-bold text-white">
-                                SELECTED
-                              </span>
-                            )}
-                          </div>
-
-                          {details ? (
-                            <div className="space-y-2">
-                              <div className="grid grid-cols-2 gap-2 text-sm">
-                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                  <svg
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                                    />
-                                  </svg>
-                                  <span>{details.units} items</span>
-                                </div>
-                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                  <svg
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                                    />
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                                    />
-                                  </svg>
-                                  <span>{details.distance}</span>
-                                </div>
-                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                  <svg
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <circle cx="12" cy="12" r="10" />
-                                    <polyline points="12 6 12 12 16 14" />
-                                  </svg>
-                                  <span>{details.deliveryTime}</span>
-                                </div>
-                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                  <svg
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                                    />
-                                  </svg>
-                                  <span>
-                                    {formatCurrency(details.deliveryFee)}{" "}
-                                    {isSelected && "(30% off)"}
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center justify-between border-t border-gray-200 pt-2 dark:border-gray-700">
-                                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                  Subtotal:
-                                </span>
-                                <span className="text-lg font-bold text-green-600 dark:text-green-400">
-                                  {formatCurrency(details.total)}
-                                </span>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-green-500"></div>
-                              Loading details...
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button
-            onClick={() => setShowCombineModal(false)}
-            appearance="primary"
-            color="blue"
-            className="bg-gradient-to-r from-blue-500 to-blue-600"
-          >
-            {selectedCartIds.size > 0
-              ? `Continue with ${selectedCartIds.size + 1} Cart${
-                  selectedCartIds.size > 0 ? "s" : ""
-                }`
-              : "Continue"}
-          </Button>
-          <Button
-            onClick={() => setShowCombineModal(false)}
-            appearance="subtle"
-          >
-            Cancel
-          </Button>
-        </Modal.Footer>
-      </Modal>
+        availableCarts={availableCarts}
+        cartDetails={cartDetails}
+        selectedCartIds={selectedCartIds}
+        toggleCartSelection={toggleCartSelection}
+        loadingCarts={loadingCarts}
+        onContinue={() => setShowCombineModal(false)}
+      />
     </>
   );
 }

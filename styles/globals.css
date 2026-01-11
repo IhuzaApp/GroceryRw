@@ -484,3 +484,14 @@ a:visited {
     bottom: 2rem !important;
   }
 }
+
+/* Hide bottom navigation bar when checkout modal is expanded */
+body.hide-bottom-bar nav {
+  display: none !important;
+}
+
+@media (max-width: 767px) {
+  body.hide-bottom-bar nav.fixed.bottom-0 {
+    display: none !important;
+  }
+}
