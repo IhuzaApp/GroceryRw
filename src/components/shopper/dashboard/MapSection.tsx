@@ -11,7 +11,7 @@ import {
 } from "../../../utils/formatCurrency";
 import { useTheme } from "../../../context/ThemeContext";
 import { logger } from "../../../utils/logger";
-import { useWebSocket } from "../../../hooks/useWebSocket";
+import { useFCMNotifications } from "../../../hooks/useFCMNotifications";
 
 // Helper function to create popup HTML with proper button styling
 const createPopupHTML = (
@@ -760,7 +760,7 @@ export default function MapSection({
   isExpanded = false,
 }: MapSectionProps) {
   const { theme } = useTheme();
-  const { isConnected } = useWebSocket();
+  const { isInitialized } = useFCMNotifications();
   const [realTimeAgedOrders, setRealTimeAgedOrders] = useState<any[]>([]);
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [shops, setShops] = useState<Shop[]>([]);

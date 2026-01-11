@@ -8,7 +8,7 @@ import { Button, Loader, Placeholder, Panel, Grid, Row, Col } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
 import { useTheme } from "../../../context/ThemeContext";
 import { useRouter } from "next/router";
-import { useWebSocket } from "../../../hooks/useWebSocket";
+import { useFCMNotifications } from "../../../hooks/useFCMNotifications";
 
 // Dynamically load MapSection only on client (disable SSR)
 const MapSection = dynamic(() => import("./MapSection"), {
@@ -92,7 +92,7 @@ interface FormattedOrder {
 export default function ShopperDashboard() {
   const router = useRouter();
   const { theme } = useTheme();
-  const { isConnected } = useWebSocket();
+  const { isInitialized } = useFCMNotifications();
   const [isLoading, setIsLoading] = useState(true);
   const [isInitializing, setIsInitializing] = useState(true);
   const [availableOrders, setAvailableOrders] = useState<any[]>([]);
@@ -284,8 +284,8 @@ export default function ShopperDashboard() {
     let intervalId: NodeJS.Timeout | null = null;
 
     if (isAutoRefreshing && currentLocation && isOnline) {
-      // Use longer polling interval when WebSocket is connected for background updates
-      const pollingInterval = isConnected ? 120000 : 30000; // 2 minutes with WebSocket, 30 seconds without
+      // Use longer polling interval when FCM is active for background updates
+      const pollingInterval = isInitialized ? 120000 : 30000; // 2 minutes with FCM, 30 seconds without
       intervalId = setInterval(loadOrders, pollingInterval);
     }
 
@@ -294,7 +294,7 @@ export default function ShopperDashboard() {
         clearInterval(intervalId);
       }
     };
-  }, [currentLocation, isAutoRefreshing, isOnline, loadOrders, isConnected]);
+  }, [currentLocation, isAutoRefreshing, isOnline, loadOrders, isInitialized]);
 
   // Add toggle for auto-refresh
   const toggleAutoRefresh = useCallback(() => {
@@ -680,7 +680,7 @@ export default function ShopperDashboard() {
                     }`}
                     title={
                       isAutoRefreshing
-                        ? `Auto-refresh is on (${isConnected ? "2min" : "30s"})`
+                        ? `Auto-refresh is on (${isInitialized ? "2min" : "30s"})`
                         : "Auto-refresh is off"
                     }
                   >

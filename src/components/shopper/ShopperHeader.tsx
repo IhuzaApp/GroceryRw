@@ -8,10 +8,15 @@ import { usePathname } from "next/navigation";
 import { useTheme } from "@context/ThemeContext";
 import { Button } from "rsuite";
 import TelegramStatusButton from "./TelegramStatusButton";
+import NotificationCenter from "./NotificationCenter";
+import { useSession } from "next-auth/react";
+import toast from "react-hot-toast";
 
 export default function ShopperHeader() {
+  const { data: session } = useSession();
   const [isMobile, setIsMobile] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
+  const [isSendingTestNotification, setIsSendingTestNotification] = useState(false);
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
 
@@ -51,6 +56,57 @@ export default function ShopperHeader() {
       clearInterval(intervalId);
     };
   }, []);
+
+  const handleTestNotification = async () => {
+    if (!session?.user?.id) {
+      toast.error("You must be logged in to test notifications");
+      return;
+    }
+
+    setIsSendingTestNotification(true);
+
+    try {
+      console.log("📤 Sending test notification for user:", session.user.id);
+      
+      const response = await fetch("/api/fcm/test-notification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: session.user.id,
+        }),
+      });
+
+      const data = await response.json();
+      console.log("📥 Test notification response:", data);
+
+      if (response.ok) {
+        toast.success(`✅ Test notification sent to ${data.tokenCount || 0} device(s)!`, {
+          duration: 5000,
+          icon: "🔔",
+        });
+      } else if (response.status === 404) {
+        toast.error(
+          "⚠️ No FCM tokens found. Please allow notifications and refresh the page.",
+          {
+            duration: 6000,
+          }
+        );
+      } else {
+        toast.error(data.error || "Failed to send test notification", {
+          duration: 4000,
+        });
+      }
+    } catch (error) {
+      console.error("❌ Error sending test notification:", error);
+      toast.error("Failed to send test notification. Check console for details.", {
+        duration: 4000,
+      });
+    } finally {
+      setIsSendingTestNotification(false);
+    }
+  };
 
   if (isMobile) {
     return (
@@ -213,11 +269,64 @@ export default function ShopperHeader() {
       {/* Right Section */}
       <div className="flex items-center gap-3">
         <div className="hidden items-center gap-2 md:flex">
+          <NotificationCenter />
           <TelegramStatusButton
             variant="primary"
             size="md"
             className="bg-blue-500 text-white hover:bg-blue-600"
           />
+          <Button
+            appearance="primary"
+            onClick={handleTestNotification}
+            disabled={isSendingTestNotification}
+            className="bg-purple-500 text-white hover:bg-purple-600"
+            style={{
+              backgroundColor: "#9333ea",
+              color: "white",
+            }}
+          >
+            {isSendingTestNotification ? (
+              <span className="flex items-center gap-2">
+                <svg
+                  className="h-4 w-4 animate-spin"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                Sending...
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                  />
+                </svg>
+                Test FCM
+              </span>
+            )}
+          </Button>
           <Button
             appearance="subtle"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}

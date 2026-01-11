@@ -1,18 +1,22 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import {
-  getActiveConnections,
-  getLocationClusters,
-  sendToShopper,
-  sendToCluster,
-} from "./connection";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { logger } from "../../../src/utils/logger";
+import {
+  sendNewOrderNotification,
+  sendOrderExpiredNotification,
+} from "../../../src/services/fcmService";
 
-// Use global WebSocket server instance
-declare global {
-  var io: any;
-}
+// GraphQL query to get available shoppers with FCM tokens
+const GET_AVAILABLE_SHOPPERS = gql`
+  query GetAvailableShoppers {
+    Shopper_Availability(where: { is_available: { _eq: true } }) {
+      user_id
+      last_known_latitude
+      last_known_longitude
+    }
+  }
+`;
 
 // GraphQL query to get available orders
 const GET_AVAILABLE_ORDERS = gql`
@@ -248,10 +252,10 @@ export const distributeOrders = async () => {
   }
 };
 
-// Distribute single order to best shopper
+// Distribute single order to best shopper using FCM
 const distributeOrderToBestShopper = async (
   order: any,
-  activeConnections: Map<string, any>
+  availableShoppers: any[]
 ) => {
   try {
     const orderLocation = {
@@ -263,21 +267,21 @@ const distributeOrderToBestShopper = async (
     let bestShopper = null;
     let bestPriority = Infinity;
 
-    for (const [userId, connection] of Array.from(
-      activeConnections.entries()
-    )) {
-      if (!connection.location) continue;
+    for (const shopper of availableShoppers) {
+      if (!shopper.last_known_latitude || !shopper.last_known_longitude)
+        continue;
+
+      const shopperLocation = {
+        lat: parseFloat(shopper.last_known_latitude),
+        lng: parseFloat(shopper.last_known_longitude),
+      };
 
       // Calculate priority for this shopper
-      const priority = calculateShopperPriority(
-        connection.location,
-        order,
-        null
-      );
+      const priority = calculateShopperPriority(shopperLocation, order, null);
 
       if (priority < bestPriority) {
         bestPriority = priority;
-        bestShopper = { userId, connection, priority };
+        bestShopper = { userId: shopper.user_id, location: shopperLocation, priority };
       }
     }
 
@@ -288,8 +292,8 @@ const distributeOrderToBestShopper = async (
 
     // Format order for notification
     const distance = calculateDistance(
-      bestShopper.connection.location.lat,
-      bestShopper.connection.location.lng,
+      bestShopper.location.lat,
+      bestShopper.location.lng,
       orderLocation.lat,
       orderLocation.lng
     );
@@ -334,33 +338,37 @@ const distributeOrderToBestShopper = async (
       }),
     };
 
-    // Send real-time notification
-    const sent = sendToShopper(bestShopper.userId, "new-order", {
-      order: orderForNotification,
-      expiresIn: 60000, // 60 seconds
-      timestamp: Date.now(),
-    });
-
-    if (sent) {
+    // Send FCM notification
+    try {
+      await sendNewOrderNotification(bestShopper.userId, orderForNotification);
       console.log(
-        `✅ Order ${order.id} sent to shopper ${
+        `✅ Order ${order.id} notification sent via FCM to shopper ${
           bestShopper.userId
         } (priority: ${bestPriority.toFixed(2)})`
       );
 
       // Set up expiration timer
-      setTimeout(() => {
-        sendToShopper(bestShopper.userId, "order-expired", {
-          orderId: order.id,
-          reason: "timeout",
-        });
-        console.log(
-          `⏰ Order ${order.id} expired for shopper ${bestShopper.userId}`
-        );
+      setTimeout(async () => {
+        try {
+          await sendOrderExpiredNotification(
+            bestShopper.userId,
+            order.id,
+            "timeout"
+          );
+          console.log(
+            `⏰ Order ${order.id} expired notification sent to shopper ${bestShopper.userId}`
+          );
+        } catch (error) {
+          console.error(
+            `❌ Failed to send expiration notification for order ${order.id}:`,
+            error
+          );
+        }
       }, 60000);
-    } else {
-      console.log(
-        `❌ Failed to send order ${order.id} to shopper ${bestShopper.userId}`
+    } catch (error) {
+      console.error(
+        `❌ Failed to send FCM notification for order ${order.id} to shopper ${bestShopper.userId}:`,
+        error
       );
     }
   } catch (error) {
