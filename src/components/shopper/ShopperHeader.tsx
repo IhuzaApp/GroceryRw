@@ -66,8 +66,6 @@ export default function ShopperHeader() {
     setIsSendingTest(true);
 
     try {
-      console.log("📤 Sending test native notification for user:", session.user.id);
-      
       const response = await fetch("/api/fcm/test-notification", {
         method: "POST",
         headers: {
@@ -79,30 +77,21 @@ export default function ShopperHeader() {
       });
 
       const data = await response.json();
-      console.log("📥 Test notification response:", data);
 
       if (response.ok) {
-        toast.success(`✅ Native notification sent to ${data.tokenCount || 0} device(s)!`, {
-          duration: 5000,
+        toast.success("Test notification sent successfully!", {
+          duration: 4000,
           icon: "🔔",
         });
       } else if (response.status === 404) {
-        toast.error(
-          "⚠️ No FCM tokens found. Please allow notifications and refresh the page.",
-          {
-            duration: 6000,
-          }
-        );
-      } else {
-        toast.error(data.error || "Failed to send test notification", {
-          duration: 4000,
+        toast.error("No FCM tokens found. Please allow notifications and refresh.", {
+          duration: 5000,
         });
+      } else {
+        toast.error(data.error || "Failed to send test notification");
       }
     } catch (error) {
-      console.error("❌ Error sending test notification:", error);
-      toast.error("Failed to send test notification. Check console for details.", {
-        duration: 4000,
-      });
+      toast.error("Failed to send test notification");
     } finally {
       setIsSendingTest(false);
     }

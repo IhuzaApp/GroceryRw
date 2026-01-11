@@ -79,13 +79,6 @@ export default function NotificationSystem({
   // FCM integration
   const { isInitialized, hasPermission } = useFCMNotifications();
 
-  // Show FCM initialization status
-  useEffect(() => {
-    if (isInitialized) {
-      logger.info("FCM notifications initialized", "NotificationSystem");
-    }
-  }, [isInitialized]);
-
   // FCM event listeners
   useEffect(() => {
     const handleFCMNewOrder = (event: CustomEvent) => {

@@ -19,17 +19,13 @@ const firebaseConfig = {
   measurementId: "G-XXXXXXXXXX", // Replace with your actual measurement ID (optional)
 };
 
-console.log("🔧 [Service Worker] Initializing Firebase...");
 firebase.initializeApp(firebaseConfig);
-console.log("✅ [Service Worker] Firebase initialized");
 
 // Initialize Firebase Messaging
 const messaging = firebase.messaging();
 
 // Handle background messages
 messaging.onBackgroundMessage((payload) => {
-  console.log("🔔 [Service Worker] Background message received:", payload);
-  
   const notificationType = payload.data?.type || "message";
   let notificationTitle = payload.notification?.title || "New Message";
   let notificationBody = payload.notification?.body || "You have a new message";
@@ -103,62 +99,40 @@ messaging.onBackgroundMessage((payload) => {
 
 // Handle notification click
 self.addEventListener("notificationclick", (event) => {
-  console.log("🔔 [Service Worker] Notification clicked:", event.action);
   event.notification.close();
 
-  if (event.action === "close") {
-    // User dismissed the notification
-    console.log("🔔 [Service Worker] Notification dismissed");
-    return;
-  }
+  if (event.action === "close") return;
 
   if (event.action === "open" || !event.action) {
-    // Get data from the notification
     const notificationType = event.notification.data?.type;
     const orderId = event.notification.data?.orderId;
-    const conversationId = event.notification.data?.conversationId;
 
-    // Determine URL based on notification type
     let urlToOpen = "/";
     
     if (notificationType === "test") {
-      // For test notifications, just focus the app
-      console.log("🔔 [Service Worker] Test notification clicked - focusing app");
       urlToOpen = "/Plasa/dashboard";
     } else if (notificationType === "chat_message" && orderId) {
       urlToOpen = `/Messages/${orderId}`;
     } else if (notificationType === "new_order" || notificationType === "batch_orders") {
       urlToOpen = "/Plasa/active-batches";
     } else if (orderId) {
-      // Fallback for any notification with orderId
       urlToOpen = `/Messages/${orderId}`;
     }
-
-    console.log("🔔 [Service Worker] Opening URL:", urlToOpen);
 
     event.waitUntil(
       clients
         .matchAll({ type: "window", includeUncontrolled: true })
         .then((clientList) => {
-          // Check if there's already a window/tab open with the target URL
           for (const client of clientList) {
             if (client.url.includes(urlToOpen) && "focus" in client) {
-              console.log("🔔 [Service Worker] Focusing existing window");
               return client.focus();
             }
           }
 
-          // If no existing window, open a new one
           if (clients.openWindow) {
-            console.log("🔔 [Service Worker] Opening new window");
             return clients.openWindow(urlToOpen);
           }
         })
     );
   }
-});
-
-// Handle notification close
-self.addEventListener("notificationclose", (event) => {
-  // Notification closed
 });

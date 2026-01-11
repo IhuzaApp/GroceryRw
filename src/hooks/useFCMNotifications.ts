@@ -13,21 +13,14 @@ export const useFCMNotifications = (): FCMNotificationHook => {
   const [hasPermission, setHasPermission] = useState(false);
 
   useEffect(() => {
-    if (!session?.user?.id) {
-      console.log("⚠️ [useFCMNotifications] No user session, skipping FCM initialization");
-      return;
-    }
+    if (!session?.user?.id) return;
 
-    console.log("🔄 [useFCMNotifications] Initializing FCM for user:", session.user.id);
     let unsubscribe: (() => void) | null = null;
 
     const init = async () => {
       try {
-        console.log("📱 [useFCMNotifications] Starting FCM initialization...");
         // Initialize FCM and set up message listener
         unsubscribe = await initializeFCM(session.user.id, (payload) => {
-          // Handle incoming FCM message
-          console.log("📨 [useFCMNotifications] Received FCM message:", payload);
           const { notification, data } = payload;
           
           // Dispatch custom events based on notification type
@@ -55,7 +48,6 @@ export const useFCMNotifications = (): FCMNotificationHook => {
                   'fcm_notification_history',
                   JSON.stringify(notificationHistory)
                 );
-                console.log("✅ New order saved to notification history");
               }
               
               window.dispatchEvent(
@@ -100,7 +92,6 @@ export const useFCMNotifications = (): FCMNotificationHook => {
                   'fcm_notification_history',
                   JSON.stringify(notificationHistory)
                 );
-                console.log("✅ Batch orders saved to notification history");
               }
               
               window.dispatchEvent(
@@ -148,7 +139,6 @@ export const useFCMNotifications = (): FCMNotificationHook => {
                   'fcm_notification_history',
                   JSON.stringify(notificationHistory)
                 );
-                console.log("✅ Chat message saved to notification history");
               }
               
               window.dispatchEvent(
@@ -164,40 +154,31 @@ export const useFCMNotifications = (): FCMNotificationHook => {
               break;
 
             case "test":
-              // Test notifications received - these will show as native notifications
-              console.log("✅ Test notification received:", notification);
-              console.log("   This will appear as a native system notification!");
-              
-              // Show a toast to confirm
+              // Test notification - show confirmation toast
               if (typeof window !== 'undefined') {
                 import('react-hot-toast').then(({ default: toast }) => {
-                  toast.success(
-                    "Native notification sent! Check your system notification center.",
-                    {
-                      duration: 5000,
-                      icon: '🔔',
-                    }
-                  );
+                  toast.success("Test notification sent successfully!", {
+                    duration: 4000,
+                    icon: '🔔',
+                  });
                 });
               }
               break;
 
             default:
-              console.log("Received FCM notification:", notification, data);
+              break;
           }
         });
 
         if (unsubscribe && typeof unsubscribe === 'function') {
-          console.log("✅ [useFCMNotifications] FCM initialized successfully");
           setIsInitialized(true);
           setHasPermission(true);
         } else {
-          console.warn("⚠️ [useFCMNotifications] FCM initialization failed - no token or permission denied");
           setIsInitialized(false);
           setHasPermission(false);
         }
       } catch (error) {
-        console.error("❌ [useFCMNotifications] Failed to initialize FCM:", error);
+        console.error("Failed to initialize FCM:", error);
         setIsInitialized(false);
         setHasPermission(false);
       }
@@ -205,9 +186,7 @@ export const useFCMNotifications = (): FCMNotificationHook => {
 
     init();
 
-    // Cleanup
     return () => {
-      console.log("🧹 [useFCMNotifications] Cleaning up FCM");
       if (unsubscribe) {
         unsubscribe();
       }
