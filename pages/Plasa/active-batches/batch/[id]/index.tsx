@@ -56,13 +56,6 @@ interface BatchOrderDetailsType {
   status: string;
   deliveryPhotoUrl: string;
   discount: number;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    profile_picture: string;
-  };
   orderedBy: {
     created_at: string;
     email: string;
@@ -286,13 +279,6 @@ export const getServerSideProps: GetServerSideProps<
         status
         deliveryPhotoUrl: delivery_photo_url
         discount
-        user: User {
-          id
-          name
-          email
-          phone
-          profile_picture
-        }
         orderedBy {
           created_at
           email

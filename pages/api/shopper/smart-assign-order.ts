@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { logger } from "../../../src/utils/logger";
+import { sendNewOrderNotification } from "../../../src/services/fcmService";
 
 // GraphQL query to get available orders for notification
 const GET_AVAILABLE_ORDERS = gql`
@@ -370,6 +371,24 @@ export default async function handler(
       distance: orderForNotification.distance,
       estimatedEarnings: orderForNotification.estimatedEarnings
     });
+    
+    // Send FCM notification to the shopper
+    try {
+      await sendNewOrderNotification(user_id, {
+        id: bestOrder.id,
+        shopName: orderForNotification.shopName,
+        customerAddress: orderForNotification.customerAddress,
+        distance: orderForNotification.distance,
+        itemsCount: orderForNotification.itemsCount,
+        travelTimeMinutes: orderForNotification.travelTimeMinutes,
+        estimatedEarnings: orderForNotification.estimatedEarnings,
+        orderType: orderForNotification.orderType,
+      });
+      console.log("✅ FCM notification sent to shopper:", user_id);
+    } catch (fcmError) {
+      console.error("Failed to send FCM notification:", fcmError);
+      // Continue even if notification fails
+    }
     
     return res.status(200).json({
       success: true,

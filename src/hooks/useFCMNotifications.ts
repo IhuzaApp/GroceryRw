@@ -22,10 +22,10 @@ export const useFCMNotifications = (): FCMNotificationHook => {
         // Initialize FCM and set up message listener
         unsubscribe = await initializeFCM(session.user.id, (payload) => {
           const { notification, data } = payload;
-          
+
           // Dispatch custom events based on notification type
           const type = data?.type;
-          
+
           switch (type) {
             case "new_order":
               // Save to notification history
@@ -114,6 +114,18 @@ export const useFCMNotifications = (): FCMNotificationHook => {
                   },
                 })
               );
+              break;
+
+            case "test":
+              // Test notification received
+              if (typeof window !== 'undefined') {
+                import('react-hot-toast').then(({ default: toast }) => {
+                  toast.success("FCM notification received successfully!", {
+                    duration: 4000,
+                    icon: '🔔',
+                  });
+                });
+              }
               break;
 
             case "chat_message":
