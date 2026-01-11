@@ -158,7 +158,7 @@ const ADD_INVOICE = gql`
     $tax: String = ""
     $total_amount: String = ""
     $reel_order_id: uuid = ""
-    $invoice_proof_url: String = ""
+    $Proof: String = ""
   ) {
     insert_Invoices(
       objects: {
@@ -174,12 +174,13 @@ const ADD_INVOICE = gql`
         tax: $tax
         total_amount: $total_amount
         reel_order_id: $reel_order_id
-        invoice_proof_url: $invoice_proof_url
+        Proof: $Proof
       }
     ) {
       returning {
         id
         invoice_number
+        Proof
       }
       affected_rows
     }
@@ -529,7 +530,7 @@ export default async function handler(
         subtotal: subtotalStr,
         tax: taxStr,
         total_amount: totalAmount,
-        invoice_proof_url: invoiceProofUrl,
+        Proof: invoiceProofUrl,
       });
     } catch (error) {
       return res

@@ -19,6 +19,7 @@ const CHECK_INVOICE_EXISTS = gql`
       id
       invoice_number
       created_at
+      Proof
     }
   }
 `;
@@ -58,6 +59,7 @@ export default async function handler(
         id: string;
         invoice_number: string;
         created_at: string;
+        Proof: string | null;
       }>;
     }>(CHECK_INVOICE_EXISTS, {
       orderId,
@@ -71,6 +73,7 @@ export default async function handler(
       hasProof,
       invoiceId: hasProof ? result.Invoices[0].id : null,
       invoiceNumber: hasProof ? result.Invoices[0].invoice_number : null,
+      proofUrl: hasProof ? result.Invoices[0].Proof : null,
     });
   } catch (error) {
     console.error("Error checking invoice proof:", error);
