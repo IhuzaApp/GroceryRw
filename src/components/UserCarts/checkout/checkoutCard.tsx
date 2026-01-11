@@ -338,6 +338,126 @@ export default function CheckoutItems({
   const [showPaymentDropdown, setShowPaymentDropdown] = useState(false);
   const [showAddressDropdown, setShowAddressDropdown] = useState(false);
 
+  // Combined carts state
+  const [availableCarts, setAvailableCarts] = useState<any[]>([]);
+  const [selectedCartIds, setSelectedCartIds] = useState<Set<string>>(new Set());
+  const [loadingCarts, setLoadingCarts] = useState(true);
+  const [cartDetails, setCartDetails] = useState<{
+    [key: string]: {
+      total: number;
+      units: number;
+      deliveryFee: number;
+      serviceFee: number;
+    };
+  }>({});
+
+  // Fetch available carts to combine with
+  useEffect(() => {
+    const fetchAvailableCarts = async () => {
+      try {
+        setLoadingCarts(true);
+        const response = await fetch("/api/carts");
+        const data = await response.json();
+        
+        if (data.carts) {
+          // Filter out the current cart
+          const otherCarts = data.carts.filter((cart: any) => cart.id !== shopId);
+          setAvailableCarts(otherCarts);
+        }
+      } catch (error) {
+        console.error("Error fetching available carts:", error);
+      } finally {
+        setLoadingCarts(false);
+      }
+    };
+
+    if (!isFoodCart) {
+      // Only show cart combination for regular shop carts, not food carts
+      fetchAvailableCarts();
+    } else {
+      setLoadingCarts(false);
+    }
+  }, [shopId, isFoodCart]);
+
+  // Fetch cart details when carts are selected
+  useEffect(() => {
+    const fetchCartDetails = async () => {
+      for (const cartId of selectedCartIds) {
+        if (cartDetails[cartId]) continue; // Skip if already fetched
+
+        try {
+          const response = await fetch(`/api/cart-items?shop_id=${cartId}`);
+          const data = await response.json();
+          const items = data.items || [];
+
+          // Calculate subtotal
+          const cartTotal = items.reduce(
+            (sum: number, item: any) =>
+              sum + parseFloat(item.price || "0") * item.quantity,
+            0
+          );
+
+          // Calculate units
+          const cartUnits = items.reduce(
+            (sum: number, item: any) => sum + item.quantity,
+            0
+          );
+
+          // Calculate service fee (same as main cart)
+          const cartServiceFee = systemConfig
+            ? parseInt(systemConfig.serviceFee)
+            : 0;
+
+          // Calculate delivery fee (will be halved when adding to total)
+          // Use same calculation as main cart
+          const extraUnitsThreshold = systemConfig
+            ? parseInt(systemConfig.extraUnits)
+            : 0;
+          const extraUnits = Math.max(0, cartUnits - extraUnitsThreshold);
+          const unitsSurcharge =
+            extraUnits * (systemConfig ? parseInt(systemConfig.unitsSurcharge) : 0);
+          
+          const baseDeliveryFee = systemConfig
+            ? parseInt(systemConfig.baseDeliveryFee)
+            : 0;
+          
+          // For simplicity, use base delivery fee + units surcharge
+          // We don't have location for each cart to calculate distance
+          const cartDeliveryFee = baseDeliveryFee + unitsSurcharge;
+
+          setCartDetails((prev) => ({
+            ...prev,
+            [cartId]: {
+              total: cartTotal,
+              units: cartUnits,
+              deliveryFee: cartDeliveryFee,
+              serviceFee: cartServiceFee,
+            },
+          }));
+        } catch (error) {
+          console.error(`Error fetching details for cart ${cartId}:`, error);
+        }
+      }
+    };
+
+    if (selectedCartIds.size > 0 && systemConfig) {
+      fetchCartDetails();
+    }
+  }, [selectedCartIds, systemConfig, cartDetails]);
+
+  // Toggle cart selection
+  const toggleCartSelection = (cartId: string) => {
+    setSelectedCartIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(cartId)) {
+        next.delete(cartId);
+      } else {
+        next.add(cartId);
+      }
+      return next;
+    });
+  };
+
   // Fetch payment methods, addresses, and refund balance on component mount
   useEffect(() => {
     const fetchPaymentData = async () => {
@@ -832,10 +952,29 @@ export default function CheckoutItems({
     }
   };
 
+  // Calculate combined totals from selected additional carts
+  let combinedSubtotal = 0;
+  let combinedUnits = 0;
+  let combinedServiceFee = 0;
+  let combinedDeliveryFee = 0; // This will be 50% for additional carts
+
+  selectedCartIds.forEach((cartId) => {
+    const details = cartDetails[cartId];
+    if (details) {
+      combinedSubtotal += details.total;
+      combinedUnits += details.units;
+      combinedServiceFee += details.serviceFee;
+      // Add only 50% of delivery fee for additional carts
+      combinedDeliveryFee += details.deliveryFee * 0.5;
+    }
+  });
+
   // Compute numeric final total including service fee and delivery fee, minus discounts
-  const finalServiceFee = serviceFee - serviceFeeDiscount;
-  const finalDeliveryFee = deliveryFee - deliveryFeeDiscount;
-  const finalTotal = Total - discount + finalServiceFee + finalDeliveryFee;
+  const finalServiceFee = serviceFee - serviceFeeDiscount + combinedServiceFee;
+  const finalDeliveryFee = deliveryFee - deliveryFeeDiscount + combinedDeliveryFee;
+  const grandSubtotal = Total + combinedSubtotal;
+  const grandTotalUnits = totalUnits + combinedUnits;
+  const finalTotal = grandSubtotal - discount + finalServiceFee + finalDeliveryFee;
 
   const handleProceedToCheckout = async () => {
     // Validate cart has items
@@ -928,25 +1067,61 @@ export default function CheckoutItems({
           })),
         };
       } else {
-        // Regular shop cart checkout
-        apiEndpoint = "/api/checkout";
-        payload = {
-          shop_id: shopId,
-          delivery_address_id: deliveryAddressId,
-          service_fee: finalServiceFee.toString(),
-          delivery_fee: finalDeliveryFee.toString(),
-          discount: discount > 0 ? discount.toString() : null,
-          voucher_code: codeType === "promo" ? appliedCode : null,
-          referral_code: codeType === "referral" ? appliedCode : null,
-          referral_discount:
-            referralDiscount > 0 ? referralDiscount.toString() : null,
-          service_fee_discount:
-            serviceFeeDiscount > 0 ? serviceFeeDiscount.toString() : null,
-          delivery_fee_discount:
-            deliveryFeeDiscount > 0 ? deliveryFeeDiscount.toString() : null,
-          delivery_time: deliveryTimestamp,
-          delivery_notes: deliveryNotes || null,
-        };
+        // Check if this is a combined checkout
+        if (selectedCartIds.size > 0) {
+          // Combined checkout with multiple carts
+          apiEndpoint = "/api/mutations/create-combined-orders";
+          
+          // Prepare stores data
+          const stores = [
+            // Current cart
+            {
+              store_id: shopId,
+              delivery_fee: (deliveryFee - deliveryFeeDiscount).toString(),
+              service_fee: (serviceFee - serviceFeeDiscount).toString(),
+              discount: discount > 0 ? discount.toString() : null,
+              voucher_code: codeType === "promo" ? appliedCode : null,
+            },
+            // Additional selected carts (with 50% delivery fee)
+            ...Array.from(selectedCartIds).map((cartId) => {
+              const details = cartDetails[cartId];
+              return {
+                store_id: cartId,
+                delivery_fee: (details.deliveryFee * 0.5).toString(), // 50% delivery fee
+                service_fee: details.serviceFee.toString(),
+              };
+            }),
+          ];
+
+          payload = {
+            stores,
+            delivery_address_id: deliveryAddressId,
+            delivery_time: deliveryTimestamp,
+            delivery_notes: deliveryNotes || null,
+            payment_method: "mobile_money", // This will be set properly
+            payment_method_id: selectedPaymentMethod?.id || null,
+          };
+        } else {
+          // Regular single cart checkout
+          apiEndpoint = "/api/checkout";
+          payload = {
+            shop_id: shopId,
+            delivery_address_id: deliveryAddressId,
+            service_fee: finalServiceFee.toString(),
+            delivery_fee: finalDeliveryFee.toString(),
+            discount: discount > 0 ? discount.toString() : null,
+            voucher_code: codeType === "promo" ? appliedCode : null,
+            referral_code: codeType === "referral" ? appliedCode : null,
+            referral_discount:
+              referralDiscount > 0 ? referralDiscount.toString() : null,
+            service_fee_discount:
+              serviceFeeDiscount > 0 ? serviceFeeDiscount.toString() : null,
+            delivery_fee_discount:
+              deliveryFeeDiscount > 0 ? deliveryFeeDiscount.toString() : null,
+            delivery_time: deliveryTimestamp,
+            delivery_notes: deliveryNotes || null,
+          };
+        }
       }
 
       // Make API call in background (don't await)
@@ -997,10 +1172,13 @@ export default function CheckoutItems({
                 window.dispatchEvent(cartChangedEvent);
               }, 500);
             } else {
-              // Handle regular shop cart success
+              // Handle regular shop cart success or combined orders success
               // Clear loading state immediately
               clearTimeout(loadingTimeout);
               setIsCheckoutLoading(false);
+
+              // Check if this was a combined order
+              const isCombinedOrder = data.combined_order_id && data.orders;
 
               // Show success notification
               toaster.push(
@@ -1008,18 +1186,30 @@ export default function CheckoutItems({
                   type="success"
                   header="Order Completed Successfully!"
                 >
-                  Your order #{data.order_id?.slice(-8)} has been placed and is
-                  being prepared! You can view it in "Current Orders".
+                  {isCombinedOrder
+                    ? `Your ${data.orders.length} combined orders have been placed successfully! You can view them in "Current Orders".`
+                    : `Your order #${data.order_id?.slice(-8)} has been placed and is being prepared! You can view it in "Current Orders".`}
                 </Notification>,
                 { placement: "topEnd", duration: 5000 }
               );
 
-              // Trigger cart refresh to show cart is cleared
+              // Trigger cart refresh to show cart(s) are cleared
               setTimeout(() => {
-                const cartChangedEvent = new CustomEvent("cartChanged", {
-                  detail: { shop_id: shopId, refetch: true },
-                });
-                window.dispatchEvent(cartChangedEvent);
+                if (isCombinedOrder) {
+                  // Clear all combined carts
+                  data.orders.forEach((order: any) => {
+                    const cartChangedEvent = new CustomEvent("cartChanged", {
+                      detail: { shop_id: order.shop_id, refetch: true },
+                    });
+                    window.dispatchEvent(cartChangedEvent);
+                  });
+                } else {
+                  // Clear single cart
+                  const cartChangedEvent = new CustomEvent("cartChanged", {
+                    detail: { shop_id: shopId, refetch: true },
+                  });
+                  window.dispatchEvent(cartChangedEvent);
+                }
               }, 500);
             }
           }
@@ -1448,8 +1638,13 @@ export default function CheckoutItems({
               Order Summary
             </span>
             <span className="ml-2 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/20 dark:text-green-300">
-              {totalUnits} items
+              {grandTotalUnits} items
             </span>
+            {selectedCartIds.size > 0 && (
+              <span className="ml-2 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+                {selectedCartIds.size + 1} carts
+              </span>
+            )}
           </div>
           <div className="flex items-center">
             <span
@@ -1514,6 +1709,57 @@ export default function CheckoutItems({
           className={`p-4 ${isExpanded ? "block" : "hidden"} overflow-y-auto`}
           style={{ maxHeight: "calc(90vh - 124px)" }}
         >
+          {/* Combine with other carts section */}
+          {!loadingCarts && availableCarts.length > 0 && (
+            <div className="mb-4">
+              <h4
+                className={`mb-2 text-sm font-semibold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                🛒 Combine with Other Carts
+              </h4>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                Select additional carts to checkout together. Delivery fee is 50% off for additional carts!
+              </p>
+              <div className="space-y-2">
+                {availableCarts.map((cart) => (
+                  <label
+                    key={cart.id}
+                    className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-3 transition-all ${
+                      selectedCartIds.has(cart.id)
+                        ? "border-green-500 bg-green-50 dark:border-green-600 dark:bg-green-900/20"
+                        : "border-gray-200 bg-white hover:border-green-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-700"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedCartIds.has(cart.id)}
+                      onChange={() => toggleCartSelection(cart.id)}
+                      className="h-5 w-5 rounded border-gray-300 text-green-600 focus:ring-2 focus:ring-green-500"
+                    />
+                    <div className="flex-1">
+                      <div className={`text-sm font-semibold ${
+                        theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}>
+                        {cart.name}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {cart.count} items
+                        {cartDetails[cart.id] && (
+                          <span className="ml-2 text-green-600 dark:text-green-400">
+                            +{formatCurrency(cartDetails[cart.id].total)} (delivery 50% off)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              <div className="my-3 h-px bg-gray-200 dark:bg-gray-700"></div>
+            </div>
+          )}
+
           {discountsEnabled && (
             <div>
               <p
@@ -1557,14 +1803,14 @@ export default function CheckoutItems({
                   theme === "dark" ? "text-gray-300" : "text-gray-600"
                 }`}
               >
-                Subtotal
+                Subtotal {selectedCartIds.size > 0 && `(${selectedCartIds.size + 1} carts)`}
               </span>
               <span
                 className={`text-sm font-medium ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
-                {formatCurrency(Total)}
+                {formatCurrency(grandSubtotal)}
               </span>
             </div>
             {discount > 0 && codeType === "promo" && (
@@ -1596,7 +1842,7 @@ export default function CheckoutItems({
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
-                {totalUnits}
+                {grandTotalUnits}
               </span>
             </div>
             <div className="flex justify-between py-1">
@@ -1621,7 +1867,7 @@ export default function CheckoutItems({
                   theme === "dark" ? "text-gray-300" : "text-gray-600"
                 }`}
               >
-                Delivery Fee
+                Delivery Fee {selectedCartIds.size > 0 && `(+${selectedCartIds.size} at 50%)`}
               </span>
               <span
                 className={`text-sm font-medium ${
@@ -1944,13 +2190,58 @@ export default function CheckoutItems({
               </h2>
             </div>
 
+            {/* Combine with other carts section - Desktop */}
+            {!loadingCarts && availableCarts.length > 0 && (
+              <div className="mb-4">
+                <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
+                  🛒 Combine with Other Carts
+                </h4>
+                <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
+                  Select additional carts to checkout together. Delivery fee is 50% off for additional carts!
+                </p>
+                <div className="space-y-2">
+                  {availableCarts.map((cart) => (
+                    <label
+                      key={cart.id}
+                      className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-3 transition-all ${
+                        selectedCartIds.has(cart.id)
+                          ? "border-green-500 bg-green-50 dark:border-green-600 dark:bg-green-900/20"
+                          : "border-gray-200 bg-white hover:border-green-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-700"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedCartIds.has(cart.id)}
+                        onChange={() => toggleCartSelection(cart.id)}
+                        className="h-5 w-5 rounded border-gray-300 text-green-600 focus:ring-2 focus:ring-green-500"
+                      />
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {cart.name}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {cart.count} items
+                          {cartDetails[cart.id] && (
+                            <span className="ml-2 text-green-600 dark:text-green-400">
+                              +{formatCurrency(cartDetails[cart.id].total)} (delivery 50% off)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+                <div className="my-4 h-px bg-gray-200 dark:bg-gray-700"></div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <div className="flex justify-between py-1">
                 <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Subtotal
+                  Subtotal {selectedCartIds.size > 0 && `(${selectedCartIds.size + 1} carts)`}
                 </span>
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  {formatCurrency(Total)}
+                  {formatCurrency(grandSubtotal)}
                 </span>
               </div>
 
@@ -1980,7 +2271,7 @@ export default function CheckoutItems({
                   Units
                 </span>
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  {totalUnits}
+                  {grandTotalUnits}
                 </span>
               </div>
 
@@ -1995,7 +2286,7 @@ export default function CheckoutItems({
 
               <div className="flex justify-between py-1">
                 <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Delivery Fee
+                  Delivery Fee {selectedCartIds.size > 0 && `(+${selectedCartIds.size} at 50%)`}
                 </span>
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
                   {formatCurrency(finalDeliveryFee)}
