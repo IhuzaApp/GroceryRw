@@ -356,7 +356,13 @@ export default function App({ Component, pageProps }: AppProps) {
                   <ChatProvider>
                     <GoogleMapProvider>
                       <SessionRefreshHandler>
-                        <Toaster position="top-right" />
+                        <Toaster 
+                          position="top-center"
+                          containerClassName="mobile-toast-container"
+                          toastOptions={{
+                            className: 'mobile-toast',
+                          }}
+                        />
                         <Component {...pageProps} />
                         <InstallPrompt />
                       </SessionRefreshHandler>
