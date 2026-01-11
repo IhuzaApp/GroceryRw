@@ -38,6 +38,8 @@ export default function GuestUpgradeModal({
       setShowPassword(false);
       setOtp("");
       setDevOTP(null);
+      // Clean up localStorage
+      localStorage.removeItem("pending_upgrade_otp");
       onClose();
     }
   };
@@ -107,9 +109,29 @@ export default function GuestUpgradeModal({
         throw new Error(data.error || "Failed to send OTP");
       }
 
-      // Show dev OTP if available (development mode)
+      // Store OTP data in localStorage for verification
       if (data.devOTP) {
+        const otpData = {
+          otp: data.devOTP,
+          email: email.trim().toLowerCase(),
+          fullName: fullName.trim(),
+          gender,
+          password,
+          expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
+        };
+        localStorage.setItem("pending_upgrade_otp", JSON.stringify(otpData));
+        
         setDevOTP(data.devOTP);
+        
+        // Log to browser console
+        console.log("=".repeat(60));
+        console.log("🔐 OTP VERIFICATION CODE (Browser)");
+        console.log("=".repeat(60));
+        console.log(`Email: ${email}`);
+        console.log(`OTP Code: ${data.devOTP}`);
+        console.log(`Expires in: 10 minutes`);
+        console.log("=".repeat(60));
+        
         toast.success(`OTP sent! Check console (Dev: ${data.devOTP})`, {
           duration: 8000,
         });
@@ -138,44 +160,61 @@ export default function GuestUpgradeModal({
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/verify-upgrade-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          otp,
-          password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to verify OTP");
+      // Get OTP data from localStorage
+      const storedDataStr = localStorage.getItem("pending_upgrade_otp");
+      
+      if (!storedDataStr) {
+        throw new Error("OTP not found or expired. Please request a new one.");
       }
 
-      toast.success("Account upgraded successfully! 🎉");
+      const storedData = JSON.parse(storedDataStr);
 
-      // Close modal first
-      handleClose();
+      // Check if OTP is expired
+      if (Date.now() > storedData.expiresAt) {
+        localStorage.removeItem("pending_upgrade_otp");
+        throw new Error("OTP has expired. Please request a new one.");
+      }
 
-      // Sign in with new credentials to refresh session
-      const result = await signIn("credentials", {
-        redirect: false,
-        email: email.trim().toLowerCase(),
-        password,
+      // Verify OTP
+      if (storedData.otp !== otp) {
+        throw new Error("Invalid OTP. Please try again.");
+      }
+
+      // OTP is valid!
+      localStorage.removeItem("pending_upgrade_otp");
+
+      toast.success("OTP verified successfully! ✅\nCheck console for details.", {
+        duration: 5000,
       });
 
-      if (result?.ok) {
-        // Refresh the page to update UI and session
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
-      } else {
-        toast.error("Account upgraded but login failed. Please log in manually.");
-        setTimeout(() => {
-          window.location.href = "/Auth/Login";
-        }, 2000);
-      }
+      console.log("=".repeat(60));
+      console.log("✅ OTP VERIFICATION SUCCESSFUL");
+      console.log("=".repeat(60));
+      console.log("User will be upgraded with:");
+      console.log(`Name: ${storedData.fullName}`);
+      console.log(`Email: ${storedData.email}`);
+      console.log(`Gender: ${storedData.gender}`);
+      console.log(`Password: ${storedData.password}`);
+      console.log("=".repeat(60));
+      console.log(
+        "TODO: Integrate with database to actually update the user account"
+      );
+      console.log("=".repeat(60));
+
+      // Close modal after showing success
+      setTimeout(() => {
+        handleClose();
+      }, 2000);
+
+      // TODO: When database is ready, uncomment the following to auto-login:
+      // const result = await signIn("credentials", {
+      //   redirect: false,
+      //   email: storedData.email,
+      //   password: storedData.password,
+      // });
+      // if (result?.ok) {
+      //   window.location.reload();
+      // }
     } catch (error: any) {
       console.error("Verify OTP error:", error);
       toast.error(error.message || "Invalid or expired OTP");
@@ -187,7 +226,7 @@ export default function GuestUpgradeModal({
   const handleBackToStep1 = () => {
     setStep(1);
     setOtp("");
-    setDevOTP(null);
+    // Keep devOTP and localStorage data so user can resend if needed
   };
 
   if (!open) return null;
@@ -267,10 +306,10 @@ export default function GuestUpgradeModal({
               theme === "dark"
                 ? step === 1
                   ? "border-green-800 bg-green-900/20"
-                  : "border-blue-800 bg-blue-900/20"
+                  : "border-green-800 bg-green-900/20"
                 : step === 1
                 ? "border-green-200 bg-green-50"
-                : "border-blue-200 bg-blue-50"
+                : "border-green-200 bg-green-50"
             }`}
           >
             <div className="flex items-start gap-3">
@@ -279,10 +318,10 @@ export default function GuestUpgradeModal({
                   theme === "dark"
                     ? step === 1
                       ? "text-green-400"
-                      : "text-blue-400"
+                      : "text-green-400"
                     : step === 1
                     ? "text-green-600"
-                    : "text-blue-600"
+                    : "text-green-600"
                 }`}
                 fill="none"
                 stroke="currentColor"
@@ -570,8 +609,8 @@ export default function GuestUpgradeModal({
                   disabled={isLoading}
                   className={`w-full rounded-xl border px-4 py-3 text-center text-2xl font-bold tracking-widest shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
                     theme === "dark"
-                      ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500/20"
-                      : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500/20"
+                      ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                      : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
                   }`}
                 />
                 <p
@@ -587,12 +626,16 @@ export default function GuestUpgradeModal({
               <div className="flex items-center justify-center">
                 <button
                   type="button"
-                  onClick={handleSendOTP}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    // Resend OTP with existing form data
+                    handleSendOTP(e as any);
+                  }}
                   disabled={isLoading}
                   className={`text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                     theme === "dark"
-                      ? "text-blue-400 hover:text-blue-300"
-                      : "text-blue-600 hover:text-blue-700"
+                      ? "text-green-400 hover:text-green-300"
+                      : "text-green-600 hover:text-green-700"
                   }`}
                 >
                   Didn't receive the code? Resend OTP
@@ -704,7 +747,7 @@ export default function GuestUpgradeModal({
                 type="submit"
                 form="verify-otp-form"
                 disabled={isLoading || otp.length !== 6}
-                className="inline-flex flex-1 items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:bg-blue-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-blue-600 disabled:hover:shadow-lg md:flex-none md:px-5"
+                className="inline-flex flex-1 items-center justify-center rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:bg-green-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-green-600 disabled:hover:shadow-lg md:flex-none md:px-5"
               >
                 {isLoading ? (
                   <>

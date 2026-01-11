@@ -1,46 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "./[...nextauth]";
-import { GraphQLClient, gql } from "graphql-request";
-import bcrypt from "bcryptjs";
 import { otpStore } from "../../../lib/otpStore";
-
-const hasuraClient = new GraphQLClient(
-  process.env.NEXT_PUBLIC_HASURA_GRAPHQL_URL!,
-  {
-    headers: {
-      "x-hasura-admin-secret": process.env.HASURA_ADMIN_SECRET!,
-    },
-  }
-);
-
-const UPDATE_USER_MUTATION = gql`
-  mutation UpdateUserToMember(
-    $userId: uuid!
-    $name: String!
-    $email: String!
-    $passwordHash: String!
-    $gender: String!
-  ) {
-    update_Users_by_pk(
-      pk_columns: { id: $userId }
-      _set: {
-        name: $name
-        email: $email
-        password_hash: $passwordHash
-        gender: $gender
-        is_guest: false
-      }
-    ) {
-      id
-      name
-      email
-      phone
-      gender
-      is_guest
-    }
-  }
-`;
 
 export default async function handler(
   req: NextApiRequest,
@@ -100,43 +61,37 @@ export default async function handler(
       });
     }
 
-    // OTP is valid, proceed with upgrade
-    // Hash the password
-    const passwordHash = await bcrypt.hash(password, 10);
-
-    // Update the user
-    const result: any = await hasuraClient.request(UPDATE_USER_MUTATION, {
-      userId: session.user.id,
-      name: storedData.fullName,
-      email: storedData.email,
-      passwordHash,
-      gender: storedData.gender,
-    });
-
-    if (!result.update_Users_by_pk) {
-      throw new Error("Failed to update user");
-    }
-
+    // OTP is valid!
     // Clear OTP from store
     otpStore.delete(session.user.id);
 
     console.log("=".repeat(60));
-    console.log("✅ ACCOUNT UPGRADED SUCCESSFULLY");
+    console.log("✅ OTP VERIFIED SUCCESSFULLY");
     console.log("=".repeat(60));
     console.log(`User ID: ${session.user.id}`);
     console.log(`Email: ${storedData.email}`);
     console.log(`Name: ${storedData.fullName}`);
+    console.log(`Gender: ${storedData.gender}`);
+    console.log(`Password: ${password}`);
+    console.log("=".repeat(60));
+    console.log("TODO: Update user in database when ready");
     console.log("=".repeat(60));
 
     return res.status(200).json({
       success: true,
-      user: result.update_Users_by_pk,
-      message: "Account upgraded successfully",
+      user: {
+        id: session.user.id,
+        name: storedData.fullName,
+        email: storedData.email,
+        gender: storedData.gender,
+        is_guest: false,
+      },
+      message: "OTP verified successfully",
     });
   } catch (error: any) {
-    console.error("Verify OTP and upgrade error:", error);
+    console.error("Verify OTP error:", error);
     return res.status(500).json({
-      error: error.message || "Failed to verify OTP and upgrade account",
+      error: error.message || "Failed to verify OTP",
     });
   }
 }
