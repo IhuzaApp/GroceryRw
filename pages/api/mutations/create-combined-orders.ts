@@ -33,6 +33,12 @@ const GET_CART_WITH_ITEMS = gql`
           final_price
         }
       }
+      Shop {
+        id
+        name
+        latitude
+        longitude
+      }
     }
   }
 `;

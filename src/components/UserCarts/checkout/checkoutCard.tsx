@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Button, Panel, Modal, toaster, Notification } from "rsuite";
-import Link from "next/link"; // Make sure you import Link if you use it
+import Link from "next/link";
 import { formatCurrency } from "../../../lib/formatCurrency";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
@@ -342,12 +342,18 @@ export default function CheckoutItems({
   const [availableCarts, setAvailableCarts] = useState<any[]>([]);
   const [selectedCartIds, setSelectedCartIds] = useState<Set<string>>(new Set());
   const [loadingCarts, setLoadingCarts] = useState(true);
+  const [showCombineModal, setShowCombineModal] = useState(false);
+  const [refetchCartDetails, setRefetchCartDetails] = useState(0);
   const [cartDetails, setCartDetails] = useState<{
     [key: string]: {
       total: number;
       units: number;
       deliveryFee: number;
       serviceFee: number;
+      distance: string;
+      deliveryTime: string;
+      shopLat: number;
+      shopLng: number;
     };
   }>({});
 
@@ -379,16 +385,58 @@ export default function CheckoutItems({
     }
   }, [shopId, isFoodCart]);
 
-  // Fetch cart details when carts are selected
+  // Fetch cart details for all available carts (not just selected)
   useEffect(() => {
     const fetchCartDetails = async () => {
-      for (const cartId of selectedCartIds) {
-        if (cartDetails[cartId]) continue; // Skip if already fetched
+      // Get current selected address (same logic as main component)
+      let currentAddress = selectedAddressId
+        ? savedAddresses.find((a) => a.id === selectedAddressId)
+        : null;
+
+      // Fallback to cookie if no address selected (for guest users)
+      let userLat = 0;
+      let userLng = 0;
+      let hasUserLocation = false;
+
+      if (currentAddress && currentAddress.latitude && currentAddress.longitude) {
+        userLat = parseFloat(currentAddress.latitude.toString());
+        userLng = parseFloat(currentAddress.longitude.toString());
+        hasUserLocation = true;
+      } else {
+        // Try cookie fallback
+        const cookie = Cookies.get("delivery_address");
+        if (cookie) {
+          try {
+            const userAddr = JSON.parse(cookie);
+            if (userAddr.latitude && userAddr.longitude) {
+              userLat = parseFloat(userAddr.latitude.toString());
+              userLng = parseFloat(userAddr.longitude.toString());
+              hasUserLocation = true;
+            }
+          } catch (err) {
+            console.error("Error parsing delivery_address cookie:", err);
+          }
+        }
+      }
+
+      // Only proceed if we have user location
+      if (!hasUserLocation) {
+        return;
+      }
+
+      for (const cart of availableCarts) {
+        // Only skip if we have valid data (not N/A for distance)
+        if (cartDetails[cart.id] && cartDetails[cart.id].distance !== "N/A") {
+          continue;
+        }
 
         try {
-          const response = await fetch(`/api/cart-items?shop_id=${cartId}`);
-          const data = await response.json();
-          const items = data.items || [];
+          // Fetch cart items (now includes shop coordinates)
+          const itemsResponse = await fetch(`/api/cart-items?shop_id=${cart.id}`);
+          const itemsData = await itemsResponse.json();
+          const items = itemsData.items || [];
+          const shopLatitude = itemsData.shopLatitude;
+          const shopLongitude = itemsData.shopLongitude;
 
           // Calculate subtotal
           const cartTotal = items.reduce(
@@ -408,8 +456,7 @@ export default function CheckoutItems({
             ? parseInt(systemConfig.serviceFee)
             : 0;
 
-          // Calculate delivery fee (will be halved when adding to total)
-          // Use same calculation as main cart
+          // Calculate delivery fee based on distance
           const extraUnitsThreshold = systemConfig
             ? parseInt(systemConfig.extraUnits)
             : 0;
@@ -420,30 +467,82 @@ export default function CheckoutItems({
           const baseDeliveryFee = systemConfig
             ? parseInt(systemConfig.baseDeliveryFee)
             : 0;
-          
-          // For simplicity, use base delivery fee + units surcharge
-          // We don't have location for each cart to calculate distance
-          const cartDeliveryFee = baseDeliveryFee + unitsSurcharge;
+
+          // Calculate distance if we have store location
+          let distanceKm = 0;
+          let cartDeliveryFee = baseDeliveryFee + unitsSurcharge;
+          let distanceText = "N/A";
+          let deliveryTimeText = "N/A";
+
+          if (shopLatitude && shopLongitude) {
+            const storeLat = parseFloat(shopLatitude.toString());
+            const storeLng = parseFloat(shopLongitude.toString());
+
+            if (storeLat && storeLng) {
+              distanceKm = getDistanceFromLatLonInKm(userLat, userLng, storeLat, storeLng);
+              
+              // Use 3D distance for consistency with main cart (altitude difference)
+              // Assume shop altitude is 0 if not available, user altitude from cookie or 0
+              const shopAltitude = 0; // Could be fetched from shop data if available
+              const userAltitude = 0; // Could be from address data if available
+              const altKm = (shopAltitude - userAltitude) / 1000;
+              const distance3D = Math.sqrt(distanceKm * distanceKm + altKm * altKm);
+              
+              distanceText = `${distance3D.toFixed(1)} km`;
+
+              // Calculate distance-based delivery fee using 3D distance
+              const extraDistance = Math.max(0, distance3D - 3);
+              const distanceSurcharge =
+                Math.ceil(extraDistance) *
+                (systemConfig ? parseInt(systemConfig.distanceSurcharge) : 0);
+              const rawDistanceFee = baseDeliveryFee + distanceSurcharge;
+              const cappedDistanceFee = systemConfig
+                ? parseInt(systemConfig.cappedDistanceFee)
+                : 0;
+              const finalDistanceFee =
+                rawDistanceFee > cappedDistanceFee ? cappedDistanceFee : rawDistanceFee;
+              cartDeliveryFee = finalDistanceFee + unitsSurcharge;
+
+              // Calculate delivery time using 3D distance
+              const shoppingTimeMinutes = systemConfig ? parseInt(systemConfig.shoppingTime) : 0;
+              const travelTimeMinutes = Math.min(Math.ceil(distance3D), 240); // Cap at 4 hours
+              const totalMinutes = shoppingTimeMinutes + travelTimeMinutes;
+              
+              if (totalMinutes < 60) {
+                deliveryTimeText = `${totalMinutes}min`;
+              } else {
+                const hours = Math.floor(totalMinutes / 60);
+                const mins = totalMinutes % 60;
+                deliveryTimeText = mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+              }
+
+            }
+          }
 
           setCartDetails((prev) => ({
             ...prev,
-            [cartId]: {
+            [cart.id]: {
               total: cartTotal,
               units: cartUnits,
               deliveryFee: cartDeliveryFee,
               serviceFee: cartServiceFee,
+              distance: distanceText,
+              deliveryTime: deliveryTimeText,
+              shopLat: shopLatitude ? parseFloat(shopLatitude.toString()) : 0,
+              shopLng: shopLongitude ? parseFloat(shopLongitude.toString()) : 0,
             },
           }));
         } catch (error) {
-          console.error(`Error fetching details for cart ${cartId}:`, error);
+          console.error(`Error fetching details for cart ${cart.id}:`, error);
         }
       }
     };
 
-    if (selectedCartIds.size > 0 && systemConfig) {
+    if (availableCarts.length > 0 && systemConfig) {
       fetchCartDetails();
     }
-  }, [selectedCartIds, systemConfig, cartDetails]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableCarts, systemConfig, selectedAddressId, savedAddresses, refetchCartDetails]);
 
   // Toggle cart selection
   const toggleCartSelection = (cartId: string) => {
@@ -457,6 +556,127 @@ export default function CheckoutItems({
       return next;
     });
   };
+
+  // Calculate combined delivery time for multiple shops
+  const calculateCombinedDeliveryTime = () => {
+    if (selectedCartIds.size === 0) {
+      return null; // No combined carts, use normal calculation
+    }
+
+    // Get user location
+    let userLat = 0;
+    let userLng = 0;
+    
+    if (selectedAddress && selectedAddress.latitude && selectedAddress.longitude) {
+      userLat = parseFloat(selectedAddress.latitude.toString());
+      userLng = parseFloat(selectedAddress.longitude.toString());
+    } else {
+      const cookie = Cookies.get("delivery_address");
+      if (cookie) {
+        try {
+          const userAddr = JSON.parse(cookie);
+          if (userAddr.latitude && userAddr.longitude) {
+            userLat = parseFloat(userAddr.latitude.toString());
+            userLng = parseFloat(userAddr.longitude.toString());
+          }
+        } catch (err) {
+          // Ignore
+        }
+      }
+    }
+
+    if (!userLat || !userLng) {
+      return null; // Can't calculate without user location
+    }
+
+    // Create array of all shops (current + selected) with coordinates
+    const allShops = [
+      { id: shopId, lat: shopLat, lng: shopLng, name: "Current Shop" },
+      ...Array.from(selectedCartIds).map(cartId => {
+        const details = cartDetails[cartId];
+        return {
+          id: cartId,
+          lat: details?.shopLat || 0,
+          lng: details?.shopLng || 0,
+          name: availableCarts.find(c => c.id === cartId)?.name || "Shop"
+        };
+      })
+    ].filter(shop => shop.lat !== 0 && shop.lng !== 0); // Filter out shops without coordinates
+
+    // If we only have 1 shop (the current one), return null to use normal calculation
+    if (allShops.length <= 1) {
+      return null;
+    }
+
+    // Shopping time: 15 minutes per shop (faster for combined orders)
+    const totalShoppingTime = 15 * allShops.length;
+
+    // Initial travel time: Shopper → First Shop (estimated ~5 min buffer)
+    const initialTravelTime = 5; // Fixed 5 minutes for shopper to reach first shop
+
+    // Calculate total travel distance between shops and to customer
+    // Route: Shopper → Shop 1 → Shop 2 → ... → Shop N → Customer
+    let totalTravelDistance = 0;
+    const routeLegs = [`Shopper → ${allShops[0].name}: ~5 min (buffer)`];
+    
+    // Distance between consecutive shops
+    for (let i = 0; i < allShops.length - 1; i++) {
+      const shop1 = allShops[i];
+      const shop2 = allShops[i + 1];
+      const distance = getDistanceFromLatLonInKm(shop1.lat, shop1.lng, shop2.lat, shop2.lng);
+      totalTravelDistance += distance;
+      routeLegs.push(`${shop1.name} → ${shop2.name}: ${distance.toFixed(2)} km`);
+    }
+    
+    // Distance from last shop to customer
+    const lastShop = allShops[allShops.length - 1];
+    const lastLegDistance = getDistanceFromLatLonInKm(lastShop.lat, lastShop.lng, userLat, userLng);
+    totalTravelDistance += lastLegDistance;
+    routeLegs.push(`${lastShop.name} → Customer: ${lastLegDistance.toFixed(2)} km`);
+
+    // Travel time (1 min per km, capped at 240 min)
+    const shopToShopTravelTime = Math.min(Math.ceil(totalTravelDistance), 240);
+    const totalTravelTime = initialTravelTime + shopToShopTravelTime;
+    
+    const totalTime = totalShoppingTime + totalTravelTime;
+
+    return {
+      totalTime,
+      details: {
+        numberOfShops: allShops.length,
+        shoppingTime: totalShoppingTime,
+        initialTravelTime,
+        shopToShopTravelTime,
+        totalTravelDistance,
+        totalTravelTime,
+        route: "Shopper → " + allShops.map(s => s.name).join(" → ") + " → Customer",
+        routeLegs
+      }
+    };
+  };
+
+  // Log combined delivery time calculation when it changes
+  useEffect(() => {
+    // Only log when there are actually combined carts
+    if (selectedCartIds.size > 0) {
+      const combinedCalc = calculateCombinedDeliveryTime();
+      if (combinedCalc && combinedCalc.details) {
+        console.log(`🚚 Combined Delivery Time Calculation:`);
+        console.log(`   📊 ${combinedCalc.details.numberOfShops} shops selected`);
+        console.log(`   🛒 Shopping: ${combinedCalc.details.shoppingTime} min (15 min × ${combinedCalc.details.numberOfShops})`);
+        console.log(`   🚗 Travel Time Breakdown:`);
+        console.log(`      - Shopper to First Shop: ${combinedCalc.details.initialTravelTime} min (buffer)`);
+        console.log(`      - Between Shops + To Customer: ${combinedCalc.details.shopToShopTravelTime} min (${combinedCalc.details.totalTravelDistance.toFixed(2)} km)`);
+        console.log(`      - Total Travel: ${combinedCalc.details.totalTravelTime} min`);
+        console.log(`   📍 Route breakdown:`);
+        combinedCalc.details.routeLegs.forEach(leg => {
+          console.log(`      ${leg}`);
+        });
+        console.log(`   ⏱️  Total Time: ${combinedCalc.totalTime} min (${combinedCalc.details.shoppingTime} shopping + ${combinedCalc.details.totalTravelTime} travel)`);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCartIds.size, Object.keys(cartDetails).length]);
 
   // Fetch payment methods, addresses, and refund balance on component mount
   useEffect(() => {
@@ -670,6 +890,15 @@ export default function CheckoutItems({
   const distance3D = Math.sqrt(distanceKm * distanceKm + altKm * altKm);
   // Cap travel time to reasonable maximum (4 hours = 240 minutes)
   const travelTime = Math.min(Math.ceil(distance3D), 240); // assume 1 km ≈ 1 minute travel, max 4 hours
+  
+  // Log single cart delivery calculation (before combining)
+  if (!isFoodCart) {
+    console.log(`🛒 Single Cart Delivery Calculation:`);
+    console.log(`   📦 Shop: ${shopId.substring(0, 8)}...`);
+    console.log(`   🛒 Shopping: ${shoppingTime} min`);
+    console.log(`   🚗 Travel: ${travelTime} min (${distanceKm.toFixed(2)} km)`);
+    console.log(`   ⏱️  Total Time: ${shoppingTime + travelTime} min`);
+  }
 
   // Helper function to parse preparation time string from database
   const parsePreparationTimeString = (timeString?: string): number => {
@@ -758,7 +987,10 @@ export default function CheckoutItems({
 
   // Use preparation time for food orders, shopping time for regular orders
   const processingTime = isFoodCart ? preparationTime : shoppingTime;
-  const totalTimeMinutes = travelTime + processingTime;
+  
+  // Calculate combined delivery time if multiple carts are selected
+  const combinedCalc = calculateCombinedDeliveryTime();
+  const totalTimeMinutes = combinedCalc !== null ? combinedCalc.totalTime : (travelTime + processingTime);
 
   // Calculate the delivery timestamp (current time + totalTimeMinutes)
   const deliveryDate = new Date(Date.now() + totalTimeMinutes * 60000);
@@ -818,16 +1050,20 @@ export default function CheckoutItems({
     }
   } else {
     // For regular shop orders, show shopping + delivery time with distance
+    const multiShopSuffix = selectedCartIds.size > 0 
+      ? ` - ${selectedCartIds.size + 1} shops` 
+      : "";
+      
     if (days > 0) {
       deliveryTime = `Will be delivered in ${days} day${days > 1 ? "s" : ""}${
         hours > 0 ? ` ${hours}h` : ""
-      } (${formattedDistance})`;
+      } (${formattedDistance}${multiShopSuffix})`;
     } else if (hours > 0) {
       deliveryTime = `Will be delivered in ${hours}h${
         mins > 0 ? ` ${mins}m` : ""
-      } (${formattedDistance})`;
+      } (${formattedDistance}${multiShopSuffix})`;
     } else {
-      deliveryTime = `Will be delivered in ${mins} minutes (${formattedDistance})`;
+      deliveryTime = `Will be delivered in ${mins} minutes (${formattedDistance}${multiShopSuffix})`;
     }
   }
 
@@ -955,17 +1191,18 @@ export default function CheckoutItems({
   // Calculate combined totals from selected additional carts
   let combinedSubtotal = 0;
   let combinedUnits = 0;
-  let combinedServiceFee = 0;
-  let combinedDeliveryFee = 0; // This will be 50% for additional carts
+  let combinedServiceFee = 0; // Service fee stays the same, not added
+  let combinedDeliveryFee = 0; // This will be 70% for additional carts
 
   selectedCartIds.forEach((cartId) => {
     const details = cartDetails[cartId];
     if (details) {
       combinedSubtotal += details.total;
       combinedUnits += details.units;
-      combinedServiceFee += details.serviceFee;
-      // Add only 50% of delivery fee for additional carts
-      combinedDeliveryFee += details.deliveryFee * 0.5;
+      // Service fee is NOT added - it stays the same as the main cart
+      // combinedServiceFee += details.serviceFee; // REMOVED
+      // Add 70% of delivery fee for additional carts
+      combinedDeliveryFee += details.deliveryFee * 0.7;
     }
   });
 
@@ -1082,13 +1319,13 @@ export default function CheckoutItems({
               discount: discount > 0 ? discount.toString() : null,
               voucher_code: codeType === "promo" ? appliedCode : null,
             },
-            // Additional selected carts (with 50% delivery fee)
+            // Additional selected carts (with 70% delivery fee, no service fee)
             ...Array.from(selectedCartIds).map((cartId) => {
               const details = cartDetails[cartId];
               return {
                 store_id: cartId,
-                delivery_fee: (details.deliveryFee * 0.5).toString(), // 50% delivery fee
-                service_fee: details.serviceFee.toString(),
+                delivery_fee: (details.deliveryFee * 0.7).toString(), // 70% delivery fee
+                service_fee: "0", // No service fee for additional carts
               };
             }),
           ];
@@ -1625,65 +1862,96 @@ export default function CheckoutItems({
         }}
       >
         {/* Header with toggle button */}
-        <div
-          className="flex items-center justify-between p-4 shadow-sm"
-          onClick={toggleExpand} // Make the entire header clickable to toggle
-        >
-          <div className="flex items-center">
-            <span
-              className={`text-lg font-bold ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}
-            >
-              Order Summary
-            </span>
-            <span className="ml-2 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/20 dark:text-green-300">
-              {grandTotalUnits} items
-            </span>
-            {selectedCartIds.size > 0 && (
-              <span className="ml-2 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
-                {selectedCartIds.size + 1} carts
+        <div className="p-4 shadow-sm">
+          <div
+            className="flex items-center justify-between"
+            onClick={toggleExpand}
+          >
+            <div className="flex items-center">
+              <span
+                className={`text-lg font-bold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Order Summary
               </span>
-            )}
-          </div>
-          <div className="flex items-center">
-            <span
-              className={`mr-2 font-bold text-green-600 ${
-                theme === "dark" ? "text-green-400" : "text-green-600"
-              }`}
-            >
-              {formatCurrency(finalTotal)}
-            </span>
-            <button
-              className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                theme === "dark"
-                  ? "bg-gray-700 text-gray-300"
-                  : "bg-gray-100 text-gray-600"
-              }`}
-            >
-              {isExpanded ? (
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="h-5 w-5"
-                >
-                  <polyline points="18 15 12 9 6 15"></polyline>
-                </svg>
-              ) : (
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="h-5 w-5"
-                >
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
+              <span className="ml-2 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/20 dark:text-green-300">
+                {grandTotalUnits} items
+              </span>
+              {selectedCartIds.size > 0 && (
+                <span className="ml-2 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+                  {selectedCartIds.size + 1} carts
+                </span>
               )}
-            </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <span
+                className={`font-bold text-green-600 ${
+                  theme === "dark" ? "text-green-400" : "text-green-600"
+                }`}
+              >
+                {formatCurrency(finalTotal)}
+              </span>
+              <button
+                className={`flex h-8 w-8 items-center justify-center rounded-full ${
+                  theme === "dark"
+                    ? "bg-gray-700 text-gray-300"
+                    : "bg-gray-100 text-gray-600"
+                }`}
+              >
+                {isExpanded ? (
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="h-5 w-5"
+                  >
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                  </svg>
+                ) : (
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="h-5 w-5"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
+          
+          {/* Combine button - Mobile */}
+          {!loadingCarts && availableCarts.length > 0 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                // Clear cart details and trigger refetch
+                setCartDetails({});
+                setRefetchCartDetails(prev => prev + 1);
+                setShowCombineModal(true);
+              }}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-md transition-all hover:from-green-600 hover:to-emerald-700"
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+              {selectedCartIds.size > 0 ? `${selectedCartIds.size} Cart${selectedCartIds.size !== 1 ? 's' : ''} Combined` : "Combine with Other Carts"}
+            </button>
+          )}
         </div>
 
         {/* Checkout button when collapsed */}
@@ -1709,57 +1977,6 @@ export default function CheckoutItems({
           className={`p-4 ${isExpanded ? "block" : "hidden"} overflow-y-auto`}
           style={{ maxHeight: "calc(90vh - 124px)" }}
         >
-          {/* Combine with other carts section */}
-          {!loadingCarts && availableCarts.length > 0 && (
-            <div className="mb-4">
-              <h4
-                className={`mb-2 text-sm font-semibold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                🛒 Combine with Other Carts
-              </h4>
-              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
-                Select additional carts to checkout together. Delivery fee is 50% off for additional carts!
-              </p>
-              <div className="space-y-2">
-                {availableCarts.map((cart) => (
-                  <label
-                    key={cart.id}
-                    className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-3 transition-all ${
-                      selectedCartIds.has(cart.id)
-                        ? "border-green-500 bg-green-50 dark:border-green-600 dark:bg-green-900/20"
-                        : "border-gray-200 bg-white hover:border-green-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-700"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedCartIds.has(cart.id)}
-                      onChange={() => toggleCartSelection(cart.id)}
-                      className="h-5 w-5 rounded border-gray-300 text-green-600 focus:ring-2 focus:ring-green-500"
-                    />
-                    <div className="flex-1">
-                      <div className={`text-sm font-semibold ${
-                        theme === "dark" ? "text-white" : "text-gray-900"
-                      }`}>
-                        {cart.name}
-                      </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {cart.count} items
-                        {cartDetails[cart.id] && (
-                          <span className="ml-2 text-green-600 dark:text-green-400">
-                            +{formatCurrency(cartDetails[cart.id].total)} (delivery 50% off)
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </label>
-                ))}
-              </div>
-              <div className="my-3 h-px bg-gray-200 dark:bg-gray-700"></div>
-            </div>
-          )}
-
           {discountsEnabled && (
             <div>
               <p
@@ -1867,7 +2084,7 @@ export default function CheckoutItems({
                   theme === "dark" ? "text-gray-300" : "text-gray-600"
                 }`}
               >
-                Delivery Fee {selectedCartIds.size > 0 && `(+${selectedCartIds.size} at 50%)`}
+                Delivery Fee {selectedCartIds.size > 0 && `(+${selectedCartIds.size} at 70%)`}
               </span>
               <span
                 className={`text-sm font-medium ${
@@ -2181,59 +2398,43 @@ export default function CheckoutItems({
                 theme === "dark" ? "bg-gray-700" : "bg-gray-50"
               }`}
             >
-              <h2
-                className={`text-xl font-bold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                Order Summary
-              </h2>
-            </div>
-
-            {/* Combine with other carts section - Desktop */}
-            {!loadingCarts && availableCarts.length > 0 && (
-              <div className="mb-4">
-                <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
-                  🛒 Combine with Other Carts
-                </h4>
-                <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
-                  Select additional carts to checkout together. Delivery fee is 50% off for additional carts!
-                </p>
-                <div className="space-y-2">
-                  {availableCarts.map((cart) => (
-                    <label
-                      key={cart.id}
-                      className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-3 transition-all ${
-                        selectedCartIds.has(cart.id)
-                          ? "border-green-500 bg-green-50 dark:border-green-600 dark:bg-green-900/20"
-                          : "border-gray-200 bg-white hover:border-green-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-700"
-                      }`}
+              <div className="flex items-center justify-between">
+                <h2
+                  className={`text-xl font-bold ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  Order Summary
+                </h2>
+                {!loadingCarts && availableCarts.length > 0 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Clear cart details and trigger refetch
+                      setCartDetails({});
+                      setRefetchCartDetails(prev => prev + 1);
+                      setShowCombineModal(true);
+                    }}
+                    className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-md transition-all hover:from-green-600 hover:to-emerald-700"
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      <input
-                        type="checkbox"
-                        checked={selectedCartIds.has(cart.id)}
-                        onChange={() => toggleCartSelection(cart.id)}
-                        className="h-5 w-5 rounded border-gray-300 text-green-600 focus:ring-2 focus:ring-green-500"
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                       />
-                      <div className="flex-1">
-                        <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                          {cart.name}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {cart.count} items
-                          {cartDetails[cart.id] && (
-                            <span className="ml-2 text-green-600 dark:text-green-400">
-                              +{formatCurrency(cartDetails[cart.id].total)} (delivery 50% off)
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-                <div className="my-4 h-px bg-gray-200 dark:bg-gray-700"></div>
+                    </svg>
+                    {selectedCartIds.size > 0 ? `${selectedCartIds.size} Combined` : "Combine Carts"}
+                  </button>
+                )}
               </div>
-            )}
+            </div>
 
             <div className="space-y-2">
               <div className="flex justify-between py-1">
@@ -2286,7 +2487,7 @@ export default function CheckoutItems({
 
               <div className="flex justify-between py-1">
                 <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Delivery Fee {selectedCartIds.size > 0 && `(+${selectedCartIds.size} at 50%)`}
+                  Delivery Fee {selectedCartIds.size > 0 && `(+${selectedCartIds.size} at 70%)`}
                 </span>
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
                   {formatCurrency(finalDeliveryFee)}
@@ -2623,6 +2824,141 @@ export default function CheckoutItems({
           setTick((t) => t + 1); // Force re-render to update address display
         }}
       />
+
+      {/* Combine Carts Modal */}
+      <Modal
+        open={showCombineModal}
+        onClose={() => setShowCombineModal(false)}
+        size="md"
+      >
+        <Modal.Header>
+          <Modal.Title className={theme === "dark" ? "text-white" : "text-gray-900"}>
+            🛒 Combine with Other Carts
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className={theme === "dark" ? "text-gray-300" : "text-gray-700"}>
+            <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+              Select additional carts to checkout together. <span className="font-semibold text-green-600 dark:text-green-400">Delivery fee is 30% off</span> for each additional cart!
+            </p>
+            
+            {loadingCarts ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-green-500"></div>
+              </div>
+            ) : availableCarts.length === 0 ? (
+              <div className="py-8 text-center text-gray-500 dark:text-gray-400">
+                No other carts available to combine
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {availableCarts.map((cart) => {
+                  const details = cartDetails[cart.id];
+                  const isSelected = selectedCartIds.has(cart.id);
+                  
+                  return (
+                    <div
+                      key={cart.id}
+                      onClick={() => toggleCartSelection(cart.id)}
+                      className={`cursor-pointer rounded-xl border-2 p-4 transition-all ${
+                        isSelected
+                          ? "border-green-500 bg-green-50 dark:border-green-600 dark:bg-green-900/20"
+                          : "border-gray-200 bg-white hover:border-green-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-700"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            toggleCartSelection(cart.id);
+                          }}
+                          className="mt-1 h-5 w-5 rounded border-gray-300 text-green-600 focus:ring-2 focus:ring-green-500"
+                        />
+                        <div className="flex-1">
+                          <div className="mb-2 flex items-center justify-between">
+                            <h4 className="text-base font-bold text-gray-900 dark:text-white">
+                              {cart.name}
+                            </h4>
+                            {isSelected && (
+                              <span className="rounded-full bg-green-500 px-2 py-0.5 text-xs font-bold text-white">
+                                SELECTED
+                              </span>
+                            )}
+                          </div>
+                          
+                          {details ? (
+                            <div className="space-y-2">
+                              <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                  </svg>
+                                  <span>{details.units} items</span>
+                                </div>
+                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  </svg>
+                                  <span>{details.distance}</span>
+                                </div>
+                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <polyline points="12 6 12 12 16 14" />
+                                  </svg>
+                                  <span>{details.deliveryTime}</span>
+                                </div>
+                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                  </svg>
+                                  <span>{formatCurrency(details.deliveryFee)} {isSelected && "(30% off)"}</span>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center justify-between border-t border-gray-200 pt-2 dark:border-gray-700">
+                                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                  Subtotal:
+                                </span>
+                                <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                                  {formatCurrency(details.total)}
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-green-500"></div>
+                              Loading details...
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            onClick={() => setShowCombineModal(false)}
+            appearance="primary"
+            color="green"
+            className="bg-gradient-to-r from-green-500 to-emerald-600"
+          >
+            {selectedCartIds.size > 0 
+              ? `Continue with ${selectedCartIds.size + 1} Cart${selectedCartIds.size > 0 ? 's' : ''}`
+              : 'Continue'}
+          </Button>
+          <Button onClick={() => setShowCombineModal(false)} appearance="subtle">
+            Cancel
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </>
   );
 }

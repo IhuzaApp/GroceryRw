@@ -110,6 +110,8 @@ const GET_CART_WITH_ITEMS = gql`
     }
     Shops_by_pk(id: $shop_id) {
       name
+      latitude
+      longitude
     }
   }
 `;
@@ -240,10 +242,12 @@ export default async function handler(
             quantity: number;
           }>;
         }>;
-        Shops_by_pk?: { name: string };
+        Shops_by_pk?: { name: string; latitude: string; longitude: string };
       }>(GET_CART_WITH_ITEMS, { user_id, shop_id });
       const cart = data.Carts[0];
       const shopName = data.Shops_by_pk?.name || "";
+      const shopLatitude = data.Shops_by_pk?.latitude || null;
+      const shopLongitude = data.Shops_by_pk?.longitude || null;
       const rawItems = cart?.Cart_Items || [];
       // 2) Fetch product metadata
       const productIds = rawItems.map((item) => item.product_id);
@@ -292,9 +296,14 @@ export default async function handler(
         (sum, item) => sum + parseFloat(item.price || "0") * item.quantity,
         0
       );
-      return res
-        .status(200)
-        .json({ items, count, total: totalValue.toString(), shopName });
+      return res.status(200).json({
+        items,
+        count,
+        total: totalValue.toString(),
+        shopName,
+        shopLatitude,
+        shopLongitude,
+      });
     } catch (error) {
       console.error("Error fetching cart:", error);
       return res.status(500).json({ error: "Failed to fetch cart" });
