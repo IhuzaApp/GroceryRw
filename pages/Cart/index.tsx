@@ -696,8 +696,8 @@ export default function CartMainPage() {
           </div>
         </div>
 
-        <div className="p-4 md:p-4">
-          <div className="container mx-auto">
+        <div className="pb-4 pt-2 md:p-4">
+          <div className="container mx-auto px-0 md:px-4">
             {/* Cart Selection - Desktop Only */}
             <div className="mb-6 hidden items-center md:flex">
               <Link
@@ -731,9 +731,9 @@ export default function CartMainPage() {
             ) : (
               <div className="flex flex-col gap-6 lg:flex-row">
                 {/* Cart Items Column - Restaurant/Shop Selection + Cart Table */}
-                <div className="w-full lg:w-2/3">
+                <div className="w-full pb-44 md:pb-0 lg:w-2/3">
                   {/* Restaurant/Shop Selection - Custom Tailwind Tabs */}
-                  <div className="mb-2 md:mb-6">
+                  <div className="mb-2 px-2 md:mb-6 md:px-0">
                     <div className="flex gap-2 overflow-x-auto pb-2">
                       {hasAnyItems ? (
                         <>
@@ -1008,7 +1008,7 @@ export default function CartMainPage() {
                         </>
                       ) : (
                         // Empty state
-                        <div className="flex w-full flex-col items-center justify-center py-8">
+                        <div className="flex w-full flex-col items-center justify-center px-2 py-8 md:px-0">
                           {/* Empty Cart Icon */}
                           <div className="mb-4 flex justify-center">
                             <svg
@@ -1080,7 +1080,7 @@ export default function CartMainPage() {
                   ) : selectedRestaurantId && selectedRestaurant ? (
                     <>
                       <h2
-                        className={`mb-4 text-xl font-semibold ${
+                        className={`mb-4 px-2 text-xl font-semibold md:px-0 ${
                           theme === "dark" ? "text-white" : "text-gray-900"
                         }`}
                       >
@@ -1098,7 +1098,7 @@ export default function CartMainPage() {
                   ) : selectedShopId && selectedShop ? (
                     <>
                       <h2
-                        className={`mb-4 text-xl font-semibold ${
+                        className={`mb-4 px-2 text-xl font-semibold md:px-0 ${
                           theme === "dark" ? "text-white" : "text-gray-900"
                         }`}
                       >
@@ -1114,7 +1114,7 @@ export default function CartMainPage() {
                     </>
                   ) : hasAnyItems ? (
                     <div
-                      className={`p-4 text-center ${
+                      className={`p-4 px-2 text-center md:px-4 ${
                         theme === "dark" ? "text-gray-400" : "text-gray-500"
                       }`}
                     >
