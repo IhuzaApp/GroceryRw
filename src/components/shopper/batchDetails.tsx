@@ -2094,44 +2094,48 @@ export default function BatchDetails({
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
-                      <div className="relative mx-auto h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:mx-0 sm:h-16 sm:w-16">
-                        {order.shop?.image ? (
-                          <Image
-                            src={order.shop.image}
-                            alt={order.shop.name}
-                            width={64}
-                            height={64}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
-                            <svg
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              className="h-5 w-5 sm:h-6 sm:w-6"
-                            >
-                              <rect x="3" y="3" width="18" height="18" rx="2" />
-                              <path d="M16 8h.01M8 16h.01M16 16h.01" />
-                            </svg>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 text-center sm:text-left">
-                        <h3 className="mb-1 text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
-                          {order.shop?.name}
-                        </h3>
-                        <p className="text-sm text-slate-600 dark:text-slate-400 sm:text-base">
-                          {order.shop?.address}
-                        </p>
-                      </div>
-                    </div>
+                    {/* Shop Image, Name, Address, and Contact Information */}
+                    <div className="space-y-3 rounded-lg border border-slate-200  p-3 dark:border-slate-600  sm:p-4">
+                      <div className="flex gap-3 sm:gap-4">
+                        {/* Shop Image */}
+                        <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:h-20 sm:w-20">
+                          {order.shop?.image ? (
+                            <Image
+                              src={order.shop.image}
+                              alt={order.shop.name}
+                              width={80}
+                              height={80}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                className="h-6 w-6 sm:h-8 sm:w-8"
+                              >
+                                <rect x="3" y="3" width="18" height="18" rx="2" />
+                                <path d="M16 8h.01M8 16h.01M16 16h.01" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
 
-                    {/* Shop Contact Information */}
-                    <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-700 sm:p-4">
-                      <div className="space-y-2 text-sm sm:text-base">
+                        {/* Shop Name and Address */}
+                        <div className="flex-1">
+                          <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
+                            {order.shop?.name}
+                          </h3>
+                          <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 sm:text-sm">
+                            {order.shop?.address}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Contact Information */}
+                      <div className="space-y-2 border-t border-slate-200 pt-3 text-sm dark:border-slate-600 sm:text-base">
                         {/* Phone Number */}
                         <div className="flex items-center justify-between">
                           <span className="flex items-center text-slate-600 dark:text-slate-400">
@@ -2197,31 +2201,35 @@ export default function BatchDetails({
                           </div>
                         )}
                       </div>
-                    </div>
 
-                    {/* Shop Directions Button */}
-                    {order.shop?.address && (
-                      <div className="flex justify-center sm:justify-start">
-                        <button
-                          className="flex items-center rounded-full border border-green-400 px-3 py-1.5 text-xs font-medium text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-sm"
-                          onClick={() =>
-                            handleDirectionsClick(order.shop?.address || "")
-                          }
-                        >
-                          <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            className="mr-1 h-4 w-4 sm:h-5 sm:w-5"
+                      {/* Shop Directions Button */}
+                      {order.shop?.address && (
+                        <div className="border-t border-slate-200 pt-3 dark:border-slate-600">
+                          <button
+                            onClick={() =>
+                              handleDirectionsClick(order.shop?.address || "")
+                            }
+                            className={`flex w-full items-center justify-center rounded-lg px-6 py-3 text-sm font-semibold text-white transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+                              theme === "dark"
+                                ? "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+                                : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                            }`}
                           >
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                            <circle cx="12" cy="10" r="3" />
-                          </svg>
-                          Directions to Shop
-                        </button>
-                      </div>
-                    )}
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              className="mr-2 h-4 w-4"
+                            >
+                              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                              <circle cx="12" cy="10" r="3" />
+                            </svg>
+                            Directions to Shop
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -2249,55 +2257,84 @@ export default function BatchDetails({
                   </h2>
                 </div>
 
-                <div className="mb-3 flex flex-col items-center gap-3 sm:mb-4 sm:flex-row sm:items-start">
-                  <div className="h-8 w-8 overflow-hidden rounded-full bg-slate-200 sm:h-12 sm:w-12">
-                    <Image
-                      src={
-                        (order as any).orderedBy?.profile_picture ||
-                        order.user?.profile_picture ||
-                        "/images/userProfile.png"
-                      }
-                      alt={
-                        (order as any).orderedBy?.name ||
-                        order.user?.name ||
-                        "Customer"
-                      }
-                      width={48}
-                      height={48}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  <div className="text-center sm:text-left">
-                    <h4 className="text-base font-medium text-slate-900 dark:text-slate-100 sm:text-lg">
-                      {(order as any).orderedBy?.name ||
-                        order.user?.name ||
-                        "Unknown Customer"}
-                    </h4>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 sm:text-base">
-                      {(order as any).orderedBy?.phone ||
-                        order.user?.phone ||
-                        "N/A"}
-                    </p>
-                  </div>
-                </div>
+                {/* Customer Image, Name, Phone, and Address */}
+                <div className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-600 sm:p-4">
+                  <div className="flex gap-3 sm:gap-4">
+                    {/* Customer Avatar */}
+                    <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-full bg-slate-200 sm:h-20 sm:w-20">
+                      <Image
+                        src={
+                          (order as any).orderedBy?.profile_picture ||
+                          order.user?.profile_picture ||
+                          "/images/userProfile.png"
+                        }
+                        alt={
+                          (order as any).orderedBy?.name ||
+                          order.user?.name ||
+                          "Customer"
+                        }
+                        width={80}
+                        height={80}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
 
-                <div className="space-y-3">
-                  <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-700">
-                    <p className="mb-1 text-xs font-medium text-slate-500 dark:text-slate-400">
-                      Delivery Address
-                    </p>
-                    <p className="text-sm text-slate-900 dark:text-slate-100 sm:text-base">
-                      {order.address?.street || "No street"},{" "}
-                      {order.address?.city || "No city"}
-                      {order.address?.postal_code
-                        ? `, ${order.address.postal_code}`
-                        : ""}
-                    </p>
+                    {/* Customer Name and Contact */}
+                    <div className="flex-1">
+                      <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
+                        {(order as any).orderedBy?.name ||
+                          order.user?.name ||
+                          "Unknown Customer"}
+                      </h3>
+                      {((order as any).orderedBy?.phone || order.user?.phone) && (
+                        <p className="mt-1 flex items-center text-xs text-slate-600 dark:text-slate-400 sm:text-sm">
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            className="mr-1.5 h-3.5 w-3.5"
+                          >
+                            <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                          </svg>
+                          {(order as any).orderedBy?.phone || order.user?.phone}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
+                  {/* Delivery Address */}
+                  <div className="space-y-2 border-t border-slate-200 pt-3 text-sm dark:border-slate-600 sm:text-base">
+                    <div className="flex items-start gap-2">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        className="mt-0.5 h-4 w-4 flex-shrink-0 text-slate-600 dark:text-slate-400"
+                      >
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                        <circle cx="12" cy="10" r="3" />
+                      </svg>
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                          Delivery Address
+                        </p>
+                        <p className="mt-1 text-sm text-slate-900 dark:text-slate-100">
+                          {order.address?.street || "No street"},{" "}
+                          {order.address?.city || "No city"}
+                          {order.address?.postal_code
+                            ? `, ${order.address.postal_code}`
+                            : ""}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center justify-center gap-3 border-t border-slate-200 pt-3 dark:border-slate-600 sm:justify-start">
+                    {/* Directions Button */}
                     <button
-                      className="flex items-center rounded-full border border-green-400 px-3 py-1.5 text-xs text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-sm"
                       onClick={() =>
                         handleDirectionsClick(
                           `${order.address?.street || "No street"}, ${
@@ -2309,94 +2346,132 @@ export default function BatchDetails({
                           }`
                         )
                       }
+                      title="Directions to Customer"
+                      className={`flex h-12 w-12 items-center justify-center rounded-full text-white shadow-md transition-all hover:scale-110 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+                        theme === "dark"
+                          ? "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+                          : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                      }`}
                     >
                       <svg
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="2"
-                        className="mr-1 h-4 w-4 sm:h-5 sm:w-5"
+                        className="h-5 w-5"
                       >
                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
                         <circle cx="12" cy="10" r="3" />
                       </svg>
-                      Directions to Customer
                     </button>
 
+                    {/* Call Button */}
                     {((order as any).orderedBy?.phone || order.user?.phone) && (
                       <button
-                        className="flex items-center rounded-full border border-green-400 px-3 py-1.5 text-xs text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-sm"
                         onClick={() =>
                           (window.location.href = `tel:${
                             (order as any).orderedBy?.phone || order.user?.phone
                           }`)
                         }
+                        title="Call Customer"
+                        className={`flex h-12 w-12 items-center justify-center rounded-full text-white shadow-md transition-all hover:scale-110 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                          theme === "dark"
+                            ? "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                            : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+                        }`}
                       >
                         <svg
                           viewBox="0 0 24 24"
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="2"
-                          className="mr-1 h-4 w-4 sm:h-5 sm:w-5"
+                          className="h-5 w-5"
                         >
                           <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                         </svg>
-                        Call Customer
                       </button>
                     )}
 
+                    {/* Message Button */}
                     {order.status !== "delivered" ? (
                       <button
-                        className="flex items-center rounded-full border border-green-400 px-3 py-1.5 text-xs text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-sm"
                         onClick={handleChatClick}
+                        title="Message Customer"
+                        className={`flex h-12 w-12 items-center justify-center rounded-full text-white shadow-md transition-all hover:scale-110 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
+                          theme === "dark"
+                            ? "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
+                            : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
+                        }`}
                       >
                         <svg
                           viewBox="0 0 24 24"
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="2"
-                          className="mr-1 h-4 w-4 sm:h-5 sm:w-5"
+                          className="h-5 w-5"
                         >
                           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                         </svg>
-                        Message
                       </button>
                     ) : (
                       <button
-                        className="flex cursor-not-allowed items-center rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-400 dark:border-slate-600 sm:text-sm"
                         disabled
+                        title="Chat Closed"
+                        className="flex h-12 w-12 cursor-not-allowed items-center justify-center rounded-full border-2 border-slate-300 bg-slate-100 text-slate-400 shadow-md dark:border-slate-600 dark:bg-slate-700"
                       >
                         <svg
                           viewBox="0 0 24 24"
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="2"
-                          className="mr-1 h-4 w-4 sm:h-5 sm:w-5"
+                          className="h-5 w-5"
                         >
                           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                         </svg>
-                        Chat Closed
                       </button>
                     )}
 
-                    {/* Shopper Arrived Button - Only show when delivering */}
+                    {/* Notify Button - Only show when delivering */}
                     {(order.status === "on_the_way" ||
                       order.status === "at_customer") && (
                       <button
-                        className="flex items-center rounded-full border border-blue-400 px-3 py-1.5 text-xs text-blue-600 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 dark:border-blue-700 dark:text-blue-400 dark:hover:border-blue-600 dark:hover:bg-blue-900/20 sm:text-sm"
                         onClick={handleShopperArrived}
                         disabled={loading}
+                        title={loading ? "Notifying..." : "Notify Customer"}
+                        className={`flex h-12 w-12 items-center justify-center rounded-full text-white shadow-md transition-all hover:scale-110 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 ${
+                          theme === "dark"
+                            ? "bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800"
+                            : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+                        }`}
                       >
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          className="mr-1 h-4 w-4 sm:h-5 sm:w-5"
-                        >
-                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                        </svg>
-                        {loading ? "Notifying..." : "Notify the Customer"}
+                        {loading ? (
+                          <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24">
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                              fill="none"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            />
+                          </svg>
+                        ) : (
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            className="h-5 w-5"
+                          >
+                            <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                          </svg>
+                        )}
                       </button>
                     )}
                   </div>
