@@ -807,6 +807,8 @@ export default function MapSection({
       accuracy: number;
     }>
   >([]);
+  const [showBusyAreas, setShowBusyAreas] = useState(false);
+  const busyAreaCirclesRef = useRef<L.Circle[]>([]);
 
   // Refs
   const mapInitializedRef = useRef(false);
@@ -2271,6 +2273,17 @@ export default function MapSection({
     }
   }, [isOnline, mapLoaded]);
 
+  // Handle busy areas toggle
+  useEffect(() => {
+    if (mapInstanceRef.current && mapLoaded) {
+      if (showBusyAreas) {
+        renderBusyAreas(mapInstanceRef.current);
+      } else {
+        clearBusyAreas();
+      }
+    }
+  }, [showBusyAreas, mapLoaded, pendingOrders, allAgedOrders, theme]);
+
   // Function to initialize map sequence
   const initMapSequence = async (map: L.Map) => {
     if (!map || !map.getContainer()) return;
@@ -2707,6 +2720,205 @@ export default function MapSection({
     shopMarkersRef.current = [];
   };
 
+  // Helper function to clear busy area circles
+  const clearBusyAreas = () => {
+    console.log(`Clearing ${busyAreaCirclesRef.current.length} busy area elements`);
+    busyAreaCirclesRef.current.forEach((circle) => {
+      if (circle) {
+        try {
+          circle.remove();
+        } catch (e) {
+          console.warn('Error removing busy area element:', e);
+        }
+      }
+    });
+    busyAreaCirclesRef.current = [];
+  };
+
+  // Helper function to calculate and render busy areas
+  const renderBusyAreas = (map: L.Map) => {
+    if (!showBusyAreas) return;
+
+    // Clear existing busy areas
+    clearBusyAreas();
+
+    // Combine all orders for density calculation
+    const allOrders = [...pendingOrders, ...allAgedOrders];
+    
+    if (allOrders.length === 0) {
+      console.warn('⚠️ No orders available for busy areas visualization');
+      return;
+    }
+    
+    console.log(`📊 Rendering busy areas from ${allOrders.length} orders (${pendingOrders.length} pending + ${allAgedOrders.length} aged)`);
+
+    // Group orders by proximity (within 2km radius)
+    const clusters: Array<{
+      lat: number;
+      lng: number;
+      count: number;
+      totalEarnings: number;
+    }> = [];
+
+    allOrders.forEach((order, idx) => {
+      const lat = order.shopLat || order.shop_latitude || order.shopLatitude;
+      const lng = order.shopLng || order.shop_longitude || order.shopLongitude;
+      
+      if (!lat || !lng) return;
+
+      // Find existing cluster within 2km
+      let foundCluster = false;
+      for (const cluster of clusters) {
+        const distance = getDistance(
+          cluster.lat,
+          cluster.lng,
+          lat,
+          lng
+        );
+        
+        if (distance < 2) { // 2km radius
+          // Add to existing cluster
+          cluster.count++;
+          cluster.totalEarnings += order.earnings || order.earning || 0;
+          // Update cluster center (weighted average)
+          cluster.lat = (cluster.lat * (cluster.count - 1) + lat) / cluster.count;
+          cluster.lng = (cluster.lng * (cluster.count - 1) + lng) / cluster.count;
+          foundCluster = true;
+          break;
+        }
+      }
+
+      // Create new cluster if not found
+      if (!foundCluster) {
+        clusters.push({
+          lat,
+          lng,
+          count: 1,
+          totalEarnings: order.earnings || order.earning || 0,
+        });
+      }
+    });
+
+    // Sort clusters by count (busiest first)
+    clusters.sort((a, b) => b.count - a.count);
+
+    // Render top clusters
+    // If total orders < 5, show all individual locations
+    // Otherwise, show only clusters with 2+ orders
+    const minOrdersPerCluster = allOrders.length < 5 ? 1 : 2;
+    const busyClusters = clusters
+      .filter(cluster => cluster.count >= minOrdersPerCluster)
+      .slice(0, 10); // Show top 10 busy areas
+    
+    console.log(`🔥 ${busyClusters.length} busy areas identified from ${clusters.length} clusters`);
+    
+    busyClusters.forEach((cluster, index) => {
+        // Calculate intensity based on order count
+        const maxCount = clusters[0].count;
+        const intensity = cluster.count / maxCount;
+        
+        // Color gradient: red (most busy) -> yellow -> green (less busy)
+        let color: string;
+        let fillOpacity: number;
+        let strokeOpacity: number;
+        
+        if (intensity > 0.7) {
+          color = theme === "dark" ? "#ef4444" : "#dc2626"; // Red
+          fillOpacity = 0.35;
+          strokeOpacity = 0.8;
+        } else if (intensity > 0.4) {
+          color = theme === "dark" ? "#f59e0b" : "#d97706"; // Orange
+          fillOpacity = 0.30;
+          strokeOpacity = 0.7;
+        } else {
+          color = theme === "dark" ? "#10b981" : "#059669"; // Green
+          fillOpacity = 0.25;
+          strokeOpacity = 0.6;
+        }
+
+        // Radius based on count (500m-2km)
+        const radius = Math.min(500 + (cluster.count * 300), 2000);
+
+        const circle = L.circle([cluster.lat, cluster.lng], {
+          color: color,
+          fillColor: color,
+          fillOpacity: fillOpacity,
+          opacity: 0,
+          weight: 0,
+          radius: radius,
+        }).addTo(map);
+
+        // Add popup with cluster info
+        const avgEarnings = cluster.totalEarnings / cluster.count;
+        
+        circle.bindPopup(`
+          <div style="
+            padding: 12px;
+            background: ${theme === "dark" ? "#1f2937" : "#ffffff"};
+            color: ${theme === "dark" ? "#f3f4f6" : "#111827"};
+            border-radius: 8px;
+            min-width: 200px;
+          ">
+            <div style="
+              font-size: 16px;
+              font-weight: 700;
+              margin-bottom: 8px;
+              color: ${color};
+            ">
+              Busy Area #${index + 1}
+            </div>
+            <div style="margin-bottom: 6px;">
+              <span style="font-weight: 600;">Orders:</span> ${cluster.count}
+            </div>
+            <div style="margin-bottom: 6px;">
+              <span style="font-weight: 600;">Avg Earnings:</span> ${formatCurrencySync(avgEarnings)}
+            </div>
+            <div style="
+              font-size: 12px;
+              color: ${theme === "dark" ? "#9ca3af" : "#6b7280"};
+              margin-top: 8px;
+            ">
+              Position yourself here for more orders!
+            </div>
+          </div>
+        `);
+
+        busyAreaCirclesRef.current.push(circle);
+      });
+    
+    console.log(`✅ ${busyClusters.length} busy areas displayed on map`);
+    
+    // Auto-pan to show all busy areas
+    if (busyAreaCirclesRef.current.length > 0) {
+      try {
+        const bounds = L.latLngBounds(
+          busyClusters.map(c => [c.lat, c.lng] as [number, number])
+        );
+        map.fitBounds(bounds, { 
+          padding: [50, 50],
+          maxZoom: 13
+        });
+      } catch (error) {
+        console.error('Error panning to busy areas:', error);
+      }
+    }
+  };
+
+  // Helper function to calculate distance in km
+  const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) *
+        Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -2897,6 +3109,41 @@ export default function MapSection({
                 </>
               )}
             </span>
+          </button>
+
+          {/* Busy Areas Toggle Button */}
+          <button
+            onClick={() => setShowBusyAreas(!showBusyAreas)}
+            className={`absolute right-4 top-4 z-[1000] flex items-center gap-2 rounded-lg px-4 py-2.5 font-semibold shadow-lg backdrop-blur-lg transition-all duration-200 hover:shadow-xl active:scale-95 ${
+              showBusyAreas
+                ? theme === "dark"
+                  ? "bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-purple-500/30 hover:shadow-purple-500/40"
+                  : "bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-purple-500/30 hover:shadow-purple-500/40"
+                : theme === "dark"
+                ? "border border-gray-700/50 bg-gray-800/90 text-gray-100 hover:bg-gray-700/90"
+                : "border border-gray-200/50 bg-white/90 text-gray-900 hover:bg-gray-50/90"
+            }`}
+            title={showBusyAreas ? "Hide busy areas" : "Show busy areas"}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              className="h-5 w-5"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+              />
+            </svg>
+            <span className="hidden md:inline">
+              {showBusyAreas ? "Hide" : "Show"} Busy Areas
+            </span>
+            {showBusyAreas && (
+              <span className="text-xs opacity-80">🔥</span>
+            )}
           </button>
 
           {/* Add tracking mode indicator */}
