@@ -1,26 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "./[...nextauth]";
-import { GraphQLClient, gql } from "graphql-request";
 import { otpStore } from "../../../lib/otpStore";
-
-const hasuraClient = new GraphQLClient(
-  process.env.NEXT_PUBLIC_HASURA_GRAPHQL_URL!,
-  {
-    headers: {
-      "x-hasura-admin-secret": process.env.HASURA_ADMIN_SECRET!,
-    },
-  }
-);
-
-const CHECK_EMAIL_QUERY = gql`
-  query CheckEmailExists($email: String!) {
-    Users(where: { email: { _eq: $email } }) {
-      id
-      email
-    }
-  }
-`;
 
 // Generate a 6-digit OTP
 function generateOTP(): string {
@@ -60,19 +41,7 @@ export default async function handler(
       return res.status(400).json({ error: "Invalid email format" });
     }
 
-    // Check if email already exists
-    const emailCheck: any = await hasuraClient.request(CHECK_EMAIL_QUERY, {
-      email: email.toLowerCase(),
-    });
-
-    if (emailCheck.Users && emailCheck.Users.length > 0) {
-      // Check if the existing email belongs to a different user
-      if (emailCheck.Users[0].id !== session.user.id) {
-        return res.status(400).json({
-          error: "Email already in use by another account",
-        });
-      }
-    }
+    // TODO: Add email uniqueness check when database is ready
 
     // Generate OTP
     const otp = generateOTP();
