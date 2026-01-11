@@ -170,11 +170,10 @@ export default function MobileUserDashboard({
           })) || [];
 
       // Combine and format results
+      // Note: Don't override the 'type' field - the API already sets it correctly
+      // (products have type: "product", shops have type: "shop")
       const allResults = [
-        ...(shopsData.results || []).map((item: any) => ({
-          ...item,
-          type: "shop",
-        })),
+        ...(shopsData.results || []),
         ...filteredRestaurants,
       ];
 

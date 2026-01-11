@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { formatCurrencySync } from "../../utils/formatCurrency";
-import Image from "next/image";
 import { Plus, Edit, Trash2, X } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -40,6 +39,7 @@ export default function StoreProductCard({
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
+  const [imageError, setImageError] = useState(false);
 
   const handleAdd = () => {
     onAdd({
@@ -85,12 +85,20 @@ export default function StoreProductCard({
       >
         {/* Image Section - Smaller on mobile */}
         <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-700 dark:via-gray-800 dark:to-gray-700">
-          <Image
-            src={image || "/images/groceryPlaceholder.png"}
+          <img
+            src={
+              imageError
+                ? "/images/groceryPlaceholder.png"
+                : image || "/images/groceryPlaceholder.png"
+            }
             alt={name}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            onError={(e) => {
+              if (!imageError) {
+                setImageError(true);
+                e.currentTarget.src = "/images/groceryPlaceholder.png";
+              }
+            }}
           />
           {/* Overlay gradient */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent transition-opacity duration-300 group-hover:from-black/50" />
@@ -204,11 +212,20 @@ export default function StoreProductCard({
 
             {/* Product Image */}
             <div className="relative h-64 w-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
-              <Image
-                src={image || "/images/groceryPlaceholder.png"}
+              <img
+                src={
+                  imageError
+                    ? "/images/groceryPlaceholder.png"
+                    : image || "/images/groceryPlaceholder.png"
+                }
                 alt={name}
-                fill
-                className="object-cover"
+                className="h-full w-full object-cover"
+                onError={(e) => {
+                  if (!imageError) {
+                    setImageError(true);
+                    e.currentTarget.src = "/images/groceryPlaceholder.png";
+                  }
+                }}
               />
             </div>
 

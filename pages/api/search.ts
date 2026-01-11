@@ -56,6 +56,7 @@ export default async function handler(
       image_url: product.image,
       price: product.final_price || product.price,
     }));
+    
     results.push(...products);
 
     // Search shops
