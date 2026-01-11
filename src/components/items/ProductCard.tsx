@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { formatCurrency } from "../../lib/formatCurrency";
-import Image from "next/image";
 import { Button } from "rsuite";
 import { useCart } from "../../context/CartContext";
 import { useSession } from "next-auth/react";
@@ -57,6 +56,7 @@ export default function ProductCard({
     type: "quick" | "modal";
     quantity: number;
   } | null>(null);
+  const [imageError, setImageError] = useState(false);
 
   const handleQuickAdd = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -136,13 +136,20 @@ export default function ProductCard({
         }}
       >
         <div className="relative aspect-square overflow-hidden rounded-2xl shadow-lg ring-1 ring-gray-200/50 dark:ring-gray-700/50">
-          <Image
+          <img
             src={
-              productName?.image || image || "/images/groceryPlaceholder.png"
+              imageError
+                ? "/images/groceryPlaceholder.png"
+                : productName?.image || image || "/images/groceryPlaceholder.png"
             }
             alt={name}
-            fill
-            className="object-cover transition-transform duration-300 hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+            onError={(e) => {
+              if (!imageError) {
+                setImageError(true);
+                e.currentTarget.src = "/images/groceryPlaceholder.png";
+              }
+            }}
           />
           {sale && (
             <div className="absolute left-1 top-1 rounded bg-red-500 px-1.5 py-0.5 text-xs font-bold !text-white">
@@ -279,13 +286,20 @@ export default function ProductCard({
               {/* Product Info */}
               <div className="mb-6 flex items-center gap-4 rounded-xl border-2 border-gray-200 bg-gray-50/80 p-4 dark:border-gray-700/50 dark:bg-gray-900/40">
                 <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl">
-                  <Image
+                  <img
                     src={
-                      productName?.image || image || "/images/groceryPlaceholder.png"
+                      imageError
+                        ? "/images/groceryPlaceholder.png"
+                        : productName?.image || image || "/images/groceryPlaceholder.png"
                     }
                     alt={name}
-                    fill
-                    className="object-cover"
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      if (!imageError) {
+                        setImageError(true);
+                        e.currentTarget.src = "/images/groceryPlaceholder.png";
+                      }
+                    }}
                   />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -517,15 +531,20 @@ export default function ProductCard({
                 {/* Product Image */}
                 <div className="space-y-4">
                   <div className="relative overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-700">
-                    <Image
+                    <img
                       src={
-                        image ||
-                        "https://www.thedailymeal.com/img/gallery/you-should-think-twice-about-bagging-your-own-groceries-at-the-store/intro-1681220544.jpg"
+                        imageError
+                          ? "/images/groceryPlaceholder.png"
+                          : productName?.image || image || "/images/groceryPlaceholder.png"
                       }
                       alt={name}
-                      width={300}
-                      height={300}
                       className="h-48 w-full object-cover md:h-56"
+                      onError={(e) => {
+                        if (!imageError) {
+                          setImageError(true);
+                          e.currentTarget.src = "/images/groceryPlaceholder.png";
+                        }
+                      }}
                     />
                     {sale && (
                       <div className="absolute left-4 top-4 rounded-lg bg-red-500 px-3 py-1 text-sm font-bold text-white">
