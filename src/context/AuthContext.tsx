@@ -282,8 +282,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         }
 
         // Use replace instead of href to prevent back button from going to logged-in state
-        // Add a timestamp to prevent caching
-        window.location.replace(`/?_=${Date.now()}`);
+        // Redirect to home page
+        window.location.replace("/");
       }
 
       // logAuth("AuthContext", "logout_completed", {
@@ -297,9 +297,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       //   timestamp: Date.now(),
       // });
       console.error("Logout error:", error);
-      // Even if there's an error, try to redirect
+      // Even if there's an error, try to redirect to home
       if (typeof window !== "undefined") {
-        window.location.href = "/";
+        window.location.replace("/");
       }
     }
   };
