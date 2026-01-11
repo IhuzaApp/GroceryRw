@@ -32,6 +32,14 @@ const GET_AVAILABLE_ORDERS = gql`
         street
         city
       }
+      Order_Items_aggregate {
+        aggregate {
+          count
+          sum {
+            quantity
+          }
+        }
+      }
     }
   }
 `;
@@ -331,6 +339,21 @@ export default async function handler(
       return Math.round(travelTimeHours * 60);
     };
 
+    // Calculate items count based on order type
+    let itemsCount = 1; // Default
+    if (bestOrder.orderType === "regular") {
+      // For regular orders, use Order_Items aggregate - sum gives total units, count gives number of different items
+      const unitsCount = bestOrder.Order_Items_aggregate?.aggregate?.sum?.quantity || 0;
+      const itemsTypeCount = bestOrder.Order_Items_aggregate?.aggregate?.count || 0;
+      itemsCount = unitsCount || itemsTypeCount || 1; // Prefer units count (total quantity)
+    } else if (bestOrder.orderType === "reel") {
+      // For reel orders, use quantity field
+      itemsCount = bestOrder.quantity || 1;
+    } else if (bestOrder.orderType === "restaurant") {
+      // For restaurant orders, we'll need to check the correct field name
+      itemsCount = bestOrder.items || bestOrder.quantity || 1;
+    }
+
     // Format order for notification (don't assign yet)
     const orderForNotification = {
       id: bestOrder.id,
@@ -345,7 +368,7 @@ export default async function handler(
       customerAddress: `${
         bestOrder.Address?.street || bestOrder.address?.street
       }, ${bestOrder.Address?.city || bestOrder.address?.city}`,
-      itemsCount: bestOrder.quantity || 1,
+      itemsCount: itemsCount,
       estimatedEarnings:
         bestOrder.orderType === "restaurant"
           ? parseFloat(bestOrder.delivery_fee || "0") // Restaurant orders: delivery only
@@ -369,7 +392,8 @@ export default async function handler(
       orderId: orderForNotification.id,
       orderType: orderForNotification.orderType,
       distance: orderForNotification.distance,
-      estimatedEarnings: orderForNotification.estimatedEarnings
+      estimatedEarnings: orderForNotification.estimatedEarnings,
+      itemsCount: orderForNotification.itemsCount
     });
     
     // Send FCM notification to the shopper
