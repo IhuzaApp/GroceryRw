@@ -471,10 +471,57 @@ a:visited {
   }
 }
 
-/* Toast notifications positioning */
-/* Mobile: top-center (default for regular toasts) */
-.mobile-toast-container {
+/* ===================================
+   TOAST NOTIFICATION SYSTEM
+   ===================================
+   Two separate toast systems:
+   1. Main/Regular Toasts - for app feedback (success, error, info)
+   2. Batch Notifications - for order notifications
+*/
+
+/* Main Toast Container (default react-hot-toast container) */
+/* Target the default toast container that doesn't have batch-notification-container class */
+[data-react-hot-toast] > div:not(.batch-notification-container) {
+  /* Mobile: top-center */
   top: 1rem !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  right: auto !important;
+}
+
+/* Desktop: bottom-center for main toasts */
+@media (min-width: 768px) {
+  [data-react-hot-toast] > div:not(.batch-notification-container) {
+    top: auto !important;
+    bottom: 2rem !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+}
+
+/* ===================================
+   TOAST NOTIFICATION SEPARATION
+   ===================================
+   This ensures batch notifications and regular notifications
+   use separate toast containers and don't interfere with each other.
+*/
+
+/* Hide batch notifications from the main toast container */
+[data-react-hot-toast] > div:not(.batch-notification-container) .batch-notification-toast,
+[data-react-hot-toast] > div:not(.batch-notification-container) .batch-warning-toast,
+[data-react-hot-toast] > div:not(.batch-notification-container) [class*="batch-notification-toast"],
+[data-react-hot-toast] > div:not(.batch-notification-container) [class*="batch-warning-toast"] {
+  display: none !important;
+}
+
+/* Hide regular notifications from the batch notification container */
+.batch-notification-container > div:not([class*="batch-notification-toast"]):not([class*="batch-warning-toast"]) {
+  display: none !important;
+}
+
+/* Ensure batch container has proper z-index and positioning */
+.batch-notification-container {
+  z-index: 99999 !important;
 }
 
 /* Mobile: Batch notifications at bottom covering nav bar */
@@ -522,14 +569,8 @@ a:visited {
   }
 }
 
-/* Desktop: bottom-center for regular toasts */
+/* Desktop: Keep batch notifications at the top-right on desktop */
 @media (min-width: 768px) {
-  .mobile-toast-container {
-    top: auto !important;
-    bottom: 2rem !important;
-  }
-
-  /* Keep batch notifications at the top-right on desktop */
   .batch-notification-toast {
     position: fixed !important;
     top: 1rem !important;
@@ -539,7 +580,7 @@ a:visited {
     z-index: 99999 !important;
   }
 
-  /* Also keep warning toasts at top (legacy support) */
+  /* Also keep warning toasts at top */
   .batch-warning-toast {
     position: fixed !important;
     top: 1rem !important;

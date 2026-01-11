@@ -1,11 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Message, Button } from "rsuite";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import { logger } from "../../utils/logger";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import { useTheme } from "../../context/ThemeContext";
 import { useFCMNotifications } from "../../hooks/useFCMNotifications";
+
+// Create a separate toast instance for batch notifications
+const batchToast = toast;
 
 interface Order {
   id: string;
@@ -134,7 +137,7 @@ export default function NotificationSystem({
       // Dismiss toast
       const existingToast = activeToasts.current.get(orderId);
       if (existingToast) {
-        toast.dismiss(existingToast);
+        batchToast.dismiss(existingToast);
         activeToasts.current.delete(orderId);
       }
     };
@@ -267,7 +270,7 @@ export default function NotificationSystem({
   const removeToastForOrder = (orderId: string) => {
     const existingToast = activeToasts.current.get(orderId);
     if (existingToast) {
-      toast.dismiss(existingToast);
+      batchToast.dismiss(existingToast);
       activeToasts.current.delete(orderId);
       // Removed toast for accepted order
     }
@@ -394,11 +397,11 @@ export default function NotificationSystem({
     // Remove any existing toast for this order
     const existingToast = activeToasts.current.get(order.id);
     if (existingToast) {
-      toast.dismiss(existingToast);
+      batchToast.dismiss(existingToast);
       activeToasts.current.delete(order.id);
     }
 
-    const toastKey = toast.custom(
+    const toastKey = batchToast.custom(
       (t) => (
         <div
           className={`${
@@ -425,7 +428,7 @@ export default function NotificationSystem({
               <button
                 onClick={() => {
                   removeToastForOrder(order.id);
-                  toast.dismiss(t.id);
+                  batchToast.dismiss(t.id);
                 }}
                 className="text-white/80 transition-colors hover:text-white"
               >
@@ -577,7 +580,7 @@ export default function NotificationSystem({
                 onClick={async () => {
                   const success = await handleAcceptOrder(order.id);
                   if (success) {
-                    toast.dismiss(t.id);
+                    batchToast.dismiss(t.id);
                   }
                 }}
                 disabled={acceptingOrders.has(order.id)}
@@ -598,7 +601,7 @@ export default function NotificationSystem({
                   batchAssignments.current = batchAssignments.current.filter(
                     (assignment) => assignment.orderId !== order.id
                   );
-                  toast.dismiss(t.id);
+                  batchToast.dismiss(t.id);
                   // Skipped order - allowing other shoppers
                 }}
                 className="flex-1 rounded-lg bg-gray-500 px-4 py-2.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
@@ -734,11 +737,11 @@ export default function NotificationSystem({
     // Remove existing toast for this order and show warning toast
     const existingToast = activeToasts.current.get(order.id);
     if (existingToast) {
-      toast.dismiss(existingToast);
+      batchToast.dismiss(existingToast);
       activeToasts.current.delete(order.id);
     }
 
-    const warningToastKey = toast.custom(
+    const warningToastKey = batchToast.custom(
       (t) => (
         <div
           className={`${
@@ -851,7 +854,7 @@ export default function NotificationSystem({
                     onClick={async () => {
                       const success = await handleAcceptOrder(order.id);
                       if (success) {
-                        toast.dismiss(t.id);
+                        batchToast.dismiss(t.id);
                       }
                     }}
                     disabled={acceptingOrders.has(order.id)}
@@ -875,7 +878,7 @@ export default function NotificationSystem({
                         batchAssignments.current.filter(
                           (assignment) => assignment.orderId !== order.id
                         );
-                      toast.dismiss(t.id);
+                      batchToast.dismiss(t.id);
                       // Skipped expiring order - allowing other shoppers
                     }}
                     className={`rounded-lg px-4 py-2 text-sm font-medium text-white/80 backdrop-blur-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50 ${
@@ -894,7 +897,7 @@ export default function NotificationSystem({
             <button
               onClick={() => {
                 removeToastForOrder(order.id);
-                toast.dismiss(t.id);
+                batchToast.dismiss(t.id);
               }}
               className="flex w-full items-center justify-center rounded-none rounded-r-xl border border-transparent p-4 text-sm font-medium text-white/70 transition-all duration-200 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50"
             >
@@ -1050,17 +1053,15 @@ export default function NotificationSystem({
   const checkForNewOrders = async () => {
     // Prevent concurrent API calls
     if (isCheckingOrders.current) {
-      logger.debug(
-        "⏸️ Order check already in progress, skipping duplicate call",
-        "NotificationSystem"
+      console.log(
+        "[NotificationSystem] ⏸️ Order check already in progress, skipping duplicate call"
       );
       return;
     }
 
     if (!session?.user?.id || !currentLocation) {
-      logger.debug(
-        "Missing session or location, skipping check",
-        "NotificationSystem"
+      console.log(
+        "[NotificationSystem] Missing session or location, skipping check"
       );
       return;
     }
@@ -1068,9 +1069,8 @@ export default function NotificationSystem({
     const now = new Date();
     const currentTime = now.getTime();
     
-    logger.debug(
-      `🔍 Initiating order check (last check: ${Math.floor((currentTime - lastNotificationTime.current) / 1000)}s ago)`,
-      "NotificationSystem"
+    console.log(
+      `[NotificationSystem] 🔍 Initiating order check (last check: ${Math.floor((currentTime - lastNotificationTime.current) / 1000)}s ago)`
     );
 
     // Set flag to prevent concurrent calls
@@ -1078,11 +1078,10 @@ export default function NotificationSystem({
 
     // Check if we should skip this check (25-second cooldown to prevent spam)
     if (currentTime - lastNotificationTime.current < 25000) {
-      logger.debug(
-        `Skipping smart order finder check - ${Math.floor(
+      console.log(
+        `[NotificationSystem] ⏭️ Skipping smart order finder check - ${Math.floor(
           (25000 - (currentTime - lastNotificationTime.current)) / 1000
-        )}s until next check`,
-        "NotificationSystem"
+        )}s until next check`
       );
       isCheckingOrders.current = false; // Reset flag when skipping
       return;
@@ -1117,6 +1116,13 @@ export default function NotificationSystem({
 
       if (data.success && data.order) {
         // Smart order finder found order
+        console.log(
+          `[NotificationSystem] 📦 Order found: ${data.order.id} (${data.order.orderType})`
+        );
+        
+        // Update lastNotificationTime to prevent rapid API calls
+        // This is updated regardless of whether we show a notification
+        lastNotificationTime.current = currentTime;
 
         // Clean up expired order reviews
         const ninetySecondsAgo = currentTime - 90000;
@@ -1131,7 +1137,7 @@ export default function NotificationSystem({
                 assignment.orderId
               );
               if (existingToast) {
-                toast.dismiss(existingToast);
+                batchToast.dismiss(existingToast);
                 activeToasts.current.delete(assignment.orderId);
               }
               return false;
@@ -1183,25 +1189,28 @@ export default function NotificationSystem({
           await playNotificationSound({ enabled: true, volume: 0.7 });
           showToast(orderForNotification);
           showDesktopNotification(orderForNotification);
-          sendFirebaseNotification(orderForNotification, "batch");
-
+          
+          // FCM notification is already sent by the backend API (smart-assign-order.ts)
+          // No need to send duplicate notification from frontend
+          
           // Warning notification removed - shoppers now have full 90 seconds to respond
           // No intermediate warning needed as 90 seconds is sufficient time
 
-          lastNotificationTime.current = currentTime;
+          // Note: lastNotificationTime is updated at the top of this block
 
           // Smart order finder: Order shown to shopper for review
         } else {
-          logger.debug(
-            "User already has an active order review, skipping smart order finder",
-            "NotificationSystem"
+          console.log(
+            `[NotificationSystem] ⏭️ User already has an active order review (Order ID: ${currentUserAssignment.orderId}), skipping notification`
           );
+          // lastNotificationTime was already updated above to prevent rapid API calls
         }
       } else {
-        logger.debug(
-          data.message || "No suitable orders available for review",
-          "NotificationSystem"
+        console.log(
+          `[NotificationSystem] ${data.message || "No suitable orders available for review"}`
         );
+        // Update lastNotificationTime even when no orders found to prevent rapid polling
+        lastNotificationTime.current = currentTime;
       }
     } catch (error) {
       logger.error(
@@ -1231,7 +1240,7 @@ export default function NotificationSystem({
     lastNotificationTime.current = 0;
 
     // Starting smart notification system
-    logger.info("Starting notification system", "NotificationSystem");
+    console.log("[NotificationSystem] ✅ Starting notification system");
 
     // Initial check
     checkForNewOrders();
@@ -1259,9 +1268,9 @@ export default function NotificationSystem({
       }
     });
 
-    // Clear all active toasts
+    // Clear all active batch notification toasts
     activeToasts.current.forEach((toastKey) => {
-      toast.dismiss(toastKey);
+      batchToast.dismiss(toastKey);
     });
     activeToasts.current.clear();
 
@@ -1303,25 +1312,41 @@ export default function NotificationSystem({
     };
   }, [session?.user?.id]); // Only depend on session user ID, not location
 
-  // The component doesn't render anything visible
-  // FCM connection status indicator (optional UI element)
-  if (process.env.NODE_ENV === "development") {
-    return (
-      <div className="fixed right-4 top-4 z-50">
-        <div
-          className={`rounded-lg px-3 py-2 text-xs font-medium ${
-            isInitialized && hasPermission
-              ? "border border-green-200 bg-green-100 text-green-800"
-              : "border border-orange-200 bg-orange-100 text-orange-800"
-          }`}
-        >
-          {isInitialized && hasPermission
-            ? "🔔 FCM Notifications Active"
-            : "📡 Polling Mode"}
+  // The component renders a separate Toaster for batch notifications
+  return (
+    <>
+      {/* Separate Toaster for batch notifications - positioned independently */}
+      <Toaster
+        position="top-right"
+        containerClassName="batch-notification-container"
+        toastOptions={{
+          // Only show toasts with our batch notification classes
+          className: "",
+          style: {
+            background: "transparent",
+            boxShadow: "none",
+            padding: 0,
+            margin: 0,
+          },
+        }}
+      />
+      
+      {/* FCM connection status indicator (optional UI element in development) */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="fixed right-4 top-4 z-50">
+          <div
+            className={`rounded-lg px-3 py-2 text-xs font-medium ${
+              isInitialized && hasPermission
+                ? "border border-green-200 bg-green-100 text-green-800"
+                : "border border-orange-200 bg-orange-100 text-orange-800"
+            }`}
+          >
+            {isInitialized && hasPermission
+              ? "🔔 FCM Notifications Active"
+              : "📡 Polling Mode"}
+          </div>
         </div>
-      </div>
-    );
-  }
-
-  return null;
+      )}
+    </>
+  );
 }

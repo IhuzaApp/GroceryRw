@@ -4,6 +4,22 @@ import { gql } from "graphql-request";
 import { logger } from "../../../src/utils/logger";
 import { sendNewOrderNotification } from "../../../src/services/fcmService";
 
+// In-memory cache to track which orders were sent to which shoppers
+// Key format: "shopperId:orderId" -> timestamp
+const notificationCache = new Map<string, number>();
+
+// Clean up old entries every 5 minutes (orders expire after 90 seconds)
+setInterval(() => {
+  const now = Date.now();
+  const expireTime = 90000; // 90 seconds
+  
+  for (const [key, timestamp] of notificationCache.entries()) {
+    if (now - timestamp > expireTime) {
+      notificationCache.delete(key);
+    }
+  }
+}, 5 * 60 * 1000); // Clean every 5 minutes
+
 // GraphQL query to get available orders for notification
 const GET_AVAILABLE_ORDERS = gql`
   query GetAvailableOrders($current_time: timestamptz!) {
@@ -396,22 +412,36 @@ export default async function handler(
       itemsCount: orderForNotification.itemsCount
     });
     
-    // Send FCM notification to the shopper
-    try {
-      await sendNewOrderNotification(user_id, {
-        id: bestOrder.id,
-        shopName: orderForNotification.shopName,
-        customerAddress: orderForNotification.customerAddress,
-        distance: orderForNotification.distance,
-        itemsCount: orderForNotification.itemsCount,
-        travelTimeMinutes: orderForNotification.travelTimeMinutes,
-        estimatedEarnings: orderForNotification.estimatedEarnings,
-        orderType: orderForNotification.orderType,
-      });
-      console.log("✅ FCM notification sent to shopper:", user_id);
-    } catch (fcmError) {
-      console.error("Failed to send FCM notification:", fcmError);
-      // Continue even if notification fails
+    // Check if we already sent FCM notification for this order to this shopper
+    const cacheKey = `${user_id}:${bestOrder.id}`;
+    const lastSent = notificationCache.get(cacheKey);
+    const now = Date.now();
+    
+    // Only send FCM if we haven't sent it in the last 90 seconds (order expiry time)
+    if (!lastSent || (now - lastSent) > 90000) {
+      // Send FCM notification to the shopper
+      try {
+        await sendNewOrderNotification(user_id, {
+          id: bestOrder.id,
+          shopName: orderForNotification.shopName,
+          customerAddress: orderForNotification.customerAddress,
+          distance: orderForNotification.distance,
+          itemsCount: orderForNotification.itemsCount,
+          travelTimeMinutes: orderForNotification.travelTimeMinutes,
+          estimatedEarnings: orderForNotification.estimatedEarnings,
+          orderType: orderForNotification.orderType,
+        });
+        
+        // Cache this notification
+        notificationCache.set(cacheKey, now);
+        console.log("✅ FCM notification sent to shopper:", user_id, "for order:", bestOrder.id);
+      } catch (fcmError) {
+        console.error("Failed to send FCM notification:", fcmError);
+        // Continue even if notification fails
+      }
+    } else {
+      const timeSinceLastSent = Math.floor((now - lastSent) / 1000);
+      console.log(`⏭️ Skipping FCM notification - already sent ${timeSinceLastSent}s ago to shopper:`, user_id, "for order:", bestOrder.id);
     }
     
     return res.status(200).json({
