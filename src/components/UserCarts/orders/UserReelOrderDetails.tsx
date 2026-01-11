@@ -50,7 +50,7 @@ export default function UserReelOrderDetails({
   }, [order?.id]);
 
   const getStatusStep = (status: string, assignedTo: any) => {
-    // If no shopper is assigned yet
+    // If no Plaser is assigned yet
     if (!assignedTo) {
       return 0;
     }
@@ -89,7 +89,7 @@ export default function UserReelOrderDetails({
         },
         body: JSON.stringify({
           reel_order_id: order.id,
-          shopper_id: order.assignedTo.id,
+          Plaser_id: order.assignedTo.id,
           rating: ratings.rating.toString(),
           review: comment,
           delivery_experience: ratings.delivery_experience.toString(),
@@ -147,7 +147,7 @@ export default function UserReelOrderDetails({
         <div className="mb-6">
           <h2 className="mb-4 text-xl font-bold">Order Status</h2>
           {isMobile ? (
-            // Mobile: Simple status display or shopper details
+            // Mobile: Simple status display or Plaser details
             <div className="py-4">
               {order.status === "delivered" ? (
                 <div className="text-center">
@@ -176,14 +176,14 @@ export default function UserReelOrderDetails({
                     </div>
                   )}
                 </div>
-              ) : order.assignedTo || order.shopper_id ? (
-                // Show shopper details when assigned (regardless of status)
+              ) : order.assignedTo || order.Plaser_id ? (
+                // Show Plaser details when assigned (regardless of status)
                 <div className="flex items-center gap-3">
                   <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-purple-100 dark:bg-purple-900/30">
                     {order.assignedTo?.profile_photo ? (
                       <Image
                         src={order.assignedTo.profile_photo}
-                        alt={order.assignedTo.name || "Shopper"}
+                        alt={order.assignedTo.name || "Plaser"}
                         width={48}
                         height={48}
                         className="h-full w-full object-cover"
@@ -206,7 +206,7 @@ export default function UserReelOrderDetails({
                   </div>
                   <div className="flex-1">
                     <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                      {order.assignedTo?.name || "Shopper Assigned"}
+                      {order.assignedTo?.name || "Plaser Assigned"}
                     </div>
                     <div className="mt-0.5 flex items-center gap-2">
                       {order.assignedTo?.rating && (
@@ -249,7 +249,7 @@ export default function UserReelOrderDetails({
                       ? "Preparing for delivery"
                       : order.status === "shopping"
                       ? "Picking your items"
-                      : "Waiting for shopper assignment"}
+                      : "Waiting for Plaser assignment"}
                   </div>
                 </div>
               )}
@@ -264,7 +264,7 @@ export default function UserReelOrderDetails({
               >
                 <Steps.Item
                   title="Awaiting Assignment"
-                  description="Waiting for shopper assignment"
+                  description="Waiting for Plaser assignment"
                 />
                 <Steps.Item title="Shopping" description="Picking your items" />
                 <Steps.Item
@@ -472,7 +472,7 @@ export default function UserReelOrderDetails({
             <div className="relative bg-gradient-to-br from-purple-50 to-purple-100/50 px-6 py-5 dark:from-purple-900/20 dark:to-purple-800/10">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                 {order.status === "shopping" || order.status === "packing"
-                  ? "Your Shopper"
+                  ? "Your Plaser"
                   : "Your Delivery Person"}
               </h2>
               <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
@@ -774,7 +774,7 @@ export default function UserReelOrderDetails({
                   No assigned person available
                 </p>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                  Waiting for shopper assignment
+                  Waiting for Plaser assignment
                 </p>
               </div>
             )}

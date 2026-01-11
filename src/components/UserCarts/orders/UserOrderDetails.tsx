@@ -50,7 +50,7 @@ export default function UserOrderDetails({
   }, [order?.id]);
 
   const getStatusStep = (status: string, assignedTo: any) => {
-    // If no shopper is assigned yet
+    // If no Plaser is assigned yet
     if (!assignedTo) {
       return 0;
     }
@@ -146,7 +146,7 @@ export default function UserOrderDetails({
         <div className="mb-6">
           <h2 className="mb-4 text-xl font-bold">Order Status</h2>
           {isMobile ? (
-            // Mobile: Simple status display or shopper details
+            // Mobile: Simple status display or Plaser details
             <div className="py-4">
               {order.status === "delivered" ? (
                 <div className="text-center">
@@ -183,7 +183,7 @@ export default function UserOrderDetails({
                       {order.assignedTo?.profile_photo ? (
                         <Image
                           src={order.assignedTo.profile_photo}
-                          alt={order.assignedTo.name || "Shopper"}
+                          alt={order.assignedTo.name || "Plaser"}
                           width={64}
                           height={64}
                           className="h-full w-full object-cover"
@@ -296,7 +296,7 @@ export default function UserOrderDetails({
                       ? "Preparing for delivery"
                       : order.status === "shopping"
                       ? "Picking your items"
-                      : "Waiting for shopper assignment"}
+                      : "Waiting for Plaser assignment"}
                   </div>
                 </div>
               )}
@@ -563,8 +563,8 @@ export default function UserOrderDetails({
             <div className="relative bg-gradient-to-br from-green-50 to-green-100/50 px-6 py-5 dark:from-green-900/20 dark:to-green-800/10">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                 {order.status === "shopping" || order.status === "packing"
-                  ? "Your Shopper"
-                  : "Your Delivery Person"}
+                  ? "Your Plaser"
+                  : "Your Plaser"}
               </h2>
               <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 {order.status === "shopping"
@@ -586,7 +586,7 @@ export default function UserOrderDetails({
                     {order.assignedTo?.profile_photo ? (
                       <Image
                         src={order.assignedTo.profile_photo}
-                        alt={order.assignedTo?.name || "Shopper"}
+                        alt={order.assignedTo?.name || "Plaser"}
                         width={56}
                         height={56}
                         className="h-full w-full object-cover"
@@ -612,7 +612,7 @@ export default function UserOrderDetails({
                   <div className="flex flex-1 flex-col gap-1.5">
                     {/* Name */}
                     <h3 className="text-base font-bold text-gray-900 dark:text-white">
-                      {order.assignedTo?.name || "Shopper Assigned"}
+                      {order.assignedTo?.name || "Plaser Assigned"}
                     </h3>
 
                     {/* Phone, Rating, Orders in a row */}
@@ -862,10 +862,10 @@ export default function UserOrderDetails({
                   </svg>
                 </div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  No assigned person available
+                  No Plaser assigned yet
                 </p>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                  Waiting for shopper assignment
+                  Waiting for Plaser assignment
                 </p>
               </div>
             )}
