@@ -73,19 +73,13 @@ messaging.onBackgroundMessage((payload) => {
     icon: "/assets/logos/PlasIcon.png",
     badge: "/assets/logos/PlasIcon.png",
     data: payload.data,
-    requireInteraction: false, // Changed to false for better system behavior
-    silent: false, // CRITICAL: false = sound ON, true = sound OFF
+    requireInteraction: false,
+    silent: false,
     vibrate: [200, 100, 200, 100, 200],
-    tag: `fcm-${notificationType}-${Date.now()}`, // Always unique
-    renotify: true, // CRITICAL: Allows sound on every notification
+    tag: `fcm-${notificationType}-${Date.now()}`,
+    renotify: true,
     actions: actions,
   };
-
-  console.log("🔔 [Service Worker] Notification options:", {
-    silent: notificationOptions.silent,
-    renotify: notificationOptions.renotify,
-    requireInteraction: notificationOptions.requireInteraction,
-  });
   
   return self.registration.showNotification(
     notificationTitle,
@@ -95,7 +89,6 @@ messaging.onBackgroundMessage((payload) => {
 
 // Handle notification click
 self.addEventListener("notificationclick", (event) => {
-  console.log("🖱️ Notification clicked, action:", event.action);
   event.notification.close();
 
   if (event.action === "close") return;

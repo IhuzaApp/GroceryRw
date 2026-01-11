@@ -9,14 +9,9 @@ import { useTheme } from "@context/ThemeContext";
 import { Button } from "rsuite";
 import TelegramStatusButton from "./TelegramStatusButton";
 import NotificationCenter from "./NotificationCenter";
-import { useSession } from "next-auth/react";
-import toast from "react-hot-toast";
-
 export default function ShopperHeader() {
-  const { data: session } = useSession();
   const [isMobile, setIsMobile] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
-  const [isSendingTest, setIsSendingTest] = useState(false);
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
 
@@ -56,78 +51,6 @@ export default function ShopperHeader() {
       clearInterval(intervalId);
     };
   }, []);
-
-  const handleTestNotification = async () => {
-    if (!session?.user?.id) {
-      toast.error("You must be logged in");
-      return;
-    }
-
-    console.log("🔍 Current notification permission:", Notification.permission);
-    
-    if (Notification.permission === "denied") {
-      toast.error("Notifications are BLOCKED! Enable them in browser settings.", {
-        duration: 8000,
-      });
-      return;
-    }
-
-    if (Notification.permission === "default") {
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        toast.error("Permission denied");
-        return;
-      }
-    }
-
-    setIsSendingTest(true);
-
-    try {
-      // Test 1: Direct browser notification with Chrome-friendly options
-      console.log("🧪 Test 1: Direct browser notification");
-      if ("serviceWorker" in navigator) {
-        const registration = await navigator.serviceWorker.ready;
-        await registration.showNotification("🔔 Direct Browser Test", {
-          body: "If you see this, browser notifications work!",
-          icon: "/assets/logos/PlasIcon.png",
-          tag: "test-" + Date.now(),
-          silent: false,
-          vibrate: [200, 100, 200],
-          requireInteraction: true,
-          timestamp: Date.now(),
-          actions: [
-            { action: 'ok', title: 'OK' }
-          ],
-        });
-        console.log("✅ Test 1 notification called");
-      }
-      
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Test 2: FCM notification via server
-      console.log("🧪 Test 2: FCM notification via server");
-      const response = await fetch("/api/fcm/test-notification", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: session.user.id }),
-      });
-
-      const data = await response.json();
-      console.log("📥 Server response:", data);
-
-      if (response.ok) {
-        toast.success(`Sent to ${data.tokenCount || 0} device(s)!`, { duration: 4000 });
-      } else {
-        console.error("❌ Server error:", data);
-        toast.error(data.message || data.error || "Failed to send");
-      }
-    } catch (error) {
-      console.error("❌ Test failed:", error);
-      toast.error("Test failed - check console");
-    } finally {
-      setIsSendingTest(false);
-    }
-  };
 
   if (isMobile) {
     return (
@@ -296,14 +219,6 @@ export default function ShopperHeader() {
             size="md"
             className="bg-blue-500 text-white hover:bg-blue-600"
           />
-          <Button
-            appearance="primary"
-            onClick={handleTestNotification}
-            disabled={isSendingTest}
-            style={{ backgroundColor: "#9333ea", color: "white" }}
-          >
-            {isSendingTest ? "Testing..." : "Test Notification"}
-          </Button>
           <Button
             appearance="subtle"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
