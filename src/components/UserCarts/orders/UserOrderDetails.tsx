@@ -17,16 +17,19 @@ function formatOrderID(id?: string | number): string {
 interface UserOrderDetailsProps {
   order: any;
   isMobile?: boolean;
+  combinedOrders?: any[];
 }
 export default function UserOrderDetails({
   order,
   isMobile = false,
+  combinedOrders: propCombinedOrders,
 }: UserOrderDetailsProps) {
   const { theme } = useTheme();
   const [feedbackModal, setFeedbackModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [hasExistingRating, setHasExistingRating] = useState(false);
+  const [combinedOrders, setCombinedOrders] = useState<any[]>(propCombinedOrders || []);
 
   // Check for existing rating
   useEffect(() => {
@@ -48,6 +51,50 @@ export default function UserOrderDetails({
       checkExistingRating();
     }
   }, [order?.id]);
+
+  // Update combinedOrders when prop changes or fetch if not provided
+  useEffect(() => {
+    const fetchCombinedOrders = async () => {
+      // If combinedOrders prop is provided and not empty, use it
+      if (propCombinedOrders && propCombinedOrders.length > 0) {
+        console.log("Using provided combined orders:", propCombinedOrders.length);
+        setCombinedOrders(propCombinedOrders);
+        return;
+      }
+
+      if (!order) {
+        setCombinedOrders([]);
+        return;
+      }
+
+      if (!order?.combinedOrderId) {
+        console.log("No combined order ID, using single order");
+        setCombinedOrders([order]);
+        return;
+      }
+
+      // Only fetch if prop wasn't provided
+      try {
+        console.log("Fetching combined orders for ID:", order.combinedOrderId);
+        const response = await fetch(
+          `/api/queries/combined-orders?combined_order_id=${order.combinedOrderId}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Combined orders fetched:", data.orders, "Count:", data.orders?.length);
+          setCombinedOrders(data.orders || [order]);
+        } else {
+          console.error("Failed to fetch combined orders:", response.status);
+          setCombinedOrders([order]);
+        }
+      } catch (error) {
+        console.error("Error fetching combined orders:", error);
+        setCombinedOrders([order]);
+      }
+    };
+
+    fetchCombinedOrders();
+  }, [order, order?.combinedOrderId, propCombinedOrders]);
 
   const getStatusStep = (status: string, assignedTo: any) => {
     // If no Plaser is assigned yet
@@ -136,7 +183,22 @@ export default function UserOrderDetails({
             </svg>
           </Link>
           <h1 className="text-2xl font-bold">
-            Order #{formatOrderID(order.OrderID)}
+            {(() => {
+              console.log("Header render - combinedOrderId:", order?.combinedOrderId, "combinedOrders.length:", combinedOrders.length, "combinedOrders:", combinedOrders);
+              return order?.combinedOrderId && combinedOrders.length > 1 ? (
+                <>
+                  Orders{" "}
+                  {combinedOrders.map((ord: any, idx: number) => (
+                    <span key={ord.id}>
+                      #{formatOrderID(ord.OrderID)}
+                      {idx < combinedOrders.length - 1 ? " & " : ""}
+                    </span>
+                  ))}
+                </>
+              ) : (
+                <>Order #{formatOrderID(order.OrderID)}</>
+              );
+            })()}
           </h1>
           <span className="ml-2 text-gray-500">Placed on {order.placedAt}</span>
         </div>
@@ -296,7 +358,7 @@ export default function UserOrderDetails({
                       ? "Preparing for delivery"
                       : order.status === "shopping"
                       ? "Picking your items"
-                      : "Waiting for Plaser assignment"}
+                      : "Waiting for assignment"}
                   </div>
                 </div>
               )}
@@ -311,7 +373,7 @@ export default function UserOrderDetails({
               >
                 <Steps.Item
                   title="Awaiting Assignment"
-                  description="Waiting for shopper assignment"
+                  description="Waiting for assignment"
                 />
                 <Steps.Item title="Shopping" description="Picking your items" />
                 <Steps.Item
@@ -415,90 +477,219 @@ export default function UserOrderDetails({
         {/* Left Column - Order Details */}
         <div className="w-full md:w-2/3">
           <Panel shaded bordered className="mb-6">
-            <h2 className="mb-4 text-xl font-bold">Order Details</h2>
-            <div className="space-y-4">
-              {order.Order_Items?.map((item: any, index: number) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-4 border-b pb-4 last:border-0"
-                >
-                  <div className="h-16 w-16 flex-shrink-0">
-                    <Image
-                      src={
-                        (item.product.ProductName?.image ||
-                          item.product.image) ??
-                        "/images/groceryPlaceholder.png"
-                      }
-                      alt={item.product.ProductName?.name || "Product"}
-                      width={60}
-                      height={60}
-                      className="rounded-md"
-                    />
-                  </div>
-                  <div className="flex-grow">
-                    <h3 className="font-medium">
-                      {item.product.ProductName?.name || "Product"}
-                    </h3>
-                    <div className="mt-1 flex justify-between text-sm text-gray-600 dark:text-gray-400">
-                      <span>
-                        {item.quantity} ×{" "}
-                        {formatCurrency(parseFloat(item.product.final_price))}
-                      </span>
-                      <span className="font-bold">
-                        {formatCurrency(
-                          parseFloat(item.product.final_price) * item.quantity
-                        )}
-                      </span>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold">Order Details</h2>
+              {combinedOrders.length > 1 && (
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {combinedOrders.length} shops • {combinedOrders.reduce((sum: number, ord: any) => sum + (ord.Order_Items?.length || 0), 0)} items
+                </span>
+              )}
+            </div>
+            <div className="space-y-6">
+              {(() => {
+                console.log("Rendering combined orders:", {
+                  count: combinedOrders.length,
+                  orders: combinedOrders.map((o: any) => ({
+                    id: o.id,
+                    OrderID: o.OrderID,
+                    shop: o.shop?.name,
+                    itemCount: o.Order_Items?.length || 0,
+                  })),
+                });
+                return null;
+              })()}
+              {combinedOrders.map((ord: any, orderIndex: number) => (
+                <div key={ord.id || orderIndex} className={orderIndex > 0 ? "border-t border-gray-200 dark:border-gray-700 pt-6" : ""}>
+                  {/* Shop Header for Combined Orders */}
+                  {combinedOrders.length > 1 && (
+                    <div className="mb-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3 flex items-center gap-3">
+                      {ord.shop?.image && (
+                        <Image
+                          src={ord.shop.image}
+                          alt={ord.shop.name}
+                          width={48}
+                          height={48}
+                          className="rounded-lg object-cover"
+                        />
+                      )}
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                          {ord.shop?.name || "Unknown Shop"}
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Order #{formatOrderID(ord.OrderID)} • {ord.Order_Items?.length || 0} items
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Subtotal</p>
+                        <p className="font-bold text-gray-900 dark:text-white">
+                          {formatCurrency(
+                            ord.Order_Items?.reduce((sum: number, item: any) => {
+                              return sum + parseFloat(item.product.final_price) * item.quantity;
+                            }, 0) || 0
+                          )}
+                        </p>
+                      </div>
                     </div>
+                  )}
+                  
+                  {/* Order Items */}
+                  <div className="space-y-4">
+                    {ord.Order_Items?.map((item: any, index: number) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-4 border-b pb-4 last:border-0"
+                      >
+                        <div className="h-16 w-16 flex-shrink-0">
+                          <Image
+                            src={
+                              (item.product.ProductName?.image ||
+                                item.product.image) ??
+                              "/images/groceryPlaceholder.png"
+                            }
+                            alt={item.product.ProductName?.name || "Product"}
+                            width={60}
+                            height={60}
+                            className="rounded-md"
+                          />
+                        </div>
+                        <div className="flex-grow">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-medium">
+                              {item.product.ProductName?.name || "Product"}
+                            </h3>
+                            {ord.shop?.name && (
+                              <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                {ord.shop.name}
+                              </span>
+                            )}
+                          </div>
+                          <div className="mt-1 flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                            <span>
+                              {item.quantity} ×{" "}
+                              {formatCurrency(parseFloat(item.product.final_price))}
+                            </span>
+                            <span className="font-bold">
+                              {formatCurrency(
+                                parseFloat(item.product.final_price) * item.quantity
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )) ?? null}
                   </div>
                 </div>
-              )) ?? null}
+              ))}
             </div>
 
             <div className="mt-6 border-t pt-4">
+              {/* Subtotal */}
               <div className="mb-2 flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">
                   Subtotal
                 </span>
                 <span className="font-medium">
                   {formatCurrency(
-                    order.Order_Items?.reduce((sum: number, item: any) => {
+                    combinedOrders.reduce((orderSum: number, ord: any) => {
                       return (
-                        sum +
-                        parseFloat(item.product.final_price) * item.quantity
+                        orderSum +
+                        (ord.Order_Items?.reduce((sum: number, item: any) => {
+                          return (
+                            sum +
+                            parseFloat(item.product.final_price) * item.quantity
+                          );
+                        }, 0) || 0)
                       );
-                    }, 0) || 0
+                    }, 0)
                   )}
                 </span>
               </div>
-              <div className="mb-2 flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">
-                  Service Fee
-                </span>
-                <span className="font-medium">
-                  {formatCurrency(order.serviceFee || 0)}
-                </span>
+
+              {/* Service Fee with breakdown for combined orders */}
+              <div className="mb-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Service Fee
+                    {combinedOrders.length > 1 && (
+                      <span className="ml-1 text-xs text-gray-500">
+                        ({combinedOrders.length} shops)
+                      </span>
+                    )}
+                  </span>
+                  <span className="font-medium">
+                    {formatCurrency(
+                      combinedOrders.reduce(
+                        (sum: number, ord: any) => sum + (Number(ord.serviceFee) || 0),
+                        0
+                      )
+                    )}
+                  </span>
+                </div>
+                {combinedOrders.length > 1 && (
+                  <div className="mt-1 ml-4 space-y-1">
+                    {combinedOrders.map((ord: any, idx: number) => (
+                      <div key={ord.id || idx} className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                        <span>• {ord.shop?.name || `Shop ${idx + 1}`}</span>
+                        <span>{formatCurrency(Number(ord.serviceFee) || 0)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div className="mb-2 flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">
-                  Delivery Fee
-                </span>
-                <span className="font-medium">
-                  {formatCurrency(order.deliveryFee || 0)}
-                </span>
+
+              {/* Delivery Fee with breakdown for combined orders */}
+              <div className="mb-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Delivery Fee
+                    {combinedOrders.length > 1 && (
+                      <span className="ml-1 text-xs text-gray-500">
+                        ({combinedOrders.length} shops)
+                      </span>
+                    )}
+                  </span>
+                  <span className="font-medium">
+                    {formatCurrency(
+                      combinedOrders.reduce(
+                        (sum: number, ord: any) => sum + (Number(ord.deliveryFee) || 0),
+                        0
+                      )
+                    )}
+                  </span>
+                </div>
+                {combinedOrders.length > 1 && (
+                  <div className="mt-1 ml-4 space-y-1">
+                    {combinedOrders.map((ord: any, idx: number) => (
+                      <div key={ord.id || idx} className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                        <span>• {ord.shop?.name || `Shop ${idx + 1}`}</span>
+                        <span>{formatCurrency(Number(ord.deliveryFee) || 0)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
+
+              {/* Total */}
               <div className="mt-4 flex justify-between text-lg font-bold">
                 <span>Total</span>
                 <span>
                   {formatCurrency(
-                    (order.Order_Items?.reduce((sum: number, item: any) => {
+                    combinedOrders.reduce((orderSum: number, ord: any) => {
+                      const itemsTotal =
+                        ord.Order_Items?.reduce((sum: number, item: any) => {
+                          return (
+                            sum +
+                            parseFloat(item.product.final_price) * item.quantity
+                          );
+                        }, 0) || 0;
                       return (
-                        sum +
-                        parseFloat(item.product.final_price) * item.quantity
+                        orderSum +
+                        itemsTotal +
+                        (Number(ord.serviceFee) || 0) +
+                        (Number(ord.deliveryFee) || 0)
                       );
-                    }, 0) || 0) +
-                      (Number(order.serviceFee) || 0) +
-                      (Number(order.deliveryFee) || 0)
+                    }, 0)
                   )}
                 </span>
               </div>
@@ -865,7 +1056,7 @@ export default function UserOrderDetails({
                   No Plaser assigned yet
                 </p>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                  Waiting for Plaser assignment
+                  Waiting for assignment
                 </p>
               </div>
             )}

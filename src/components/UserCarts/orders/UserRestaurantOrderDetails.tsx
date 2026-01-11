@@ -656,7 +656,7 @@ export default function UserRestaurantOrderDetails({
                   </svg>
                 </div>
                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                  Waiting for Plaser assignment
+                  Waiting for assignment
                 </p>
               </div>
             </div>
