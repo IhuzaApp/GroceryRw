@@ -5,10 +5,10 @@ import { GraphQLClient, gql } from "graphql-request";
 import bcrypt from "bcryptjs";
 
 const hasuraClient = new GraphQLClient(
-  process.env.NEXT_PUBLIC_HASURA_GRAPHQL_URL!,
+  process.env.HASURA_GRAPHQL_URL || process.env.NEXT_PUBLIC_HASURA_GRAPHQL_URL!,
   {
     headers: {
-      "x-hasura-admin-secret": process.env.HASURA_ADMIN_SECRET!,
+      "x-hasura-admin-secret": process.env.HASURA_ADMIN_SECRET || process.env.HASURA_GRAPHQL_ADMIN_SECRET!,
     },
   }
 );
@@ -29,6 +29,7 @@ const UPDATE_USER_MUTATION = gql`
         password_hash: $passwordHash
         gender: $gender
         is_guest: false
+        updated_at: "now()"
       }
     ) {
       id
@@ -37,6 +38,7 @@ const UPDATE_USER_MUTATION = gql`
       phone
       gender
       is_guest
+      updated_at
     }
   }
 `;
@@ -101,6 +103,15 @@ export default async function handler(
     // Hash the password
     const passwordHash = await bcrypt.hash(password, 10);
 
+    console.log("=".repeat(60));
+    console.log("🔄 UPDATING USER IN DATABASE");
+    console.log("=".repeat(60));
+    console.log(`User ID: ${session.user.id}`);
+    console.log(`Name: ${fullName}`);
+    console.log(`Email: ${email.toLowerCase()}`);
+    console.log(`Gender: ${gender || "male"}`);
+    console.log("=".repeat(60));
+
     // Update the user
     const result: any = await hasuraClient.request(UPDATE_USER_MUTATION, {
       userId: session.user.id,
@@ -114,15 +125,30 @@ export default async function handler(
       throw new Error("Failed to update user");
     }
 
+    console.log("=".repeat(60));
+    console.log("✅ USER UPDATED SUCCESSFULLY IN DATABASE");
+    console.log("=".repeat(60));
+    console.log("Updated user:", JSON.stringify(result.update_Users_by_pk, null, 2));
+    console.log("=".repeat(60));
+
     return res.status(200).json({
       success: true,
       user: result.update_Users_by_pk,
       message: "Account upgraded successfully",
     });
   } catch (error: any) {
-    console.error("Guest upgrade error:", error);
+    console.error("=".repeat(60));
+    console.error("❌ GUEST UPGRADE ERROR");
+    console.error("=".repeat(60));
+    console.error("Error details:", error);
+    if (error.response) {
+      console.error("GraphQL Response:", JSON.stringify(error.response, null, 2));
+    }
+    console.error("=".repeat(60));
+    
     return res.status(500).json({
       error: error.message || "Failed to upgrade account",
+      details: error.response?.errors || error.response?.error || undefined,
     });
   }
 }

@@ -180,41 +180,56 @@ export default function GuestUpgradeModal({
         throw new Error("Invalid OTP. Please try again.");
       }
 
-      // OTP is valid!
-      localStorage.removeItem("pending_upgrade_otp");
+      // OTP is valid! Now update the user in the database
+      console.log("=".repeat(60));
+      console.log("✅ OTP VERIFIED - Updating user in database...");
+      console.log("=".repeat(60));
 
-      toast.success("OTP verified successfully! ✅\nCheck console for details.", {
-        duration: 5000,
+      const upgradeResponse = await fetch("/api/auth/upgrade-guest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: storedData.fullName,
+          email: storedData.email,
+          password: storedData.password,
+          gender: storedData.gender,
+        }),
       });
 
+      const upgradeData = await upgradeResponse.json();
+
+      if (!upgradeResponse.ok) {
+        throw new Error(upgradeData.error || "Failed to upgrade account");
+      }
+
+      // Clear localStorage
+      localStorage.removeItem("pending_upgrade_otp");
+
       console.log("=".repeat(60));
-      console.log("✅ OTP VERIFICATION SUCCESSFUL");
+      console.log("✅ ACCOUNT UPGRADED SUCCESSFULLY");
       console.log("=".repeat(60));
-      console.log("User will be upgraded with:");
       console.log(`Name: ${storedData.fullName}`);
       console.log(`Email: ${storedData.email}`);
       console.log(`Gender: ${storedData.gender}`);
-      console.log(`Password: ${storedData.password}`);
-      console.log("=".repeat(60));
-      console.log(
-        "TODO: Integrate with database to actually update the user account"
-      );
       console.log("=".repeat(60));
 
-      // Close modal after showing success
+      toast.success("Account upgraded successfully! 🎉 Refreshing your account...", {
+        duration: 2000,
+      });
+
+      console.log("=".repeat(60));
+      console.log("✅ Upgrade complete! Reloading to refresh session...");
+      console.log("=".repeat(60));
+
+      // Close modal
+      handleClose();
+
+      // Force a complete page reload to refresh the session
+      // This will fetch the updated user data from the database
       setTimeout(() => {
-        handleClose();
-      }, 2000);
-
-      // TODO: When database is ready, uncomment the following to auto-login:
-      // const result = await signIn("credentials", {
-      //   redirect: false,
-      //   email: storedData.email,
-      //   password: storedData.password,
-      // });
-      // if (result?.ok) {
-      //   window.location.reload();
-      // }
+        console.log("Reloading page...");
+        window.location.reload();
+      }, 1000);
     } catch (error: any) {
       console.error("Verify OTP error:", error);
       toast.error(error.message || "Invalid or expired OTP");
