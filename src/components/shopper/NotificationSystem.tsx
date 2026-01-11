@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import { logger } from "../../utils/logger";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import { useTheme } from "../../context/ThemeContext";
-import { useWebSocket } from "../../hooks/useWebSocket";
+import { useFCMNotifications } from "../../hooks/useFCMNotifications";
 
 interface Order {
   id: string;
@@ -76,25 +76,19 @@ export default function NotificationSystem({
   const lastOrderIds = useRef<Set<string>>(new Set());
   const activeToasts = useRef<Map<string, any>>(new Map()); // Track active toasts by order ID
 
-  // WebSocket integration
-  const { isConnected, sendLocation, acceptOrder, rejectOrder } =
-    useWebSocket();
+  // FCM integration
+  const { isInitialized, hasPermission } = useFCMNotifications();
 
-  // Show WebSocket connection status
+  // Show FCM initialization status
   useEffect(() => {
-    // WebSocket connection status changed - no logging needed
-  }, [isConnected]);
-
-  // Send location updates to WebSocket when location changes
-  useEffect(() => {
-    if (isConnected && currentLocation) {
-      sendLocation(currentLocation);
+    if (isInitialized) {
+      logger.info("FCM notifications initialized", "NotificationSystem");
     }
-  }, [isConnected, currentLocation, sendLocation]);
+  }, [isInitialized]);
 
-  // WebSocket event listeners
+  // FCM event listeners
   useEffect(() => {
-    const handleWebSocketNewOrder = (event: CustomEvent) => {
+    const handleFCMNewOrder = (event: CustomEvent) => {
       const { order } = event.detail;
 
       // Convert to Order format and show notification
@@ -112,10 +106,9 @@ export default function NotificationSystem({
       // Show notification
       showToast(orderForNotification);
       showDesktopNotification(orderForNotification);
-      sendFirebaseNotification(orderForNotification, "batch");
     };
 
-    const handleWebSocketBatchOrders = (event: CustomEvent) => {
+    const handleFCMBatchOrders = (event: CustomEvent) => {
       const { orders } = event.detail;
 
       // Show notifications for each order
@@ -133,11 +126,10 @@ export default function NotificationSystem({
 
         showToast(orderForNotification);
         showDesktopNotification(orderForNotification);
-        sendFirebaseNotification(orderForNotification, "batch");
       });
     };
 
-    const handleWebSocketOrderExpired = (event: CustomEvent) => {
+    const handleFCMOrderExpired = (event: CustomEvent) => {
       const { orderId } = event.detail;
 
       // Remove expired order from active assignments
@@ -153,33 +145,33 @@ export default function NotificationSystem({
       }
     };
 
-    // Add event listeners
+    // Add event listeners for FCM notifications
     window.addEventListener(
-      "websocket-new-order",
-      handleWebSocketNewOrder as EventListener
+      "fcm-new-order",
+      handleFCMNewOrder as EventListener
     );
     window.addEventListener(
-      "websocket-batch-orders",
-      handleWebSocketBatchOrders as EventListener
+      "fcm-batch-orders",
+      handleFCMBatchOrders as EventListener
     );
     window.addEventListener(
-      "websocket-order-expired",
-      handleWebSocketOrderExpired as EventListener
+      "fcm-order-expired",
+      handleFCMOrderExpired as EventListener
     );
 
     // Cleanup
     return () => {
       window.removeEventListener(
-        "websocket-new-order",
-        handleWebSocketNewOrder as EventListener
+        "fcm-new-order",
+        handleFCMNewOrder as EventListener
       );
       window.removeEventListener(
-        "websocket-batch-orders",
-        handleWebSocketBatchOrders as EventListener
+        "fcm-batch-orders",
+        handleFCMBatchOrders as EventListener
       );
       window.removeEventListener(
-        "websocket-order-expired",
-        handleWebSocketOrderExpired as EventListener
+        "fcm-order-expired",
+        handleFCMOrderExpired as EventListener
       );
     };
   }, []);
@@ -306,39 +298,25 @@ export default function NotificationSystem({
     setAcceptingOrders((prev) => new Set(prev).add(orderId));
 
     try {
-      let success = false;
+      // Accept order via API
+      const response = await fetch("/api/shopper/accept-batch", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId,
+          userId: session.user.id,
+        }),
+      });
 
-      // Try WebSocket first if connected
-      if (isConnected) {
-        try {
-          await acceptOrder(orderId);
-          success = true;
-        } catch (wsError) {
-          // WebSocket failed, try API fallback
-        }
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to accept order");
       }
 
-      // If WebSocket failed or not connected, try API
-      if (!success) {
-        const response = await fetch("/api/shopper/accept-batch", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            orderId,
-            userId: session.user.id,
-          }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || "Failed to accept order");
-        }
-
-        success = true;
-      }
+      const success = true;
 
       if (success) {
         // Remove toast and show success message
@@ -622,14 +600,10 @@ export default function NotificationSystem({
               <button
                 onClick={() => {
                   removeToastForOrder(order.id);
-                  // Use WebSocket if connected, otherwise fallback to local state
-                  if (isConnected) {
-                    rejectOrder(order.id);
-                  } else {
-                    batchAssignments.current = batchAssignments.current.filter(
-                      (assignment) => assignment.orderId !== order.id
-                    );
-                  }
+                  // Remove from local state
+                  batchAssignments.current = batchAssignments.current.filter(
+                    (assignment) => assignment.orderId !== order.id
+                  );
                   toast.dismiss(t.id);
                   // Skipped order - allowing other shoppers
                 }}
@@ -901,15 +875,11 @@ export default function NotificationSystem({
                   <button
                     onClick={() => {
                       removeToastForOrder(order.id);
-                      // Use WebSocket if connected, otherwise fallback to local state
-                      if (isConnected) {
-                        rejectOrder(order.id);
-                      } else {
-                        batchAssignments.current =
-                          batchAssignments.current.filter(
-                            (assignment) => assignment.orderId !== order.id
-                          );
-                      }
+                      // Remove from local state
+                      batchAssignments.current =
+                        batchAssignments.current.filter(
+                          (assignment) => assignment.orderId !== order.id
+                        );
                       toast.dismiss(t.id);
                       // Skipped expiring order - allowing other shoppers
                     }}
@@ -1236,8 +1206,8 @@ export default function NotificationSystem({
     // Initial check
     checkForNewOrders();
 
-    // Set up interval for checking (less frequent when WebSocket is connected)
-    const intervalTime = isConnected ? 120000 : 30000; // 2 minutes with WebSocket, 30 seconds without
+    // Set up interval for checking (less frequent when FCM is active)
+    const intervalTime = isInitialized ? 120000 : 30000; // 2 minutes with FCM, 30 seconds without
     checkInterval.current = setInterval(() => {
       checkForNewOrders();
     }, intervalTime);
@@ -1296,18 +1266,20 @@ export default function NotificationSystem({
   }, [session, currentLocation]);
 
   // The component doesn't render anything visible
-  // WebSocket connection status indicator (optional UI element)
+  // FCM connection status indicator (optional UI element)
   if (process.env.NODE_ENV === "development") {
     return (
       <div className="fixed right-4 top-4 z-50">
         <div
           className={`rounded-lg px-3 py-2 text-xs font-medium ${
-            isConnected
+            isInitialized && hasPermission
               ? "border border-green-200 bg-green-100 text-green-800"
-              : "border border-red-200 bg-red-100 text-red-800"
+              : "border border-orange-200 bg-orange-100 text-orange-800"
           }`}
         >
-          {isConnected ? "🔌 WebSocket Connected" : "📡 Polling Mode"}
+          {isInitialized && hasPermission
+            ? "🔔 FCM Notifications Active"
+            : "📡 Polling Mode"}
         </div>
       </div>
     );

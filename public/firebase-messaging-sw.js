@@ -7,9 +7,21 @@ importScripts(
 );
 
 // Initialize Firebase
-const firebaseConfig = {};
+// TODO: Replace these with your actual Firebase config values from .env.local
+// Service workers cannot access process.env, so these must be hardcoded
+const firebaseConfig = {
+  apiKey: "AIzaSyDNFJL4UdFpwW2N0wbUVQQkJw1aM2M2M2M", // Replace with your actual API key
+  authDomain: "your-project.firebaseapp.com", // Replace with your actual auth domain
+  projectId: "your-project-id", // Replace with your actual project ID
+  storageBucket: "your-project.appspot.com", // Replace with your actual storage bucket
+  messagingSenderId: "123456789012", // Replace with your actual sender ID
+  appId: "1:123456789012:web:abc123def456", // Replace with your actual app ID
+  measurementId: "G-XXXXXXXXXX", // Replace with your actual measurement ID (optional)
+};
 
+console.log("🔧 [Service Worker] Initializing Firebase...");
 firebase.initializeApp(firebaseConfig);
+console.log("✅ [Service Worker] Firebase initialized");
 
 // Initialize Firebase Messaging
 const messaging = firebase.messaging();

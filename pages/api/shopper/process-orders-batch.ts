@@ -2,11 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { logger } from "../../../src/utils/logger";
-import {
-  getActiveConnections,
-  getLocationClusters,
-  sendToCluster,
-} from "../websocket/connection";
+import { sendBatchOrdersNotification } from "../../../src/services/fcmService";
 
 // GraphQL query to get available dashers
 const GET_AVAILABLE_DASHERS = gql`
@@ -281,10 +277,6 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    // Get WebSocket connections
-    const activeConnections = getActiveConnections();
-    const locationClusters = getLocationClusters();
-
     // Get current time and day for schedule checking
     const now = new Date();
     const currentTime = now.toTimeString().split(" ")[0] + "+00:00";
@@ -323,32 +315,8 @@ export default async function handler(
     const availableRestaurantOrders =
       restaurantOrdersData.restaurant_orders || [];
 
-    // Use WebSocket clusters if available, otherwise fall back to database clusters
-    let shopperClusters;
-    if (locationClusters.size > 0) {
-      // Use real-time WebSocket clusters
-      shopperClusters = Array.from(locationClusters.values()).map(
-        (cluster) => ({
-          id: cluster.center.lat + "_" + cluster.center.lng,
-          center: cluster.center,
-          shoppers: cluster.shoppers
-            .map((userId: string) => {
-              const conn = activeConnections.get(userId);
-              return conn
-                ? {
-                    user_id: userId,
-                    last_known_latitude: conn.location?.lat,
-                    last_known_longitude: conn.location?.lng,
-                  }
-                : null;
-            })
-            .filter(Boolean),
-        })
-      );
-    } else {
-      // Fall back to database-based clustering
-      shopperClusters = groupShoppersByLocation(availableDashers, 2);
-    }
+    // Use database-based clustering for FCM notifications
+    const shopperClusters = groupShoppersByLocation(availableDashers, 2);
 
     // Group orders by location
     const regularOrderGroups = groupOrdersByLocation(
@@ -486,18 +454,18 @@ export default async function handler(
 
     return res.status(200).json({
       success: true,
-      message: `Processed ${totalShoppers} shoppers and ${totalOrders} orders across ${totalClusters} clusters with ${totalNotifications} real-time notifications`,
+      message: `Processed ${totalShoppers} shoppers and ${totalOrders} orders across ${totalClusters} clusters with ${totalNotifications} FCM notifications`,
       data: {
         clusters: clusterAssignments,
         efficiency,
         summary: {
           regularOrders: availableOrders.length,
           reelOrders: availableReelOrders.length,
+          restaurantOrders: availableRestaurantOrders.length,
           totalOrders,
           totalShoppers,
           totalClusters,
           totalNotifications,
-          websocketConnections: activeConnections.size,
         },
       },
     });

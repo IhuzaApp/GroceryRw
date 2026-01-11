@@ -302,3 +302,133 @@ export const sendChatNotification = async (
     throw error;
   }
 };
+
+/**
+ * Send new order notification to a shopper
+ */
+export const sendNewOrderNotification = async (
+  shopperId: string,
+  orderData: {
+    id: string;
+    shopName: string;
+    distance: number;
+    travelTimeMinutes: number;
+    estimatedEarnings: number;
+    orderType: string;
+    customerAddress: string;
+  }
+): Promise<void> => {
+  try {
+    if (!messaging) {
+      console.warn(
+        "⚠️ [FCM Service] Firebase not initialized. Skipping order notification."
+      );
+      return;
+    }
+
+    const payload: NotificationPayload = {
+      title: `New ${orderData.orderType} order available!`,
+      body: `${orderData.shopName} - $${orderData.estimatedEarnings.toFixed(2)} • ${orderData.distance.toFixed(1)}km away`,
+      data: {
+        type: "new_order",
+        orderId: orderData.id,
+        orderType: orderData.orderType,
+        shopName: orderData.shopName,
+        distance: orderData.distance.toString(),
+        travelTimeMinutes: orderData.travelTimeMinutes.toString(),
+        estimatedEarnings: orderData.estimatedEarnings.toString(),
+        customerAddress: orderData.customerAddress,
+        expiresIn: "60000",
+        timestamp: Date.now().toString(),
+      },
+    };
+
+    await sendNotificationToUser(shopperId, payload);
+    console.log(`✅ [FCM Service] Order ${orderData.id} notification sent to shopper ${shopperId}`);
+  } catch (error) {
+    console.error("❌ [FCM Service] Error sending order notification:", error);
+    throw error;
+  }
+};
+
+/**
+ * Send batch orders notification to multiple shoppers
+ */
+export const sendBatchOrdersNotification = async (
+  shopperIds: string[],
+  ordersData: Array<{
+    id: string;
+    shopName: string;
+    distance: number;
+    estimatedEarnings: number;
+    orderType: string;
+  }>
+): Promise<void> => {
+  try {
+    if (!messaging) {
+      console.warn(
+        "⚠️ [FCM Service] Firebase not initialized. Skipping batch notification."
+      );
+      return;
+    }
+
+    const totalOrders = ordersData.length;
+    const totalEarnings = ordersData.reduce(
+      (sum, order) => sum + order.estimatedEarnings,
+      0
+    );
+
+    const payload: NotificationPayload = {
+      title: `${totalOrders} new orders in your area!`,
+      body: `Potential earnings: $${totalEarnings.toFixed(2)}`,
+      data: {
+        type: "batch_orders",
+        orderCount: totalOrders.toString(),
+        totalEarnings: totalEarnings.toString(),
+        orders: JSON.stringify(ordersData),
+        expiresIn: "60000",
+        timestamp: Date.now().toString(),
+      },
+    };
+
+    await sendNotificationToUsers(shopperIds, payload);
+    console.log(`✅ [FCM Service] Batch notification sent to ${shopperIds.length} shoppers for ${totalOrders} orders`);
+  } catch (error) {
+    console.error("❌ [FCM Service] Error sending batch notification:", error);
+    throw error;
+  }
+};
+
+/**
+ * Send order expiration notification
+ */
+export const sendOrderExpiredNotification = async (
+  shopperId: string,
+  orderId: string,
+  reason: string = "timeout"
+): Promise<void> => {
+  try {
+    if (!messaging) {
+      console.warn(
+        "⚠️ [FCM Service] Firebase not initialized. Skipping expiration notification."
+      );
+      return;
+    }
+
+    const payload: NotificationPayload = {
+      title: "Order expired",
+      body: "The order you were viewing is no longer available",
+      data: {
+        type: "order_expired",
+        orderId,
+        reason,
+        timestamp: Date.now().toString(),
+      },
+    };
+
+    await sendNotificationToUser(shopperId, payload);
+  } catch (error) {
+    console.error("❌ [FCM Service] Error sending expiration notification:", error);
+    // Don't throw error for expiration notifications
+  }
+};
