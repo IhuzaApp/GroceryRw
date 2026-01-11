@@ -29,7 +29,9 @@ export default function UserOrderDetails({
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [hasExistingRating, setHasExistingRating] = useState(false);
-  const [combinedOrders, setCombinedOrders] = useState<any[]>(propCombinedOrders || []);
+  const [combinedOrders, setCombinedOrders] = useState<any[]>(
+    propCombinedOrders || []
+  );
 
   // Check for existing rating
   useEffect(() => {
@@ -57,7 +59,10 @@ export default function UserOrderDetails({
     const fetchCombinedOrders = async () => {
       // If combinedOrders prop is provided and not empty, use it
       if (propCombinedOrders && propCombinedOrders.length > 0) {
-        console.log("Using provided combined orders:", propCombinedOrders.length);
+        console.log(
+          "Using provided combined orders:",
+          propCombinedOrders.length
+        );
         setCombinedOrders(propCombinedOrders);
         return;
       }
@@ -81,7 +86,12 @@ export default function UserOrderDetails({
         );
         if (response.ok) {
           const data = await response.json();
-          console.log("Combined orders fetched:", data.orders, "Count:", data.orders?.length);
+          console.log(
+            "Combined orders fetched:",
+            data.orders,
+            "Count:",
+            data.orders?.length
+          );
           setCombinedOrders(data.orders || [order]);
         } else {
           console.error("Failed to fetch combined orders:", response.status);
@@ -184,7 +194,14 @@ export default function UserOrderDetails({
           </Link>
           <h1 className="text-2xl font-bold">
             {(() => {
-              console.log("Header render - combinedOrderId:", order?.combinedOrderId, "combinedOrders.length:", combinedOrders.length, "combinedOrders:", combinedOrders);
+              console.log(
+                "Header render - combinedOrderId:",
+                order?.combinedOrderId,
+                "combinedOrders.length:",
+                combinedOrders.length,
+                "combinedOrders:",
+                combinedOrders
+              );
               return order?.combinedOrderId && combinedOrders.length > 1 ? (
                 <>
                   Orders{" "}
@@ -481,7 +498,13 @@ export default function UserOrderDetails({
               <h2 className="text-xl font-bold">Order Details</h2>
               {combinedOrders.length > 1 && (
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {combinedOrders.length} shops • {combinedOrders.reduce((sum: number, ord: any) => sum + (ord.Order_Items?.length || 0), 0)} items
+                  {combinedOrders.length} shops •{" "}
+                  {combinedOrders.reduce(
+                    (sum: number, ord: any) =>
+                      sum + (ord.Order_Items?.length || 0),
+                    0
+                  )}{" "}
+                  items
                 </span>
               )}
             </div>
@@ -499,10 +522,17 @@ export default function UserOrderDetails({
                 return null;
               })()}
               {combinedOrders.map((ord: any, orderIndex: number) => (
-                <div key={ord.id || orderIndex} className={orderIndex > 0 ? "border-t border-gray-200 dark:border-gray-700 pt-6" : ""}>
+                <div
+                  key={ord.id || orderIndex}
+                  className={
+                    orderIndex > 0
+                      ? "border-t border-gray-200 pt-6 dark:border-gray-700"
+                      : ""
+                  }
+                >
                   {/* Shop Header for Combined Orders */}
                   {combinedOrders.length > 1 && (
-                    <div className="mb-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3 flex items-center gap-3">
+                    <div className="mb-4 flex items-center gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-800/50">
                       {ord.shop?.image && (
                         <Image
                           src={ord.shop.image}
@@ -517,22 +547,32 @@ export default function UserOrderDetails({
                           {ord.shop?.name || "Unknown Shop"}
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Order #{formatOrderID(ord.OrderID)} • {ord.Order_Items?.length || 0} items
+                          Order #{formatOrderID(ord.OrderID)} •{" "}
+                          {ord.Order_Items?.length || 0} items
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Subtotal</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Subtotal
+                        </p>
                         <p className="font-bold text-gray-900 dark:text-white">
                           {formatCurrency(
-                            ord.Order_Items?.reduce((sum: number, item: any) => {
-                              return sum + parseFloat(item.product.final_price) * item.quantity;
-                            }, 0) || 0
+                            ord.Order_Items?.reduce(
+                              (sum: number, item: any) => {
+                                return (
+                                  sum +
+                                  parseFloat(item.product.final_price) *
+                                    item.quantity
+                                );
+                              },
+                              0
+                            ) || 0
                           )}
                         </p>
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Order Items */}
                   <div className="space-y-4">
                     {ord.Order_Items?.map((item: any, index: number) => (
@@ -567,11 +607,14 @@ export default function UserOrderDetails({
                           <div className="mt-1 flex justify-between text-sm text-gray-600 dark:text-gray-400">
                             <span>
                               {item.quantity} ×{" "}
-                              {formatCurrency(parseFloat(item.product.final_price))}
+                              {formatCurrency(
+                                parseFloat(item.product.final_price)
+                              )}
                             </span>
                             <span className="font-bold">
                               {formatCurrency(
-                                parseFloat(item.product.final_price) * item.quantity
+                                parseFloat(item.product.final_price) *
+                                  item.quantity
                               )}
                             </span>
                           </div>
@@ -620,18 +663,24 @@ export default function UserOrderDetails({
                   <span className="font-medium">
                     {formatCurrency(
                       combinedOrders.reduce(
-                        (sum: number, ord: any) => sum + (Number(ord.serviceFee) || 0),
+                        (sum: number, ord: any) =>
+                          sum + (Number(ord.serviceFee) || 0),
                         0
                       )
                     )}
                   </span>
                 </div>
                 {combinedOrders.length > 1 && (
-                  <div className="mt-1 ml-4 space-y-1">
+                  <div className="ml-4 mt-1 space-y-1">
                     {combinedOrders.map((ord: any, idx: number) => (
-                      <div key={ord.id || idx} className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                      <div
+                        key={ord.id || idx}
+                        className="flex justify-between text-xs text-gray-500 dark:text-gray-400"
+                      >
                         <span>• {ord.shop?.name || `Shop ${idx + 1}`}</span>
-                        <span>{formatCurrency(Number(ord.serviceFee) || 0)}</span>
+                        <span>
+                          {formatCurrency(Number(ord.serviceFee) || 0)}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -652,18 +701,24 @@ export default function UserOrderDetails({
                   <span className="font-medium">
                     {formatCurrency(
                       combinedOrders.reduce(
-                        (sum: number, ord: any) => sum + (Number(ord.deliveryFee) || 0),
+                        (sum: number, ord: any) =>
+                          sum + (Number(ord.deliveryFee) || 0),
                         0
                       )
                     )}
                   </span>
                 </div>
                 {combinedOrders.length > 1 && (
-                  <div className="mt-1 ml-4 space-y-1">
+                  <div className="ml-4 mt-1 space-y-1">
                     {combinedOrders.map((ord: any, idx: number) => (
-                      <div key={ord.id || idx} className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                      <div
+                        key={ord.id || idx}
+                        className="flex justify-between text-xs text-gray-500 dark:text-gray-400"
+                      >
                         <span>• {ord.shop?.name || `Shop ${idx + 1}`}</span>
-                        <span>{formatCurrency(Number(ord.deliveryFee) || 0)}</span>
+                        <span>
+                          {formatCurrency(Number(ord.deliveryFee) || 0)}
+                        </span>
                       </div>
                     ))}
                   </div>
