@@ -752,14 +752,21 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
   return (
     <>
-      {createPortal(renderContent(), document.body)}
-      <CameraCapture
-        isOpen={showCameraCapture}
-        onClose={() => setShowCameraCapture(false)}
-        onCapture={handlePhotoCapture}
-        cameraType="environment"
-        title="Delivery Proof Photo"
-      />
+      {createPortal(
+        <>
+          {renderContent()}
+          {showCameraCapture && (
+            <CameraCapture
+              isOpen={showCameraCapture}
+              onClose={() => setShowCameraCapture(false)}
+              onCapture={handlePhotoCapture}
+              cameraType="environment"
+              title="Delivery Proof Photo"
+            />
+          )}
+        </>,
+        document.body
+      )}
     </>
   );
 };

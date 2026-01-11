@@ -236,14 +236,21 @@ const InvoiceProofModal: React.FC<InvoiceProofModalProps> = ({
 
   return (
     <>
-      {createPortal(renderContent(), document.body)}
-      <CameraCapture
-        isOpen={showCameraCapture}
-        onClose={() => setShowCameraCapture(false)}
-        onCapture={handlePhotoCapture}
-        cameraType="environment"
-        title="Invoice/Receipt Photo"
-      />
+      {createPortal(
+        <>
+          {renderContent()}
+          {showCameraCapture && (
+            <CameraCapture
+              isOpen={showCameraCapture}
+              onClose={() => setShowCameraCapture(false)}
+              onCapture={handlePhotoCapture}
+              cameraType="environment"
+              title="Invoice/Receipt Photo"
+            />
+          )}
+        </>,
+        document.body
+      )}
     </>
   );
 };
