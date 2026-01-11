@@ -1,6 +1,7 @@
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getMessaging } from "firebase-admin/messaging";
 import { getFirestore } from "firebase-admin/firestore";
+import { formatCurrency } from "../lib/formatCurrency";
 
 // Check if Firebase credentials are available
 const hasFirebaseCredentials = () => {
@@ -328,7 +329,7 @@ export const sendNewOrderNotification = async (
 
     const payload: NotificationPayload = {
       title: `New ${orderData.orderType} order available!`,
-      body: `${orderData.shopName} - $${orderData.estimatedEarnings.toFixed(2)} • ${orderData.distance.toFixed(1)}km away`,
+      body: `${orderData.shopName} - ${formatCurrency(orderData.estimatedEarnings)} • ${orderData.distance.toFixed(1)}km away`,
       data: {
         type: "new_order",
         orderId: orderData.id,
@@ -378,8 +379,8 @@ export const sendBatchOrdersNotification = async (
     );
 
     const payload: NotificationPayload = {
-      title: `${totalOrders} new orders in your area!`,
-      body: `Potential earnings: $${totalEarnings.toFixed(2)}`,
+      title: `${totalOrders} new batch in your area!`,
+      body: `Potential earnings: ${formatCurrency(totalEarnings)}`,
       data: {
         type: "batch_orders",
         orderCount: totalOrders.toString(),
