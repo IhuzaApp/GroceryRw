@@ -89,7 +89,7 @@ function getOrderStatusInfo(order: any) {
           />
         </svg>
       ),
-      description: "Waiting for shopper assignment",
+      description: "Waiting for Plaser assignment",
     };
   } else {
     switch (order?.status) {
@@ -112,7 +112,7 @@ function getOrderStatusInfo(order: any) {
               />
             </svg>
           ),
-          description: "Shopper is picking your items",
+          description: "Your Plaser is picking your items",
         };
       case "packing":
         return {
