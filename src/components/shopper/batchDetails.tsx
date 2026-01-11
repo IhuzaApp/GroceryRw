@@ -1000,6 +1000,58 @@ export default function BatchDetails({
     setShowInvoiceModal(true);
   };
 
+  // NEW: Handle delivery confirmation button click - generates invoice first, then shows modal
+  const handleDeliveryConfirmationClick = async () => {
+    if (!order?.id) return;
+
+    const isRestaurantOrder = order?.orderType === "restaurant";
+    const isRestaurantUserReel =
+      order?.orderType === "reel" &&
+      (order?.reel?.restaurant_id || order?.reel?.user_id);
+
+    try {
+      setLoading(true);
+
+      // For restaurant orders, show modal directly without generating invoice
+      if (isRestaurantOrder) {
+        handleRestaurantDeliveryConfirmation();
+        setLoading(false);
+        return;
+      }
+
+      // For restaurant/user reel orders, show modal directly
+      if (order?.orderType === "reel" && isRestaurantUserReel) {
+        handleReelDeliveryConfirmation();
+        setLoading(false);
+        return;
+      }
+
+      // For regular orders and regular reel orders, generate invoice first
+      const invoiceGenerated = await generateInvoiceAndRedirect(order.id);
+      
+      if (!invoiceGenerated) {
+        // If invoice generation failed, show error
+        toaster.push(
+          <Notification type="error" header="Invoice Error" closable>
+            Failed to generate invoice. Please try again.
+          </Notification>,
+          { placement: "topEnd" }
+        );
+      }
+      // If successful, the modal will be shown automatically by generateInvoiceAndRedirect
+    } catch (error) {
+      console.error("Error preparing delivery confirmation:", error);
+      toaster.push(
+        <Notification type="error" header="Error" closable>
+          Failed to prepare delivery confirmation. Please try again.
+        </Notification>,
+        { placement: "topEnd" }
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleUpdateStatus = async (newStatus: string) => {
     if (!order?.id || loading) return; // Prevent multiple calls while loading
 
@@ -1059,30 +1111,14 @@ export default function BatchDetails({
             closeChat();
           }
 
-          // Check if this is a reel order with restaurant_id OR user_id not null
-
-          // Only generate invoice for regular orders and regular reel orders (not restaurant/user reels)
-          if (
-            !isRestaurantOrder &&
-            !(order?.orderType === "reel" && isRestaurantUserReel)
-          ) {
-            // Generate invoice and show the delivery photo modal
-            const invoiceGenerated = await generateInvoiceAndRedirect(order.id);
-          } else {
-            // For restaurant orders and restaurant/user reel orders, show delivery confirmation modal directly
-            if (isRestaurantOrder) {
-              handleRestaurantDeliveryConfirmation();
-            } else {
-              // For restaurant/user reel orders, show delivery confirmation modal without generating invoice
-              handleReelDeliveryConfirmation();
-            }
-          }
-
+          // NOTE: Invoice generation and modal display is now handled by handleDeliveryConfirmationClick
+          // This case is only reached when the modal confirms delivery (updating the status from the modal)
+          // So we don't need to generate invoice or show modal here anymore
+          
           // Show success notification when order is delivered
           toaster.push(
             <Notification type="success" header="Order Delivered" closable>
-              Order was successfully marked as delivered. Please upload a
-              delivery confirmation photo.
+              Order has been successfully marked as delivered!
             </Notification>,
             { placement: "topEnd" }
           );
@@ -1367,19 +1403,11 @@ export default function BatchDetails({
             color="green"
             size="lg"
             block
-            onClick={() => {
-              if (isRestaurantOrder) {
-                // For restaurant orders, show modal without updating status
-                handleRestaurantDeliveryConfirmation();
-              } else {
-                // For regular/reel orders, update status immediately
-                handleUpdateStatus("delivered");
-              }
-            }}
+            onClick={handleDeliveryConfirmationClick}
             loading={loading}
             className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
           >
-            Confirm Delivery
+            {loading ? "Generating Invoice..." : "Confirm Delivery"}
           </Button>
         );
       case "delivered":
