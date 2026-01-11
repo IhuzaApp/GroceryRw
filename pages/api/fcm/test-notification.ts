@@ -34,11 +34,11 @@ export default async function handler(
       });
     }
 
-    // Send a test notification
+    // Send a test notification using native device notification
     console.log("📤 [Test Notification API] Sending test notification...");
     await sendNotificationToUser(userId, {
       title: "🎉 Test Notification",
-      body: "Your Firebase Cloud Messaging is working perfectly! You can now receive order notifications.",
+      body: "This is a native device notification! It uses your system's default sound and appearance.",
       data: {
         type: "test",
         timestamp: Date.now().toString(),

@@ -16,7 +16,7 @@ export default function ShopperHeader() {
   const { data: session } = useSession();
   const [isMobile, setIsMobile] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
-  const [isSendingTestNotification, setIsSendingTestNotification] = useState(false);
+  const [isSendingTest, setIsSendingTest] = useState(false);
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
 
@@ -63,10 +63,10 @@ export default function ShopperHeader() {
       return;
     }
 
-    setIsSendingTestNotification(true);
+    setIsSendingTest(true);
 
     try {
-      console.log("📤 Sending test notification for user:", session.user.id);
+      console.log("📤 Sending test native notification for user:", session.user.id);
       
       const response = await fetch("/api/fcm/test-notification", {
         method: "POST",
@@ -82,7 +82,7 @@ export default function ShopperHeader() {
       console.log("📥 Test notification response:", data);
 
       if (response.ok) {
-        toast.success(`✅ Test notification sent to ${data.tokenCount || 0} device(s)!`, {
+        toast.success(`✅ Native notification sent to ${data.tokenCount || 0} device(s)!`, {
           duration: 5000,
           icon: "🔔",
         });
@@ -104,7 +104,7 @@ export default function ShopperHeader() {
         duration: 4000,
       });
     } finally {
-      setIsSendingTestNotification(false);
+      setIsSendingTest(false);
     }
   };
 
@@ -278,14 +278,14 @@ export default function ShopperHeader() {
           <Button
             appearance="primary"
             onClick={handleTestNotification}
-            disabled={isSendingTestNotification}
+            disabled={isSendingTest}
             className="bg-purple-500 text-white hover:bg-purple-600"
             style={{
               backgroundColor: "#9333ea",
               color: "white",
             }}
           >
-            {isSendingTestNotification ? (
+            {isSendingTest ? (
               <span className="flex items-center gap-2">
                 <svg
                   className="h-4 w-4 animate-spin"
@@ -323,7 +323,7 @@ export default function ShopperHeader() {
                     d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
                   />
                 </svg>
-                Test FCM
+                Test
               </span>
             )}
           </Button>

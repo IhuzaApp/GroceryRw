@@ -220,28 +220,57 @@ export const setupFCMListener = (
       console.log("  - Body:", payload.notification?.body);
       console.log("  - Data:", payload.data);
       
-      // Also show a browser notification manually for foreground messages
-      if (payload.notification && "Notification" in window && Notification.permission === "granted") {
-        console.log("🔔 [setupFCMListener] Showing browser notification...");
-        const notification = new Notification(payload.notification.title || "New Notification", {
-          body: payload.notification.body,
-          icon: "/assets/logos/PlasIcon.png",
-          badge: "/assets/logos/PlasIcon.png",
-          data: payload.data,
-          requireInteraction: true, // Keep notification visible until user dismisses
-          tag: `fcm-${Date.now()}`, // Unique tag for each notification
-          vibrate: [200, 100, 200], // Vibration pattern
-        });
-        
-        // Keep notification open for at least 10 seconds
-        setTimeout(() => {
-          // Notification will auto-close after 10 seconds if user hasn't interacted
-          if (notification) {
-            console.log("🔔 Notification still visible after 10s");
+      // Show notification using native system UI via service worker
+      if (payload.notification && "serviceWorker" in navigator) {
+        navigator.serviceWorker.ready.then((registration) => {
+          console.log("🔔 [setupFCMListener] Showing native notification via service worker");
+          
+          const notificationType = payload.data?.type || "message";
+          let actions = [];
+          
+          if (notificationType === "chat_message") {
+            actions = [
+              { action: "open", title: "Open Chat" },
+              { action: "close", title: "Dismiss" },
+            ];
+          } else if (notificationType === "new_order" || notificationType === "batch_orders") {
+            actions = [
+              { action: "open", title: "View Order" },
+              { action: "close", title: "Dismiss" },
+            ];
+          } else if (notificationType === "test") {
+            actions = [
+              { action: "close", title: "Got it!" },
+            ];
           }
-        }, 10000);
+          
+          // Show notification using native system API
+          registration.showNotification(
+            payload.notification.title || "New Notification",
+            {
+              body: payload.notification.body,
+              icon: "/assets/logos/PlasIcon.png",
+              badge: "/assets/logos/PlasIcon.png",
+              data: payload.data,
+              requireInteraction: false,
+              silent: false, // CRITICAL: Must be false for sound to play
+              // Note: Do NOT include 'sound' property - let browser use default
+              vibrate: [200, 100, 200],
+              tag: `fcm-${notificationType}-${Date.now()}`,
+              renotify: true, // Important for sound on similar notifications
+              actions: actions,
+            }
+          ).then(() => {
+            console.log("✅ [FCM Client] Native notification displayed with sound");
+          }).catch(error => {
+            console.error("❌ [FCM Client] Failed to show notification:", error);
+          });
+        }).catch((error) => {
+          console.error("❌ Error showing notification:", error);
+        });
       }
       
+      // Process the payload data
       onMessageReceived(payload);
     });
 

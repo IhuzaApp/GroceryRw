@@ -28,14 +28,16 @@ const messaging = firebase.messaging();
 
 // Handle background messages
 messaging.onBackgroundMessage((payload) => {
-  const notificationTitle = payload.notification?.title || "New Message";
-  const notificationOptions = {
-    body: payload.notification?.body || "You have a new message",
-    icon: "/assets/logos/PlasIcon.png",
-    badge: "/assets/logos/PlasIcon.png",
-    data: payload.data,
-    requireInteraction: true,
-    actions: [
+  console.log("🔔 [Service Worker] Background message received:", payload);
+  
+  const notificationType = payload.data?.type || "message";
+  let notificationTitle = payload.notification?.title || "New Message";
+  let notificationBody = payload.notification?.body || "You have a new message";
+  
+  // Customize notification based on type
+  let actions = [];
+  if (notificationType === "chat_message") {
+    actions = [
       {
         action: "open",
         title: "Open Chat",
@@ -43,29 +45,96 @@ messaging.onBackgroundMessage((payload) => {
       },
       {
         action: "close",
-        title: "Close",
+        title: "Dismiss",
         icon: "/assets/logos/PlasIcon.png",
       },
-    ],
+    ];
+  } else if (notificationType === "new_order" || notificationType === "batch_orders") {
+    actions = [
+      {
+        action: "open",
+        title: "View Order",
+        icon: "/assets/logos/PlasIcon.png",
+      },
+      {
+        action: "close",
+        title: "Dismiss",
+        icon: "/assets/logos/PlasIcon.png",
+      },
+    ];
+  } else if (notificationType === "test") {
+    actions = [
+      {
+        action: "close",
+        title: "Got it!",
+        icon: "/assets/logos/PlasIcon.png",
+      },
+    ];
+  }
+  
+  const notificationOptions = {
+    body: notificationBody,
+    icon: "/assets/logos/PlasIcon.png",
+    badge: "/assets/logos/PlasIcon.png",
+    data: payload.data,
+    requireInteraction: false, // Changed to false for better system behavior
+    silent: false, // CRITICAL: false = sound ON, true = sound OFF
+    vibrate: [200, 100, 200, 100, 200],
+    tag: `fcm-${notificationType}-${Date.now()}`, // Always unique
+    renotify: true, // CRITICAL: Allows sound on every notification
+    actions: actions,
   };
 
+  console.log("🔔 [Service Worker] Notification options:", {
+    silent: notificationOptions.silent,
+    renotify: notificationOptions.renotify,
+    requireInteraction: notificationOptions.requireInteraction,
+  });
+  
   return self.registration.showNotification(
     notificationTitle,
     notificationOptions
-  );
+  ).then(() => {
+    console.log("✅ [Service Worker] Notification shown successfully");
+  }).catch((error) => {
+    console.error("❌ [Service Worker] Error showing notification:", error);
+  });
 });
 
 // Handle notification click
 self.addEventListener("notificationclick", (event) => {
+  console.log("🔔 [Service Worker] Notification clicked:", event.action);
   event.notification.close();
 
+  if (event.action === "close") {
+    // User dismissed the notification
+    console.log("🔔 [Service Worker] Notification dismissed");
+    return;
+  }
+
   if (event.action === "open" || !event.action) {
-    // Get the orderId from the notification data
+    // Get data from the notification
+    const notificationType = event.notification.data?.type;
     const orderId = event.notification.data?.orderId;
     const conversationId = event.notification.data?.conversationId;
 
-    // Open the chat page
-    const urlToOpen = orderId ? `/Messages/${orderId}` : "/Messages";
+    // Determine URL based on notification type
+    let urlToOpen = "/";
+    
+    if (notificationType === "test") {
+      // For test notifications, just focus the app
+      console.log("🔔 [Service Worker] Test notification clicked - focusing app");
+      urlToOpen = "/Plasa/dashboard";
+    } else if (notificationType === "chat_message" && orderId) {
+      urlToOpen = `/Messages/${orderId}`;
+    } else if (notificationType === "new_order" || notificationType === "batch_orders") {
+      urlToOpen = "/Plasa/active-batches";
+    } else if (orderId) {
+      // Fallback for any notification with orderId
+      urlToOpen = `/Messages/${orderId}`;
+    }
+
+    console.log("🔔 [Service Worker] Opening URL:", urlToOpen);
 
     event.waitUntil(
       clients
@@ -74,12 +143,14 @@ self.addEventListener("notificationclick", (event) => {
           // Check if there's already a window/tab open with the target URL
           for (const client of clientList) {
             if (client.url.includes(urlToOpen) && "focus" in client) {
+              console.log("🔔 [Service Worker] Focusing existing window");
               return client.focus();
             }
           }
 
           // If no existing window, open a new one
           if (clients.openWindow) {
+            console.log("🔔 [Service Worker] Opening new window");
             return clients.openWindow(urlToOpen);
           }
         })
