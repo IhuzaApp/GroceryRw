@@ -655,28 +655,6 @@ export default function CheckoutItems({
     };
   };
 
-  // Log combined delivery time calculation when it changes
-  useEffect(() => {
-    // Only log when there are actually combined carts
-    if (selectedCartIds.size > 0) {
-      const combinedCalc = calculateCombinedDeliveryTime();
-      if (combinedCalc && combinedCalc.details) {
-        console.log(`🚚 Combined Delivery Time Calculation:`);
-        console.log(`   📊 ${combinedCalc.details.numberOfShops} shops selected`);
-        console.log(`   🛒 Shopping: ${combinedCalc.details.shoppingTime} min (15 min × ${combinedCalc.details.numberOfShops})`);
-        console.log(`   🚗 Travel Time Breakdown:`);
-        console.log(`      - Shopper to First Shop: ${combinedCalc.details.initialTravelTime} min (buffer)`);
-        console.log(`      - Between Shops + To Customer: ${combinedCalc.details.shopToShopTravelTime} min (${combinedCalc.details.totalTravelDistance.toFixed(2)} km)`);
-        console.log(`      - Total Travel: ${combinedCalc.details.totalTravelTime} min`);
-        console.log(`   📍 Route breakdown:`);
-        combinedCalc.details.routeLegs.forEach(leg => {
-          console.log(`      ${leg}`);
-        });
-        console.log(`   ⏱️  Total Time: ${combinedCalc.totalTime} min (${combinedCalc.details.shoppingTime} shopping + ${combinedCalc.details.totalTravelTime} travel)`);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCartIds.size, Object.keys(cartDetails).length]);
 
   // Fetch payment methods, addresses, and refund balance on component mount
   useEffect(() => {
@@ -890,15 +868,6 @@ export default function CheckoutItems({
   const distance3D = Math.sqrt(distanceKm * distanceKm + altKm * altKm);
   // Cap travel time to reasonable maximum (4 hours = 240 minutes)
   const travelTime = Math.min(Math.ceil(distance3D), 240); // assume 1 km ≈ 1 minute travel, max 4 hours
-  
-  // Log single cart delivery calculation (before combining)
-  if (!isFoodCart) {
-    console.log(`🛒 Single Cart Delivery Calculation:`);
-    console.log(`   📦 Shop: ${shopId.substring(0, 8)}...`);
-    console.log(`   🛒 Shopping: ${shoppingTime} min`);
-    console.log(`   🚗 Travel: ${travelTime} min (${distanceKm.toFixed(2)} km)`);
-    console.log(`   ⏱️  Total Time: ${shoppingTime + travelTime} min`);
-  }
 
   // Helper function to parse preparation time string from database
   const parsePreparationTimeString = (timeString?: string): number => {
