@@ -1869,11 +1869,11 @@ export default function BatchDetails({
         )}
 
       {/* Main Content */}
-      <main className="mx-auto w-full p-2 pb-20 sm:p-6 sm:pb-6">
-        <div className="overflow-hidden rounded-lg bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900 sm:rounded-2xl sm:shadow-xl">
+      <main className="mx-auto w-full px-0 py-2 pb-20 sm:p-6 sm:pb-6">
+        <div className="overflow-hidden rounded-none bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900 sm:rounded-2xl sm:shadow-xl">
           {/* Header with gradient background */}
-          <div className={`p-4 text-gray-900 dark:text-gray-100 sm:p-6`}>
-            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center sm:gap-4">
+          <div className={`px-0 py-4 text-gray-900 dark:text-gray-100 sm:p-6`}>
+            <div className="flex flex-col justify-between gap-3 px-3 sm:flex-row sm:items-center sm:gap-4 sm:px-0">
               <div className="flex items-center gap-3 sm:gap-4">
                 <Button
                   appearance="link"
@@ -1904,7 +1904,7 @@ export default function BatchDetails({
           </div>
 
           {/* Content */}
-          <div className="space-y-4 p-3 sm:space-y-8 sm:p-8">
+          <div className="space-y-3 px-0 py-3 sm:space-y-8 sm:p-8">
             {/* Order Progress Steps - Hidden on Mobile */}
             <div className="hidden rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800 sm:block sm:p-6">
               <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
@@ -1963,7 +1963,7 @@ export default function BatchDetails({
             {/* Main Info Grid */}
             <div className="grid grid-cols-1 gap-3 sm:gap-8 lg:grid-cols-2">
               {/* Shop/Reel Info */}
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
+              <div className="rounded-none border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
                 <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
                   <span
                     className={`inline-block rounded-full p-1.5 sm:p-2 ${
@@ -2227,7 +2227,7 @@ export default function BatchDetails({
               </div>
 
               {/* Customer Info */}
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
+              <div className="rounded-none border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
                 <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
                   <span className="inline-block rounded-full bg-sky-100 p-1.5 sm:p-2">
                     <svg
@@ -2406,7 +2406,7 @@ export default function BatchDetails({
 
             {/* Order Items */}
             {shouldShowOrderDetails() && (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
+              <div className="rounded-none border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
                 <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
                   <span
                     className={`inline-block rounded-full p-1.5 sm:p-2 ${
@@ -2572,7 +2572,7 @@ export default function BatchDetails({
 
             {/* Order Summary */}
             {shouldShowOrderDetails() && (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
+              <div className="rounded-none border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
                 <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
                   <span className="inline-block rounded-full bg-slate-100 p-1.5 sm:p-2">
                     <svg
@@ -2808,7 +2808,7 @@ export default function BatchDetails({
 
             {/* Delivery Notes */}
             {(order.deliveryNotes || order.deliveryNote) && (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
+              <div className="rounded-none border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
                 <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
                   <span className="inline-block rounded-full bg-amber-100 p-1.5 sm:p-2">
                     <svg
