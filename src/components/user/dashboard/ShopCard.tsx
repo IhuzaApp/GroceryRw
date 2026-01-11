@@ -128,7 +128,7 @@ const ShopCard: React.FC<ShopCardProps> = ({
   const ratingCount = hasRating ? dynamics.ratingCount.toString() : "0";
 
   return (
-    <Link href={getNavigationPath()} className="no-underline">
+    <Link href={getNavigationPath()} className="block no-underline hover:no-underline" style={{ color: 'inherit', textDecoration: 'none' }}>
       <div className="relative transform cursor-pointer overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:bg-gray-800">
         {/* Main Image Banner */}
         <div className="relative h-40 w-full bg-gray-100 dark:bg-gray-800">
@@ -192,7 +192,7 @@ const ShopCard: React.FC<ShopCardProps> = ({
 
         {/* Shop Details */}
         <div className="bg-white p-4 dark:bg-gray-800">
-          <h3 className="mb-2 text-base font-bold text-gray-900 dark:text-white">
+          <h3 className="mb-2 text-base font-bold text-gray-900 no-underline dark:text-white">
             {shop.name}
           </h3>
           {/* Price • Delivery Time • Rating */}
