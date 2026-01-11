@@ -35,6 +35,7 @@ export default function MobileUserDashboard({
   const [isSearching, setIsSearching] = useState(false);
   const [topShops, setTopShops] = useState<any[]>([]);
   const [isLoadingTopShops, setIsLoadingTopShops] = useState(false);
+  const [showOpenOnly, setShowOpenOnly] = useState(false);
 
   // Get user's default address
   const { defaultAddress } = useAddress();
@@ -119,6 +120,7 @@ export default function MobileUserDashboard({
       fetchTopShops(selectedCategory);
     } else {
       setTopShops([]);
+      setShowOpenOnly(false); // Reset filter when leaving category view
     }
   }, [selectedCategory, data?.shops]);
 
@@ -192,17 +194,78 @@ export default function MobileUserDashboard({
     }
   };
 
-  // Filter shops based on search term when in category view
+  // Function to calculate if shop is open based on operating hours
+  const isShopOpen = (shop: any): boolean => {
+    const hoursObj = shop.operating_hours;
+    if (!hoursObj || typeof hoursObj !== "object") {
+      return false;
+    }
+
+    const now = new Date();
+    const dayKey = now
+      .toLocaleDateString("en-US", { weekday: "long" })
+      .toLowerCase();
+    const todaysHours = (hoursObj as any)[dayKey];
+
+    if (!todaysHours) {
+      return false;
+    }
+
+    if (todaysHours.toLowerCase() === "closed") {
+      return false;
+    }
+
+    // Parse time format like "9am - 5pm"
+    const parts = todaysHours.split("-").map((s: string) => s.trim());
+    if (parts.length !== 2) {
+      return false;
+    }
+
+    const parseTime = (tp: string): number | null => {
+      const m = tp.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i);
+      if (!m) return null;
+      let h = parseInt(m[1], 10);
+      const mm = m[2] ? parseInt(m[2], 10) : 0;
+      const ampm = m[3].toLowerCase();
+      if (h === 12) h = 0;
+      if (ampm === "pm") h += 12;
+      return h * 60 + mm;
+    };
+
+    const openMins = parseTime(parts[0]);
+    const closeMins = parseTime(parts[1]);
+
+    if (openMins === null || closeMins === null) {
+      return false;
+    }
+
+    const nowMins = now.getHours() * 60 + now.getMinutes();
+    let isOpen = false;
+
+    if (openMins < closeMins) {
+      // Normal case: shop opens and closes on the same day
+      isOpen = nowMins >= openMins && nowMins <= closeMins;
+    } else {
+      // Special case: shop opens one day and closes the next (e.g., 8pm - 2am)
+      isOpen = nowMins >= openMins || nowMins <= closeMins;
+    }
+
+    return isOpen;
+  };
+
+  // Filter shops based on search term and open status when in category view
   const filteredShopsBySearch =
     selectedCategory && filteredShops
-      ? filteredShops.filter(
-          (shop) =>
-            shop.name.toLowerCase().includes(shopSearchTerm.toLowerCase()) ||
-            shop.description
-              ?.toLowerCase()
-              .includes(shopSearchTerm.toLowerCase()) ||
-            shop.address?.toLowerCase().includes(shopSearchTerm.toLowerCase())
-        )
+      ? filteredShops
+          .filter(
+            (shop) =>
+              shop.name.toLowerCase().includes(shopSearchTerm.toLowerCase()) ||
+              shop.description
+                ?.toLowerCase()
+                .includes(shopSearchTerm.toLowerCase()) ||
+              shop.address?.toLowerCase().includes(shopSearchTerm.toLowerCase())
+          )
+          .filter((shop) => (showOpenOnly ? isShopOpen(shop) : true))
       : filteredShops;
 
   // If no category is selected, show only categories
@@ -431,7 +494,7 @@ export default function MobileUserDashboard({
 
   return (
     <div className="p-0">
-      {/* Mobile Header with Category Name */}
+      {/* Mobile Header with Category Name and Background */}
       <div
         className="mb-6"
         style={{
@@ -440,145 +503,205 @@ export default function MobileUserDashboard({
           marginRight: "-16px",
         }}
       >
-        {/* Category Header */}
-        <div className="flex items-center justify-between bg-white px-4 py-4 shadow-sm dark:bg-gray-800">
-          {/* Left side - Back button and Category name */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={clearFilter}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors duration-200 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-            >
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                {selectedCategoryData?.name || "Selected Category"}
-              </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {shopSearchTerm
-                  ? `${filteredShopsBySearch?.length || 0} shops found`
-                  : `${filteredShops?.length || 0} shops available`}
-              </p>
-            </div>
-          </div>
+        {/* Category Header with Background Image */}
+        <div
+          className="relative overflow-hidden rounded-b-3xl"
+          style={{
+            backgroundImage: "url(/assets/images/mobileheaderbg.jpg)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          {/* Overlay for better text readability */}
+          <div className="absolute inset-0 bg-black/30"></div>
 
-          {/* Right side - Icon-only Sort and Nearby buttons */}
-          <div className="flex items-center gap-2">
-            {/* Nearby Button */}
-            <button
-              onClick={handleNearbyClick}
-              className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-200 ${
-                isNearbyActive
-                  ? "bg-green-100 text-green-600 dark:bg-green-800 dark:text-green-300"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-              }`}
-              title="Nearby shops"
-            >
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-            </button>
-
-            {/* Sort Button */}
-            <div className="relative">
-              <button
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors duration-200 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                title="Sort options"
-              >
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+          {/* Header Content */}
+          <div className="relative z-10 py-6">
+            {/* Top Bar - Back button, Category name, and Action buttons */}
+            <div className="flex items-center justify-between gap-3 px-4 pb-4">
+              {/* Left side - Back button and Category name */}
+              <div className="flex min-w-0 flex-1 items-center gap-3">
+                <button
+                  onClick={clearFilter}
+                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/90 text-gray-800 shadow-lg backdrop-blur-sm transition-all duration-200 hover:bg-white active:scale-95 dark:bg-gray-800/90 dark:text-white dark:hover:bg-gray-800"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 19l-7-7 7-7"
+                    />
+                  </svg>
+                </button>
+                <div className="min-w-0 flex-1">
+                  <h2 className="truncate text-lg font-bold !text-white drop-shadow-lg sm:text-xl">
+                    {selectedCategoryData?.name || "Selected Category"}
+                  </h2>
+                  <p className="truncate text-xs font-medium !text-white drop-shadow sm:text-sm">
+                    {filteredShopsBySearch?.length || 0} {showOpenOnly ? "open" : ""} shop
+                    {(filteredShopsBySearch?.length || 0) !== 1 ? "s" : ""}{" "}
+                    {shopSearchTerm || showOpenOnly ? "found" : "available"}
+                  </p>
+                </div>
+              </div>
 
-        {/* Search Input */}
-        <div className="bg-white px-4 pb-2 dark:bg-gray-800">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-              <svg
-                className="h-4 w-4 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
-            <input
-              type="text"
-              placeholder="Search shops..."
-              value={shopSearchTerm}
-              onChange={(e) => setShopSearchTerm(e.target.value)}
-              className="w-full rounded-2xl border border-gray-200 bg-gray-50 py-3 pl-10 pr-10 text-gray-900 placeholder-gray-500 transition-all duration-200 focus:border-green-500 focus:bg-white focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:bg-gray-600"
-            />
-            {shopSearchTerm && (
-              <button
-                onClick={() => setShopSearchTerm("")}
-                className="absolute inset-y-0 right-0 flex items-center pr-3"
-              >
-                <svg
-                  className="h-4 w-4 text-gray-400 hover:text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              {/* Right side - Icon-only Sort and Nearby buttons */}
+              <div className="flex flex-shrink-0 items-center gap-2">
+                {/* Nearby Button */}
+                <button
+                  onClick={handleNearbyClick}
+                  className={`flex h-10 w-10 items-center justify-center rounded-full shadow-lg backdrop-blur-sm transition-all duration-200 active:scale-95 ${
+                    isNearbyActive
+                      ? "bg-green-500 text-white"
+                      : "bg-white/90 text-gray-800 hover:bg-white dark:bg-gray-800/90 dark:text-white dark:hover:bg-gray-800"
+                  }`}
+                  title="Nearby shops"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            )}
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                </button>
+
+                {/* Filter Button - Show Open Only */}
+                <div className="relative">
+                  <button
+                    className={`flex h-10 w-10 items-center justify-center rounded-full shadow-lg backdrop-blur-sm transition-all duration-200 hover:bg-white active:scale-95 ${
+                      showOpenOnly
+                        ? "bg-green-500 text-white"
+                        : "bg-white/90 text-gray-800 dark:bg-gray-800/90 dark:text-white dark:hover:bg-gray-800"
+                    }`}
+                    title={showOpenOnly ? "Show all shops" : "Show open shops only"}
+                    onClick={() => setShowOpenOnly(!showOpenOnly)}
+                  >
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                      />
+                    </svg>
+                  </button>
+                  {showOpenOnly && (
+                    <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center">
+                      <span className="flex h-3 w-3 rounded-full bg-green-500">
+                        <span className="absolute inline-flex h-3 w-3 animate-ping rounded-full bg-green-400 opacity-75"></span>
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Search Input */}
+            <div className="px-4">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-4">
+                  <svg
+                    className="h-4 w-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search shops..."
+                  value={shopSearchTerm}
+                  onChange={(e) => setShopSearchTerm(e.target.value)}
+                  className="w-full rounded-2xl border-0 bg-white/90 py-3 pl-11 pr-10 text-sm text-gray-900 placeholder-gray-500 shadow-lg backdrop-blur-sm transition-all duration-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-800/90 dark:text-white dark:placeholder-gray-400 dark:focus:bg-gray-800"
+                />
+                {shopSearchTerm && (
+                  <button
+                    onClick={() => setShopSearchTerm("")}
+                    className="absolute inset-y-0 right-0 flex items-center pr-4"
+                  >
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-red-100 text-red-600 transition-all duration-200 hover:bg-red-200 active:scale-95">
+                      <svg
+                        className="h-3 w-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </div>
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Active Filter Indicator */}
+      {showOpenOnly && (
+        <div className="mb-4 flex items-center justify-center">
+          <div className="inline-flex items-center gap-2 rounded-full bg-green-100 px-4 py-2 text-sm font-medium text-green-800 shadow-sm dark:bg-green-900 dark:text-green-100">
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            <span>Showing open shops only</span>
+            <button
+              onClick={() => setShowOpenOnly(false)}
+              className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-200 text-green-700 transition-colors hover:bg-green-300 dark:bg-green-800 dark:text-green-200 dark:hover:bg-green-700"
+            >
+              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
 
       {topShops.length > 0 && (
         <div className="mb-3  ">
@@ -646,18 +769,18 @@ export default function MobileUserDashboard({
 
         {/* Shops List */}
         {isLoading || isFetchingData ? (
-          <div className="space-y-3">
+          <div className="space-y-5">
             {Array(6)
               .fill(0)
               .map((_, index) => (
                 <div
                   key={index}
-                  className="h-24 w-full animate-pulse rounded-xl bg-gray-200"
+                  className="h-52 w-full animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-700"
                 ></div>
               ))}
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-5">
             {filteredShopsBySearch?.length ? (
               filteredShopsBySearch.map((shop) => {
                 const dyn = shopDynamics[shop.id] || {
