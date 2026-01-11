@@ -91,6 +91,7 @@ interface BatchOrderDetailsType {
     postal_code: string;
     latitude: string;
     longitude: string;
+    placeDetails?: any;
   };
   Shoppers: {
     id: string;
@@ -333,6 +334,7 @@ export const getServerSideProps: GetServerSideProps<
           postal_code
           latitude
           longitude
+          placeDetails
         }
         Shoppers {
           id

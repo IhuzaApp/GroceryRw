@@ -115,6 +115,7 @@ const GET_ORDER_DETAILS = gql`
         street
         city
         postal_code
+        placeDetails
         created_at
         updated_at
         user_id
@@ -245,6 +246,7 @@ const GET_REEL_ORDER_DETAILS = gql`
         street
         city
         postal_code
+        placeDetails
         created_at
         id
         updated_at
@@ -325,6 +327,7 @@ const GET_RESTAURANT_ORDER_DETAILS = gql`
         postal_code
         latitude
         longitude
+        placeDetails
         created_at
         updated_at
         user_id
