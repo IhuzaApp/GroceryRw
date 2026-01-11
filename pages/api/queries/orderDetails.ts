@@ -20,13 +20,7 @@ const GET_ORDER_DETAILS = gql`
       combinedOrderId: combined_order_id
       voucherCode: voucher_code
       shop_id
-      user: User {
-        id
-        name
-        email
-        phone
-        profile_picture
-      }
+      pin
       shop: Shop {
         id
         name
@@ -70,7 +64,7 @@ const GET_ORDER_DETAILS = gql`
         }
         order_id
       }
-      assignedTo: User {
+      Shoppers {
         id
         name
         email
@@ -102,10 +96,24 @@ const GET_ORDER_DETAILS = gql`
         is_default
       }
       delivery_address_id
-      found
       shopper_id
       updated_at
       user_id
+      assigned_at
+      orderedBy {
+        created_at
+        email
+        gender
+        id
+        is_active
+        is_guest
+        name
+        password_hash
+        profile_picture
+        phone
+        updated_at
+        role
+      }
     }
   }
 `;
@@ -154,14 +162,8 @@ export default async function handler(
         discount: string | null;
         combinedOrderId: string | null;
         voucherCode: string | null;
+        pin: string;
         shop_id: string;
-        user: {
-          id: string;
-          name: string;
-          email: string;
-          phone: string;
-          profile_picture: string | null;
-        };
         shop: {
           id: string;
           name: string;
@@ -237,10 +239,24 @@ export default async function handler(
           is_default: boolean;
         } | null;
         delivery_address_id: string | null;
-        found: boolean;
         shopper_id: string | null;
         updated_at: string;
         user_id: string;
+        assigned_at: string | null;
+        orderedBy: {
+          created_at: string;
+          email: string;
+          gender: string | null;
+          id: string;
+          is_active: boolean;
+          is_guest: boolean;
+          name: string;
+          password_hash: string;
+          profile_picture: string | null;
+          phone: string;
+          updated_at: string;
+          role: string;
+        };
       }>;
     }>(GET_ORDER_DETAILS, { id: orderId });
 
@@ -381,16 +397,16 @@ export default async function handler(
         : null,
       // Use calculated shopper stats if available
       assignedTo:
-        order.assignedTo && shopperStats
+        order.Shoppers && shopperStats
           ? {
-              ...order.assignedTo,
+              ...order.Shoppers,
               rating: shopperStats.rating,
               orders_aggregate: shopperStats.orders_aggregate,
               recentReviews: shopperStats.recentReviews,
             }
-          : order.assignedTo
+          : order.Shoppers
           ? {
-              ...order.assignedTo,
+              ...order.Shoppers,
               rating: 0,
               orders_aggregate: {
                 aggregate: {
