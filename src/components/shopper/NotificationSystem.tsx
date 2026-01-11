@@ -609,7 +609,7 @@ export default function NotificationSystem({
         </div>
       ),
       {
-        duration: 60000, // 1 minute
+        duration: 90000, // 90 seconds (1 minute 30 seconds)
         position: "top-right",
       }
     );
@@ -1099,10 +1099,11 @@ export default function NotificationSystem({
         // Smart order finder found order
 
         // Clean up expired order reviews
-        const oneMinuteAgo = currentTime - 60000;
+        const ninetySecondsAgo = currentTime - 90000;
         batchAssignments.current = batchAssignments.current.filter(
           (assignment) => {
             if (assignment.expiresAt <= currentTime) {
+              // Clean up warning timeout if it exists (legacy support)
               if (assignment.warningTimeout) {
                 clearTimeout(assignment.warningTimeout);
               }
@@ -1130,7 +1131,7 @@ export default function NotificationSystem({
             shopperId: session.user.id,
             orderId: order.id,
             assignedAt: currentTime,
-            expiresAt: currentTime + 60000, // Expires in 1 minute
+            expiresAt: currentTime + 90000, // Expires in 90 seconds (1 minute 30 seconds)
             warningShown: false,
             warningTimeout: null,
           };
@@ -1153,12 +1154,9 @@ export default function NotificationSystem({
           showDesktopNotification(orderForNotification);
           sendFirebaseNotification(orderForNotification, "batch");
 
-          // Set up warning notification after 40 seconds
-          const warningTimeout = setTimeout(() => {
-            showWarningNotification(orderForNotification);
-          }, 40000);
+          // Warning notification removed - shoppers now have full 90 seconds to respond
+          // No intermediate warning needed as 90 seconds is sufficient time
 
-          newAssignment.warningTimeout = warningTimeout;
           lastNotificationTime.current = currentTime;
 
           // Smart order finder: Order shown to shopper for review
