@@ -76,8 +76,18 @@ export default function HeaderLayout() {
     } else if (session?.user?.id) {
       // Only fetch addresses from API if user is authenticated and no cookie exists
       authenticatedFetch("/api/queries/addresses")
-        .then((res) => res.json())
+        .then((res) => {
+          if (res.ok) {
+            return res.json();
+          }
+          // Silently handle 401 errors (not authenticated)
+          if (res.status === 401) {
+            return null;
+          }
+          throw new Error(`Failed to fetch addresses: ${res.status}`);
+        })
         .then((data) => {
+          if (!data) return;
           const def = (data.addresses || []).find((a: any) => a.is_default);
           setDefaultAddress(def || null);
           if (def) {
@@ -85,9 +95,12 @@ export default function HeaderLayout() {
             window.dispatchEvent(new Event("addressChanged"));
           }
         })
-        .catch((err) =>
-          console.error("Error fetching addresses in header:", err)
-        );
+        .catch((err) => {
+          // Only log non-401 errors
+          if (!err.message?.includes("401")) {
+            console.error("Error fetching addresses in header:", err);
+          }
+        });
     }
     // Listen for address changes and update
     const handleAddrChange = () => {
@@ -126,14 +139,27 @@ export default function HeaderLayout() {
       } else if (session?.user?.id) {
         // If no cookie, try to fetch default address from API (only for authenticated users)
         fetch("/api/queries/addresses")
-          .then((res) => res.json())
+          .then((res) => {
+            if (res.ok) {
+              return res.json();
+            }
+            // Silently handle 401 errors (not authenticated)
+            if (res.status === 401) {
+              return null;
+            }
+            throw new Error(`Failed to fetch addresses: ${res.status}`);
+          })
           .then((data) => {
+            if (!data) return;
             const def = (data.addresses || []).find((a: any) => a.is_default);
             setDefaultAddress(def || null);
           })
-          .catch((err) =>
-            console.error("Error fetching addresses in header:", err)
-          );
+          .catch((err) => {
+            // Only log non-401 errors
+            if (!err.message?.includes("401")) {
+              console.error("Error fetching addresses in header:", err);
+            }
+          });
       }
     };
     window.addEventListener("addressChanged", handleAddrChange);
