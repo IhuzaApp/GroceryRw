@@ -277,6 +277,7 @@ export default function BatchDetails({
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [systemConfig, setSystemConfig] = useState<any>(null);
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
 
   const [currentStep, setCurrentStep] = useState(() => {
     if (!orderData) return 0;
@@ -1977,10 +1978,11 @@ export default function BatchDetails({
               </div>
             </div>
 
-            {/* Main Info Grid */}
-            <div className="grid grid-cols-1 gap-3 sm:gap-8 lg:grid-cols-2">
-              {/* Shop/Reel Info */}
-              <div className="rounded-none border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
+            {/* Main Info Grid - Hidden during shopping status */}
+            {order.status !== "shopping" && (
+              <div className="grid grid-cols-1 gap-3 sm:gap-8 lg:grid-cols-2">
+                {/* Shop/Reel Info */}
+                <div className="rounded-none border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
                 <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
                   <span
                     className={`inline-block rounded-full p-1.5 sm:p-2 ${
@@ -2495,6 +2497,7 @@ export default function BatchDetails({
                 </div>
               </div>
             </div>
+            )}
 
             {/* Order Items */}
             {shouldShowOrderDetails() && (
@@ -2664,8 +2667,25 @@ export default function BatchDetails({
 
             {/* Order Summary */}
             {shouldShowOrderDetails() && (
-              <div className="rounded-none border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
-                <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
+              <div 
+                className={`border border-slate-200 bg-slate-50 p-3 shadow-lg dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6 sm:shadow-none ${
+                  order.status === "shopping" 
+                    ? "fixed bottom-[4.5rem] left-0 right-0 z-[9998] rounded-none sm:relative sm:bottom-auto sm:z-auto" 
+                    : "rounded-none"
+                }`}
+              >
+                <div 
+                  className={`flex items-center gap-2 sm:mb-4 sm:gap-3 ${
+                    order.status === "shopping" 
+                      ? "mb-0 cursor-pointer sm:mb-3 sm:cursor-default" 
+                      : "mb-3"
+                  }`}
+                  onClick={() => {
+                    if (order.status === "shopping" && window.innerWidth < 640) {
+                      setIsSummaryExpanded(!isSummaryExpanded);
+                    }
+                  }}
+                >
                   <span className="inline-block rounded-full bg-slate-100 p-1.5 sm:p-2">
                     <svg
                       className="h-4 w-4 text-slate-600 sm:h-5 sm:w-5"
@@ -2681,12 +2701,53 @@ export default function BatchDetails({
                       />
                     </svg>
                   </span>
-                  <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
-                    Order Summary
-                  </h2>
+                  <div className="flex flex-1 items-center justify-between">
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
+                      Order Summary
+                    </h2>
+                    {order.status === "shopping" && !isSummaryExpanded && (
+                      <span className="text-base font-bold text-green-600 dark:text-green-400 sm:hidden">
+                        {formatCurrency(calculateFoundItemsTotal())}
+                      </span>
+                    )}
+                  </div>
+                  {order.status === "shopping" && (
+                    <button
+                      className="sm:hidden"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsSummaryExpanded(!isSummaryExpanded);
+                      }}
+                    >
+                      <svg
+                        className={`h-5 w-5 text-slate-600 transition-transform dark:text-slate-400 ${
+                          isSummaryExpanded ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+                  )}
                 </div>
 
-                <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-700 sm:p-4">
+                <div 
+                  className={`overflow-y-auto rounded-lg border border-slate-200 bg-white p-3 transition-all duration-300 dark:border-slate-600 dark:bg-slate-700 sm:p-4 ${
+                    order.status === "shopping" && !isSummaryExpanded 
+                      ? "hidden sm:block" 
+                      : ""
+                  }`}
+                  style={{
+                    maxHeight: order.status === "shopping" && isSummaryExpanded ? "50vh" : "auto"
+                  }}
+                >
                   <div className="space-y-2 text-base sm:text-lg">
                     {order.orderType === "reel" ? (
                       <>
