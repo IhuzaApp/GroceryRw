@@ -25,6 +25,10 @@ const db = app ? getFirestore(app) : null;
 
 // Initialize messaging only in browser environment
 let messaging: any = null;
+let serviceWorkerRegistration: ServiceWorkerRegistration | null = null;
+let isRegisteringServiceWorker = false;
+let registrationPromise: Promise<ServiceWorkerRegistration | null> | null = null;
+
 if (typeof window !== "undefined") {
   try {
     messaging = getMessaging(app);
@@ -83,6 +87,46 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
 };
 
 /**
+ * Register service worker once and reuse (SINGLETON PATTERN)
+ */
+const getServiceWorkerRegistration = async (): Promise<ServiceWorkerRegistration | null> => {
+  // If already registered, return cached registration
+  if (serviceWorkerRegistration) {
+    return serviceWorkerRegistration;
+  }
+
+  // If currently registering, wait for that promise
+  if (isRegisteringServiceWorker && registrationPromise) {
+    return registrationPromise;
+  }
+
+  // Start new registration
+  if ("serviceWorker" in navigator) {
+    isRegisteringServiceWorker = true;
+    registrationPromise = (async () => {
+      try {
+        const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js", {
+          scope: "/"
+        });
+        await navigator.serviceWorker.ready;
+        console.log("✅ Service worker registered (singleton):", registration.scope);
+        serviceWorkerRegistration = registration;
+        return registration;
+      } catch (error) {
+        console.error("❌ Service worker registration failed:", error);
+        return null;
+      } finally {
+        isRegisteringServiceWorker = false;
+      }
+    })();
+    
+    return registrationPromise;
+  }
+
+  return null;
+};
+
+/**
  * Get FCM token for the current user
  */
 export const getFCMToken = async (): Promise<string | null> => {
@@ -92,14 +136,8 @@ export const getFCMToken = async (): Promise<string | null> => {
     const hasPermission = await requestNotificationPermission();
     if (!hasPermission) return null;
 
-    // Register service worker
-    if ("serviceWorker" in navigator) {
-      try {
-        await navigator.serviceWorker.register("/firebase-messaging-sw.js");
-      } catch (error) {
-        console.error("Service worker registration failed:", error);
-      }
-    }
+    // Use singleton service worker registration
+    await getServiceWorkerRegistration();
 
     const token = await getToken(messaging, {
       vapidKey:
@@ -172,53 +210,92 @@ export const setupFCMListener = (
   onMessageReceived: (payload: any) => void
 ): (() => void) => {
   try {
-    if (!messaging) return () => {};
+    if (!messaging) {
+      console.error("❌ Messaging not initialized");
+      return () => {};
+    }
 
+    console.log("👂 Setting up onMessage listener...");
+    
     const unsubscribe = onMessage(messaging, (payload) => {
-      // Show notification using native system UI via service worker
-      if (payload.notification && "serviceWorker" in navigator) {
-        navigator.serviceWorker.ready.then((registration) => {
-          const notificationType = payload.data?.type || "message";
-          let actions = [];
-          
-          if (notificationType === "chat_message") {
-            actions = [
-              { action: "open", title: "Open Chat" },
-              { action: "close", title: "Dismiss" },
-            ];
-          } else if (notificationType === "new_order" || notificationType === "batch_orders") {
-            actions = [
-              { action: "open", title: "View Order" },
-              { action: "close", title: "Dismiss" },
-            ];
-          }
-          
-          registration.showNotification(
-            payload.notification.title || "New Notification",
-            {
-              body: payload.notification.body,
-              icon: "/assets/logos/PlasIcon.png",
-              badge: "/assets/logos/PlasIcon.png",
-              data: payload.data,
-              requireInteraction: false,
-              silent: false,
-              vibrate: [200, 100, 200],
-              tag: `fcm-${notificationType}-${Date.now()}`,
-              renotify: true,
-              actions: actions,
-            }
-          ).catch(error => {
-            console.error("Failed to show notification:", error);
+      console.log("🔥 FCM onMessage FIRED!", payload);
+      
+      // Show notification using service worker (Chrome requires this)
+      if (payload.notification && Notification.permission === "granted") {
+        const notificationType = payload.data?.type || "message";
+        console.log("📤 Attempting to show notification, type:", notificationType);
+        
+        // DUAL METHOD: Try both service worker AND direct Notification API
+        const notificationTitle = payload.notification.title || "New Notification";
+        const notificationBody = payload.notification.body;
+        
+        // Method 1: Try direct Notification API first (works in Safari, sometimes Chrome)
+        try {
+          console.log("🔔 Method 1: Trying direct Notification API");
+          const directNotif = new Notification(notificationTitle, {
+            body: notificationBody,
+            icon: "/assets/logos/PlasIcon.png",
+            tag: `fcm-${notificationType}-${Date.now()}`,
+            requireInteraction: true,
+            silent: false,
+            vibrate: [200, 100, 200],
+            data: payload.data,
           });
-        });
+          
+          directNotif.onclick = () => {
+            window.focus();
+            if (notificationType === "new_order" || notificationType === "batch_orders") {
+              window.location.href = "/Plasa/active-batches";
+            }
+            directNotif.close();
+          };
+          
+          console.log("✅ Direct notification created");
+        } catch (directError) {
+          console.warn("⚠️ Direct notification failed:", directError);
+        }
+        
+        // Method 2: Also try service worker method (Chrome prefers this)
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.ready
+            .then((registration) => {
+              console.log("🔔 Method 2: Trying service worker notification");
+              
+              const notificationOptions = {
+                body: notificationBody,
+                icon: "/assets/logos/PlasIcon.png",
+                badge: "/assets/logos/PlasIcon.png",
+                tag: `fcm-sw-${notificationType}-${Date.now()}`,
+                requireInteraction: true,
+                silent: false,
+                vibrate: [200, 100, 200],
+                data: payload.data,
+                renotify: true,
+                timestamp: Date.now(),
+                actions: [
+                  { action: 'view', title: 'View' },
+                  { action: 'close', title: 'Close' }
+                ],
+              };
+              
+              return registration.showNotification(notificationTitle, notificationOptions);
+            })
+            .then(() => {
+              console.log("✅ Service worker notification displayed!");
+            })
+            .catch((error) => {
+              console.error("❌ Service worker notification failed:", error);
+            });
+        }
       }
       
       onMessageReceived(payload);
     });
 
+    console.log("✅ onMessage listener registered");
     return unsubscribe;
   } catch (error) {
-    console.error("Error setting up FCM listener:", error);
+    console.error("❌ Error setting up FCM listener:", error);
     return () => {};
   }
 };
@@ -231,15 +308,27 @@ export const initializeFCM = async (
   onMessageReceived: (payload: any) => void
 ): Promise<(() => void) | null> => {
   try {
+    console.log("🔧 Initializing FCM for user:", userId);
+    
     const token = await getFCMToken();
-    if (!token) return null;
+    console.log("📱 FCM Token obtained:", token ? "✅ Yes" : "❌ No");
+    
+    if (!token) {
+      console.error("❌ Failed to get FCM token");
+      return null;
+    }
 
+    console.log("💾 Saving token to server...");
     await saveFCMTokenToServer(userId, token);
+    console.log("✅ Token saved");
+    
+    console.log("👂 Setting up FCM listener...");
     const unsubscribe = setupFCMListener(onMessageReceived);
+    console.log("✅ FCM listener active");
 
     return unsubscribe;
   } catch (error) {
-    console.error("Error initializing FCM:", error);
+    console.error("❌ Error initializing FCM:", error);
     return null;
   }
 };

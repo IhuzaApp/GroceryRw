@@ -32,7 +32,15 @@ messaging.onBackgroundMessage((payload) => {
   
   // Customize notification based on type
   let actions = [];
-  if (notificationType === "chat_message") {
+  if (notificationType === "test") {
+    actions = [
+      {
+        action: "close",
+        title: "Got it!",
+        icon: "/assets/logos/PlasIcon.png",
+      },
+    ];
+  } else if (notificationType === "chat_message") {
     actions = [
       {
         action: "open",
@@ -82,18 +90,18 @@ messaging.onBackgroundMessage((payload) => {
   return self.registration.showNotification(
     notificationTitle,
     notificationOptions
-  ).then(() => {
-    console.log("✅ [Service Worker] Notification shown successfully");
-  }).catch((error) => {
-    console.error("❌ [Service Worker] Error showing notification:", error);
-  });
+  );
 });
 
 // Handle notification click
 self.addEventListener("notificationclick", (event) => {
+  console.log("🖱️ Notification clicked, action:", event.action);
   event.notification.close();
 
   if (event.action === "close") return;
+  if (event.action === "view") {
+    // View action clicked
+  }
 
   if (event.action === "open" || !event.action) {
     const notificationType = event.notification.data?.type;
@@ -101,7 +109,9 @@ self.addEventListener("notificationclick", (event) => {
 
     let urlToOpen = "/Plasa/dashboard";
     
-    if (notificationType === "chat_message" && orderId) {
+    if (notificationType === "test") {
+      urlToOpen = "/Plasa/dashboard";
+    } else if (notificationType === "chat_message" && orderId) {
       urlToOpen = `/Messages/${orderId}`;
     } else if (notificationType === "new_order" || notificationType === "batch_orders") {
       urlToOpen = "/Plasa/active-batches";
