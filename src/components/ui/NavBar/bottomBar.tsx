@@ -1118,61 +1118,6 @@ export default function BottomBar() {
                   </span>
                 </button>
 
-                {/* Logout - Only show for non-guest users */}
-                {session?.user && !isGuest && (
-                  <MoreMenuItem
-                    icon={
-                      <svg
-                        width="20px"
-                        height="20px"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="text-red-500"
-                      >
-                        <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                        <g
-                          id="SVGRepo_tracerCarrier"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></g>
-                        <g id="SVGRepo_iconCarrier">
-                          <path
-                            d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <path
-                            d="M16 17L21 12L16 7"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <path
-                            d="M21 12H9"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </g>
-                      </svg>
-                    }
-                    label="Logout"
-                    href="#"
-                    onClick={async () => {
-                      setMoreOpen(false);
-                      try {
-                        await logout();
-                      } catch (error) {
-                        console.error("Logout error:", error);
-                      }
-                    }}
-                  />
-                )}
               </div>
             )}
           </div>
