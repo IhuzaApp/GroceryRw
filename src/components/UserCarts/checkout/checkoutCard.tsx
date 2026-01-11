@@ -1514,7 +1514,7 @@ export default function CheckoutItems({
       document.body.style.removeProperty("--hide-bottom-bar");
       document.body.classList.remove("hide-bottom-bar");
     }
-    
+
     return () => {
       document.body.style.removeProperty("--hide-bottom-bar");
       document.body.classList.remove("hide-bottom-bar");
@@ -1913,36 +1913,46 @@ export default function CheckoutItems({
         className={`fixed w-full transition-all duration-300 md:hidden ${
           theme === "dark" ? "bg-gray-900" : "bg-white"
         } ${
-          isExpanded 
-            ? "inset-0 z-[10000] mt-[5vh] h-[95vh] rounded-t-3xl shadow-2xl flex flex-col" 
+          isExpanded
+            ? "inset-0 z-[10000] mt-[5vh] flex h-[95vh] flex-col rounded-t-3xl shadow-2xl"
             : "bottom-20 left-0 right-0 z-[9998] rounded-t-3xl border-t-2 shadow-2xl"
         } ${
-          theme === "dark" && !isExpanded 
-            ? "border-gray-700" 
-            : !isExpanded 
-            ? "border-gray-200" 
+          theme === "dark" && !isExpanded
+            ? "border-gray-700"
+            : !isExpanded
+            ? "border-gray-200"
             : ""
         }`}
         style={{
           maxHeight: isExpanded ? "95vh" : "auto",
           overflow: isExpanded ? "visible" : "hidden",
-          boxShadow: !isExpanded 
-            ? "0 -10px 25px -5px rgba(0, 0, 0, 0.1), 0 -8px 10px -6px rgba(0, 0, 0, 0.1)" 
+          boxShadow: !isExpanded
+            ? "0 -10px 25px -5px rgba(0, 0, 0, 0.1), 0 -8px 10px -6px rgba(0, 0, 0, 0.1)"
             : undefined,
         }}
         onClick={isExpanded ? (e) => e.stopPropagation() : undefined}
       >
         {/* Header with toggle button */}
-        <div className={`px-4 ${isExpanded ? "py-4 border-b" : "py-3"} ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}>
+        <div
+          className={`px-4 ${isExpanded ? "border-b py-4" : "py-3"} ${
+            theme === "dark" ? "border-gray-700" : "border-gray-200"
+          }`}
+        >
           <div
             className="flex items-center justify-between"
             onClick={!isExpanded ? toggleExpand : undefined}
           >
             <div className="flex items-center gap-3">
               {isExpanded && (
-                <div className={`rounded-lg p-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-100"}`}>
+                <div
+                  className={`rounded-lg p-2 ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-100"
+                  }`}
+                >
                   <svg
-                    className={`h-6 w-6 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}
+                    className={`h-6 w-6 ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-700"
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1958,16 +1968,23 @@ export default function CheckoutItems({
               )}
               <div>
                 <span
-                  className={`${isExpanded ? "text-xl" : "text-base"} font-bold ${
+                  className={`${
+                    isExpanded ? "text-xl" : "text-base"
+                  } font-bold ${
                     theme === "dark" ? "text-white" : "text-gray-900"
                   }`}
                 >
                   Order Summary
                 </span>
                 {isExpanded && (
-                  <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                  <p
+                    className={`text-xs ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
                     {grandTotalUnits} items
-                    {selectedCartIds.size > 0 && ` • ${selectedCartIds.size + 1} carts`}
+                    {selectedCartIds.size > 0 &&
+                      ` • ${selectedCartIds.size + 1} carts`}
                   </p>
                 )}
                 {!isExpanded && (
@@ -2013,7 +2030,11 @@ export default function CheckoutItems({
                     strokeWidth="2"
                     className="h-6 w-6"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 ) : (
                   <svg
@@ -2051,7 +2072,9 @@ export default function CheckoutItems({
 
         {/* Expanded content */}
         <div
-          className={`flex-1 ${isExpanded ? "flex flex-col" : "hidden"} overflow-hidden`}
+          className={`flex-1 ${
+            isExpanded ? "flex flex-col" : "hidden"
+          } overflow-hidden`}
         >
           <div className="flex-1 overflow-y-auto p-4">
             {/* Combine button - Mobile (only show when expanded) */}
@@ -2093,75 +2116,75 @@ export default function CheckoutItems({
             )}
 
             {discountsEnabled && (
-            <div>
-              <p
-                className={`mb-0.5 ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
-                Promo or Referral Code
-              </p>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={discountCode}
-                  onChange={(e) => setDiscountCode(e.target.value)}
-                  placeholder="Enter promo or referral code"
-                  className={`flex-1 rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
-                    theme === "dark"
-                      ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
-                      : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+              <div>
+                <p
+                  className={`mb-0.5 ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
                   }`}
-                />
-                <Button
-                  appearance="primary"
-                  color="green"
-                  className="whitespace-nowrap bg-green-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-green-600 hover:shadow-md"
-                  onClick={handleApplyCode}
-                  loading={validatingCode}
                 >
-                  Apply
-                </Button>
+                  Promo or Referral Code
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={discountCode}
+                    onChange={(e) => setDiscountCode(e.target.value)}
+                    placeholder="Enter promo or referral code"
+                    className={`flex-1 rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+                      theme === "dark"
+                        ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                        : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                    }`}
+                  />
+                  <Button
+                    appearance="primary"
+                    color="green"
+                    className="whitespace-nowrap bg-green-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-green-600 hover:shadow-md"
+                    onClick={handleApplyCode}
+                    loading={validatingCode}
+                  >
+                    Apply
+                  </Button>
+                </div>
               </div>
-            </div>
             )}
 
             <div className="my-1.5 h-px bg-gray-200 dark:bg-gray-700"></div>
 
             <div className="flex flex-col gap-1.5">
               <div className="flex justify-between py-1">
-              <span
-                className={`text-sm ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
-                Subtotal{" "}
-                {selectedCartIds.size > 0 &&
-                  `(${selectedCartIds.size + 1} carts)`}
-              </span>
-              <span
-                className={`text-sm font-medium ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                {formatCurrency(grandSubtotal)}
-              </span>
+                <span
+                  className={`text-sm ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Subtotal{" "}
+                  {selectedCartIds.size > 0 &&
+                    `(${selectedCartIds.size + 1} carts)`}
+                </span>
+                <span
+                  className={`text-sm font-medium ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  {formatCurrency(grandSubtotal)}
+                </span>
               </div>
               {discount > 0 && codeType === "promo" && (
-              <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
-                <span className="text-sm">Discount ({appliedCode})</span>
-                <span className="text-sm font-medium">
-                  -{formatCurrency(discount)}
-                </span>
-              </div>
+                <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
+                  <span className="text-sm">Discount ({appliedCode})</span>
+                  <span className="text-sm font-medium">
+                    -{formatCurrency(discount)}
+                  </span>
+                </div>
               )}
               {referralDiscount > 0 && codeType === "referral" && (
-              <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
-                <span className="text-sm">
-                  Referral Discount ({appliedCode})
-                </span>
-                <span className="text-sm font-medium">17% off</span>
-              </div>
+                <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
+                  <span className="text-sm">
+                    Referral Discount ({appliedCode})
+                  </span>
+                  <span className="text-sm font-medium">17% off</span>
+                </div>
               )}
               <div className="flex justify-between py-1">
                 <span
@@ -2484,7 +2507,13 @@ export default function CheckoutItems({
             </div>
           </div>
           {/* Proceed to Checkout Button - Fixed at bottom */}
-          <div className={`border-t p-4 ${theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"}`}>
+          <div
+            className={`border-t p-4 ${
+              theme === "dark"
+                ? "border-gray-700 bg-gray-800"
+                : "border-gray-200 bg-white"
+            }`}
+          >
             <Button
               appearance="primary"
               color="green"
@@ -2530,35 +2559,35 @@ export default function CheckoutItems({
                 </h2>
                 {!loadingCarts && availableCarts.length > 0 && (
                   <Button
-                  appearance="primary"
-                  color="green"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // Clear cart details and trigger refetch
-                    setCartDetails({});
-                    setRefetchCartDetails((prev) => prev + 1);
-                    setShowCombineModal(true);
-                  }}
-                  className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
-                >
-                  <span className="flex items-center gap-2">
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                      />
-                    </svg>
-                    {selectedCartIds.size > 0
-                      ? `${selectedCartIds.size} Combined`
-                      : "Combine Carts"}
-                  </span>
+                    appearance="primary"
+                    color="green"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Clear cart details and trigger refetch
+                      setCartDetails({});
+                      setRefetchCartDetails((prev) => prev + 1);
+                      setShowCombineModal(true);
+                    }}
+                    className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
+                  >
+                    <span className="flex items-center gap-2">
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
+                      </svg>
+                      {selectedCartIds.size > 0
+                        ? `${selectedCartIds.size} Combined`
+                        : "Combine Carts"}
+                    </span>
                   </Button>
                 )}
               </div>

@@ -269,7 +269,9 @@ const MobileOrderDetails = ({
             <p className="mt-1 text-sm !text-white/90">
               {combinedOrders.length === 2
                 ? `${combinedOrders[0]?.shop?.name} & ${combinedOrders[1]?.shop?.name}`
-                : `${combinedOrders[0]?.shop?.name} & ${combinedOrders.length - 1} others`}
+                : `${combinedOrders[0]?.shop?.name} & ${
+                    combinedOrders.length - 1
+                  } others`}
             </p>
           ) : (
             <>
@@ -277,7 +279,9 @@ const MobileOrderDetails = ({
                 <p className="mt-1 text-sm !text-white/90">{order.shop.name}</p>
               )}
               {order?.reel?.title && (
-                <p className="mt-1 text-sm !text-white/90">{order.reel.title}</p>
+                <p className="mt-1 text-sm !text-white/90">
+                  {order.reel.title}
+                </p>
               )}
             </>
           )}
@@ -342,7 +346,11 @@ const MobileOrderDetails = ({
           ) : orderType === "restaurant" ? (
             <UserRestaurantOrderDetails order={order} isMobile={true} />
           ) : (
-            <UserOrderDetails order={order} isMobile={true} combinedOrders={combinedOrders} />
+            <UserOrderDetails
+              order={order}
+              isMobile={true}
+              combinedOrders={combinedOrders}
+            />
           )}
         </div>
       </div>
@@ -586,12 +594,20 @@ function ViewOrderDetailsPage() {
       <RootLayout>
         {/* Mobile View */}
         <div className="block md:hidden">
-          <MobileOrderDetails order={order} orderType={orderType} combinedOrders={combinedOrders} />
+          <MobileOrderDetails
+            order={order}
+            orderType={orderType}
+            combinedOrders={combinedOrders}
+          />
         </div>
 
         {/* Desktop View */}
         <div className="hidden md:block">
-          <DesktopOrderDetails order={order} orderType={orderType} combinedOrders={combinedOrders} />
+          <DesktopOrderDetails
+            order={order}
+            orderType={orderType}
+            combinedOrders={combinedOrders}
+          />
         </div>
 
         {/* Mobile-specific styles for full-width layout */}

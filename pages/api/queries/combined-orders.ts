@@ -92,12 +92,17 @@ export default async function handler(
   }
 
   const { combined_order_id } = req.query;
-  if (!combined_order_id || (Array.isArray(combined_order_id) && combined_order_id.length === 0)) {
+  if (
+    !combined_order_id ||
+    (Array.isArray(combined_order_id) && combined_order_id.length === 0)
+  ) {
     return res.status(400).json({ error: "Missing combined_order_id" });
   }
 
   // Ensure we have a single string ID
-  const combinedOrderId = Array.isArray(combined_order_id) ? combined_order_id[0] : combined_order_id;
+  const combinedOrderId = Array.isArray(combined_order_id)
+    ? combined_order_id[0]
+    : combined_order_id;
 
   try {
     if (!hasuraClient) {
@@ -110,7 +115,9 @@ export default async function handler(
 
     // Check if orders exist
     if (!data.Orders || data.Orders.length === 0) {
-      return res.status(404).json({ error: "No orders found for this combined_order_id" });
+      return res
+        .status(404)
+        .json({ error: "No orders found for this combined_order_id" });
     }
 
     res.status(200).json({ orders: data.Orders });

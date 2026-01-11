@@ -50,7 +50,7 @@ export default function CombineCartsModal({
       {/* Modal */}
       <div className="fixed inset-0 z-[10020] flex items-center justify-center p-4">
         <div
-          className={`relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl ${
+          className={`relative max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-2xl shadow-2xl ${
             theme === "dark" ? "bg-gray-800" : "bg-white"
           }`}
           onClick={(e) => e.stopPropagation()}
@@ -72,8 +72,8 @@ export default function CombineCartsModal({
               onClick={onClose}
               className={`rounded-lg p-2 transition-colors ${
                 theme === "dark"
-                  ? "hover:bg-gray-700 text-gray-400"
-                  : "hover:bg-gray-100 text-gray-600"
+                  ? "text-gray-400 hover:bg-gray-700"
+                  : "text-gray-600 hover:bg-gray-100"
               }`}
             >
               <svg
@@ -95,9 +95,7 @@ export default function CombineCartsModal({
           {/* Body */}
           <div className="max-h-[calc(90vh-180px)] overflow-y-auto p-6">
             <div
-              className={
-                theme === "dark" ? "text-gray-300" : "text-gray-700"
-              }
+              className={theme === "dark" ? "text-gray-300" : "text-gray-700"}
             >
               <p
                 className={`mb-4 text-sm ${
@@ -235,7 +233,8 @@ export default function CombineCartsModal({
                                       />
                                     </svg>
                                     <span>
-                                      Service: {formatCurrency(details.serviceFee)}
+                                      Service:{" "}
+                                      {formatCurrency(details.serviceFee)}
                                     </span>
                                   </div>
                                   <div
@@ -311,7 +310,9 @@ export default function CombineCartsModal({
           {/* Footer */}
           <div
             className={`flex items-center justify-end gap-3 border-t px-6 py-4 ${
-              theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-gray-50"
+              theme === "dark"
+                ? "border-gray-700 bg-gray-800"
+                : "border-gray-200 bg-gray-50"
             }`}
           >
             <button
@@ -327,7 +328,7 @@ export default function CombineCartsModal({
             <button
               onClick={onContinue}
               className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-8 py-2.5 text-sm font-semibold shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
-              style={{ color: '#ffffff' }}
+              style={{ color: "#ffffff" }}
             >
               {selectedCartIds.size > 0
                 ? `Continue with ${selectedCartIds.size + 1} Cart${

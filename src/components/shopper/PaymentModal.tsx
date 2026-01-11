@@ -1085,7 +1085,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 Back
               </button>
             </>
-          )}
+          ) : null}
         </div>
         </div>
       </div>

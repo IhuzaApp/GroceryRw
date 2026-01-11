@@ -125,7 +125,7 @@ function EstimatedDelivery({
   const est = new Date(deliveryTime);
   const diffMs = est.getTime() - currentTime;
   const isLate = diffMs <= 0;
-  
+
   // Calculate time difference
   const absMs = Math.abs(diffMs);
   const days = Math.floor(absMs / (1000 * 60 * 60 * 24));
@@ -136,9 +136,15 @@ function EstimatedDelivery({
   // Format countdown
   let countdownText: string;
   if (days > 0) {
-    countdownText = `${isLate ? "-" : "+"}${days}d ${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    countdownText = `${isLate ? "-" : "+"}${days}d ${String(hours).padStart(
+      2,
+      "0"
+    )}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   } else {
-    countdownText = `${isLate ? "-" : "+"}${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    countdownText = `${isLate ? "-" : "+"}${String(hours).padStart(
+      2,
+      "0"
+    )}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   }
 
   return (
@@ -162,7 +168,11 @@ function EstimatedDelivery({
           </>
         )}
       </svg>
-      <span className={`font-bold tabular-nums ${isLate ? "!text-red-500" : "!text-green-600"}`}>
+      <span
+        className={`font-bold tabular-nums ${
+          isLate ? "!text-red-500" : "!text-green-600"
+        }`}
+      >
         {countdownText}
       </span>
     </div>
@@ -407,7 +417,8 @@ export default function UserRecentOrders({
                           alt={order.shop.name}
                           className="h-12 w-12 rounded-lg border-2 border-white object-cover shadow-md dark:border-gray-800 md:h-10 md:w-10"
                           onError={(e) => {
-                            e.currentTarget.src = "/images/shop-placeholder.jpg";
+                            e.currentTarget.src =
+                              "/images/shop-placeholder.jpg";
                           }}
                         />
                       ) : (
@@ -433,22 +444,30 @@ export default function UserRecentOrders({
                 </div>
 
                 {/* Order Details - Left Column */}
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-bold text-gray-900 dark:text-white truncate">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-bold text-gray-900 dark:text-white">
                     {group.orders.length === 1
                       ? group.orders[0]?.shop?.name || "Unknown Shop"
                       : group.orders.length === 2
                       ? `${group.orders[0]?.shop?.name} & ${group.orders[1]?.shop?.name}`
-                      : `${group.orders[0]?.shop?.name} & ${group.orders.length - 1} others`}
+                      : `${group.orders[0]?.shop?.name} & ${
+                          group.orders.length - 1
+                        } others`}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {group.orders.reduce((sum, o) => sum + (o.unitsCount || 0), 0)} units • {group.orders.length} {group.orders.length === 1 ? 'store' : 'stores'}
+                    {group.orders.reduce(
+                      (sum, o) => sum + (o.unitsCount || 0),
+                      0
+                    )}{" "}
+                    units • {group.orders.length}{" "}
+                    {group.orders.length === 1 ? "store" : "stores"}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    ID {group.orders.map((o, idx) => (
+                    ID{" "}
+                    {group.orders.map((o, idx) => (
                       <span key={o.id}>
                         #{formatOrderID(o?.OrderID)}
-                        {idx < group.orders.length - 1 ? ' & ' : ''}
+                        {idx < group.orders.length - 1 ? " & " : ""}
                       </span>
                     ))}
                   </div>
@@ -476,7 +495,7 @@ export default function UserRecentOrders({
                   </div>
                 </div>
               </div>
-              
+
               {/* Delivery Time */}
               {group.orders[0]?.delivery_time && (
                 <div className="mt-3 flex items-center justify-between border-t border-green-100 pt-2 dark:border-green-800/30">
@@ -509,7 +528,8 @@ export default function UserRecentOrders({
                           className="h-12 w-12 rounded-lg object-cover md:h-10 md:w-10"
                           onError={(e) => {
                             // Fallback to placeholder if image fails
-                            e.currentTarget.src = "/images/shop-placeholder.jpg";
+                            e.currentTarget.src =
+                              "/images/shop-placeholder.jpg";
                           }}
                         />
                       ) : (
@@ -527,14 +547,15 @@ export default function UserRecentOrders({
                   )}
 
                   {/* Order Details - Left Column */}
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-bold text-gray-900 dark:text-white truncate">
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-bold text-gray-900 dark:text-white">
                       {order.orderType === "reel" && order.reel
                         ? order.reel.title
                         : order?.shop?.name || "Unknown Shop"}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {order.unitsCount || 0} {order.unitsCount === 1 ? 'unit' : 'units'}
+                      {order.unitsCount || 0}{" "}
+                      {order.unitsCount === 1 ? "unit" : "units"}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
                       ID #{formatOrderID(order?.OrderID)}
@@ -563,7 +584,7 @@ export default function UserRecentOrders({
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Delivery Time */}
                 {order?.delivery_time && (
                   <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-2 dark:border-gray-700">
