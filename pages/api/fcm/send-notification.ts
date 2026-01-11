@@ -35,7 +35,7 @@ export default async function handler(
     );
     return res.status(200).json({ success: true });
   } catch (error) {
-    console.error("❌ [FCM API] Error sending notification:", error);
+    console.error("Error sending chat notification:", error instanceof Error ? error.message : "Unknown error");
     return res.status(500).json({
       error: "Failed to send notification",
       details: error instanceof Error ? error.message : "Unknown error",

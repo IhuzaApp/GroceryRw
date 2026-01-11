@@ -26,17 +26,6 @@ export default async function handler(
       });
     }
 
-    console.log(
-      "🔔 [FCM API] Sending batch notifications to all users with notifications enabled:",
-      {
-        orderId,
-        shopName,
-        distance,
-        itemsCount,
-        earnings: estimatedEarnings,
-      }
-    );
-
     // Get all users with FCM tokens and notifications enabled
     const allUsersResponse = await fetch(
       `${
@@ -52,10 +41,6 @@ export default async function handler(
     );
 
     if (!allUsersResponse.ok) {
-      console.warn(
-        "⚠️ [FCM API] Failed to get users with notifications:",
-        allUsersResponse.statusText
-      );
       return res.status(200).json({
         success: true,
         message: "Batch notification processing completed",
@@ -68,7 +53,6 @@ export default async function handler(
     const notificationUsers = allUsersData.users || [];
 
     if (notificationUsers.length === 0) {
-      console.log("ℹ️ [FCM API] No users with notifications enabled found");
       return res.status(200).json({
         success: true,
         message: "No users with notifications enabled found",
@@ -110,15 +94,8 @@ export default async function handler(
       async (user: { id: string }) => {
         try {
           await sendNotificationToUser(user.id, payload);
-          console.log(
-            `✅ [FCM API] Sent batch notification to user ${user.id}`
-          );
           return { userId: user.id, success: true };
         } catch (error) {
-          console.error(
-            `❌ [FCM API] Failed to send notification to user ${user.id}:`,
-            error
-          );
           return { userId: user.id, success: false, error };
         }
       }
@@ -129,10 +106,6 @@ export default async function handler(
       (result) => result.status === "fulfilled" && result.value.success
     ).length;
 
-    console.log(
-      `🔔 [FCM API] Batch notifications sent: ${successful}/${notificationUsers.length} successful`
-    );
-
     return res.status(200).json({
       success: true,
       message:
@@ -142,10 +115,7 @@ export default async function handler(
       orderId,
     });
   } catch (error) {
-    console.error(
-      "❌ [FCM API] Error sending batch notifications to all users:",
-      error
-    );
+    console.error("Error sending batch notifications:", error instanceof Error ? error.message : "Unknown error");
     return res.status(500).json({
       error: "Failed to send batch notifications to all users",
       details: error instanceof Error ? error.message : "Unknown error",
