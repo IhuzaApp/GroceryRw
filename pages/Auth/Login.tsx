@@ -53,17 +53,12 @@ export default function LoginPage() {
   return (
     <ThemeProvider>
       <div className="h-screen overflow-hidden bg-gradient-to-br from-green-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        {/* Mobile Header */}
-        <div className="flex items-center justify-center p-3 lg:hidden">
-          <ThemeAwareLogo />
-        </div>
-
         <div className="flex h-full lg:h-screen">
           {/* Left Side - Login Form */}
-          <div className="flex w-full flex-col items-center justify-start overflow-y-auto px-4 py-4 lg:w-1/2 lg:justify-center lg:px-16 lg:py-8">
+          <div className="flex w-full flex-col items-center justify-center overflow-y-auto px-4 py-8 lg:w-1/2 lg:px-16 lg:py-8">
             <div className="w-full max-w-md">
-              {/* Desktop Logo */}
-              <div className="hidden lg:block">
+              {/* Logo */}
+              <div>
                 <ThemeAwareLogo />
               </div>
 
