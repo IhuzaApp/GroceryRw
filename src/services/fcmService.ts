@@ -298,7 +298,7 @@ export const sendChatNotification = async (
 
     await sendNotificationToUser(recipientId, payload);
   } catch (error) {
-    console.error("❌ [FCM Service] Error sending chat notification:", error);
+    console.error("Error sending chat notification:", error);
     throw error;
   }
 };
@@ -344,9 +344,8 @@ export const sendNewOrderNotification = async (
     };
 
     await sendNotificationToUser(shopperId, payload);
-    console.log(`✅ [FCM Service] Order ${orderData.id} notification sent to shopper ${shopperId}`);
   } catch (error) {
-    console.error("❌ [FCM Service] Error sending order notification:", error);
+    console.error("Error sending order notification:", error);
     throw error;
   }
 };
@@ -392,9 +391,8 @@ export const sendBatchOrdersNotification = async (
     };
 
     await sendNotificationToUsers(shopperIds, payload);
-    console.log(`✅ [FCM Service] Batch notification sent to ${shopperIds.length} shoppers for ${totalOrders} orders`);
   } catch (error) {
-    console.error("❌ [FCM Service] Error sending batch notification:", error);
+    console.error("Error sending batch notification:", error);
     throw error;
   }
 };
@@ -428,7 +426,6 @@ export const sendOrderExpiredNotification = async (
 
     await sendNotificationToUser(shopperId, payload);
   } catch (error) {
-    console.error("❌ [FCM Service] Error sending expiration notification:", error);
-    // Don't throw error for expiration notifications
+    // Silent fail for expiration notifications
   }
 };

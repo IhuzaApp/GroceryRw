@@ -87,63 +87,28 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
  */
 export const getFCMToken = async (): Promise<string | null> => {
   try {
-    console.log("🔑 [getFCMToken] Starting token retrieval...");
-    
-    if (!messaging) {
-      console.warn("⚠️ [getFCMToken] Firebase Messaging not initialized");
-      return null;
-    }
+    if (!messaging) return null;
 
-    console.log("🔐 [getFCMToken] Requesting notification permission...");
     const hasPermission = await requestNotificationPermission();
-    if (!hasPermission) {
-      console.warn("⚠️ [getFCMToken] Notification permission denied or unavailable");
-      return null;
-    }
-    console.log("✅ [getFCMToken] Notification permission granted");
+    if (!hasPermission) return null;
 
-    // Register service worker first
+    // Register service worker
     if ("serviceWorker" in navigator) {
       try {
-        console.log("📝 [getFCMToken] Registering service worker...");
-        const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
-        console.log("✅ [getFCMToken] Service worker registered:", registration.scope);
+        await navigator.serviceWorker.register("/firebase-messaging-sw.js");
       } catch (error) {
-        console.error("❌ [getFCMToken] Service worker registration failed:", error);
+        console.error("Service worker registration failed:", error);
       }
-    } else {
-      console.warn("⚠️ [getFCMToken] Service workers not supported in this browser");
     }
 
-    console.log("🎟️ [getFCMToken] Getting FCM token from Firebase...");
     const token = await getToken(messaging, {
       vapidKey:
         "BHlNUbElLjZwdCrqi9LxcPStpMhVtwpf1HRRUJA-iP1eqiXERJWSibJCiPwLJuOBOjRPT70RJL5n64EZxJgQfr4",
     });
 
-    if (token) {
-      console.log("✅ [getFCMToken] Token obtained successfully:", token.substring(0, 20) + "...");
-    } else {
-      console.warn("⚠️ [getFCMToken] No token returned from Firebase");
-    }
-
     return token;
   } catch (error) {
-    console.error("❌ [getFCMToken] Error getting token:", error);
-    // Handle specific FCM errors more gracefully
-    if (error instanceof Error) {
-      if (
-        error.name === "AbortError" &&
-        error.message.includes("permission denied")
-      ) {
-        console.warn("⚠️ [getFCMToken] Permission denied error");
-        return null;
-      }
-      if (error.message.includes("unsupported-browser")) {
-        console.warn("⚠️ [getFCMToken] Unsupported browser");
-        return null;
-      }
-    }
+    console.error("Error getting FCM token:", error);
     return null;
   }
 };
@@ -207,24 +172,12 @@ export const setupFCMListener = (
   onMessageReceived: (payload: any) => void
 ): (() => void) => {
   try {
-    console.log("👂 [setupFCMListener] Setting up message listener...");
-    
-    if (!messaging) {
-      console.warn("⚠️ [setupFCMListener] No messaging instance available");
-      return () => {};
-    }
+    if (!messaging) return () => {};
 
     const unsubscribe = onMessage(messaging, (payload) => {
-      console.log("📨 [setupFCMListener] Message received in foreground:", payload);
-      console.log("  - Title:", payload.notification?.title);
-      console.log("  - Body:", payload.notification?.body);
-      console.log("  - Data:", payload.data);
-      
       // Show notification using native system UI via service worker
       if (payload.notification && "serviceWorker" in navigator) {
         navigator.serviceWorker.ready.then((registration) => {
-          console.log("🔔 [setupFCMListener] Showing native notification via service worker");
-          
           const notificationType = payload.data?.type || "message";
           let actions = [];
           
@@ -239,12 +192,9 @@ export const setupFCMListener = (
               { action: "close", title: "Dismiss" },
             ];
           } else if (notificationType === "test") {
-            actions = [
-              { action: "close", title: "Got it!" },
-            ];
+            actions = [{ action: "close", title: "Got it!" }];
           }
           
-          // Show notification using native system API
           registration.showNotification(
             payload.notification.title || "New Notification",
             {
@@ -253,31 +203,24 @@ export const setupFCMListener = (
               badge: "/assets/logos/PlasIcon.png",
               data: payload.data,
               requireInteraction: false,
-              silent: false, // CRITICAL: Must be false for sound to play
-              // Note: Do NOT include 'sound' property - let browser use default
+              silent: false,
               vibrate: [200, 100, 200],
               tag: `fcm-${notificationType}-${Date.now()}`,
-              renotify: true, // Important for sound on similar notifications
+              renotify: true,
               actions: actions,
             }
-          ).then(() => {
-            console.log("✅ [FCM Client] Native notification displayed with sound");
-          }).catch(error => {
-            console.error("❌ [FCM Client] Failed to show notification:", error);
+          ).catch(error => {
+            console.error("Failed to show notification:", error);
           });
-        }).catch((error) => {
-          console.error("❌ Error showing notification:", error);
         });
       }
       
-      // Process the payload data
       onMessageReceived(payload);
     });
 
-    console.log("✅ [setupFCMListener] Message listener set up successfully");
     return unsubscribe;
   } catch (error) {
-    console.error("❌ [setupFCMListener] Error setting up listener:", error);
+    console.error("Error setting up FCM listener:", error);
     return () => {};
   }
 };
@@ -290,35 +233,15 @@ export const initializeFCM = async (
   onMessageReceived: (payload: any) => void
 ): Promise<(() => void) | null> => {
   try {
-    console.log("🔧 [FCM Client] Initializing FCM for user:", userId);
-    
-    // Get FCM token
-    console.log("🔑 [FCM Client] Getting FCM token...");
     const token = await getFCMToken();
-    
-    if (!token) {
-      console.warn("⚠️ [FCM Client] No FCM token obtained. Possible reasons:");
-      console.warn("  - Notification permission not granted");
-      console.warn("  - Service worker not registered");
-      console.warn("  - Browser doesn't support FCM");
-      return null;
-    }
+    if (!token) return null;
 
-    console.log("✅ [FCM Client] FCM token obtained:", token.substring(0, 20) + "...");
-
-    // Save token to server
-    console.log("💾 [FCM Client] Saving token to server...");
     await saveFCMTokenToServer(userId, token);
-    console.log("✅ [FCM Client] Token saved to server successfully");
-
-    // Set up message listener
-    console.log("👂 [FCM Client] Setting up message listener...");
     const unsubscribe = setupFCMListener(onMessageReceived);
-    console.log("✅ [FCM Client] Message listener set up successfully");
 
     return unsubscribe;
   } catch (error) {
-    console.error("❌ [FCM Client] Error initializing FCM:", error);
+    console.error("Error initializing FCM:", error);
     return null;
   }
 };
