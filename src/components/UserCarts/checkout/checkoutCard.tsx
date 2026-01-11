@@ -1910,17 +1910,30 @@ export default function CheckoutItems({
       )}
 
       <div
-        className={`fixed z-[10000] w-full transition-all duration-300 md:hidden ${
+        className={`fixed w-full transition-all duration-300 md:hidden ${
           theme === "dark" ? "bg-gray-900" : "bg-white"
-        } ${isExpanded ? "inset-0 mt-[5vh] h-[95vh] rounded-t-3xl shadow-2xl flex flex-col" : "bottom-16 left-0 right-0 rounded-t-2xl shadow-xl"}`}
+        } ${
+          isExpanded 
+            ? "inset-0 z-[10000] mt-[5vh] h-[95vh] rounded-t-3xl shadow-2xl flex flex-col" 
+            : "bottom-20 left-0 right-0 z-[9998] rounded-t-3xl border-t-2 shadow-2xl"
+        } ${
+          theme === "dark" && !isExpanded 
+            ? "border-gray-700" 
+            : !isExpanded 
+            ? "border-gray-200" 
+            : ""
+        }`}
         style={{
-          maxHeight: isExpanded ? "95vh" : "160px",
+          maxHeight: isExpanded ? "95vh" : "auto",
           overflow: isExpanded ? "visible" : "hidden",
+          boxShadow: !isExpanded 
+            ? "0 -10px 25px -5px rgba(0, 0, 0, 0.1), 0 -8px 10px -6px rgba(0, 0, 0, 0.1)" 
+            : undefined,
         }}
         onClick={isExpanded ? (e) => e.stopPropagation() : undefined}
       >
         {/* Header with toggle button */}
-        <div className={`p-4 ${isExpanded ? "border-b" : ""} ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}>
+        <div className={`px-4 ${isExpanded ? "py-4 border-b" : "py-3"} ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}>
           <div
             className="flex items-center justify-between"
             onClick={!isExpanded ? toggleExpand : undefined}
@@ -1945,7 +1958,7 @@ export default function CheckoutItems({
               )}
               <div>
                 <span
-                  className={`${isExpanded ? "text-xl" : "text-lg"} font-bold ${
+                  className={`${isExpanded ? "text-xl" : "text-base"} font-bold ${
                     theme === "dark" ? "text-white" : "text-gray-900"
                   }`}
                 >
@@ -1958,12 +1971,12 @@ export default function CheckoutItems({
                   </p>
                 )}
                 {!isExpanded && (
-                  <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/20 dark:text-green-300">
+                  <div className="mt-0.5 flex items-center gap-2">
+                    <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/20 dark:text-green-300">
                       {grandTotalUnits} items
                     </span>
                     {selectedCartIds.size > 0 && (
-                      <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
                         {selectedCartIds.size + 1} carts
                       </span>
                     )}
@@ -1971,10 +1984,10 @@ export default function CheckoutItems({
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               {!isExpanded && (
                 <span
-                  className={`font-bold text-green-600 ${
+                  className={`text-lg font-bold ${
                     theme === "dark" ? "text-green-400" : "text-green-600"
                   }`}
                 >
@@ -1986,7 +1999,7 @@ export default function CheckoutItems({
                   e.stopPropagation();
                   toggleExpand();
                 }}
-                className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
+                className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-colors ${
                   theme === "dark"
                     ? "text-gray-300 hover:bg-gray-700"
                     : "text-gray-600 hover:bg-gray-100"
@@ -2020,7 +2033,7 @@ export default function CheckoutItems({
 
         {/* Checkout button when collapsed */}
         {!isExpanded && (
-          <div className="p-4">
+          <div className="px-4 pb-4 pt-2">
             <Button
               appearance="primary"
               color="green"
