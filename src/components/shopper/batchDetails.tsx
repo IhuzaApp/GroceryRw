@@ -1630,16 +1630,16 @@ export default function BatchDetails({
 
     switch (status) {
       case "accepted":
-        return <Tag color={isReelOrder ? "violet" : "blue"}>Accepted</Tag>;
+        return <Tag color={isReelOrder ? "violet" : "blue"} size="lg">Accepted</Tag>;
       case "shopping":
-        return <Tag color={isReelOrder ? "violet" : "orange"}>Shopping</Tag>;
+        return <Tag color={isReelOrder ? "violet" : "orange"} size="lg">Shopping</Tag>;
       case "on_the_way":
       case "at_customer":
-        return <Tag color={isReelOrder ? "violet" : "violet"}>On The Way</Tag>;
+        return <Tag color={isReelOrder ? "violet" : "violet"} size="lg">On The Way</Tag>;
       case "delivered":
-        return <Tag color={isReelOrder ? "violet" : "green"}>Delivered</Tag>;
+        return <Tag color={isReelOrder ? "violet" : "green"} size="lg">Delivered</Tag>;
       default:
-        return <Tag color={isReelOrder ? "violet" : "cyan"}>{status}</Tag>;
+        return <Tag color={isReelOrder ? "violet" : "cyan"} size="lg">{status}</Tag>;
     }
   };
 
@@ -1872,39 +1872,39 @@ export default function BatchDetails({
       <main className="mx-auto w-full px-0 py-2 pb-20 sm:p-6 sm:pb-6">
         <div className="overflow-hidden rounded-none bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900 sm:rounded-2xl sm:shadow-xl">
           {/* Header with gradient background */}
-          <div className={`px-0 py-4 text-gray-900 dark:text-gray-100 sm:p-6`}>
-            <div className="flex flex-col justify-between gap-3 px-3 sm:flex-row sm:items-center sm:gap-4 sm:px-0">
-              <div className="flex items-center gap-3 sm:gap-4">
+          <div className={`px-0 py-2 text-gray-900 dark:text-gray-100 sm:p-6`}>
+            <div className="flex flex-row items-center justify-between gap-2 px-3 sm:gap-4 sm:px-0">
+              <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
                 <Button
                   appearance="link"
                   onClick={() => router.back()}
-                  className="flex items-center px-0 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 sm:text-base"
+                  className="flex flex-shrink-0 items-center px-0 text-base text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 sm:text-base"
                 >
                   <svg
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2"
-                    className="mr-1 h-4 w-4 sm:mr-2 sm:h-5 sm:w-5"
+                    className="mr-1 h-5 w-5 sm:mr-2 sm:h-5 sm:w-5"
                   >
                     <path d="M19 12H5M12 19l-7-7 7-7" />
                   </svg>
-                  Back
+                  <span className="hidden sm:inline">Back</span>
                 </Button>
-                <div className="h-4 w-px bg-gray-300 dark:bg-gray-600 sm:h-6"></div>
-                <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 sm:text-2xl">
-                  {order.orderType === "reel" ? "Reel Batch" : "Regular Batch"}{" "}
-                  #{order.OrderID || order.id.slice(0, 8)}
+                <div className="h-5 w-px flex-shrink-0 bg-gray-300 dark:bg-gray-600 sm:h-6"></div>
+                <h1 className="min-w-0 truncate text-base font-bold text-gray-900 dark:text-gray-100 sm:text-2xl">
+                  <span className="hidden sm:inline">{order.orderType === "reel" ? "Reel Batch" : "Regular Batch"} </span>
+                  {order.orderType === "reel" ? "Reel Batch" : "Regular Batch"} #{order.OrderID || order.id.slice(0, 8)}
                 </h1>
               </div>
-              <div className="flex items-center gap-2 sm:gap-3">
+              <div className="flex flex-shrink-0 items-center gap-2 sm:gap-3">
                 {getStatusTag(order.status)}
               </div>
             </div>
           </div>
 
           {/* Content */}
-          <div className="space-y-3 px-0 py-3 sm:space-y-8 sm:p-8">
+          <div className="space-y-3 px-0 pb-3 pt-1 sm:space-y-8 sm:p-8">
             {/* Order Progress Steps - Hidden on Mobile */}
             <div className="hidden rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800 sm:block sm:p-6">
               <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
