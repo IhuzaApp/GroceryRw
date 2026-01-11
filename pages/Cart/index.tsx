@@ -170,6 +170,8 @@ interface ShopCart {
   name: string;
   logo?: string;
   count: number;
+  latitude?: string;
+  longitude?: string;
 }
 
 export default function CartMainPage() {
@@ -1161,8 +1163,8 @@ export default function CartMainPage() {
                                 shopId={selectedShopId!}
                                 Total={total}
                                 totalUnits={units}
-                                shopLat={0} // Will need to fetch shop coordinates from API
-                                shopLng={0} // Will need to fetch shop coordinates from API
+                                shopLat={selectedShop.latitude ? parseFloat(selectedShop.latitude) : 0}
+                                shopLng={selectedShop.longitude ? parseFloat(selectedShop.longitude) : 0}
                                 shopAlt={0}
                                 isFoodCart={false}
                               />
