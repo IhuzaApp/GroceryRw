@@ -183,7 +183,7 @@ export default function AddressManagementModal({
       });
       if (!res.ok) throw new Error(`Save failed (${res.status})`);
       const savedAddress = await res.json();
-      
+
       // Update cookie with the new address (especially important for guest users)
       if (isGuest || isDefault) {
         const locationData = {
@@ -197,7 +197,7 @@ export default function AddressManagementModal({
         Cookies.set("delivery_address", JSON.stringify(locationData));
         window.dispatchEvent(new Event("addressChanged"));
       }
-      
+
       fetchAddresses();
       setShowAddModal(false);
       // reset form
@@ -270,7 +270,7 @@ export default function AddressManagementModal({
     };
     Cookies.set("delivery_address", JSON.stringify(locationData));
     window.dispatchEvent(new Event("addressChanged"));
-    
+
     if (onSelect) {
       onSelect(address);
     }
@@ -697,7 +697,9 @@ export default function AddressManagementModal({
                                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                                   />
                                 </svg>
-                                <span className="text-current group-hover:text-white">Setting...</span>
+                                <span className="text-current group-hover:text-white">
+                                  Setting...
+                                </span>
                               </>
                             ) : (
                               <>
@@ -714,7 +716,9 @@ export default function AddressManagementModal({
                                     d="M5 13l4 4L19 7"
                                   />
                                 </svg>
-                                <span className="text-current group-hover:text-white">Set as Default</span>
+                                <span className="text-current group-hover:text-white">
+                                  Set as Default
+                                </span>
                               </>
                             )}
                           </button>
@@ -1260,8 +1264,8 @@ export default function AddressManagementModal({
                 }}
                 className={`rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                   theme === "dark"
-                    ? "border-2 border-gray-600 bg-gray-700 text-white hover:bg-gray-600 hover:border-gray-500 focus:ring-gray-500"
-                    : "border-2 border-gray-300 bg-white text-gray-900 hover:bg-gray-50 hover:border-gray-400 focus:ring-gray-300"
+                    ? "border-2 border-gray-600 bg-gray-700 text-white hover:border-gray-500 hover:bg-gray-600 focus:ring-gray-500"
+                    : "border-2 border-gray-300 bg-white text-gray-900 hover:border-gray-400 hover:bg-gray-50 focus:ring-gray-300"
                 }`}
               >
                 Cancel

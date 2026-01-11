@@ -9,7 +9,9 @@ const client = new GraphQLClient(process.env.HASURA_GRAPHQL_ENDPOINT!, {
 
 // Generate a random 2-digit PIN (00-99)
 function generateOrderPin(): string {
-  return Math.floor(Math.random() * 100).toString().padStart(2, '0');
+  return Math.floor(Math.random() * 100)
+    .toString()
+    .padStart(2, "0");
 }
 
 // Mutation to create a restaurant order

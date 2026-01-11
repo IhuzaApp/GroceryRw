@@ -202,13 +202,8 @@ export default async function handler(
 
     // Process each store's cart
     for (const storeData of stores as StoreCheckoutData[]) {
-      const {
-        store_id,
-        delivery_fee,
-        service_fee,
-        discount,
-        voucher_code,
-      } = storeData;
+      const { store_id, delivery_fee, service_fee, discount, voucher_code } =
+        storeData;
 
       if (!store_id || !delivery_fee || !service_fee) {
         throw new Error(

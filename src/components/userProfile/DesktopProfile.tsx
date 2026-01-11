@@ -379,10 +379,14 @@ export default function DesktopProfile({
                     }`}
                     onClick={() => {
                       if (isGuest) {
-                        toast.error("Please create a full account to become a shopper");
+                        toast.error(
+                          "Please create a full account to become a shopper"
+                        );
                         return;
                       }
-                      handleBecomePlasa({ preventDefault: () => {} } as React.MouseEvent);
+                      handleBecomePlasa({
+                        preventDefault: () => {},
+                      } as React.MouseEvent);
                     }}
                     disabled={
                       isGuest ||

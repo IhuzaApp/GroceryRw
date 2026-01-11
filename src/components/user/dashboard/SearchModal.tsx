@@ -49,7 +49,7 @@ export default function SearchModal({
     } else if (result.type === "restaurant") {
       router.push(`/restaurant/${result.id}`);
     }
-    
+
     // Close the modal after navigation
     onClose();
   };
@@ -133,7 +133,10 @@ export default function SearchModal({
                               // Fallback based on type
                               if (result.type === "restaurant") {
                                 return "/images/restaurantDish.png";
-                              } else if (result.type === "product" || result.shop_id) {
+                              } else if (
+                                result.type === "product" ||
+                                result.shop_id
+                              ) {
                                 return "/images/groceryPlaceholder.png";
                               } else {
                                 return "/images/groceryPlaceholder.png";
@@ -144,18 +147,30 @@ export default function SearchModal({
                             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                             onError={(e) => {
                               // Prevent infinite loop if placeholder also fails
-                              if (e.currentTarget.src.includes("groceryPlaceholder.png") || 
-                                  e.currentTarget.src.includes("restaurantDish.png")) {
+                              if (
+                                e.currentTarget.src.includes(
+                                  "groceryPlaceholder.png"
+                                ) ||
+                                e.currentTarget.src.includes(
+                                  "restaurantDish.png"
+                                )
+                              ) {
                                 return;
                               }
-                              
+
                               // Set appropriate placeholder based on result type
                               if (result.type === "restaurant") {
-                                e.currentTarget.src = "/images/restaurantDish.png";
-                              } else if (result.type === "product" || result.shop_id) {
-                                e.currentTarget.src = "/images/groceryPlaceholder.png";
+                                e.currentTarget.src =
+                                  "/images/restaurantDish.png";
+                              } else if (
+                                result.type === "product" ||
+                                result.shop_id
+                              ) {
+                                e.currentTarget.src =
+                                  "/images/groceryPlaceholder.png";
                               } else {
-                                e.currentTarget.src = "/images/groceryPlaceholder.png";
+                                e.currentTarget.src =
+                                  "/images/groceryPlaceholder.png";
                               }
                             }}
                           />

@@ -140,7 +140,9 @@ export default function ProductCard({
             src={
               imageError
                 ? "/images/groceryPlaceholder.png"
-                : productName?.image || image || "/images/groceryPlaceholder.png"
+                : productName?.image ||
+                  image ||
+                  "/images/groceryPlaceholder.png"
             }
             alt={name}
             className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
@@ -290,7 +292,9 @@ export default function ProductCard({
                     src={
                       imageError
                         ? "/images/groceryPlaceholder.png"
-                        : productName?.image || image || "/images/groceryPlaceholder.png"
+                        : productName?.image ||
+                          image ||
+                          "/images/groceryPlaceholder.png"
                     }
                     alt={name}
                     className="h-full w-full object-cover"
@@ -306,7 +310,9 @@ export default function ProductCard({
                   <h4 className="truncate text-base font-bold text-gray-900 dark:text-white">
                     {name}
                   </h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{unit}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {unit}
+                  </p>
                   <p className="mt-1 text-xl font-bold text-green-600 dark:text-green-400">
                     {formatCurrency(parseFloat(final_price || "0"))}
                   </p>
@@ -322,7 +328,9 @@ export default function ProductCard({
                   {/* Minus Button */}
                   <button
                     type="button"
-                    onClick={() => setSelectedQuantity(Math.max(1, selectedQuantity - 1))}
+                    onClick={() =>
+                      setSelectedQuantity(Math.max(1, selectedQuantity - 1))
+                    }
                     className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-gray-200 bg-gray-50/80 text-gray-700 transition-all hover:bg-white hover:shadow-lg active:scale-95 dark:border-gray-700/50 dark:bg-gray-900/40 dark:text-white dark:hover:bg-gray-900/60"
                   >
                     <svg
@@ -359,7 +367,9 @@ export default function ProductCard({
                   {/* Plus Button */}
                   <button
                     type="button"
-                    onClick={() => setSelectedQuantity(Math.min(999, selectedQuantity + 1))}
+                    onClick={() =>
+                      setSelectedQuantity(Math.min(999, selectedQuantity + 1))
+                    }
                     className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-gray-200 bg-gray-50/80 text-gray-700 transition-all hover:bg-white hover:shadow-lg active:scale-95 dark:border-gray-700/50 dark:bg-gray-900/40 dark:text-white dark:hover:bg-gray-900/60"
                   >
                     <svg
@@ -535,14 +545,17 @@ export default function ProductCard({
                       src={
                         imageError
                           ? "/images/groceryPlaceholder.png"
-                          : productName?.image || image || "/images/groceryPlaceholder.png"
+                          : productName?.image ||
+                            image ||
+                            "/images/groceryPlaceholder.png"
                       }
                       alt={name}
                       className="h-48 w-full object-cover md:h-56"
                       onError={(e) => {
                         if (!imageError) {
                           setImageError(true);
-                          e.currentTarget.src = "/images/groceryPlaceholder.png";
+                          e.currentTarget.src =
+                            "/images/groceryPlaceholder.png";
                         }
                       }}
                     />

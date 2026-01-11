@@ -340,7 +340,9 @@ export default function CheckoutItems({
 
   // Combined carts state
   const [availableCarts, setAvailableCarts] = useState<any[]>([]);
-  const [selectedCartIds, setSelectedCartIds] = useState<Set<string>>(new Set());
+  const [selectedCartIds, setSelectedCartIds] = useState<Set<string>>(
+    new Set()
+  );
   const [loadingCarts, setLoadingCarts] = useState(true);
   const [showCombineModal, setShowCombineModal] = useState(false);
   const [refetchCartDetails, setRefetchCartDetails] = useState(0);
@@ -364,10 +366,12 @@ export default function CheckoutItems({
         setLoadingCarts(true);
         const response = await fetch("/api/carts");
         const data = await response.json();
-        
+
         if (data.carts) {
           // Filter out the current cart
-          const otherCarts = data.carts.filter((cart: any) => cart.id !== shopId);
+          const otherCarts = data.carts.filter(
+            (cart: any) => cart.id !== shopId
+          );
           setAvailableCarts(otherCarts);
         }
       } catch (error) {
@@ -398,7 +402,11 @@ export default function CheckoutItems({
       let userLng = 0;
       let hasUserLocation = false;
 
-      if (currentAddress && currentAddress.latitude && currentAddress.longitude) {
+      if (
+        currentAddress &&
+        currentAddress.latitude &&
+        currentAddress.longitude
+      ) {
         userLat = parseFloat(currentAddress.latitude.toString());
         userLng = parseFloat(currentAddress.longitude.toString());
         hasUserLocation = true;
@@ -432,7 +440,9 @@ export default function CheckoutItems({
 
         try {
           // Fetch cart items (now includes shop coordinates)
-          const itemsResponse = await fetch(`/api/cart-items?shop_id=${cart.id}`);
+          const itemsResponse = await fetch(
+            `/api/cart-items?shop_id=${cart.id}`
+          );
           const itemsData = await itemsResponse.json();
           const items = itemsData.items || [];
           const shopLatitude = itemsData.shopLatitude;
@@ -462,8 +472,9 @@ export default function CheckoutItems({
             : 0;
           const extraUnits = Math.max(0, cartUnits - extraUnitsThreshold);
           const unitsSurcharge =
-            extraUnits * (systemConfig ? parseInt(systemConfig.unitsSurcharge) : 0);
-          
+            extraUnits *
+            (systemConfig ? parseInt(systemConfig.unitsSurcharge) : 0);
+
           const baseDeliveryFee = systemConfig
             ? parseInt(systemConfig.baseDeliveryFee)
             : 0;
@@ -479,15 +490,22 @@ export default function CheckoutItems({
             const storeLng = parseFloat(shopLongitude.toString());
 
             if (storeLat && storeLng) {
-              distanceKm = getDistanceFromLatLonInKm(userLat, userLng, storeLat, storeLng);
-              
+              distanceKm = getDistanceFromLatLonInKm(
+                userLat,
+                userLng,
+                storeLat,
+                storeLng
+              );
+
               // Use 3D distance for consistency with main cart (altitude difference)
               // Assume shop altitude is 0 if not available, user altitude from cookie or 0
               const shopAltitude = 0; // Could be fetched from shop data if available
               const userAltitude = 0; // Could be from address data if available
               const altKm = (shopAltitude - userAltitude) / 1000;
-              const distance3D = Math.sqrt(distanceKm * distanceKm + altKm * altKm);
-              
+              const distance3D = Math.sqrt(
+                distanceKm * distanceKm + altKm * altKm
+              );
+
               distanceText = `${distance3D.toFixed(1)} km`;
 
               // Calculate distance-based delivery fee using 3D distance
@@ -500,22 +518,26 @@ export default function CheckoutItems({
                 ? parseInt(systemConfig.cappedDistanceFee)
                 : 0;
               const finalDistanceFee =
-                rawDistanceFee > cappedDistanceFee ? cappedDistanceFee : rawDistanceFee;
+                rawDistanceFee > cappedDistanceFee
+                  ? cappedDistanceFee
+                  : rawDistanceFee;
               cartDeliveryFee = finalDistanceFee + unitsSurcharge;
 
               // Calculate delivery time using 3D distance
-              const shoppingTimeMinutes = systemConfig ? parseInt(systemConfig.shoppingTime) : 0;
+              const shoppingTimeMinutes = systemConfig
+                ? parseInt(systemConfig.shoppingTime)
+                : 0;
               const travelTimeMinutes = Math.min(Math.ceil(distance3D), 240); // Cap at 4 hours
               const totalMinutes = shoppingTimeMinutes + travelTimeMinutes;
-              
+
               if (totalMinutes < 60) {
                 deliveryTimeText = `${totalMinutes}min`;
               } else {
                 const hours = Math.floor(totalMinutes / 60);
                 const mins = totalMinutes % 60;
-                deliveryTimeText = mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+                deliveryTimeText =
+                  mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
               }
-
             }
           }
 
@@ -542,7 +564,13 @@ export default function CheckoutItems({
       fetchCartDetails();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [availableCarts, systemConfig, selectedAddressId, savedAddresses, refetchCartDetails]);
+  }, [
+    availableCarts,
+    systemConfig,
+    selectedAddressId,
+    savedAddresses,
+    refetchCartDetails,
+  ]);
 
   // Toggle cart selection
   const toggleCartSelection = (cartId: string) => {
@@ -566,8 +594,12 @@ export default function CheckoutItems({
     // Get user location
     let userLat = 0;
     let userLng = 0;
-    
-    if (selectedAddress && selectedAddress.latitude && selectedAddress.longitude) {
+
+    if (
+      selectedAddress &&
+      selectedAddress.latitude &&
+      selectedAddress.longitude
+    ) {
       userLat = parseFloat(selectedAddress.latitude.toString());
       userLng = parseFloat(selectedAddress.longitude.toString());
     } else {
@@ -592,16 +624,16 @@ export default function CheckoutItems({
     // Create array of all shops (current + selected) with coordinates
     const allShops = [
       { id: shopId, lat: shopLat, lng: shopLng, name: "Current Shop" },
-      ...Array.from(selectedCartIds).map(cartId => {
+      ...Array.from(selectedCartIds).map((cartId) => {
         const details = cartDetails[cartId];
         return {
           id: cartId,
           lat: details?.shopLat || 0,
           lng: details?.shopLng || 0,
-          name: availableCarts.find(c => c.id === cartId)?.name || "Shop"
+          name: availableCarts.find((c) => c.id === cartId)?.name || "Shop",
         };
-      })
-    ].filter(shop => shop.lat !== 0 && shop.lng !== 0); // Filter out shops without coordinates
+      }),
+    ].filter((shop) => shop.lat !== 0 && shop.lng !== 0); // Filter out shops without coordinates
 
     // If we only have 1 shop (the current one), return null to use normal calculation
     if (allShops.length <= 1) {
@@ -618,26 +650,40 @@ export default function CheckoutItems({
     // Route: Shopper → Shop 1 → Shop 2 → ... → Shop N → Customer
     let totalTravelDistance = 0;
     const routeLegs = [`Shopper → ${allShops[0].name}: ~5 min (buffer)`];
-    
+
     // Distance between consecutive shops
     for (let i = 0; i < allShops.length - 1; i++) {
       const shop1 = allShops[i];
       const shop2 = allShops[i + 1];
-      const distance = getDistanceFromLatLonInKm(shop1.lat, shop1.lng, shop2.lat, shop2.lng);
+      const distance = getDistanceFromLatLonInKm(
+        shop1.lat,
+        shop1.lng,
+        shop2.lat,
+        shop2.lng
+      );
       totalTravelDistance += distance;
-      routeLegs.push(`${shop1.name} → ${shop2.name}: ${distance.toFixed(2)} km`);
+      routeLegs.push(
+        `${shop1.name} → ${shop2.name}: ${distance.toFixed(2)} km`
+      );
     }
-    
+
     // Distance from last shop to customer
     const lastShop = allShops[allShops.length - 1];
-    const lastLegDistance = getDistanceFromLatLonInKm(lastShop.lat, lastShop.lng, userLat, userLng);
+    const lastLegDistance = getDistanceFromLatLonInKm(
+      lastShop.lat,
+      lastShop.lng,
+      userLat,
+      userLng
+    );
     totalTravelDistance += lastLegDistance;
-    routeLegs.push(`${lastShop.name} → Customer: ${lastLegDistance.toFixed(2)} km`);
+    routeLegs.push(
+      `${lastShop.name} → Customer: ${lastLegDistance.toFixed(2)} km`
+    );
 
     // Travel time (1 min per km, capped at 240 min)
     const shopToShopTravelTime = Math.min(Math.ceil(totalTravelDistance), 240);
     const totalTravelTime = initialTravelTime + shopToShopTravelTime;
-    
+
     const totalTime = totalShoppingTime + totalTravelTime;
 
     return {
@@ -649,12 +695,14 @@ export default function CheckoutItems({
         shopToShopTravelTime,
         totalTravelDistance,
         totalTravelTime,
-        route: "Shopper → " + allShops.map(s => s.name).join(" → ") + " → Customer",
-        routeLegs
-      }
+        route:
+          "Shopper → " +
+          allShops.map((s) => s.name).join(" → ") +
+          " → Customer",
+        routeLegs,
+      },
     };
   };
-
 
   // Fetch payment methods, addresses, and refund balance on component mount
   useEffect(() => {
@@ -664,7 +712,10 @@ export default function CheckoutItems({
         if (isGuest) {
           setSelectedPaymentValue("one-time-phone");
           setShowOneTimePhoneInput(true);
-          setSelectedPaymentMethod({ type: "momo", number: oneTimePhoneNumber });
+          setSelectedPaymentMethod({
+            type: "momo",
+            number: oneTimePhoneNumber,
+          });
           setLoadingPayment(false);
           return;
         }
@@ -956,10 +1007,13 @@ export default function CheckoutItems({
 
   // Use preparation time for food orders, shopping time for regular orders
   const processingTime = isFoodCart ? preparationTime : shoppingTime;
-  
+
   // Calculate combined delivery time if multiple carts are selected
   const combinedCalc = calculateCombinedDeliveryTime();
-  const totalTimeMinutes = combinedCalc !== null ? combinedCalc.totalTime : (travelTime + processingTime);
+  const totalTimeMinutes =
+    combinedCalc !== null
+      ? combinedCalc.totalTime
+      : travelTime + processingTime;
 
   // Calculate the delivery timestamp (current time + totalTimeMinutes)
   const deliveryDate = new Date(Date.now() + totalTimeMinutes * 60000);
@@ -1019,10 +1073,9 @@ export default function CheckoutItems({
     }
   } else {
     // For regular shop orders, show shopping + delivery time with distance
-    const multiShopSuffix = selectedCartIds.size > 0 
-      ? ` - ${selectedCartIds.size + 1} shops` 
-      : "";
-      
+    const multiShopSuffix =
+      selectedCartIds.size > 0 ? ` - ${selectedCartIds.size + 1} shops` : "";
+
     if (days > 0) {
       deliveryTime = `Will be delivered in ${days} day${days > 1 ? "s" : ""}${
         hours > 0 ? ` ${hours}h` : ""
@@ -1177,10 +1230,12 @@ export default function CheckoutItems({
 
   // Compute numeric final total including service fee and delivery fee, minus discounts
   const finalServiceFee = serviceFee - serviceFeeDiscount + combinedServiceFee;
-  const finalDeliveryFee = deliveryFee - deliveryFeeDiscount + combinedDeliveryFee;
+  const finalDeliveryFee =
+    deliveryFee - deliveryFeeDiscount + combinedDeliveryFee;
   const grandSubtotal = Total + combinedSubtotal;
   const grandTotalUnits = totalUnits + combinedUnits;
-  const finalTotal = grandSubtotal - discount + finalServiceFee + finalDeliveryFee;
+  const finalTotal =
+    grandSubtotal - discount + finalServiceFee + finalDeliveryFee;
 
   const handleProceedToCheckout = async () => {
     // Validate cart has items
@@ -1277,7 +1332,7 @@ export default function CheckoutItems({
         if (selectedCartIds.size > 0) {
           // Combined checkout with multiple carts
           apiEndpoint = "/api/mutations/create-combined-orders";
-          
+
           // Prepare stores data
           const stores = [
             // Current cart
@@ -1394,7 +1449,9 @@ export default function CheckoutItems({
                 >
                   {isCombinedOrder
                     ? `Your ${data.orders.length} combined orders have been placed successfully! You can view them in "Current Orders".`
-                    : `Your order #${data.order_id?.slice(-8)} has been placed and is being prepared! You can view it in "Current Orders".`}
+                    : `Your order #${data.order_id?.slice(
+                        -8
+                      )} has been placed and is being prepared! You can view it in "Current Orders".`}
                 </Notification>,
                 { placement: "topEnd", duration: 5000 }
               );
@@ -1679,7 +1736,10 @@ export default function CheckoutItems({
     // For guest users or when using one-time phone
     if (isGuest || showOneTimePhoneInput) {
       // Phone number must be provided and valid (at least 10 digits)
-      if (!oneTimePhoneNumber || oneTimePhoneNumber.replace(/\D/g, "").length < 10) {
+      if (
+        !oneTimePhoneNumber ||
+        oneTimePhoneNumber.replace(/\D/g, "").length < 10
+      ) {
         return false;
       }
     }
@@ -1892,7 +1952,7 @@ export default function CheckoutItems({
               </button>
             </div>
           </div>
-          
+
           {/* Combine button - Mobile */}
           {!loadingCarts && availableCarts.length > 0 && (
             <button
@@ -1900,7 +1960,7 @@ export default function CheckoutItems({
                 e.stopPropagation();
                 // Clear cart details and trigger refetch
                 setCartDetails({});
-                setRefetchCartDetails(prev => prev + 1);
+                setRefetchCartDetails((prev) => prev + 1);
                 setShowCombineModal(true);
               }}
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-md transition-all hover:from-green-600 hover:to-emerald-700"
@@ -1918,7 +1978,11 @@ export default function CheckoutItems({
                   d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                 />
               </svg>
-              {selectedCartIds.size > 0 ? `${selectedCartIds.size} Cart${selectedCartIds.size !== 1 ? 's' : ''} Combined` : "Combine with Other Carts"}
+              {selectedCartIds.size > 0
+                ? `${selectedCartIds.size} Cart${
+                    selectedCartIds.size !== 1 ? "s" : ""
+                  } Combined`
+                : "Combine with Other Carts"}
             </button>
           )}
         </div>
@@ -1989,7 +2053,9 @@ export default function CheckoutItems({
                   theme === "dark" ? "text-gray-300" : "text-gray-600"
                 }`}
               >
-                Subtotal {selectedCartIds.size > 0 && `(${selectedCartIds.size + 1} carts)`}
+                Subtotal{" "}
+                {selectedCartIds.size > 0 &&
+                  `(${selectedCartIds.size + 1} carts)`}
               </span>
               <span
                 className={`text-sm font-medium ${
@@ -2053,7 +2119,9 @@ export default function CheckoutItems({
                   theme === "dark" ? "text-gray-300" : "text-gray-600"
                 }`}
               >
-                Delivery Fee {selectedCartIds.size > 0 && `(+${selectedCartIds.size} at 70%)`}
+                Delivery Fee{" "}
+                {selectedCartIds.size > 0 &&
+                  `(+${selectedCartIds.size} at 70%)`}
               </span>
               <span
                 className={`text-sm font-medium ${
@@ -2181,13 +2249,15 @@ export default function CheckoutItems({
               >
                 Payment Method
               </h4>
-              
+
               {/* For guest users, show only phone input */}
               {isGuest ? (
                 <div>
-                  <p className={`mb-2 text-xs ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}>
+                  <p
+                    className={`mb-2 text-xs ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
                     Pay with MTN Mobile Money
                   </p>
                   <input
@@ -2381,7 +2451,7 @@ export default function CheckoutItems({
                       e.stopPropagation();
                       // Clear cart details and trigger refetch
                       setCartDetails({});
-                      setRefetchCartDetails(prev => prev + 1);
+                      setRefetchCartDetails((prev) => prev + 1);
                       setShowCombineModal(true);
                     }}
                     className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-md transition-all hover:from-green-600 hover:to-emerald-700"
@@ -2399,7 +2469,9 @@ export default function CheckoutItems({
                         d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                       />
                     </svg>
-                    {selectedCartIds.size > 0 ? `${selectedCartIds.size} Combined` : "Combine Carts"}
+                    {selectedCartIds.size > 0
+                      ? `${selectedCartIds.size} Combined`
+                      : "Combine Carts"}
                   </button>
                 )}
               </div>
@@ -2408,7 +2480,9 @@ export default function CheckoutItems({
             <div className="space-y-2">
               <div className="flex justify-between py-1">
                 <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Subtotal {selectedCartIds.size > 0 && `(${selectedCartIds.size + 1} carts)`}
+                  Subtotal{" "}
+                  {selectedCartIds.size > 0 &&
+                    `(${selectedCartIds.size + 1} carts)`}
                 </span>
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
                   {formatCurrency(grandSubtotal)}
@@ -2456,7 +2530,9 @@ export default function CheckoutItems({
 
               <div className="flex justify-between py-1">
                 <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Delivery Fee {selectedCartIds.size > 0 && `(+${selectedCartIds.size} at 70%)`}
+                  Delivery Fee{" "}
+                  {selectedCartIds.size > 0 &&
+                    `(+${selectedCartIds.size} at 70%)`}
                 </span>
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
                   {formatCurrency(finalDeliveryFee)}
@@ -2579,7 +2655,7 @@ export default function CheckoutItems({
               <h4 className="mb-0.5 text-sm font-semibold text-gray-900 dark:text-white">
                 Payment Method
               </h4>
-              
+
               {/* For guest users, show only phone input */}
               {isGuest ? (
                 <div>
@@ -2591,7 +2667,7 @@ export default function CheckoutItems({
                     placeholder="Enter phone number (e.g., 078XXXXXXX)"
                     value={oneTimePhoneNumber}
                     onChange={(e) => handleOneTimePhoneChange(e.target.value)}
-                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm text-gray-900 placeholder-gray-400 transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20"
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20"
                   />
                 </div>
               ) : (
@@ -2689,7 +2765,7 @@ export default function CheckoutItems({
                       placeholder="Enter phone number"
                       value={oneTimePhoneNumber}
                       onChange={(e) => handleOneTimePhoneChange(e.target.value)}
-                      className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm text-gray-900 placeholder-gray-400 transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20"
+                      className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20"
                     />
                   )}
                 </>
@@ -2707,7 +2783,7 @@ export default function CheckoutItems({
                     value={discountCode}
                     onChange={(e) => setDiscountCode(e.target.value)}
                     placeholder="Enter promo or referral code"
-                    className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm text-gray-900 placeholder-gray-400 transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20"
+                    className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20"
                   />
                   <Button
                     appearance="primary"
@@ -2731,7 +2807,7 @@ export default function CheckoutItems({
                 value={deliveryNotes}
                 onChange={(e) => setDeliveryNotes(e.target.value)}
                 placeholder="Enter any delivery instructions or notes"
-                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm text-gray-900 placeholder-gray-400 transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20"
+                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20"
               />
             </div>
 
@@ -2801,16 +2877,22 @@ export default function CheckoutItems({
         size="md"
       >
         <Modal.Header>
-          <Modal.Title className={theme === "dark" ? "text-white" : "text-gray-900"}>
+          <Modal.Title
+            className={theme === "dark" ? "text-white" : "text-gray-900"}
+          >
             🛒 Combine with Other Carts
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <div className={theme === "dark" ? "text-gray-300" : "text-gray-700"}>
             <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-              Select additional carts to checkout together. <span className="font-semibold text-green-600 dark:text-green-400">Delivery fee is 30% off</span> for each additional cart!
+              Select additional carts to checkout together.{" "}
+              <span className="font-semibold text-green-600 dark:text-green-400">
+                Delivery fee is 30% off
+              </span>{" "}
+              for each additional cart!
             </p>
-            
+
             {loadingCarts ? (
               <div className="flex items-center justify-center py-8">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-green-500"></div>
@@ -2824,7 +2906,7 @@ export default function CheckoutItems({
                 {availableCarts.map((cart) => {
                   const details = cartDetails[cart.id];
                   const isSelected = selectedCartIds.has(cart.id);
-                  
+
                   return (
                     <div
                       key={cart.id}
@@ -2856,38 +2938,81 @@ export default function CheckoutItems({
                               </span>
                             )}
                           </div>
-                          
+
                           {details ? (
                             <div className="space-y-2">
                               <div className="grid grid-cols-2 gap-2 text-sm">
                                 <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                  <svg
+                                    className="h-4 w-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                                    />
                                   </svg>
                                   <span>{details.units} items</span>
                                 </div>
                                 <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <svg
+                                    className="h-4 w-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                                    />
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                                    />
                                   </svg>
                                   <span>{details.distance}</span>
                                 </div>
                                 <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <svg
+                                    className="h-4 w-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
                                     <circle cx="12" cy="12" r="10" />
                                     <polyline points="12 6 12 12 16 14" />
                                   </svg>
                                   <span>{details.deliveryTime}</span>
                                 </div>
                                 <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                  <svg
+                                    className="h-4 w-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                                    />
                                   </svg>
-                                  <span>{formatCurrency(details.deliveryFee)} {isSelected && "(30% off)"}</span>
+                                  <span>
+                                    {formatCurrency(details.deliveryFee)}{" "}
+                                    {isSelected && "(30% off)"}
+                                  </span>
                                 </div>
                               </div>
-                              
+
                               <div className="flex items-center justify-between border-t border-gray-200 pt-2 dark:border-gray-700">
                                 <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                                   Subtotal:
@@ -2919,11 +3044,16 @@ export default function CheckoutItems({
             color="green"
             className="bg-gradient-to-r from-green-500 to-emerald-600"
           >
-            {selectedCartIds.size > 0 
-              ? `Continue with ${selectedCartIds.size + 1} Cart${selectedCartIds.size > 0 ? 's' : ''}`
-              : 'Continue'}
+            {selectedCartIds.size > 0
+              ? `Continue with ${selectedCartIds.size + 1} Cart${
+                  selectedCartIds.size > 0 ? "s" : ""
+                }`
+              : "Continue"}
           </Button>
-          <Button onClick={() => setShowCombineModal(false)} appearance="subtle">
+          <Button
+            onClick={() => setShowCombineModal(false)}
+            appearance="subtle"
+          >
             Cancel
           </Button>
         </Modal.Footer>

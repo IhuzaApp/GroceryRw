@@ -245,7 +245,8 @@ export default function UserRecentOrders({
           is_combined: true,
           orders: groupOrders.sort(
             (a, b) =>
-              new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
           ),
           total: totalAmount,
           created_at: earliestDate,
@@ -413,7 +414,8 @@ export default function UserRecentOrders({
                       </span>
                     </div>
                     <span className="text-xs text-gray-600 dark:text-gray-400">
-                      {timeAgo(group.created_at)} • {formatCurrency(group.total)}
+                      {timeAgo(group.created_at)} •{" "}
+                      {formatCurrency(group.total)}
                     </span>
                   </div>
                   <button
@@ -445,7 +447,7 @@ export default function UserRecentOrders({
                   {group.orders.map((order: Order) => (
                     <div
                       key={order.id}
-                      className="bg-white p-4 transition-colors hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-750"
+                      className="dark:hover:bg-gray-750 bg-white p-4 transition-colors hover:bg-gray-50 dark:bg-gray-800"
                     >
                       {/* Render individual order (reuse existing order display logic) */}
                       {order.shop && (
@@ -464,7 +466,8 @@ export default function UserRecentOrders({
                               {order?.shop?.name}
                             </div>
                             <div className="text-xs text-gray-500 dark:text-gray-400">
-                              Order #{formatOrderID(order?.OrderID)} • {formatCurrency(order.total)}
+                              Order #{formatOrderID(order?.OrderID)} •{" "}
+                              {formatCurrency(order.total)}
                             </div>
                           </div>
                           {order.status === "delivered" ? (
@@ -509,212 +512,276 @@ export default function UserRecentOrders({
           ) : (
             // Single Order (Original Display)
             group.orders.map((order: Order) => (
-          <div
-            key={order.id}
-            className="group mb-2 overflow-hidden rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-all duration-300 hover:border-green-200 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-700"
-          >
-            {/* Shop Profile for Regular Orders */}
-            {order.shop && order.orderType === "regular" ? (
-              <div className="mb-2 flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30">
-                  <svg
-                    className="h-4 w-4 text-green-600 dark:text-green-400"
-                    viewBox="0 0 0.6 0.6"
-                    data-name="Layer 1"
-                    id="Layer_1"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="currentColor"
-                  >
-                    <title />
-                    <path d="M0.138 0.125 0.125 0.075H0.031a0.025 0.025 0 0 0 0 0.05h0.056L0.168 0.45H0.5v-0.05H0.207l-0.008 -0.034L0.525 0.304V0.125ZM0.475 0.263 0.186 0.318 0.15 0.175h0.325ZM0.175 0.475a0.038 0.038 0 1 0 0.038 0.038A0.038 0.038 0 0 0 0.175 0.475m0.3 0a0.038 0.038 0 1 0 0.038 0.038A0.038 0.038 0 0 0 0.475 0.475" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <div className="text-sm font-bold text-gray-900 dark:text-white">
-                    {order?.shop?.name}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {order?.shop?.address}
-                  </div>
-                </div>
-              </div>
-            ) : null}
-
-            {/* Restaurant Profile for Restaurant Orders */}
-            {order.shop && order.orderType === "restaurant" ? (
-              <div className="mb-2 flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/30">
-                  <svg
-                    className="h-4 w-4 text-orange-600 dark:text-orange-400"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M3 2h7l4 9H8l-2 4.5c-.3.8-1.5.8-1.8 0L3 11H2a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z" />
-                    <path d="M12 2h7l-4 9h4l-2 4.5c-.3.8-1.5.8-1.8 0L12 11h1a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <div className="text-sm font-bold text-gray-900 dark:text-white">
-                    {order?.shop?.name}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {order?.shop?.address}
-                  </div>
-                  {order.delivery_note && (
-                    <div className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
-                      Note: {order.delivery_note}
+              <div
+                key={order.id}
+                className="group mb-2 overflow-hidden rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-all duration-300 hover:border-green-200 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-700"
+              >
+                {/* Shop Profile for Regular Orders */}
+                {order.shop && order.orderType === "regular" ? (
+                  <div className="mb-2 flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30">
+                      <svg
+                        className="h-4 w-4 text-green-600 dark:text-green-400"
+                        viewBox="0 0 0.6 0.6"
+                        data-name="Layer 1"
+                        id="Layer_1"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="currentColor"
+                      >
+                        <title />
+                        <path d="M0.138 0.125 0.125 0.075H0.031a0.025 0.025 0 0 0 0 0.05h0.056L0.168 0.45H0.5v-0.05H0.207l-0.008 -0.034L0.525 0.304V0.125ZM0.475 0.263 0.186 0.318 0.15 0.175h0.325ZM0.175 0.475a0.038 0.038 0 1 0 0.038 0.038A0.038 0.038 0 0 0 0.175 0.475m0.3 0a0.038 0.038 0 1 0 0.038 0.038A0.038 0.038 0 0 0 0.475 0.475" />
+                      </svg>
                     </div>
-                  )}
-                </div>
-              </div>
-            ) : null}
-
-            {/* Reel Profile for Reel Orders */}
-            {order.orderType === "reel" && order.reel ? (
-              <div className="mb-2 flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/30">
-                  <svg
-                    className="h-4 w-4 text-purple-600 dark:text-purple-400"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <div className="text-sm font-bold text-gray-900 dark:text-white">
-                    {order.reel.title}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {order.reel.description}
-                  </div>
-                  {order.delivery_note && (
-                    <div className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
-                      Note: {order.delivery_note}
+                    <div className="flex-1">
+                      <div className="text-sm font-bold text-gray-900 dark:text-white">
+                        {order?.shop?.name}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {order?.shop?.address}
+                      </div>
                     </div>
-                  )}
-                </div>
-              </div>
-            ) : null}
+                  </div>
+                ) : null}
 
-            {/* Order Info */}
-            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-              <div className="flex flex-col">
-                <span className="text-sm font-bold text-gray-900 dark:text-white">
-                  Order #{formatOrderID(order?.OrderID)}
-                </span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {timeAgo(order?.created_at)}
-                </span>
-              </div>
-              
-              {/* PIN Display */}
-              {order?.pin && (
-                <div className="flex flex-col items-center gap-0.5 rounded-lg border-2 border-dashed border-green-400 bg-gradient-to-br from-green-50 to-green-100 px-3 py-1.5 shadow-sm dark:border-green-600 dark:from-green-900/30 dark:to-green-800/20">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-green-600 dark:text-green-400">
-                    PICKUP PIN
-                  </span>
-                  <span className="text-2xl font-black leading-none tracking-wider text-green-700 dark:text-green-300">
-                    {order.pin}
-                  </span>
-                </div>
-              )}
-              
-              {/* Shopper Details or Status Badge */}
-              {(() => {
-                const isDone = order.status === "delivered";
-                const isAssigned = !!order?.shopper_id || !!order?.assignedTo;
+                {/* Restaurant Profile for Restaurant Orders */}
+                {order.shop && order.orderType === "restaurant" ? (
+                  <div className="mb-2 flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/30">
+                      <svg
+                        className="h-4 w-4 text-orange-600 dark:text-orange-400"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M3 2h7l4 9H8l-2 4.5c-.3.8-1.5.8-1.8 0L3 11H2a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z" />
+                        <path d="M12 2h7l-4 9h4l-2 4.5c-.3.8-1.5.8-1.8 0L12 11h1a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-bold text-gray-900 dark:text-white">
+                        {order?.shop?.name}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {order?.shop?.address}
+                      </div>
+                      {order.delivery_note && (
+                        <div className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+                          Note: {order.delivery_note}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : null}
 
-                if (isDone) {
-                  return (
-                    <div className="flex items-center gap-1.5 rounded-full bg-green-100 px-2 py-1 dark:bg-green-900/30">
-                      <div className="h-1.5 w-1.5 rounded-full bg-green-500"></div>
-                      <span className="text-xs font-semibold text-green-700 dark:text-green-300">
-                        Completed
+                {/* Reel Profile for Reel Orders */}
+                {order.orderType === "reel" && order.reel ? (
+                  <div className="mb-2 flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                      <svg
+                        className="h-4 w-4 text-purple-600 dark:text-purple-400"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-bold text-gray-900 dark:text-white">
+                        {order.reel.title}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {order.reel.description}
+                      </div>
+                      {order.delivery_note && (
+                        <div className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+                          Note: {order.delivery_note}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : null}
+
+                {/* Order Info */}
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">
+                      Order #{formatOrderID(order?.OrderID)}
+                    </span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {timeAgo(order?.created_at)}
+                    </span>
+                  </div>
+
+                  {/* PIN Display */}
+                  {order?.pin && (
+                    <div className="flex flex-col items-center gap-0.5 rounded-lg border-2 border-dashed border-green-400 bg-gradient-to-br from-green-50 to-green-100 px-3 py-1.5 shadow-sm dark:border-green-600 dark:from-green-900/30 dark:to-green-800/20">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-green-600 dark:text-green-400">
+                        PICKUP PIN
+                      </span>
+                      <span className="text-2xl font-black leading-none tracking-wider text-green-700 dark:text-green-300">
+                        {order.pin}
                       </span>
                     </div>
-                  );
-                } else if (isAssigned && order.assignedTo) {
-                  // Show shopper details when assigned
-                  return (
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-blue-100 dark:bg-blue-900/30">
-                        {order.assignedTo.profile_photo ? (
-                          <img
-                            src={order.assignedTo.profile_photo}
-                            alt={order.assignedTo.name}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <svg
-                            className="h-5 w-5 text-blue-600 dark:text-blue-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                            />
-                          </svg>
-                        )}
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-xs font-semibold text-gray-900 dark:text-white">
-                          {order.assignedTo.name}
-                        </span>
-                        {order.assignedTo.rating && (
-                          <div className="flex items-center gap-1">
-                            <svg
-                              className="h-3 w-3 text-yellow-400"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              {order.assignedTo.rating.toFixed(1)}
-                            </span>
+                  )}
+
+                  {/* Shopper Details or Status Badge */}
+                  {(() => {
+                    const isDone = order.status === "delivered";
+                    const isAssigned =
+                      !!order?.shopper_id || !!order?.assignedTo;
+
+                    if (isDone) {
+                      return (
+                        <div className="flex items-center gap-1.5 rounded-full bg-green-100 px-2 py-1 dark:bg-green-900/30">
+                          <div className="h-1.5 w-1.5 rounded-full bg-green-500"></div>
+                          <span className="text-xs font-semibold text-green-700 dark:text-green-300">
+                            Completed
+                          </span>
+                        </div>
+                      );
+                    } else if (isAssigned && order.assignedTo) {
+                      // Show shopper details when assigned
+                      return (
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-blue-100 dark:bg-blue-900/30">
+                            {order.assignedTo.profile_photo ? (
+                              <img
+                                src={order.assignedTo.profile_photo}
+                                alt={order.assignedTo.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <svg
+                                className="h-5 w-5 text-blue-600 dark:text-blue-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                />
+                              </svg>
+                            )}
                           </div>
-                        )}
+                          <div className="flex flex-col">
+                            <span className="text-xs font-semibold text-gray-900 dark:text-white">
+                              {order.assignedTo.name}
+                            </span>
+                            {order.assignedTo.rating && (
+                              <div className="flex items-center gap-1">
+                                <svg
+                                  className="h-3 w-3 text-yellow-400"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                  {order.assignedTo.rating.toFixed(1)}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    } else if (!isAssigned) {
+                      return (
+                        <div className="flex items-center gap-1.5 rounded-full bg-yellow-100 px-2 py-1 dark:bg-yellow-900/30">
+                          <div className="h-1.5 w-1.5 rounded-full bg-yellow-500"></div>
+                          <span className="text-xs font-semibold text-yellow-700 dark:text-yellow-300">
+                            Pending
+                          </span>
+                        </div>
+                      );
+                    } else {
+                      // Assigned but no assignedTo details available
+                      return (
+                        <div className="flex items-center gap-1.5 rounded-full bg-blue-100 px-2 py-1 dark:bg-blue-900/30">
+                          <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
+                          <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">
+                            Assigned
+                          </span>
+                        </div>
+                      );
+                    }
+                  })()}
+                </div>
+
+                <div className="mb-2 rounded-lg bg-gray-50 p-2 dark:bg-gray-700/50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30">
+                        <svg
+                          className="h-3 w-3 text-green-600 dark:text-green-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-gray-900 dark:text-white">
+                          {order.orderType === "reel"
+                            ? `${order.quantity || 1} quantity`
+                            : order.orderType === "restaurant"
+                            ? `${order.itemsCount} dishes (${order.unitsCount} items)`
+                            : `${order.itemsCount} items (${order.unitsCount} units)`}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {order.orderType === "reel"
+                            ? "Reel Order"
+                            : order.orderType === "restaurant"
+                            ? "Restaurant Order"
+                            : "Grocery Order"}
+                        </div>
                       </div>
                     </div>
-                  );
-                } else if (!isAssigned) {
-                  return (
-                    <div className="flex items-center gap-1.5 rounded-full bg-yellow-100 px-2 py-1 dark:bg-yellow-900/30">
-                      <div className="h-1.5 w-1.5 rounded-full bg-yellow-500"></div>
-                      <span className="text-xs font-semibold text-yellow-700 dark:text-yellow-300">
-                        Pending
-                      </span>
+                    <div className="text-right">
+                      <div className="text-sm font-bold text-gray-900 dark:text-white">
+                        {formatCurrency(order.total)}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        Total
+                      </div>
                     </div>
-                  );
-                } else {
-                  // Assigned but no assignedTo details available
-                  return (
-                    <div className="flex items-center gap-1.5 rounded-full bg-blue-100 px-2 py-1 dark:bg-blue-900/30">
-                      <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
-                      <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">
-                        Assigned
-                      </span>
-                    </div>
-                  );
-                }
-              })()}
-            </div>
+                  </div>
+                </div>
 
-            <div className="mb-2 rounded-lg bg-gray-50 p-2 dark:bg-gray-700/50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30">
+                {/* Estimated Delivery Time */}
+                {order.delivery_time && (
+                  <div className="mb-1.5">
+                    <EstimatedDelivery
+                      deliveryTime={order.delivery_time}
+                      status={order.status}
+                    />
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <Link
+                    href={`/CurrentPendingOrders/viewOrderDetails/${order.id}`}
+                    className={`group flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold !text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
+                      order.orderType === "reel"
+                        ? "bg-gradient-to-r from-purple-500 to-purple-600 shadow-md hover:from-purple-600 hover:to-purple-700 hover:shadow-purple-200 focus:ring-purple-500 dark:shadow-purple-900/50"
+                        : order.orderType === "restaurant"
+                        ? "bg-gradient-to-r from-orange-500 to-orange-600 shadow-md hover:from-orange-600 hover:to-orange-700 hover:shadow-orange-200 focus:ring-orange-500 dark:shadow-orange-900/50"
+                        : "bg-gradient-to-r from-green-500 to-green-600 shadow-md hover:from-green-600 hover:to-green-700 hover:shadow-green-200 focus:ring-green-500 dark:shadow-green-900/50"
+                    }`}
+                  >
                     <svg
-                      className="h-3 w-3 text-green-600 dark:text-green-400"
+                      className="h-3 w-3 !text-white transition-transform group-hover:scale-110"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -723,101 +790,38 @@ export default function UserRecentOrders({
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth="2"
-                        d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                       />
                     </svg>
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold text-gray-900 dark:text-white">
-                      {order.orderType === "reel"
-                        ? `${order.quantity || 1} quantity`
-                        : order.orderType === "restaurant"
-                        ? `${order.itemsCount} dishes (${order.unitsCount} items)`
-                        : `${order.itemsCount} items (${order.unitsCount} units)`}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {order.orderType === "reel"
-                        ? "Reel Order"
-                        : order.orderType === "restaurant"
-                        ? "Restaurant Order"
-                        : "Grocery Order"}
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-bold text-gray-900 dark:text-white">
-                    {formatCurrency(order.total)}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    Total
-                  </div>
+                    View Details
+                  </Link>
+
+                  {!isPendingOrdersPage && (
+                    <button className="flex items-center gap-1.5 rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs font-semibold text-gray-700 transition-all duration-200 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700">
+                      <svg
+                        className="h-3 w-3"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                        />
+                      </svg>
+                      Reorder
+                    </button>
+                  )}
                 </div>
               </div>
-            </div>
-
-            {/* Estimated Delivery Time */}
-            {order.delivery_time && (
-              <div className="mb-1.5">
-                <EstimatedDelivery
-                  deliveryTime={order.delivery_time}
-                  status={order.status}
-                />
-              </div>
-            )}
-
-            <div className="flex gap-2">
-              <Link
-                href={`/CurrentPendingOrders/viewOrderDetails/${order.id}`}
-                className={`group flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold !text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
-                  order.orderType === "reel"
-                    ? "bg-gradient-to-r from-purple-500 to-purple-600 shadow-md hover:from-purple-600 hover:to-purple-700 hover:shadow-purple-200 focus:ring-purple-500 dark:shadow-purple-900/50"
-                    : order.orderType === "restaurant"
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 shadow-md hover:from-orange-600 hover:to-orange-700 hover:shadow-orange-200 focus:ring-orange-500 dark:shadow-orange-900/50"
-                    : "bg-gradient-to-r from-green-500 to-green-600 shadow-md hover:from-green-600 hover:to-green-700 hover:shadow-green-200 focus:ring-green-500 dark:shadow-green-900/50"
-                }`}
-              >
-                <svg
-                  className="h-3 w-3 !text-white transition-transform group-hover:scale-110"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                  />
-                </svg>
-                View Details
-              </Link>
-
-              {!isPendingOrdersPage && (
-                <button className="flex items-center gap-1.5 rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs font-semibold text-gray-700 transition-all duration-200 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700">
-                  <svg
-                    className="h-3 w-3"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                    />
-                  </svg>
-                  Reorder
-                </button>
-              )}
-            </div>
-          </div>
             ))
           )
         )

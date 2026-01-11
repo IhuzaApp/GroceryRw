@@ -285,7 +285,7 @@ const MobileOrderDetails = ({
                     </span>
                   </div>
                 </div>
-                
+
                 {/* Order Status Indicator */}
                 {(() => {
                   const statusInfo = getOrderStatusInfo(order);

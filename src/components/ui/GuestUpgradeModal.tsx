@@ -125,8 +125,8 @@ export default function GuestUpgradeModal({
             onClick={onClose}
             className={`rounded-xl p-2 transition-colors ${
               theme === "dark"
-                ? "hover:bg-gray-700 text-gray-400"
-                : "hover:bg-gray-100 text-gray-500"
+                ? "text-gray-400 hover:bg-gray-700"
+                : "text-gray-500 hover:bg-gray-100"
             }`}
             disabled={isLoading}
           >
@@ -381,8 +381,8 @@ export default function GuestUpgradeModal({
             disabled={isLoading}
             className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 md:px-5 ${
               theme === "dark"
-                ? "border-2 border-gray-600 bg-gray-700 text-white hover:bg-gray-600 hover:border-gray-500 focus:ring-gray-500"
-                : "border-2 border-gray-300 bg-white text-gray-900 hover:bg-gray-50 hover:border-gray-400 focus:ring-gray-300"
+                ? "border-2 border-gray-600 bg-gray-700 text-white hover:border-gray-500 hover:bg-gray-600 focus:ring-gray-500"
+                : "border-2 border-gray-300 bg-white text-gray-900 hover:border-gray-400 hover:bg-gray-50 focus:ring-gray-300"
             }`}
           >
             Cancel

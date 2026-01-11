@@ -128,7 +128,11 @@ const MobileShopCard: React.FC<MobileShopCardProps> = ({
   const ratingCount = hasRating ? dynamics.ratingCount.toString() : "0";
 
   return (
-    <Link href={getNavigationPath()} className="block no-underline hover:no-underline" style={{ color: 'inherit', textDecoration: 'none' }}>
+    <Link
+      href={getNavigationPath()}
+      className="block no-underline hover:no-underline"
+      style={{ color: "inherit", textDecoration: "none" }}
+    >
       <div className="relative mb-5 transform cursor-pointer overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:bg-gray-800">
         {/* Main Image Banner */}
         <div className="relative h-28 w-full bg-gray-100 dark:bg-gray-800">

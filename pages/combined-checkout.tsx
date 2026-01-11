@@ -5,7 +5,14 @@ import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import RootLayout from "../src/components/ui/layout";
-import { ArrowLeft, MapPin, Clock, CreditCard, ShoppingCart, X } from "lucide-react";
+import {
+  ArrowLeft,
+  MapPin,
+  Clock,
+  CreditCard,
+  ShoppingCart,
+  X,
+} from "lucide-react";
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../src/utils/formatCurrency";
@@ -104,7 +111,7 @@ export default function CombinedCheckoutPage() {
 
           // Calculate fees (5% service fee, distance-based transport)
           const serviceFee = Math.ceil(subtotal * 0.05);
-          
+
           // For now, use a default transportation fee of 1000
           // We'll calculate actual distance-based fee when user selects address
           const transportationFee = 1000;
@@ -331,7 +338,9 @@ export default function CombinedCheckoutPage() {
         toast.success(
           `Successfully placed ${result.orders.length} orders together!`
         );
-        router.push(`/user-orders?combined_order_id=${result.combined_order_id}`);
+        router.push(
+          `/user-orders?combined_order_id=${result.combined_order_id}`
+        );
       } else {
         const error = await response.json();
         throw new Error(error.message || "Failed to place combined orders");
@@ -520,7 +529,8 @@ export default function CombinedCheckoutPage() {
                                 {item.name}
                               </p>
                               <p className="text-xs text-gray-500 dark:text-gray-400">
-                                {item.quantity} × {formatCurrencySync(parseFloat(item.price))}
+                                {item.quantity} ×{" "}
+                                {formatCurrencySync(parseFloat(item.price))}
                               </p>
                             </div>
                             <p className="text-sm font-bold text-gray-900 dark:text-white">

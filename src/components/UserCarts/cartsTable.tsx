@@ -52,10 +52,10 @@ function CartItem({
 
   return (
     <div
-      className={`relative mb-3 rounded-xl p-4 shadow-sm transition-all border md:grid md:grid-cols-12 md:items-center md:gap-4 ${
-        theme === "dark" 
-          ? "bg-gray-800/50 border-gray-700 hover:shadow-md" 
-          : "bg-white border-gray-200 hover:shadow-md"
+      className={`relative mb-3 rounded-xl border p-4 shadow-sm transition-all md:grid md:grid-cols-12 md:items-center md:gap-4 ${
+        theme === "dark"
+          ? "border-gray-700 bg-gray-800/50 hover:shadow-md"
+          : "border-gray-200 bg-white hover:shadow-md"
       }`}
     >
       {/* Delete Button - Top Right (Mobile Only) */}
@@ -137,13 +137,15 @@ function CartItem({
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
-          <div className={`flex items-center gap-0 rounded-lg px-1 py-1 ${
-            theme === "dark" ? "bg-gray-700/50" : "bg-gray-100"
-          }`}>
+          <div
+            className={`flex items-center gap-0 rounded-lg px-1 py-1 ${
+              theme === "dark" ? "bg-gray-700/50" : "bg-gray-100"
+            }`}
+          >
             <button
               onClick={onDecrease}
               disabled={quantity <= 1 || loading}
-              className={`flex h-7 w-7 items-center justify-center rounded-md transition-all disabled:cursor-not-allowed disabled:opacity-40 font-semibold text-base ${
+              className={`flex h-7 w-7 items-center justify-center rounded-md text-base font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
                 theme === "dark"
                   ? "text-gray-300 hover:bg-gray-600 hover:text-white"
                   : "text-gray-700 hover:bg-gray-200"
@@ -161,7 +163,7 @@ function CartItem({
             <button
               onClick={onIncrease}
               disabled={loading}
-              className={`flex h-7 w-7 items-center justify-center rounded-md transition-all disabled:cursor-not-allowed disabled:opacity-40 font-semibold text-base ${
+              className={`flex h-7 w-7 items-center justify-center rounded-md text-base font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
                 theme === "dark"
                   ? "text-gray-300 hover:bg-gray-600 hover:text-white"
                   : "text-gray-700 hover:bg-gray-200"
@@ -181,13 +183,13 @@ function CartItem({
             alt={name}
             width={60}
             height={60}
-            className="rounded-lg object-cover bg-gray-100 dark:bg-gray-700"
+            className="rounded-lg bg-gray-100 object-cover dark:bg-gray-700"
           />
         </div>
       </div>
       <div className="hidden md:col-span-5 md:block">
         <h3
-          className={`font-semibold text-base leading-tight ${
+          className={`text-base font-semibold leading-tight ${
             theme === "dark" ? "text-white" : "text-gray-900"
           }`}
         >
@@ -202,13 +204,15 @@ function CartItem({
         </p>
       </div>
       <div className="hidden md:col-span-3 md:flex md:items-center md:justify-center md:gap-2">
-        <div className={`flex items-center gap-0 rounded-lg px-1 py-1 ${
-          theme === "dark" ? "bg-gray-700/50" : "bg-gray-100"
-        }`}>
+        <div
+          className={`flex items-center gap-0 rounded-lg px-1 py-1 ${
+            theme === "dark" ? "bg-gray-700/50" : "bg-gray-100"
+          }`}
+        >
           <button
             onClick={onDecrease}
             disabled={quantity <= 1 || loading}
-            className={`flex h-8 w-8 items-center justify-center rounded-md transition-all disabled:cursor-not-allowed disabled:opacity-40 font-semibold text-base ${
+            className={`flex h-8 w-8 items-center justify-center rounded-md text-base font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
               theme === "dark"
                 ? "text-gray-300 hover:bg-gray-600 hover:text-white"
                 : "text-gray-700 hover:bg-gray-200"
@@ -226,7 +230,7 @@ function CartItem({
           <button
             onClick={onIncrease}
             disabled={loading}
-            className={`flex h-8 w-8 items-center justify-center rounded-md transition-all disabled:cursor-not-allowed disabled:opacity-40 font-semibold text-base ${
+            className={`flex h-8 w-8 items-center justify-center rounded-md text-base font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
               theme === "dark"
                 ? "text-gray-300 hover:bg-gray-600 hover:text-white"
                 : "text-gray-700 hover:bg-gray-200"
@@ -511,9 +515,11 @@ export default function ItemCartTable({
 
   return (
     <>
-      <div className={`mb-4 hidden pb-3 font-semibold md:grid md:grid-cols-12 md:gap-4 ${
-        theme === "dark" ? "text-gray-300" : "text-gray-900"
-      }`}>
+      <div
+        className={`mb-4 hidden pb-3 font-semibold md:grid md:grid-cols-12 md:gap-4 ${
+          theme === "dark" ? "text-gray-300" : "text-gray-900"
+        }`}
+      >
         <div className="md:col-span-6">Product</div>
         <div className="text-center md:col-span-3">Quantity</div>
         <div className="text-right md:col-span-3">Price</div>
