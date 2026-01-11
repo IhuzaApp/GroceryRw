@@ -26,6 +26,7 @@ import ProductImageModal from "./ProductImageModal";
 import QuantityConfirmationModal from "./QuantityConfirmationModal";
 import PaymentModal from "./PaymentModal";
 import DeliveryConfirmationModal from "./DeliveryConfirmationModal";
+import InvoiceProofModal from "./InvoiceProofModal";
 import { useChat } from "../../context/ChatContext";
 import { isMobileDevice } from "../../lib/formatters";
 import ShopperChatDrawer from "../chat/ShopperChatDrawer";
@@ -172,6 +173,7 @@ interface OrderDetailsType {
     postal_code: string;
     latitude: string;
     longitude: string;
+    placeDetails?: any;
   };
   assignedTo: {
     id: string;
@@ -268,6 +270,7 @@ export default function BatchDetails({
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [invoiceData, setInvoiceData] = useState<any>(null);
   const [invoiceLoading, setInvoiceLoading] = useState(false);
+  const [showInvoiceProofModal, setShowInvoiceProofModal] = useState(false);
   const [walletData, setWalletData] = useState<any>(null);
   const [walletLoading, setWalletLoading] = useState(false);
   const [newMessage, setNewMessage] = useState("");
@@ -850,73 +853,27 @@ export default function BatchDetails({
       // Close payment modal (which includes OTP step)
       setShowPaymentModal(false);
 
-      // Only proceed with status update if payment was successful
+      // Only proceed with invoice proof if payment was successful
       if (paymentSuccess && walletUpdated) {
-        // Update order status directly without showing payment modal again
-        try {
-          setLoading(true);
-          await onUpdateStatus(order.id, "on_the_way");
+        // Clear payment info
+        setMomoCode("");
+        setPrivateKey("");
+        setOtp("");
+        setGeneratedOtp("");
 
-          // Update local state
-          setOrder({
-            ...order,
-            status: "on_the_way",
-          });
+        // Show invoice proof modal instead of updating status immediately
+        setShowInvoiceProofModal(true);
 
-          // Update step
-          setCurrentStep(2);
-
-          // Clear payment info and close payment modal
-          setMomoCode("");
-          setPrivateKey("");
-          setOtp("");
-          setGeneratedOtp("");
-          setShowPaymentModal(false); // Ensure payment modal is closed
-
-          // Notify customer that shopper is on the way
-          try {
-            await fetch("/api/fcm/send-notification", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                recipientId: order.orderedBy?.id || order.customerId,
-                senderName: session?.user?.name || "Your Shopper",
-                message: "Plasa is on the way",
-                orderId: order.id,
-                conversationId: order.id,
-              }),
-            });
-          } catch (notificationError) {
-            // Error sending on-the-way notification
-            // Don't show error to user as payment was successful
-          }
-
-          // Show success notification
-          toaster.push(
-            <Notification type="success" header="Payment Complete" closable>
-              ✅ MoMo payment successful
-              <br />
-              ✅ Wallet balance updated
-              <br />✅ Order status updated to "On The Way"
-              <br />✅ Customer notified that you're on the way
-            </Notification>,
-            { placement: "topEnd", duration: 5000 }
-          );
-        } catch (updateError) {
-          // Error updating order status
-          toaster.push(
-            <Notification type="error" header="Status Update Failed" closable>
-              {updateError instanceof Error
-                ? updateError.message
-                : "Failed to update order status. Please try again."}
-            </Notification>,
-            { placement: "topEnd" }
-          );
-        } finally {
-          setLoading(false);
-        }
+        // Show success notification
+        toaster.push(
+          <Notification type="success" header="Payment Complete" closable>
+            ✅ MoMo payment successful
+            <br />
+            ✅ Wallet balance updated
+            <br />✅ Next: Add invoice proof
+          </Notification>,
+          { placement: "topEnd", duration: 5000 }
+        );
       }
     } catch (err) {
       // OTP verification error
@@ -937,6 +894,11 @@ export default function BatchDetails({
   const handleRestaurantDeliveryConfirmation = () => {
     if (!order) return;
 
+    console.log("🔍 [Restaurant Delivery] Order address data:", {
+      fullAddress: order.address,
+      placeDetails: order.address?.placeDetails,
+    });
+
     // For restaurant orders, create minimal invoice data for delivery confirmation modal
     const restaurantOrder = order as any; // Type assertion for restaurant order fields
     const mockInvoiceData = {
@@ -955,6 +917,7 @@ export default function BatchDetails({
       deliveryStreet: order.address?.street || "",
       deliveryCity: order.address?.city || "",
       deliveryPostalCode: order.address?.postal_code || "",
+      deliveryPlaceDetails: order.address?.placeDetails || null,
       deliveryAddress: order.address ? `${order.address.street || ""}, ${order.address.city || ""}${order.address.postal_code ? `, ${order.address.postal_code}` : ""}` : "",
       dateCreated: new Date().toLocaleString(),
       dateCompleted: new Date().toLocaleString(),
@@ -976,6 +939,11 @@ export default function BatchDetails({
   const handleReelDeliveryConfirmation = () => {
     if (!order) return;
 
+    console.log("🔍 [Reel Delivery] Order address data:", {
+      fullAddress: order.address,
+      placeDetails: order.address?.placeDetails,
+    });
+
     // For restaurant/user reel orders, create minimal invoice data for delivery confirmation modal
     const mockInvoiceData = {
       id: `reel_${order.id}_${Date.now()}`,
@@ -993,6 +961,7 @@ export default function BatchDetails({
       deliveryStreet: order.address?.street || "",
       deliveryCity: order.address?.city || "",
       deliveryPostalCode: order.address?.postal_code || "",
+      deliveryPlaceDetails: order.address?.placeDetails || null,
       deliveryAddress: order.address ? `${order.address.street || ""}, ${order.address.city || ""}${order.address.postal_code ? `, ${order.address.postal_code}` : ""}` : "",
       dateCreated: new Date().toLocaleString(),
       dateCompleted: new Date().toLocaleString(),
@@ -1011,7 +980,7 @@ export default function BatchDetails({
   };
 
   // NEW: Handle delivery confirmation button click - generates invoice first, then shows modal
-  const handleDeliveryConfirmationClick = async () => {
+  const handleDeliveryConfirmationClick = () => {
     if (!order?.id) return;
 
     const isRestaurantOrder = order?.orderType === "restaurant";
@@ -1019,44 +988,151 @@ export default function BatchDetails({
       order?.orderType === "reel" &&
       (order?.reel?.restaurant_id || order?.reel?.user_id);
 
+    // For restaurant orders, show modal directly without generating invoice
+    if (isRestaurantOrder) {
+      handleRestaurantDeliveryConfirmation();
+      return;
+    }
+
+    // For restaurant/user reel orders, show modal directly
+    if (order?.orderType === "reel" && isRestaurantUserReel) {
+      handleReelDeliveryConfirmation();
+      return;
+    }
+
+    // For regular orders, invoice has already been generated during payment
+    // Create invoice data for the modal display
+    console.log("🔍 [Delivery Confirmation] Order address data:", {
+      fullAddress: order.address,
+      placeDetails: order.address?.placeDetails,
+      street: order.address?.street,
+      city: order.address?.city,
+    });
+    
+    const mockInvoiceData = {
+      id: `order_${order.id}_${Date.now()}`,
+      invoiceNumber: order.OrderID || order.id.slice(-8),
+      orderId: order.id,
+      orderNumber: order.OrderID || order.id.slice(-8),
+      customer: order.orderedBy?.name || order.user?.name || "Customer",
+      customerEmail: order.orderedBy?.email || order.user?.email || "",
+      customerPhone: order.orderedBy?.phone || order.user?.phone || "",
+      shop: order.shop?.name || "Shop",
+      shopAddress: order.shop?.address || "",
+      deliveryStreet: order.address?.street || "",
+      deliveryCity: order.address?.city || "",
+      deliveryPostalCode: order.address?.postal_code || "",
+      deliveryPlaceDetails: order.address?.placeDetails || null,
+      deliveryAddress: order.address 
+        ? `${order.address.street || ""}, ${order.address.city || ""}${order.address.postal_code ? `, ${order.address.postal_code}` : ""}` 
+        : "",
+      dateCreated: new Date().toLocaleString(),
+      dateCompleted: new Date().toLocaleString(),
+      status: "delivered",
+      items: order.Order_Items?.map((item: any) => ({
+        id: item.id,
+        name: item.product?.ProductName?.name || item.product?.name || "Item",
+        quantity: item.foundQuantity || item.quantity || 0,
+        unitPrice: parseFloat(item.product?.price || item.price || "0"),
+        total: (item.foundQuantity || item.quantity || 0) * parseFloat(item.product?.price || item.price || "0"),
+        unit: item.product?.measurement_unit || "unit",
+      })) || [],
+      subtotal: parseFloat(order.total?.toString() || "0") - parseFloat(order.serviceFee || "0") - parseFloat(order.deliveryFee || "0"),
+      serviceFee: parseFloat(order.serviceFee || "0"),
+      deliveryFee: parseFloat(order.deliveryFee || "0"),
+      total: parseFloat(order.total?.toString() || "0"),
+      orderType: order.orderType || "regular",
+      isReelOrder: order.orderType === "reel",
+      isRestaurantOrder: false,
+    };
+    
+    setInvoiceData(mockInvoiceData);
+    setShowInvoiceModal(true);
+  };
+
+  // Handle invoice proof captured - generates invoice and updates status to on_the_way
+  const handleInvoiceProofCaptured = async (imageDataUrl: string) => {
+    if (!order?.id) return;
+
     try {
       setLoading(true);
 
-      // For restaurant orders, show modal directly without generating invoice
-      if (isRestaurantOrder) {
-        handleRestaurantDeliveryConfirmation();
-        setLoading(false);
-        return;
+      // Generate invoice with proof photo
+      const invoiceResponse = await fetch("/api/invoices/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId: order.id,
+          orderType: order?.orderType || "regular",
+          invoiceProofPhoto: imageDataUrl, // Send the invoice proof photo
+        }),
+      });
+
+      if (!invoiceResponse.ok) {
+        throw new Error("Failed to generate invoice with proof");
       }
 
-      // For restaurant/user reel orders, show modal directly
-      if (order?.orderType === "reel" && isRestaurantUserReel) {
-        handleReelDeliveryConfirmation();
-        setLoading(false);
-        return;
+      const invoiceResult = await invoiceResponse.json();
+
+      if (!invoiceResult.success || !invoiceResult.invoice) {
+        throw new Error("Invalid invoice data returned from API");
       }
 
-      // For regular orders and regular reel orders, generate invoice first
-      const invoiceGenerated = await generateInvoiceAndRedirect(order.id);
-      
-      if (!invoiceGenerated) {
-        // If invoice generation failed, show error
-        toaster.push(
-          <Notification type="error" header="Invoice Error" closable>
-            Failed to generate invoice. Please try again.
-          </Notification>,
-          { placement: "topEnd" }
-        );
+      // Close invoice proof modal
+      setShowInvoiceProofModal(false);
+
+      // Update order status to on_the_way
+      await onUpdateStatus(order.id, "on_the_way");
+
+      // Update local state
+      setOrder({
+        ...order,
+        status: "on_the_way",
+      });
+
+      // Update step
+      setCurrentStep(2);
+
+      // Notify customer that shopper is on the way
+      try {
+        await fetch("/api/fcm/send-notification", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            recipientId: order.orderedBy?.id || order.customerId,
+            senderName: session?.user?.name || "Your Shopper",
+            message: "Plasa is on the way",
+            orderId: order.id,
+            conversationId: order.id,
+          }),
+        });
+      } catch (notificationError) {
+        // Error sending on-the-way notification
+        console.error("Error sending notification:", notificationError);
       }
-      // If successful, the modal will be shown automatically by generateInvoiceAndRedirect
-    } catch (error) {
-      console.error("Error preparing delivery confirmation:", error);
+
+      // Show success notification
       toaster.push(
-        <Notification type="error" header="Error" closable>
-          Failed to prepare delivery confirmation. Please try again.
+        <Notification type="success" header="Success" closable>
+          Invoice generated and you're now on the way!
         </Notification>,
         { placement: "topEnd" }
       );
+    } catch (error) {
+      console.error("Error processing invoice proof:", error);
+      toaster.push(
+        <Notification type="error" header="Error" closable>
+          {error instanceof Error
+            ? error.message
+            : "Failed to process invoice proof. Please try again."}
+        </Notification>,
+        { placement: "topEnd" }
+      );
+      throw error; // Rethrow to let modal handle it
     } finally {
       setLoading(false);
     }
@@ -1414,10 +1490,9 @@ export default function BatchDetails({
             size="lg"
             block
             onClick={handleDeliveryConfirmationClick}
-            loading={loading}
             className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
           >
-            {loading ? "Generating Invoice..." : "Confirm Delivery"}
+            Confirm Delivery
           </Button>
         );
       case "delivered":
@@ -1700,6 +1775,15 @@ export default function BatchDetails({
         otpLoading={otpVerifyLoading}
         onVerifyOtp={handleVerifyOtp}
         generatedOtp={generatedOtp}
+      />
+
+      {/* Invoice Proof Modal */}
+      <InvoiceProofModal
+        open={showInvoiceProofModal}
+        onClose={() => setShowInvoiceProofModal(false)}
+        onProofCaptured={handleInvoiceProofCaptured}
+        orderId={order?.id || ""}
+        orderNumber={order?.OrderID || order?.id.slice(-8) || ""}
       />
 
       {/* Delivery Confirmation Modal */}

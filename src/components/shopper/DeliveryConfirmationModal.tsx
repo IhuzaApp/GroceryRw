@@ -27,6 +27,7 @@ interface InvoiceData {
   deliveryStreet?: string;
   deliveryCity?: string;
   deliveryPostalCode?: string;
+  deliveryPlaceDetails?: any;
   dateCreated: string;
   dateCompleted: string;
   status: string;
@@ -101,6 +102,14 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
   // Reset modal state when it opens
   useEffect(() => {
     if (open && invoiceData?.orderId) {
+      console.log("🔍 [Delivery Modal] Invoice data received:", {
+        deliveryPlaceDetails: invoiceData.deliveryPlaceDetails,
+        deliveryStreet: invoiceData.deliveryStreet,
+        deliveryCity: invoiceData.deliveryCity,
+        customer: invoiceData.customer,
+        orderNumber: invoiceData.orderNumber,
+      });
+      
       localStorage.removeItem(`delivery_upload_${invoiceData.orderId}`);
       setCurrentVerificationStep("pin");
       setPinInput("");
@@ -433,6 +442,68 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                           {invoiceData.customerPhone}
                         </p>
                       )}
+                      {invoiceData.deliveryPlaceDetails && (
+                        <div className={`mt-2 rounded-lg border-l-4 p-3 ${theme === "dark" ? "border-blue-500 bg-blue-900/20" : "border-blue-400 bg-blue-50"}`}>
+                          <div className="flex items-start gap-2">
+                            <svg className={`h-4 w-4 mt-0.5 flex-shrink-0 ${theme === "dark" ? "text-blue-400" : "text-blue-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <div className="flex-1">
+                              <p className={`text-xs font-semibold uppercase tracking-wide mb-1 ${theme === "dark" ? "text-blue-300" : "text-blue-700"}`}>
+                                Additional Location Details
+                              </p>
+                              <div className={`text-sm space-y-1 ${theme === "dark" ? "text-blue-200" : "text-blue-900"}`}>
+                                {typeof invoiceData.deliveryPlaceDetails === 'string' ? (
+                                  <p>{invoiceData.deliveryPlaceDetails}</p>
+                                ) : (
+                                  <>
+                                    {invoiceData.deliveryPlaceDetails.gateNumber && (
+                                      <p>
+                                        <span className="font-semibold">Gate:</span> {invoiceData.deliveryPlaceDetails.gateNumber}
+                                        {invoiceData.deliveryPlaceDetails.gateColor && (
+                                          <span className="ml-2">
+                                            ({invoiceData.deliveryPlaceDetails.gateColor} gate)
+                                          </span>
+                                        )}
+                                      </p>
+                                    )}
+                                    {invoiceData.deliveryPlaceDetails.floor && (
+                                      <p>
+                                        <span className="font-semibold">Floor:</span> {invoiceData.deliveryPlaceDetails.floor}
+                                      </p>
+                                    )}
+                                    {invoiceData.deliveryPlaceDetails.doorNumber && (
+                                      <p>
+                                        <span className="font-semibold">Door:</span> {invoiceData.deliveryPlaceDetails.doorNumber}
+                                      </p>
+                                    )}
+                                    {invoiceData.deliveryPlaceDetails.buildingName && (
+                                      <p>
+                                        <span className="font-semibold">Building:</span> {invoiceData.deliveryPlaceDetails.buildingName}
+                                      </p>
+                                    )}
+                                    {invoiceData.deliveryPlaceDetails.apartmentNumber && (
+                                      <p>
+                                        <span className="font-semibold">Apartment:</span> {invoiceData.deliveryPlaceDetails.apartmentNumber}
+                                      </p>
+                                    )}
+                                    {invoiceData.deliveryPlaceDetails.landmark && (
+                                      <p>
+                                        <span className="font-semibold">Landmark:</span> {invoiceData.deliveryPlaceDetails.landmark}
+                                      </p>
+                                    )}
+                                    {invoiceData.deliveryPlaceDetails.instructions && (
+                                      <p>
+                                        <span className="font-semibold">Instructions:</span> {invoiceData.deliveryPlaceDetails.instructions}
+                                      </p>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       <p className="mt-2">
                         {invoiceData.deliveryStreet || invoiceData.deliveryAddress || "Address not available"}
                         {invoiceData.deliveryCity && `, ${invoiceData.deliveryCity}`}
@@ -440,71 +511,6 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                       </p>
                     </div>
                   </div>
-                </div>
-              </div>
-
-              {/* Order Details Section */}
-              <div className={`rounded-xl border p-4 ${theme === "dark" ? "border-gray-700 bg-gray-900/50" : "border-gray-200 bg-gray-50"}`}>
-                <div className="mb-3 flex items-center gap-3">
-                  <div className={`rounded-full p-2 ${theme === "dark" ? "bg-orange-600" : "bg-orange-100"}`}>
-                    <svg className={`h-5 w-5 ${theme === "dark" ? "text-white" : "text-orange-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                    </svg>
-                  </div>
-                  <h3 className={`text-base font-bold ${theme === "dark" ? "text-gray-100" : "text-gray-800"}`}>
-                    Order Details
-                  </h3>
-                </div>
-
-                {/* Items List */}
-                <div className="space-y-2">
-                  {invoiceData.items && invoiceData.items.length > 0 ? (
-                    <>
-                      {invoiceData.items.map((item, index) => (
-                        <div key={index} className={`flex items-start justify-between gap-3 rounded-lg border p-2 text-sm ${theme === "dark" ? "border-gray-700 bg-gray-800/50" : "border-gray-200 bg-white"}`}>
-                          <div className="flex-1">
-                            <p className={`font-medium ${theme === "dark" ? "text-gray-200" : "text-gray-800"}`}>
-                              {item.name}
-                            </p>
-                            <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                              {item.quantity} {item.unit} × ${item.unitPrice.toFixed(2)}
-                            </p>
-                          </div>
-                          <p className={`font-semibold ${theme === "dark" ? "text-gray-200" : "text-gray-800"}`}>
-                            ${item.total.toFixed(2)}
-                          </p>
-                        </div>
-                      ))}
-
-                      {/* Order Summary */}
-                      <div className={`mt-3 space-y-2 border-t pt-3 ${theme === "dark" ? "border-gray-700" : "border-gray-300"}`}>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>Subtotal</span>
-                          <span className={theme === "dark" ? "text-gray-300" : "text-gray-700"}>${invoiceData.subtotal.toFixed(2)}</span>
-                        </div>
-                        {invoiceData.serviceFee > 0 && (
-                          <div className="flex items-center justify-between text-sm">
-                            <span className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>Service Fee</span>
-                            <span className={theme === "dark" ? "text-gray-300" : "text-gray-700"}>${invoiceData.serviceFee.toFixed(2)}</span>
-                          </div>
-                        )}
-                        {invoiceData.deliveryFee > 0 && (
-                          <div className="flex items-center justify-between text-sm">
-                            <span className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>Delivery Fee</span>
-                            <span className={theme === "dark" ? "text-gray-300" : "text-gray-700"}>${invoiceData.deliveryFee.toFixed(2)}</span>
-                          </div>
-                        )}
-                        <div className={`flex items-center justify-between border-t pt-2 text-base font-bold ${theme === "dark" ? "border-gray-700 text-gray-100" : "border-gray-300 text-gray-900"}`}>
-                          <span>Total</span>
-                          <span className="text-green-600">${invoiceData.total.toFixed(2)}</span>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                      No items available
-                    </p>
-                  )}
                 </div>
               </div>
 
