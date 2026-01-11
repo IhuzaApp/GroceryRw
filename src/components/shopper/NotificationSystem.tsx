@@ -1051,7 +1051,7 @@ export default function NotificationSystem({
     // Prevent concurrent API calls
     if (isCheckingOrders.current) {
       logger.debug(
-        "Order check already in progress, skipping",
+        "⏸️ Order check already in progress, skipping duplicate call",
         "NotificationSystem"
       );
       return;
@@ -1067,18 +1067,24 @@ export default function NotificationSystem({
 
     const now = new Date();
     const currentTime = now.getTime();
+    
+    logger.debug(
+      `🔍 Initiating order check (last check: ${Math.floor((currentTime - lastNotificationTime.current) / 1000)}s ago)`,
+      "NotificationSystem"
+    );
 
     // Set flag to prevent concurrent calls
     isCheckingOrders.current = true;
 
-    // Check if we should skip this check (30-second cooldown for smart order finder)
-    if (currentTime - lastNotificationTime.current < 30000) {
+    // Check if we should skip this check (25-second cooldown to prevent spam)
+    if (currentTime - lastNotificationTime.current < 25000) {
       logger.debug(
         `Skipping smart order finder check - ${Math.floor(
-          (30000 - (currentTime - lastNotificationTime.current)) / 1000
+          (25000 - (currentTime - lastNotificationTime.current)) / 1000
         )}s until next check`,
         "NotificationSystem"
       );
+      isCheckingOrders.current = false; // Reset flag when skipping
       return;
     }
 
@@ -1212,15 +1218,20 @@ export default function NotificationSystem({
   const startNotificationSystem = () => {
     if (!session?.user?.id || !currentLocation) return;
 
-    // Clear existing interval if any
+    // If already running, don't restart
     if (checkInterval.current) {
-      clearInterval(checkInterval.current);
+      logger.debug(
+        "Notification system already running, skipping restart",
+        "NotificationSystem"
+      );
+      return;
     }
 
     // Reset notification state
     lastNotificationTime.current = 0;
 
     // Starting smart notification system
+    logger.info("Starting notification system", "NotificationSystem");
 
     // Initial check
     checkForNewOrders();
@@ -1282,7 +1293,15 @@ export default function NotificationSystem({
       );
       stopNotificationSystem();
     }
-  }, [session, currentLocation]);
+    
+    // Cleanup on unmount or when dependencies change
+    return () => {
+      // Don't stop when location updates, only when session changes
+      if (!session) {
+        stopNotificationSystem();
+      }
+    };
+  }, [session?.user?.id]); // Only depend on session user ID, not location
 
   // The component doesn't render anything visible
   // FCM connection status indicator (optional UI element)
