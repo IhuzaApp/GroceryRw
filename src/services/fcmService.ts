@@ -339,7 +339,7 @@ export const sendNewOrderNotification = async (
         travelTimeMinutes: orderData.travelTimeMinutes.toString(),
         estimatedEarnings: orderData.estimatedEarnings.toString(),
         customerAddress: orderData.customerAddress,
-        expiresIn: "60000",
+        expiresIn: "90000", // 90 seconds (1 minute 30 seconds)
         timestamp: Date.now().toString(),
       },
     };
@@ -386,7 +386,7 @@ export const sendBatchOrdersNotification = async (
         orderCount: totalOrders.toString(),
         totalEarnings: totalEarnings.toString(),
         orders: JSON.stringify(ordersData),
-        expiresIn: "60000",
+        expiresIn: "90000", // 90 seconds (1 minute 30 seconds)
         timestamp: Date.now().toString(),
       },
     };

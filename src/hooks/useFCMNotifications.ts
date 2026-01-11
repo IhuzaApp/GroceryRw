@@ -63,7 +63,7 @@ export const useFCMNotifications = (): FCMNotificationHook => {
                       orderType: data.orderType,
                       createdAt: new Date().toISOString(),
                     },
-                    expiresIn: parseInt(data.expiresIn || "60000"),
+                    expiresIn: parseInt(data.expiresIn || "90000"), // Default to 90 seconds
                     timestamp: parseInt(data.timestamp),
                   },
                 })
@@ -98,7 +98,7 @@ export const useFCMNotifications = (): FCMNotificationHook => {
                 new CustomEvent("fcm-batch-orders", {
                   detail: {
                     orders: orders,
-                    expiresIn: parseInt(data.expiresIn || "60000"),
+                    expiresIn: parseInt(data.expiresIn || "90000"), // Default to 90 seconds
                     timestamp: parseInt(data.timestamp),
                   },
                 })

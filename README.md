@@ -3508,12 +3508,12 @@ Before showing any notifications, the system checks:
 
   - Orders are sorted by creation time (oldest first)
   - Each order becomes a batch
-  - System tracks batch assignments for 60 seconds
+  - System tracks batch assignments for 90 seconds
   - Prevents duplicate notifications for the same batch
 
 - **Assignment Rules**
   - One batch per shopper
-  - 60-second acceptance window
+  - 90-second acceptance window
   - Batch expires if not accepted within time limit
   - Shopper becomes eligible for new batches after:
     - Current batch expires
@@ -5261,11 +5261,11 @@ The notification system provides real-time order notifications to shoppers with 
 - **Custom Design**: Beautiful, responsive toast components with action buttons
 - **Type Support**: Info, success, warning, and error notification types
 
-#### 2. Two-Stage Notification System
+#### 2. Single Notification System
 
-- **Initial Notification**: Shows immediately when order is assigned (60 seconds)
-- **Warning Notification**: Shows after 40 seconds if not accepted (20 seconds remaining)
+- **Initial Notification**: Shows immediately when order is assigned (90 seconds to respond)
 - **Automatic Cleanup**: Toasts are removed when orders expire or are accepted
+- **Simplified UX**: No warning notifications - shoppers have full 90 seconds to decide
 
 #### 3. Location-Based Filtering
 
@@ -5444,13 +5444,7 @@ CREATE TABLE shopper_notification_settings (
 Order Created → Check Shopper Availability → Assign to Shopper → Show Initial Toast
 ```
 
-#### 2. Warning Stage
-
-```
-40 seconds → Show Warning Toast → 20 seconds remaining → Auto-reassign
-```
-
-#### 3. Cleanup
+#### 2. Cleanup
 
 ```
 Order Expires → Remove Toast → Reassign to Next Shopper
@@ -5469,8 +5463,7 @@ Order Expires → Remove Toast → Reassign to Next Shopper
 #### Timing Settings
 
 - **Check Interval**: 60 seconds between checks
-- **Assignment Timeout**: 60 seconds per assignment
-- **Warning Delay**: 40 seconds before warning
+- **Assignment Timeout**: 90 seconds per assignment (1 minute 30 seconds)
 - **Age Filter**: Only orders within 10 minutes
 
 ### Usage Examples
