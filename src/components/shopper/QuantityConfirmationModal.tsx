@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Button, InputNumber, Form } from "rsuite";
+import { Button, InputNumber, Form } from "rsuite";
 import { OrderItem } from "../../types/order";
 import { useTheme } from "../../context/ThemeContext";
 import Image from "next/image";
@@ -187,6 +187,8 @@ export default function QuantityConfirmationModal({
 
   if (!currentItem) return null;
 
+  if (!open) return null;
+
   return (
     <>
       {/* Barcode Scanner Modal */}
@@ -198,29 +200,82 @@ export default function QuantityConfirmationModal({
       )}
 
       {/* Quantity Confirmation Modal */}
-      <Modal
-        open={open}
-        onClose={onClose}
-        size="sm"
-        className={`${theme === "dark" ? "dark-theme" : ""} rounded-2xl`}
+      <div
+        className="fixed inset-0 z-[9999] flex items-end justify-center p-0 sm:items-center sm:p-4"
+        onClick={onClose}
       >
-        <Modal.Header
-          className={`${
+        {/* Backdrop */}
+        <div
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          aria-hidden="true"
+        />
+
+        {/* Modal */}
+        <div
+          className={`relative z-10 w-full max-w-[550px] rounded-t-2xl border-0 shadow-2xl sm:rounded-2xl sm:border ${
             theme === "dark"
-              ? "border-b border-gray-700 bg-gray-800"
-              : "border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50"
-          } rounded-t-2xl px-4 py-3`}
+              ? "bg-gray-800 sm:border-gray-700"
+              : "bg-white sm:border-gray-200"
+          }`}
+          onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center gap-3">
-            <div
-              className={`rounded-full p-2 ${
-                theme === "dark" ? "bg-blue-600" : "bg-blue-100"
+          {/* Header */}
+          <div
+            className={`flex items-center justify-between px-6 py-6 sm:px-8 ${
+              theme === "dark"
+                ? "border-b border-gray-700"
+                : "border-b border-gray-200"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className={`rounded-full p-2 ${
+                  theme === "dark" ? "bg-blue-600" : "bg-blue-100"
+                }`}
+              >
+                <svg
+                  className={`h-6 w-6 ${
+                    theme === "dark" ? "text-white" : "text-blue-600"
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h2
+                  className={`text-xl font-bold ${
+                    theme === "dark" ? "text-gray-100" : "text-gray-800"
+                  }`}
+                >
+                  Confirm Found Quantity
+                </h2>
+                <p
+                  className={`text-sm ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  {currentItem.product.ProductName?.name || "Unknown Product"}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className={`rounded-lg p-2 transition-colors ${
+                theme === "dark"
+                  ? "text-gray-400 hover:bg-gray-700/50 hover:text-gray-200"
+                  : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
               }`}
             >
               <svg
-                className={`h-6 w-6 ${
-                  theme === "dark" ? "text-white" : "text-blue-600"
-                }`}
+                className="h-5 w-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -229,36 +284,18 @@ export default function QuantityConfirmationModal({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
-            </div>
-            <div>
-              <Modal.Title
-                className={`text-xl font-bold ${
-                  theme === "dark" ? "text-gray-100" : "text-gray-800"
-                }`}
-              >
-                Confirm Found Quantity
-              </Modal.Title>
-              <p
-                className={`text-sm ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
-                {currentItem.product.ProductName?.name || "Unknown Product"}
-              </p>
-            </div>
+            </button>
           </div>
-        </Modal.Header>
 
-        <Modal.Body
-          className={`${
-            theme === "dark"
-              ? "bg-gray-800 text-gray-100"
-              : "bg-white text-gray-900"
-          } px-4 py-4`}
-        >
+          {/* Body */}
+          <div
+            className={`max-h-[70vh] overflow-y-auto px-6 py-8 sm:px-8 ${
+              theme === "dark" ? "bg-gray-800" : "bg-white"
+            }`}
+          >
           <div className="space-y-4">
             {/* Debug info removed */}
 
@@ -900,16 +937,16 @@ export default function QuantityConfirmationModal({
               </div>
             )}
           </div>
-        </Modal.Body>
+          </div>
 
-        <Modal.Footer
-          className={`${
-            theme === "dark"
-              ? "border-t border-gray-700 bg-gray-800"
-              : "border-t border-gray-200 bg-gray-50"
-          } rounded-b-2xl px-4 py-3`}
-        >
-          <div className="flex w-full gap-3">
+          {/* Footer */}
+          <div
+            className={`flex w-full flex-col-reverse gap-3 px-6 py-5 sm:flex-row sm:justify-end sm:px-8 ${
+              theme === "dark"
+                ? "border-t border-gray-700"
+                : "border-t border-gray-200"
+            }`}
+          >
             <button
               onClick={onClose}
               className={`rounded-xl px-6 py-3 font-semibold transition-all duration-200 ${
@@ -927,7 +964,7 @@ export default function QuantityConfirmationModal({
                 exceedsBudget ||
                 (!isWeightBased && !barcodeValidation.isValid)
               }
-              className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white transition-all duration-200 ${
+              className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white transition-all duration-200 sm:flex-initial ${
                 foundQuantity === 0 ||
                 exceedsBudget ||
                 (!isWeightBased && !barcodeValidation.isValid)
@@ -953,8 +990,8 @@ export default function QuantityConfirmationModal({
               Confirm Found
             </button>
           </div>
-        </Modal.Footer>
-      </Modal>
+        </div>
+      </div>
     </>
   );
 }
