@@ -20,8 +20,13 @@ interface InvoiceData {
   orderNumber: string;
   customer: string;
   customerEmail: string;
+  customerPhone?: string;
   shop: string;
   shopAddress: string;
+  deliveryAddress?: string;
+  deliveryStreet?: string;
+  deliveryCity?: string;
+  deliveryPostalCode?: string;
   dateCreated: string;
   dateCompleted: string;
   status: string;
@@ -272,20 +277,6 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
     }
   };
 
-  const handleViewInvoiceDetails = () => {
-    if (!invoiceData?.id) {
-      setUploadError("Unable to view invoice details: Invoice ID is missing");
-      return;
-    }
-    onClose();
-    router.push(`/Plasa/invoices/${invoiceData.id}`);
-  };
-
-  const handleReturnToBatches = () => {
-    onClose();
-    router.push("/Plasa/active-batches");
-  };
-
   const handleClose = () => {
     if (photoUploading || forceOpen || confirmingDelivery) {
       return;
@@ -419,12 +410,110 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
           {/* Body */}
           <div className={`flex-1 overflow-y-auto px-4 py-4 md:px-6 ${theme === "dark" ? "bg-gray-800 text-gray-100" : "bg-white"}`}>
             <div className="space-y-4">
+              {/* Delivery Address Section */}
+              <div className={`rounded-xl border p-4 ${theme === "dark" ? "border-gray-700 bg-gray-900/50" : "border-gray-200 bg-gray-50"}`}>
+                <div className="mb-3 flex items-start gap-3">
+                  <div className={`rounded-full p-2 ${theme === "dark" ? "bg-blue-600" : "bg-blue-100"}`}>
+                    <svg className={`h-5 w-5 ${theme === "dark" ? "text-white" : "text-blue-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className={`text-base font-bold ${theme === "dark" ? "text-gray-100" : "text-gray-800"}`}>
+                      Delivery Address
+                    </h3>
+                    <div className={`mt-2 space-y-1 text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
+                      <p className="font-medium">{invoiceData.customer}</p>
+                      {invoiceData.customerPhone && (
+                        <p className="flex items-center gap-1">
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                          </svg>
+                          {invoiceData.customerPhone}
+                        </p>
+                      )}
+                      <p className="mt-2">
+                        {invoiceData.deliveryStreet || invoiceData.deliveryAddress || "Address not available"}
+                        {invoiceData.deliveryCity && `, ${invoiceData.deliveryCity}`}
+                        {invoiceData.deliveryPostalCode && `, ${invoiceData.deliveryPostalCode}`}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Order Details Section */}
+              <div className={`rounded-xl border p-4 ${theme === "dark" ? "border-gray-700 bg-gray-900/50" : "border-gray-200 bg-gray-50"}`}>
+                <div className="mb-3 flex items-center gap-3">
+                  <div className={`rounded-full p-2 ${theme === "dark" ? "bg-orange-600" : "bg-orange-100"}`}>
+                    <svg className={`h-5 w-5 ${theme === "dark" ? "text-white" : "text-orange-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                  </div>
+                  <h3 className={`text-base font-bold ${theme === "dark" ? "text-gray-100" : "text-gray-800"}`}>
+                    Order Details
+                  </h3>
+                </div>
+
+                {/* Items List */}
+                <div className="space-y-2">
+                  {invoiceData.items && invoiceData.items.length > 0 ? (
+                    <>
+                      {invoiceData.items.map((item, index) => (
+                        <div key={index} className={`flex items-start justify-between gap-3 rounded-lg border p-2 text-sm ${theme === "dark" ? "border-gray-700 bg-gray-800/50" : "border-gray-200 bg-white"}`}>
+                          <div className="flex-1">
+                            <p className={`font-medium ${theme === "dark" ? "text-gray-200" : "text-gray-800"}`}>
+                              {item.name}
+                            </p>
+                            <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                              {item.quantity} {item.unit} × ${item.unitPrice.toFixed(2)}
+                            </p>
+                          </div>
+                          <p className={`font-semibold ${theme === "dark" ? "text-gray-200" : "text-gray-800"}`}>
+                            ${item.total.toFixed(2)}
+                          </p>
+                        </div>
+                      ))}
+
+                      {/* Order Summary */}
+                      <div className={`mt-3 space-y-2 border-t pt-3 ${theme === "dark" ? "border-gray-700" : "border-gray-300"}`}>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>Subtotal</span>
+                          <span className={theme === "dark" ? "text-gray-300" : "text-gray-700"}>${invoiceData.subtotal.toFixed(2)}</span>
+                        </div>
+                        {invoiceData.serviceFee > 0 && (
+                          <div className="flex items-center justify-between text-sm">
+                            <span className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>Service Fee</span>
+                            <span className={theme === "dark" ? "text-gray-300" : "text-gray-700"}>${invoiceData.serviceFee.toFixed(2)}</span>
+                          </div>
+                        )}
+                        {invoiceData.deliveryFee > 0 && (
+                          <div className="flex items-center justify-between text-sm">
+                            <span className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>Delivery Fee</span>
+                            <span className={theme === "dark" ? "text-gray-300" : "text-gray-700"}>${invoiceData.deliveryFee.toFixed(2)}</span>
+                          </div>
+                        )}
+                        <div className={`flex items-center justify-between border-t pt-2 text-base font-bold ${theme === "dark" ? "border-gray-700 text-gray-100" : "border-gray-300 text-gray-900"}`}>
+                          <span>Total</span>
+                          <span className="text-green-600">${invoiceData.total.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                      No items available
+                    </p>
+                  )}
+                </div>
+              </div>
+
               {/* PIN Verification Section */}
               {currentVerificationStep === "pin" && !photoUploaded && (
-                <div className={`rounded-xl border-2 p-4 ${theme === "dark" ? "border-purple-600 bg-purple-900/20" : "border-purple-200 bg-purple-50"}`}>
+                <div className={`rounded-xl border-2 p-4 ${theme === "dark" ? "border-green-600 bg-green-900/20" : "border-green-200 bg-green-50"}`}>
                   <div className="mb-3 flex items-center gap-3">
-                    <div className={`rounded-full p-2 ${theme === "dark" ? "bg-purple-600" : "bg-purple-100"}`}>
-                      <svg className={`h-5 w-5 ${theme === "dark" ? "text-white" : "text-purple-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className={`rounded-full p-2 ${theme === "dark" ? "bg-green-600" : "bg-green-100"}`}>
+                      <svg className={`h-5 w-5 ${theme === "dark" ? "text-white" : "text-green-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                       </svg>
                     </div>
@@ -453,7 +542,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                         placeholder="Enter 2-digit PIN"
                         maxLength={2}
                         disabled={verifyingPin}
-                        className={`w-full rounded-xl border-2 px-4 py-4 text-center text-2xl font-bold tracking-widest transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 ${theme === "dark" ? "border-gray-600 bg-gray-700 text-gray-100 placeholder-gray-400 focus:border-purple-500" : "border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-purple-500"} ${pinError ? 'border-red-500 focus:ring-red-500' : ''}`}
+                        className={`w-full rounded-xl border-2 px-4 py-4 text-center text-2xl font-bold tracking-widest transition-all focus:outline-none focus:ring-2 focus:ring-green-500 ${theme === "dark" ? "border-gray-600 bg-gray-700 text-gray-100 placeholder-gray-400 focus:border-green-500" : "border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-green-500"} ${pinError ? 'border-red-500 focus:ring-red-500' : ''}`}
                       />
                     </div>
 
@@ -472,7 +561,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                     <button
                       onClick={handleVerifyPin}
                       disabled={verifyingPin || pinInput.length !== 2}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4 font-semibold text-white shadow-lg transition-all duration-200 hover:from-purple-700 hover:to-purple-800 hover:shadow-purple-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-green-700 px-6 py-4 font-semibold text-white shadow-lg transition-all duration-200 hover:from-green-700 hover:to-green-800 hover:shadow-green-500/25 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {verifyingPin ? (
                         <>
@@ -631,26 +720,6 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                   </div>
                 </div>
               )}
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className={`flex-shrink-0 border-t px-4 py-4 md:px-6 ${theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-gray-50"}`}>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <button
-                onClick={handleViewInvoiceDetails}
-                disabled={!photoUploaded || photoUploading || confirmingDelivery}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-700 hover:to-blue-800 hover:shadow-blue-500/25 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                📄 View Invoice Details
-              </button>
-              <button
-                onClick={handleReturnToBatches}
-                disabled={photoUploading || confirmingDelivery}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${theme === "dark" ? "border border-gray-600 text-gray-300 hover:bg-gray-700" : "border border-gray-300 text-gray-700 hover:bg-gray-100"}`}
-              >
-                ← Return to Batches
-              </button>
             </div>
           </div>
         </div>
