@@ -255,7 +255,7 @@ export default function FeedbackModal({
   const colors = getAccentColors();
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-end justify-center p-0 sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-[100000] flex items-end justify-center p-0 sm:items-center sm:p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
