@@ -89,7 +89,7 @@ function getOrderStatusInfo(order: any) {
           />
         </svg>
       ),
-      description: "Waiting for Plaser assignment",
+      description: "Waiting for assignment",
     };
   } else {
     switch (order?.status) {
@@ -185,9 +185,11 @@ function getOrderStatusInfo(order: any) {
 const MobileOrderDetails = ({
   order,
   orderType,
+  combinedOrders,
 }: {
   order: any;
   orderType: "regular" | "reel" | "restaurant" | null;
+  combinedOrders: any[];
 }) => {
   const { theme } = useTheme();
   const router = useRouter();
@@ -243,18 +245,41 @@ const MobileOrderDetails = ({
         {/* Order ID Badge */}
         <div className="absolute right-4 top-7 z-20">
           <span className="inline-flex items-center rounded-full bg-white/20 px-4 py-2 text-sm font-semibold !text-white shadow-lg backdrop-blur-md">
-            #{formatOrderID(order?.OrderID)}
+            {combinedOrders.length > 1 ? (
+              <>
+                {combinedOrders.map((ord: any, idx: number) => (
+                  <span key={ord.id}>
+                    #{formatOrderID(ord.OrderID)}
+                    {idx < combinedOrders.length - 1 ? " & " : ""}
+                  </span>
+                ))}
+              </>
+            ) : (
+              <>#{formatOrderID(order?.OrderID)}</>
+            )}
           </span>
         </div>
 
         {/* Header Content */}
         <div className="absolute bottom-0 left-0 right-0 z-10 p-4">
-          <h1 className="text-2xl font-bold !text-white">Order Details</h1>
-          {order?.shop?.name && (
-            <p className="mt-1 text-sm !text-white/90">{order.shop.name}</p>
-          )}
-          {order?.reel?.title && (
-            <p className="mt-1 text-sm !text-white/90">{order.reel.title}</p>
+          <h1 className="text-2xl font-bold !text-white">
+            {combinedOrders.length > 1 ? "Orders Details" : "Order Details"}
+          </h1>
+          {combinedOrders.length > 1 ? (
+            <p className="mt-1 text-sm !text-white/90">
+              {combinedOrders.length === 2
+                ? `${combinedOrders[0]?.shop?.name} & ${combinedOrders[1]?.shop?.name}`
+                : `${combinedOrders[0]?.shop?.name} & ${combinedOrders.length - 1} others`}
+            </p>
+          ) : (
+            <>
+              {order?.shop?.name && (
+                <p className="mt-1 text-sm !text-white/90">{order.shop.name}</p>
+              )}
+              {order?.reel?.title && (
+                <p className="mt-1 text-sm !text-white/90">{order.reel.title}</p>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -317,7 +342,7 @@ const MobileOrderDetails = ({
           ) : orderType === "restaurant" ? (
             <UserRestaurantOrderDetails order={order} isMobile={true} />
           ) : (
-            <UserOrderDetails order={order} isMobile={true} />
+            <UserOrderDetails order={order} isMobile={true} combinedOrders={combinedOrders} />
           )}
         </div>
       </div>
@@ -329,9 +354,11 @@ const MobileOrderDetails = ({
 const DesktopOrderDetails = ({
   order,
   orderType,
+  combinedOrders,
 }: {
   order: any;
   orderType: "regular" | "reel" | "restaurant" | null;
+  combinedOrders: any[];
 }) => {
   return (
     <div className="min-h-screen md:ml-16">
@@ -343,7 +370,7 @@ const DesktopOrderDetails = ({
           ) : orderType === "restaurant" ? (
             <UserRestaurantOrderDetails order={order} />
           ) : (
-            <UserOrderDetails order={order} />
+            <UserOrderDetails order={order} combinedOrders={combinedOrders} />
           )}
         </div>
       </div>
@@ -360,6 +387,7 @@ function ViewOrderDetailsPage() {
   const [orderType, setOrderType] = useState<
     "regular" | "reel" | "restaurant" | null
   >(null);
+  const [combinedOrders, setCombinedOrders] = useState<any[]>([]);
 
   useEffect(() => {
     if (!orderId || !router.isReady) return;
@@ -432,6 +460,35 @@ function ViewOrderDetailsPage() {
     }
     fetchDetails();
   }, [orderId]);
+
+  // Fetch combined orders if this is a combined order
+  useEffect(() => {
+    const fetchCombinedOrders = async () => {
+      if (!order?.combinedOrderId) {
+        setCombinedOrders(order ? [order] : []);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `/api/queries/combined-orders?combined_order_id=${order.combinedOrderId}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setCombinedOrders(data.orders || [order]);
+        } else {
+          setCombinedOrders([order]);
+        }
+      } catch (error) {
+        console.error("Error fetching combined orders:", error);
+        setCombinedOrders([order]);
+      }
+    };
+
+    if (order) {
+      fetchCombinedOrders();
+    }
+  }, [order]);
 
   if (loading) {
     return (
@@ -529,12 +586,12 @@ function ViewOrderDetailsPage() {
       <RootLayout>
         {/* Mobile View */}
         <div className="block md:hidden">
-          <MobileOrderDetails order={order} orderType={orderType} />
+          <MobileOrderDetails order={order} orderType={orderType} combinedOrders={combinedOrders} />
         </div>
 
         {/* Desktop View */}
         <div className="hidden md:block">
-          <DesktopOrderDetails order={order} orderType={orderType} />
+          <DesktopOrderDetails order={order} orderType={orderType} combinedOrders={combinedOrders} />
         </div>
 
         {/* Mobile-specific styles for full-width layout */}

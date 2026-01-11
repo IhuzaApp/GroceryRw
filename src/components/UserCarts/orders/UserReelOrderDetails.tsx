@@ -249,7 +249,7 @@ export default function UserReelOrderDetails({
                       ? "Preparing for delivery"
                       : order.status === "shopping"
                       ? "Picking your items"
-                      : "Waiting for Plaser assignment"}
+                      : "Waiting for assignment"}
                   </div>
                 </div>
               )}
@@ -264,7 +264,7 @@ export default function UserReelOrderDetails({
               >
                 <Steps.Item
                   title="Awaiting Assignment"
-                  description="Waiting for Plaser assignment"
+                  description="Waiting for assignment"
                 />
                 <Steps.Item title="Shopping" description="Picking your items" />
                 <Steps.Item
@@ -774,7 +774,7 @@ export default function UserReelOrderDetails({
                   No assigned person available
                 </p>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                  Waiting for Plaser assignment
+                  Waiting for assignment
                 </p>
               </div>
             )}
