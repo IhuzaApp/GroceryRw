@@ -1776,13 +1776,30 @@ export default function BatchDetails({
   }
 
   return (
-    <div
-      className={`min-h-screen ${
-        theme === "dark"
-          ? "bg-gray-900 text-gray-100"
-          : "bg-gray-50 text-gray-900"
-      }`}
-    >
+    <>
+      {/* Hide mobile bottom navbar on this page */}
+      <style jsx global>{`
+        @media (max-width: 767px) {
+          nav[class*="bottom-"],
+          div[class*="mobile-nav"],
+          div[class*="bottom-nav"],
+          .mobile-bottom-navigation,
+          [class*="ShopperSidebar"] {
+            display: none !important;
+          }
+        }
+      `}</style>
+      
+      <div
+        className={`min-h-screen ${
+          theme === "dark"
+            ? "bg-gray-900 text-gray-100"
+            : "bg-gray-50 text-gray-900"
+        }`}
+        style={{
+          paddingBottom: "env(safe-area-inset-bottom)",
+        }}
+      >
       {/* Product Image Modal */}
       <ProductImageModal
         open={showImageModal}
@@ -2912,11 +2929,17 @@ export default function BatchDetails({
               </div>
             )}
 
-            {/* Action Button */}
-            <div className="pt-2 sm:pt-4">{getActionButton()}</div>
+            {/* Action Button - Hidden on Mobile (shown in fixed bar) */}
+            <div className="hidden pt-2 sm:block sm:pt-4">{getActionButton()}</div>
           </div>
         </div>
       </main>
+
+      {/* Fixed Bottom Action Button - Mobile Only */}
+      <div className="fixed bottom-0 left-0 right-0 z-[9999] border-t border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-900 sm:hidden">
+        {getActionButton()}
+      </div>
     </div>
+    </>
   );
 }
