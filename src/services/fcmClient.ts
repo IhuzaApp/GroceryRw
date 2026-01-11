@@ -109,11 +109,10 @@ const getServiceWorkerRegistration = async (): Promise<ServiceWorkerRegistration
           scope: "/"
         });
         await navigator.serviceWorker.ready;
-        console.log("✅ Service worker registered (singleton):", registration.scope);
         serviceWorkerRegistration = registration;
         return registration;
       } catch (error) {
-        console.error("❌ Service worker registration failed:", error);
+        console.error("Service worker registration failed:", error);
         return null;
       } finally {
         isRegisteringServiceWorker = false;
@@ -211,27 +210,19 @@ export const setupFCMListener = (
 ): (() => void) => {
   try {
     if (!messaging) {
-      console.error("❌ Messaging not initialized");
+      console.error("Messaging not initialized");
       return () => {};
     }
-
-    console.log("👂 Setting up onMessage listener...");
     
     const unsubscribe = onMessage(messaging, (payload) => {
-      console.log("🔥 FCM onMessage FIRED!", payload);
-      
       // Show notification using service worker (Chrome requires this)
       if (payload.notification && Notification.permission === "granted") {
         const notificationType = payload.data?.type || "message";
-        console.log("📤 Attempting to show notification, type:", notificationType);
-        
-        // DUAL METHOD: Try both service worker AND direct Notification API
         const notificationTitle = payload.notification.title || "New Notification";
         const notificationBody = payload.notification.body;
         
         // Method 1: Try direct Notification API first (works in Safari, sometimes Chrome)
         try {
-          console.log("🔔 Method 1: Trying direct Notification API");
           const directNotif = new Notification(notificationTitle, {
             body: notificationBody,
             icon: "/assets/logos/PlasIcon.png",
@@ -249,18 +240,14 @@ export const setupFCMListener = (
             }
             directNotif.close();
           };
-          
-          console.log("✅ Direct notification created");
         } catch (directError) {
-          console.warn("⚠️ Direct notification failed:", directError);
+          // Silent fail, service worker method will handle it
         }
         
         // Method 2: Also try service worker method (Chrome prefers this)
         if ("serviceWorker" in navigator) {
           navigator.serviceWorker.ready
             .then((registration) => {
-              console.log("🔔 Method 2: Trying service worker notification");
-              
               const notificationOptions = {
                 body: notificationBody,
                 icon: "/assets/logos/PlasIcon.png",
@@ -280,11 +267,8 @@ export const setupFCMListener = (
               
               return registration.showNotification(notificationTitle, notificationOptions);
             })
-            .then(() => {
-              console.log("✅ Service worker notification displayed!");
-            })
             .catch((error) => {
-              console.error("❌ Service worker notification failed:", error);
+              console.error("Failed to show notification:", error);
             });
         }
       }
@@ -292,10 +276,9 @@ export const setupFCMListener = (
       onMessageReceived(payload);
     });
 
-    console.log("✅ onMessage listener registered");
     return unsubscribe;
   } catch (error) {
-    console.error("❌ Error setting up FCM listener:", error);
+    console.error("Error setting up FCM listener:", error);
     return () => {};
   }
 };
@@ -308,27 +291,19 @@ export const initializeFCM = async (
   onMessageReceived: (payload: any) => void
 ): Promise<(() => void) | null> => {
   try {
-    console.log("🔧 Initializing FCM for user:", userId);
-    
     const token = await getFCMToken();
-    console.log("📱 FCM Token obtained:", token ? "✅ Yes" : "❌ No");
     
     if (!token) {
-      console.error("❌ Failed to get FCM token");
+      console.error("Failed to get FCM token");
       return null;
     }
 
-    console.log("💾 Saving token to server...");
     await saveFCMTokenToServer(userId, token);
-    console.log("✅ Token saved");
-    
-    console.log("👂 Setting up FCM listener...");
     const unsubscribe = setupFCMListener(onMessageReceived);
-    console.log("✅ FCM listener active");
 
     return unsubscribe;
   } catch (error) {
-    console.error("❌ Error initializing FCM:", error);
+    console.error("Error initializing FCM:", error);
     return null;
   }
 };
