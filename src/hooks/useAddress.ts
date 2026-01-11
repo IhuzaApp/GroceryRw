@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { authenticatedFetch } from "../lib/authenticatedFetch";
 
 interface Address {
@@ -25,12 +26,22 @@ interface UseAddressReturn {
 }
 
 export const useAddress = (): UseAddressReturn => {
+  const { data: session, status } = useSession();
   const [defaultAddress, setDefaultAddress] = useState<Address | null>(null);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchAddresses = async () => {
+    // Only fetch if user is authenticated
+    if (status !== "authenticated" || !session?.user) {
+      setLoading(false);
+      setAddresses([]);
+      setDefaultAddress(null);
+      setError(null);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -38,6 +49,13 @@ export const useAddress = (): UseAddressReturn => {
       const response = await authenticatedFetch("/api/queries/addresses");
 
       if (!response.ok) {
+        // Don't log 401 errors as they're expected when not logged in
+        if (response.status === 401) {
+          setAddresses([]);
+          setDefaultAddress(null);
+          setLoading(false);
+          return;
+        }
         throw new Error(`Failed to fetch addresses: ${response.status}`);
       }
 
@@ -52,7 +70,10 @@ export const useAddress = (): UseAddressReturn => {
       );
       setDefaultAddress(defaultAddr || null);
     } catch (err) {
-      console.error("Error fetching addresses:", err);
+      // Only log actual errors, not 401s
+      if (err instanceof Error && !err.message.includes("401")) {
+        console.error("Error fetching addresses:", err);
+      }
       setError(
         err instanceof Error ? err.message : "Failed to fetch addresses"
       );
@@ -64,8 +85,17 @@ export const useAddress = (): UseAddressReturn => {
   };
 
   useEffect(() => {
-    fetchAddresses();
-  }, []);
+    // Only fetch if authenticated
+    if (status === "authenticated" && session?.user) {
+      fetchAddresses();
+    } else if (status === "unauthenticated") {
+      // Clear data when not authenticated
+      setLoading(false);
+      setAddresses([]);
+      setDefaultAddress(null);
+      setError(null);
+    }
+  }, [status, session?.user]);
 
   return {
     defaultAddress,
