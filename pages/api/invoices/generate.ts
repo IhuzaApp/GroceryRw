@@ -20,11 +20,18 @@ const GET_ORDER_DETAILS_FOR_INVOICE = gql`
         id
         name
         email
+        phone
       }
       Shop {
         name
         address
         image
+      }
+      Address {
+        id
+        street
+        city
+        postal_code
       }
       Order_Items {
         id
@@ -59,6 +66,13 @@ const GET_REEL_ORDER_DETAILS_FOR_INVOICE = gql`
         id
         name
         email
+        phone
+      }
+      Address {
+        id
+        street
+        city
+        postal_code
       }
       Reel {
         id
@@ -94,6 +108,13 @@ const GET_RESTAURANT_ORDER_DETAILS_FOR_INVOICE = gql`
         id
         name
         email
+        phone
+      }
+      Address {
+        id
+        street
+        city
+        postal_code
       }
       Restaurant {
         id
@@ -494,8 +515,19 @@ export default async function handler(
         : isRestaurantOrder
         ? order.User.email
         : order.orderedBy.email,
+      customerPhone: isReelOrder
+        ? order.User?.phone || ""
+        : isRestaurantOrder
+        ? order.User?.phone || ""
+        : order.orderedBy?.phone || "",
       shop: shopName,
       shopAddress: shopAddress,
+      deliveryStreet: order.Address?.street || "",
+      deliveryCity: order.Address?.city || "",
+      deliveryPostalCode: order.Address?.postal_code || "",
+      deliveryAddress: order.Address
+        ? `${order.Address.street || ""}, ${order.Address.city || ""}${order.Address.postal_code ? `, ${order.Address.postal_code}` : ""}`
+        : "",
       dateCreated: new Date(order.created_at).toLocaleString(),
       dateCompleted: new Date(order.updated_at).toLocaleString(),
       status: order.status,
