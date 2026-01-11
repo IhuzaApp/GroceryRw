@@ -191,8 +191,6 @@ export const setupFCMListener = (
               { action: "open", title: "View Order" },
               { action: "close", title: "Dismiss" },
             ];
-          } else if (notificationType === "test") {
-            actions = [{ action: "close", title: "Got it!" }];
           }
           
           registration.showNotification(
