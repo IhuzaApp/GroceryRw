@@ -287,7 +287,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
   };
 
   const handleClose = () => {
-    if (photoUploading || forceOpen || confirmingDelivery) {
+    if (photoUploading || forceOpen || confirmingDelivery || showCameraCapture) {
       return;
     }
     onClose();
