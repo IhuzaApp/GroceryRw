@@ -472,16 +472,81 @@ a:visited {
 }
 
 /* Toast notifications positioning */
-/* Mobile: top-center (default) */
+/* Mobile: top-center (default for regular toasts) */
 .mobile-toast-container {
   top: 1rem !important;
 }
 
-/* Desktop: bottom-center */
+/* Mobile: Batch notifications at bottom covering nav bar */
+@media (max-width: 767px) {
+  .batch-notification-toast {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    z-index: 99999 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    padding-bottom: env(safe-area-inset-bottom, 0) !important;
+  }
+
+  .batch-notification-toast > div {
+    border-radius: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .batch-warning-toast {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    z-index: 99999 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    padding-bottom: env(safe-area-inset-bottom, 0) !important;
+  }
+
+  .batch-warning-toast > div {
+    border-radius: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15) !important;
+  }
+}
+
+/* Desktop: bottom-center for regular toasts */
 @media (min-width: 768px) {
   .mobile-toast-container {
     top: auto !important;
     bottom: 2rem !important;
+  }
+
+  /* Keep batch notifications at the top-right on desktop */
+  .batch-notification-toast {
+    position: fixed !important;
+    top: 1rem !important;
+    right: 1rem !important;
+    bottom: auto !important;
+    left: auto !important;
+    z-index: 99999 !important;
+  }
+
+  /* Also keep warning toasts at top (legacy support) */
+  .batch-warning-toast {
+    position: fixed !important;
+    top: 1rem !important;
+    right: 1rem !important;
+    bottom: auto !important;
+    left: auto !important;
+    z-index: 99999 !important;
   }
 }
 

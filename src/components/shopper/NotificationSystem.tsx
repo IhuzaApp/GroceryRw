@@ -75,6 +75,7 @@ export default function NotificationSystem({
   const batchAssignments = useRef<BatchAssignment[]>([]);
   const lastOrderIds = useRef<Set<string>>(new Set());
   const activeToasts = useRef<Map<string, any>>(new Map()); // Track active toasts by order ID
+  const isCheckingOrders = useRef<boolean>(false); // Prevent concurrent API calls
 
   // FCM integration
   const { isInitialized, hasPermission } = useFCMNotifications();
@@ -402,15 +403,15 @@ export default function NotificationSystem({
         <div
           className={`${
             t.visible ? "animate-enter" : "animate-leave"
-          } pointer-events-auto w-full max-w-sm rounded-2xl shadow-xl ${
+          } pointer-events-auto w-full max-w-sm md:rounded-2xl shadow-xl ${
             theme === "dark"
-              ? "border border-gray-700 bg-gray-800"
-              : "border border-gray-200 bg-white"
+              ? "border md:border border-t-0 md:border-t border-gray-700 bg-gray-800"
+              : "border md:border border-t-0 md:border-t border-gray-200 bg-white"
           }`}
         >
           {/* Header */}
           <div
-            className={`rounded-t-2xl px-4 py-3 ${
+            className={`md:rounded-t-2xl px-4 py-3 ${
               theme === "dark" ? "bg-green-600" : "bg-green-500"
             }`}
           >
@@ -611,6 +612,7 @@ export default function NotificationSystem({
       {
         duration: 90000, // 90 seconds (1 minute 30 seconds)
         position: "top-right",
+        className: "batch-notification-toast",
       }
     );
 
@@ -1046,6 +1048,15 @@ export default function NotificationSystem({
   };
 
   const checkForNewOrders = async () => {
+    // Prevent concurrent API calls
+    if (isCheckingOrders.current) {
+      logger.debug(
+        "Order check already in progress, skipping",
+        "NotificationSystem"
+      );
+      return;
+    }
+
     if (!session?.user?.id || !currentLocation) {
       logger.debug(
         "Missing session or location, skipping check",
@@ -1056,6 +1067,9 @@ export default function NotificationSystem({
 
     const now = new Date();
     const currentTime = now.getTime();
+
+    // Set flag to prevent concurrent calls
+    isCheckingOrders.current = true;
 
     // Check if we should skip this check (30-second cooldown for smart order finder)
     if (currentTime - lastNotificationTime.current < 30000) {
@@ -1127,6 +1141,17 @@ export default function NotificationSystem({
 
         if (!currentUserAssignment) {
           const order = data.order;
+          
+          // Validate order data before showing notification
+          if (!order.itemsCount || order.itemsCount === 0) {
+            logger.warn(
+              "Order has 0 items, skipping notification",
+              "NotificationSystem",
+              { orderId: order.id, orderData: order }
+            );
+            return;
+          }
+
           const newAssignment: BatchAssignment = {
             shopperId: session.user.id,
             orderId: order.id,
@@ -1144,7 +1169,7 @@ export default function NotificationSystem({
             distance: order.distance,
             createdAt: order.createdAt,
             customerAddress: order.customerAddress,
-            itemsCount: order.itemsCount || 0,
+            itemsCount: order.itemsCount,
             estimatedEarnings: order.estimatedEarnings || 0,
             orderType: order.orderType || "regular",
           };
@@ -1178,6 +1203,9 @@ export default function NotificationSystem({
         "NotificationSystem",
         error
       );
+    } finally {
+      // Always reset the flag when done
+      isCheckingOrders.current = false;
     }
   };
 
