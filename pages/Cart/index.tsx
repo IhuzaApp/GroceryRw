@@ -2,7 +2,6 @@ import Image from "next/image";
 import { Input, InputGroup, Button, Checkbox, Panel } from "rsuite";
 import Link from "next/link";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { ShoppingCart } from "lucide-react";
 import RootLayout from "@components/ui/layout";
 import ItemCartTable from "@components/UserCarts/cartsTable";
 import CheckoutItems from "@components/UserCarts/checkout/checkoutCard";
@@ -735,22 +734,6 @@ export default function CartMainPage() {
                 <div className="w-full lg:w-2/3">
                   {/* Restaurant/Shop Selection - Custom Tailwind Tabs */}
                   <div className="mb-2 md:mb-6">
-                    {/* Combined Checkout Button - Show when multiple carts exist */}
-                    {(shopCarts.length > 1 ||
-                      (shopCarts.length >= 1 && restaurants.length >= 1)) && (
-                      <div className="mb-4">
-                        <Link
-                          href="/combined-checkout"
-                          className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-3 text-base font-bold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:from-green-600 hover:to-emerald-600 hover:shadow-xl"
-                        >
-                          <ShoppingCart className="h-5 w-5" />
-                          <span>
-                            Checkout All Carts Together (
-                            {shopCarts.length + restaurants.length} carts)
-                          </span>
-                        </Link>
-                      </div>
-                    )}
                     <div className="flex gap-2 overflow-x-auto pb-2">
                       {hasAnyItems ? (
                         <>

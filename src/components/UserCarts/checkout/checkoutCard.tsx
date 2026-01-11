@@ -1955,16 +1955,20 @@ export default function CheckoutItems({
 
           {/* Combine button - Mobile */}
           {!loadingCarts && availableCarts.length > 0 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                // Clear cart details and trigger refetch
-                setCartDetails({});
-                setRefetchCartDetails((prev) => prev + 1);
-                setShowCombineModal(true);
-              }}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-md transition-all hover:from-green-600 hover:to-emerald-700"
-            >
+            <Button
+            appearance="primary"
+            color="green"
+            block
+            onClick={(e) => {
+              e.stopPropagation();
+              // Clear cart details and trigger refetch
+              setCartDetails({});
+              setRefetchCartDetails((prev) => prev + 1);
+              setShowCombineModal(true);
+            }}
+            className="mt-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
+          >
+            <span className="flex items-center justify-center gap-2">
               <svg
                 className="h-4 w-4"
                 fill="none"
@@ -1983,7 +1987,8 @@ export default function CheckoutItems({
                     selectedCartIds.size !== 1 ? "s" : ""
                   } Combined`
                 : "Combine with Other Carts"}
-            </button>
+            </span>
+            </Button>
           )}
         </div>
 
@@ -2446,16 +2451,19 @@ export default function CheckoutItems({
                   Order Summary
                 </h2>
                 {!loadingCarts && availableCarts.length > 0 && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // Clear cart details and trigger refetch
-                      setCartDetails({});
-                      setRefetchCartDetails((prev) => prev + 1);
-                      setShowCombineModal(true);
-                    }}
-                    className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-md transition-all hover:from-green-600 hover:to-emerald-700"
-                  >
+                  <Button
+                  appearance="primary"
+                  color="green"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Clear cart details and trigger refetch
+                    setCartDetails({});
+                    setRefetchCartDetails((prev) => prev + 1);
+                    setShowCombineModal(true);
+                  }}
+                  className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
+                >
+                  <span className="flex items-center gap-2">
                     <svg
                       className="h-4 w-4"
                       fill="none"
@@ -2472,7 +2480,8 @@ export default function CheckoutItems({
                     {selectedCartIds.size > 0
                       ? `${selectedCartIds.size} Combined`
                       : "Combine Carts"}
-                  </button>
+                  </span>
+                  </Button>
                 )}
               </div>
             </div>
@@ -3041,8 +3050,8 @@ export default function CheckoutItems({
           <Button
             onClick={() => setShowCombineModal(false)}
             appearance="primary"
-            color="green"
-            className="bg-gradient-to-r from-green-500 to-emerald-600"
+            color="blue"
+            className="bg-gradient-to-r from-blue-500 to-blue-600"
           >
             {selectedCartIds.size > 0
               ? `Continue with ${selectedCartIds.size + 1} Cart${
