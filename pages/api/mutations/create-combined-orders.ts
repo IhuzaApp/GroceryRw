@@ -189,8 +189,9 @@ export default async function handler(
       });
     }
 
-    // Generate a single combined_order_id for all orders
+    // Generate a single combined_order_id and PIN for all orders
     const combinedOrderId = uuidv4();
+    const sharedPin = generateOrderPin(); // Single PIN for all combined orders
     const createdOrders: Array<{
       id: string;
       pin: string;
@@ -265,8 +266,7 @@ export default async function handler(
         return sum + price * item.quantity;
       }, 0);
 
-      // 4. Create order record with PIN and combined_order_id
-      const orderPin = generateOrderPin();
+      // 4. Create order record with shared PIN and combined_order_id
       const orderRes = await hasuraClient.request<{
         insert_Orders_one: {
           id: string;
@@ -285,7 +285,7 @@ export default async function handler(
         voucher_code: voucher_code ?? null,
         delivery_time,
         delivery_notes: delivery_notes ?? null,
-        pin: orderPin,
+        pin: sharedPin, // Use the same PIN for all combined orders
         combined_order_id: combinedOrderId,
       });
 
@@ -313,7 +313,7 @@ export default async function handler(
         parseFloat(delivery_fee || "0");
       createdOrders.push({
         id: orderId,
-        pin: orderPin,
+        pin: sharedPin, // Use the shared PIN
         shop_id: store_id,
         total: orderTotal,
       });
