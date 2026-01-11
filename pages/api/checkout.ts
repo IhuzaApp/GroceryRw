@@ -60,7 +60,9 @@ const GET_PRODUCTS_BY_IDS = gql`
 
 // Generate a random 2-digit PIN (00-99)
 function generateOrderPin(): string {
-  return Math.floor(Math.random() * 100).toString().padStart(2, '0');
+  return Math.floor(Math.random() * 100)
+    .toString()
+    .padStart(2, "0");
 }
 
 // Create a new order
@@ -288,9 +290,9 @@ export default async function handler(
     await hasuraClient.request(DELETE_CART, { cart_id: cart.id });
 
     // 9. Respond with new order ID and PIN
-    return res.status(201).json({ 
+    return res.status(201).json({
       order_id: orderId,
-      pin: orderRes.insert_Orders_one.pin 
+      pin: orderRes.insert_Orders_one.pin,
     });
   } catch (err: any) {
     console.error("Checkout error:", err);

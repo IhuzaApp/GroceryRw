@@ -79,8 +79,8 @@ export default async function handler(
     }
 
     if (password.length < 8) {
-      return res.status(400).json({ 
-        error: "Password must be at least 8 characters long" 
+      return res.status(400).json({
+        error: "Password must be at least 8 characters long",
       });
     }
 
@@ -92,8 +92,8 @@ export default async function handler(
     if (emailCheck.Users && emailCheck.Users.length > 0) {
       // Check if the existing email belongs to a different user
       if (emailCheck.Users[0].id !== session.user.id) {
-        return res.status(400).json({ 
-          error: "Email already in use by another account" 
+        return res.status(400).json({
+          error: "Email already in use by another account",
         });
       }
     }

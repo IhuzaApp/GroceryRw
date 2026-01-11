@@ -172,10 +172,7 @@ export default function MobileUserDashboard({
       // Combine and format results
       // Note: Don't override the 'type' field - the API already sets it correctly
       // (products have type: "product", shops have type: "shop")
-      const allResults = [
-        ...(shopsData.results || []),
-        ...filteredRestaurants,
-      ];
+      const allResults = [...(shopsData.results || []), ...filteredRestaurants];
 
       setSearchResults(allResults);
     } catch (error) {
@@ -543,7 +540,8 @@ export default function MobileUserDashboard({
                     {selectedCategoryData?.name || "Selected Category"}
                   </h2>
                   <p className="truncate text-xs font-medium !text-white drop-shadow sm:text-sm">
-                    {filteredShopsBySearch?.length || 0} {showOpenOnly ? "open" : ""} shop
+                    {filteredShopsBySearch?.length || 0}{" "}
+                    {showOpenOnly ? "open" : ""} shop
                     {(filteredShopsBySearch?.length || 0) !== 1 ? "s" : ""}{" "}
                     {shopSearchTerm || showOpenOnly ? "found" : "available"}
                   </p>
@@ -591,7 +589,9 @@ export default function MobileUserDashboard({
                         ? "bg-green-500 text-white"
                         : "bg-white/90 text-gray-800 dark:bg-gray-800/90 dark:text-white dark:hover:bg-gray-800"
                     }`}
-                    title={showOpenOnly ? "Show all shops" : "Show open shops only"}
+                    title={
+                      showOpenOnly ? "Show all shops" : "Show open shops only"
+                    }
                     onClick={() => setShowOpenOnly(!showOpenOnly)}
                   >
                     <svg
@@ -694,8 +694,18 @@ export default function MobileUserDashboard({
               onClick={() => setShowOpenOnly(false)}
               className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-200 text-green-700 transition-colors hover:bg-green-300 dark:bg-green-800 dark:text-green-200 dark:hover:bg-green-700"
             >
-              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="h-3 w-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>

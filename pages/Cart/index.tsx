@@ -736,14 +736,18 @@ export default function CartMainPage() {
                   {/* Restaurant/Shop Selection - Custom Tailwind Tabs */}
                   <div className="mb-2 md:mb-6">
                     {/* Combined Checkout Button - Show when multiple carts exist */}
-                    {(shopCarts.length > 1 || (shopCarts.length >= 1 && restaurants.length >= 1)) && (
+                    {(shopCarts.length > 1 ||
+                      (shopCarts.length >= 1 && restaurants.length >= 1)) && (
                       <div className="mb-4">
                         <Link
                           href="/combined-checkout"
                           className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-3 text-base font-bold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:from-green-600 hover:to-emerald-600 hover:shadow-xl"
                         >
                           <ShoppingCart className="h-5 w-5" />
-                          <span>Checkout All Carts Together ({shopCarts.length + restaurants.length} carts)</span>
+                          <span>
+                            Checkout All Carts Together (
+                            {shopCarts.length + restaurants.length} carts)
+                          </span>
                         </Link>
                       </div>
                     )}
@@ -1163,8 +1167,16 @@ export default function CartMainPage() {
                                 shopId={selectedShopId!}
                                 Total={total}
                                 totalUnits={units}
-                                shopLat={selectedShop.latitude ? parseFloat(selectedShop.latitude) : 0}
-                                shopLng={selectedShop.longitude ? parseFloat(selectedShop.longitude) : 0}
+                                shopLat={
+                                  selectedShop.latitude
+                                    ? parseFloat(selectedShop.latitude)
+                                    : 0
+                                }
+                                shopLng={
+                                  selectedShop.longitude
+                                    ? parseFloat(selectedShop.longitude)
+                                    : 0
+                                }
                                 shopAlt={0}
                                 isFoodCart={false}
                               />

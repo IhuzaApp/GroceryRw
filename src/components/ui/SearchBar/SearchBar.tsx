@@ -179,14 +179,17 @@ export default function SearchBar() {
                           <div className="h-4 w-4 overflow-hidden rounded bg-gray-100 dark:bg-gray-700">
                             <img
                               src={
-                                result.shopImage || "/images/groceryPlaceholder.png"
+                                result.shopImage ||
+                                "/images/groceryPlaceholder.png"
                               }
                               alt={result.shopName}
                               className="h-full w-full object-cover"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
                                 // Prevent infinite loop if placeholder fails
-                                if (target.src.includes("groceryPlaceholder.png")) {
+                                if (
+                                  target.src.includes("groceryPlaceholder.png")
+                                ) {
                                   return;
                                 }
                                 target.src = "/images/groceryPlaceholder.png";

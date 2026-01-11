@@ -191,7 +191,7 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
       });
       if (!res.ok) throw new Error(`Save failed (${res.status})`);
       const savedAddress = await res.json();
-      
+
       // Update cookie with the new address (especially important for guest users)
       if (isGuest || isDefault) {
         const locationData = {
@@ -205,7 +205,7 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
         Cookies.set("delivery_address", JSON.stringify(locationData));
         window.dispatchEvent(new Event("addressChanged"));
       }
-      
+
       fetchAddresses();
       setShowModal(false);
       // reset form
@@ -396,33 +396,35 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
                     {addr.city}, {addr.postal_code}
                   </p>
                 </div>
-                {addr.placeDetails && Object.keys(addr.placeDetails).length > 0 && (
-                  <div className="mt-2 space-y-1 text-xs text-gray-500 dark:text-gray-400">
-                    {addr.placeDetails.gateNumber && (
-                      <div className="flex items-center gap-1">
-                        <span className="font-medium">Gate:</span>
-                        <span>
-                          {addr.placeDetails.gateNumber}
-                          {addr.placeDetails.gateColor && ` (${addr.placeDetails.gateColor})`}
-                        </span>
-                      </div>
-                    )}
-                    {addr.placeDetails.floor && (
-                      <div className="flex items-center gap-1">
-                        <span className="font-medium">Floor:</span>
-                        <span>{addr.placeDetails.floor}</span>
-                      </div>
-                    )}
-                    {addr.placeDetails.doorNumber && (
-                      <div className="flex items-center gap-1">
-                        <span className="font-medium">
-                          {addr.type === "office" ? "Office" : "Apt"}:
-                        </span>
-                        <span>{addr.placeDetails.doorNumber}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
+                {addr.placeDetails &&
+                  Object.keys(addr.placeDetails).length > 0 && (
+                    <div className="mt-2 space-y-1 text-xs text-gray-500 dark:text-gray-400">
+                      {addr.placeDetails.gateNumber && (
+                        <div className="flex items-center gap-1">
+                          <span className="font-medium">Gate:</span>
+                          <span>
+                            {addr.placeDetails.gateNumber}
+                            {addr.placeDetails.gateColor &&
+                              ` (${addr.placeDetails.gateColor})`}
+                          </span>
+                        </div>
+                      )}
+                      {addr.placeDetails.floor && (
+                        <div className="flex items-center gap-1">
+                          <span className="font-medium">Floor:</span>
+                          <span>{addr.placeDetails.floor}</span>
+                        </div>
+                      )}
+                      {addr.placeDetails.doorNumber && (
+                        <div className="flex items-center gap-1">
+                          <span className="font-medium">
+                            {addr.type === "office" ? "Office" : "Apt"}:
+                          </span>
+                          <span>{addr.placeDetails.doorNumber}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
               </div>
 
               {/* Action Buttons */}
@@ -628,7 +630,8 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
                         Guest Address
                       </h4>
                       <p className="text-xs text-blue-700 dark:text-blue-400">
-                        We've pre-filled your current delivery address. You can update it here and it will be used for your order.
+                        We've pre-filled your current delivery address. You can
+                        update it here and it will be used for your order.
                       </p>
                     </div>
                   </div>
@@ -892,7 +895,7 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
                   setAddressType("home");
                   setPlaceDetails({});
                 }}
-                className="rounded-xl border-2 border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition-all duration-200 hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:border-gray-500"
+                className="rounded-xl border-2 border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition-all duration-200 hover:border-gray-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-600"
               >
                 {t("common.cancel")}
               </button>

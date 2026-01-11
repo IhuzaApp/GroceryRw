@@ -99,7 +99,7 @@ export default async function handler(
     }
 
     const userId = (session.user as any).id;
-    
+
     if (!userId) {
       return res.status(400).json({ error: "User ID not found in session" });
     }

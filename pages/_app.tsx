@@ -356,11 +356,11 @@ export default function App({ Component, pageProps }: AppProps) {
                   <ChatProvider>
                     <GoogleMapProvider>
                       <SessionRefreshHandler>
-                        <Toaster 
+                        <Toaster
                           position="top-center"
                           containerClassName="mobile-toast-container"
                           toastOptions={{
-                            className: 'mobile-toast',
+                            className: "mobile-toast",
                           }}
                         />
                         <Component {...pageProps} />

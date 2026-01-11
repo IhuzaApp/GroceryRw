@@ -6,7 +6,9 @@ import { gql } from "graphql-request";
 
 // Generate a random 2-digit PIN (00-99)
 function generateOrderPin(): string {
-  return Math.floor(Math.random() * 100).toString().padStart(2, '0');
+  return Math.floor(Math.random() * 100)
+    .toString()
+    .padStart(2, "0");
 }
 
 // Mutation to create a food order (using restaurant_orders table)

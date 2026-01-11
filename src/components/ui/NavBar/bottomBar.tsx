@@ -53,7 +53,9 @@ function MoreMenuItem({ icon, label, href, onClick }: MoreMenuItemProps) {
   return (
     <Link href={href} passHref onClick={handleClick}>
       <div className="mx-2 flex items-center space-x-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-gray-100 hover:shadow-sm dark:text-gray-200 dark:hover:bg-gray-700">
-        <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center text-lg">{icon}</span>
+        <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center text-lg">
+          {icon}
+        </span>
         <span className="flex-1">{label}</span>
       </div>
     </Link>
@@ -575,66 +577,66 @@ export default function BottomBar() {
               label="Recipes"
             />
           )}
-          
+
           {/* Business - Only show for non-guest logged-in users - Second icon */}
           {session?.user && !isGuest && (
             <NavItem
               href="/plasBusiness"
               icon={
                 <div className="relative">
-                <svg
-                  width="30px"
-                  height="30px"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="text-gray-600 transition-colors duration-200 dark:text-white"
-                >
-                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                  <g
-                    id="SVGRepo_tracerCarrier"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></g>
-                  <g id="SVGRepo_iconCarrier">
-                    <path
-                      d="M3 7V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V7"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
+                  <svg
+                    width="30px"
+                    height="30px"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="text-gray-600 transition-colors duration-200 dark:text-white"
+                  >
+                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                    <g
+                      id="SVGRepo_tracerCarrier"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                    ></path>
-                    <path
-                      d="M3 7L5 7H19L21 7V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V7Z"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></path>
-                    <path
-                      d="M8 11H16"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></path>
-                    <path
-                      d="M8 15H12"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></path>
-                  </g>
-                </svg>
-                {marketplaceNotificationCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-lg">
-                    {marketplaceNotificationCount > 9
-                      ? "9+"
-                      : marketplaceNotificationCount}
-                  </span>
-                )}
-              </div>
+                    ></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <path
+                        d="M3 7V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V7"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      ></path>
+                      <path
+                        d="M3 7L5 7H19L21 7V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V7Z"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      ></path>
+                      <path
+                        d="M8 11H16"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      ></path>
+                      <path
+                        d="M8 15H12"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      ></path>
+                    </g>
+                  </svg>
+                  {marketplaceNotificationCount > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-lg">
+                      {marketplaceNotificationCount > 9
+                        ? "9+"
+                        : marketplaceNotificationCount}
+                    </span>
+                  )}
+                </div>
               }
               label={t("nav.marketplace") || "Marketplace"}
             />
@@ -676,7 +678,7 @@ export default function BottomBar() {
               </div>
             </Link>
           </div>
-          
+
           {/* Orders - Fourth icon - Show for all signed in users including guests */}
           <NavItem
             href="/CurrentPendingOrders"
@@ -802,7 +804,7 @@ export default function BottomBar() {
                             d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                           />
                         </svg>
-                        <div className="flex flex-col flex-1 min-w-0 text-left">
+                        <div className="flex min-w-0 flex-1 flex-col text-left">
                           <span className="text-sm font-bold text-orange-700 dark:text-orange-300">
                             Guest User
                           </span>
@@ -827,7 +829,7 @@ export default function BottomBar() {
                     </button>
                   </div>
                 )}
-                
+
                 {/* Profile - Only show for non-guest users */}
                 {session?.user && !isGuest && (
                   <MoreMenuItem
@@ -1111,7 +1113,9 @@ export default function BottomBar() {
                       </svg>
                     )}
                   </span>
-                  <span className="flex-1">{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+                  <span className="flex-1">
+                    {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                  </span>
                 </button>
 
                 {/* Logout - Only show for non-guest users */}

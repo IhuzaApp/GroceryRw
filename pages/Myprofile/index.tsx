@@ -65,8 +65,9 @@ function MyProfilePage() {
                           You're Shopping as a Guest
                         </h3>
                         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                          Create a full account to unlock all features, save your
-                          preferences, and enjoy a personalized shopping experience.
+                          Create a full account to unlock all features, save
+                          your preferences, and enjoy a personalized shopping
+                          experience.
                         </p>
                         <div className="mt-3 flex flex-wrap gap-2">
                           <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
