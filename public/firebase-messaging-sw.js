@@ -58,14 +58,6 @@ messaging.onBackgroundMessage((payload) => {
         icon: "/assets/logos/PlasIcon.png",
       },
     ];
-  } else if (notificationType === "test") {
-    actions = [
-      {
-        action: "close",
-        title: "Got it!",
-        icon: "/assets/logos/PlasIcon.png",
-      },
-    ];
   }
   
   const notificationOptions = {
@@ -107,11 +99,9 @@ self.addEventListener("notificationclick", (event) => {
     const notificationType = event.notification.data?.type;
     const orderId = event.notification.data?.orderId;
 
-    let urlToOpen = "/";
+    let urlToOpen = "/Plasa/dashboard";
     
-    if (notificationType === "test") {
-      urlToOpen = "/Plasa/dashboard";
-    } else if (notificationType === "chat_message" && orderId) {
+    if (notificationType === "chat_message" && orderId) {
       urlToOpen = `/Messages/${orderId}`;
     } else if (notificationType === "new_order" || notificationType === "batch_orders") {
       urlToOpen = "/Plasa/active-batches";

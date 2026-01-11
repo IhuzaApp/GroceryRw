@@ -153,18 +153,6 @@ export const useFCMNotifications = (): FCMNotificationHook => {
               );
               break;
 
-            case "test":
-              // Test notification - show confirmation toast
-              if (typeof window !== 'undefined') {
-                import('react-hot-toast').then(({ default: toast }) => {
-                  toast.success("Test notification sent successfully!", {
-                    duration: 4000,
-                    icon: '🔔',
-                  });
-                });
-              }
-              break;
-
             default:
               break;
           }
