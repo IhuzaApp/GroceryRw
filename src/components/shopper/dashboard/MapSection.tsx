@@ -2722,13 +2722,12 @@ export default function MapSection({
 
   // Helper function to clear busy area circles
   const clearBusyAreas = () => {
-    console.log(`Clearing ${busyAreaCirclesRef.current.length} busy area elements`);
     busyAreaCirclesRef.current.forEach((circle) => {
       if (circle) {
         try {
           circle.remove();
         } catch (e) {
-          console.warn('Error removing busy area element:', e);
+          // Silently handle removal errors
         }
       }
     });
@@ -2746,11 +2745,8 @@ export default function MapSection({
     const allOrders = [...pendingOrders, ...allAgedOrders];
     
     if (allOrders.length === 0) {
-      console.warn('⚠️ No orders available for busy areas visualization');
       return;
     }
-    
-    console.log(`📊 Rendering busy areas from ${allOrders.length} orders (${pendingOrders.length} pending + ${allAgedOrders.length} aged)`);
 
     // Group orders by proximity (within 2km radius)
     const clusters: Array<{
@@ -2809,8 +2805,6 @@ export default function MapSection({
     const busyClusters = clusters
       .filter(cluster => cluster.count >= minOrdersPerCluster)
       .slice(0, 10); // Show top 10 busy areas
-    
-    console.log(`🔥 ${busyClusters.length} busy areas identified from ${clusters.length} clusters`);
     
     busyClusters.forEach((cluster, index) => {
         // Calculate intensity based on order count
@@ -2886,8 +2880,6 @@ export default function MapSection({
         busyAreaCirclesRef.current.push(circle);
       });
     
-    console.log(`✅ ${busyClusters.length} busy areas displayed on map`);
-    
     // Auto-pan to show all busy areas
     if (busyAreaCirclesRef.current.length > 0) {
       try {
@@ -2899,7 +2891,7 @@ export default function MapSection({
           maxZoom: 13
         });
       } catch (error) {
-        console.error('Error panning to busy areas:', error);
+        // Silently handle panning errors
       }
     }
   };

@@ -194,35 +194,46 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  console.log("=== Smart Assignment API called ===");
+  console.log("Method:", req.method);
+  
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
     const { current_location, user_id } = req.body;
+    console.log("Request body:", { user_id, current_location });
 
     if (!user_id) {
+      console.warn("Missing user_id in request");
       return res.status(400).json({
         error: "User ID is required",
       });
     }
 
     if (!current_location || !current_location.lat || !current_location.lng) {
+      console.warn("Missing or invalid current_location in request");
       return res.status(400).json({
         error: "Current location is required",
       });
     }
 
+    console.log("Checking hasuraClient...");
     if (!hasuraClient) {
+      console.error("Hasura client is not initialized!");
       throw new Error("Hasura client is not initialized");
     }
+    console.log("hasuraClient is initialized");
 
     // Get orders created in the last 29 minutes
     const twentyNineMinutesAgo = new Date(
       Date.now() - 29 * 60 * 1000
     ).toISOString();
+    console.log("Fetching orders created after:", twentyNineMinutesAgo);
 
     // Fetch regular, reel, and restaurant orders in parallel
+    console.log("Fetching orders and shopper performance from Hasura...");
     const [
       regularOrdersData,
       reelOrdersData,
@@ -242,11 +253,19 @@ export default async function handler(
         shopper_id: user_id,
       }) as any,
     ]);
+    console.log("Data fetched successfully from Hasura");
 
     const availableOrders = regularOrdersData.Orders || [];
     const availableReelOrders = reelOrdersData.reel_orders || [];
     const availableRestaurantOrders =
       restaurantOrdersData.restaurant_orders || [];
+    
+    console.log("Available orders counts:", {
+      regular: availableOrders.length,
+      reel: availableReelOrders.length,
+      restaurant: availableRestaurantOrders.length,
+      total: availableOrders.length + availableReelOrders.length + availableRestaurantOrders.length
+    });
 
     // Combine all orders with type information
     const allOrders = [
@@ -265,12 +284,15 @@ export default async function handler(
     ];
 
     if (allOrders.length === 0) {
+      console.log("No available orders found");
       return res.status(200).json({
         success: false,
         message: "No available orders at the moment",
         orders: [],
       });
     }
+    
+    console.log("Calculating priority for", allOrders.length, "orders");
 
     // Calculate priority for each order
     const ordersWithPriority = allOrders.map((order) => ({
@@ -287,6 +309,11 @@ export default async function handler(
 
     // Get the best order for the shopper to see (don't assign yet)
     const bestOrder = ordersWithPriority[0];
+    console.log("Best order selected:", {
+      id: bestOrder.id,
+      type: bestOrder.orderType,
+      priority: bestOrder.priority
+    });
 
     // Calculate distance and travel time
     const distance = calculateDistanceKm(
@@ -337,12 +364,29 @@ export default async function handler(
       }),
     };
 
+    console.log("Returning order notification:", {
+      orderId: orderForNotification.id,
+      orderType: orderForNotification.orderType,
+      distance: orderForNotification.distance,
+      estimatedEarnings: orderForNotification.estimatedEarnings
+    });
+    
     return res.status(200).json({
       success: true,
       order: orderForNotification,
       message: "Order found - shopper can accept or skip",
     });
   } catch (error) {
+    console.error("=== ERROR in Smart Assignment API ===");
+    console.error("Error:", error);
+    console.error("Error message:", error instanceof Error ? error.message : String(error));
+    console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
+    
+    logger.error("Error in smart assignment", "SmartAssignmentAPI", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    
     return res.status(500).json({
       error: "Failed to find order",
       details: error instanceof Error ? error.message : "Unknown error",

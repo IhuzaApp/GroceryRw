@@ -31,7 +31,7 @@ const GET_ACTIVE_ORDERS = gql`
         latitude
         longitude
       }
-      User {
+      orderedBy {
         id
         name
       }
@@ -83,7 +83,7 @@ const GET_ACTIVE_REEL_ORDERS = gql`
         restaurant_id
         user_id
       }
-      user: User {
+      User {
         id
         name
         phone
@@ -190,14 +190,18 @@ export default async function handler(
   }
 
   try {
+    console.log("Checking hasuraClient...");
     if (!hasuraClient) {
+      console.error("Hasura client is not initialized!");
       throw new Error("Hasura client is not initialized");
     }
+    console.log("hasuraClient is initialized");
 
     // Fetch regular, reel, and restaurant orders in parallel
     let regularOrdersData, reelOrdersData, restaurantOrdersData;
 
     try {
+      console.log("Fetching orders from Hasura...");
       [regularOrdersData, reelOrdersData, restaurantOrdersData] =
         await Promise.all([
           hasuraClient.request<{
@@ -215,7 +219,7 @@ export default async function handler(
                 latitude: string;
                 longitude: string;
               };
-              User: { id: string; name: string };
+              orderedBy: { id: string; name: string };
               Address: {
                 latitude: string;
                 longitude: string;
@@ -251,7 +255,7 @@ export default async function handler(
                 restaurant_id: string | null;
                 user_id: string | null;
               };
-              user: {
+              User: {
                 id: string;
                 name: string;
                 phone: string;
@@ -298,7 +302,10 @@ export default async function handler(
             }>;
           }>(GET_ACTIVE_RESTAURANT_ORDERS, { shopperId: userId }),
         ]);
+      console.log("Orders fetched successfully");
     } catch (fetchError) {
+      console.error("Error fetching orders from Hasura:", fetchError);
+      console.error("Fetch error details:", JSON.stringify(fetchError, null, 2));
       throw new Error(
         `Failed to fetch orders: ${
           fetchError instanceof Error ? fetchError.message : String(fetchError)
@@ -330,7 +337,7 @@ export default async function handler(
       shopAddress: o.Shop.address,
       shopLat: parseFloat(o.Shop.latitude),
       shopLng: parseFloat(o.Shop.longitude),
-      customerName: o.User.name,
+      customerName: o.orderedBy.name,
       customerAddress: `${o.Address.street}, ${o.Address.city}`,
       customerLat: parseFloat(o.Address.latitude),
       customerLng: parseFloat(o.Address.longitude),
@@ -360,7 +367,7 @@ export default async function handler(
           : "From Reel Creator",
         shopLat: parseFloat(o.Address.latitude), // Use customer location as pickup point
         shopLng: parseFloat(o.Address.longitude),
-        customerName: o.user.name,
+        customerName: o.User.name,
         customerAddress: `${o.Address.street}, ${o.Address.city}`,
         customerLat: parseFloat(o.Address.latitude),
         customerLng: parseFloat(o.Address.longitude),
@@ -378,7 +385,7 @@ export default async function handler(
         },
         quantity: parseInt(o.quantity) || 1,
         deliveryNote: o.delivery_note,
-        customerPhone: o.user.phone,
+        customerPhone: o.User.phone,
       };
     });
 
@@ -426,6 +433,13 @@ export default async function handler(
       message: `Found ${allActiveOrders.length} active batches`,
     });
   } catch (error) {
+    console.error("=== ERROR in ActiveBatches API ===");
+    console.error("Error:", error);
+    console.error("Error message:", error instanceof Error ? error.message : String(error));
+    console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
+    console.error("User ID:", userId);
+    console.error("Hasura client exists:", !!hasuraClient);
+    
     logger.error("Error fetching active batches", "ActiveBatchesAPI", {
       userId,
       error: error instanceof Error ? error.message : String(error),
