@@ -262,22 +262,6 @@ export default function ActiveBatches({
           </button>
         </div>
 
-        {/* Description about what orders are shown */}
-        <div
-          className={`text-md mb-4 rounded-lg p-3 ${
-            theme === "dark"
-              ? "border border-green-800 bg-green-900/20 text-green-300"
-              : "border border-green-200 bg-green-50 text-green-700"
-          }`}
-        >
-          <p>
-            <span className="font-semibold">Note:</span> This page shows all
-            your assigned orders except those with status &quot;PENDING&quot;,
-            &quot;null&quot;, or &quot;delivered&quot;. You can track orders in
-            various states including accepted, shopping, on the way, and at
-            customer location.
-          </p>
-        </div>
 
         {/* Display a warning when user doesn't have the shopper role */}
         {!isLoading && role !== "shopper" && (
