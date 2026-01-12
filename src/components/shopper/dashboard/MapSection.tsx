@@ -2164,7 +2164,6 @@ export default function MapSection({
             // Store map instance
             mapInstanceRef.current = mapInstance;
             setMapInstance(mapInstance); // Update state for route drawing
-            console.log('🗺️ Map instance created and set in state');
 
             // Add initial tile layer with proper subdomain configuration
             L.tileLayer(mapStyles[theme], {
@@ -2927,22 +2926,8 @@ export default function MapSection({
   useEffect(() => {
     // Use shopperLocation passed from parent for route display
     const locationForRoute = shopperLocation || currentLocation;
-    
-    console.log('🗺️ MapSection route effect triggered:', {
-      hasMapInstance: !!mapInstance,
-      hasShopperLocation: !!shopperLocation,
-      hasCurrentLocation: !!currentLocation,
-      hasLocationForRoute: !!locationForRoute,
-      hasNotifiedOrder: !!notifiedOrder,
-      notifiedOrder: notifiedOrder,
-    });
 
     if (!mapInstance || !locationForRoute || !notifiedOrder) {
-      console.log('🗺️ Clearing route - missing required data:', {
-        mapInstance: !!mapInstance,
-        locationForRoute: !!locationForRoute,
-        notifiedOrder: !!notifiedOrder
-      });
       // Clear route and markers if no notified order
       if (routePolyline) {
         routePolyline.remove();
@@ -2957,7 +2942,6 @@ export default function MapSection({
 
     // Clear existing route and markers
     if (routePolyline) {
-      console.log('🗺️ Removing existing route polyline');
       routePolyline.remove();
     }
     if (routeEndMarker) {
@@ -2969,27 +2953,13 @@ export default function MapSection({
     const deliveryLat = notifiedOrder.customerLatitude;
     const deliveryLng = notifiedOrder.customerLongitude;
 
-    console.log('🗺️ Route coordinates:', {
-      shopperLocation: { lat: locationForRoute.lat, lng: locationForRoute.lng },
-      deliveryLocation: { lat: deliveryLat, lng: deliveryLng },
-      notifiedOrderCoords: {
-        customerLat: notifiedOrder.customerLatitude,
-        customerLng: notifiedOrder.customerLongitude,
-        shopLat: notifiedOrder.shopLatitude,
-        shopLng: notifiedOrder.shopLongitude,
-      }
-    });
-
     if (!deliveryLat || !deliveryLng) {
-      console.warn('⚠️ No customer delivery coordinates found for notified order');
       return;
     }
 
     // Fetch route from OSRM (follows actual roads)
     const fetchRoute = async () => {
       try {
-        console.log('🛣️ Fetching route from OSRM to customer delivery address...');
-        
         // OSRM API endpoint (using public demo server)
         // Format: longitude,latitude (note: OSRM uses lon,lat not lat,lon)
         // Route: Shopper location → Customer delivery address
@@ -3017,12 +2987,6 @@ export default function MapSection({
         
         // Convert from [lng, lat] to [lat, lng] for Leaflet
         const routeCoords: L.LatLngExpression[] = routeGeometry.map((coord: [number, number]) => [coord[1], coord[0]]);
-
-        console.log('✅ Route fetched from OSRM:', {
-          distance: `${(data.routes[0].distance / 1000).toFixed(2)} km`,
-          duration: `${Math.round(data.routes[0].duration / 60)} min`,
-          waypoints: routeCoords.length
-        });
 
         // Create polyline with green color following roads
         const polyline = L.polyline(routeCoords, {
@@ -3077,20 +3041,13 @@ export default function MapSection({
         endMarker.bindPopup(`<b>Delivery Address</b><br>${notifiedOrder.customerAddress}`);
         setRouteEndMarker(endMarker);
 
-        console.log('✅ Road-following route polyline created and added to map');
-        console.log('✅ Delivery marker added at customer address');
-
         // Fit map bounds to show the entire route including markers
         currentMapInstance.fitBounds(polyline.getBounds(), {
           padding: [80, 80],
           maxZoom: 15,
         });
 
-        console.log('✅ Map bounds fitted to show route');
-
       } catch (error) {
-        console.error('❌ Error fetching route from OSRM:', error);
-        console.log('📍 Falling back to straight line route');
         
         // Use ref instead of state to get current map instance
         const currentMapInstance = mapInstanceRef.current;
@@ -3158,8 +3115,6 @@ export default function MapSection({
         endMarker.bindPopup(`<b>Delivery Address</b><br>${notifiedOrder.customerAddress}`);
         setRouteEndMarker(endMarker);
 
-        console.log('✅ Fallback route to customer delivery address created');
-
         currentMapInstance.fitBounds(polyline.getBounds(), {
           padding: [80, 80],
           maxZoom: 14,
@@ -3171,7 +3126,6 @@ export default function MapSection({
 
     // Cleanup function
     return () => {
-      console.log('🗺️ Cleaning up route polyline and markers');
       if (routePolyline) {
         routePolyline.remove();
       }
