@@ -688,6 +688,8 @@ interface MapSectionProps {
   }>;
   isInitializing?: boolean;
   isExpanded?: boolean;
+  notifiedOrder?: any; // Order that triggered notification - will show route
+  shopperLocation?: { lat: number; lng: number } | null; // Current shopper location for route display
 }
 
 // Haversine formula to compute distance in km
@@ -758,6 +760,8 @@ export default function MapSection({
   availableOrders,
   isInitializing = false,
   isExpanded = false,
+  notifiedOrder = null,
+  shopperLocation = null,
 }: MapSectionProps) {
   const { theme } = useTheme();
   const { isInitialized } = useFCMNotifications();
@@ -791,6 +795,9 @@ export default function MapSection({
   const [orderMarkers, setOrderMarkers] = useState<L.Marker[]>([]);
   const [shopMarkers, setShopMarkers] = useState<L.Marker[]>([]);
   const [userMarker, setUserMarker] = useState<L.Marker | null>(null);
+  const [routePolyline, setRoutePolyline] = useState<L.Polyline | null>(null);
+  const [routeStartMarker, setRouteStartMarker] = useState<L.Marker | null>(null);
+  const [routeEndMarker, setRouteEndMarker] = useState<L.Marker | null>(null);
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
   const [isMapInitialized, setIsMapInitialized] = useState(false);
   const [locationErrorCount, setLocationErrorCount] = useState(0);
@@ -2157,6 +2164,8 @@ export default function MapSection({
 
             // Store map instance
             mapInstanceRef.current = mapInstance;
+            setMapInstance(mapInstance); // Update state for route drawing
+            console.log('🗺️ Map instance created and set in state');
 
             // Add initial tile layer with proper subdomain configuration
             L.tileLayer(mapStyles[theme], {
@@ -2912,6 +2921,338 @@ export default function MapSection({
     return R * c;
   };
 
+  // Draw route for notified order
+  useEffect(() => {
+    // Use shopperLocation passed from parent for route display
+    const locationForRoute = shopperLocation || currentLocation;
+    
+    console.log('🗺️ MapSection route effect triggered:', {
+      hasMapInstance: !!mapInstance,
+      hasShopperLocation: !!shopperLocation,
+      hasCurrentLocation: !!currentLocation,
+      hasLocationForRoute: !!locationForRoute,
+      hasNotifiedOrder: !!notifiedOrder,
+      notifiedOrder: notifiedOrder,
+    });
+
+    if (!mapInstance || !locationForRoute || !notifiedOrder) {
+      console.log('🗺️ Clearing route - missing required data:', {
+        mapInstance: !!mapInstance,
+        locationForRoute: !!locationForRoute,
+        notifiedOrder: !!notifiedOrder
+      });
+      // Clear route and markers if no notified order
+      if (routePolyline) {
+        routePolyline.remove();
+        setRoutePolyline(null);
+      }
+      if (routeStartMarker) {
+        routeStartMarker.remove();
+        setRouteStartMarker(null);
+      }
+      if (routeEndMarker) {
+        routeEndMarker.remove();
+        setRouteEndMarker(null);
+      }
+      return;
+    }
+
+    // Clear existing route and markers
+    if (routePolyline) {
+      console.log('🗺️ Removing existing route polyline');
+      routePolyline.remove();
+    }
+    if (routeStartMarker) {
+      routeStartMarker.remove();
+    }
+    if (routeEndMarker) {
+      routeEndMarker.remove();
+    }
+
+    // Get pickup location coordinates
+    const pickupLat = notifiedOrder.customerLatitude || notifiedOrder.shopLatitude;
+    const pickupLng = notifiedOrder.customerLongitude || notifiedOrder.shopLongitude;
+
+    console.log('🗺️ Route coordinates:', {
+      shopperLocation: { lat: locationForRoute.lat, lng: locationForRoute.lng },
+      pickupLocation: { lat: pickupLat, lng: pickupLng },
+      notifiedOrderCoords: {
+        customerLat: notifiedOrder.customerLatitude,
+        customerLng: notifiedOrder.customerLongitude,
+        shopLat: notifiedOrder.shopLatitude,
+        shopLng: notifiedOrder.shopLongitude,
+      }
+    });
+
+    if (!pickupLat || !pickupLng) {
+      console.warn('⚠️ No coordinates found for notified order');
+      return;
+    }
+
+    // Fetch route from OSRM (follows actual roads)
+    const fetchRoute = async () => {
+      try {
+        console.log('🛣️ Fetching route from OSRM...');
+        
+        // OSRM API endpoint (using public demo server)
+        // Format: longitude,latitude (note: OSRM uses lon,lat not lat,lon)
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${locationForRoute.lng},${locationForRoute.lat};${pickupLng},${pickupLat}?overview=full&geometries=geojson`;
+        
+        const response = await fetch(osrmUrl);
+        const data = await response.json();
+
+        if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
+          console.warn('⚠️ OSRM returned no routes, falling back to straight line');
+          throw new Error('No route found');
+        }
+
+        // Use ref instead of state to get current map instance
+        const currentMapInstance = mapInstanceRef.current;
+        
+        // Check if map instance is still valid
+        if (!currentMapInstance) {
+          console.warn('⚠️ Map instance no longer available');
+          return;
+        }
+
+        // Get the route geometry (array of [lng, lat] coordinates)
+        const routeGeometry = data.routes[0].geometry.coordinates;
+        
+        // Convert from [lng, lat] to [lat, lng] for Leaflet
+        const routeCoords: L.LatLngExpression[] = routeGeometry.map((coord: [number, number]) => [coord[1], coord[0]]);
+
+        console.log('✅ Route fetched from OSRM:', {
+          distance: `${(data.routes[0].distance / 1000).toFixed(2)} km`,
+          duration: `${Math.round(data.routes[0].duration / 60)} min`,
+          waypoints: routeCoords.length
+        });
+
+        // Create polyline with green color following roads
+        const polyline = L.polyline(routeCoords, {
+          color: '#10b981', // green-500
+          weight: 5,
+          opacity: 0.7,
+          lineJoin: 'round',
+          lineCap: 'round',
+        }).addTo(currentMapInstance);
+
+        setRoutePolyline(polyline);
+
+        // Create start marker (shopper location) - Blue marker
+        const startMarkerIcon = L.divIcon({
+          html: `
+            <div style="
+              background: #3b82f6;
+              border: 3px solid white;
+              border-radius: 50%;
+              width: 24px;
+              height: 24px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            ">
+              <div style="
+                width: 8px;
+                height: 8px;
+                background: white;
+                border-radius: 50%;
+              "></div>
+            </div>
+          `,
+          className: '',
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        });
+
+        const startMarker = L.marker([locationForRoute.lat, locationForRoute.lng], {
+          icon: startMarkerIcon,
+          zIndexOffset: 1000,
+        }).addTo(currentMapInstance);
+
+        startMarker.bindPopup('<b>Your Location</b><br>Starting point');
+        setRouteStartMarker(startMarker);
+
+        // Create end marker (pickup location) - Red pin
+        const endMarkerIcon = L.divIcon({
+          html: `
+            <div style="position: relative;">
+              <div style="
+                background: #ef4444;
+                border: 3px solid white;
+                border-radius: 50% 50% 50% 0;
+                width: 32px;
+                height: 32px;
+                transform: rotate(-45deg);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+              ">
+                <div style="
+                  width: 10px;
+                  height: 10px;
+                  background: white;
+                  border-radius: 50%;
+                  transform: rotate(45deg);
+                "></div>
+              </div>
+            </div>
+          `,
+          className: '',
+          iconSize: [32, 32],
+          iconAnchor: [16, 32],
+          popupAnchor: [0, -32],
+        });
+
+        const endMarker = L.marker([pickupLat, pickupLng], {
+          icon: endMarkerIcon,
+          zIndexOffset: 1001,
+        }).addTo(currentMapInstance);
+
+        endMarker.bindPopup(`<b>Pickup Location</b><br>${notifiedOrder.shopName}`);
+        setRouteEndMarker(endMarker);
+
+        console.log('✅ Road-following route polyline created and added to map');
+        console.log('✅ Start and end markers added');
+
+        // Fit map bounds to show the entire route including markers
+        currentMapInstance.fitBounds(polyline.getBounds(), {
+          padding: [80, 80],
+          maxZoom: 15,
+        });
+
+        console.log('✅ Map bounds fitted to show route');
+
+      } catch (error) {
+        console.error('❌ Error fetching route from OSRM:', error);
+        console.log('📍 Falling back to straight line route');
+        
+        // Use ref instead of state to get current map instance
+        const currentMapInstance = mapInstanceRef.current;
+        
+        // Check if map instance is still valid before fallback
+        if (!currentMapInstance) {
+          console.warn('⚠️ Map instance no longer available for fallback');
+          return;
+        }
+        
+        // Fallback: Draw straight line if routing service fails
+        const fallbackCoords: L.LatLngExpression[] = [
+          [locationForRoute.lat, locationForRoute.lng],
+          [pickupLat, pickupLng]
+        ];
+
+        const polyline = L.polyline(fallbackCoords, {
+          color: '#10b981',
+          weight: 4,
+          opacity: 0.8,
+          dashArray: '10, 10',
+        }).addTo(currentMapInstance);
+
+        setRoutePolyline(polyline);
+
+        // Create start marker (shopper location) - Blue marker
+        const startMarkerIcon = L.divIcon({
+          html: `
+            <div style="
+              background: #3b82f6;
+              border: 3px solid white;
+              border-radius: 50%;
+              width: 24px;
+              height: 24px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            ">
+              <div style="
+                width: 8px;
+                height: 8px;
+                background: white;
+                border-radius: 50%;
+              "></div>
+            </div>
+          `,
+          className: '',
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        });
+
+        const startMarker = L.marker([locationForRoute.lat, locationForRoute.lng], {
+          icon: startMarkerIcon,
+          zIndexOffset: 1000,
+        }).addTo(currentMapInstance);
+
+        startMarker.bindPopup('<b>Your Location</b><br>Starting point');
+        setRouteStartMarker(startMarker);
+
+        // Create end marker (pickup location) - Red pin
+        const endMarkerIcon = L.divIcon({
+          html: `
+            <div style="position: relative;">
+              <div style="
+                background: #ef4444;
+                border: 3px solid white;
+                border-radius: 50% 50% 50% 0;
+                width: 32px;
+                height: 32px;
+                transform: rotate(-45deg);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+              ">
+                <div style="
+                  width: 10px;
+                  height: 10px;
+                  background: white;
+                  border-radius: 50%;
+                  transform: rotate(45deg);
+                "></div>
+              </div>
+            </div>
+          `,
+          className: '',
+          iconSize: [32, 32],
+          iconAnchor: [16, 32],
+          popupAnchor: [0, -32],
+        });
+
+        const endMarker = L.marker([pickupLat, pickupLng], {
+          icon: endMarkerIcon,
+          zIndexOffset: 1001,
+        }).addTo(currentMapInstance);
+
+        endMarker.bindPopup(`<b>Pickup Location</b><br>${notifiedOrder.shopName}`);
+        setRouteEndMarker(endMarker);
+
+        console.log('✅ Fallback route and markers created');
+
+        currentMapInstance.fitBounds(polyline.getBounds(), {
+          padding: [80, 80],
+          maxZoom: 14,
+        });
+      }
+    };
+
+    fetchRoute();
+
+    // Cleanup function
+    return () => {
+      console.log('🗺️ Cleaning up route polyline and markers');
+      if (routePolyline) {
+        routePolyline.remove();
+      }
+      if (routeStartMarker) {
+        routeStartMarker.remove();
+      }
+      if (routeEndMarker) {
+        routeEndMarker.remove();
+      }
+    };
+  }, [mapInstance, shopperLocation, currentLocation, notifiedOrder]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -2919,6 +3260,15 @@ export default function MapSection({
       clearShopMarkers();
       if (userMarkerRef.current) {
         userMarkerRef.current.remove();
+      }
+      if (routePolyline) {
+        routePolyline.remove();
+      }
+      if (routeStartMarker) {
+        routeStartMarker.remove();
+      }
+      if (routeEndMarker) {
+        routeEndMarker.remove();
       }
     };
   }, []);

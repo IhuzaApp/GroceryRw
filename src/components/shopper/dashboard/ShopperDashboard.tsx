@@ -10,6 +10,7 @@ import { useTheme } from "../../../context/ThemeContext";
 import { useRouter } from "next/router";
 import { useFCMNotifications } from "../../../hooks/useFCMNotifications";
 import TodayCompletedOrders from "./TodayCompletedOrders";
+import NotificationSystem from "../NotificationSystem";
 
 // Dynamically load MapSection only on client (disable SSR)
 const MapSection = dynamic(() => import("./MapSection"), {
@@ -114,6 +115,7 @@ export default function ShopperDashboard() {
   const [isAutoRefreshing, setIsAutoRefreshing] = useState<boolean>(true);
   const [dailyEarnings, setDailyEarnings] = useState(0);
   const [completedOrdersCount, setCompletedOrdersCount] = useState(0);
+  const [notifiedOrder, setNotifiedOrder] = useState<any>(null);
 
   const toggleExpanded = () => setIsExpanded((prev) => !prev);
 
@@ -415,6 +417,7 @@ export default function ShopperDashboard() {
           (existingOrder) => existingOrder.id === order.id
         );
         if (!exists) {
+          const orderCreatedAt = new Date(order.createdAt);
           const newOrder = {
               id: order.id,
               shopName: order.shopName || "Unknown Shop",
@@ -637,8 +640,24 @@ export default function ShopperDashboard() {
             availableOrders={availableOrders}
             isInitializing={isInitializing}
             isExpanded={isMobile && isExpanded}
+            notifiedOrder={notifiedOrder}
+            shopperLocation={currentLocation}
           />
         </div>
+
+        {/* Notification System - Overlays on Map */}
+        <NotificationSystem
+          currentLocation={currentLocation}
+          onNewOrder={handleNewOrder}
+          onAcceptBatch={(orderId) => {
+            // Refresh orders after accepting
+            loadOrders();
+          }}
+          onNotificationShow={(order) => {
+            // Update notified order to show route on map
+            setNotifiedOrder(order);
+          }}
+        />
 
         {/* Today's Completed Orders Section */}
         <TodayCompletedOrders 
