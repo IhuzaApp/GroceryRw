@@ -93,6 +93,7 @@ export default function NotificationSystem({
   const declineClickCount = useRef<number>(0); // Track decline button clicks
   const acceptClickCount = useRef<number>(0); // Track accept button clicks
   const directionsClickCount = useRef<number>(0); // Track directions button clicks
+  const showToastLock = useRef<Map<string, number>>(new Map()); // Prevent duplicate showToast calls
 
   // FCM integration
   const { isInitialized, hasPermission } = useFCMNotifications();
@@ -106,12 +107,21 @@ export default function NotificationSystem({
         orderId: order.id,
         timestamp: new Date().toISOString(),
         isDeclined: declinedOrders.current.has(order.id),
-        alreadyShowing: activeToasts.current.has(order.id)
+        alreadyShowing: activeToasts.current.has(order.id),
+        recentlyShown: showToastLock.current.has(order.id)
       });
 
       // Check if order was declined
       if (declinedOrders.current.has(order.id)) {
         console.log("🚫 FCM: Order was declined, ignoring", {
+          orderId: order.id
+        });
+        return;
+      }
+
+      // Skip if order is already showing
+      if (activeToasts.current.has(order.id)) {
+        console.log("🚫 FCM: Order already showing, ignoring", {
           orderId: order.id
         });
         return;
@@ -143,10 +153,26 @@ export default function NotificationSystem({
     const handleFCMBatchOrders = (event: CustomEvent) => {
       const { orders } = event.detail;
 
+      console.log("📲 FCM BATCH ORDERS EVENT", {
+        orderCount: orders.length,
+        timestamp: new Date().toISOString()
+      });
+
       // Show notifications for each order
       orders.forEach((order: any) => {
         // Check if order was declined
         if (declinedOrders.current.has(order.id)) {
+          console.log("🚫 FCM BATCH: Order was declined, ignoring", {
+            orderId: order.id
+          });
+          return;
+        }
+
+        // Skip if order is already showing
+        if (activeToasts.current.has(order.id)) {
+          console.log("🚫 FCM BATCH: Order already showing, ignoring", {
+            orderId: order.id
+          });
           return;
         }
 
@@ -329,6 +355,12 @@ export default function NotificationSystem({
       // Removed toast for accepted order
     }
 
+    // Clear deduplication lock after 5 seconds to allow re-showing if needed
+    setTimeout(() => {
+      showToastLock.current.delete(orderId);
+      console.log("🔓 Cleared deduplication lock for order", { orderId });
+    }, 5000);
+
     // Also remove from batch assignments
     batchAssignments.current = batchAssignments.current.filter(
       (assignment) => assignment.orderId !== orderId
@@ -448,17 +480,33 @@ export default function NotificationSystem({
     order: Order,
     type: "info" | "success" | "warning" | "error" = "info"
   ) => {
+    const now = Date.now();
+    
     console.log("📢 SHOW TOAST CALLED", {
       orderId: order.id,
       timestamp: new Date().toISOString(),
       alreadyShowing: activeToasts.current.has(order.id),
-      isDeclined: declinedOrders.current.has(order.id)
+      isDeclined: declinedOrders.current.has(order.id),
+      lastShownAt: showToastLock.current.get(order.id),
+      callStack: new Error().stack?.split('\n').slice(2, 5).join(' <- ') // Show where this was called from
     });
     
     // Check if order was declined - CRITICAL CHECK
     if (declinedOrders.current.has(order.id)) {
       console.log("🚫 BLOCKED: Order was declined", {
         orderId: order.id,
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+    
+    // DEDUPLICATION LOCK: Prevent showing same order within 2 seconds
+    const lastShown = showToastLock.current.get(order.id);
+    if (lastShown && (now - lastShown) < 2000) {
+      console.log("🚫 BLOCKED: Order shown too recently (deduplication)", {
+        orderId: order.id,
+        lastShownAt: new Date(lastShown).toISOString(),
+        timeSinceLastShow: `${now - lastShown}ms`,
         timestamp: new Date().toISOString()
       });
       return;
@@ -484,6 +532,9 @@ export default function NotificationSystem({
       orderId: order.id,
       timestamp: new Date().toISOString()
     });
+
+    // Set deduplication lock
+    showToastLock.current.set(order.id, now);
 
     // Show full-screen map modal instead of toast
     setSelectedOrder(order);
@@ -848,8 +899,15 @@ export default function NotificationSystem({
           wasDeclined,
           hasCurrentAssignment: !!currentUserAssignment,
           alreadyShowing: activeToasts.current.has(order.id),
-          willShow: !currentUserAssignment && !wasDeclined
+          recentlyShown: showToastLock.current.has(order.id),
+          willShow: !currentUserAssignment && !wasDeclined && !activeToasts.current.has(order.id)
         });
+
+        // Skip if order is already showing or was recently shown
+        if (activeToasts.current.has(order.id)) {
+          console.log("🔍 API POLLING: Skipping - order already showing");
+          return;
+        }
 
         if (!currentUserAssignment && !wasDeclined) {
           
