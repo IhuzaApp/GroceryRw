@@ -22,7 +22,9 @@ The original `MapSection.tsx` was **3,582 lines** - too large and causing loadin
 ## 📦 Components & Utilities
 
 ### mapTypes.ts
+
 All TypeScript interfaces and types:
+
 - `Shop`, `Restaurant`, `PendingOrder`
 - `Location`, `LocationHistoryEntry`
 - `MapRefs`, `MapState`
@@ -30,7 +32,9 @@ All TypeScript interfaces and types:
 - Constants: `MAP_STYLES`, `DEFAULT_MAP_CENTER`, etc.
 
 ### mapUtils.ts
+
 Helper functions:
+
 - `calculateDistanceKm()` - Haversine distance calculation
 - `isMapReady()` - Check if map is initialized
 - `safeAddMarker()` - Safely add markers to map
@@ -41,20 +45,26 @@ Helper functions:
 - `fitMapBounds()` - Fit map to bounds
 
 ### MapPopups.tsx
+
 Popup HTML creation:
+
 - `createPopupHTML()` - Main popup for orders
 - `createShopPopupContent()` - Shop marker popups
 - `createOrderPopupContent()` - Order marker popups
 
 ### RouteDrawer.tsx
+
 Route drawing logic:
+
 - `useRouteDrawer()` - Custom hook for drawing routes
 - Uses OSRM API for road-based routing
 - Fallback to straight lines if API fails
 - Real-time updates when location/order changes
 
 ### LocationSyncer.tsx
+
 Location syncing:
+
 - `useLocationSyncer()` - Sync shopperLocation prop to user marker
 - `getInitialLocation()` - Get initial location from props or cookies
 - `initializeUserMarkerPosition()` - Set initial marker position
@@ -67,15 +77,15 @@ import {
   Location,
   NotifiedOrder,
   MapSectionProps,
-  
+
   // Utils
   calculateDistanceKm,
   saveLocationToCookies,
   getCookies,
-  
+
   // Popups
   createPopupHTML,
-  
+
   // Hooks
   useRouteDrawer,
   useLocationSyncer,
@@ -88,7 +98,7 @@ function MapSection({ shopperLocation, notifiedOrder }: MapSectionProps) {
   const userMarkerRef = useRef<L.Marker | null>(null);
   const [routePolyline, setRoutePolyline] = useState<L.Polyline | null>(null);
   const [routeEndMarker, setRouteEndMarker] = useState<L.Marker | null>(null);
-  
+
   // Sync location to map
   useLocationSyncer({
     shopperLocation,
@@ -96,7 +106,7 @@ function MapSection({ shopperLocation, notifiedOrder }: MapSectionProps) {
     mapInstanceRef,
     setCurrentLocation,
   });
-  
+
   // Draw routes
   useRouteDrawer({
     mapInstance,
@@ -109,7 +119,7 @@ function MapSection({ shopperLocation, notifiedOrder }: MapSectionProps) {
     routeEndMarker,
     setRouteEndMarker,
   });
-  
+
   // ... rest of component
 }
 ```

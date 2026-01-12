@@ -29,7 +29,7 @@ messaging.onBackgroundMessage((payload) => {
   const notificationType = payload.data?.type || "message";
   let notificationTitle = payload.notification?.title || "New Message";
   let notificationBody = payload.notification?.body || "You have a new message";
-  
+
   // Customize notification based on type
   let actions = [];
   if (notificationType === "test") {
@@ -53,7 +53,10 @@ messaging.onBackgroundMessage((payload) => {
         icon: "/assets/logos/PlasIcon.png",
       },
     ];
-  } else if (notificationType === "new_order" || notificationType === "batch_orders") {
+  } else if (
+    notificationType === "new_order" ||
+    notificationType === "batch_orders"
+  ) {
     actions = [
       {
         action: "open",
@@ -67,7 +70,7 @@ messaging.onBackgroundMessage((payload) => {
       },
     ];
   }
-  
+
   const notificationOptions = {
     body: notificationBody,
     icon: "/assets/logos/PlasIcon.png",
@@ -80,7 +83,7 @@ messaging.onBackgroundMessage((payload) => {
     renotify: true,
     actions: actions,
   };
-  
+
   return self.registration.showNotification(
     notificationTitle,
     notificationOptions
@@ -101,12 +104,15 @@ self.addEventListener("notificationclick", (event) => {
     const orderId = event.notification.data?.orderId;
 
     let urlToOpen = "/Plasa/dashboard";
-    
+
     if (notificationType === "test") {
       urlToOpen = "/Plasa/dashboard";
     } else if (notificationType === "chat_message" && orderId) {
       urlToOpen = `/Messages/${orderId}`;
-    } else if (notificationType === "new_order" || notificationType === "batch_orders") {
+    } else if (
+      notificationType === "new_order" ||
+      notificationType === "batch_orders"
+    ) {
       urlToOpen = "/Plasa/active-batches";
     } else if (orderId) {
       urlToOpen = `/Messages/${orderId}`;

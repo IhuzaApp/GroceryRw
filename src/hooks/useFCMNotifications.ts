@@ -29,15 +29,15 @@ export const useFCMNotifications = (): FCMNotificationHook => {
           switch (type) {
             case "new_order":
               // Save to notification history
-              if (notification && typeof window !== 'undefined') {
+              if (notification && typeof window !== "undefined") {
                 const notificationHistory = JSON.parse(
-                  localStorage.getItem('fcm_notification_history') || '[]'
+                  localStorage.getItem("fcm_notification_history") || "[]"
                 );
                 notificationHistory.unshift({
                   title: notification.title,
                   body: notification.body,
                   timestamp: Date.now(),
-                  type: 'new_order',
+                  type: "new_order",
                   read: false,
                   orderId: data.orderId,
                 });
@@ -45,11 +45,11 @@ export const useFCMNotifications = (): FCMNotificationHook => {
                   notificationHistory.pop();
                 }
                 localStorage.setItem(
-                  'fcm_notification_history',
+                  "fcm_notification_history",
                   JSON.stringify(notificationHistory)
                 );
               }
-              
+
               window.dispatchEvent(
                 new CustomEvent("fcm-new-order", {
                   detail: {
@@ -72,28 +72,28 @@ export const useFCMNotifications = (): FCMNotificationHook => {
 
             case "batch_orders":
               const orders = JSON.parse(data.orders || "[]");
-              
+
               // Save to notification history
-              if (notification && typeof window !== 'undefined') {
+              if (notification && typeof window !== "undefined") {
                 const notificationHistory = JSON.parse(
-                  localStorage.getItem('fcm_notification_history') || '[]'
+                  localStorage.getItem("fcm_notification_history") || "[]"
                 );
                 notificationHistory.unshift({
                   title: notification.title,
                   body: notification.body,
                   timestamp: Date.now(),
-                  type: 'batch_orders',
+                  type: "batch_orders",
                   read: false,
                 });
                 if (notificationHistory.length > 50) {
                   notificationHistory.pop();
                 }
                 localStorage.setItem(
-                  'fcm_notification_history',
+                  "fcm_notification_history",
                   JSON.stringify(notificationHistory)
                 );
               }
-              
+
               window.dispatchEvent(
                 new CustomEvent("fcm-batch-orders", {
                   detail: {
@@ -118,11 +118,11 @@ export const useFCMNotifications = (): FCMNotificationHook => {
 
             case "test":
               // Test notification received
-              if (typeof window !== 'undefined') {
-                import('react-hot-toast').then(({ default: toast }) => {
+              if (typeof window !== "undefined") {
+                import("react-hot-toast").then(({ default: toast }) => {
                   toast.success("FCM notification received successfully!", {
                     duration: 4000,
-                    icon: '🔔',
+                    icon: "🔔",
                   });
                 });
               }
@@ -130,15 +130,15 @@ export const useFCMNotifications = (): FCMNotificationHook => {
 
             case "chat_message":
               // Save chat message to notification history
-              if (notification && typeof window !== 'undefined') {
+              if (notification && typeof window !== "undefined") {
                 const notificationHistory = JSON.parse(
-                  localStorage.getItem('fcm_notification_history') || '[]'
+                  localStorage.getItem("fcm_notification_history") || "[]"
                 );
                 notificationHistory.unshift({
                   title: notification.title,
                   body: notification.body,
                   timestamp: Date.now(),
-                  type: 'chat_message',
+                  type: "chat_message",
                   read: false,
                   orderId: data.orderId,
                   conversationId: data.conversationId,
@@ -148,11 +148,11 @@ export const useFCMNotifications = (): FCMNotificationHook => {
                   notificationHistory.pop();
                 }
                 localStorage.setItem(
-                  'fcm_notification_history',
+                  "fcm_notification_history",
                   JSON.stringify(notificationHistory)
                 );
               }
-              
+
               window.dispatchEvent(
                 new CustomEvent("fcm-chat-message", {
                   detail: {
@@ -170,7 +170,7 @@ export const useFCMNotifications = (): FCMNotificationHook => {
           }
         });
 
-        if (unsubscribe && typeof unsubscribe === 'function') {
+        if (unsubscribe && typeof unsubscribe === "function") {
           setIsInitialized(true);
           setHasPermission(true);
         } else {

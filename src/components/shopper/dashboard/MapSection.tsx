@@ -2128,7 +2128,7 @@ export default function MapSection({
     // Wait for next frame to ensure DOM is ready
     const timer = requestAnimationFrame(() => {
       if (isCancelled) return;
-      
+
       try {
         // Cleanup existing map with proper error handling
         if (mapInstanceRef.current) {
@@ -2143,7 +2143,7 @@ export default function MapSection({
 
         // Clear the map container HTML to ensure clean state
         if (mapRef.current) {
-          mapRef.current.innerHTML = '';
+          mapRef.current.innerHTML = "";
         }
 
         // Wait a tick to ensure cleanup is complete
@@ -2215,21 +2215,35 @@ export default function MapSection({
             const cookieMap = getCookies();
             let initialLat: number | null = null;
             let initialLng: number | null = null;
-            
+
             // Prioritize shopperLocation prop from parent (most current)
             if (shopperLocation) {
               initialLat = shopperLocation.lat;
               initialLng = shopperLocation.lng;
-              console.log("🗺️ Using shopperLocation prop for initial position", { initialLat, initialLng });
-            } else if (cookieMap["user_latitude"] && cookieMap["user_longitude"]) {
+              console.log(
+                "🗺️ Using shopperLocation prop for initial position",
+                { initialLat, initialLng }
+              );
+            } else if (
+              cookieMap["user_latitude"] &&
+              cookieMap["user_longitude"]
+            ) {
               // Fall back to cookies
               initialLat = parseFloat(cookieMap["user_latitude"]);
               initialLng = parseFloat(cookieMap["user_longitude"]);
-              console.log("🗺️ Using cookie location for initial position", { initialLat, initialLng });
+              console.log("🗺️ Using cookie location for initial position", {
+                initialLat,
+                initialLng,
+              });
             }
 
             // Set marker position if we have valid coordinates
-            if (initialLat && initialLng && !isNaN(initialLat) && !isNaN(initialLng)) {
+            if (
+              initialLat &&
+              initialLng &&
+              !isNaN(initialLat) &&
+              !isNaN(initialLng)
+            ) {
               if (userMarkerRef.current && mapInstance) {
                 userMarkerRef.current.setLatLng([initialLat, initialLng]);
                 // ALWAYS add marker to map if we have a location (regardless of online status)
@@ -2584,9 +2598,17 @@ export default function MapSection({
       }
 
       // Process available unassigned orders with grouping
-      if (isOnline && allAvailableOrders?.length > 0 && map && map.getContainer()) {
+      if (
+        isOnline &&
+        allAvailableOrders?.length > 0 &&
+        map &&
+        map.getContainer()
+      ) {
         // Group available orders by location
-        const groupedAvailableOrders = new Map<string, typeof allAvailableOrders>();
+        const groupedAvailableOrders = new Map<
+          string,
+          typeof allAvailableOrders
+        >();
         allAvailableOrders.forEach((order) => {
           if (!order.shopLatitude || !order.shopLongitude) {
             return;
@@ -2765,7 +2787,7 @@ export default function MapSection({
 
     // Combine all orders for density calculation
     const allOrders = [...pendingOrders, ...allAvailableOrders];
-    
+
     if (allOrders.length === 0) {
       return;
     }
@@ -2781,26 +2803,24 @@ export default function MapSection({
     allOrders.forEach((order, idx) => {
       const lat = order.shopLat || order.shop_latitude || order.shopLatitude;
       const lng = order.shopLng || order.shop_longitude || order.shopLongitude;
-      
+
       if (!lat || !lng) return;
 
       // Find existing cluster within 2km
       let foundCluster = false;
       for (const cluster of clusters) {
-        const distance = getDistance(
-          cluster.lat,
-          cluster.lng,
-          lat,
-          lng
-        );
-        
-        if (distance < 2) { // 2km radius
+        const distance = getDistance(cluster.lat, cluster.lng, lat, lng);
+
+        if (distance < 2) {
+          // 2km radius
           // Add to existing cluster
           cluster.count++;
           cluster.totalEarnings += order.earnings || order.earning || 0;
           // Update cluster center (weighted average)
-          cluster.lat = (cluster.lat * (cluster.count - 1) + lat) / cluster.count;
-          cluster.lng = (cluster.lng * (cluster.count - 1) + lng) / cluster.count;
+          cluster.lat =
+            (cluster.lat * (cluster.count - 1) + lat) / cluster.count;
+          cluster.lng =
+            (cluster.lng * (cluster.count - 1) + lng) / cluster.count;
           foundCluster = true;
           break;
         }
@@ -2825,49 +2845,49 @@ export default function MapSection({
     // Otherwise, show only clusters with 2+ orders
     const minOrdersPerCluster = allOrders.length < 5 ? 1 : 2;
     const busyClusters = clusters
-      .filter(cluster => cluster.count >= minOrdersPerCluster)
+      .filter((cluster) => cluster.count >= minOrdersPerCluster)
       .slice(0, 10); // Show top 10 busy areas
-    
+
     busyClusters.forEach((cluster, index) => {
-        // Calculate intensity based on order count
-        const maxCount = clusters[0].count;
-        const intensity = cluster.count / maxCount;
-        
-        // Color gradient: red (most busy) -> yellow -> green (less busy)
-        let color: string;
-        let fillOpacity: number;
-        let strokeOpacity: number;
-        
-        if (intensity > 0.7) {
-          color = theme === "dark" ? "#ef4444" : "#dc2626"; // Red
-          fillOpacity = 0.35;
-          strokeOpacity = 0.8;
-        } else if (intensity > 0.4) {
-          color = theme === "dark" ? "#f59e0b" : "#d97706"; // Orange
-          fillOpacity = 0.30;
-          strokeOpacity = 0.7;
-        } else {
-          color = theme === "dark" ? "#10b981" : "#059669"; // Green
-          fillOpacity = 0.25;
-          strokeOpacity = 0.6;
-        }
+      // Calculate intensity based on order count
+      const maxCount = clusters[0].count;
+      const intensity = cluster.count / maxCount;
 
-        // Radius based on count (500m-2km)
-        const radius = Math.min(500 + (cluster.count * 300), 2000);
+      // Color gradient: red (most busy) -> yellow -> green (less busy)
+      let color: string;
+      let fillOpacity: number;
+      let strokeOpacity: number;
 
-        const circle = L.circle([cluster.lat, cluster.lng], {
-          color: color,
-          fillColor: color,
-          fillOpacity: fillOpacity,
-          opacity: 0,
-          weight: 0,
-          radius: radius,
-        }).addTo(map);
+      if (intensity > 0.7) {
+        color = theme === "dark" ? "#ef4444" : "#dc2626"; // Red
+        fillOpacity = 0.35;
+        strokeOpacity = 0.8;
+      } else if (intensity > 0.4) {
+        color = theme === "dark" ? "#f59e0b" : "#d97706"; // Orange
+        fillOpacity = 0.3;
+        strokeOpacity = 0.7;
+      } else {
+        color = theme === "dark" ? "#10b981" : "#059669"; // Green
+        fillOpacity = 0.25;
+        strokeOpacity = 0.6;
+      }
 
-        // Add popup with cluster info
-        const avgEarnings = cluster.totalEarnings / cluster.count;
-        
-        circle.bindPopup(`
+      // Radius based on count (500m-2km)
+      const radius = Math.min(500 + cluster.count * 300, 2000);
+
+      const circle = L.circle([cluster.lat, cluster.lng], {
+        color: color,
+        fillColor: color,
+        fillOpacity: fillOpacity,
+        opacity: 0,
+        weight: 0,
+        radius: radius,
+      }).addTo(map);
+
+      // Add popup with cluster info
+      const avgEarnings = cluster.totalEarnings / cluster.count;
+
+      circle.bindPopup(`
           <div style="
             padding: 12px;
             background: ${theme === "dark" ? "#1f2937" : "#ffffff"};
@@ -2887,7 +2907,9 @@ export default function MapSection({
               <span style="font-weight: 600;">Orders:</span> ${cluster.count}
             </div>
             <div style="margin-bottom: 6px;">
-              <span style="font-weight: 600;">Avg Earnings:</span> ${formatCurrencySync(avgEarnings)}
+              <span style="font-weight: 600;">Avg Earnings:</span> ${formatCurrencySync(
+                avgEarnings
+              )}
             </div>
             <div style="
               font-size: 12px;
@@ -2899,18 +2921,18 @@ export default function MapSection({
           </div>
         `);
 
-        busyAreaCirclesRef.current.push(circle);
-      });
-    
+      busyAreaCirclesRef.current.push(circle);
+    });
+
     // Auto-pan to show all busy areas
     if (busyAreaCirclesRef.current.length > 0) {
       try {
         const bounds = L.latLngBounds(
-          busyClusters.map(c => [c.lat, c.lng] as [number, number])
+          busyClusters.map((c) => [c.lat, c.lng] as [number, number])
         );
-        map.fitBounds(bounds, { 
+        map.fitBounds(bounds, {
           padding: [50, 50],
-          maxZoom: 13
+          maxZoom: 13,
         });
       } catch (error) {
         // Silently handle panning errors
@@ -2919,7 +2941,12 @@ export default function MapSection({
   };
 
   // Helper function to calculate distance in km
-  const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const getDistance = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number => {
     const R = 6371; // Earth's radius in km
     const dLat = (lat2 - lat1) * (Math.PI / 180);
     const dLon = (lon2 - lon1) * (Math.PI / 180);
@@ -2939,24 +2966,27 @@ export default function MapSection({
       console.log("🗺️ SYNCING SHOPPER LOCATION TO MAP", {
         lat: shopperLocation.lat,
         lng: shopperLocation.lng,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
-      
+
       try {
         // Update user marker position
-        userMarkerRef.current.setLatLng([shopperLocation.lat, shopperLocation.lng]);
-        
+        userMarkerRef.current.setLatLng([
+          shopperLocation.lat,
+          shopperLocation.lng,
+        ]);
+
         // Ensure marker is visible on the map
         if (!mapInstanceRef.current.hasLayer(userMarkerRef.current)) {
           userMarkerRef.current.addTo(mapInstanceRef.current);
         }
-        
+
         // Update local state
         setCurrentLocation(shopperLocation);
-        
+
         // Save to cookies for persistence
         saveLocationToCookies(shopperLocation.lat, shopperLocation.lng);
-        
+
         console.log("✅ USER MARKER UPDATED ON MAP");
       } catch (error) {
         console.error("❌ Error updating user marker:", error);
@@ -2975,16 +3005,16 @@ export default function MapSection({
       hasNotifiedOrder: !!notifiedOrder,
       locationForRoute,
       notifiedOrderId: notifiedOrder?.id,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     if (!mapInstance || !locationForRoute || !notifiedOrder) {
       console.log("🗺️ Clearing routes - missing requirements", {
         hasMapInstance: !!mapInstance,
         hasLocationForRoute: !!locationForRoute,
-        hasNotifiedOrder: !!notifiedOrder
+        hasNotifiedOrder: !!notifiedOrder,
       });
-      
+
       // Clear route and markers if no notified order
       if (routePolyline) {
         routePolyline.remove();
@@ -3001,9 +3031,9 @@ export default function MapSection({
       from: locationForRoute,
       to: {
         lat: notifiedOrder.customerLatitude,
-        lng: notifiedOrder.customerLongitude
+        lng: notifiedOrder.customerLongitude,
       },
-      orderId: notifiedOrder.id
+      orderId: notifiedOrder.id,
     });
 
     // Clear existing route and markers
@@ -3020,7 +3050,10 @@ export default function MapSection({
     const deliveryLng = notifiedOrder.customerLongitude;
 
     if (!deliveryLat || !deliveryLng) {
-      console.warn("⚠️ Missing delivery coordinates", { deliveryLat, deliveryLng });
+      console.warn("⚠️ Missing delivery coordinates", {
+        deliveryLat,
+        deliveryLng,
+      });
       return;
     }
 
@@ -3031,37 +3064,41 @@ export default function MapSection({
         // Format: longitude,latitude (note: OSRM uses lon,lat not lat,lon)
         // Route: Shopper location → Customer delivery address
         const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${locationForRoute.lng},${locationForRoute.lat};${deliveryLng},${deliveryLat}?overview=full&geometries=geojson`;
-        
+
         const response = await fetch(osrmUrl);
         const data = await response.json();
 
-        if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
-          console.warn('⚠️ OSRM returned no routes, falling back to straight line');
-          throw new Error('No route found');
+        if (data.code !== "Ok" || !data.routes || data.routes.length === 0) {
+          console.warn(
+            "⚠️ OSRM returned no routes, falling back to straight line"
+          );
+          throw new Error("No route found");
         }
 
         // Use ref instead of state to get current map instance
         const currentMapInstance = mapInstanceRef.current;
-        
+
         // Check if map instance is still valid
         if (!currentMapInstance) {
-          console.warn('⚠️ Map instance no longer available');
+          console.warn("⚠️ Map instance no longer available");
           return;
         }
 
         // Get the route geometry (array of [lng, lat] coordinates)
         const routeGeometry = data.routes[0].geometry.coordinates;
-        
+
         // Convert from [lng, lat] to [lat, lng] for Leaflet
-        const routeCoords: L.LatLngExpression[] = routeGeometry.map((coord: [number, number]) => [coord[1], coord[0]]);
+        const routeCoords: L.LatLngExpression[] = routeGeometry.map(
+          (coord: [number, number]) => [coord[1], coord[0]]
+        );
 
         // Create polyline with green color following roads
         const polyline = L.polyline(routeCoords, {
-          color: '#10b981', // green-500
+          color: "#10b981", // green-500
           weight: 7,
           opacity: 0.9,
-          lineJoin: 'round',
-          lineCap: 'round',
+          lineJoin: "round",
+          lineCap: "round",
         }).addTo(currentMapInstance);
 
         setRoutePolyline(polyline);
@@ -3069,7 +3106,7 @@ export default function MapSection({
         console.log("✅ ROUTE DRAWN SUCCESSFULLY", {
           routePoints: routeCoords.length,
           orderId: notifiedOrder.id,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
         // No need to create start marker - permanent shopper marker already shows location
@@ -3100,7 +3137,7 @@ export default function MapSection({
               </div>
             </div>
           `,
-          className: '',
+          className: "",
           iconSize: [32, 32],
           iconAnchor: [16, 32],
           popupAnchor: [0, -32],
@@ -3111,7 +3148,9 @@ export default function MapSection({
           zIndexOffset: 1001,
         }).addTo(currentMapInstance);
 
-        endMarker.bindPopup(`<b>Delivery Address</b><br>${notifiedOrder.customerAddress}`);
+        endMarker.bindPopup(
+          `<b>Delivery Address</b><br>${notifiedOrder.customerAddress}`
+        );
         setRouteEndMarker(endMarker);
 
         // Fit map bounds to show the entire route including markers
@@ -3119,29 +3158,27 @@ export default function MapSection({
           padding: [80, 80],
           maxZoom: 15,
         });
-
       } catch (error) {
-        
         // Use ref instead of state to get current map instance
         const currentMapInstance = mapInstanceRef.current;
-        
+
         // Check if map instance is still valid before fallback
         if (!currentMapInstance) {
-          console.warn('⚠️ Map instance no longer available for fallback');
+          console.warn("⚠️ Map instance no longer available for fallback");
           return;
         }
-        
+
         // Fallback: Draw straight line if routing service fails
         const fallbackCoords: L.LatLngExpression[] = [
           [locationForRoute.lat, locationForRoute.lng],
-          [deliveryLat, deliveryLng]
+          [deliveryLat, deliveryLng],
         ];
 
         const polyline = L.polyline(fallbackCoords, {
-          color: '#10b981',
+          color: "#10b981",
           weight: 7,
           opacity: 0.9,
-          dashArray: '12, 8',
+          dashArray: "12, 8",
         }).addTo(currentMapInstance);
 
         setRoutePolyline(polyline);
@@ -3150,7 +3187,7 @@ export default function MapSection({
           from: fallbackCoords[0],
           to: fallbackCoords[1],
           orderId: notifiedOrder.id,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
         // No need to create start marker - permanent shopper marker already shows location
@@ -3181,7 +3218,7 @@ export default function MapSection({
               </div>
             </div>
           `,
-          className: '',
+          className: "",
           iconSize: [32, 32],
           iconAnchor: [16, 32],
           popupAnchor: [0, -32],
@@ -3192,7 +3229,9 @@ export default function MapSection({
           zIndexOffset: 1001,
         }).addTo(currentMapInstance);
 
-        endMarker.bindPopup(`<b>Delivery Address</b><br>${notifiedOrder.customerAddress}`);
+        endMarker.bindPopup(
+          `<b>Delivery Address</b><br>${notifiedOrder.customerAddress}`
+        );
         setRouteEndMarker(endMarker);
 
         currentMapInstance.fitBounds(polyline.getBounds(), {
@@ -3443,9 +3482,7 @@ export default function MapSection({
             <span className="hidden md:inline">
               {showBusyAreas ? "Hide" : "Show"} Busy Areas
             </span>
-            {showBusyAreas && (
-              <span className="text-xs opacity-80">🔥</span>
-            )}
+            {showBusyAreas && <span className="text-xs opacity-80">🔥</span>}
           </button>
 
           {/* Add tracking mode indicator */}

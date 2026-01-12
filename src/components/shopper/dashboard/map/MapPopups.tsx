@@ -144,7 +144,9 @@ export function createPopupHTML(
             style="
               width: 100%;
               padding: 12px;
-              background: linear-gradient(135deg, ${isDark ? "#10b981" : "#059669"} 0%, ${isDark ? "#059669" : "#047857"} 100%);
+              background: linear-gradient(135deg, ${
+                isDark ? "#10b981" : "#059669"
+              } 0%, ${isDark ? "#059669" : "#047857"} 100%);
               color: white;
               border: none;
               border-radius: 8px;
@@ -173,7 +175,9 @@ export function createPopupHTML(
       border-radius: 8px;
       color: ${isDark ? "#f3f4f6" : "#111827"};
     ">
-      <div style="font-weight: 600; margin-bottom: 4px;">${order.shopName || order.name}</div>
+      <div style="font-weight: 600; margin-bottom: 4px;">${
+        order.shopName || order.name
+      }</div>
       <div style="font-size: 14px; color: ${isDark ? "#9ca3af" : "#6b7280"};">
         ${order.shopAddress || order.address || ""}
       </div>
@@ -190,8 +194,14 @@ export function createPopupHTML(
 export function createShopPopupContent(shop: any, isDark: boolean): string {
   return `
     <div style="padding: 8px;">
-      <strong style="color: ${isDark ? "#f3f4f6" : "#111827"};">${shop.name}</strong>
-      ${shop.logo ? `<br/><img src="${shop.logo}" alt="${shop.name}" style="max-width: 100px; margin-top: 8px; border-radius: 4px;" />` : ""}
+      <strong style="color: ${isDark ? "#f3f4f6" : "#111827"};">${
+    shop.name
+  }</strong>
+      ${
+        shop.logo
+          ? `<br/><img src="${shop.logo}" alt="${shop.name}" style="max-width: 100px; margin-top: 8px; border-radius: 4px;" />`
+          : ""
+      }
     </div>
   `;
 }
@@ -202,22 +212,31 @@ export function createShopPopupContent(shop: any, isDark: boolean): string {
  * @param isReelOrder Whether this is a reel order
  * @returns HTML string for order popup
  */
-export function createOrderPopupContent(order: any, isReelOrder: boolean = false): string {
+export function createOrderPopupContent(
+  order: any,
+  isReelOrder: boolean = false
+): string {
   const earnings = order.earnings || order.estimatedEarnings || 0;
   const itemsCount = order.itemsCount || order.items || 1;
-  
+
   return `
     <div style="min-width: 220px; padding: 12px;">
       <div style="font-weight: 600; margin-bottom: 8px; font-size: 15px;">
         ${order.shopName}
       </div>
       <div style="margin-bottom: 6px;">
-        <span style="font-weight: 500;">Earnings:</span> ${formatCurrencySync(earnings)}
+        <span style="font-weight: 500;">Earnings:</span> ${formatCurrencySync(
+          earnings
+        )}
       </div>
       <div style="margin-bottom: 6px;">
         <span style="font-weight: 500;">Items:</span> ${itemsCount}
       </div>
-      ${isReelOrder ? '<div style="margin-top: 8px; padding: 4px 8px; background: #fef3c7; color: #92400e; border-radius: 4px; display: inline-block; font-size: 12px; font-weight: 600;">📹 Reel Order</div>' : ""}
+      ${
+        isReelOrder
+          ? '<div style="margin-top: 8px; padding: 4px 8px; background: #fef3c7; color: #92400e; border-radius: 4px; display: inline-block; font-size: 12px; font-weight: 600;">📹 Reel Order</div>'
+          : ""
+      }
       <div style="margin-top: 8px; font-size: 13px; color: #6b7280;">
         ${order.addressStreet}, ${order.addressCity}
       </div>

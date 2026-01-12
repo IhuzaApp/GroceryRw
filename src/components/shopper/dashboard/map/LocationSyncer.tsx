@@ -30,7 +30,10 @@ export function useLocationSyncer({
 
       try {
         // Update user marker position
-        userMarkerRef.current.setLatLng([shopperLocation.lat, shopperLocation.lng]);
+        userMarkerRef.current.setLatLng([
+          shopperLocation.lat,
+          shopperLocation.lng,
+        ]);
 
         // Ensure marker is visible on the map
         if (!mapInstanceRef.current.hasLayer(userMarkerRef.current)) {
@@ -63,7 +66,10 @@ export function getInitialLocation(
 ): Location | null {
   // Prioritize shopperLocation prop from parent (most current)
   if (shopperLocation) {
-    console.log("🗺️ Using shopperLocation prop for initial position", shopperLocation);
+    console.log(
+      "🗺️ Using shopperLocation prop for initial position",
+      shopperLocation
+    );
     return shopperLocation;
   }
 
@@ -72,9 +78,12 @@ export function getInitialLocation(
   if (cookieMap["user_latitude"] && cookieMap["user_longitude"]) {
     const lat = parseFloat(cookieMap["user_latitude"]);
     const lng = parseFloat(cookieMap["user_longitude"]);
-    
+
     if (!isNaN(lat) && !isNaN(lng)) {
-      console.log("🗺️ Using cookie location for initial position", { lat, lng });
+      console.log("🗺️ Using cookie location for initial position", {
+        lat,
+        lng,
+      });
       return { lat, lng };
     }
   }
@@ -93,7 +102,12 @@ export function initializeUserMarkerPosition(
   mapInstance: L.Map | null,
   initialLocation: Location | null
 ): void {
-  if (!initialLocation || !userMarker || !mapInstance || !isMapReady(mapInstance)) {
+  if (
+    !initialLocation ||
+    !userMarker ||
+    !mapInstance ||
+    !isMapReady(mapInstance)
+  ) {
     return;
   }
 

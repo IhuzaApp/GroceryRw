@@ -329,7 +329,9 @@ export const sendNewOrderNotification = async (
 
     const payload: NotificationPayload = {
       title: `New ${orderData.orderType} batch available!`,
-      body: `From ${orderData.shopName} - ${formatCurrency(orderData.estimatedEarnings)} • ${orderData.distance.toFixed(1)}km away`,
+      body: `From ${orderData.shopName} - ${formatCurrency(
+        orderData.estimatedEarnings
+      )} • ${orderData.distance.toFixed(1)}km away`,
       data: {
         type: "new_order",
         orderId: orderData.id,

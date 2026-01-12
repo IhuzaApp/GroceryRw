@@ -62,7 +62,10 @@ export default async function handler(
       message: "Warning notification sent successfully",
     });
   } catch (error) {
-    console.error("Error sending warning notification:", error instanceof Error ? error.message : "Unknown error");
+    console.error(
+      "Error sending warning notification:",
+      error instanceof Error ? error.message : "Unknown error"
+    );
     return res.status(500).json({
       error: "Failed to send warning notification",
       details: error instanceof Error ? error.message : "Unknown error",

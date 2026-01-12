@@ -165,7 +165,7 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
       }`}
     >
       {/* Batch Type Indicators */}
-      <div className="mb-3 flex items-center justify-center gap-2 flex-wrap">
+      <div className="mb-3 flex flex-wrap items-center justify-center gap-2">
         {isReelOrder && (
           <div className="flex items-center gap-1 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 px-3 py-1 text-center text-xs font-bold text-white shadow-md">
             <svg
@@ -207,28 +207,31 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
         {/* Status Badge */}
         <StatusBadge status={order.status} />
 
-        {order.deliveryTime && !isReelOrder && !isRestaurantOrder && (() => {
-          const countdown = getDeliveryCountdown(order.deliveryTime);
-          if (!countdown.isOverdue) return null; // Only show if overdue
-          return (
-            <div className="flex items-center gap-1 rounded-full bg-gradient-to-r from-red-600 to-rose-600 px-3 py-1 text-center text-xs font-bold text-white shadow-md">
-              <svg
-                className="h-3 w-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              OVERDUE
-            </div>
-          );
-        })()}
+        {order.deliveryTime &&
+          !isReelOrder &&
+          !isRestaurantOrder &&
+          (() => {
+            const countdown = getDeliveryCountdown(order.deliveryTime);
+            if (!countdown.isOverdue) return null; // Only show if overdue
+            return (
+              <div className="flex items-center gap-1 rounded-full bg-gradient-to-r from-red-600 to-rose-600 px-3 py-1 text-center text-xs font-bold text-white shadow-md">
+                <svg
+                  className="h-3 w-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                OVERDUE
+              </div>
+            );
+          })()}
       </div>
 
       {/* Header Section */}

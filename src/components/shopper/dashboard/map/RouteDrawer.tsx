@@ -1,7 +1,12 @@
 import { useEffect } from "react";
 import L from "leaflet";
 import { Location, NotifiedOrder } from "./mapTypes";
-import { createCustomDivIcon, createDeliveryMarkerIcon, fitMapBounds, isMapReady } from "./mapUtils";
+import {
+  createCustomDivIcon,
+  createDeliveryMarkerIcon,
+  fitMapBounds,
+  isMapReady,
+} from "./mapUtils";
 
 interface RouteDrawerProps {
   mapInstance: L.Map | null;
@@ -84,7 +89,10 @@ export function useRouteDrawer({
     const deliveryLng = notifiedOrder.customerLongitude;
 
     if (!deliveryLat || !deliveryLng) {
-      console.warn("⚠️ Missing delivery coordinates", { deliveryLat, deliveryLng });
+      console.warn("⚠️ Missing delivery coordinates", {
+        deliveryLat,
+        deliveryLng,
+      });
       return;
     }
 
@@ -99,7 +107,9 @@ export function useRouteDrawer({
         const data = await response.json();
 
         if (data.code !== "Ok" || !data.routes || data.routes.length === 0) {
-          console.warn("⚠️ OSRM returned no routes, falling back to straight line");
+          console.warn(
+            "⚠️ OSRM returned no routes, falling back to straight line"
+          );
           throw new Error("No route found");
         }
 

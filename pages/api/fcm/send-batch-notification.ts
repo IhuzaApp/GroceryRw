@@ -59,7 +59,10 @@ export default async function handler(
       message: "Batch notification sent successfully",
     });
   } catch (error) {
-    console.error("Error sending batch notification:", error instanceof Error ? error.message : "Unknown error");
+    console.error(
+      "Error sending batch notification:",
+      error instanceof Error ? error.message : "Unknown error"
+    );
     return res.status(500).json({
       error: "Failed to send batch notification",
       details: error instanceof Error ? error.message : "Unknown error",

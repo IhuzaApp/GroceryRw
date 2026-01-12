@@ -84,17 +84,21 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
         className="absolute inset-0 bg-black/80 backdrop-blur-sm"
         aria-hidden="true"
       />
-      
+
       <div
         className={`relative z-10 w-full max-w-md rounded-t-2xl border-0 shadow-2xl sm:rounded-2xl sm:border ${
-          theme === "dark" ? "bg-gray-800 text-white sm:border-gray-700" : "bg-white text-gray-900 sm:border-gray-200"
+          theme === "dark"
+            ? "bg-gray-800 text-white sm:border-gray-700"
+            : "bg-white text-gray-900 sm:border-gray-200"
         }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div
           className={`flex items-center justify-between px-6 py-6 sm:px-8 ${
-            theme === "dark" ? "border-b border-gray-700" : "border-b border-gray-200"
+            theme === "dark"
+              ? "border-b border-gray-700"
+              : "border-b border-gray-200"
           }`}
         >
           <div className="flex items-center gap-3">
@@ -160,98 +164,104 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
         </div>
 
         {/* Body */}
-        <div className={`max-h-[70vh] overflow-y-auto px-6 py-8 sm:px-8 ${theme === "dark" ? "bg-gray-800" : "bg-white"}`}>
-        {/* Error Message */}
-        {error && (
-          <div
-            className={`mb-4 rounded-xl border-l-4 p-4 ${
-              theme === "dark"
-                ? "border-red-500 bg-red-900/20 text-red-300"
-                : "border-red-500 bg-red-50 text-red-800"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <div
-                className={`rounded-full p-1 ${
-                  theme === "dark" ? "bg-red-600" : "bg-red-100"
-                }`}
-              >
-                <svg
-                  className={`h-4 w-4 ${
-                    theme === "dark" ? "text-white" : "text-red-600"
+        <div
+          className={`max-h-[70vh] overflow-y-auto px-6 py-8 sm:px-8 ${
+            theme === "dark" ? "bg-gray-800" : "bg-white"
+          }`}
+        >
+          {/* Error Message */}
+          {error && (
+            <div
+              className={`mb-4 rounded-xl border-l-4 p-4 ${
+                theme === "dark"
+                  ? "border-red-500 bg-red-900/20 text-red-300"
+                  : "border-red-500 bg-red-50 text-red-800"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={`rounded-full p-1 ${
+                    theme === "dark" ? "bg-red-600" : "bg-red-100"
                   }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className="mb-1 font-semibold">Camera Error</p>
-                <p className="text-sm opacity-90">{error}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Video Scanner Section */}
-        <div>
-          <div className="relative overflow-hidden rounded-xl bg-gray-900">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="h-64 w-full object-cover sm:h-80"
-            />
-
-            {/* Scanning Overlay */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="relative">
-                {/* Scanning Frame */}
-                <div className="h-48 w-64 rounded-lg border-2 border-white opacity-80 sm:h-56 sm:w-80" />
-
-                {/* Corner Indicators */}
-                <div className="absolute -left-1 -top-1 h-6 w-6 border-l-4 border-t-4 border-white opacity-90" />
-                <div className="absolute -right-1 -top-1 h-6 w-6 border-r-4 border-t-4 border-white opacity-90" />
-                <div className="absolute -bottom-1 -left-1 h-6 w-6 border-b-4 border-l-4 border-white opacity-90" />
-                <div className="absolute -bottom-1 -right-1 h-6 w-6 border-b-4 border-r-4 border-white opacity-90" />
-
-                {/* Scanning Line Animation */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="h-0.5 w-full animate-pulse bg-gradient-to-r from-transparent via-white to-transparent opacity-60" />
+                  <svg
+                    className={`h-4 w-4 ${
+                      theme === "dark" ? "text-white" : "text-red-600"
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="mb-1 font-semibold">Camera Error</p>
+                  <p className="text-sm opacity-90">{error}</p>
                 </div>
               </div>
             </div>
+          )}
 
-            {/* Scanning Instructions */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 transform">
-              <div
-                className={`rounded-lg px-4 py-2 ${
-                  theme === "dark"
-                    ? "bg-gray-800/90 text-white"
-                    : "bg-white/90 text-gray-900"
-                } shadow-lg`}
-              >
-                <p className="text-center text-sm font-medium">
-                  📱 Point camera at barcode
-                </p>
+          {/* Video Scanner Section */}
+          <div>
+            <div className="relative overflow-hidden rounded-xl bg-gray-900">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="h-64 w-full object-cover sm:h-80"
+              />
+
+              {/* Scanning Overlay */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="relative">
+                  {/* Scanning Frame */}
+                  <div className="h-48 w-64 rounded-lg border-2 border-white opacity-80 sm:h-56 sm:w-80" />
+
+                  {/* Corner Indicators */}
+                  <div className="absolute -left-1 -top-1 h-6 w-6 border-l-4 border-t-4 border-white opacity-90" />
+                  <div className="absolute -right-1 -top-1 h-6 w-6 border-r-4 border-t-4 border-white opacity-90" />
+                  <div className="absolute -bottom-1 -left-1 h-6 w-6 border-b-4 border-l-4 border-white opacity-90" />
+                  <div className="absolute -bottom-1 -right-1 h-6 w-6 border-b-4 border-r-4 border-white opacity-90" />
+
+                  {/* Scanning Line Animation */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-0.5 w-full animate-pulse bg-gradient-to-r from-transparent via-white to-transparent opacity-60" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Scanning Instructions */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 transform">
+                <div
+                  className={`rounded-lg px-4 py-2 ${
+                    theme === "dark"
+                      ? "bg-gray-800/90 text-white"
+                      : "bg-white/90 text-gray-900"
+                  } shadow-lg`}
+                >
+                  <p className="text-center text-sm font-medium">
+                    📱 Point camera at barcode
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
         </div>
 
         {/* Footer */}
         <div
           className={`flex w-full flex-col-reverse gap-3 px-6 py-5 sm:flex-row sm:justify-end sm:px-8 ${
-            theme === "dark" ? "border-t border-gray-700" : "border-t border-gray-200"
+            theme === "dark"
+              ? "border-t border-gray-700"
+              : "border-t border-gray-200"
           }`}
         >
           <button

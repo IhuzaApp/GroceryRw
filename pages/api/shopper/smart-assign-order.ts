@@ -12,7 +12,7 @@ const notificationCache = new Map<string, number>();
 setInterval(() => {
   const now = Date.now();
   const expireTime = 90000; // 90 seconds
-  
+
   for (const [key, timestamp] of notificationCache.entries()) {
     if (now - timestamp > expireTime) {
       notificationCache.delete(key);
@@ -24,10 +24,7 @@ setInterval(() => {
 const GET_AVAILABLE_ORDERS = gql`
   query GetAvailableOrders {
     Orders(
-      where: {
-        status: { _eq: "PENDING" }
-        shopper_id: { _is_null: true }
-      }
+      where: { status: { _eq: "PENDING" }, shopper_id: { _is_null: true } }
       order_by: { created_at: asc }
       limit: 50
     ) {
@@ -63,10 +60,7 @@ const GET_AVAILABLE_ORDERS = gql`
 const GET_AVAILABLE_REEL_ORDERS = gql`
   query GetAvailableReelOrders {
     reel_orders(
-      where: {
-        status: { _eq: "PENDING" }
-        shopper_id: { _is_null: true }
-      }
+      where: { status: { _eq: "PENDING" }, shopper_id: { _is_null: true } }
       order_by: { created_at: asc }
       limit: 50
     ) {
@@ -97,10 +91,7 @@ const GET_AVAILABLE_REEL_ORDERS = gql`
 const GET_AVAILABLE_RESTAURANT_ORDERS = gql`
   query GetAvailableRestaurantOrders {
     restaurant_orders(
-      where: {
-        status: { _eq: "PENDING" }
-        shopper_id: { _is_null: true }
-      }
+      where: { status: { _eq: "PENDING" }, shopper_id: { _is_null: true } }
       order_by: { updated_at: asc_nulls_last, created_at: asc }
       limit: 50
     ) {
@@ -196,9 +187,10 @@ function calculateShopperPriority(
     orderCount > 0 ? Math.min(100, (orderCount / 10) * 100) : 0; // Simplified completion rate
 
   // Calculate order age in minutes
-  const orderTimestamp = order.orderType === "restaurant" && order.updated_at 
-    ? new Date(order.updated_at).getTime() 
-    : new Date(order.created_at).getTime();
+  const orderTimestamp =
+    order.orderType === "restaurant" && order.updated_at
+      ? new Date(order.updated_at).getTime()
+      : new Date(order.created_at).getTime();
   const ageInMinutes = (Date.now() - orderTimestamp) / 60000;
 
   // Age factor: heavily prioritize older orders, but don't completely ignore new ones
@@ -240,7 +232,7 @@ export default async function handler(
 ) {
   console.log("=== Smart Assignment API called ===");
   console.log("Method:", req.method);
-  
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -294,12 +286,15 @@ export default async function handler(
     const availableReelOrders = reelOrdersData.reel_orders || [];
     const availableRestaurantOrders =
       restaurantOrdersData.restaurant_orders || [];
-    
+
     console.log("Available orders counts:", {
       regular: availableOrders.length,
       reel: availableReelOrders.length,
       restaurant: availableRestaurantOrders.length,
-      total: availableOrders.length + availableReelOrders.length + availableRestaurantOrders.length
+      total:
+        availableOrders.length +
+        availableReelOrders.length +
+        availableRestaurantOrders.length,
     });
 
     // Combine all orders with type information
@@ -326,7 +321,7 @@ export default async function handler(
         orders: [],
       });
     }
-    
+
     console.log("Calculating priority for", allOrders.length, "orders");
 
     // Calculate priority for each order
@@ -347,7 +342,7 @@ export default async function handler(
     console.log("Best order selected:", {
       id: bestOrder.id,
       type: bestOrder.orderType,
-      priority: bestOrder.priority
+      priority: bestOrder.priority,
     });
 
     // Calculate distance and travel time
@@ -369,8 +364,10 @@ export default async function handler(
     let itemsCount = 1; // Default
     if (bestOrder.orderType === "regular") {
       // For regular orders, use Order_Items aggregate - sum gives total units, count gives number of different items
-      const unitsCount = bestOrder.Order_Items_aggregate?.aggregate?.sum?.quantity || 0;
-      const itemsTypeCount = bestOrder.Order_Items_aggregate?.aggregate?.count || 0;
+      const unitsCount =
+        bestOrder.Order_Items_aggregate?.aggregate?.sum?.quantity || 0;
+      const itemsTypeCount =
+        bestOrder.Order_Items_aggregate?.aggregate?.count || 0;
       itemsCount = unitsCount || itemsTypeCount || 1; // Prefer units count (total quantity)
     } else if (bestOrder.orderType === "reel") {
       // For reel orders, use quantity field
@@ -404,14 +401,10 @@ export default async function handler(
       priority: bestOrder.priority,
       // Add coordinates for map route display
       shopLatitude: parseFloat(
-        bestOrder.Shop?.latitude ||
-        bestOrder.Restaurant?.lat ||
-        "0"
+        bestOrder.Shop?.latitude || bestOrder.Restaurant?.lat || "0"
       ),
       shopLongitude: parseFloat(
-        bestOrder.Shop?.longitude ||
-        bestOrder.Restaurant?.long ||
-        "0"
+        bestOrder.Shop?.longitude || bestOrder.Restaurant?.long || "0"
       ),
       customerLatitude: parseFloat(
         bestOrder.Address?.latitude || bestOrder.address?.latitude || "0"
@@ -436,16 +429,16 @@ export default async function handler(
       orderType: orderForNotification.orderType,
       distance: orderForNotification.distance,
       estimatedEarnings: orderForNotification.estimatedEarnings,
-      itemsCount: orderForNotification.itemsCount
+      itemsCount: orderForNotification.itemsCount,
     });
-    
+
     // Check if we already sent FCM notification for this order to this shopper
     const cacheKey = `${user_id}:${bestOrder.id}`;
     const lastSent = notificationCache.get(cacheKey);
     const now = Date.now();
-    
+
     // Only send FCM if we haven't sent it in the last 90 seconds (order expiry time)
-    if (!lastSent || (now - lastSent) > 90000) {
+    if (!lastSent || now - lastSent > 90000) {
       // Send FCM notification to the shopper
       try {
         await sendNewOrderNotification(user_id, {
@@ -458,19 +451,29 @@ export default async function handler(
           estimatedEarnings: orderForNotification.estimatedEarnings,
           orderType: orderForNotification.orderType,
         });
-        
+
         // Cache this notification
         notificationCache.set(cacheKey, now);
-        console.log("✅ FCM notification sent to shopper:", user_id, "for order:", bestOrder.id);
+        console.log(
+          "✅ FCM notification sent to shopper:",
+          user_id,
+          "for order:",
+          bestOrder.id
+        );
       } catch (fcmError) {
         console.error("Failed to send FCM notification:", fcmError);
         // Continue even if notification fails
       }
     } else {
       const timeSinceLastSent = Math.floor((now - lastSent) / 1000);
-      console.log(`⏭️ Skipping FCM notification - already sent ${timeSinceLastSent}s ago to shopper:`, user_id, "for order:", bestOrder.id);
+      console.log(
+        `⏭️ Skipping FCM notification - already sent ${timeSinceLastSent}s ago to shopper:`,
+        user_id,
+        "for order:",
+        bestOrder.id
+      );
     }
-    
+
     return res.status(200).json({
       success: true,
       order: orderForNotification,
@@ -479,14 +482,20 @@ export default async function handler(
   } catch (error) {
     console.error("=== ERROR in Smart Assignment API ===");
     console.error("Error:", error);
-    console.error("Error message:", error instanceof Error ? error.message : String(error));
-    console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
-    
+    console.error(
+      "Error message:",
+      error instanceof Error ? error.message : String(error)
+    );
+    console.error(
+      "Error stack:",
+      error instanceof Error ? error.stack : "No stack trace"
+    );
+
     logger.error("Error in smart assignment", "SmartAssignmentAPI", {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
     });
-    
+
     return res.status(500).json({
       error: "Failed to find order",
       details: error instanceof Error ? error.message : "Unknown error",

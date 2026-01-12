@@ -108,13 +108,13 @@ export default function NotificationSystem({
         timestamp: new Date().toISOString(),
         isDeclined: declinedOrders.current.has(order.id),
         alreadyShowing: activeToasts.current.has(order.id),
-        recentlyShown: showToastLock.current.has(order.id)
+        recentlyShown: showToastLock.current.has(order.id),
       });
 
       // Check if order was declined
       if (declinedOrders.current.has(order.id)) {
         console.log("🚫 FCM: Order was declined, ignoring", {
-          orderId: order.id
+          orderId: order.id,
         });
         return;
       }
@@ -122,7 +122,7 @@ export default function NotificationSystem({
       // Skip if order is already showing
       if (activeToasts.current.has(order.id)) {
         console.log("🚫 FCM: Order already showing, ignoring", {
-          orderId: order.id
+          orderId: order.id,
         });
         return;
       }
@@ -155,7 +155,7 @@ export default function NotificationSystem({
 
       console.log("📲 FCM BATCH ORDERS EVENT", {
         orderCount: orders.length,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       // Show notifications for each order
@@ -163,7 +163,7 @@ export default function NotificationSystem({
         // Check if order was declined
         if (declinedOrders.current.has(order.id)) {
           console.log("🚫 FCM BATCH: Order was declined, ignoring", {
-            orderId: order.id
+            orderId: order.id,
           });
           return;
         }
@@ -171,7 +171,7 @@ export default function NotificationSystem({
         // Skip if order is already showing
         if (activeToasts.current.has(order.id)) {
           console.log("🚫 FCM BATCH: Order already showing, ignoring", {
-            orderId: order.id
+            orderId: order.id,
           });
           return;
         }
@@ -481,47 +481,51 @@ export default function NotificationSystem({
     type: "info" | "success" | "warning" | "error" = "info"
   ) => {
     const now = Date.now();
-    
+
     console.log("📢 SHOW TOAST CALLED", {
       orderId: order.id,
       timestamp: new Date().toISOString(),
       alreadyShowing: activeToasts.current.has(order.id),
       isDeclined: declinedOrders.current.has(order.id),
       lastShownAt: showToastLock.current.get(order.id),
-      callStack: new Error().stack?.split('\n').slice(2, 5).join(' <- ') // Show where this was called from
+      callStack: new Error().stack?.split("\n").slice(2, 5).join(" <- "), // Show where this was called from
     });
-    
+
     // Check if order was declined - CRITICAL CHECK
     if (declinedOrders.current.has(order.id)) {
       console.log("🚫 BLOCKED: Order was declined", {
         orderId: order.id,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
       return;
     }
-    
+
     // DEDUPLICATION LOCK: Prevent showing same order within 2 seconds
     const lastShown = showToastLock.current.get(order.id);
-    if (lastShown && (now - lastShown) < 2000) {
+    if (lastShown && now - lastShown < 2000) {
       console.log("🚫 BLOCKED: Order shown too recently (deduplication)", {
         orderId: order.id,
         lastShownAt: new Date(lastShown).toISOString(),
         timeSinceLastShow: `${now - lastShown}ms`,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
       return;
     }
-    
+
     // Check if this order is already being shown - prevent duplicates
     const existingToast = activeToasts.current.get(order.id);
-    if (existingToast === "map-modal" && showMapModal && selectedOrder?.id === order.id) {
+    if (
+      existingToast === "map-modal" &&
+      showMapModal &&
+      selectedOrder?.id === order.id
+    ) {
       console.log("🚫 BLOCKED: Notification already showing for this order", {
         orderId: order.id,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
       return;
     }
-    
+
     // Remove any existing toast for this order if it's not currently displayed
     if (existingToast) {
       batchToast.dismiss(existingToast);
@@ -530,7 +534,7 @@ export default function NotificationSystem({
 
     console.log("✅ SHOWING NOTIFICATION", {
       orderId: order.id,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     // Set deduplication lock
@@ -850,7 +854,7 @@ export default function NotificationSystem({
 
       if (data.success && data.order) {
         // Smart order finder found order
-        
+
         // Update lastNotificationTime to prevent rapid API calls
         // This is updated regardless of whether we show a notification
         lastNotificationTime.current = currentTime;
@@ -900,7 +904,10 @@ export default function NotificationSystem({
           hasCurrentAssignment: !!currentUserAssignment,
           alreadyShowing: activeToasts.current.has(order.id),
           recentlyShown: showToastLock.current.has(order.id),
-          willShow: !currentUserAssignment && !wasDeclined && !activeToasts.current.has(order.id)
+          willShow:
+            !currentUserAssignment &&
+            !wasDeclined &&
+            !activeToasts.current.has(order.id),
         });
 
         // Skip if order is already showing or was recently shown
@@ -910,7 +917,6 @@ export default function NotificationSystem({
         }
 
         if (!currentUserAssignment && !wasDeclined) {
-          
           // Validate order data before showing notification
           if (!order.itemsCount || order.itemsCount === 0) {
             logger.warn(
@@ -952,10 +958,10 @@ export default function NotificationSystem({
           await playNotificationSound({ enabled: true, volume: 0.7 });
           showToast(orderForNotification);
           showDesktopNotification(orderForNotification);
-          
+
           // FCM notification is already sent by the backend API (smart-assign-order.ts)
           // No need to send duplicate notification from frontend
-          
+
           // Warning notification removed - shoppers now have full 90 seconds to respond
           // No intermediate warning needed as 90 seconds is sufficient time
 
@@ -1050,13 +1056,13 @@ export default function NotificationSystem({
       declineClickCount.current = 0;
       acceptClickCount.current = 0;
       directionsClickCount.current = 0;
-      
+
       console.log("🔔 NOTIFICATION CARD DISPLAYED", {
         orderId: selectedOrder.id,
         shopName: selectedOrder.shopName,
         timestamp: new Date().toISOString(),
         zIndex: "z-50",
-        message: "Click counters reset - tracking clicks for this notification"
+        message: "Click counters reset - tracking clicks for this notification",
       });
     } else if (!showMapModal) {
       console.log("🔕 NOTIFICATION CARD HIDDEN", {
@@ -1064,8 +1070,8 @@ export default function NotificationSystem({
         finalClickCounts: {
           decline: declineClickCount.current,
           accept: acceptClickCount.current,
-          directions: directionsClickCount.current
-        }
+          directions: directionsClickCount.current,
+        },
       });
     }
   }, [showMapModal, selectedOrder]);
@@ -1085,7 +1091,7 @@ export default function NotificationSystem({
       );
       stopNotificationSystem();
     }
-    
+
     // Cleanup on unmount or when dependencies change
     return () => {
       // Don't stop when location updates, only when session changes
@@ -1116,7 +1122,7 @@ export default function NotificationSystem({
 
       {/* Notification Card */}
       {showMapModal && selectedOrder ? (
-        <div 
+        <div
           key={selectedOrder.id}
           className="fixed inset-x-0 bottom-0 z-50 flex md:justify-end md:px-8 md:pb-6"
           onClick={(e) => {
@@ -1124,13 +1130,13 @@ export default function NotificationSystem({
             if (e.target === e.currentTarget) {
               console.log("📱 NOTIFICATION BACKGROUND CLICKED", {
                 orderId: selectedOrder.id,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
               });
             }
           }}
         >
           {/* Bottom Sheet Card */}
-          <div 
+          <div
             ref={(el) => {
               if (el) {
                 const styles = window.getComputedStyle(el);
@@ -1142,11 +1148,11 @@ export default function NotificationSystem({
                   position: styles.position,
                   pointerEvents: styles.pointerEvents,
                   cardRect: el.getBoundingClientRect(),
-                  message: "Check if card is being overlapped by map elements"
+                  message: "Check if card is being overlapped by map elements",
                 });
               }
             }}
-            className="relative w-full md:max-w-md md:rounded-2xl rounded-t-3xl bg-white shadow-2xl"
+            className="relative w-full rounded-t-3xl bg-white shadow-2xl md:max-w-md md:rounded-2xl"
             onClick={(e) => {
               console.log("📋 NOTIFICATION CARD CLICKED", {
                 orderId: selectedOrder.id,
@@ -1154,7 +1160,7 @@ export default function NotificationSystem({
                 target: e.target,
                 currentTarget: e.currentTarget,
                 clickX: (e as React.MouseEvent).clientX,
-                clickY: (e as React.MouseEvent).clientY
+                clickY: (e as React.MouseEvent).clientY,
               });
             }}
           >
@@ -1192,21 +1198,21 @@ export default function NotificationSystem({
                   </div>
                 </div>
                 {/* Directions Button */}
-                <button 
+                <button
                   onPointerDown={(e) => {
                     console.log("👆 DIRECTIONS POINTER DOWN", {
                       orderId: selectedOrder.id,
                       timestamp: new Date().toISOString(),
                       pointerType: e.pointerType,
                       x: e.clientX,
-                      y: e.clientY
+                      y: e.clientY,
                     });
                   }}
                   onPointerUp={(e) => {
                     console.log("👆 DIRECTIONS POINTER UP", {
                       orderId: selectedOrder.id,
                       timestamp: new Date().toISOString(),
-                      pointerType: e.pointerType
+                      pointerType: e.pointerType,
                     });
                   }}
                   onClick={() => {
@@ -1218,17 +1224,17 @@ export default function NotificationSystem({
                       totalClicks: `This is click #${directionsClickCount.current}`,
                       coordinates: {
                         lat: selectedOrder.customerLatitude,
-                        lng: selectedOrder.customerLongitude
-                      }
+                        lng: selectedOrder.customerLongitude,
+                      },
                     });
-                    
+
                     // Open Google Maps with directions to delivery address
                     const destLat = selectedOrder.customerLatitude;
                     const destLng = selectedOrder.customerLongitude;
                     const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`;
-                    window.open(mapsUrl, '_blank');
+                    window.open(mapsUrl, "_blank");
                   }}
-                  className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 shadow-md hover:bg-blue-600 transition-colors"
+                  className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 shadow-md transition-colors hover:bg-blue-600"
                   title="Open in Google Maps"
                 >
                   <svg
@@ -1261,8 +1267,10 @@ export default function NotificationSystem({
                   <div className="flex-1">
                     <p className="text-xs text-gray-500">You</p>
                     <p className="text-sm font-medium text-gray-900">
-                      {currentLocation 
-                        ? `${currentLocation.lat.toFixed(4)}° N, ${currentLocation.lng.toFixed(4)}° E`
+                      {currentLocation
+                        ? `${currentLocation.lat.toFixed(
+                            4
+                          )}° N, ${currentLocation.lng.toFixed(4)}° E`
                         : "Current Location"}
                     </p>
                   </div>
@@ -1283,7 +1291,9 @@ export default function NotificationSystem({
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <p className="text-xs text-gray-500">Delivery Address</p>
+                        <p className="text-xs text-gray-500">
+                          Delivery Address
+                        </p>
                         <p className="text-sm font-medium text-gray-900">
                           {selectedOrder.customerAddress}
                         </p>
@@ -1367,14 +1377,14 @@ export default function NotificationSystem({
                       timestamp: new Date().toISOString(),
                       pointerType: e.pointerType,
                       x: e.clientX,
-                      y: e.clientY
+                      y: e.clientY,
                     });
                   }}
                   onPointerUp={(e) => {
                     console.log("👆 DECLINE POINTER UP", {
                       orderId: selectedOrder.id,
                       timestamp: new Date().toISOString(),
-                      pointerType: e.pointerType
+                      pointerType: e.pointerType,
                     });
                   }}
                   onClick={() => {
@@ -1383,39 +1393,41 @@ export default function NotificationSystem({
                       orderId: selectedOrder.id,
                       timestamp: new Date().toISOString(),
                       clickCount: declineClickCount.current,
-                      totalClicks: `This is click #${declineClickCount.current}`
+                      totalClicks: `This is click #${declineClickCount.current}`,
                     });
-                    
+
                     // Save order ID before clearing state
                     const orderId = selectedOrder.id;
-                    
+
                     // Add to declined orders list (expires after 5 minutes)
                     declinedOrders.current.set(orderId, Date.now() + 300000);
-                    
+
                     // Set decline cooldown (10 seconds before showing next notification)
                     lastDeclineTime.current = Date.now();
-                    
+
                     // Remove from tracking
                     removeToastForOrder(orderId);
-                    
+
                     // Remove from local state
                     batchAssignments.current = batchAssignments.current.filter(
                       (assignment) => assignment.orderId !== orderId
                     );
-                    
+
                     // Close the notification modal
                     setShowMapModal(false);
                     setSelectedOrder(null);
-                    
+
                     // Notify parent that notification is hidden
                     onNotificationShow?.(null);
-                    
-                    console.log("🔴 DECLINE COMPLETED", { 
+
+                    console.log("🔴 DECLINE COMPLETED", {
                       orderId,
                       declinedOrdersCount: declinedOrders.current.size,
-                      declinedOrderIds: Array.from(declinedOrders.current.keys()),
+                      declinedOrderIds: Array.from(
+                        declinedOrders.current.keys()
+                      ),
                       lastDeclineTime: lastDeclineTime.current,
-                      nextCheckAllowedAt: lastDeclineTime.current + 10000
+                      nextCheckAllowedAt: lastDeclineTime.current + 10000,
                     });
                   }}
                   className="flex-1 rounded-xl bg-red-500 py-4 text-base font-bold text-white shadow-lg transition-all hover:bg-red-600 active:scale-95"
@@ -1431,14 +1443,14 @@ export default function NotificationSystem({
                       timestamp: new Date().toISOString(),
                       pointerType: e.pointerType,
                       x: e.clientX,
-                      y: e.clientY
+                      y: e.clientY,
                     });
                   }}
                   onPointerUp={(e) => {
                     console.log("👆 ACCEPT POINTER UP", {
                       orderId: selectedOrder.id,
                       timestamp: new Date().toISOString(),
-                      pointerType: e.pointerType
+                      pointerType: e.pointerType,
                     });
                   }}
                   onClick={async () => {
@@ -1447,17 +1459,17 @@ export default function NotificationSystem({
                       orderId: selectedOrder.id,
                       timestamp: new Date().toISOString(),
                       clickCount: acceptClickCount.current,
-                      totalClicks: `This is click #${acceptClickCount.current}`
+                      totalClicks: `This is click #${acceptClickCount.current}`,
                     });
-                    
+
                     const success = await handleAcceptOrder(selectedOrder.id);
-                    
+
                     console.log("🟢 ACCEPT RESULT", {
                       orderId: selectedOrder.id,
                       success,
-                      timestamp: new Date().toISOString()
+                      timestamp: new Date().toISOString(),
                     });
-                    
+
                     if (success) {
                       setShowMapModal(false);
                       setSelectedOrder(null);

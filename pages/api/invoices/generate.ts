@@ -566,7 +566,9 @@ export default async function handler(
       deliveryPostalCode: order.Address?.postal_code || "",
       deliveryPlaceDetails: order.Address?.placeDetails || null,
       deliveryAddress: order.Address
-        ? `${order.Address.street || ""}, ${order.Address.city || ""}${order.Address.postal_code ? `, ${order.Address.postal_code}` : ""}`
+        ? `${order.Address.street || ""}, ${order.Address.city || ""}${
+            order.Address.postal_code ? `, ${order.Address.postal_code}` : ""
+          }`
         : "",
       dateCreated: new Date(order.created_at).toLocaleString(),
       dateCompleted: new Date(order.updated_at).toLocaleString(),

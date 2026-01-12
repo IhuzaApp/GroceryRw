@@ -419,93 +419,93 @@ export default function ShopperDashboard() {
         if (!exists) {
           const orderCreatedAt = new Date(order.createdAt);
           const newOrder = {
-              id: order.id,
-              shopName: order.shopName || "Unknown Shop",
-              shopAddress: order.shopAddress || "No address available",
-              customerAddress: order.customerAddress || "No address available",
-              distance: `${order.distance} km`,
-              items: order.itemsCount || 0,
-              total: (order.earnings || 0).toString(),
-              estimatedEarnings: (order.earnings || 0).toString(),
-              createdAt: relativeTime(order.createdAt),
-              status: order.status || "PENDING",
-              rawDistance:
-                typeof order.distance === "number"
-                  ? order.distance
-                  : parseFloat(order.distance) || 0,
-              rawEarnings:
-                typeof order.earnings === "number"
-                  ? order.earnings
-                  : parseFloat(order.earnings) || 0,
-              rawCreatedAt: orderCreatedAt.getTime(),
-              minutesAgo: Math.floor(
-                (Date.now() - orderCreatedAt.getTime()) / 60000
-              ),
-              priorityLevel: order.priorityLevel || 1,
-              shopLatitude: order.shopLatitude,
-              shopLongitude: order.shopLongitude,
-              customerLatitude: order.customerLatitude,
-              customerLongitude: order.customerLongitude,
-              travelTimeMinutes: order.travelTimeMinutes,
-              orderType: order.orderType || "regular",
-              reel: order.reel,
-              quantity: order.quantity,
-              deliveryNote: order.deliveryNote,
-              customerName: order.customerName,
-              customerPhone: order.customerPhone,
-            };
-            return [newOrder, ...prev];
-          }
-          return prev;
-        });
+            id: order.id,
+            shopName: order.shopName || "Unknown Shop",
+            shopAddress: order.shopAddress || "No address available",
+            customerAddress: order.customerAddress || "No address available",
+            distance: `${order.distance} km`,
+            items: order.itemsCount || 0,
+            total: (order.earnings || 0).toString(),
+            estimatedEarnings: (order.earnings || 0).toString(),
+            createdAt: relativeTime(order.createdAt),
+            status: order.status || "PENDING",
+            rawDistance:
+              typeof order.distance === "number"
+                ? order.distance
+                : parseFloat(order.distance) || 0,
+            rawEarnings:
+              typeof order.earnings === "number"
+                ? order.earnings
+                : parseFloat(order.earnings) || 0,
+            rawCreatedAt: orderCreatedAt.getTime(),
+            minutesAgo: Math.floor(
+              (Date.now() - orderCreatedAt.getTime()) / 60000
+            ),
+            priorityLevel: order.priorityLevel || 1,
+            shopLatitude: order.shopLatitude,
+            shopLongitude: order.shopLongitude,
+            customerLatitude: order.customerLatitude,
+            customerLongitude: order.customerLongitude,
+            travelTimeMinutes: order.travelTimeMinutes,
+            orderType: order.orderType || "regular",
+            reel: order.reel,
+            quantity: order.quantity,
+            deliveryNote: order.deliveryNote,
+            customerName: order.customerName,
+            customerPhone: order.customerPhone,
+          };
+          return [newOrder, ...prev];
+        }
+        return prev;
+      });
 
-        // Update sorted orders
-        setSortedOrders((prev) => {
-          const exists = prev.some(
-            (existingOrder) => existingOrder.id === order.id
-          );
-          if (!exists) {
-            const orderCreatedAt = new Date(order.createdAt);
-            const newOrder = {
-              id: order.id,
-              shopName: order.shopName || "Unknown Shop",
-              shopAddress: order.shopAddress || "No address available",
-              customerAddress: order.customerAddress || "No address available",
-              distance: `${order.distance} km`,
-              items: order.itemsCount || 0,
-              total: (order.earnings || 0).toString(),
-              estimatedEarnings: (order.earnings || 0).toString(),
-              createdAt: relativeTime(order.createdAt),
-              status: order.status || "PENDING",
-              rawDistance:
-                typeof order.distance === "number"
-                  ? order.distance
-                  : parseFloat(order.distance) || 0,
-              rawEarnings:
-                typeof order.earnings === "number"
-                  ? order.earnings
-                  : parseFloat(order.earnings) || 0,
-              rawCreatedAt: orderCreatedAt.getTime(),
-              minutesAgo: Math.floor(
-                (Date.now() - orderCreatedAt.getTime()) / 60000
-              ),
-              priorityLevel: order.priorityLevel || 1,
-              shopLatitude: order.shopLatitude,
-              shopLongitude: order.shopLongitude,
-              customerLatitude: order.customerLatitude,
-              customerLongitude: order.customerLongitude,
-              travelTimeMinutes: order.travelTimeMinutes,
-              orderType: order.orderType || "regular",
-              reel: order.reel,
-              quantity: order.quantity,
-              deliveryNote: order.deliveryNote,
-              customerName: order.customerName,
-              customerPhone: order.customerPhone,
-            };
-            return sortOrders([newOrder, ...prev], sortBy);
-          }
-          return prev;
-        });
+      // Update sorted orders
+      setSortedOrders((prev) => {
+        const exists = prev.some(
+          (existingOrder) => existingOrder.id === order.id
+        );
+        if (!exists) {
+          const orderCreatedAt = new Date(order.createdAt);
+          const newOrder = {
+            id: order.id,
+            shopName: order.shopName || "Unknown Shop",
+            shopAddress: order.shopAddress || "No address available",
+            customerAddress: order.customerAddress || "No address available",
+            distance: `${order.distance} km`,
+            items: order.itemsCount || 0,
+            total: (order.earnings || 0).toString(),
+            estimatedEarnings: (order.earnings || 0).toString(),
+            createdAt: relativeTime(order.createdAt),
+            status: order.status || "PENDING",
+            rawDistance:
+              typeof order.distance === "number"
+                ? order.distance
+                : parseFloat(order.distance) || 0,
+            rawEarnings:
+              typeof order.earnings === "number"
+                ? order.earnings
+                : parseFloat(order.earnings) || 0,
+            rawCreatedAt: orderCreatedAt.getTime(),
+            minutesAgo: Math.floor(
+              (Date.now() - orderCreatedAt.getTime()) / 60000
+            ),
+            priorityLevel: order.priorityLevel || 1,
+            shopLatitude: order.shopLatitude,
+            shopLongitude: order.shopLongitude,
+            customerLatitude: order.customerLatitude,
+            customerLongitude: order.customerLongitude,
+            travelTimeMinutes: order.travelTimeMinutes,
+            orderType: order.orderType || "regular",
+            reel: order.reel,
+            quantity: order.quantity,
+            deliveryNote: order.deliveryNote,
+            customerName: order.customerName,
+            customerPhone: order.customerPhone,
+          };
+          return sortOrders([newOrder, ...prev], sortBy);
+        }
+        return prev;
+      });
     };
 
     const handleWebSocketOrderExpired = (event: Event) => {
@@ -660,7 +660,7 @@ export default function ShopperDashboard() {
         />
 
         {/* Today's Completed Orders Section */}
-        <TodayCompletedOrders 
+        <TodayCompletedOrders
           isMobile={isMobile}
           isExpanded={isExpanded}
           toggleExpanded={toggleExpanded}
