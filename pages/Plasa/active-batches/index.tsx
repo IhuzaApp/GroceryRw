@@ -1,6 +1,6 @@
 import React from "react";
 import ShopperLayout from "@components/shopper/ShopperLayout";
-import ActiveBatches from "@components/shopper/activeBatchesCard";
+import ActiveBatches from "@components/shopper/activebatches/activeBatchesCard";
 import { AuthGuard } from "../../../src/components/AuthGuard";
 import { GetServerSideProps } from "next";
 import { getServerSession } from "next-auth/next";
