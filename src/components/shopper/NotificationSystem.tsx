@@ -88,6 +88,8 @@ export default function NotificationSystem({
   const lastOrderIds = useRef<Set<string>>(new Set());
   const activeToasts = useRef<Map<string, any>>(new Map()); // Track active toasts by order ID
   const isCheckingOrders = useRef<boolean>(false); // Prevent concurrent API calls
+  const declinedOrders = useRef<Map<string, number>>(new Map()); // Track declined orders with timestamp
+  const lastDeclineTime = useRef<number>(0); // Track when user last declined an order
 
   // FCM integration
   const { isInitialized, hasPermission } = useFCMNotifications();
@@ -96,6 +98,11 @@ export default function NotificationSystem({
   useEffect(() => {
     const handleFCMNewOrder = (event: CustomEvent) => {
       const { order } = event.detail;
+
+      // Check if order was declined
+      if (declinedOrders.current.has(order.id)) {
+        return;
+      }
 
       // Convert to Order format and show notification
       const orderForNotification: Order = {
@@ -125,6 +132,11 @@ export default function NotificationSystem({
 
       // Show notifications for each order
       orders.forEach((order: any) => {
+        // Check if order was declined
+        if (declinedOrders.current.has(order.id)) {
+          return;
+        }
+
         const orderForNotification: Order = {
           id: order.id,
           shopName: order.shopName,
@@ -703,6 +715,12 @@ export default function NotificationSystem({
     // Set flag to prevent concurrent calls
     isCheckingOrders.current = true;
 
+    // Check if user just declined an order (10-second cooldown)
+    if (currentTime - lastDeclineTime.current < 10000) {
+      isCheckingOrders.current = false;
+      return;
+    }
+
     // Check if we should skip this check (25-second cooldown to prevent spam)
     if (currentTime - lastNotificationTime.current < 25000) {
       isCheckingOrders.current = false; // Reset flag when skipping
@@ -765,13 +783,23 @@ export default function NotificationSystem({
           }
         );
 
+        // Clean up expired declined orders
+        for (const [orderId, expiresAt] of declinedOrders.current.entries()) {
+          if (expiresAt <= currentTime) {
+            declinedOrders.current.delete(orderId);
+          }
+        }
+
         // Check if user already has an active order review
         const currentUserAssignment = batchAssignments.current.find(
           (assignment) => assignment.shopperId === session.user.id
         );
 
-        if (!currentUserAssignment) {
-          const order = data.order;
+        // Check if this order was declined
+        const order = data.order;
+        const wasDeclined = declinedOrders.current.has(order.id);
+
+        if (!currentUserAssignment && !wasDeclined) {
           
           // Validate order data before showing notification
           if (!order.itemsCount || order.itemsCount === 0) {
@@ -810,15 +838,6 @@ export default function NotificationSystem({
             customerLatitude: order.customerLatitude,
             customerLongitude: order.customerLongitude,
           };
-
-          console.log("📍 Showing notification with coordinates:", {
-            orderId: orderForNotification.id,
-            shopName: orderForNotification.shopName,
-            customerLatitude: orderForNotification.customerLatitude,
-            customerLongitude: orderForNotification.customerLongitude,
-            shopLatitude: orderForNotification.shopLatitude,
-            shopLongitude: orderForNotification.shopLongitude,
-          });
 
           await playNotificationSound({ enabled: true, volume: 0.7 });
           showToast(orderForNotification);
@@ -959,8 +978,10 @@ export default function NotificationSystem({
       />
 
       {/* Notification Card */}
-      {showMapModal && selectedOrder && (
-        <div className="fixed inset-x-0 bottom-0 z-50 flex md:justify-end md:px-8 md:pb-6">
+      {showMapModal && selectedOrder ? (
+        <div 
+          key={selectedOrder.id}
+          className="fixed inset-x-0 bottom-0 z-50 flex md:justify-end md:px-8 md:pb-6">
           {/* Bottom Sheet Card */}
           <div className="relative w-full md:max-w-md md:rounded-2xl rounded-t-3xl bg-white shadow-2xl">
             {/* Drag Handle */}
@@ -1139,11 +1160,29 @@ export default function NotificationSystem({
                 {/* Decline Button */}
                 <button
                   onClick={() => {
-                    removeToastForOrder(selectedOrder.id);
+                    // Save order ID before clearing state
+                    const orderId = selectedOrder.id;
+                    
+                    // Add to declined orders list (expires after 5 minutes)
+                    declinedOrders.current.set(orderId, Date.now() + 300000);
+                    
+                    // Set decline cooldown (10 seconds before showing next notification)
+                    lastDeclineTime.current = Date.now();
+                    
+                    // Remove from tracking
+                    removeToastForOrder(orderId);
+                    
                     // Remove from local state
                     batchAssignments.current = batchAssignments.current.filter(
-                      (assignment) => assignment.orderId !== selectedOrder.id
+                      (assignment) => assignment.orderId !== orderId
                     );
+                    
+                    // Close the notification modal
+                    setShowMapModal(false);
+                    setSelectedOrder(null);
+                    
+                    // Notify parent that notification is hidden
+                    onNotificationShow?.(null);
                   }}
                   className="flex-1 rounded-xl bg-red-500 py-4 text-base font-bold text-white shadow-lg transition-all hover:bg-red-600 active:scale-95"
                 >
@@ -1176,7 +1215,7 @@ export default function NotificationSystem({
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </>
   );
 }
