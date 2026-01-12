@@ -402,6 +402,23 @@ export default async function handler(
             parseFloat(bestOrder.delivery_fee || "0"), // Regular and reel orders: service + delivery
       orderType: bestOrder.orderType,
       priority: bestOrder.priority,
+      // Add coordinates for map route display
+      shopLatitude: parseFloat(
+        bestOrder.Shop?.latitude ||
+        bestOrder.Restaurant?.lat ||
+        "0"
+      ),
+      shopLongitude: parseFloat(
+        bestOrder.Shop?.longitude ||
+        bestOrder.Restaurant?.long ||
+        "0"
+      ),
+      customerLatitude: parseFloat(
+        bestOrder.Address?.latitude || bestOrder.address?.latitude || "0"
+      ),
+      customerLongitude: parseFloat(
+        bestOrder.Address?.longitude || bestOrder.address?.longitude || "0"
+      ),
       // Add restaurant-specific fields
       ...(bestOrder.orderType === "restaurant" && {
         restaurant: bestOrder.Restaurant,
