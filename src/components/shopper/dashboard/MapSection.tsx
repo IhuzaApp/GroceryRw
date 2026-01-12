@@ -3027,8 +3027,8 @@ export default function MapSection({
         // Create polyline with green color following roads
         const polyline = L.polyline(routeCoords, {
           color: '#10b981', // green-500
-          weight: 5,
-          opacity: 0.7,
+          weight: 7,
+          opacity: 0.9,
           lineJoin: 'round',
           lineCap: 'round',
         }).addTo(currentMapInstance);
@@ -3109,9 +3109,9 @@ export default function MapSection({
 
         const polyline = L.polyline(fallbackCoords, {
           color: '#10b981',
-          weight: 4,
-          opacity: 0.8,
-          dashArray: '10, 10',
+          weight: 7,
+          opacity: 0.9,
+          dashArray: '12, 8',
         }).addTo(currentMapInstance);
 
         setRoutePolyline(polyline);
