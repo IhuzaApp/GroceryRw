@@ -174,8 +174,8 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
             : "border-gray-200 bg-white"
         }`}
       >
-        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
-          <table className="w-full min-w-[1200px]">
+        <div className="overflow-x-auto">
+          <table className="w-full">
             <thead
               className={`border-b text-left text-xs font-medium uppercase ${
                 theme === "dark"
@@ -184,21 +184,21 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
               }`}
             >
               <tr>
-                <th className="sticky left-0 z-10 w-12 px-4 py-3 lg:px-6 bg-inherit">
+                <th className="w-12 px-6 py-3">
                   <input
                     type="checkbox"
                     className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                 </th>
-                <th className="sticky left-12 z-10 px-4 py-3 lg:px-6 bg-inherit whitespace-nowrap">Order No</th>
-                <th className="px-4 py-3 lg:px-6 whitespace-nowrap">Order Type</th>
-                <th className="px-4 py-3 lg:px-6 whitespace-nowrap">Name</th>
-                <th className="px-4 py-3 lg:px-6 whitespace-nowrap">Distance</th>
-                <th className="px-4 py-3 lg:px-6 whitespace-nowrap">Shop/Store</th>
-                <th className="px-4 py-3 lg:px-6 whitespace-nowrap">Time</th>
-                <th className="px-4 py-3 lg:px-6 whitespace-nowrap">Address</th>
-                <th className="px-4 py-3 lg:px-6 whitespace-nowrap">Status</th>
-                <th className="w-12 px-4 py-3 lg:px-6"></th>
+                <th className="px-6 py-3 whitespace-nowrap">Order No</th>
+                <th className="px-6 py-3 whitespace-nowrap">Order Type</th>
+                <th className="px-6 py-3 whitespace-nowrap">Name</th>
+                <th className="px-6 py-3 whitespace-nowrap">Distance</th>
+                <th className="px-6 py-3 whitespace-nowrap">Shop/Store</th>
+                <th className="px-6 py-3 whitespace-nowrap">Time</th>
+                <th className="px-6 py-3 whitespace-nowrap">Address</th>
+                <th className="px-6 py-3 whitespace-nowrap">Status</th>
+                <th className="w-12 px-6 py-3"></th>
               </tr>
             </thead>
             <tbody
@@ -215,16 +215,16 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
                     : "border-gray-200 hover:bg-gray-50"
                 }`}
               >
-                {/* Checkbox - Sticky */}
-                <td className="sticky left-0 z-10 px-4 py-4 lg:px-6 bg-inherit">
+                {/* Checkbox */}
+                <td className="px-6 py-4">
                   <input
                     type="checkbox"
                     className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                 </td>
 
-                {/* Order Number - Sticky */}
-                <td className="sticky left-12 z-10 px-4 py-4 lg:px-6 font-medium bg-inherit">
+                {/* Order Number */}
+                <td className="px-6 py-4 font-medium">
                   <Link
                     href={`/Plasa/active-batches/batch/${order.id}`}
                     className={`hover:underline whitespace-nowrap ${
@@ -236,10 +236,10 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
                 </td>
 
                 {/* Order Type */}
-                <td className="px-4 py-4 lg:px-6 whitespace-nowrap">{getOrderTypeBadge(order)}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{getOrderTypeBadge(order)}</td>
 
                 {/* Name with Avatar */}
-                <td className="px-4 py-4 lg:px-6">
+                <td className="px-6 py-4">
                   <div className="flex items-center gap-3 whitespace-nowrap">
                     <BatchAvatar name={order.customerName} size="sm" />
                     <span className="font-medium">{order.customerName}</span>
@@ -247,7 +247,7 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
                 </td>
 
                 {/* Distance */}
-                <td className="px-4 py-4 lg:px-6 whitespace-nowrap">
+                <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center gap-1.5">
                     <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -258,29 +258,29 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
                 </td>
 
                 {/* Shop/Store */}
-                <td className="px-4 py-4 lg:px-6">
+                <td className="px-6 py-4">
                   <ClientTag name={order.shopName} />
                 </td>
 
                 {/* Time */}
-                <td className="px-4 py-4 lg:px-6 whitespace-nowrap">
+                <td className="px-6 py-4 whitespace-nowrap">
                   {formatTime(order.deliveryTime)}
                 </td>
 
                 {/* Address */}
-                <td className="px-4 py-4 lg:px-6">
+                <td className="px-6 py-4">
                   <div className="max-w-[200px] truncate" title={order.customerAddress}>
                     {order.customerAddress}
                   </div>
                 </td>
 
                 {/* Status */}
-                <td className="px-4 py-4 lg:px-6 whitespace-nowrap">
+                <td className="px-6 py-4 whitespace-nowrap">
                   <StatusBadge status={order.status} />
                 </td>
 
                 {/* Actions Menu */}
-                <td className="px-4 py-4 lg:px-6">
+                <td className="px-6 py-4">
                   <button
                     className={`rounded p-1 transition-colors ${
                       theme === "dark"

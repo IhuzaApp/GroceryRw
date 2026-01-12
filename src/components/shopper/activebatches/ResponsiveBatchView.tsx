@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useTheme } from "../../../context/ThemeContext";
-import { BatchTableDesktop } from "./BatchTableDesktop";
+import { BatchTable } from "./BatchTable";
 import { BatchCardMobile } from "./BatchCardMobile";
 import { BatchFilters, FilterState } from "./BatchFilters";
 import { BatchTableSkeleton } from "./BatchTableSkeleton";
@@ -158,12 +158,12 @@ export function ResponsiveBatchView({ orders, isLoading = false }: ResponsiveBat
       {/* Actual Content - Only show when not loading */}
       {!isLoading && (
         <>
-          {/* Desktop Table View - Hidden on mobile using CSS */}
+          {/* Desktop Table View - Hidden on mobile */}
           <div className="hidden lg:block">
-            <BatchTableDesktop orders={filteredOrders} />
+            <BatchTable orders={filteredOrders} />
           </div>
 
-          {/* Mobile Card View - Hidden on desktop using CSS */}
+          {/* Mobile Card View - Hidden on desktop */}
           <div className="block lg:hidden">
             <div className="grid grid-cols-1 gap-4 sm:gap-6">
               {filteredOrders.map((order) => (
