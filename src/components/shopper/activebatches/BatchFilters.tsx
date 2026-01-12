@@ -141,8 +141,8 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
 
   return (
     <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-      {/* Left side - Filter buttons */}
-      <div className="flex flex-wrap items-center gap-3">
+      {/* Left side - Filter buttons (Hidden on mobile) */}
+      <div className="hidden sm:flex flex-wrap items-center gap-3">
         {/* Order Type Filter */}
         <div className="relative dropdown-container">
           <button
@@ -593,8 +593,8 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
         </button>
       </div>
 
-      {/* Right side - Search */}
-      <div className="relative flex-1 min-w-[200px] max-w-md">
+      {/* Right side - Search (Full width on mobile) */}
+      <div className="relative flex-1 w-full sm:min-w-[200px] sm:max-w-md">
         <input
           type="text"
           placeholder="Search..."
