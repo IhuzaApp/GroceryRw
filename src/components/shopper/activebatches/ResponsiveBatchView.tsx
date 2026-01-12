@@ -5,6 +5,8 @@ import { useTheme } from "../../../context/ThemeContext";
 import { BatchTableDesktop } from "./BatchTableDesktop";
 import { BatchCardMobile } from "./BatchCardMobile";
 import { BatchFilters, FilterState } from "./BatchFilters";
+import { BatchTableSkeleton } from "./BatchTableSkeleton";
+import { BatchCardSkeleton } from "./BatchCardSkeleton";
 
 interface Order {
   id: string;
@@ -43,27 +45,13 @@ interface Order {
 
 interface ResponsiveBatchViewProps {
   orders: Order[];
+  isLoading?: boolean;
 }
 
-export function ResponsiveBatchView({ orders }: ResponsiveBatchViewProps) {
+export function ResponsiveBatchView({ orders, isLoading = false }: ResponsiveBatchViewProps) {
   const { theme } = useTheme();
-  const [isMobile, setIsMobile] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [filteredOrders, setFilteredOrders] = useState<Order[]>(orders);
-
-  // Check screen size
-  useEffect(() => {
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 1024); // Use 1024px as breakpoint for table view
-    };
-
-    checkIfMobile();
-    window.addEventListener("resize", checkIfMobile);
-
-    return () => {
-      window.removeEventListener("resize", checkIfMobile);
-    };
-  }, []);
 
   // Update current time every second for real-time countdown
   useEffect(() => {
@@ -150,24 +138,48 @@ export function ResponsiveBatchView({ orders }: ResponsiveBatchViewProps) {
       {/* Filters - Show on both desktop and mobile */}
       <BatchFilters onFilterChange={handleFilterChange} />
 
-      {/* Desktop Table View */}
-      {!isMobile && <BatchTableDesktop orders={filteredOrders} />}
+      {/* Loading Skeletons */}
+      {isLoading && (
+        <>
+          {/* Desktop Skeleton - Hidden on mobile */}
+          <div className="hidden lg:block">
+            <BatchTableSkeleton rows={25} />
+          </div>
 
-      {/* Mobile Card View */}
-      {isMobile && (
-        <div className="grid grid-cols-1 gap-4 sm:gap-6">
-          {filteredOrders.map((order) => (
-            <BatchCardMobile
-              key={order.id}
-              order={order}
-              currentTime={currentTime}
-            />
-          ))}
-        </div>
+          {/* Mobile Skeleton - Hidden on desktop */}
+          <div className="block lg:hidden">
+            <div className="grid grid-cols-1 gap-4 sm:gap-6">
+              <BatchCardSkeleton count={6} />
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Actual Content - Only show when not loading */}
+      {!isLoading && (
+        <>
+          {/* Desktop Table View - Hidden on mobile using CSS */}
+          <div className="hidden lg:block">
+            <BatchTableDesktop orders={filteredOrders} />
+          </div>
+
+          {/* Mobile Card View - Hidden on desktop using CSS */}
+          <div className="block lg:hidden">
+            <div className="grid grid-cols-1 gap-4 sm:gap-6">
+              {filteredOrders.map((order) => (
+                <BatchCardMobile
+                  key={order.id}
+                  order={order}
+                  currentTime={currentTime}
+                />
+              ))}
+            </div>
+          </div>
+        </>
       )}
 
       {/* Empty State */}
-      {filteredOrders.length === 0 && (
+      {!isLoading && filteredOrders.length === 0 && (
         <div
           className={`rounded-xl border p-8 text-center ${
             theme === "dark"
