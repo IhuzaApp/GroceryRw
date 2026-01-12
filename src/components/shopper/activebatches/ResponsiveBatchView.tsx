@@ -108,7 +108,7 @@ export function ResponsiveBatchView({ orders, isLoading = false }: ResponsiveBat
       const searchLower = filters.search.toLowerCase();
       filtered = filtered.filter(
         (order) =>
-          order.OrderID.toLowerCase().includes(searchLower) ||
+          order.OrderID.toString().toLowerCase().includes(searchLower) ||
           order.customerName.toLowerCase().includes(searchLower) ||
           order.shopName.toLowerCase().includes(searchLower) ||
           order.customerAddress.toLowerCase().includes(searchLower)
