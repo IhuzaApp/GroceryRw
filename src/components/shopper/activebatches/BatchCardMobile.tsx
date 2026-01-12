@@ -204,18 +204,14 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
           </div>
         )}
 
+        {/* Status Badge */}
+        <StatusBadge status={order.status} />
+
         {order.deliveryTime && !isReelOrder && !isRestaurantOrder && (() => {
           const countdown = getDeliveryCountdown(order.deliveryTime);
+          if (!countdown.isOverdue) return null; // Only show if overdue
           return (
-            <div
-              className={`flex items-center gap-1 rounded-full px-3 py-1 text-center text-xs font-bold shadow-md ${
-                countdown.isOverdue
-                  ? "bg-gradient-to-r from-red-600 to-rose-600 text-white"
-                  : countdown.totalMinutes <= 30
-                  ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white"
-                  : "bg-gradient-to-r from-sky-600 to-blue-600 text-white"
-              }`}
-            >
+            <div className="flex items-center gap-1 rounded-full bg-gradient-to-r from-red-600 to-rose-600 px-3 py-1 text-center text-xs font-bold text-white shadow-md">
               <svg
                 className="h-3 w-3"
                 fill="none"
@@ -229,13 +225,7 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
                   d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              {countdown.isOverdue
-                ? "OVERDUE"
-                : countdown.totalMinutes <= 30
-                ? `${countdown.totalMinutes}m`
-                : countdown.hours > 0
-                ? `${countdown.hours}h ${countdown.minutes}m`
-                : `${countdown.minutes}m`}
+              OVERDUE
             </div>
           );
         })()}
@@ -321,84 +311,6 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
             >
               Earnings
             </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Status */}
-      <div className="mb-4">
-        <StatusBadge status={order.status} />
-      </div>
-
-      {/* Location Information */}
-      <div className="mb-4 space-y-3">
-        <div
-          className={`rounded-lg border p-3 ${
-            theme === "dark"
-              ? "border-blue-600 bg-blue-900/20"
-              : "border-blue-200 bg-blue-50"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <svg
-              className={`h-4 w-4 ${
-                theme === "dark" ? "text-blue-400" : "text-blue-600"
-              }`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-              />
-            </svg>
-            <div className="flex-1">
-              <p
-                className={`text-xs font-bold ${
-                  theme === "dark" ? "text-gray-100" : "text-gray-800"
-                }`}
-              >
-                {order.shopName}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div
-          className={`rounded-lg border p-3 ${
-            theme === "dark"
-              ? "border-green-600 bg-green-900/20"
-              : "border-green-200 bg-green-50"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <svg
-              className={`h-4 w-4 ${
-                theme === "dark" ? "text-green-400" : "text-green-600"
-              }`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-              />
-            </svg>
-            <div className="flex-1">
-              <p
-                className={`text-xs ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
-                {order.customerName}, {order.customerAddress}
-              </p>
-            </div>
           </div>
         </div>
       </div>
