@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import ShopperHeader from "@components/shopper/ShopperHeader";
 import ShopperSidebar from "@components/shopper/ShopperSidebar";
 import NotificationSystem from "@components/shopper/NotificationSystem";
+import FCMStatusIndicator from "@components/shopper/FCMStatusIndicator";
 import { useSession } from "next-auth/react";
 import { useTheme } from "@context/ThemeContext";
 import { logger } from "../../utils/logger";
@@ -269,6 +270,9 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
         onNewOrder={handleNewOrder}
         onAcceptBatch={handleAcceptBatch}
       />
+
+      {/* FCM Status Indicator (only shows in development) */}
+      <FCMStatusIndicator />
     </div>
   );
 }

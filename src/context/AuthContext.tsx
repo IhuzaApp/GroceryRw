@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
-import { useSession, signOut } from "next-auth/react";
+import { useSession, signOut, getSession } from "next-auth/react";
 import { refreshSession } from "../lib/sessionRefresh";
+import apolloClient from "../lib/apolloClient";
 // import { logAuthState, logAuth, logSessionRefresh, logRoleSwitch } from "../lib/debugAuth";
 
 interface User {
@@ -136,6 +137,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     // });
 
     try {
+      // First, clear Apollo Client cache
+      try {
+        await apolloClient.clearStore();
+        await apolloClient.resetStore();
+      } catch (apolloError) {
+        console.error("Error clearing Apollo cache:", apolloError);
+      }
+
       // Clear all localStorage data
       const localStorageKeys = Object.keys(localStorage);
       localStorage.clear();
@@ -150,24 +159,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       //   keys: sessionStorageKeys,
       // });
 
-      // Clear NextAuth cookies manually
+      // Clear NextAuth cookies manually - comprehensive approach
       const cookiesBefore = document.cookie.split(";").map((c) => c.trim());
+      const cookieNames = [
+        "next-auth.session-token",
+        "next-auth.callback-url",
+        "next-auth.csrf-token",
+        "__Secure-next-auth.session-token",
+        "__Host-next-auth.csrf-token",
+        "__Host-next-auth.callback-url",
+      ];
+
+      // Clear known NextAuth cookies
+      cookieNames.forEach((name) => {
+        // Clear for current path
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+        // Clear for domain
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`;
+        // Clear for subdomain
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.${window.location.hostname}`;
+        // Clear with Secure flag
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;Secure;SameSite=Lax`;
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;Secure;SameSite=None`;
+      });
+
+      // Clear all other cookies
       document.cookie.split(";").forEach((c) => {
         const eqPos = c.indexOf("=");
-        const name = eqPos > -1 ? c.substr(0, eqPos) : c;
-        document.cookie = `${name.trim()}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-        document.cookie = `${name.trim()}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${
-          window.location.hostname
-        }`;
-        document.cookie = `${name.trim()}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.${
-          window.location.hostname
-        }`;
+        const name = eqPos > -1 ? c.substr(0, eqPos).trim() : c.trim();
+        if (name) {
+          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`;
+          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.${window.location.hostname}`;
+        }
       });
       // logAuth("AuthContext", "cookies_cleared", {
       //   cookiesBefore,
       //   cookiesAfter: document.cookie.split(";").map((c) => c.trim()),
       // });
 
+      // Clear local state FIRST
       setIsLoggedIn(false);
       setUser(null);
       setRole("user");
@@ -179,7 +210,81 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       //   timestamp: Date.now(),
       // });
 
-      await signOut({ redirect: true });
+      // Call the logout API to clear server-side session
+      try {
+        const logoutResponse = await fetch("/api/logout", {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!logoutResponse.ok) {
+          console.error("Logout API returned error:", logoutResponse.status);
+        }
+      } catch (apiError) {
+        console.error("Error calling logout API:", apiError);
+      }
+
+      // Sign out from NextAuth - this is critical for clearing the session
+      try {
+        // First, clear the session from NextAuth
+        await signOut({
+          redirect: false,
+          callbackUrl: "/",
+        });
+
+        // Verify session is cleared by checking it
+        const clearedSession = await getSession();
+        if (clearedSession) {
+          console.warn("Session still exists after signOut, forcing clear...");
+          // If session still exists, try signing out again
+          await signOut({ redirect: false });
+        }
+      } catch (signOutError) {
+        console.error("Error signing out from NextAuth:", signOutError);
+      }
+
+      // Wait a bit to ensure all async operations complete
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // Force a hard reload to ensure everything is cleared and redirect
+      // Use window.location.replace to prevent back button issues
+      if (typeof window !== "undefined") {
+        // Clear any remaining cookies one more time - be more aggressive
+        const allCookies = document.cookie.split(";");
+        allCookies.forEach((c) => {
+          const eqPos = c.indexOf("=");
+          const name = eqPos > -1 ? c.substr(0, eqPos).trim() : c.trim();
+          if (name) {
+            // Clear with all possible variations
+            const basePath = `expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+            document.cookie = `${name}=;${basePath}`;
+            document.cookie = `${name}=;${basePath};domain=${window.location.hostname}`;
+            document.cookie = `${name}=;${basePath};domain=.${window.location.hostname}`;
+            document.cookie = `${name}=;${basePath};Secure;SameSite=Lax`;
+            document.cookie = `${name}=;${basePath};Secure;SameSite=None`;
+            document.cookie = `${name}=;${basePath};Secure;SameSite=Strict`;
+          }
+        });
+
+        // Clear IndexedDB if used by NextAuth
+        if ("indexedDB" in window) {
+          try {
+            const deleteReq = indexedDB.deleteDatabase("next-auth");
+            deleteReq.onsuccess = () => {
+              console.log("NextAuth IndexedDB cleared");
+            };
+          } catch (e) {
+            // Ignore IndexedDB errors
+          }
+        }
+
+        // Use replace instead of href to prevent back button from going to logged-in state
+        // Redirect to home page
+        window.location.replace("/");
+      }
 
       // logAuth("AuthContext", "logout_completed", {
       //   signOutCalled: true,
@@ -192,6 +297,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       //   timestamp: Date.now(),
       // });
       console.error("Logout error:", error);
+      // Even if there's an error, try to redirect to home
+      if (typeof window !== "undefined") {
+        window.location.replace("/");
+      }
     }
   };
 

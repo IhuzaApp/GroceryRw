@@ -1,6 +1,7 @@
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getMessaging } from "firebase-admin/messaging";
 import { getFirestore } from "firebase-admin/firestore";
+import { formatCurrency } from "../lib/formatCurrency";
 
 // Check if Firebase credentials are available
 const hasFirebaseCredentials = () => {
@@ -298,7 +299,136 @@ export const sendChatNotification = async (
 
     await sendNotificationToUser(recipientId, payload);
   } catch (error) {
-    console.error("❌ [FCM Service] Error sending chat notification:", error);
+    console.error("Error sending chat notification:", error);
     throw error;
+  }
+};
+
+/**
+ * Send new order notification to a shopper
+ */
+export const sendNewOrderNotification = async (
+  shopperId: string,
+  orderData: {
+    id: string;
+    shopName: string;
+    distance: number;
+    travelTimeMinutes: number;
+    estimatedEarnings: number;
+    orderType: string;
+    customerAddress: string;
+  }
+): Promise<void> => {
+  try {
+    if (!messaging) {
+      console.warn(
+        "⚠️ [FCM Service] Firebase not initialized. Skipping order notification."
+      );
+      return;
+    }
+
+    const payload: NotificationPayload = {
+      title: `New ${orderData.orderType} batch available!`,
+      body: `From ${orderData.shopName} - ${formatCurrency(
+        orderData.estimatedEarnings
+      )} • ${orderData.distance.toFixed(1)}km away`,
+      data: {
+        type: "new_order",
+        orderId: orderData.id,
+        orderType: orderData.orderType,
+        shopName: orderData.shopName,
+        distance: orderData.distance.toString(),
+        travelTimeMinutes: orderData.travelTimeMinutes.toString(),
+        estimatedEarnings: orderData.estimatedEarnings.toString(),
+        customerAddress: orderData.customerAddress,
+        expiresIn: "90000", // 90 seconds (1 minute 30 seconds)
+        timestamp: Date.now().toString(),
+      },
+    };
+
+    await sendNotificationToUser(shopperId, payload);
+  } catch (error) {
+    console.error("Error sending order notification:", error);
+    throw error;
+  }
+};
+
+/**
+ * Send batch orders notification to multiple shoppers
+ */
+export const sendBatchOrdersNotification = async (
+  shopperIds: string[],
+  ordersData: Array<{
+    id: string;
+    shopName: string;
+    distance: number;
+    estimatedEarnings: number;
+    orderType: string;
+  }>
+): Promise<void> => {
+  try {
+    if (!messaging) {
+      console.warn(
+        "⚠️ [FCM Service] Firebase not initialized. Skipping batch notification."
+      );
+      return;
+    }
+
+    const totalOrders = ordersData.length;
+    const totalEarnings = ordersData.reduce(
+      (sum, order) => sum + order.estimatedEarnings,
+      0
+    );
+
+    const payload: NotificationPayload = {
+      title: `${totalOrders} new batch in your area!`,
+      body: `Potential earnings: ${formatCurrency(totalEarnings)}`,
+      data: {
+        type: "batch_orders",
+        orderCount: totalOrders.toString(),
+        totalEarnings: totalEarnings.toString(),
+        orders: JSON.stringify(ordersData),
+        expiresIn: "90000", // 90 seconds (1 minute 30 seconds)
+        timestamp: Date.now().toString(),
+      },
+    };
+
+    await sendNotificationToUsers(shopperIds, payload);
+  } catch (error) {
+    console.error("Error sending batch notification:", error);
+    throw error;
+  }
+};
+
+/**
+ * Send order expiration notification
+ */
+export const sendOrderExpiredNotification = async (
+  shopperId: string,
+  orderId: string,
+  reason: string = "timeout"
+): Promise<void> => {
+  try {
+    if (!messaging) {
+      console.warn(
+        "⚠️ [FCM Service] Firebase not initialized. Skipping expiration notification."
+      );
+      return;
+    }
+
+    const payload: NotificationPayload = {
+      title: "Order expired",
+      body: "The order you were viewing is no longer available",
+      data: {
+        type: "order_expired",
+        orderId,
+        reason,
+        timestamp: Date.now().toString(),
+      },
+    };
+
+    await sendNotificationToUser(shopperId, payload);
+  } catch (error) {
+    // Silent fail for expiration notifications
   }
 };

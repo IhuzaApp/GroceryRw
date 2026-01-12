@@ -29,12 +29,13 @@ import { ProductsBidsSection } from "../../src/components/business/ProductsBidsS
 import { RFQOpportunitiesSection } from "../../src/components/business/RFQOpportunitiesSection";
 import { CreateRFQForm } from "../../src/components/business/CreateRFQForm";
 import { ContractsManagement } from "../../src/components/business/ContractsManagement";
-import PlasBusinessOnboarding from "../../src/components/business/PlasBusinessOnboarding";
+import PlasBusinessExplorer from "../../src/components/business/PlasBusinessExplorer";
 import { BusinessOverview } from "../../src/components/business/BusinessOverview";
 import { ServicesSection } from "../../src/components/business/ServicesSection";
 import { StoresSection } from "../../src/components/business/StoresSection";
 import BusinessChatDrawer from "../../src/components/business/BusinessChatDrawer";
 import { MobilePlasBusinessPage } from "../../src/components/business/mobile/MobilePlasBusinessPage";
+import { ContractDetailDrawer } from "../../src/components/business/ContractDetailDrawer";
 import toast from "react-hot-toast";
 
 // Data moved to individual components
@@ -107,10 +108,52 @@ export default function PlasBusinessPage() {
   if (!authReady || checkingAccount) {
     return (
       <RootLayout>
-        <div className="flex h-screen w-full items-center justify-center">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="h-16 w-16 animate-spin rounded-full border-b-4 border-t-4 border-green-800"></div>
-            <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+        <div className="min-h-screen via-white to-gray-100 dark:from-gray-900 md:ml-16">
+          <div className="max-w-8xl container mx-auto space-y-8 p-6">
+            {/* Header Skeleton */}
+            <div className="animate-pulse space-y-4">
+              <div className="h-12 w-64 rounded-xl bg-gray-200 dark:bg-gray-700"></div>
+              <div className="h-6 w-96 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+            </div>
+
+            {/* Stats Cards Skeleton */}
+            <div className="hidden md:grid md:grid-cols-4 md:gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="animate-pulse rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
+                >
+                  <div className="mb-4 h-4 w-24 rounded bg-gray-200 dark:bg-gray-700"></div>
+                  <div className="mb-2 h-8 w-32 rounded bg-gray-200 dark:bg-gray-700"></div>
+                  <div className="h-3 w-20 rounded bg-gray-200 dark:bg-gray-700"></div>
+                </div>
+              ))}
+            </div>
+
+            {/* Tabs Skeleton */}
+            <div className="animate-pulse rounded-xl border border-gray-100 bg-white p-2 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div
+                    key={i}
+                    className="h-10 w-24 rounded-lg bg-gray-200 dark:bg-gray-700"
+                  ></div>
+                ))}
+              </div>
+            </div>
+
+            {/* Content Skeleton */}
+            <div className="animate-pulse space-y-4 rounded-xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+              <div className="space-y-3">
+                <div className="h-6 w-48 rounded bg-gray-200 dark:bg-gray-700"></div>
+                <div className="h-4 w-full rounded bg-gray-200 dark:bg-gray-700"></div>
+                <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700"></div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="h-32 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                  <div className="h-32 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </RootLayout>
@@ -131,11 +174,11 @@ export default function PlasBusinessPage() {
     );
   }
 
-  // Desktop view - show onboarding if user doesn't have business account
+  // Desktop view - show explorer if user doesn't have business account
   if (!hasBusinessAccount) {
     return (
       <RootLayout>
-        <PlasBusinessOnboarding onAccountCreated={handleAccountCreated} />
+        <PlasBusinessExplorer onAccountCreated={handleAccountCreated} />
       </RootLayout>
     );
   }
@@ -197,6 +240,10 @@ function BuyerDashboardContent({
   // Service provider status should come from user data/API
   // For now, only business accounts can be service providers
   const [isServiceProvider, setIsServiceProvider] = useState(isBusinessAccount);
+  const [selectedContractId, setSelectedContractId] = useState<string | null>(
+    null
+  );
+  const [isContractDrawerOpen, setIsContractDrawerOpen] = useState(false);
 
   useEffect(() => {
     // Only business accounts can be service providers
@@ -238,6 +285,8 @@ function BuyerDashboardContent({
   };
 
   const handleViewContract = (contractId: string) => {
+    setSelectedContractId(contractId);
+    setIsContractDrawerOpen(true);
     // Handle view contract logic
   };
 
@@ -465,6 +514,20 @@ function BuyerDashboardContent({
       <BusinessChatDrawer
         isOpen={isChatDrawerOpen}
         onClose={() => setIsChatDrawerOpen(false)}
+      />
+
+      {/* Contract Detail Drawer */}
+      <ContractDetailDrawer
+        isOpen={isContractDrawerOpen}
+        onClose={() => {
+          setIsContractDrawerOpen(false);
+          setSelectedContractId(null);
+        }}
+        contractId={selectedContractId}
+        onContractUpdated={() => {
+          // Refresh contracts if needed
+          window.location.reload();
+        }}
       />
     </div>
   );

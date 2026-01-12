@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import { Input, InputGroup, Modal } from "rsuite";
+import { useRouter } from "next/router";
 import { useCart } from "../../../context/CartContext";
 import AddressManagementModal from "../../userProfile/AddressManagementModal";
 import Cookies from "js-cookie";
@@ -17,10 +18,14 @@ import {
 import { db } from "../../../lib/firebase";
 import SearchBar from "../SearchBar/SearchBar";
 import { authenticatedFetch } from "../../../lib/authenticatedFetch";
+import { useAuth } from "../../../hooks/useAuth";
+import GuestUpgradeModal from "../GuestUpgradeModal";
 
 export default function HeaderLayout() {
+  const router = useRouter();
   const { count } = useCart();
   const { data: session } = useSession();
+  const { isGuest } = useAuth();
   const { theme, setTheme } = useTheme();
   const [defaultAddress, setDefaultAddress] = useState<{
     street: string;
@@ -32,15 +37,13 @@ export default function HeaderLayout() {
   } | null>(null);
   const [showAddressModal, setShowAddressModal] = useState<boolean>(false);
   const [unreadMessages, setUnreadMessages] = useState<number>(0);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   useEffect(() => {
-    // Only fetch addresses if user is authenticated
-    if (!session?.user?.id) {
-      return;
-    }
-
-    // Try loading the delivery address from cookie first
+    // Try loading the delivery address from cookie first (works for both logged in and guest users)
     const saved = Cookies.get("delivery_address");
+    const tempAddress = Cookies.get("temp_address");
+
     if (saved) {
       try {
         const parsedAddress = JSON.parse(saved);
@@ -59,11 +62,32 @@ export default function HeaderLayout() {
           setDefaultAddress(parsedAddress);
         }
       } catch {}
-    } else {
-      // Fall back to default address from API
+    } else if (tempAddress) {
+      // For guest users with temp address, create address object
+      const lat = Cookies.get("user_latitude");
+      const lng = Cookies.get("user_longitude");
+      setDefaultAddress({
+        street: tempAddress,
+        city: "",
+        postal_code: "",
+        latitude: lat || "",
+        longitude: lng || "",
+      });
+    } else if (session?.user?.id) {
+      // Only fetch addresses from API if user is authenticated and no cookie exists
       authenticatedFetch("/api/queries/addresses")
-        .then((res) => res.json())
+        .then((res) => {
+          if (res.ok) {
+            return res.json();
+          }
+          // Silently handle 401 errors (not authenticated)
+          if (res.status === 401) {
+            return null;
+          }
+          throw new Error(`Failed to fetch addresses: ${res.status}`);
+        })
         .then((data) => {
+          if (!data) return;
           const def = (data.addresses || []).find((a: any) => a.is_default);
           setDefaultAddress(def || null);
           if (def) {
@@ -71,13 +95,18 @@ export default function HeaderLayout() {
             window.dispatchEvent(new Event("addressChanged"));
           }
         })
-        .catch((err) =>
-          console.error("Error fetching addresses in header:", err)
-        );
+        .catch((err) => {
+          // Only log non-401 errors
+          if (!err.message?.includes("401")) {
+            console.error("Error fetching addresses in header:", err);
+          }
+        });
     }
     // Listen for address changes and update
     const handleAddrChange = () => {
       const updated = Cookies.get("delivery_address");
+      const tempAddr = Cookies.get("temp_address");
+
       if (updated) {
         try {
           const parsedAddress = JSON.parse(updated);
@@ -96,17 +125,41 @@ export default function HeaderLayout() {
             setDefaultAddress(parsedAddress);
           }
         } catch {}
-      } else {
-        // If no cookie, try to fetch default address from API
+      } else if (tempAddr) {
+        // For guest users with temp address
+        const lat = Cookies.get("user_latitude");
+        const lng = Cookies.get("user_longitude");
+        setDefaultAddress({
+          street: tempAddr,
+          city: "",
+          postal_code: "",
+          latitude: lat || "",
+          longitude: lng || "",
+        });
+      } else if (session?.user?.id) {
+        // If no cookie, try to fetch default address from API (only for authenticated users)
         fetch("/api/queries/addresses")
-          .then((res) => res.json())
+          .then((res) => {
+            if (res.ok) {
+              return res.json();
+            }
+            // Silently handle 401 errors (not authenticated)
+            if (res.status === 401) {
+              return null;
+            }
+            throw new Error(`Failed to fetch addresses: ${res.status}`);
+          })
           .then((data) => {
+            if (!data) return;
             const def = (data.addresses || []).find((a: any) => a.is_default);
             setDefaultAddress(def || null);
           })
-          .catch((err) =>
-            console.error("Error fetching addresses in header:", err)
-          );
+          .catch((err) => {
+            // Only log non-401 errors
+            if (!err.message?.includes("401")) {
+              console.error("Error fetching addresses in header:", err);
+            }
+          });
       }
     };
     window.addEventListener("addressChanged", handleAddrChange);
@@ -152,15 +205,30 @@ export default function HeaderLayout() {
         <div className="flex items-center justify-between gap-4 px-2 sm:px-4">
           {/* Left section (address + icon) - Desktop only */}
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center">
-              <Image
-                src="/assets/logos/PlasIcon.png"
-                alt="Plas Logo"
-                width={32}
-                height={32}
-                className="h-8 w-8"
-              />
-            </div>
+            {!session?.user ? (
+              <Link
+                href="/"
+                className="flex h-8 w-8 cursor-pointer items-center justify-center transition-opacity hover:opacity-80"
+              >
+                <Image
+                  src="/assets/logos/PlasIcon.png"
+                  alt="Plas Logo"
+                  width={32}
+                  height={32}
+                  className="h-8 w-8"
+                />
+              </Link>
+            ) : (
+              <div className="flex h-8 w-8 items-center justify-center">
+                <Image
+                  src="/assets/logos/PlasIcon.png"
+                  alt="Plas Logo"
+                  width={32}
+                  height={32}
+                  className="h-8 w-8"
+                />
+              </div>
+            )}
             <div>
               <h6 className="font-medium text-inherit">
                 {defaultAddress
@@ -189,6 +257,45 @@ export default function HeaderLayout() {
 
           {/* Right actions - Desktop only */}
           <div className="flex items-center gap-4">
+            {/* Guest Badge */}
+            {isGuest && (
+              <button
+                onClick={() => setShowUpgradeModal(true)}
+                className="flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-100 to-yellow-100 px-3 py-1.5 shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md dark:from-orange-900/30 dark:to-yellow-900/30"
+                title="Upgrade to full member"
+              >
+                <svg
+                  className="h-4 w-4 text-orange-600 dark:text-orange-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+                <span className="text-sm font-semibold text-orange-700 dark:text-orange-300">
+                  Guest
+                </span>
+                <svg
+                  className="h-3 w-3 text-orange-600 dark:text-orange-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            )}
+
             {/* Theme Switch */}
             <button
               onClick={handleThemeToggle}
@@ -341,6 +448,12 @@ export default function HeaderLayout() {
           window.dispatchEvent(new Event("addressChanged"));
           setShowAddressModal(false);
         }}
+      />
+
+      {/* Guest Upgrade Modal */}
+      <GuestUpgradeModal
+        open={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
       />
     </>
   );

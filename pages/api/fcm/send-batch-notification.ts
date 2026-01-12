@@ -52,14 +52,6 @@ export default async function handler(
       imageUrl: "/images/batch-notification-icon.png", // Optional: add a custom icon
     };
 
-    console.log("🔔 [FCM API] Sending batch notification:", {
-      shopperId,
-      orderId,
-      distance,
-      units: itemsCount,
-      earnings: estimatedEarnings,
-    });
-
     await sendNotificationToUser(shopperId, payload);
 
     return res.status(200).json({
@@ -67,7 +59,10 @@ export default async function handler(
       message: "Batch notification sent successfully",
     });
   } catch (error) {
-    console.error("❌ [FCM API] Error sending batch notification:", error);
+    console.error(
+      "Error sending batch notification:",
+      error instanceof Error ? error.message : "Unknown error"
+    );
     return res.status(500).json({
       error: "Failed to send batch notification",
       details: error instanceof Error ? error.message : "Unknown error",

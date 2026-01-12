@@ -55,15 +55,6 @@ export default async function handler(
       imageUrl: "/images/warning-notification-icon.png", // Optional: add a warning icon
     };
 
-    console.log("🚨 [FCM API] Sending warning notification:", {
-      shopperId,
-      orderId,
-      distance,
-      units: itemsCount,
-      earnings: estimatedEarnings,
-      timeRemaining,
-    });
-
     await sendNotificationToUser(shopperId, payload);
 
     return res.status(200).json({
@@ -71,7 +62,10 @@ export default async function handler(
       message: "Warning notification sent successfully",
     });
   } catch (error) {
-    console.error("❌ [FCM API] Error sending warning notification:", error);
+    console.error(
+      "Error sending warning notification:",
+      error instanceof Error ? error.message : "Unknown error"
+    );
     return res.status(500).json({
       error: "Failed to send warning notification",
       details: error instanceof Error ? error.message : "Unknown error",

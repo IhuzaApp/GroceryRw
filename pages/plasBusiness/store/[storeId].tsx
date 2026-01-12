@@ -340,10 +340,52 @@ export default function StoreDetailsPage() {
   if (!authReady || loading) {
     return (
       <RootLayout>
-        <div className="flex h-screen w-full items-center justify-center">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="h-16 w-16 animate-spin rounded-full border-b-4 border-t-4 border-green-800"></div>
-            <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-16">
+          {/* Banner Skeleton */}
+          <div className="relative hidden h-56 animate-pulse bg-gray-200 dark:bg-gray-700 sm:block">
+            <div className="absolute bottom-8 left-8 flex items-end gap-6">
+              <div className="h-28 w-28 rounded-2xl bg-gray-300 dark:bg-gray-600"></div>
+              <div className="space-y-2">
+                <div className="h-8 w-48 rounded bg-gray-300 dark:bg-gray-600"></div>
+                <div className="h-4 w-64 rounded bg-gray-300 dark:bg-gray-600"></div>
+                <div className="flex gap-2">
+                  <div className="h-6 w-24 rounded-full bg-gray-300 dark:bg-gray-600"></div>
+                  <div className="h-6 w-24 rounded-full bg-gray-300 dark:bg-gray-600"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Header Skeleton */}
+          <div className="relative h-32 animate-pulse bg-gray-200 dark:bg-gray-700 sm:hidden">
+            <div className="absolute -bottom-4 left-3 h-16 w-16 rounded-full bg-gray-300 dark:bg-gray-600"></div>
+          </div>
+          <div className="h-8 sm:hidden"></div>
+
+          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 md:px-8">
+            {/* Products Section Skeleton */}
+            <div className="mb-6 animate-pulse space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="h-8 w-48 rounded bg-gray-200 dark:bg-gray-700"></div>
+                <div className="h-10 w-32 rounded-xl bg-gray-200 dark:bg-gray-700"></div>
+              </div>
+              <div className="h-12 w-full rounded-xl bg-gray-200 dark:bg-gray-700"></div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div
+                    key={i}
+                    className="animate-pulse rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+                  >
+                    <div className="aspect-square w-full bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="space-y-2 p-3">
+                      <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="h-5 w-1/2 rounded bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="h-8 w-full rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </RootLayout>
@@ -592,15 +634,15 @@ export default function StoreDetailsPage() {
               >
                 {isGeneratingQueryId ? (
                   <>
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent sm:h-5 sm:w-5" />
+                    <div className="h-4 w-4 animate-pulse rounded-full bg-white/80 sm:h-5 sm:w-5" />
                     <span
                       className="hidden sm:inline"
                       style={{ color: "#ffffff" }}
                     >
-                      Loading...
+                      Generating...
                     </span>
                     <span className="sm:hidden" style={{ color: "#ffffff" }}>
-                      Loading...
+                      Generating...
                     </span>
                   </>
                 ) : (

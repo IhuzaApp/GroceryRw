@@ -41,7 +41,7 @@ export default function ShopperSidebar() {
   const [isSwitchingRole, setIsSwitchingRole] = useState(false);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const pathname = usePathname();
-  const { toggleRole } = useAuth();
+  const { toggleRole, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const [showMoreMenu, setShowMoreMenu] = useState(false);
 
@@ -137,22 +137,8 @@ export default function ShopperSidebar() {
 
   const handleLogout = async () => {
     try {
-      // Use custom logout API to avoid redirect loops
-      const response = await authenticatedFetch("/api/logout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (response.ok) {
-        // Clear client-side storage
-        localStorage.clear();
-        sessionStorage.clear();
-
-        // Redirect to home page
-        window.location.href = "/";
-      } else {
-        throw new Error("Logout failed");
-      }
+      toast.success("Logging out...");
+      await logout();
     } catch (error) {
       logger.error("Error signing out", "ShopperSidebar", error);
       toast.error("Failed to sign out");

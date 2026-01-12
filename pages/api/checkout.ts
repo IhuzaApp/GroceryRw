@@ -58,6 +58,13 @@ const GET_PRODUCTS_BY_IDS = gql`
   }
 `;
 
+// Generate a random 2-digit PIN (00-99)
+function generateOrderPin(): string {
+  return Math.floor(Math.random() * 100)
+    .toString()
+    .padStart(2, "0");
+}
+
 // Create a new order
 const CREATE_ORDER = gql`
   mutation CreateOrder(
@@ -72,6 +79,7 @@ const CREATE_ORDER = gql`
     $voucher_code: String
     $delivery_time: timestamptz!
     $delivery_notes: String
+    $pin: String!
   ) {
     insert_Orders_one(
       object: {
@@ -87,9 +95,11 @@ const CREATE_ORDER = gql`
         shopper_id: null
         delivery_time: $delivery_time
         delivery_notes: $delivery_notes
+        pin: $pin
       }
     ) {
       id
+      pin
     }
   }
 `;
@@ -223,12 +233,13 @@ export default async function handler(
       return sum + price * item.quantity;
     }, 0);
 
-    // 4. Create order record
+    // 4. Create order record with PIN
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
+    const orderPin = generateOrderPin();
     const orderRes = await hasuraClient.request<{
-      insert_Orders_one: { id: string };
+      insert_Orders_one: { id: string; pin: string };
     }>(CREATE_ORDER, {
       user_id,
       shop_id,
@@ -241,6 +252,7 @@ export default async function handler(
       voucher_code: voucher_code ?? null,
       delivery_time,
       delivery_notes: delivery_notes ?? null,
+      pin: orderPin,
     });
     const orderId = orderRes.insert_Orders_one.id;
 
@@ -277,8 +289,11 @@ export default async function handler(
     }
     await hasuraClient.request(DELETE_CART, { cart_id: cart.id });
 
-    // 9. Respond with new order ID
-    return res.status(201).json({ order_id: orderId });
+    // 9. Respond with new order ID and PIN
+    return res.status(201).json({
+      order_id: orderId,
+      pin: orderRes.insert_Orders_one.pin,
+    });
   } catch (err: any) {
     console.error("Checkout error:", err);
     return res.status(500).json({ error: err.message || "Checkout failed" });

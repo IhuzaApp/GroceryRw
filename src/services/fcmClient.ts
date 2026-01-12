@@ -25,6 +25,11 @@ const db = app ? getFirestore(app) : null;
 
 // Initialize messaging only in browser environment
 let messaging: any = null;
+let serviceWorkerRegistration: ServiceWorkerRegistration | null = null;
+let isRegisteringServiceWorker = false;
+let registrationPromise: Promise<ServiceWorkerRegistration | null> | null =
+  null;
+
 if (typeof window !== "undefined") {
   try {
     messaging = getMessaging(app);
@@ -83,27 +88,60 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
 };
 
 /**
+ * Register service worker once and reuse (SINGLETON PATTERN)
+ */
+const getServiceWorkerRegistration =
+  async (): Promise<ServiceWorkerRegistration | null> => {
+    // If already registered, return cached registration
+    if (serviceWorkerRegistration) {
+      return serviceWorkerRegistration;
+    }
+
+    // If currently registering, wait for that promise
+    if (isRegisteringServiceWorker && registrationPromise) {
+      return registrationPromise;
+    }
+
+    // Start new registration
+    if ("serviceWorker" in navigator) {
+      isRegisteringServiceWorker = true;
+      registrationPromise = (async () => {
+        try {
+          const registration = await navigator.serviceWorker.register(
+            "/firebase-messaging-sw.js",
+            {
+              scope: "/",
+            }
+          );
+          await navigator.serviceWorker.ready;
+          serviceWorkerRegistration = registration;
+          return registration;
+        } catch (error) {
+          console.error("Service worker registration failed:", error);
+          return null;
+        } finally {
+          isRegisteringServiceWorker = false;
+        }
+      })();
+
+      return registrationPromise;
+    }
+
+    return null;
+  };
+
+/**
  * Get FCM token for the current user
  */
 export const getFCMToken = async (): Promise<string | null> => {
   try {
-    if (!messaging) {
-      return null;
-    }
+    if (!messaging) return null;
 
     const hasPermission = await requestNotificationPermission();
-    if (!hasPermission) {
-      return null;
-    }
+    if (!hasPermission) return null;
 
-    // Register service worker first
-    if ("serviceWorker" in navigator) {
-      try {
-        await navigator.serviceWorker.register("/firebase-messaging-sw.js");
-      } catch (error) {
-        // Service worker registration failed
-      }
-    }
+    // Use singleton service worker registration
+    await getServiceWorkerRegistration();
 
     const token = await getToken(messaging, {
       vapidKey:
@@ -112,18 +150,7 @@ export const getFCMToken = async (): Promise<string | null> => {
 
     return token;
   } catch (error) {
-    // Handle specific FCM errors more gracefully
-    if (error instanceof Error) {
-      if (
-        error.name === "AbortError" &&
-        error.message.includes("permission denied")
-      ) {
-        return null;
-      }
-      if (error.message.includes("unsupported-browser")) {
-        return null;
-      }
-    }
+    console.error("Error getting FCM token:", error);
     return null;
   }
 };
@@ -188,15 +215,82 @@ export const setupFCMListener = (
 ): (() => void) => {
   try {
     if (!messaging) {
+      console.error("Messaging not initialized");
       return () => {};
     }
 
     const unsubscribe = onMessage(messaging, (payload) => {
+      // Show notification using service worker (Chrome requires this)
+      if (payload.notification && Notification.permission === "granted") {
+        const notificationType = payload.data?.type || "message";
+        const notificationTitle =
+          payload.notification.title || "New Notification";
+        const notificationBody = payload.notification.body;
+
+        // Method 1: Try direct Notification API first (works in Safari, sometimes Chrome)
+        try {
+          const directNotif = new Notification(notificationTitle, {
+            body: notificationBody,
+            icon: "/assets/logos/PlasIcon.png",
+            tag: `fcm-${notificationType}-${Date.now()}`,
+            requireInteraction: true,
+            silent: false,
+            vibrate: [200, 100, 200],
+            data: payload.data,
+          });
+
+          directNotif.onclick = () => {
+            window.focus();
+            if (
+              notificationType === "new_order" ||
+              notificationType === "batch_orders"
+            ) {
+              window.location.href = "/Plasa/active-batches";
+            }
+            directNotif.close();
+          };
+        } catch (directError) {
+          // Silent fail, service worker method will handle it
+        }
+
+        // Method 2: Also try service worker method (Chrome prefers this)
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.ready
+            .then((registration) => {
+              const notificationOptions = {
+                body: notificationBody,
+                icon: "/assets/logos/PlasIcon.png",
+                badge: "/assets/logos/PlasIcon.png",
+                tag: `fcm-sw-${notificationType}-${Date.now()}`,
+                requireInteraction: true,
+                silent: false,
+                vibrate: [200, 100, 200],
+                data: payload.data,
+                renotify: true,
+                timestamp: Date.now(),
+                actions: [
+                  { action: "view", title: "View" },
+                  { action: "close", title: "Close" },
+                ],
+              };
+
+              return registration.showNotification(
+                notificationTitle,
+                notificationOptions
+              );
+            })
+            .catch((error) => {
+              console.error("Failed to show notification:", error);
+            });
+        }
+      }
+
       onMessageReceived(payload);
     });
 
     return unsubscribe;
   } catch (error) {
+    console.error("Error setting up FCM listener:", error);
     return () => {};
   }
 };
@@ -207,23 +301,22 @@ export const setupFCMListener = (
 export const initializeFCM = async (
   userId: string,
   onMessageReceived: (payload: any) => void
-): Promise<() => void> => {
+): Promise<(() => void) | null> => {
   try {
-    // Get FCM token
     const token = await getFCMToken();
+
     if (!token) {
-      return () => {};
+      console.error("Failed to get FCM token");
+      return null;
     }
 
-    // Save token to server
     await saveFCMTokenToServer(userId, token);
-
-    // Set up message listener
     const unsubscribe = setupFCMListener(onMessageReceived);
 
     return unsubscribe;
   } catch (error) {
-    return () => {};
+    console.error("Error initializing FCM:", error);
+    return null;
   }
 };
 

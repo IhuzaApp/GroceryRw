@@ -26,6 +26,7 @@ export default function DesktopUserDashboard({
     dataLoaded,
     isFetchingData,
     authReady,
+    isLoggedIn,
     filteredShops,
     handleCategoryClick,
     clearFilter,
@@ -34,7 +35,8 @@ export default function DesktopUserDashboard({
     handleRefreshData,
   } = useUserDashboardLogic(initialData);
 
-  if (!authReady || !dataLoaded) {
+  // Allow guests (non-logged-in users) to proceed without waiting for auth
+  if ((!authReady && isLoggedIn) || !dataLoaded) {
     return <LoadingScreen />;
   }
 
@@ -51,13 +53,13 @@ export default function DesktopUserDashboard({
         {/* Shop Categories */}
         <div className="mt-4">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Shop by Category
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+              Groceries
             </h2>
             {selectedCategory && (
               <button
                 onClick={clearFilter}
-                className="rounded-full bg-green-600 px-4 py-2 text-sm text-white transition-colors duration-200 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800"
+                className="rounded-full bg-green-600 px-4 py-2 text-sm !text-white transition-colors duration-200 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800"
               >
                 Clear Filter
               </button>
@@ -70,41 +72,52 @@ export default function DesktopUserDashboard({
             </div>
           )}
 
-          {/* Desktop Grid */}
-          <div className="grid grid-cols-3 gap-4 lg:grid-cols-8">
-            {isLoading
-              ? Array(7)
-                  .fill(0)
-                  .map((_, index) => (
-                    <div
-                      key={index}
-                      className="animate-pulse rounded-xl border border-gray-200 bg-gray-100 p-4 dark:border-gray-700 dark:bg-gray-800"
-                    >
-                      <div className="mb-3 h-12 w-12 rounded-full bg-gray-200 dark:bg-gray-700"></div>
-                      <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700"></div>
-                    </div>
-                  ))
-              : allCategories.map((category) => (
-                  <div
-                    key={category.id}
-                    onClick={() => handleCategoryClick(category.id)}
-                    className={`group relative flex cursor-pointer flex-col items-center rounded-xl border p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg ${
-                      selectedCategory === category.id
-                        ? "border-green-500 bg-green-50 shadow-md dark:border-green-400 dark:bg-green-900/20"
-                        : "border-gray-200 hover:border-green-200 dark:border-gray-700 dark:hover:border-green-700"
-                    }`}
-                  >
-                    <CategoryIcon category={category.name} />
-                    <span className="mt-3 text-center text-sm font-medium text-gray-700 dark:text-gray-200">
-                      {category.name}
-                    </span>
-                    {selectedCategory === category.id && (
-                      <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-xs text-white">
-                        ✓
+          {/* Horizontal Scrollable Categories */}
+          <div className="overflow-x-auto pb-4">
+            <div className="flex min-w-max gap-4">
+              {isLoading
+                ? Array(15)
+                    .fill(0)
+                    .map((_, index) => (
+                      <div
+                        key={index}
+                        className="flex min-w-[80px] flex-col items-center gap-2"
+                      >
+                        <div className="h-16 w-16 animate-pulse rounded-full border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800"></div>
+                        <div className="h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
                       </div>
-                    )}
-                  </div>
-                ))}
+                    ))
+                : allCategories.map((category) => (
+                    <div
+                      key={category.id}
+                      onClick={() => handleCategoryClick(category.id)}
+                      className={`group flex min-w-[80px] cursor-pointer flex-col items-center gap-2 transition-all duration-200 ${
+                        selectedCategory === category.id
+                          ? "opacity-100"
+                          : "opacity-90 hover:opacity-100"
+                      }`}
+                    >
+                      <div
+                        className={`flex h-16 w-16 items-center justify-center overflow-visible bg-gray-50 transition-all duration-200 dark:bg-gray-700 ${
+                          selectedCategory === category.id
+                            ? "scale-110 shadow-md"
+                            : "group-hover:shadow-sm"
+                        }`}
+                        style={{
+                          borderRadius: "50% 50% 50% 50% / 40% 40% 60% 60%",
+                          clipPath: "ellipse(55% 45% at 50% 50%)",
+                        }}
+                      >
+                        <div className="scale-75">
+                          <CategoryIcon category={category.name} />
+                        </div>
+                      </div>
+                      <span className="max-w-[80px] truncate text-center text-xs font-medium text-gray-900 dark:text-gray-100">
+                        {category.name}
+                      </span>
+                    </div>
+                  ))}
+            </div>
           </div>
         </div>
 
@@ -115,7 +128,7 @@ export default function DesktopUserDashboard({
               {selectedCategory
                 ? data?.categories?.find((c) => c.id === selectedCategory)
                     ?.name || "Selected Category"
-                : "All Mart"}
+                : "All Stores"}
             </h4>
             <div className="flex items-center gap-3">
               {/* Refresh Button */}
@@ -155,15 +168,15 @@ export default function DesktopUserDashboard({
           </div>
 
           {isLoading || isFetchingData ? (
-            <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-6">
-              {Array(6)
+            <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+              {Array(8)
                 .fill(0)
                 .map((_, index) => (
                   <ShopSkeleton key={index} />
                 ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-6">
+            <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
               {filteredShops?.length ? (
                 filteredShops.map((shop) => {
                   const dyn = shopDynamics[shop.id] || {
@@ -171,6 +184,8 @@ export default function DesktopUserDashboard({
                     time: "N/A",
                     fee: "N/A",
                     open: false,
+                    rating: 0,
+                    ratingCount: 0,
                   };
                   return (
                     <ShopCard

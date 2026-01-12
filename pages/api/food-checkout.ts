@@ -4,6 +4,13 @@ import { authOptions } from "./auth/[...nextauth]";
 import { hasuraClient } from "../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
+// Generate a random 2-digit PIN (00-99)
+function generateOrderPin(): string {
+  return Math.floor(Math.random() * 100)
+    .toString()
+    .padStart(2, "0");
+}
+
 // Mutation to create a food order (using restaurant_orders table)
 const CREATE_FOOD_ORDER = gql`
   mutation CreateFoodOrder(
@@ -16,6 +23,7 @@ const CREATE_FOOD_ORDER = gql`
     $voucher_code: String
     $delivery_time: String!
     $delivery_notes: String
+    $pin: String!
     $status: String = "WAITING_FOR_CONFIRMATION"
   ) {
     insert_restaurant_orders(
@@ -29,8 +37,8 @@ const CREATE_FOOD_ORDER = gql`
         voucher_code: $voucher_code
         delivery_time: $delivery_time
         delivery_notes: $delivery_notes
+        pin: $pin
         status: $status
-        found: false
         shopper_id: null
       }
     ) {
@@ -42,6 +50,7 @@ const CREATE_FOOD_ORDER = gql`
         status
         created_at
         delivery_time
+        pin
       }
     }
   }
@@ -166,11 +175,12 @@ export default async function handler(
 
     // OrderID will be generated automatically by the database
 
-    // Step 1: Create the food order using GraphQL mutation
+    // Step 1: Create the food order using GraphQL mutation with PIN
     if (!hasuraClient) {
       return res.status(500).json({ error: "Database connection error" });
     }
 
+    const orderPin = generateOrderPin();
     const orderResponse = (await hasuraClient.request(CREATE_FOOD_ORDER, {
       user_id: session.user.id,
       restaurant_id,
@@ -181,6 +191,7 @@ export default async function handler(
       voucher_code: voucher_code || null,
       delivery_time: delivery_time,
       delivery_notes: delivery_notes || null,
+      pin: orderPin,
     })) as any;
 
     if (
@@ -216,11 +227,12 @@ export default async function handler(
       console.error("Not all dishes were added to the order");
     }
 
-    // Return success response
+    // Return success response with PIN
     return res.status(200).json({
       success: true,
       order_id: createdOrder.id,
       order_number: createdOrder.OrderID,
+      pin: createdOrder.pin,
       message: "Food order created successfully",
       total_amount: totalAmount,
       delivery_time: createdOrder.delivery_time,

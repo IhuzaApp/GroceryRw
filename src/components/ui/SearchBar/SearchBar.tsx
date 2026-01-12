@@ -138,20 +138,28 @@ export default function SearchBar() {
         <div className="absolute z-50 mt-2 w-full max-w-md rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
           <div className="max-h-96 overflow-y-auto">
             {results.map((result) => (
-              <button
+              <div
                 key={`${result.type}-${result.id}`}
                 onClick={() => handleResultClick(result)}
-                className="flex w-full items-center gap-3 border-b border-gray-100 px-4 py-3 text-left last:border-b-0 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700"
+                className="flex w-full cursor-pointer items-center gap-3 border-b border-gray-100 px-4 py-3 text-left last:border-b-0 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700"
               >
                 {/* Product/Shop Image */}
-                <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg">
+                <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-700">
                   <img
-                    src={result.type === "product" ? result.image : result.logo}
+                    src={
+                      result.type === "product"
+                        ? result.image || "/images/groceryPlaceholder.png"
+                        : result.logo || "/images/groceryPlaceholder.png"
+                    }
                     alt={result.name}
                     className="h-full w-full object-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      target.src = "/assets/images/placeholder-product.png";
+                      // Prevent infinite loop if placeholder fails
+                      if (target.src.includes("groceryPlaceholder.png")) {
+                        return;
+                      }
+                      target.src = "/images/groceryPlaceholder.png";
                     }}
                   />
                 </div>
@@ -168,15 +176,23 @@ export default function SearchBar() {
                       {/* Supermarket Name */}
                       {result.shopName && (
                         <div className="flex items-center gap-2">
-                          <div className="h-4 w-4 overflow-hidden rounded">
+                          <div className="h-4 w-4 overflow-hidden rounded bg-gray-100 dark:bg-gray-700">
                             <img
-                              src={result.shopImage}
+                              src={
+                                result.shopImage ||
+                                "/images/groceryPlaceholder.png"
+                              }
                               alt={result.shopName}
                               className="h-full w-full object-cover"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
-                                target.src =
-                                  "/assets/images/placeholder-shop.png";
+                                // Prevent infinite loop if placeholder fails
+                                if (
+                                  target.src.includes("groceryPlaceholder.png")
+                                ) {
+                                  return;
+                                }
+                                target.src = "/images/groceryPlaceholder.png";
                               }}
                             />
                           </div>
@@ -217,10 +233,9 @@ export default function SearchBar() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 // Navigate to supermarket page
-                                window.open(
-                                  `/shops/${result.shopId}`,
-                                  "_blank"
-                                );
+                                router.push(`/shops/${result.shopId}`);
+                                setShowResults(false);
+                                setSearchTerm("");
                               }}
                               className="rounded-full bg-gradient-to-r from-purple-500 to-violet-500 px-3 py-1.5 text-xs font-medium text-white shadow-lg shadow-purple-500/25 transition-all duration-200 hover:scale-105 hover:from-purple-600 hover:to-violet-600 hover:shadow-purple-500/40"
                             >
@@ -273,7 +288,7 @@ export default function SearchBar() {
                     </div>
                   )}
                 </div>
-              </button>
+              </div>
             ))}
           </div>
 

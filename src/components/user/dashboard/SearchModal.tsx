@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { formatCurrencySync } from "../../../utils/formatCurrency";
+import { useRouter } from "next/router";
 
 interface SearchResult {
   id: string;
@@ -34,16 +34,24 @@ export default function SearchModal({
   searchResults,
   isSearching,
 }: SearchModalProps) {
+  const router = useRouter();
+
   const handleResultClick = (result: SearchResult) => {
-    if (result.type === "product") {
-      window.location.href = `/shops/${result.shop_id}`;
+    // If the result has a shop_id, it's a product - redirect to the shop
+    if (result.shop_id) {
+      router.push(`/shops/${result.shop_id}`);
+    } else if (result.type === "product") {
+      router.push(`/shops/${result.shop_id}`);
     } else if (result.type === "shop") {
-      window.location.href = `/shops/${result.id}`;
+      router.push(`/shops/${result.id}`);
     } else if (result.type === "recipe") {
-      window.location.href = `/Recipes/${result.id}`;
+      router.push(`/Recipes/${result.id}`);
     } else if (result.type === "restaurant") {
-      window.location.href = `/restaurant/${result.id}`;
+      router.push(`/restaurant/${result.id}`);
     }
+
+    // Close the modal after navigation
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -122,18 +130,48 @@ export default function SearchModal({
                                 return `/images/restaurants/${result.profile}`;
                               }
 
-                              // Fallback to restaurant placeholder or general placeholder
-                              return result.type === "restaurant"
-                                ? "/images/restaurantDish.png"
-                                : "/images/groceryPlaceholder.png";
+                              // Fallback based on type
+                              if (result.type === "restaurant") {
+                                return "/images/restaurantDish.png";
+                              } else if (
+                                result.type === "product" ||
+                                result.shop_id
+                              ) {
+                                return "/images/groceryPlaceholder.png";
+                              } else {
+                                return "/images/groceryPlaceholder.png";
+                              }
                             })()}
                             alt={result.name}
+                            referrerPolicy="no-referrer"
                             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                             onError={(e) => {
-                              e.currentTarget.src =
-                                result.type === "restaurant"
-                                  ? "/images/restaurantDish.png"
-                                  : "/images/groceryPlaceholder.png";
+                              // Prevent infinite loop if placeholder also fails
+                              if (
+                                e.currentTarget.src.includes(
+                                  "groceryPlaceholder.png"
+                                ) ||
+                                e.currentTarget.src.includes(
+                                  "restaurantDish.png"
+                                )
+                              ) {
+                                return;
+                              }
+
+                              // Set appropriate placeholder based on result type
+                              if (result.type === "restaurant") {
+                                e.currentTarget.src =
+                                  "/images/restaurantDish.png";
+                              } else if (
+                                result.type === "product" ||
+                                result.shop_id
+                              ) {
+                                e.currentTarget.src =
+                                  "/images/groceryPlaceholder.png";
+                              } else {
+                                e.currentTarget.src =
+                                  "/images/groceryPlaceholder.png";
+                              }
                             }}
                           />
                         </div>

@@ -22,6 +22,9 @@ const GET_RFQ_OPPORTUNITIES = gql`
       estimated_quantity
       expected_delivery_date
       payment_terms
+      delivery_terms
+      warranty_information
+      cancellation_terms
       requirements
       notes
       contact_name
@@ -66,21 +69,36 @@ export default async function handler(
   }
 
   try {
-    const session = (await getServerSession(
-      req,
-      res,
-      authOptions as any
-    )) as Session | null;
-
-    if (!session || !session.user) {
-      return res.status(401).json({ error: "Unauthorized" });
+    // Make authentication optional - allow unauthenticated users to view RFQs for explorer
+    let session: Session | null = null;
+    try {
+      session = (await getServerSession(
+        req,
+        res,
+        authOptions as any
+      )) as Session | null;
+    } catch (authError: any) {
+      // Log but don't fail - allow unauthenticated access for explorer view
+      if (
+        authError?.message?.includes("timeout") ||
+        authError?.code === "UND_ERR_CONNECT_TIMEOUT"
+      ) {
+        console.warn(
+          "Auth timeout - allowing unauthenticated access to RFQ opportunities"
+        );
+      } else {
+        console.warn(
+          "Auth error - allowing unauthenticated access:",
+          authError?.message
+        );
+      }
     }
 
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
 
-    // Fetch all open RFQs regardless of user or business
+    // Fetch all open RFQs regardless of user or business (available to everyone)
     const result = await hasuraClient.request<{
       bussines_RFQ: Array<{
         id: string;
@@ -95,6 +113,9 @@ export default async function handler(
         estimated_quantity: string;
         expected_delivery_date: string;
         payment_terms: string;
+        delivery_terms: string | null;
+        warranty_information: string | null;
+        cancellation_terms: string | null;
         requirements: any;
         notes: string;
         contact_name: string;

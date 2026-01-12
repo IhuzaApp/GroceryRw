@@ -51,13 +51,6 @@ interface OrderDetailsResponse {
         count: number;
       };
     };
-    user: {
-      id: string;
-      name: string;
-      email: string;
-      phone: string;
-      profile_picture: string;
-    } | null;
     orderedBy: {
       created_at: string;
       email: string;
@@ -71,7 +64,7 @@ interface OrderDetailsResponse {
       updated_at: string;
       role: string;
     } | null;
-    assignedTo: {
+    Shoppers: {
       id: string;
       name: string;
       email: string;
@@ -122,6 +115,7 @@ const GET_ORDER_DETAILS = gql`
         street
         city
         postal_code
+        placeDetails
         created_at
         updated_at
         user_id
@@ -153,13 +147,6 @@ const GET_ORDER_DETAILS = gql`
           count
         }
       }
-      user: User {
-        id
-        name
-        email
-        phone
-        profile_picture
-      }
       orderedBy {
         created_at
         email
@@ -173,7 +160,7 @@ const GET_ORDER_DETAILS = gql`
         updated_at
         role
       }
-      assignedTo: User {
+      Shoppers {
         id
         name
         email
@@ -246,7 +233,7 @@ const GET_REEL_ORDER_DETAILS = gql`
         phone
         profile_picture
       }
-      assignedTo: User {
+      Shoppers {
         id
         name
         email
@@ -259,6 +246,7 @@ const GET_REEL_ORDER_DETAILS = gql`
         street
         city
         postal_code
+        placeDetails
         created_at
         id
         updated_at
@@ -339,6 +327,7 @@ const GET_RESTAURANT_ORDER_DETAILS = gql`
         postal_code
         latitude
         longitude
+        placeDetails
         created_at
         updated_at
         user_id
@@ -629,9 +618,8 @@ export default async function handler(
         deliveryFee,
         total: subTotal + serviceFee + deliveryFee,
         estimatedEarnings: totalEarnings,
-        user: orderData.user, // Include user data
         orderedBy: orderData.orderedBy, // Include orderedBy data (actual customer)
-        assignedTo: orderData.assignedTo, // Include assignedTo data (shopper)
+        assignedTo: orderData.Shoppers, // Include assignedTo data (shopper)
         customerId: orderData.orderedBy?.id, // Customer is ALWAYS from orderedBy
         shop: orderData.shop, // Include shop data
       };
@@ -693,7 +681,7 @@ export default async function handler(
         customerPhone: orderData.user?.phone,
         user: orderData.user, // Include full user data
         orderedBy: orderData.user, // Add orderedBy for compatibility
-        assignedTo: orderData.assignedTo, // Include assignedTo data (shopper)
+        assignedTo: orderData.Shoppers, // Include assignedTo data (shopper)
         customerId: orderData.user?.id, // Add customerId for compatibility
         discount: orderData.discount || 0, // Add discount field
         deliveryPhotoUrl: orderData.delivery_photo_url, // Add delivery photo URL

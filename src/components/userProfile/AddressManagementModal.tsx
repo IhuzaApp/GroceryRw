@@ -1,22 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Button, Modal, Form, Checkbox, Loader } from "rsuite";
 import { useGoogleMap } from "../../context/GoogleMapProvider";
 import { useTheme } from "../../context/ThemeContext";
 import Cookies from "js-cookie";
+import { useAuth } from "../../hooks/useAuth";
 
 // Skeleton loader for address cards
 function AddressSkeleton() {
   return (
-    <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800 sm:p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="h-3 w-2/3 rounded bg-gray-200 dark:bg-gray-700 sm:h-4 sm:w-3/4" />
-        <div className="h-5 w-12 rounded bg-green-200 dark:bg-green-800 sm:h-6 sm:w-16" />
-      </div>
-      <div className="mb-2 h-2 w-1/2 rounded bg-gray-200 dark:bg-gray-700 sm:h-3" />
-      <div className="mb-3 h-2 w-1/3 rounded bg-gray-200 dark:bg-gray-700 sm:mb-4 sm:h-3" />
-      <div className="flex flex-wrap gap-2">
-        <div className="h-7 w-20 rounded bg-gray-200 dark:bg-gray-700 sm:h-8" />
-        <div className="h-7 w-16 rounded bg-gray-200 dark:bg-gray-700 sm:h-8" />
+    <div className="animate-pulse rounded-xl border-2 border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+      <div className="mb-3 flex h-10 w-10 rounded-xl bg-gray-200 dark:bg-gray-700" />
+      <div className="mb-2 h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700" />
+      <div className="mb-3 h-3 w-1/2 rounded bg-gray-200 dark:bg-gray-700" />
+      <div className="flex gap-2">
+        <div className="h-9 flex-1 rounded-lg bg-gray-200 dark:bg-gray-700" />
+        <div className="h-9 flex-1 rounded-lg bg-gray-200 dark:bg-gray-700" />
       </div>
     </div>
   );
@@ -35,6 +32,7 @@ export default function AddressManagementModal({
 }: AddressManagementModalProps) {
   const { isLoaded } = useGoogleMap();
   const { theme } = useTheme();
+  const { isGuest } = useAuth();
 
   // Autocomplete service and geocoder refs
   const autocompleteServiceRef =
@@ -58,6 +56,14 @@ export default function AddressManagementModal({
   const [isDefault, setIsDefault] = useState<boolean>(false);
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
+  // Address type and place details
+  const [addressType, setAddressType] = useState<string>("home");
+  const [placeDetails, setPlaceDetails] = useState<{
+    gateNumber?: string;
+    gateColor?: string;
+    floor?: string;
+    doorNumber?: string;
+  }>({});
 
   useEffect(() => {
     if (isLoaded && !autocompleteServiceRef.current) {
@@ -66,6 +72,31 @@ export default function AddressManagementModal({
       geocoderRef.current = new google.maps.Geocoder();
     }
   }, [isLoaded]);
+
+  // Pre-fill address from cookies for guest users when opening add modal
+  useEffect(() => {
+    if (showAddModal && isGuest) {
+      const savedAddress = Cookies.get("delivery_address");
+      if (savedAddress) {
+        try {
+          const addressData = JSON.parse(savedAddress);
+          if (addressData.street) {
+            setStreet(addressData.street);
+            setCity(addressData.city || "");
+            setPostalCode(addressData.postal_code || "");
+            setLat(
+              addressData.latitude ? parseFloat(addressData.latitude) : null
+            );
+            setLng(
+              addressData.longitude ? parseFloat(addressData.longitude) : null
+            );
+          }
+        } catch (err) {
+          console.error("Error parsing delivery address cookie:", err);
+        }
+      }
+    }
+  }, [showAddModal, isGuest]);
 
   // Handle street input change for autocomplete
   const handleStreetChange = (val: string) => {
@@ -146,10 +177,27 @@ export default function AddressManagementModal({
           is_default: isDefault,
           latitude: lat,
           longitude: lng,
+          type: addressType,
+          placeDetails: placeDetails,
         }),
       });
       if (!res.ok) throw new Error(`Save failed (${res.status})`);
-      await res.json();
+      const savedAddress = await res.json();
+
+      // Update cookie with the new address (especially important for guest users)
+      if (isGuest || isDefault) {
+        const locationData = {
+          latitude: lat?.toString() || "0",
+          longitude: lng?.toString() || "0",
+          altitude: "0",
+          street: street,
+          city: city,
+          postal_code: postalCode,
+        };
+        Cookies.set("delivery_address", JSON.stringify(locationData));
+        window.dispatchEvent(new Event("addressChanged"));
+      }
+
       fetchAddresses();
       setShowAddModal(false);
       // reset form
@@ -159,6 +207,8 @@ export default function AddressManagementModal({
       setIsDefault(false);
       setLat(null);
       setLng(null);
+      setAddressType("home");
+      setPlaceDetails({});
     } catch (err: any) {
       alert(err.message || "Failed to save address");
     } finally {
@@ -209,280 +259,277 @@ export default function AddressManagementModal({
   };
 
   const handleAddressSelect = (address: any) => {
+    // Update cookie when selecting an address (important for guest users)
+    const locationData = {
+      latitude: address.latitude || "0",
+      longitude: address.longitude || "0",
+      altitude: "0",
+      street: address.street,
+      city: address.city,
+      postal_code: address.postal_code,
+    };
+    Cookies.set("delivery_address", JSON.stringify(locationData));
+    window.dispatchEvent(new Event("addressChanged"));
+
     if (onSelect) {
       onSelect(address);
     }
     onClose();
   };
 
-  return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      size="lg"
-      className={`${
-        theme === "dark" ? "bg-gray-900 text-gray-100" : ""
-      } mx-auto w-full max-w-4xl`}
-      backdrop="static"
-    >
-      <Modal.Header
-        className={`${
-          theme === "dark" ? "bg-gray-800 text-gray-100" : ""
-        } px-4 py-3 sm:px-6 sm:py-4`}
-      >
-        <Modal.Title className="text-lg font-semibold sm:text-xl">
-          Manage Delivery Addresses
-        </Modal.Title>
-      </Modal.Header>
+  if (!open) return null;
 
-      <Modal.Body
-        className={`${
-          theme === "dark" ? "bg-gray-900 text-gray-100" : ""
-        } p-4 sm:p-6`}
-      >
-        <div className="space-y-4 sm:space-y-6">
-          {/* Header Section */}
+  return (
+    <>
+      {/* Main Modal Backdrop */}
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
+        <div
+          className={`max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl border shadow-2xl ${
+            theme === "dark"
+              ? "border-gray-700 bg-gray-800"
+              : "border-gray-200 bg-white"
+          }`}
+        >
+          {/* Header */}
           <div
-            className={`rounded-lg border p-3 sm:p-4 ${
+            className={`sticky top-0 z-10 flex items-center justify-between border-b p-5 ${
               theme === "dark"
                 ? "border-gray-700 bg-gray-800"
-                : "border-gray-200 bg-gray-50"
+                : "border-gray-200 bg-white"
             }`}
           >
-            <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-              <div className="flex items-center space-x-3">
-                <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-full sm:h-10 sm:w-10 ${
-                    theme === "dark" ? "bg-green-600" : "bg-green-500"
-                  }`}
-                >
-                  <svg
-                    className="h-4 w-4 text-white sm:h-5 sm:w-5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-base font-semibold sm:text-lg">
-                    Your Addresses
-                  </h3>
-                  <p
-                    className={`text-xs sm:text-sm ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-600"
-                    }`}
-                  >
-                    Manage your delivery addresses and set your default location
-                  </p>
-                </div>
-              </div>
-              <Button
-                appearance="primary"
-                color="green"
-                size="sm"
-                className="bg-green-500 text-white hover:bg-green-600 sm:text-sm"
-                onClick={() => setShowAddModal(true)}
+            <div>
+              <h2
+                className={`text-xl font-bold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
               >
-                <svg
-                  className="mr-1 h-3 w-3 sm:h-4 sm:w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                <span className="hidden sm:inline">Add New Address</span>
-                <span className="sm:hidden">Add Address</span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Addresses Grid */}
-          {loading ? (
-            <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
-              {Array(4)
-                .fill(0)
-                .map((_, idx) => (
-                  <AddressSkeleton key={idx} />
-                ))}
-            </div>
-          ) : error ? (
-            <div
-              className={`rounded-lg border p-4 text-center sm:p-6 ${
-                theme === "dark"
-                  ? "border-red-700 bg-red-900/20 text-red-400"
-                  : "border-red-200 bg-red-50 text-red-600"
-              }`}
-            >
-              <svg
-                className="mx-auto mb-2 h-6 w-6 sm:mb-3 sm:h-8 sm:w-8"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <p className="text-sm font-medium sm:text-base">{error}</p>
-              <Button
-                appearance="primary"
-                size="sm"
-                className="mt-2 sm:mt-3"
-                onClick={fetchAddresses}
-              >
-                Try Again
-              </Button>
-            </div>
-          ) : addresses.length === 0 ? (
-            <div
-              className={`rounded-lg border p-6 text-center sm:p-8 ${
-                theme === "dark"
-                  ? "border-gray-700 bg-gray-800"
-                  : "border-gray-200 bg-gray-50"
-              }`}
-            >
-              <svg
-                className="mx-auto mb-3 h-10 w-10 text-gray-400 sm:mb-4 sm:h-12 sm:w-12"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-              <h3 className="mb-2 text-base font-semibold sm:text-lg">
-                No addresses yet
-              </h3>
+                Manage Delivery Addresses
+              </h2>
               <p
-                className={`mb-3 text-xs sm:mb-4 sm:text-sm ${
+                className={`mt-1 text-sm ${
                   theme === "dark" ? "text-gray-400" : "text-gray-600"
                 }`}
               >
-                Add your first delivery address to get started
+                Manage your delivery addresses and set your default location
               </p>
-              <Button
-                appearance="primary"
-                color="green"
-                size="sm"
-                className="bg-green-500 text-white hover:bg-green-600 sm:text-sm"
-                onClick={() => setShowAddModal(true)}
-              >
-                Add Your First Address
-              </Button>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
-              {addresses.map((addr) => (
-                <div
-                  key={addr.id}
-                  className={`group relative rounded-lg border p-3 transition-all duration-200 hover:shadow-lg sm:p-4 ${
-                    addr.is_default
-                      ? theme === "dark"
-                        ? "border-green-600 bg-green-900/10"
-                        : "border-green-500 bg-green-50"
-                      : theme === "dark"
-                      ? "border-gray-700 bg-gray-800 hover:border-gray-600"
-                      : "border-gray-200 bg-white hover:border-gray-300"
-                  }`}
-                >
-                  {/* Default Badge */}
-                  {addr.is_default && (
-                    <div
-                      className={`absolute -top-1 right-2 rounded-full px-2 py-0.5 text-xs font-semibold sm:-top-2 sm:right-4 sm:px-3 sm:py-1 ${
-                        theme === "dark"
-                          ? "bg-green-600 text-white"
-                          : "bg-green-500 text-white"
-                      }`}
-                    >
-                      Default
-                    </div>
-                  )}
+            <button
+              onClick={onClose}
+              className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+                theme === "dark"
+                  ? "bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-white"
+                  : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900"
+              }`}
+            >
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
 
-                  {/* Address Icon */}
-                  <div className="mb-2 sm:mb-3">
-                    <div
-                      className={`flex h-8 w-8 items-center justify-center rounded-full sm:h-10 sm:w-10 ${
-                        addr.is_default
-                          ? theme === "dark"
-                            ? "bg-green-600"
-                            : "bg-green-500"
-                          : theme === "dark"
-                          ? "bg-gray-600"
-                          : "bg-gray-500"
-                      }`}
+          {/* Body */}
+          <div className="p-6">
+            <div className="space-y-6">
+              {/* Header Section */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                      theme === "dark" ? "bg-green-600" : "bg-green-500"
+                    }`}
+                  >
+                    <svg
+                      className="h-5 w-5 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
                     >
-                      <svg
-                        className="h-4 w-4 text-white sm:h-5 sm:w-5"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
+                      <path
+                        fillRule="evenodd"
+                        d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
                   </div>
-
-                  {/* Address Details */}
-                  <div className="mb-3 sm:mb-4">
-                    <h4 className="mb-1 text-sm font-semibold text-gray-900 dark:text-white sm:mb-2 sm:text-base">
-                      {addr.street}
-                    </h4>
+                  <div>
+                    <h3
+                      className={`text-base font-semibold ${
+                        theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      Your Addresses
+                    </h3>
                     <p
-                      className={`text-xs sm:text-sm ${
+                      className={`text-xs ${
                         theme === "dark" ? "text-gray-400" : "text-gray-600"
                       }`}
                     >
-                      {addr.city}, {addr.postal_code}
+                      {addresses.length} saved address
+                      {addresses.length !== 1 ? "es" : ""}
                     </p>
                   </div>
+                </div>
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="inline-flex items-center rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:bg-green-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                >
+                  <svg
+                    className="mr-2 h-5 w-5 !text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  <span className="!text-white">Add New Address</span>
+                </button>
+              </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                    {!addr.is_default && (
-                      <Button
-                        size="xs"
-                        appearance="ghost"
-                        className={`border text-xs sm:text-sm ${
-                          theme === "dark"
-                            ? "border-green-600 text-green-400 hover:bg-green-600/20"
-                            : "border-green-500 text-green-600 hover:bg-green-50"
-                        }`}
-                        onClick={() => handleSetDefault(addr.id)}
-                        disabled={saving}
-                      >
-                        {saving ? (
-                          <Loader size="xs" content="Setting..." />
-                        ) : (
-                          <>
+              {/* Addresses Grid */}
+              {loading ? (
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {Array(4)
+                    .fill(0)
+                    .map((_, idx) => (
+                      <AddressSkeleton key={idx} />
+                    ))}
+                </div>
+              ) : error ? (
+                <div
+                  className={`rounded-xl border p-6 text-center ${
+                    theme === "dark"
+                      ? "border-red-700 bg-red-900/20 text-red-400"
+                      : "border-red-200 bg-red-50 text-red-600"
+                  }`}
+                >
+                  <svg
+                    className="mx-auto mb-3 h-8 w-8"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <p className="mb-3 font-medium">{error}</p>
+                  <button
+                    onClick={fetchAddresses}
+                    className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+                      theme === "dark"
+                        ? "bg-gray-700 text-white hover:bg-gray-600"
+                        : "bg-gray-200 text-gray-900 hover:bg-gray-300"
+                    }`}
+                  >
+                    Try Again
+                  </button>
+                </div>
+              ) : addresses.length === 0 ? (
+                <div
+                  className={`rounded-xl border-2 border-dashed p-12 text-center ${
+                    theme === "dark"
+                      ? "border-gray-700 bg-gray-800/50"
+                      : "border-gray-300 bg-gray-50"
+                  }`}
+                >
+                  <svg
+                    className={`mx-auto mb-4 h-16 w-16 ${
+                      theme === "dark" ? "text-gray-600" : "text-gray-400"
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                  <h3
+                    className={`mb-2 text-lg font-semibold ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    No addresses yet
+                  </h3>
+                  <p
+                    className={`mb-6 text-sm ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
+                    Add your first delivery address to get started
+                  </p>
+                  <button
+                    onClick={() => setShowAddModal(true)}
+                    className="inline-flex items-center rounded-xl bg-green-600 px-6 py-3 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:bg-green-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                  >
+                    <svg
+                      className="mr-2 h-5 w-5 !text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
+                    <span className="!text-white">Add Your First Address</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {addresses.map((addr) => (
+                    <div
+                      key={addr.id}
+                      className={`group relative overflow-hidden rounded-xl border-2 p-5 shadow-md transition-all duration-300 hover:shadow-xl ${
+                        addr.is_default
+                          ? theme === "dark"
+                            ? "border-green-600 bg-green-900/20"
+                            : "border-green-500 bg-gradient-to-br from-green-50 to-emerald-50"
+                          : theme === "dark"
+                          ? "border-gray-700 bg-gray-800 hover:border-gray-600"
+                          : "border-gray-200 bg-white hover:border-green-300"
+                      }`}
+                    >
+                      {/* Default Badge */}
+                      {addr.is_default && (
+                        <div className="absolute right-3 top-3">
+                          <span
+                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-white shadow-lg ${
+                              theme === "dark" ? "bg-green-600" : "bg-green-500"
+                            }`}
+                          >
                             <svg
-                              className="mr-1 h-2.5 w-2.5 sm:h-3 sm:w-3"
+                              className="mr-1 h-3 w-3"
                               fill="currentColor"
                               viewBox="0 0 20 20"
                             >
@@ -492,23 +539,25 @@ export default function AddressManagementModal({
                                 clipRule="evenodd"
                               />
                             </svg>
-                            <span className="hidden sm:inline">
-                              Set Default
-                            </span>
-                            <span className="sm:hidden">Default</span>
-                          </>
-                        )}
-                      </Button>
-                    )}
-                    {onSelect && (
-                      <Button
-                        size="xs"
-                        appearance="primary"
-                        className="bg-blue-500 text-xs text-white hover:bg-blue-600 sm:text-sm"
-                        onClick={() => handleAddressSelect(addr)}
+                            Default
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Location Icon */}
+                      <div
+                        className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl shadow-lg transition-transform duration-300 group-hover:scale-110 ${
+                          addr.is_default
+                            ? theme === "dark"
+                              ? "bg-green-600"
+                              : "bg-gradient-to-br from-green-500 to-emerald-600"
+                            : theme === "dark"
+                            ? "bg-gray-600"
+                            : "bg-gradient-to-br from-gray-400 to-gray-500"
+                        }`}
                       >
                         <svg
-                          className="mr-1 h-2.5 w-2.5 sm:h-3 sm:w-3"
+                          className="h-6 w-6 text-white"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -517,151 +566,761 @@ export default function AddressManagementModal({
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M5 13l4 4L19 7"
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                           />
                         </svg>
-                        Select
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </Modal.Body>
+                      </div>
 
-      <Modal.Footer
-        className={`${
-          theme === "dark" ? "bg-gray-800" : ""
-        } px-4 py-3 sm:px-6 sm:py-4`}
-      >
-        <div className="flex justify-end space-x-2 sm:space-x-3">
-          <Button appearance="subtle" size="sm" onClick={onClose}>
-            Close
-          </Button>
-        </div>
-      </Modal.Footer>
+                      {/* Address Details */}
+                      <div className="mb-4">
+                        <div className="mb-2 flex items-center gap-2">
+                          <h4
+                            className={`text-lg font-bold ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
+                            }`}
+                          >
+                            {addr.street}
+                          </h4>
+                          {addr.type && (
+                            <span
+                              className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
+                                theme === "dark"
+                                  ? "bg-gray-700 text-gray-300"
+                                  : "bg-gray-100 text-gray-700"
+                              }`}
+                            >
+                              {addr.type}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-start space-x-2">
+                          <svg
+                            className={`mt-0.5 h-4 w-4 flex-shrink-0 ${
+                              theme === "dark"
+                                ? "text-gray-400"
+                                : "text-gray-600"
+                            }`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                            />
+                          </svg>
+                          <p
+                            className={`text-sm ${
+                              theme === "dark"
+                                ? "text-gray-300"
+                                : "text-gray-600"
+                            }`}
+                          >
+                            {addr.city}, {addr.postal_code}
+                          </p>
+                        </div>
+                        {addr.placeDetails &&
+                          Object.keys(addr.placeDetails).length > 0 && (
+                            <div
+                              className={`mt-2 space-y-1 text-xs ${
+                                theme === "dark"
+                                  ? "text-gray-400"
+                                  : "text-gray-500"
+                              }`}
+                            >
+                              {addr.placeDetails.gateNumber && (
+                                <div className="flex items-center gap-1">
+                                  <span className="font-medium">Gate:</span>
+                                  <span>
+                                    {addr.placeDetails.gateNumber}
+                                    {addr.placeDetails.gateColor &&
+                                      ` (${addr.placeDetails.gateColor})`}
+                                  </span>
+                                </div>
+                              )}
+                              {addr.placeDetails.floor && (
+                                <div className="flex items-center gap-1">
+                                  <span className="font-medium">Floor:</span>
+                                  <span>{addr.placeDetails.floor}</span>
+                                </div>
+                              )}
+                              {addr.placeDetails.doorNumber && (
+                                <div className="flex items-center gap-1">
+                                  <span className="font-medium">
+                                    {addr.type === "office" ? "Office" : "Apt"}:
+                                  </span>
+                                  <span>{addr.placeDetails.doorNumber}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                      </div>
 
-      {/* Add New Address Modal */}
-      <Modal
-        open={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        size="md"
-        className={`${
-          theme === "dark" ? "bg-gray-900 text-gray-100" : ""
-        } mx-auto w-full max-w-2xl`}
-      >
-        <Modal.Header
-          className={`${
-            theme === "dark" ? "bg-gray-800 text-gray-100" : ""
-          } px-4 py-3 sm:px-6 sm:py-4`}
-        >
-          <Modal.Title className="text-base font-semibold sm:text-lg">
-            Add New Address
-          </Modal.Title>
-        </Modal.Header>
+                      {/* Action Buttons */}
+                      <div className="flex flex-wrap gap-2">
+                        {!addr.is_default && (
+                          <button
+                            onClick={() => handleSetDefault(addr.id)}
+                            disabled={saving}
+                            className={`group flex flex-1 items-center justify-center rounded-lg border-2 px-4 py-2 text-sm font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${
+                              theme === "dark"
+                                ? "border-green-400 bg-gray-800 text-green-400 hover:bg-green-600 hover:text-white"
+                                : "border-green-500 bg-white text-green-600 hover:bg-green-500 hover:text-white"
+                            }`}
+                          >
+                            {saving ? (
+                              <>
+                                <svg
+                                  className="mr-2 h-4 w-4 animate-spin text-current group-hover:text-white"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                  />
+                                  <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                  />
+                                </svg>
+                                <span className="text-current group-hover:text-white">
+                                  Setting...
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <svg
+                                  className="mr-2 h-4 w-4 text-current group-hover:text-white"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                                <span className="text-current group-hover:text-white">
+                                  Set as Default
+                                </span>
+                              </>
+                            )}
+                          </button>
+                        )}
+                        {onSelect && (
+                          <button
+                            onClick={() => handleAddressSelect(addr)}
+                            className="flex flex-1 items-center justify-center rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold !text-white shadow-md transition-all duration-200 hover:bg-green-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                          >
+                            <svg
+                              className="mr-2 h-4 w-4 !text-white"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                            <span className="!text-white">Select</span>
+                          </button>
+                        )}
+                      </div>
 
-        <Modal.Body
-          className={`${
-            theme === "dark" ? "bg-gray-900 text-gray-100" : ""
-          } p-4 sm:p-6`}
-        >
-          <Form fluid>
-            <Form.Group className="relative mb-3 sm:mb-4">
-              <Form.ControlLabel className="text-sm sm:text-base">
-                Street Address
-              </Form.ControlLabel>
-              <Form.Control
-                disabled={!isLoaded}
-                name="street"
-                placeholder="Enter street address"
-                value={street}
-                onChange={handleStreetChange}
-                className="w-full text-sm sm:text-base"
-              />
-              {activeInput && suggestions.length > 0 && (
-                <div className="absolute z-10 mt-1 max-h-32 w-full overflow-auto rounded-md border bg-white text-sm shadow-lg dark:border-gray-600 dark:bg-gray-800 sm:max-h-40">
-                  {suggestions.map((s) => (
-                    <div
-                      key={s.place_id}
-                      className="cursor-pointer p-2 hover:bg-gray-100 dark:hover:bg-gray-700 sm:p-3"
-                      onClick={() => handleSelect(s)}
-                    >
-                      {s.description}
+                      {/* Decorative Elements */}
+                      <div
+                        className={`absolute -right-8 -top-8 h-24 w-24 rounded-full blur-xl ${
+                          theme === "dark"
+                            ? "bg-green-800/20"
+                            : "bg-gradient-to-br from-green-200/30 to-emerald-200/30"
+                        }`}
+                      />
+                      <div
+                        className={`absolute -bottom-6 -left-6 h-20 w-20 rounded-full blur-xl ${
+                          theme === "dark"
+                            ? "bg-blue-800/20"
+                            : "bg-gradient-to-br from-blue-200/30 to-cyan-200/30"
+                        }`}
+                      />
                     </div>
                   ))}
                 </div>
               )}
-            </Form.Group>
+            </div>
+          </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
-              <Form.Group>
-                <Form.ControlLabel className="text-sm sm:text-base">
-                  City
-                </Form.ControlLabel>
-                <Form.Control
-                  name="city"
-                  placeholder="Enter city"
-                  value={city}
-                  onChange={setCity}
-                  className="text-sm sm:text-base"
-                />
-              </Form.Group>
+          {/* Footer */}
+          <div
+            className={`sticky bottom-0 flex items-center justify-end border-t p-5 ${
+              theme === "dark"
+                ? "border-gray-700 bg-gray-800"
+                : "border-gray-200 bg-white"
+            }`}
+          >
+            <button
+              onClick={onClose}
+              className={`rounded-lg px-5 py-2.5 text-sm font-semibold transition-colors ${
+                theme === "dark"
+                  ? "bg-gray-700 text-white hover:bg-gray-600"
+                  : "bg-gray-200 text-gray-900 hover:bg-gray-300"
+              }`}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
 
-              <Form.Group>
-                <Form.ControlLabel className="text-sm sm:text-base">
-                  Postal Code
-                </Form.ControlLabel>
-                <Form.Control
-                  name="postal_code"
-                  placeholder="Enter postal code"
-                  value={postalCode}
-                  onChange={setPostalCode}
-                  className="text-sm sm:text-base"
-                />
-              </Form.Group>
+      {/* Add New Address Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
+          <div
+            className={`max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border shadow-2xl ${
+              theme === "dark"
+                ? "border-gray-700 bg-gray-800"
+                : "border-gray-200 bg-white"
+            }`}
+          >
+            {/* Header */}
+            <div
+              className={`sticky top-0 z-10 flex items-center justify-between border-b p-5 ${
+                theme === "dark"
+                  ? "border-gray-700 bg-gray-800"
+                  : "border-gray-200 bg-white"
+              }`}
+            >
+              <div>
+                <h3
+                  className={`text-xl font-bold ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  Add New Address
+                </h3>
+                <p
+                  className={`mt-1 text-sm ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-600"
+                  }`}
+                >
+                  Enter your delivery address details
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowAddModal(false);
+                  setStreet("");
+                  setCity("");
+                  setPostalCode("");
+                  setIsDefault(false);
+                  setLat(null);
+                  setLng(null);
+                  setSuggestions([]);
+                  setActiveInput(false);
+                }}
+                className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+                  theme === "dark"
+                    ? "bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-white"
+                    : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900"
+                }`}
+              >
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
             </div>
 
-            <Form.Group className="mt-3 sm:mt-4">
-              <Checkbox
-                checked={isDefault}
-                onChange={(value, checked) => setIsDefault(checked)}
-                className="text-xs sm:text-sm"
-              >
-                Set as default address
-              </Checkbox>
-            </Form.Group>
-          </Form>
-        </Modal.Body>
+            {/* Body */}
+            <div className="space-y-5 p-6">
+              {/* Guest User Info Banner */}
+              {isGuest && (
+                <div
+                  className={`rounded-xl border-2 p-4 ${
+                    theme === "dark"
+                      ? "border-blue-800 bg-blue-900/20"
+                      : "border-blue-200 bg-blue-50"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <svg
+                      className={`mt-0.5 h-5 w-5 flex-shrink-0 ${
+                        theme === "dark" ? "text-blue-400" : "text-blue-600"
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <div className="flex-1">
+                      <h4
+                        className={`mb-1 text-sm font-semibold ${
+                          theme === "dark" ? "text-blue-300" : "text-blue-900"
+                        }`}
+                      >
+                        Guest Address
+                      </h4>
+                      <p
+                        className={`text-xs ${
+                          theme === "dark" ? "text-blue-400" : "text-blue-700"
+                        }`}
+                      >
+                        We've pre-filled your current delivery address. You can
+                        update it here and it will be used for your order.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-        <Modal.Footer
-          className={`${
-            theme === "dark" ? "bg-gray-800" : ""
-          } px-4 py-3 sm:px-6 sm:py-4`}
-        >
-          <div className="flex justify-end space-x-2 sm:space-x-3">
-            <Button
-              appearance="subtle"
-              size="sm"
-              onClick={() => setShowAddModal(false)}
+              {/* Street Address */}
+              <div className="relative">
+                <label
+                  className={`mb-2 block text-sm font-semibold ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Street Address <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  disabled={!isLoaded}
+                  value={street}
+                  onChange={(e) => handleStreetChange(e.target.value)}
+                  placeholder="Start typing your street address..."
+                  className={`w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+                    theme === "dark"
+                      ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                      : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                  } disabled:cursor-not-allowed disabled:opacity-50`}
+                />
+                {activeInput && suggestions.length > 0 && (
+                  <div
+                    className={`absolute z-50 mt-2 max-h-60 w-full overflow-auto rounded-xl border shadow-lg ${
+                      theme === "dark"
+                        ? "border-gray-700 bg-gray-800"
+                        : "border-gray-200 bg-white"
+                    }`}
+                  >
+                    {suggestions.map((s) => (
+                      <div
+                        key={s.place_id}
+                        onClick={() => handleSelect(s)}
+                        className={`cursor-pointer border-b px-4 py-3 text-sm transition-colors ${
+                          theme === "dark"
+                            ? "border-gray-700 text-gray-300 hover:bg-gray-700"
+                            : "border-gray-100 text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        {s.description}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* City and Postal Code */}
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <div>
+                  <label
+                    className={`mb-2 block text-sm font-semibold ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    City <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="Enter city"
+                    className={`w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+                      theme === "dark"
+                        ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                        : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                    }`}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    className={`mb-2 block text-sm font-semibold ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    Postal Code <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={postalCode}
+                    onChange={(e) => setPostalCode(e.target.value)}
+                    placeholder="Enter postal code"
+                    className={`w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+                      theme === "dark"
+                        ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                        : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {/* Address Type Selection */}
+              <div>
+                <label
+                  className={`mb-2 block text-sm font-semibold ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Address Type <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  {["home", "office", "apartment"].map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => {
+                        setAddressType(type);
+                        setPlaceDetails({});
+                      }}
+                      className={`flex flex-col items-center justify-center rounded-xl border-2 px-4 py-3 text-sm font-semibold transition-all duration-200 ${
+                        addressType === type
+                          ? theme === "dark"
+                            ? "border-green-400 bg-green-900/30 text-green-400"
+                            : "border-green-500 bg-green-50 text-green-700"
+                          : theme === "dark"
+                          ? "border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500"
+                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      {type === "home" && (
+                        <svg
+                          className="mb-1 h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                          />
+                        </svg>
+                      )}
+                      {type === "office" && (
+                        <svg
+                          className="mb-1 h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                          />
+                        </svg>
+                      )}
+                      {type === "apartment" && (
+                        <svg
+                          className="mb-1 h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"
+                          />
+                        </svg>
+                      )}
+                      <span className="capitalize">{type}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Conditional Place Details */}
+              {addressType === "home" && (
+                <div
+                  className={`grid grid-cols-1 gap-4 rounded-xl border-2 border-dashed p-4 sm:grid-cols-2 ${
+                    theme === "dark"
+                      ? "border-green-800 bg-green-900/10"
+                      : "border-green-200 bg-green-50/50"
+                  }`}
+                >
+                  <div>
+                    <label
+                      className={`mb-2 block text-sm font-semibold ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      Gate Number
+                    </label>
+                    <input
+                      type="text"
+                      value={placeDetails.gateNumber || ""}
+                      onChange={(e) =>
+                        setPlaceDetails({
+                          ...placeDetails,
+                          gateNumber: e.target.value,
+                        })
+                      }
+                      placeholder="e.g., G-123"
+                      className={`w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+                        theme === "dark"
+                          ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                          : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className={`mb-2 block text-sm font-semibold ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      Gate Color
+                    </label>
+                    <input
+                      type="text"
+                      value={placeDetails.gateColor || ""}
+                      onChange={(e) =>
+                        setPlaceDetails({
+                          ...placeDetails,
+                          gateColor: e.target.value,
+                        })
+                      }
+                      placeholder="e.g., Blue, White"
+                      className={`w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+                        theme === "dark"
+                          ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                          : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                      }`}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {(addressType === "office" || addressType === "apartment") && (
+                <div
+                  className={`grid grid-cols-1 gap-4 rounded-xl border-2 border-dashed p-4 sm:grid-cols-2 ${
+                    theme === "dark"
+                      ? "border-blue-800 bg-blue-900/10"
+                      : "border-blue-200 bg-blue-50/50"
+                  }`}
+                >
+                  <div>
+                    <label
+                      className={`mb-2 block text-sm font-semibold ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      Floor Number
+                    </label>
+                    <input
+                      type="text"
+                      value={placeDetails.floor || ""}
+                      onChange={(e) =>
+                        setPlaceDetails({
+                          ...placeDetails,
+                          floor: e.target.value,
+                        })
+                      }
+                      placeholder="e.g., 5th Floor, Ground"
+                      className={`w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+                        theme === "dark"
+                          ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                          : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className={`mb-2 block text-sm font-semibold ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      {addressType === "office"
+                        ? "Office Number"
+                        : "Apartment Number"}
+                    </label>
+                    <input
+                      type="text"
+                      value={placeDetails.doorNumber || ""}
+                      onChange={(e) =>
+                        setPlaceDetails({
+                          ...placeDetails,
+                          doorNumber: e.target.value,
+                        })
+                      }
+                      placeholder={
+                        addressType === "office" ? "e.g., 501" : "e.g., Apt 12B"
+                      }
+                      className={`w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+                        theme === "dark"
+                          ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                          : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                      }`}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Default Address Checkbox */}
+              <div
+                className={`flex items-center space-x-3 rounded-xl border p-4 ${
+                  theme === "dark"
+                    ? "border-gray-700 bg-gray-700/50"
+                    : "border-gray-200 bg-gray-50"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  id="default-address-modal"
+                  checked={isDefault}
+                  onChange={(e) => setIsDefault(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700"
+                />
+                <label
+                  htmlFor="default-address-modal"
+                  className={`flex-1 text-sm font-medium ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Set as default address
+                </label>
+                {isDefault && (
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                      theme === "dark"
+                        ? "bg-green-900/30 text-green-400"
+                        : "bg-green-100 text-green-700"
+                    }`}
+                  >
+                    Default
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div
+              className={`sticky bottom-0 flex items-center justify-end gap-3 border-t p-5 ${
+                theme === "dark"
+                  ? "border-gray-700 bg-gray-800"
+                  : "border-gray-200 bg-white"
+              }`}
             >
-              Cancel
-            </Button>
-            <Button
-              appearance="primary"
-              color="green"
-              size="sm"
-              className="bg-green-500 text-white hover:bg-green-600"
-              onClick={handleSave}
-              loading={saving}
-              disabled={!street || lat === null || lng === null}
-            >
-              Save Address
-            </Button>
+              <button
+                onClick={() => {
+                  setShowAddModal(false);
+                  setStreet("");
+                  setCity("");
+                  setPostalCode("");
+                  setIsDefault(false);
+                  setLat(null);
+                  setLng(null);
+                  setSuggestions([]);
+                  setActiveInput(false);
+                  setAddressType("home");
+                  setPlaceDetails({});
+                }}
+                className={`rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                  theme === "dark"
+                    ? "border-2 border-gray-600 bg-gray-700 text-white hover:border-gray-500 hover:bg-gray-600 focus:ring-gray-500"
+                    : "border-2 border-gray-300 bg-white text-gray-900 hover:border-gray-400 hover:bg-gray-50 focus:ring-gray-300"
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={!street || lat === null || lng === null || saving}
+                className="inline-flex items-center rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:bg-green-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-green-600 disabled:hover:shadow-lg"
+              >
+                {saving ? (
+                  <>
+                    <svg
+                      className="mr-2 h-4 w-4 animate-spin !text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    <span className="!text-white">Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      className="mr-2 h-4 w-4 !text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span className="!text-white">Save Address</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
-        </Modal.Footer>
-      </Modal>
-    </Modal>
+        </div>
+      )}
+    </>
   );
 }

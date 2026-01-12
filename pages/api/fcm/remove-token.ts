@@ -18,8 +18,6 @@ export default async function handler(
       });
     }
 
-    console.log("🔍 [FCM API] Removing token:", token);
-
     await removeFCMToken(token);
 
     res.status(200).json({
@@ -27,7 +25,10 @@ export default async function handler(
       message: "Token removed successfully",
     });
   } catch (error) {
-    console.error("❌ [FCM API] Error removing token:", error);
+    console.error(
+      "Error removing FCM token:",
+      error instanceof Error ? error.message : "Unknown error"
+    );
     res.status(500).json({
       error: "Failed to remove token",
       details: error instanceof Error ? error.message : "Unknown error",

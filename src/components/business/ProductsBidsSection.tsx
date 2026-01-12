@@ -445,11 +445,23 @@ export function ProductsBidsSection() {
 
           {/* Services Grid */}
           {loadingServices ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-green-500" />
-              <span className="ml-3 text-gray-600 dark:text-gray-400">
-                Loading services...
-              </span>
+            <div className="grid animate-pulse grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div
+                  key={i}
+                  className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
+                >
+                  <div className="space-y-4">
+                    <div className="h-6 w-3/4 rounded bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="h-4 w-full rounded bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="h-4 w-2/3 rounded bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="flex gap-2">
+                      <div className="h-8 w-24 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="h-8 w-24 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : services.length === 0 ? (
             <div className="py-12 text-center">

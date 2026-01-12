@@ -3,6 +3,7 @@ import { useGoogleMap } from "../../context/GoogleMapProvider";
 import Cookies from "js-cookie";
 import { authenticatedFetch } from "../../lib/authenticatedFetch";
 import { useLanguage } from "../../context/LanguageContext";
+import { useAuth } from "../../hooks/useAuth";
 
 // Skeleton loader for address cards
 function AddressSkeleton() {
@@ -28,6 +29,7 @@ interface UserAddressProps {
 export default function UserAddress({ onSelect }: UserAddressProps) {
   const { isLoaded } = useGoogleMap();
   const { t } = useLanguage();
+  const { isGuest } = useAuth();
   // Autocomplete service and geocoder refs
   const autocompleteServiceRef =
     useRef<google.maps.places.AutocompleteService | null>(null);
@@ -50,6 +52,14 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
   // Coordinates
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
+  // Address type and place details
+  const [addressType, setAddressType] = useState<string>("home");
+  const [placeDetails, setPlaceDetails] = useState<{
+    gateNumber?: string;
+    gateColor?: string;
+    floor?: string;
+    doorNumber?: string;
+  }>({});
 
   useEffect(() => {
     if (isLoaded && !autocompleteServiceRef.current) {
@@ -58,6 +68,31 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
       geocoderRef.current = new google.maps.Geocoder();
     }
   }, [isLoaded]);
+
+  // Pre-fill address from cookies for guest users when opening modal
+  useEffect(() => {
+    if (showModal && isGuest) {
+      const savedAddress = Cookies.get("delivery_address");
+      if (savedAddress) {
+        try {
+          const addressData = JSON.parse(savedAddress);
+          if (addressData.street) {
+            setStreet(addressData.street);
+            setCity(addressData.city || "");
+            setPostalCode(addressData.postal_code || "");
+            setLat(
+              addressData.latitude ? parseFloat(addressData.latitude) : null
+            );
+            setLng(
+              addressData.longitude ? parseFloat(addressData.longitude) : null
+            );
+          }
+        } catch (err) {
+          console.error("Error parsing delivery address cookie:", err);
+        }
+      }
+    }
+  }, [showModal, isGuest]);
 
   // Handle street input change for autocomplete
   const handleStreetChange = (val: string) => {
@@ -150,10 +185,27 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
           is_default: isDefault,
           latitude: lat,
           longitude: lng,
+          type: addressType,
+          placeDetails: placeDetails,
         }),
       });
       if (!res.ok) throw new Error(`Save failed (${res.status})`);
-      await res.json();
+      const savedAddress = await res.json();
+
+      // Update cookie with the new address (especially important for guest users)
+      if (isGuest || isDefault) {
+        const locationData = {
+          latitude: lat?.toString() || "0",
+          longitude: lng?.toString() || "0",
+          altitude: "0",
+          street: street,
+          city: city,
+          postal_code: postalCode,
+        };
+        Cookies.set("delivery_address", JSON.stringify(locationData));
+        window.dispatchEvent(new Event("addressChanged"));
+      }
+
       fetchAddresses();
       setShowModal(false);
       // reset form
@@ -163,6 +215,8 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
       setIsDefault(false);
       setLat(null);
       setLng(null);
+      setAddressType("home");
+      setPlaceDetails({});
     } catch (err: any) {
       alert(err.message || "Failed to save address");
     } finally {
@@ -225,7 +279,7 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="inline-flex items-center rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-5 py-2.5 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 active:scale-95"
+          className="inline-flex items-center rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:bg-green-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 active:scale-[0.98]"
         >
           <svg
             className="mr-2 h-5 w-5 !text-white"
@@ -314,9 +368,16 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
 
               {/* Address Details */}
               <div className="mb-4">
-                <h4 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
-                  {addr.street}
-                </h4>
+                <div className="mb-2 flex items-center gap-2">
+                  <h4 className="text-lg font-bold text-gray-900 dark:text-white">
+                    {addr.street}
+                  </h4>
+                  {addr.type && (
+                    <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium capitalize text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                      {addr.type}
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-start space-x-2 text-gray-600 dark:text-gray-300">
                   <svg
                     className="mt-0.5 h-4 w-4 flex-shrink-0"
@@ -335,20 +396,49 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
                     {addr.city}, {addr.postal_code}
                   </p>
                 </div>
+                {addr.placeDetails &&
+                  Object.keys(addr.placeDetails).length > 0 && (
+                    <div className="mt-2 space-y-1 text-xs text-gray-500 dark:text-gray-400">
+                      {addr.placeDetails.gateNumber && (
+                        <div className="flex items-center gap-1">
+                          <span className="font-medium">Gate:</span>
+                          <span>
+                            {addr.placeDetails.gateNumber}
+                            {addr.placeDetails.gateColor &&
+                              ` (${addr.placeDetails.gateColor})`}
+                          </span>
+                        </div>
+                      )}
+                      {addr.placeDetails.floor && (
+                        <div className="flex items-center gap-1">
+                          <span className="font-medium">Floor:</span>
+                          <span>{addr.placeDetails.floor}</span>
+                        </div>
+                      )}
+                      {addr.placeDetails.doorNumber && (
+                        <div className="flex items-center gap-1">
+                          <span className="font-medium">
+                            {addr.type === "office" ? "Office" : "Apt"}:
+                          </span>
+                          <span>{addr.placeDetails.doorNumber}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
               </div>
 
               {/* Action Buttons */}
               <div className="flex flex-wrap gap-2">
                 {!addr.is_default && (
                   <button
-                    className="group flex flex-1 items-center justify-center rounded-lg border-2 border-green-500 bg-white px-4 py-2 text-sm font-semibold text-green-600 transition-all duration-200 hover:bg-green-500 hover:!text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-green-400 dark:bg-gray-800 dark:text-green-400 dark:hover:bg-green-500 dark:hover:!text-white"
+                    className="group flex flex-1 items-center justify-center rounded-lg border-2 border-green-500 bg-white px-4 py-2 text-sm font-semibold text-green-600 transition-all duration-200 hover:bg-green-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-green-400 dark:bg-gray-800 dark:text-green-400 dark:hover:bg-green-500 dark:hover:text-white"
                     onClick={() => handleSetDefault(addr.id)}
                     disabled={saving}
                   >
                     {saving ? (
                       <>
                         <svg
-                          className="mr-2 h-4 w-4 animate-spin group-hover:!text-white"
+                          className="mr-2 h-4 w-4 animate-spin text-current group-hover:text-white"
                           fill="none"
                           viewBox="0 0 24 24"
                         >
@@ -366,14 +456,14 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                           />
                         </svg>
-                        <span className="group-hover:!text-white">
+                        <span className="text-current group-hover:text-white">
                           Setting...
                         </span>
                       </>
                     ) : (
                       <>
                         <svg
-                          className="mr-2 h-4 w-4 group-hover:!text-white"
+                          className="mr-2 h-4 w-4 text-current group-hover:text-white"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -385,7 +475,7 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
                             d="M5 13l4 4L19 7"
                           />
                         </svg>
-                        <span className="group-hover:!text-white">
+                        <span className="text-current group-hover:text-white">
                           Set as Default
                         </span>
                       </>
@@ -394,11 +484,11 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
                 )}
                 {onSelect && (
                   <button
-                    className="group flex flex-1 items-center justify-center rounded-lg border-2 border-blue-500 bg-white px-4 py-2 text-sm font-semibold text-blue-600 transition-all duration-200 hover:bg-blue-500 hover:!text-white dark:border-blue-400 dark:bg-gray-800 dark:text-blue-400 dark:hover:bg-blue-500 dark:hover:!text-white"
+                    className="flex flex-1 items-center justify-center rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold !text-white shadow-md transition-all duration-200 hover:bg-green-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                     onClick={() => onSelect(addr)}
                   >
                     <svg
-                      className="mr-2 h-4 w-4 group-hover:!text-white"
+                      className="mr-2 h-4 w-4 !text-white"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -410,7 +500,7 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
                         d="M5 13l4 4L19 7"
                       />
                     </svg>
-                    <span className="group-hover:!text-white">Select</span>
+                    <span className="!text-white">Select</span>
                   </button>
                 )}
               </div>
@@ -447,6 +537,25 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-500">
               {t("address.addFirstAddress")}
             </p>
+            <button
+              onClick={() => setShowModal(true)}
+              className="mt-6 inline-flex items-center rounded-xl bg-green-600 px-6 py-3 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:bg-green-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+            >
+              <svg
+                className="mr-2 h-5 w-5 !text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              <span className="!text-white">Add Your First Address</span>
+            </button>
           </div>
         )}
       </div>
@@ -476,6 +585,8 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
                   setLng(null);
                   setSuggestions([]);
                   setActiveInput(false);
+                  setAddressType("home");
+                  setPlaceDetails({});
                 }}
                 className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
               >
@@ -497,6 +608,36 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
 
             {/* Body */}
             <div className="space-y-4 p-4 sm:space-y-5 sm:p-6 md:space-y-6 md:p-8">
+              {/* Guest User Info Banner */}
+              {isGuest && (
+                <div className="rounded-xl border-2 border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+                  <div className="flex items-start gap-3">
+                    <svg
+                      className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <div className="flex-1">
+                      <h4 className="mb-1 text-sm font-semibold text-blue-900 dark:text-blue-300">
+                        Guest Address
+                      </h4>
+                      <p className="text-xs text-blue-700 dark:text-blue-400">
+                        We've pre-filled your current delivery address. You can
+                        update it here and it will be used for your order.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Street Address */}
               <div className="relative">
                 <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -561,6 +702,160 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
                 </div>
               </div>
 
+              {/* Address Type Selection */}
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Address Type *
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  {["home", "office", "apartment"].map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => {
+                        setAddressType(type);
+                        setPlaceDetails({});
+                      }}
+                      className={`flex flex-col items-center justify-center rounded-xl border-2 px-4 py-3 text-sm font-semibold transition-all duration-200 ${
+                        addressType === type
+                          ? "border-green-500 bg-green-50 text-green-700 dark:border-green-400 dark:bg-green-900/30 dark:text-green-400"
+                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-gray-500"
+                      }`}
+                    >
+                      {type === "home" && (
+                        <svg
+                          className="mb-1 h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                          />
+                        </svg>
+                      )}
+                      {type === "office" && (
+                        <svg
+                          className="mb-1 h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                          />
+                        </svg>
+                      )}
+                      {type === "apartment" && (
+                        <svg
+                          className="mb-1 h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"
+                          />
+                        </svg>
+                      )}
+                      <span className="capitalize">{type}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Conditional Place Details */}
+              {addressType === "home" && (
+                <div className="grid grid-cols-1 gap-4 rounded-xl border-2 border-dashed border-green-200 bg-green-50/50 p-4 dark:border-green-800 dark:bg-green-900/10 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Gate Number
+                    </label>
+                    <input
+                      type="text"
+                      value={placeDetails.gateNumber || ""}
+                      onChange={(e) =>
+                        setPlaceDetails({
+                          ...placeDetails,
+                          gateNumber: e.target.value,
+                        })
+                      }
+                      placeholder="e.g., G-123"
+                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Gate Color
+                    </label>
+                    <input
+                      type="text"
+                      value={placeDetails.gateColor || ""}
+                      onChange={(e) =>
+                        setPlaceDetails({
+                          ...placeDetails,
+                          gateColor: e.target.value,
+                        })
+                      }
+                      placeholder="e.g., Blue, White"
+                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {(addressType === "office" || addressType === "apartment") && (
+                <div className="grid grid-cols-1 gap-4 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50/50 p-4 dark:border-blue-800 dark:bg-blue-900/10 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Floor Number
+                    </label>
+                    <input
+                      type="text"
+                      value={placeDetails.floor || ""}
+                      onChange={(e) =>
+                        setPlaceDetails({
+                          ...placeDetails,
+                          floor: e.target.value,
+                        })
+                      }
+                      placeholder="e.g., 5th Floor, Ground"
+                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      {addressType === "office"
+                        ? "Office Number"
+                        : "Apartment Number"}
+                    </label>
+                    <input
+                      type="text"
+                      value={placeDetails.doorNumber || ""}
+                      onChange={(e) =>
+                        setPlaceDetails({
+                          ...placeDetails,
+                          doorNumber: e.target.value,
+                        })
+                      }
+                      placeholder={
+                        addressType === "office" ? "e.g., 501" : "e.g., Apt 12B"
+                      }
+                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20"
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Default Address Checkbox */}
               <div className="flex items-center space-x-3 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
                 <input
@@ -597,15 +892,17 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
                   setLng(null);
                   setSuggestions([]);
                   setActiveInput(false);
+                  setAddressType("home");
+                  setPlaceDetails({});
                 }}
-                className="rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                className="rounded-xl border-2 border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition-all duration-200 hover:border-gray-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-600"
               >
                 {t("common.cancel")}
               </button>
               <button
                 onClick={handleSave}
                 disabled={!street || lat === null || lng === null || saving}
-                className="inline-flex items-center rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold !text-white shadow-sm transition-all duration-200 hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:bg-green-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-green-600 disabled:hover:shadow-lg"
               >
                 {saving ? (
                   <>

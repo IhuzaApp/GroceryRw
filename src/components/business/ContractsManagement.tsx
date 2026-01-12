@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FileText,
   Calendar,
@@ -20,6 +20,9 @@ import {
   Search,
   SortAsc,
 } from "lucide-react";
+import { formatCurrencySync } from "../../utils/formatCurrency";
+import { downloadContractAsPdf } from "../../lib/contractUtils";
+import toast from "react-hot-toast";
 
 interface Contract {
   id: string;
@@ -32,10 +35,12 @@ interface Contract {
   status:
     | "draft"
     | "pending"
+    | "waiting_for_supplier"
     | "active"
     | "completed"
     | "terminated"
-    | "expired";
+    | "expired"
+    | "rejected";
   startDate: string;
   endDate: string;
   totalValue: number;
@@ -66,152 +71,28 @@ interface ContractsManagementProps {
   onMessageSupplier: (supplierId: string) => void;
 }
 
-const mockContracts: Contract[] = [
-  {
-    id: "1",
-    contractId: "CONTRACT-001",
-    title: "Weekly Fresh Produce Supply",
-    supplierName: "John Smith",
-    supplierCompany: "Green Valley Farms",
-    supplierId: "SUP-001",
-    contractType: "Supply Contract",
-    status: "active",
-    startDate: "2024-01-15",
-    endDate: "2024-12-15",
-    totalValue: 156000,
-    currency: "USD",
-    paymentSchedule: "Monthly",
-    progress: 75,
-    deliverables: [
-      {
-        id: "1",
-        description: "Weekly produce delivery",
-        dueDate: "2024-01-22",
-        value: 3000,
-        status: "completed",
-      },
-      {
-        id: "2",
-        description: "Quality assurance report",
-        dueDate: "2024-01-25",
-        value: 500,
-        status: "in-progress",
-      },
-      {
-        id: "3",
-        description: "Monthly inventory report",
-        dueDate: "2024-02-01",
-        value: 200,
-        status: "pending",
-      },
-    ],
-    lastActivity: "2024-01-20",
-    created: "2024-01-10",
-    signedByClient: true,
-    signedBySupplier: true,
-    nextPayment: {
-      amount: 13000,
-      dueDate: "2024-02-01",
-    },
-  },
-  {
-    id: "2",
-    contractId: "CONTRACT-002",
-    title: "Office Equipment Maintenance",
-    supplierName: "Sarah Johnson",
-    supplierCompany: "TechFix Solutions",
-    supplierId: "SUP-002",
-    contractType: "Service Agreement",
-    status: "pending",
-    startDate: "2024-02-01",
-    endDate: "2024-08-01",
-    totalValue: 24000,
-    currency: "USD",
-    paymentSchedule: "Quarterly",
-    progress: 0,
-    deliverables: [
-      {
-        id: "1",
-        description: "Initial equipment assessment",
-        dueDate: "2024-02-05",
-        value: 2000,
-        status: "pending",
-      },
-      {
-        id: "2",
-        description: "Monthly maintenance schedule",
-        dueDate: "2024-02-15",
-        value: 1500,
-        status: "pending",
-      },
-    ],
-    lastActivity: "2024-01-18",
-    created: "2024-01-15",
-    signedByClient: true,
-    signedBySupplier: false,
-  },
-  {
-    id: "3",
-    contractId: "CONTRACT-003",
-    title: "Marketing Campaign Development",
-    supplierName: "Mike Chen",
-    supplierCompany: "Creative Agency Pro",
-    supplierId: "SUP-003",
-    contractType: "Consulting Agreement",
-    status: "completed",
-    startDate: "2023-10-01",
-    endDate: "2023-12-31",
-    totalValue: 45000,
-    currency: "USD",
-    paymentSchedule: "Milestone-based",
-    progress: 100,
-    deliverables: [
-      {
-        id: "1",
-        description: "Brand strategy development",
-        dueDate: "2023-10-15",
-        value: 15000,
-        status: "completed",
-      },
-      {
-        id: "2",
-        description: "Campaign materials",
-        dueDate: "2023-11-30",
-        value: 20000,
-        status: "completed",
-      },
-      {
-        id: "3",
-        description: "Performance report",
-        dueDate: "2023-12-31",
-        value: 10000,
-        status: "completed",
-      },
-    ],
-    lastActivity: "2023-12-31",
-    created: "2023-09-20",
-    signedByClient: true,
-    signedBySupplier: true,
-  },
-];
-
 const statusColors = {
   draft: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200",
   pending:
     "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+  waiting_for_supplier:
+    "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
   active: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
   completed: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
   terminated: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
   expired: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200",
+  rejected: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
 };
 
 const statusIcons = {
   draft: <FileText className="h-4 w-4" />,
   pending: <Clock className="h-4 w-4" />,
+  waiting_for_supplier: <Clock className="h-4 w-4" />,
   active: <CheckCircle className="h-4 w-4" />,
   completed: <CheckCircle className="h-4 w-4" />,
   terminated: <XCircle className="h-4 w-4" />,
   expired: <AlertCircle className="h-4 w-4" />,
+  rejected: <XCircle className="h-4 w-4" />,
 };
 
 export function ContractsManagement({
@@ -220,6 +101,8 @@ export function ContractsManagement({
   onEditContract,
   onMessageSupplier,
 }: ContractsManagementProps) {
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<
     "date" | "value" | "status" | "progress"
   >("date");
@@ -227,14 +110,75 @@ export function ContractsManagement({
     | "all"
     | "draft"
     | "pending"
+    | "waiting_for_supplier"
     | "active"
     | "completed"
     | "terminated"
     | "expired"
+    | "rejected"
   >("all");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredContracts = mockContracts
+  useEffect(() => {
+    fetchContracts();
+  }, []);
+
+  const fetchContracts = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/queries/business-contracts");
+      if (response.ok) {
+        const data = await response.json();
+        // Transform API data to match Contract interface
+        const transformedContracts: Contract[] = (data.contracts || []).map(
+          (contract: any) => ({
+            id: contract.id,
+            contractId: contract.contractId,
+            title: contract.title,
+            supplierName: contract.supplierName,
+            supplierCompany: contract.supplierCompany,
+            supplierId: contract.supplierId || "",
+            contractType: contract.contractType,
+            status: contract.status,
+            startDate: contract.startDate,
+            endDate: contract.endDate,
+            totalValue: contract.totalValue,
+            currency: contract.currency,
+            paymentSchedule: contract.paymentSchedule,
+            progress: contract.progress || 0,
+            deliverables: Array.isArray(contract.deliverables)
+              ? contract.deliverables.map((del: any, idx: number) => ({
+                  id: del.id || `del-${idx}`,
+                  description: del.description || "",
+                  dueDate: del.dueDate || "",
+                  value: del.value || 0,
+                  status: (del.status || "pending") as
+                    | "pending"
+                    | "in-progress"
+                    | "completed"
+                    | "overdue",
+                }))
+              : [],
+            lastActivity: contract.updated_at || contract.created_at || "",
+            created: contract.created_at || "",
+            signedByClient: !!contract.clientSignature,
+            signedBySupplier: !!contract.supplierSignature,
+          })
+        );
+        setContracts(transformedContracts);
+      } else {
+        console.error("Failed to fetch contracts");
+        setContracts([]);
+      }
+    } catch (error) {
+      console.error("Error fetching contracts:", error);
+      setContracts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredContracts = contracts
     .filter((contract) => {
       const matchesSearch =
         contract.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -280,6 +224,118 @@ export function ContractsManagement({
     return "bg-red-500";
   };
 
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "Not specified";
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
+  const handleDownload = async (contract: Contract) => {
+    if (contract.status !== "active") {
+      toast.error("Only active contracts can be downloaded");
+      return;
+    }
+
+    try {
+      // Fetch full contract details for PDF generation
+      const response = await fetch(
+        `/api/queries/contract-details?id=${contract.id}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch contract details");
+      }
+
+      const data = await response.json();
+      if (!data.success || !data.contract) {
+        throw new Error("Invalid contract data");
+      }
+
+      const contractData = data.contract;
+
+      // Map contract data to match the expected interface
+      const contractDataForPdf = {
+        id: contractData.id,
+        contractId: contractData.contractId,
+        title: contractData.title,
+        supplierName: contractData.supplierName,
+        supplierCompany: contractData.supplierCompany,
+        supplierEmail: contractData.supplierEmail,
+        supplierPhone: contractData.supplierPhone,
+        supplierAddress: contractData.supplierAddress,
+        clientName: contractData.clientName,
+        clientCompany: contractData.clientCompany,
+        clientEmail: contractData.clientEmail,
+        clientPhone: contractData.clientPhone,
+        clientAddress: contractData.clientAddress,
+        contractType: contractData.contractType,
+        status: contractData.status,
+        startDate: contractData.startDate,
+        endDate: contractData.endDate,
+        totalValue: contractData.totalValue,
+        currency: contractData.currency,
+        paymentSchedule: contractData.paymentSchedule,
+        duration: contractData.duration,
+        paymentTerms: contractData.paymentTerms,
+        terminationTerms: contractData.terminationTerms,
+        specialConditions: contractData.specialConditions,
+        deliverables: contractData.deliverables.map((del: any) => ({
+          id: del.id || `del-${Math.random()}`,
+          description: del.description,
+          dueDate: del.dueDate,
+          value: del.value,
+          status: del.status || "pending",
+        })),
+        doneAt: contractData.doneAt || undefined,
+        updateOn: contractData.updateOn || undefined,
+        clientSignature: contractData.clientSignature,
+        clientPhoto: contractData.clientPhoto,
+        supplierSignature: contractData.supplierSignature,
+        supplierPhoto: contractData.supplierPhoto,
+      };
+
+      await downloadContractAsPdf(contractDataForPdf);
+      toast.success("Contract downloaded successfully!");
+    } catch (error) {
+      console.error("Error downloading contract:", error);
+      toast.error("Failed to download contract");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className={`space-y-6 ${className}`}>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Contract Management
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Manage your business contracts and agreements
+            </p>
+          </div>
+        </div>
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+          <div className="animate-pulse space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-32 rounded-lg bg-gray-200 dark:bg-gray-700"
+              ></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Header */}
@@ -319,8 +375,10 @@ export function ContractsManagement({
               <option value="all">All Status</option>
               <option value="draft">Draft</option>
               <option value="pending">Pending</option>
+              <option value="waiting_for_supplier">Waiting for Supplier</option>
               <option value="active">Active</option>
               <option value="completed">Completed</option>
+              <option value="rejected">Rejected</option>
               <option value="terminated">Terminated</option>
               <option value="expired">Expired</option>
             </select>
@@ -368,12 +426,16 @@ export function ContractsManagement({
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
                     <span>
-                      {contract.startDate} - {contract.endDate}
+                      {formatDate(contract.startDate)} -{" "}
+                      {formatDate(contract.endDate)}
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
                     <DollarSign className="h-4 w-4" />
-                    <span>${contract.totalValue.toLocaleString()}</span>
+                    <span>
+                      {formatCurrencySync(contract.totalValue)}{" "}
+                      {contract.currency}
+                    </span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
@@ -383,7 +445,7 @@ export function ContractsManagement({
               </div>
               <div className="text-right">
                 <div className="mb-1 text-2xl font-bold text-gray-900 dark:text-white">
-                  ${contract.totalValue.toLocaleString()}
+                  {formatCurrencySync(contract.totalValue)} {contract.currency}
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">
                   {contract.progress}% complete
@@ -423,7 +485,8 @@ export function ContractsManagement({
                     </span>
                     <div className="flex items-center gap-2">
                       <span className="text-gray-500 dark:text-gray-400">
-                        ${deliverable.value.toLocaleString()}
+                        {formatCurrencySync(deliverable.value)}{" "}
+                        {contract.currency}
                       </span>
                       <span
                         className={`rounded-full px-2 py-1 text-xs ${getDeliverableStatusColor(
@@ -452,7 +515,8 @@ export function ContractsManagement({
                   </span>
                   <div className="text-right">
                     <div className="font-semibold text-blue-900 dark:text-blue-100">
-                      ${contract.nextPayment.amount.toLocaleString()}
+                      {formatCurrencySync(contract.nextPayment.amount)}{" "}
+                      {contract.currency}
                     </div>
                     <div className="text-blue-600 dark:text-blue-400">
                       Due {contract.nextPayment.dueDate}
@@ -465,10 +529,21 @@ export function ContractsManagement({
             {/* Actions */}
             <div className="flex flex-col gap-3 border-t border-gray-200 pt-4 dark:border-gray-600 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
               <div className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 sm:gap-2 sm:text-sm">
-                <span className="whitespace-nowrap">
-                  Last activity: {contract.lastActivity}
-                </span>
-                <span className="hidden sm:inline">•</span>
+                {contract.lastActivity ? (
+                  <>
+                    <span className="whitespace-nowrap">
+                      Last activity: {formatDate(contract.lastActivity)}
+                    </span>
+                    <span className="hidden sm:inline">•</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="whitespace-nowrap text-gray-400 dark:text-gray-500">
+                      Last activity: Not available
+                    </span>
+                    <span className="hidden sm:inline">•</span>
+                  </>
+                )}
                 <div className="flex items-center gap-1">
                   <span>Client:</span>
                   {contract.signedByClient ? (
@@ -490,24 +565,35 @@ export function ContractsManagement({
               <div className="flex flex-wrap gap-2 sm:flex-nowrap">
                 <button
                   onClick={() => onViewContract(contract.id)}
-                  className="flex-1 rounded-lg border border-blue-300 px-2.5 py-1.5 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700 active:scale-95 dark:border-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 sm:flex-none sm:px-3 sm:py-1 sm:text-sm"
+                  className="group flex items-center justify-center gap-1.5 rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 shadow-sm transition-all hover:bg-blue-100 hover:shadow-md active:scale-95 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50 sm:px-4 sm:py-2 sm:text-sm"
                 >
-                  <Eye className="mr-1 inline h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  View
+                  <Eye className="h-4 w-4 transition-transform group-hover:scale-110" />
+                  <span>View</span>
                 </button>
-                <button
-                  onClick={() => onEditContract(contract.id)}
-                  className="flex-1 rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800 active:scale-95 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200 sm:flex-none sm:px-3 sm:py-1 sm:text-sm"
-                >
-                  <Edit className="mr-1 inline h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  Edit
-                </button>
+                {contract.status === "waiting_for_supplier" && (
+                  <button
+                    onClick={() => onEditContract(contract.id)}
+                    className="group flex items-center justify-center gap-1.5 rounded-lg bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700 shadow-sm transition-all hover:bg-amber-100 hover:shadow-md active:scale-95 dark:bg-amber-900/30 dark:text-amber-300 dark:hover:bg-amber-900/50 sm:px-4 sm:py-2 sm:text-sm"
+                  >
+                    <Edit className="h-4 w-4 transition-transform group-hover:scale-110" />
+                    <span>Edit</span>
+                  </button>
+                )}
+                {contract.status === "active" && (
+                  <button
+                    onClick={() => handleDownload(contract)}
+                    className="group flex items-center justify-center gap-1.5 rounded-lg bg-green-50 px-3 py-2 text-xs font-semibold text-green-700 shadow-sm transition-all hover:bg-green-100 hover:shadow-md active:scale-95 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50 sm:px-4 sm:py-2 sm:text-sm"
+                  >
+                    <Download className="h-4 w-4 transition-transform group-hover:scale-110" />
+                    <span>Download</span>
+                  </button>
+                )}
                 <button
                   onClick={() => onMessageSupplier(contract.supplierId)}
-                  className="flex-1 rounded-lg border border-green-300 px-2.5 py-1.5 text-xs font-medium text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 active:scale-95 dark:border-green-600 dark:hover:bg-green-900/20 dark:hover:text-green-400 sm:flex-none sm:px-3 sm:py-1 sm:text-sm"
+                  className="group flex items-center justify-center gap-1.5 rounded-lg bg-purple-50 px-3 py-2 text-xs font-semibold text-purple-700 shadow-sm transition-all hover:bg-purple-100 hover:shadow-md active:scale-95 dark:bg-purple-900/30 dark:text-purple-300 dark:hover:bg-purple-900/50 sm:px-4 sm:py-2 sm:text-sm"
                 >
-                  <MessageSquare className="mr-1 inline h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  Message
+                  <MessageSquare className="h-4 w-4 transition-transform group-hover:scale-110" />
+                  <span>Message</span>
                 </button>
               </div>
             </div>

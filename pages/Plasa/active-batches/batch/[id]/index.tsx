@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import ShopperLayout from "@components/shopper/ShopperLayout";
-import BatchDetails from "@components/shopper/batchDetails";
+import {
+  BatchDetailsResponsive,
+  type OrderDetailsType,
+  type OrderItem,
+} from "@components/shopper/activebatches";
 import { GetServerSideProps } from "next";
 import { hasuraClient } from "../../../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
@@ -20,30 +24,6 @@ import {
 import { db } from "../../../../../src/lib/firebase";
 import { AuthGuard } from "../../../../../src/components/AuthGuard";
 
-// Define interfaces for the order data
-interface OrderItem {
-  id: string;
-  quantity: number;
-  price: number;
-  product: {
-    id: string;
-    name: string;
-    image: string;
-    final_price: string;
-    measurement_unit?: string;
-    category?: string;
-    ProductName?: {
-      id: string;
-      name: string;
-      description: string;
-      barcode: string;
-      sku: string;
-      image: string;
-      create_at: string;
-    };
-  };
-}
-
 interface BatchOrderDetailsType {
   id: string;
   OrderID: string;
@@ -56,13 +36,6 @@ interface BatchOrderDetailsType {
   status: string;
   deliveryPhotoUrl: string;
   discount: number;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    profile_picture: string;
-  };
   orderedBy: {
     created_at: string;
     email: string;
@@ -98,8 +71,9 @@ interface BatchOrderDetailsType {
     postal_code: string;
     latitude: string;
     longitude: string;
+    placeDetails?: any;
   };
-  assignedTo: {
+  Shoppers: {
     id: string;
     name: string;
     profile_picture: string;
@@ -236,7 +210,7 @@ function BatchDetailsPage({ orderData, error }: BatchDetailsPageProps) {
 
   return (
     <ShopperLayout>
-      <BatchDetails
+      <BatchDetailsResponsive
         orderData={transformedOrderData as any}
         error={error}
         onUpdateStatus={handleUpdateStatus}
@@ -286,13 +260,6 @@ export const getServerSideProps: GetServerSideProps<
         status
         deliveryPhotoUrl: delivery_photo_url
         discount
-        user: User {
-          id
-          name
-          email
-          phone
-          profile_picture
-        }
         orderedBy {
           created_at
           email
@@ -347,8 +314,9 @@ export const getServerSideProps: GetServerSideProps<
           postal_code
           latitude
           longitude
+          placeDetails
         }
-        assignedTo: User {
+        Shoppers {
           id
           name
           profile_picture
@@ -445,7 +413,7 @@ export const getServerSideProps: GetServerSideProps<
           user_id
           is_default
         }
-        assignedTo: User {
+        Shoppers {
           id
           name
           email
@@ -594,7 +562,7 @@ export const getServerSideProps: GetServerSideProps<
     // Check if the user is authorized to view this order
     // User can view if they are assigned to the order or if they are the customer
     const isAssignedShopper =
-      order.assignedTo?.id === session.user.id ||
+      order.Shoppers?.id === session.user.id ||
       order.shopper?.id === session.user.id;
     const isCustomer = order.orderedBy?.id === session.user.id;
 
@@ -622,7 +590,7 @@ export const getServerSideProps: GetServerSideProps<
       isRestaurantShopper,
       isRestaurantCustomer,
       orderType,
-      assignedToId: order.assignedTo?.id,
+      assignedToId: order.Shoppers?.id,
       shopperId: order.shopper?.id,
       sessionUserId: session.user.id,
     });

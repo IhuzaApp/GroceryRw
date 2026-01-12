@@ -2,18 +2,31 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { logger } from "../../../src/utils/logger";
+import { sendNewOrderNotification } from "../../../src/services/fcmService";
 
-// GraphQL query to get available orders for notification
+// In-memory cache to track which orders were sent to which shoppers
+// Key format: "shopperId:orderId" -> timestamp
+const notificationCache = new Map<string, number>();
+
+// Clean up old entries every 5 minutes (orders expire after 90 seconds)
+setInterval(() => {
+  const now = Date.now();
+  const expireTime = 90000; // 90 seconds
+
+  for (const [key, timestamp] of notificationCache.entries()) {
+    if (now - timestamp > expireTime) {
+      notificationCache.delete(key);
+    }
+  }
+}, 5 * 60 * 1000); // Clean every 5 minutes
+
+// GraphQL query to get all available orders for notification
 const GET_AVAILABLE_ORDERS = gql`
-  query GetAvailableOrders($current_time: timestamptz!) {
+  query GetAvailableOrders {
     Orders(
-      where: {
-        status: { _eq: "PENDING" }
-        created_at: { _gt: $current_time }
-        shopper_id: { _is_null: true }
-      }
+      where: { status: { _eq: "PENDING" }, shopper_id: { _is_null: true } }
       order_by: { created_at: asc }
-      limit: 20
+      limit: 50
     ) {
       id
       created_at
@@ -31,21 +44,25 @@ const GET_AVAILABLE_ORDERS = gql`
         street
         city
       }
+      Order_Items_aggregate {
+        aggregate {
+          count
+          sum {
+            quantity
+          }
+        }
+      }
     }
   }
 `;
 
-// GraphQL query to get available reel orders for notification
+// GraphQL query to get all available reel orders for notification
 const GET_AVAILABLE_REEL_ORDERS = gql`
-  query GetAvailableReelOrders($current_time: timestamptz!) {
+  query GetAvailableReelOrders {
     reel_orders(
-      where: {
-        status: { _eq: "PENDING" }
-        created_at: { _gt: $current_time }
-        shopper_id: { _is_null: true }
-      }
+      where: { status: { _eq: "PENDING" }, shopper_id: { _is_null: true } }
       order_by: { created_at: asc }
-      limit: 20
+      limit: 50
     ) {
       id
       created_at
@@ -70,23 +87,13 @@ const GET_AVAILABLE_REEL_ORDERS = gql`
   }
 `;
 
-// GraphQL query to get available restaurant orders for notification
+// GraphQL query to get all available restaurant orders for notification
 const GET_AVAILABLE_RESTAURANT_ORDERS = gql`
-  query GetAvailableRestaurantOrders($current_time: timestamptz!) {
+  query GetAvailableRestaurantOrders {
     restaurant_orders(
-      where: {
-        status: { _eq: "PENDING" }
-        shopper_id: { _is_null: true }
-        _or: [
-          { updated_at: { _gte: $current_time } }
-          {
-            updated_at: { _is_null: true }
-            created_at: { _gte: $current_time }
-          }
-        ]
-      }
+      where: { status: { _eq: "PENDING" }, shopper_id: { _is_null: true } }
       order_by: { updated_at: asc_nulls_last, created_at: asc }
-      limit: 20
+      limit: 50
     ) {
       id
       created_at
@@ -154,6 +161,7 @@ function calculateDistanceKm(
 }
 
 // Calculate shopper priority score (lower is better)
+// Prioritizes older orders heavily while still considering new ones
 function calculateShopperPriority(
   shopperLocation: { lat: number; lng: number },
   order: any,
@@ -178,12 +186,40 @@ function calculateShopperPriority(
   const completionRate =
     orderCount > 0 ? Math.min(100, (orderCount / 10) * 100) : 0; // Simplified completion rate
 
+  // Calculate order age in minutes
+  const orderTimestamp =
+    order.orderType === "restaurant" && order.updated_at
+      ? new Date(order.updated_at).getTime()
+      : new Date(order.created_at).getTime();
+  const ageInMinutes = (Date.now() - orderTimestamp) / 60000;
+
+  // Age factor: heavily prioritize older orders, but don't completely ignore new ones
+  // - Orders 30+ minutes old get maximum priority boost (lowest score)
+  // - Orders 15-30 minutes old get moderate priority boost
+  // - Orders under 15 minutes get less priority boost
+  // - All orders are still considered, ensuring new ones don't get stuck
+  let ageFactor;
+  if (ageInMinutes >= 30) {
+    // Very old orders: strongest priority (lowest score added)
+    ageFactor = -5; // Negative value means higher priority
+  } else if (ageInMinutes >= 15) {
+    // Moderately old orders: good priority
+    ageFactor = -2;
+  } else if (ageInMinutes >= 5) {
+    // Somewhat new orders: neutral priority
+    ageFactor = 0;
+  } else {
+    // Very new orders: lower priority (higher score added)
+    ageFactor = 2;
+  }
+
   // Priority score calculation (lower is better)
   const priorityScore =
-    distance * 0.4 + // Distance weight (40%)
-    (5 - avgRating) * 2 + // Rating weight (inverted, 20%)
-    (100 - completionRate) * 0.01 + // Completion rate weight (10%)
-    Math.random() * 0.5; // Small random factor (10%) for fairness
+    distance * 0.3 + // Distance weight (30%)
+    (5 - avgRating) * 1.5 + // Rating weight (inverted, 15%)
+    (100 - completionRate) * 0.01 + // Completion rate weight (5%)
+    ageFactor + // Age-based priority (50%)
+    Math.random() * 0.3; // Small random factor (5%) for fairness
 
   return priorityScore;
 }
@@ -194,59 +230,72 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  console.log("=== Smart Assignment API called ===");
+  console.log("Method:", req.method);
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
     const { current_location, user_id } = req.body;
+    console.log("Request body:", { user_id, current_location });
 
     if (!user_id) {
+      console.warn("Missing user_id in request");
       return res.status(400).json({
         error: "User ID is required",
       });
     }
 
     if (!current_location || !current_location.lat || !current_location.lng) {
+      console.warn("Missing or invalid current_location in request");
       return res.status(400).json({
         error: "Current location is required",
       });
     }
 
+    console.log("Checking hasuraClient...");
     if (!hasuraClient) {
+      console.error("Hasura client is not initialized!");
       throw new Error("Hasura client is not initialized");
     }
+    console.log("hasuraClient is initialized");
 
-    // Get orders created in the last 29 minutes
-    const twentyNineMinutesAgo = new Date(
-      Date.now() - 29 * 60 * 1000
-    ).toISOString();
+    // Fetch all available orders (no time restriction)
+    console.log("Fetching all available orders from Hasura...");
 
     // Fetch regular, reel, and restaurant orders in parallel
+    console.log("Fetching orders and shopper performance from Hasura...");
     const [
       regularOrdersData,
       reelOrdersData,
       restaurantOrdersData,
       performanceData,
     ] = await Promise.all([
-      hasuraClient.request(GET_AVAILABLE_ORDERS, {
-        current_time: twentyNineMinutesAgo,
-      }) as any,
-      hasuraClient.request(GET_AVAILABLE_REEL_ORDERS, {
-        current_time: twentyNineMinutesAgo,
-      }) as any,
-      hasuraClient.request(GET_AVAILABLE_RESTAURANT_ORDERS, {
-        current_time: twentyNineMinutesAgo,
-      }) as any,
+      hasuraClient.request(GET_AVAILABLE_ORDERS) as any,
+      hasuraClient.request(GET_AVAILABLE_REEL_ORDERS) as any,
+      hasuraClient.request(GET_AVAILABLE_RESTAURANT_ORDERS) as any,
       hasuraClient.request(GET_SHOPPER_PERFORMANCE, {
         shopper_id: user_id,
       }) as any,
     ]);
+    console.log("Data fetched successfully from Hasura");
 
     const availableOrders = regularOrdersData.Orders || [];
     const availableReelOrders = reelOrdersData.reel_orders || [];
     const availableRestaurantOrders =
       restaurantOrdersData.restaurant_orders || [];
+
+    console.log("Available orders counts:", {
+      regular: availableOrders.length,
+      reel: availableReelOrders.length,
+      restaurant: availableRestaurantOrders.length,
+      total:
+        availableOrders.length +
+        availableReelOrders.length +
+        availableRestaurantOrders.length,
+    });
 
     // Combine all orders with type information
     const allOrders = [
@@ -265,12 +314,15 @@ export default async function handler(
     ];
 
     if (allOrders.length === 0) {
+      console.log("No available orders found");
       return res.status(200).json({
         success: false,
         message: "No available orders at the moment",
         orders: [],
       });
     }
+
+    console.log("Calculating priority for", allOrders.length, "orders");
 
     // Calculate priority for each order
     const ordersWithPriority = allOrders.map((order) => ({
@@ -287,6 +339,11 @@ export default async function handler(
 
     // Get the best order for the shopper to see (don't assign yet)
     const bestOrder = ordersWithPriority[0];
+    console.log("Best order selected:", {
+      id: bestOrder.id,
+      type: bestOrder.orderType,
+      priority: bestOrder.priority,
+    });
 
     // Calculate distance and travel time
     const distance = calculateDistanceKm(
@@ -303,6 +360,23 @@ export default async function handler(
       return Math.round(travelTimeHours * 60);
     };
 
+    // Calculate items count based on order type
+    let itemsCount = 1; // Default
+    if (bestOrder.orderType === "regular") {
+      // For regular orders, use Order_Items aggregate - sum gives total units, count gives number of different items
+      const unitsCount =
+        bestOrder.Order_Items_aggregate?.aggregate?.sum?.quantity || 0;
+      const itemsTypeCount =
+        bestOrder.Order_Items_aggregate?.aggregate?.count || 0;
+      itemsCount = unitsCount || itemsTypeCount || 1; // Prefer units count (total quantity)
+    } else if (bestOrder.orderType === "reel") {
+      // For reel orders, use quantity field
+      itemsCount = bestOrder.quantity || 1;
+    } else if (bestOrder.orderType === "restaurant") {
+      // For restaurant orders, we'll need to check the correct field name
+      itemsCount = bestOrder.items || bestOrder.quantity || 1;
+    }
+
     // Format order for notification (don't assign yet)
     const orderForNotification = {
       id: bestOrder.id,
@@ -317,7 +391,7 @@ export default async function handler(
       customerAddress: `${
         bestOrder.Address?.street || bestOrder.address?.street
       }, ${bestOrder.Address?.city || bestOrder.address?.city}`,
-      itemsCount: bestOrder.quantity || 1,
+      itemsCount: itemsCount,
       estimatedEarnings:
         bestOrder.orderType === "restaurant"
           ? parseFloat(bestOrder.delivery_fee || "0") // Restaurant orders: delivery only
@@ -325,6 +399,19 @@ export default async function handler(
             parseFloat(bestOrder.delivery_fee || "0"), // Regular and reel orders: service + delivery
       orderType: bestOrder.orderType,
       priority: bestOrder.priority,
+      // Add coordinates for map route display
+      shopLatitude: parseFloat(
+        bestOrder.Shop?.latitude || bestOrder.Restaurant?.lat || "0"
+      ),
+      shopLongitude: parseFloat(
+        bestOrder.Shop?.longitude || bestOrder.Restaurant?.long || "0"
+      ),
+      customerLatitude: parseFloat(
+        bestOrder.Address?.latitude || bestOrder.address?.latitude || "0"
+      ),
+      customerLongitude: parseFloat(
+        bestOrder.Address?.longitude || bestOrder.address?.longitude || "0"
+      ),
       // Add restaurant-specific fields
       ...(bestOrder.orderType === "restaurant" && {
         restaurant: bestOrder.Restaurant,
@@ -337,12 +424,78 @@ export default async function handler(
       }),
     };
 
+    console.log("Returning order notification:", {
+      orderId: orderForNotification.id,
+      orderType: orderForNotification.orderType,
+      distance: orderForNotification.distance,
+      estimatedEarnings: orderForNotification.estimatedEarnings,
+      itemsCount: orderForNotification.itemsCount,
+    });
+
+    // Check if we already sent FCM notification for this order to this shopper
+    const cacheKey = `${user_id}:${bestOrder.id}`;
+    const lastSent = notificationCache.get(cacheKey);
+    const now = Date.now();
+
+    // Only send FCM if we haven't sent it in the last 90 seconds (order expiry time)
+    if (!lastSent || now - lastSent > 90000) {
+      // Send FCM notification to the shopper
+      try {
+        await sendNewOrderNotification(user_id, {
+          id: bestOrder.id,
+          shopName: orderForNotification.shopName,
+          customerAddress: orderForNotification.customerAddress,
+          distance: orderForNotification.distance,
+          itemsCount: orderForNotification.itemsCount,
+          travelTimeMinutes: orderForNotification.travelTimeMinutes,
+          estimatedEarnings: orderForNotification.estimatedEarnings,
+          orderType: orderForNotification.orderType,
+        });
+
+        // Cache this notification
+        notificationCache.set(cacheKey, now);
+        console.log(
+          "✅ FCM notification sent to shopper:",
+          user_id,
+          "for order:",
+          bestOrder.id
+        );
+      } catch (fcmError) {
+        console.error("Failed to send FCM notification:", fcmError);
+        // Continue even if notification fails
+      }
+    } else {
+      const timeSinceLastSent = Math.floor((now - lastSent) / 1000);
+      console.log(
+        `⏭️ Skipping FCM notification - already sent ${timeSinceLastSent}s ago to shopper:`,
+        user_id,
+        "for order:",
+        bestOrder.id
+      );
+    }
+
     return res.status(200).json({
       success: true,
       order: orderForNotification,
       message: "Order found - shopper can accept or skip",
     });
   } catch (error) {
+    console.error("=== ERROR in Smart Assignment API ===");
+    console.error("Error:", error);
+    console.error(
+      "Error message:",
+      error instanceof Error ? error.message : String(error)
+    );
+    console.error(
+      "Error stack:",
+      error instanceof Error ? error.stack : "No stack trace"
+    );
+
+    logger.error("Error in smart assignment", "SmartAssignmentAPI", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+
     return res.status(500).json({
       error: "Failed to find order",
       details: error instanceof Error ? error.message : "Unknown error",

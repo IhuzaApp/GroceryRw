@@ -18,8 +18,6 @@ export default async function handler(
       });
     }
 
-    console.log("🔍 [FCM API] Saving token:", { userId, token, platform });
-
     await saveFCMToken(userId, token, platform);
 
     res.status(200).json({
@@ -27,7 +25,10 @@ export default async function handler(
       message: "Token saved successfully",
     });
   } catch (error) {
-    console.error("❌ [FCM API] Error saving token:", error);
+    console.error(
+      "Error saving FCM token:",
+      error instanceof Error ? error.message : "Unknown error"
+    );
     res.status(500).json({
       error: "Failed to save token",
       details: error instanceof Error ? error.message : "Unknown error",

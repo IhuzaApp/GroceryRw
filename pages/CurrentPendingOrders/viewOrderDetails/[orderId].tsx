@@ -89,7 +89,7 @@ function getOrderStatusInfo(order: any) {
           />
         </svg>
       ),
-      description: "Waiting for shopper assignment",
+      description: "Waiting for assignment",
     };
   } else {
     switch (order?.status) {
@@ -112,7 +112,7 @@ function getOrderStatusInfo(order: any) {
               />
             </svg>
           ),
-          description: "Shopper is picking your items",
+          description: "Your Plaser is picking your items",
         };
       case "packing":
         return {
@@ -185,9 +185,11 @@ function getOrderStatusInfo(order: any) {
 const MobileOrderDetails = ({
   order,
   orderType,
+  combinedOrders,
 }: {
   order: any;
   orderType: "regular" | "reel" | "restaurant" | null;
+  combinedOrders: any[];
 }) => {
   const { theme } = useTheme();
   const router = useRouter();
@@ -243,69 +245,99 @@ const MobileOrderDetails = ({
         {/* Order ID Badge */}
         <div className="absolute right-4 top-7 z-20">
           <span className="inline-flex items-center rounded-full bg-white/20 px-4 py-2 text-sm font-semibold !text-white shadow-lg backdrop-blur-md">
-            #{formatOrderID(order?.OrderID)}
+            {combinedOrders.length > 1 ? (
+              <>
+                {combinedOrders.map((ord: any, idx: number) => (
+                  <span key={ord.id}>
+                    #{formatOrderID(ord.OrderID)}
+                    {idx < combinedOrders.length - 1 ? " & " : ""}
+                  </span>
+                ))}
+              </>
+            ) : (
+              <>#{formatOrderID(order?.OrderID)}</>
+            )}
           </span>
         </div>
 
         {/* Header Content */}
         <div className="absolute bottom-0 left-0 right-0 z-10 p-4">
-          <h1 className="text-2xl font-bold !text-white">Order Details</h1>
-          {order?.shop?.name && (
-            <p className="mt-1 text-sm !text-white/90">{order.shop.name}</p>
-          )}
-          {order?.reel?.title && (
-            <p className="mt-1 text-sm !text-white/90">{order.reel.title}</p>
+          <h1 className="text-2xl font-bold !text-white">
+            {combinedOrders.length > 1 ? "Orders Details" : "Order Details"}
+          </h1>
+          {combinedOrders.length > 1 ? (
+            <p className="mt-1 text-sm !text-white/90">
+              {combinedOrders.length === 2
+                ? `${combinedOrders[0]?.shop?.name} & ${combinedOrders[1]?.shop?.name}`
+                : `${combinedOrders[0]?.shop?.name} & ${
+                    combinedOrders.length - 1
+                  } others`}
+            </p>
+          ) : (
+            <>
+              {order?.shop?.name && (
+                <p className="mt-1 text-sm !text-white/90">{order.shop.name}</p>
+              )}
+              {order?.reel?.title && (
+                <p className="mt-1 text-sm !text-white/90">
+                  {order.reel.title}
+                </p>
+              )}
+            </>
           )}
         </div>
       </div>
 
       {/* Mobile Content */}
       <div className="py-6">
-        {/* Order Status Badge - Modern Design */}
-        <div className="mb-6 px-4">
-          {(() => {
-            const statusInfo = getOrderStatusInfo(order);
-            const colorClasses = {
-              green:
-                "from-green-400 to-green-600 shadow-green-200 dark:shadow-green-900/50",
-              yellow:
-                "from-yellow-400 to-yellow-600 shadow-yellow-200 dark:shadow-yellow-900/50",
-              blue: "from-blue-400 to-blue-600 shadow-blue-200 dark:shadow-blue-900/50",
-              purple:
-                "from-purple-400 to-purple-600 shadow-purple-200 dark:shadow-purple-900/50",
-              orange:
-                "from-orange-400 to-orange-600 shadow-orange-200 dark:shadow-orange-900/50",
-            };
+        {/* Order PIN Card - Compact Display */}
+        {order?.pin && (
+          <div className="mb-4 px-4">
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-green-500 via-green-600 to-green-700 p-4 shadow-lg">
+              {/* Animated background elements */}
+              <div className="absolute -right-6 -top-6 h-20 w-20 animate-pulse rounded-full bg-white opacity-10"></div>
+              <div className="absolute -bottom-3 -left-3 h-16 w-16 rounded-full bg-white opacity-5"></div>
 
-            return (
-              <div
-                className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${
-                  colorClasses[statusInfo.color as keyof typeof colorClasses]
-                } p-6 text-white shadow-lg`}
-              >
-                {/* Animated background elements */}
-                <div className="absolute -right-4 -top-4 h-16 w-16 animate-pulse rounded-full bg-white opacity-10"></div>
-                <div className="absolute -bottom-2 -left-2 h-12 w-12 animate-bounce rounded-full bg-white opacity-5"></div>
-
-                <div className="relative z-10">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white bg-opacity-20">
-                      {statusInfo.icon}
-                    </div>
-                    <div className="flex-1">
-                      <h2 className="text-2xl font-bold">
-                        {statusInfo.status}
-                      </h2>
-                      <p className="text-sm opacity-90">
-                        {statusInfo.description}
-                      </p>
-                    </div>
+              <div className="relative z-10">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold uppercase tracking-wider !text-white">
+                      Pickup PIN
+                    </p>
+                    <p className="mt-0.5 text-[10px] !text-white">
+                      Show to Plaser
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-center rounded-lg border-2 border-dashed border-white/30 bg-white/10 px-4 py-2 backdrop-blur-sm">
+                    <span className="text-3xl font-black leading-none tracking-wider !text-white">
+                      {order.pin}
+                    </span>
                   </div>
                 </div>
+
+                {/* Order Status Indicator */}
+                {(() => {
+                  const statusInfo = getOrderStatusInfo(order);
+                  return (
+                    <div className="mt-3 flex items-center gap-2 rounded-lg bg-white/10 px-2.5 py-1.5 backdrop-blur-sm">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20">
+                        <div className="scale-75">{statusInfo.icon}</div>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold !text-white">
+                          {statusInfo.status}
+                        </p>
+                        <p className="text-[10px] !text-white">
+                          {statusInfo.description}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
-            );
-          })()}
-        </div>
+            </div>
+          </div>
+        )}
 
         {/* Order Details Component - Full width on mobile */}
         <div className="mobile-full-width ">
@@ -314,7 +346,11 @@ const MobileOrderDetails = ({
           ) : orderType === "restaurant" ? (
             <UserRestaurantOrderDetails order={order} isMobile={true} />
           ) : (
-            <UserOrderDetails order={order} isMobile={true} />
+            <UserOrderDetails
+              order={order}
+              isMobile={true}
+              combinedOrders={combinedOrders}
+            />
           )}
         </div>
       </div>
@@ -326,9 +362,11 @@ const MobileOrderDetails = ({
 const DesktopOrderDetails = ({
   order,
   orderType,
+  combinedOrders,
 }: {
   order: any;
   orderType: "regular" | "reel" | "restaurant" | null;
+  combinedOrders: any[];
 }) => {
   return (
     <div className="min-h-screen md:ml-16">
@@ -340,7 +378,7 @@ const DesktopOrderDetails = ({
           ) : orderType === "restaurant" ? (
             <UserRestaurantOrderDetails order={order} />
           ) : (
-            <UserOrderDetails order={order} />
+            <UserOrderDetails order={order} combinedOrders={combinedOrders} />
           )}
         </div>
       </div>
@@ -357,6 +395,7 @@ function ViewOrderDetailsPage() {
   const [orderType, setOrderType] = useState<
     "regular" | "reel" | "restaurant" | null
   >(null);
+  const [combinedOrders, setCombinedOrders] = useState<any[]>([]);
 
   useEffect(() => {
     if (!orderId || !router.isReady) return;
@@ -429,6 +468,35 @@ function ViewOrderDetailsPage() {
     }
     fetchDetails();
   }, [orderId]);
+
+  // Fetch combined orders if this is a combined order
+  useEffect(() => {
+    const fetchCombinedOrders = async () => {
+      if (!order?.combinedOrderId) {
+        setCombinedOrders(order ? [order] : []);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `/api/queries/combined-orders?combined_order_id=${order.combinedOrderId}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setCombinedOrders(data.orders || [order]);
+        } else {
+          setCombinedOrders([order]);
+        }
+      } catch (error) {
+        console.error("Error fetching combined orders:", error);
+        setCombinedOrders([order]);
+      }
+    };
+
+    if (order) {
+      fetchCombinedOrders();
+    }
+  }, [order]);
 
   if (loading) {
     return (
@@ -526,12 +594,20 @@ function ViewOrderDetailsPage() {
       <RootLayout>
         {/* Mobile View */}
         <div className="block md:hidden">
-          <MobileOrderDetails order={order} orderType={orderType} />
+          <MobileOrderDetails
+            order={order}
+            orderType={orderType}
+            combinedOrders={combinedOrders}
+          />
         </div>
 
         {/* Desktop View */}
         <div className="hidden md:block">
-          <DesktopOrderDetails order={order} orderType={orderType} />
+          <DesktopOrderDetails
+            order={order}
+            orderType={orderType}
+            combinedOrders={combinedOrders}
+          />
         </div>
 
         {/* Mobile-specific styles for full-width layout */}

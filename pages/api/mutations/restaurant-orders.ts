@@ -7,6 +7,13 @@ const client = new GraphQLClient(process.env.HASURA_GRAPHQL_ENDPOINT!, {
   },
 });
 
+// Generate a random 2-digit PIN (00-99)
+function generateOrderPin(): string {
+  return Math.floor(Math.random() * 100)
+    .toString()
+    .padStart(2, "0");
+}
+
 // Mutation to create a restaurant order
 const CREATE_RESTAURANT_ORDER = `
   mutation CreateRestaurantOrder(
@@ -20,6 +27,7 @@ const CREATE_RESTAURANT_ORDER = `
     $voucher_code: String,
     $delivery_time: timestamptz!,
     $delivery_notes: String,
+    $pin: String!,
     $status: String = "pending"
   ) {
     insert_restaurant_orders(
@@ -34,7 +42,8 @@ const CREATE_RESTAURANT_ORDER = `
         voucher_code: $voucher_code,
         delivery_time: $delivery_time,
         delivery_notes: $delivery_notes,
-        status: $status,
+        pin: $pin,
+        status: $status
         found: false
       }
     ) {
@@ -45,6 +54,8 @@ const CREATE_RESTAURANT_ORDER = `
         status
         created_at
         delivery_time
+        found
+        pin
       }
     }
   }
@@ -97,7 +108,7 @@ const GET_RESTAURANT_ORDER = `
       delivery_time
       delivery_notes
       status
-      found
+      pin
       created_at
       updated_at
       restaurant {
@@ -233,7 +244,8 @@ export default async function handler(
       });
     }
 
-    // Step 1: Create the restaurant order
+    // Step 1: Create the restaurant order with PIN
+    const orderPin = generateOrderPin();
     const orderResponse = await client.request<CreateRestaurantOrderResponse>(
       CREATE_RESTAURANT_ORDER,
       {
@@ -247,6 +259,7 @@ export default async function handler(
         voucher_code: voucher_code || null,
         delivery_time,
         delivery_notes: delivery_notes || null,
+        pin: orderPin,
       }
     );
 
@@ -291,6 +304,7 @@ export default async function handler(
       success: true,
       order_id: orderId,
       order_number: createdOrder.order_number,
+      pin: createdOrder.pin,
       total: createdOrder.total,
       status: createdOrder.status,
       delivery_time: createdOrder.delivery_time,

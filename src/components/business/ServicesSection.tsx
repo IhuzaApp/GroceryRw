@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   Filter,
@@ -20,81 +20,6 @@ import {
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 
-const mockServices = [
-  {
-    id: "1",
-    name: "Professional Cleaning Services",
-    description:
-      "Complete commercial and residential cleaning services with trained staff and eco-friendly products",
-    category: "Cleaning Services",
-    provider: "CleanPro Solutions",
-    location: "Kigali, Rwanda",
-    rating: 4.8,
-    reviews: 124,
-    priceRange: `${formatCurrencySync(200)} - ${formatCurrencySync(500)}/month`,
-    availability: "Available",
-    specialties: ["Office Cleaning", "Residential", "Deep Cleaning"],
-    contact: "+250 788 123 456",
-    email: "info@cleanpro.rw",
-    responseTime: "Within 24 hours",
-  },
-  {
-    id: "2",
-    name: "IT Support & Maintenance",
-    description:
-      "Comprehensive IT support, network setup, and maintenance services for small to medium businesses",
-    category: "Technology Services",
-    provider: "TechSupport Rwanda",
-    location: "Kigali, Rwanda",
-    rating: 4.9,
-    reviews: 89,
-    priceRange: `${formatCurrencySync(300)} - ${formatCurrencySync(800)}/month`,
-    availability: "Available",
-    specialties: ["Network Setup", "Hardware Support", "Software Installation"],
-    contact: "+250 789 234 567",
-    email: "support@techsupport.rw",
-    responseTime: "Within 12 hours",
-  },
-  {
-    id: "3",
-    name: "Marketing & Branding Services",
-    description:
-      "Full-service marketing agency offering branding, digital marketing, and content creation",
-    category: "Marketing Services",
-    provider: "BrandWorks Agency",
-    location: "Kigali, Rwanda",
-    rating: 4.7,
-    reviews: 156,
-    priceRange: `${formatCurrencySync(500)} - ${formatCurrencySync(
-      2000
-    )}/month`,
-    availability: "Available",
-    specialties: ["Branding", "Social Media", "Content Creation"],
-    contact: "+250 788 345 678",
-    email: "hello@brandworks.rw",
-    responseTime: "Within 48 hours",
-  },
-  {
-    id: "4",
-    name: "Accounting & Bookkeeping",
-    description:
-      "Professional accounting services including bookkeeping, tax preparation, and financial consulting",
-    category: "Financial Services",
-    provider: "FinancePro Consultants",
-    location: "Kigali, Rwanda",
-    rating: 4.6,
-    reviews: 67,
-    priceRange: `${formatCurrencySync(400)} - ${formatCurrencySync(
-      1000
-    )}/month`,
-    availability: "Available",
-    specialties: ["Bookkeeping", "Tax Preparation", "Financial Consulting"],
-    contact: "+250 789 456 789",
-    email: "contact@financepro.rw",
-    responseTime: "Within 24 hours",
-  },
-];
-
 interface ServicesSectionProps {
   onRequestQuotation?: (serviceId: string) => void;
 }
@@ -104,24 +29,54 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedService, setSelectedService] = useState<any>(null);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
+  const [services, setServices] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  const fetchServices = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/queries/business-services");
+      if (response.ok) {
+        const data = await response.json();
+        setServices(data.services || []);
+      } else {
+        setServices([]);
+      }
+    } catch (error) {
+      console.error("Error fetching services:", error);
+      setServices([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Extract unique categories from services
   const categories = [
     "all",
-    "Cleaning Services",
-    "Technology Services",
-    "Marketing Services",
-    "Financial Services",
-    "Security Services",
-    "Legal Services",
+    ...Array.from(
+      new Set(
+        services.map((s) => s.category || s.service_category).filter(Boolean)
+      )
+    ),
   ];
 
-  const filteredServices = mockServices.filter((service) => {
+  const filteredServices = services.filter((service) => {
+    const serviceName = service.name || service.service_name || "";
+    const serviceDescription =
+      service.description || service.service_description || "";
+    const providerName = service.provider_name || service.business_name || "";
+    const serviceCategory = service.category || service.service_category || "";
+
     const matchesSearch =
-      service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.provider.toLowerCase().includes(searchTerm.toLowerCase());
+      serviceName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      serviceDescription.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      providerName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory =
-      selectedCategory === "all" || service.category === selectedCategory;
+      selectedCategory === "all" || serviceCategory === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -192,78 +147,110 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
         </div>
       </div>
 
-      {/* Services Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredServices.map((service) => (
-          <div
-            key={service.id}
-            className="group relative rounded-xl border border-gray-200 bg-white p-4 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 sm:p-6"
-          >
-            <div className="mb-3 flex items-start justify-between">
-              <div className="flex-1">
-                <h3 className="mb-1 text-lg font-semibold text-gray-900 dark:text-white">
-                  {service.name}
-                </h3>
-                <p className="mb-2 text-xs font-medium text-green-600 dark:text-green-400">
-                  {service.category}
+      {/* Loading State */}
+      {loading ? (
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div
+              key={i}
+              className="animate-pulse rounded-xl border border-gray-200 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:p-6"
+            >
+              <div className="mb-3 h-6 w-3/4 rounded bg-gray-200 dark:bg-gray-700"></div>
+              <div className="mb-4 h-4 w-full rounded bg-gray-200 dark:bg-gray-700"></div>
+              <div className="mb-4 space-y-2">
+                <div className="h-3 w-2/3 rounded bg-gray-200 dark:bg-gray-700"></div>
+                <div className="h-3 w-1/2 rounded bg-gray-200 dark:bg-gray-700"></div>
+              </div>
+              <div className="h-10 w-full rounded bg-gray-200 dark:bg-gray-700"></div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        /* Services Grid */
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredServices.map((service) => {
+            const serviceName =
+              service.name || service.service_name || "Unnamed Service";
+            const serviceDescription =
+              service.description || service.service_description || "";
+            const providerName =
+              service.provider_name ||
+              service.business_name ||
+              "Unknown Provider";
+            const serviceCategory =
+              service.category || service.service_category || "Uncategorized";
+            const location =
+              service.location || service.service_location || "Not specified";
+            const priceRange =
+              service.price_range ||
+              service.priceRange ||
+              "Contact for pricing";
+            const rating = service.rating || service.average_rating || 0;
+            const serviceId = service.id || service.service_id;
+
+            return (
+              <div
+                key={serviceId}
+                className="group relative rounded-xl border border-gray-200 bg-white p-4 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 sm:p-6"
+              >
+                <div className="mb-3 flex items-start justify-between">
+                  <div className="flex-1">
+                    <h3 className="mb-1 text-lg font-semibold text-gray-900 dark:text-white">
+                      {serviceName}
+                    </h3>
+                    <p className="mb-2 text-xs font-medium text-green-600 dark:text-green-400">
+                      {serviceCategory}
+                    </p>
+                  </div>
+                  {rating > 0 && (
+                    <div className="flex items-center gap-1">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                        {rating.toFixed(1)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <p className="mb-4 line-clamp-2 text-sm text-gray-600 dark:text-gray-400">
+                  {serviceDescription}
                 </p>
-              </div>
-              <div className="flex items-center gap-1">
-                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                  {service.rating}
-                </span>
-              </div>
-            </div>
 
-            <p className="mb-4 line-clamp-2 text-sm text-gray-600 dark:text-gray-400">
-              {service.description}
-            </p>
+                <div className="mb-4 space-y-2">
+                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                    <User className="h-3.5 w-3.5" />
+                    <span>{providerName}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                    <MapPin className="h-3.5 w-3.5" />
+                    <span>{location}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                    <DollarSign className="h-3.5 w-3.5" />
+                    <span>{priceRange}</span>
+                  </div>
+                </div>
 
-            <div className="mb-4 space-y-2">
-              <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                <User className="h-3.5 w-3.5" />
-                <span>{service.provider}</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleViewService(service)}
+                    className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                  >
+                    <Eye className="mr-1 inline h-4 w-4" />
+                    View Details
+                  </button>
+                  <button
+                    onClick={() => handleRequestQuotation(serviceId)}
+                    className="flex-1 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 text-sm font-medium text-white transition-all hover:from-green-600 hover:to-emerald-600"
+                  >
+                    Request Quote
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                <MapPin className="h-3.5 w-3.5" />
-                <span>{service.location}</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                <DollarSign className="h-3.5 w-3.5" />
-                <span>{service.priceRange}</span>
-              </div>
-            </div>
-
-            <div className="mb-4 flex flex-wrap gap-1.5">
-              {service.specialties.slice(0, 3).map((specialty, idx) => (
-                <span
-                  key={idx}
-                  className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-                >
-                  {specialty}
-                </span>
-              ))}
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleViewService(service)}
-                className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-              >
-                <Eye className="mr-1 inline h-4 w-4" />
-                View Details
-              </button>
-              <button
-                onClick={() => handleRequestQuotation(service.id)}
-                className="flex-1 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 text-sm font-medium text-white transition-all hover:from-green-600 hover:to-emerald-600"
-              >
-                Request Quote
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {filteredServices.length === 0 && (
         <div className="py-12 text-center">
@@ -284,7 +271,9 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
             <div className="sticky top-0 border-b border-gray-200 bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-4 dark:border-gray-700">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold text-white">
-                  {selectedService.name}
+                  {selectedService.name ||
+                    selectedService.service_name ||
+                    "Service Details"}
                 </h3>
                 <button
                   onClick={() => setIsServiceModalOpen(false)}
@@ -313,7 +302,9 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
                   Service Provider
                 </h4>
                 <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {selectedService.provider}
+                  {selectedService.provider_name ||
+                    selectedService.business_name ||
+                    "Unknown Provider"}
                 </p>
               </div>
 
@@ -322,7 +313,9 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
                   Description
                 </h4>
                 <p className="text-sm text-gray-700 dark:text-gray-300">
-                  {selectedService.description}
+                  {selectedService.description ||
+                    selectedService.service_description ||
+                    "No description available"}
                 </p>
               </div>
 
@@ -332,7 +325,9 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
                     Category
                   </h4>
                   <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {selectedService.category}
+                    {selectedService.category ||
+                      selectedService.service_category ||
+                      "Uncategorized"}
                   </p>
                 </div>
                 <div>
@@ -340,7 +335,9 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
                     Price Range
                   </h4>
                   <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {selectedService.priceRange}
+                    {selectedService.price_range ||
+                      selectedService.priceRange ||
+                      "Contact for pricing"}
                   </p>
                 </div>
                 <div>
@@ -348,7 +345,9 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
                     Location
                   </h4>
                   <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {selectedService.location}
+                    {selectedService.location ||
+                      selectedService.service_location ||
+                      "Not specified"}
                   </p>
                 </div>
                 <div>
@@ -356,44 +355,64 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
                     Response Time
                   </h4>
                   <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {selectedService.responseTime}
+                    {selectedService.response_time ||
+                      selectedService.responseTime ||
+                      "Contact provider"}
                   </p>
                 </div>
               </div>
 
-              <div>
-                <h4 className="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Specialties
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {selectedService.specialties.map(
-                    (specialty: string, idx: number) => (
+              {(selectedService.specialties || selectedService.skills) && (
+                <div>
+                  <h4 className="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+                    Specialties
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {(
+                      selectedService.specialties ||
+                      selectedService.skills ||
+                      []
+                    ).map((specialty: string, idx: number) => (
                       <span
                         key={idx}
                         className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400"
                       >
                         {specialty}
                       </span>
-                    )
-                  )}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div>
-                <h4 className="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Contact Information
-                </h4>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                    <Phone className="h-4 w-4" />
-                    <span>{selectedService.contact}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                    <Mail className="h-4 w-4" />
-                    <span>{selectedService.email}</span>
+              {(selectedService.contact ||
+                selectedService.email ||
+                selectedService.phone) && (
+                <div>
+                  <h4 className="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+                    Contact Information
+                  </h4>
+                  <div className="space-y-2">
+                    {selectedService.contact && (
+                      <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                        <Phone className="h-4 w-4" />
+                        <span>{selectedService.contact}</span>
+                      </div>
+                    )}
+                    {selectedService.phone && (
+                      <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                        <Phone className="h-4 w-4" />
+                        <span>{selectedService.phone}</span>
+                      </div>
+                    )}
+                    {selectedService.email && (
+                      <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                        <Mail className="h-4 w-4" />
+                        <span>{selectedService.email}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
+              )}
 
               <div className="flex gap-3 border-t border-gray-200 pt-4 dark:border-gray-700">
                 <button

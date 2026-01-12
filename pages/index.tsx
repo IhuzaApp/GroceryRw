@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import { useAuth } from "../src/context/AuthContext";
 import RootLayout from "@components/ui/layout";
 import { GetServerSideProps } from "next";
@@ -24,8 +25,10 @@ import {
 
 import ShopperDashboard from "@components/shopper/dashboard/ShopperDashboard";
 import ResponsiveUserDashboard from "@components/user/dashboard/ResponsiveUserDashboard";
-import MainBanners from "@components/ui/banners";
+// import MainBanners from "@components/ui/banners"; // Temporarily hidden
 import LoadingScreen from "@components/ui/LoadingScreen";
+import LandingPage from "@components/ui/LandingPage";
+import { isMobileDevice } from "../src/lib/formatters";
 
 // Loading screen component is now imported from @components/ui/LoadingScreen
 
@@ -52,10 +55,57 @@ const CategoryIcon = ({ category }: { category: string }) => {
 };
 
 export default function Home({ initialData }: { initialData: Data }) {
+  const router = useRouter();
   const { role, authReady, isLoggedIn } = useAuth();
   const [dataLoaded, setDataLoaded] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
+  const [hasLocationAndCategory, setHasLocationAndCategory] = useState(false);
+
+  useEffect(() => {
+    // Check if mobile device
+    const checkMobile = () => {
+      setIsMobile(isMobileDevice());
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  useEffect(() => {
+    // Check if user has selected location and category
+    const checkLocationAndCategory = () => {
+      if (typeof window !== "undefined") {
+        const categoryParam = router.query.category as string;
+
+        // Check for location in cookies
+        const cookies = document.cookie.split(";");
+        const tempAddress = cookies.find((c) =>
+          c.trim().startsWith("temp_address=")
+        );
+        const hasAddress =
+          tempAddress &&
+          tempAddress.split("=")[1] &&
+          tempAddress.split("=")[1] !== "undefined";
+
+        // If both category and address exist, show dashboard
+        if (categoryParam && hasAddress) {
+          setHasLocationAndCategory(true);
+        } else {
+          setHasLocationAndCategory(false);
+        }
+      }
+    };
+
+    checkLocationAndCategory();
+    // Listen to route changes
+    router.events?.on("routeChangeComplete", checkLocationAndCategory);
+
+    return () => {
+      router.events?.off("routeChangeComplete", checkLocationAndCategory);
+    };
+  }, [router.query.category, router.events]);
 
   useEffect(() => {
     // Allow guest access - don't wait for auth to be ready
@@ -66,6 +116,11 @@ export default function Home({ initialData }: { initialData: Data }) {
 
   if (!dataLoaded) {
     return <LoadingScreen />;
+  }
+
+  // Show landing page for non-logged-in users on desktop, unless they have location and category
+  if (!isLoggedIn && !isMobile && !hasLocationAndCategory) {
+    return <LandingPage />;
   }
 
   // Show shopper dashboard only for authenticated shoppers
@@ -93,7 +148,7 @@ export default function Home({ initialData }: { initialData: Data }) {
 
   return (
     <RootLayout>
-      <MainBanners />
+      {/* <MainBanners /> Temporarily hidden */}
       <ResponsiveUserDashboard
         initialData={safeInitialData}
         searchOpen={searchOpen}

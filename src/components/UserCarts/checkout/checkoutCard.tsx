@@ -1,16 +1,18 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Button, Panel, Modal, toaster, Notification } from "rsuite";
-import Link from "next/link"; // Make sure you import Link if you use it
+import { Button, Panel, toaster, Notification } from "rsuite";
+import Link from "next/link";
 import { formatCurrency } from "../../../lib/formatCurrency";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { useTheme } from "../../../context/ThemeContext";
 import { useAuth } from "../../../context/AuthContext";
+import { useAuth as useAuthHook } from "../../../hooks/useAuth";
 import {
   useFoodCart,
   FoodCartRestaurant,
 } from "../../../context/FoodCartContext";
 import AddressManagementModal from "../../userProfile/AddressManagementModal";
+import CombineCartsModal from "./CombineCartsModal";
 
 // Cookie name for system configuration cache
 const SYSTEM_CONFIG_COOKIE = "system_configuration";
@@ -103,6 +105,7 @@ export default function CheckoutItems({
   const { theme } = useTheme();
   const router = useRouter();
   const { clearRestaurant } = useFoodCart();
+  const { isGuest } = useAuthHook();
   // Re-render when the address cookie changes
   const [, setTick] = useState(0);
   // Mobile checkout card expand/collapse state
@@ -336,11 +339,389 @@ export default function CheckoutItems({
   const [showPaymentDropdown, setShowPaymentDropdown] = useState(false);
   const [showAddressDropdown, setShowAddressDropdown] = useState(false);
 
+  // Combined carts state
+  const [availableCarts, setAvailableCarts] = useState<any[]>([]);
+  const [selectedCartIds, setSelectedCartIds] = useState<Set<string>>(
+    new Set()
+  );
+  const [loadingCarts, setLoadingCarts] = useState(true);
+  const [showCombineModal, setShowCombineModal] = useState(false);
+  const [refetchCartDetails, setRefetchCartDetails] = useState(0);
+  const [cartDetails, setCartDetails] = useState<{
+    [key: string]: {
+      total: number;
+      units: number;
+      deliveryFee: number;
+      serviceFee: number;
+      distance: string;
+      deliveryTime: string;
+      shopLat: number;
+      shopLng: number;
+    };
+  }>({});
+
+  // Fetch available carts to combine with
+  useEffect(() => {
+    const fetchAvailableCarts = async () => {
+      try {
+        setLoadingCarts(true);
+        const response = await fetch("/api/carts");
+        const data = await response.json();
+
+        if (data.carts) {
+          // Filter out the current cart
+          const otherCarts = data.carts.filter(
+            (cart: any) => cart.id !== shopId
+          );
+          setAvailableCarts(otherCarts);
+        }
+      } catch (error) {
+        console.error("Error fetching available carts:", error);
+      } finally {
+        setLoadingCarts(false);
+      }
+    };
+
+    if (!isFoodCart) {
+      // Only show cart combination for regular shop carts, not food carts
+      fetchAvailableCarts();
+    } else {
+      setLoadingCarts(false);
+    }
+  }, [shopId, isFoodCart]);
+
+  // Fetch cart details for all available carts (not just selected)
+  useEffect(() => {
+    const fetchCartDetails = async () => {
+      // Get current selected address (same logic as main component)
+      let currentAddress = selectedAddressId
+        ? savedAddresses.find((a) => a.id === selectedAddressId)
+        : null;
+
+      // Fallback to cookie if no address selected (for guest users)
+      let userLat = 0;
+      let userLng = 0;
+      let hasUserLocation = false;
+
+      if (
+        currentAddress &&
+        currentAddress.latitude &&
+        currentAddress.longitude
+      ) {
+        userLat = parseFloat(currentAddress.latitude.toString());
+        userLng = parseFloat(currentAddress.longitude.toString());
+        hasUserLocation = true;
+      } else {
+        // Try cookie fallback
+        const cookie = Cookies.get("delivery_address");
+        if (cookie) {
+          try {
+            const userAddr = JSON.parse(cookie);
+            if (userAddr.latitude && userAddr.longitude) {
+              userLat = parseFloat(userAddr.latitude.toString());
+              userLng = parseFloat(userAddr.longitude.toString());
+              hasUserLocation = true;
+            }
+          } catch (err) {
+            console.error("Error parsing delivery_address cookie:", err);
+          }
+        }
+      }
+
+      // Only proceed if we have user location
+      if (!hasUserLocation) {
+        return;
+      }
+
+      for (const cart of availableCarts) {
+        // Only skip if we have valid data (not N/A for distance)
+        if (cartDetails[cart.id] && cartDetails[cart.id].distance !== "N/A") {
+          continue;
+        }
+
+        try {
+          // Fetch cart items (now includes shop coordinates)
+          const itemsResponse = await fetch(
+            `/api/cart-items?shop_id=${cart.id}`
+          );
+          const itemsData = await itemsResponse.json();
+          const items = itemsData.items || [];
+          const shopLatitude = itemsData.shopLatitude;
+          const shopLongitude = itemsData.shopLongitude;
+
+          // Calculate subtotal
+          const cartTotal = items.reduce(
+            (sum: number, item: any) =>
+              sum + parseFloat(item.price || "0") * item.quantity,
+            0
+          );
+
+          // Calculate units
+          const cartUnits = items.reduce(
+            (sum: number, item: any) => sum + item.quantity,
+            0
+          );
+
+          // Calculate service fee (same as main cart)
+          const cartServiceFee = systemConfig
+            ? parseInt(systemConfig.serviceFee)
+            : 0;
+
+          // Calculate delivery fee based on distance
+          const extraUnitsThreshold = systemConfig
+            ? parseInt(systemConfig.extraUnits)
+            : 0;
+          const extraUnits = Math.max(0, cartUnits - extraUnitsThreshold);
+          const unitsSurcharge =
+            extraUnits *
+            (systemConfig ? parseInt(systemConfig.unitsSurcharge) : 0);
+
+          const baseDeliveryFee = systemConfig
+            ? parseInt(systemConfig.baseDeliveryFee)
+            : 0;
+
+          // Calculate distance if we have store location
+          let distanceKm = 0;
+          let cartDeliveryFee = baseDeliveryFee + unitsSurcharge;
+          let distanceText = "N/A";
+          let deliveryTimeText = "N/A";
+
+          if (shopLatitude && shopLongitude) {
+            const storeLat = parseFloat(shopLatitude.toString());
+            const storeLng = parseFloat(shopLongitude.toString());
+
+            if (storeLat && storeLng) {
+              distanceKm = getDistanceFromLatLonInKm(
+                userLat,
+                userLng,
+                storeLat,
+                storeLng
+              );
+
+              // Use 3D distance for consistency with main cart (altitude difference)
+              // Assume shop altitude is 0 if not available, user altitude from cookie or 0
+              const shopAltitude = 0; // Could be fetched from shop data if available
+              const userAltitude = 0; // Could be from address data if available
+              const altKm = (shopAltitude - userAltitude) / 1000;
+              const distance3D = Math.sqrt(
+                distanceKm * distanceKm + altKm * altKm
+              );
+
+              distanceText = `${distance3D.toFixed(1)} km`;
+
+              // Calculate distance-based delivery fee using 3D distance
+              const extraDistance = Math.max(0, distance3D - 3);
+              const distanceSurcharge =
+                Math.ceil(extraDistance) *
+                (systemConfig ? parseInt(systemConfig.distanceSurcharge) : 0);
+              const rawDistanceFee = baseDeliveryFee + distanceSurcharge;
+              const cappedDistanceFee = systemConfig
+                ? parseInt(systemConfig.cappedDistanceFee)
+                : 0;
+              const finalDistanceFee =
+                rawDistanceFee > cappedDistanceFee
+                  ? cappedDistanceFee
+                  : rawDistanceFee;
+              cartDeliveryFee = finalDistanceFee + unitsSurcharge;
+
+              // Calculate delivery time using 3D distance
+              const shoppingTimeMinutes = systemConfig
+                ? parseInt(systemConfig.shoppingTime)
+                : 0;
+              const travelTimeMinutes = Math.min(Math.ceil(distance3D), 240); // Cap at 4 hours
+              const totalMinutes = shoppingTimeMinutes + travelTimeMinutes;
+
+              if (totalMinutes < 60) {
+                deliveryTimeText = `${totalMinutes}min`;
+              } else {
+                const hours = Math.floor(totalMinutes / 60);
+                const mins = totalMinutes % 60;
+                deliveryTimeText =
+                  mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+              }
+            }
+          }
+
+          setCartDetails((prev) => ({
+            ...prev,
+            [cart.id]: {
+              total: cartTotal,
+              units: cartUnits,
+              deliveryFee: cartDeliveryFee,
+              serviceFee: cartServiceFee,
+              distance: distanceText,
+              deliveryTime: deliveryTimeText,
+              shopLat: shopLatitude ? parseFloat(shopLatitude.toString()) : 0,
+              shopLng: shopLongitude ? parseFloat(shopLongitude.toString()) : 0,
+            },
+          }));
+        } catch (error) {
+          console.error(`Error fetching details for cart ${cart.id}:`, error);
+        }
+      }
+    };
+
+    if (availableCarts.length > 0 && systemConfig) {
+      fetchCartDetails();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    availableCarts,
+    systemConfig,
+    selectedAddressId,
+    savedAddresses,
+    refetchCartDetails,
+  ]);
+
+  // Toggle cart selection
+  const toggleCartSelection = (cartId: string) => {
+    setSelectedCartIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(cartId)) {
+        next.delete(cartId);
+      } else {
+        next.add(cartId);
+      }
+      return next;
+    });
+  };
+
+  // Calculate combined delivery time for multiple shops
+  const calculateCombinedDeliveryTime = () => {
+    if (selectedCartIds.size === 0) {
+      return null; // No combined carts, use normal calculation
+    }
+
+    // Get user location
+    let userLat = 0;
+    let userLng = 0;
+
+    if (
+      selectedAddress &&
+      selectedAddress.latitude &&
+      selectedAddress.longitude
+    ) {
+      userLat = parseFloat(selectedAddress.latitude.toString());
+      userLng = parseFloat(selectedAddress.longitude.toString());
+    } else {
+      const cookie = Cookies.get("delivery_address");
+      if (cookie) {
+        try {
+          const userAddr = JSON.parse(cookie);
+          if (userAddr.latitude && userAddr.longitude) {
+            userLat = parseFloat(userAddr.latitude.toString());
+            userLng = parseFloat(userAddr.longitude.toString());
+          }
+        } catch (err) {
+          // Ignore
+        }
+      }
+    }
+
+    if (!userLat || !userLng) {
+      return null; // Can't calculate without user location
+    }
+
+    // Create array of all shops (current + selected) with coordinates
+    const allShops = [
+      { id: shopId, lat: shopLat, lng: shopLng, name: "Current Shop" },
+      ...Array.from(selectedCartIds).map((cartId) => {
+        const details = cartDetails[cartId];
+        return {
+          id: cartId,
+          lat: details?.shopLat || 0,
+          lng: details?.shopLng || 0,
+          name: availableCarts.find((c) => c.id === cartId)?.name || "Shop",
+        };
+      }),
+    ].filter((shop) => shop.lat !== 0 && shop.lng !== 0); // Filter out shops without coordinates
+
+    // If we only have 1 shop (the current one), return null to use normal calculation
+    if (allShops.length <= 1) {
+      return null;
+    }
+
+    // Shopping time: 15 minutes per shop (faster for combined orders)
+    const totalShoppingTime = 15 * allShops.length;
+
+    // Initial travel time: Shopper → First Shop (estimated ~5 min buffer)
+    const initialTravelTime = 5; // Fixed 5 minutes for shopper to reach first shop
+
+    // Calculate total travel distance between shops and to customer
+    // Route: Shopper → Shop 1 → Shop 2 → ... → Shop N → Customer
+    let totalTravelDistance = 0;
+    const routeLegs = [`Shopper → ${allShops[0].name}: ~5 min (buffer)`];
+
+    // Distance between consecutive shops
+    for (let i = 0; i < allShops.length - 1; i++) {
+      const shop1 = allShops[i];
+      const shop2 = allShops[i + 1];
+      const distance = getDistanceFromLatLonInKm(
+        shop1.lat,
+        shop1.lng,
+        shop2.lat,
+        shop2.lng
+      );
+      totalTravelDistance += distance;
+      routeLegs.push(
+        `${shop1.name} → ${shop2.name}: ${distance.toFixed(2)} km`
+      );
+    }
+
+    // Distance from last shop to customer
+    const lastShop = allShops[allShops.length - 1];
+    const lastLegDistance = getDistanceFromLatLonInKm(
+      lastShop.lat,
+      lastShop.lng,
+      userLat,
+      userLng
+    );
+    totalTravelDistance += lastLegDistance;
+    routeLegs.push(
+      `${lastShop.name} → Customer: ${lastLegDistance.toFixed(2)} km`
+    );
+
+    // Travel time (1 min per km, capped at 240 min)
+    const shopToShopTravelTime = Math.min(Math.ceil(totalTravelDistance), 240);
+    const totalTravelTime = initialTravelTime + shopToShopTravelTime;
+
+    const totalTime = totalShoppingTime + totalTravelTime;
+
+    return {
+      totalTime,
+      details: {
+        numberOfShops: allShops.length,
+        shoppingTime: totalShoppingTime,
+        initialTravelTime,
+        shopToShopTravelTime,
+        totalTravelDistance,
+        totalTravelTime,
+        route:
+          "Shopper → " +
+          allShops.map((s) => s.name).join(" → ") +
+          " → Customer",
+        routeLegs,
+      },
+    };
+  };
+
   // Fetch payment methods, addresses, and refund balance on component mount
   useEffect(() => {
     const fetchPaymentData = async () => {
       try {
-        // Fetch payment methods
+        // For guest users, skip fetching payment methods and just set up phone payment
+        if (isGuest) {
+          setSelectedPaymentValue("one-time-phone");
+          setShowOneTimePhoneInput(true);
+          setSelectedPaymentMethod({
+            type: "momo",
+            number: oneTimePhoneNumber,
+          });
+          setLoadingPayment(false);
+          return;
+        }
+
+        // Fetch payment methods for regular users
         const paymentResponse = await fetch("/api/queries/payment-methods");
         const paymentData = await paymentResponse.json();
         const methods = paymentData.paymentMethods || [];
@@ -390,7 +771,7 @@ export default function CheckoutItems({
     };
 
     fetchPaymentData();
-  }, []);
+  }, [isGuest]);
 
   // Fetch addresses on component mount
   useEffect(() => {
@@ -627,7 +1008,13 @@ export default function CheckoutItems({
 
   // Use preparation time for food orders, shopping time for regular orders
   const processingTime = isFoodCart ? preparationTime : shoppingTime;
-  const totalTimeMinutes = travelTime + processingTime;
+
+  // Calculate combined delivery time if multiple carts are selected
+  const combinedCalc = calculateCombinedDeliveryTime();
+  const totalTimeMinutes =
+    combinedCalc !== null
+      ? combinedCalc.totalTime
+      : travelTime + processingTime;
 
   // Calculate the delivery timestamp (current time + totalTimeMinutes)
   const deliveryDate = new Date(Date.now() + totalTimeMinutes * 60000);
@@ -687,16 +1074,19 @@ export default function CheckoutItems({
     }
   } else {
     // For regular shop orders, show shopping + delivery time with distance
+    const multiShopSuffix =
+      selectedCartIds.size > 0 ? ` - ${selectedCartIds.size + 1} shops` : "";
+
     if (days > 0) {
       deliveryTime = `Will be delivered in ${days} day${days > 1 ? "s" : ""}${
         hours > 0 ? ` ${hours}h` : ""
-      } (${formattedDistance})`;
+      } (${formattedDistance}${multiShopSuffix})`;
     } else if (hours > 0) {
       deliveryTime = `Will be delivered in ${hours}h${
         mins > 0 ? ` ${mins}m` : ""
-      } (${formattedDistance})`;
+      } (${formattedDistance}${multiShopSuffix})`;
     } else {
-      deliveryTime = `Will be delivered in ${mins} minutes (${formattedDistance})`;
+      deliveryTime = `Will be delivered in ${mins} minutes (${formattedDistance}${multiShopSuffix})`;
     }
   }
 
@@ -821,10 +1211,32 @@ export default function CheckoutItems({
     }
   };
 
+  // Calculate combined totals from selected additional carts
+  let combinedSubtotal = 0;
+  let combinedUnits = 0;
+  let combinedServiceFee = 0; // Service fee stays the same, not added
+  let combinedDeliveryFee = 0; // This will be 70% for additional carts
+
+  selectedCartIds.forEach((cartId) => {
+    const details = cartDetails[cartId];
+    if (details) {
+      combinedSubtotal += details.total;
+      combinedUnits += details.units;
+      // Service fee is NOT added - it stays the same as the main cart
+      // combinedServiceFee += details.serviceFee; // REMOVED
+      // Add 70% of delivery fee for additional carts
+      combinedDeliveryFee += details.deliveryFee * 0.7;
+    }
+  });
+
   // Compute numeric final total including service fee and delivery fee, minus discounts
-  const finalServiceFee = serviceFee - serviceFeeDiscount;
-  const finalDeliveryFee = deliveryFee - deliveryFeeDiscount;
-  const finalTotal = Total - discount + finalServiceFee + finalDeliveryFee;
+  const finalServiceFee = serviceFee - serviceFeeDiscount + combinedServiceFee;
+  const finalDeliveryFee =
+    deliveryFee - deliveryFeeDiscount + combinedDeliveryFee;
+  const grandSubtotal = Total + combinedSubtotal;
+  const grandTotalUnits = totalUnits + combinedUnits;
+  const finalTotal =
+    grandSubtotal - discount + finalServiceFee + finalDeliveryFee;
 
   const handleProceedToCheckout = async () => {
     // Validate cart has items
@@ -917,25 +1329,61 @@ export default function CheckoutItems({
           })),
         };
       } else {
-        // Regular shop cart checkout
-        apiEndpoint = "/api/checkout";
-        payload = {
-          shop_id: shopId,
-          delivery_address_id: deliveryAddressId,
-          service_fee: finalServiceFee.toString(),
-          delivery_fee: finalDeliveryFee.toString(),
-          discount: discount > 0 ? discount.toString() : null,
-          voucher_code: codeType === "promo" ? appliedCode : null,
-          referral_code: codeType === "referral" ? appliedCode : null,
-          referral_discount:
-            referralDiscount > 0 ? referralDiscount.toString() : null,
-          service_fee_discount:
-            serviceFeeDiscount > 0 ? serviceFeeDiscount.toString() : null,
-          delivery_fee_discount:
-            deliveryFeeDiscount > 0 ? deliveryFeeDiscount.toString() : null,
-          delivery_time: deliveryTimestamp,
-          delivery_notes: deliveryNotes || null,
-        };
+        // Check if this is a combined checkout
+        if (selectedCartIds.size > 0) {
+          // Combined checkout with multiple carts
+          apiEndpoint = "/api/mutations/create-combined-orders";
+
+          // Prepare stores data
+          const stores = [
+            // Current cart
+            {
+              store_id: shopId,
+              delivery_fee: (deliveryFee - deliveryFeeDiscount).toString(),
+              service_fee: (serviceFee - serviceFeeDiscount).toString(),
+              discount: discount > 0 ? discount.toString() : null,
+              voucher_code: codeType === "promo" ? appliedCode : null,
+            },
+            // Additional selected carts (with 70% delivery fee, no service fee)
+            ...Array.from(selectedCartIds).map((cartId) => {
+              const details = cartDetails[cartId];
+              return {
+                store_id: cartId,
+                delivery_fee: (details.deliveryFee * 0.7).toString(), // 70% delivery fee
+                service_fee: "0", // No service fee for additional carts
+              };
+            }),
+          ];
+
+          payload = {
+            stores,
+            delivery_address_id: deliveryAddressId,
+            delivery_time: deliveryTimestamp,
+            delivery_notes: deliveryNotes || null,
+            payment_method: "mobile_money", // This will be set properly
+            payment_method_id: selectedPaymentMethod?.id || null,
+          };
+        } else {
+          // Regular single cart checkout
+          apiEndpoint = "/api/checkout";
+          payload = {
+            shop_id: shopId,
+            delivery_address_id: deliveryAddressId,
+            service_fee: finalServiceFee.toString(),
+            delivery_fee: finalDeliveryFee.toString(),
+            discount: discount > 0 ? discount.toString() : null,
+            voucher_code: codeType === "promo" ? appliedCode : null,
+            referral_code: codeType === "referral" ? appliedCode : null,
+            referral_discount:
+              referralDiscount > 0 ? referralDiscount.toString() : null,
+            service_fee_discount:
+              serviceFeeDiscount > 0 ? serviceFeeDiscount.toString() : null,
+            delivery_fee_discount:
+              deliveryFeeDiscount > 0 ? deliveryFeeDiscount.toString() : null,
+            delivery_time: deliveryTimestamp,
+            delivery_notes: deliveryNotes || null,
+          };
+        }
       }
 
       // Make API call in background (don't await)
@@ -986,10 +1434,13 @@ export default function CheckoutItems({
                 window.dispatchEvent(cartChangedEvent);
               }, 500);
             } else {
-              // Handle regular shop cart success
+              // Handle regular shop cart success or combined orders success
               // Clear loading state immediately
               clearTimeout(loadingTimeout);
               setIsCheckoutLoading(false);
+
+              // Check if this was a combined order
+              const isCombinedOrder = data.combined_order_id && data.orders;
 
               // Show success notification
               toaster.push(
@@ -997,18 +1448,32 @@ export default function CheckoutItems({
                   type="success"
                   header="Order Completed Successfully!"
                 >
-                  Your order #{data.order_id?.slice(-8)} has been placed and is
-                  being prepared! You can view it in "Current Orders".
+                  {isCombinedOrder
+                    ? `Your ${data.orders.length} combined orders have been placed successfully! You can view them in "Current Orders".`
+                    : `Your order #${data.order_id?.slice(
+                        -8
+                      )} has been placed and is being prepared! You can view it in "Current Orders".`}
                 </Notification>,
                 { placement: "topEnd", duration: 5000 }
               );
 
-              // Trigger cart refresh to show cart is cleared
+              // Trigger cart refresh to show cart(s) are cleared
               setTimeout(() => {
-                const cartChangedEvent = new CustomEvent("cartChanged", {
-                  detail: { shop_id: shopId, refetch: true },
-                });
-                window.dispatchEvent(cartChangedEvent);
+                if (isCombinedOrder) {
+                  // Clear all combined carts
+                  data.orders.forEach((order: any) => {
+                    const cartChangedEvent = new CustomEvent("cartChanged", {
+                      detail: { shop_id: order.shop_id, refetch: true },
+                    });
+                    window.dispatchEvent(cartChangedEvent);
+                  });
+                } else {
+                  // Clear single cart
+                  const cartChangedEvent = new CustomEvent("cartChanged", {
+                    detail: { shop_id: shopId, refetch: true },
+                  });
+                  window.dispatchEvent(cartChangedEvent);
+                }
               }, 500);
             }
           }
@@ -1037,6 +1502,24 @@ export default function CheckoutItems({
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
   };
+
+  // Hide/show bottom bar when modal is expanded
+  useEffect(() => {
+    if (isExpanded) {
+      // Hide bottom navigation bar
+      document.body.style.setProperty("--hide-bottom-bar", "none");
+      document.body.classList.add("hide-bottom-bar");
+    } else {
+      // Show bottom navigation bar
+      document.body.style.removeProperty("--hide-bottom-bar");
+      document.body.classList.remove("hide-bottom-bar");
+    }
+
+    return () => {
+      document.body.style.removeProperty("--hide-bottom-bar");
+      document.body.classList.remove("hide-bottom-bar");
+    };
+  }, [isExpanded]);
 
   // Handle payment method selection
   const handlePaymentMethodChange = (value: string | null) => {
@@ -1188,6 +1671,17 @@ export default function CheckoutItems({
       value: string;
       methodType?: string;
     }> = [];
+
+    // For guest users, only show one-time phone number option
+    if (isGuest) {
+      options.push({
+        label: "Pay with Phone Number (MTN Mobile Money)",
+        value: "one-time-phone",
+      });
+      return options;
+    }
+
+    // For regular users, show all payment options
     const canUseRefund = refundBalance >= finalTotal;
     const canUseWallet = walletBalance >= finalTotal;
 
@@ -1245,6 +1739,31 @@ export default function CheckoutItems({
       }`,
       value: address.id,
     }));
+  };
+
+  // Check if checkout can proceed (all required fields filled)
+  const canProceedToCheckout = () => {
+    // Must have items in cart
+    if (totalUnits <= 0) return false;
+
+    // Must have delivery address selected
+    if (!selectedAddressId) return false;
+
+    // Must have payment method selected
+    if (!selectedPaymentMethod) return false;
+
+    // For guest users or when using one-time phone
+    if (isGuest || showOneTimePhoneInput) {
+      // Phone number must be provided and valid (at least 10 digits)
+      if (
+        !oneTimePhoneNumber ||
+        oneTimePhoneNumber.replace(/\D/g, "").length < 10
+      ) {
+        return false;
+      }
+    }
+
+    return true;
   };
 
   // Update the payment method display section
@@ -1373,91 +1892,178 @@ export default function CheckoutItems({
       )}
 
       {/* Mobile View - Only visible on small devices */}
-      {/* Backdrop overlay when expanded */}
+      {/* Backdrop overlay when expanded - Full screen */}
       {isExpanded && (
         <div
-          className="fixed inset-0 z-40 bg-black/80 backdrop-blur-lg transition-all duration-300 md:hidden"
+          className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm md:hidden"
           onClick={toggleExpand}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: "100vw",
+            height: "100vh",
+          }}
         />
       )}
 
       <div
-        className={`fixed bottom-16 left-0 right-0 z-50 w-full rounded-2xl transition-all duration-300 md:hidden ${
+        className={`fixed w-full transition-all duration-300 md:hidden ${
           theme === "dark" ? "bg-gray-900" : "bg-white"
-        } ${isExpanded ? "shadow-2xl" : "shadow-xl"}`}
+        } ${
+          isExpanded
+            ? "inset-0 z-[10000] mt-[5vh] flex h-[95vh] flex-col rounded-t-3xl shadow-2xl"
+            : "bottom-20 left-0 right-0 z-[9998] rounded-t-3xl border-t-2 shadow-2xl"
+        } ${
+          theme === "dark" && !isExpanded
+            ? "border-gray-700"
+            : !isExpanded
+            ? "border-gray-200"
+            : ""
+        }`}
         style={{
-          maxHeight: isExpanded ? "calc(90vh - 64px)" : "160px",
-          overflow: "hidden",
+          maxHeight: isExpanded ? "95vh" : "auto",
+          overflow: isExpanded ? "visible" : "hidden",
+          boxShadow: !isExpanded
+            ? "0 -10px 25px -5px rgba(0, 0, 0, 0.1), 0 -8px 10px -6px rgba(0, 0, 0, 0.1)"
+            : undefined,
         }}
+        onClick={isExpanded ? (e) => e.stopPropagation() : undefined}
       >
         {/* Header with toggle button */}
         <div
-          className="flex items-center justify-between p-4 shadow-sm"
-          onClick={toggleExpand} // Make the entire header clickable to toggle
+          className={`px-4 ${isExpanded ? "border-b py-4" : "py-3"} ${
+            theme === "dark" ? "border-gray-700" : "border-gray-200"
+          }`}
         >
-          <div className="flex items-center">
-            <span
-              className={`text-lg font-bold ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}
-            >
-              Order Summary
-            </span>
-            <span className="ml-2 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/20 dark:text-green-300">
-              {totalUnits} items
-            </span>
-          </div>
-          <div className="flex items-center">
-            <span
-              className={`mr-2 font-bold text-green-600 ${
-                theme === "dark" ? "text-green-400" : "text-green-600"
-              }`}
-            >
-              {formatCurrency(finalTotal)}
-            </span>
-            <button
-              className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                theme === "dark"
-                  ? "bg-gray-700 text-gray-300"
-                  : "bg-gray-100 text-gray-600"
-              }`}
-            >
-              {isExpanded ? (
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="h-5 w-5"
+          <div
+            className="flex items-center justify-between"
+            onClick={!isExpanded ? toggleExpand : undefined}
+          >
+            <div className="flex items-center gap-3">
+              {isExpanded && (
+                <div
+                  className={`rounded-lg p-2 ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-100"
+                  }`}
                 >
-                  <polyline points="18 15 12 9 6 15"></polyline>
-                </svg>
-              ) : (
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="h-5 w-5"
-                >
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
+                  <svg
+                    className={`h-6 w-6 ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-700"
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                    />
+                  </svg>
+                </div>
               )}
-            </button>
+              <div>
+                <span
+                  className={`${
+                    isExpanded ? "text-xl" : "text-base"
+                  } font-bold ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  Order Summary
+                </span>
+                {isExpanded && (
+                  <p
+                    className={`text-xs ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
+                    {grandTotalUnits} items
+                    {selectedCartIds.size > 0 &&
+                      ` • ${selectedCartIds.size + 1} carts`}
+                  </p>
+                )}
+                {!isExpanded && (
+                  <div className="mt-0.5 flex items-center gap-2">
+                    <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/20 dark:text-green-300">
+                      {grandTotalUnits} items
+                    </span>
+                    {selectedCartIds.size > 0 && (
+                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+                        {selectedCartIds.size + 1} carts
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              {!isExpanded && (
+                <span
+                  className={`text-lg font-bold ${
+                    theme === "dark" ? "text-green-400" : "text-green-600"
+                  }`}
+                >
+                  {formatCurrency(finalTotal)}
+                </span>
+              )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleExpand();
+                }}
+                className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-colors ${
+                  theme === "dark"
+                    ? "text-gray-300 hover:bg-gray-700"
+                    : "text-gray-600 hover:bg-gray-100"
+                } ${isExpanded ? "active:scale-95" : ""}`}
+              >
+                {isExpanded ? (
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="h-6 w-6"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="h-5 w-5"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Checkout button when collapsed */}
         {!isExpanded && (
-          <div className="p-4">
+          <div className="px-4 pb-4 pt-2">
             <Button
               appearance="primary"
               color="green"
               block
               size="lg"
               loading={isCheckoutLoading}
+              disabled={!canProceedToCheckout() || isCheckoutLoading}
               onClick={handleProceedToCheckout}
-              className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
+              className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
             >
               Proceed to Checkout
             </Button>
@@ -1466,148 +2072,197 @@ export default function CheckoutItems({
 
         {/* Expanded content */}
         <div
-          className={`p-4 ${isExpanded ? "block" : "hidden"} overflow-y-auto`}
-          style={{ maxHeight: "calc(90vh - 124px)" }}
+          className={`flex-1 ${
+            isExpanded ? "flex flex-col" : "hidden"
+          } overflow-hidden`}
         >
-          {discountsEnabled && (
-            <div>
-              <p
-                className={`mb-0.5 ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
-                }`}
+          <div className="flex-1 overflow-y-auto p-4">
+            {/* Combine button - Mobile (only show when expanded) */}
+            {!loadingCarts && availableCarts.length > 0 && (
+              <Button
+                appearance="primary"
+                color="green"
+                block
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Clear cart details and trigger refetch
+                  setCartDetails({});
+                  setRefetchCartDetails((prev) => prev + 1);
+                  setShowCombineModal(true);
+                }}
+                className="mb-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
               >
-                Promo or Referral Code
-              </p>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={discountCode}
-                  onChange={(e) => setDiscountCode(e.target.value)}
-                  placeholder="Enter promo or referral code"
-                  className="flex-1 border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20"
-                />
-                <Button
-                  appearance="primary"
-                  color="green"
-                  className="whitespace-nowrap bg-green-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-green-600 hover:shadow-md"
-                  onClick={handleApplyCode}
-                  loading={validatingCode}
+                <span className="flex items-center justify-center gap-2">
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
+                  {selectedCartIds.size > 0
+                    ? `${selectedCartIds.size} Cart${
+                        selectedCartIds.size !== 1 ? "s" : ""
+                      } Combined`
+                    : "Combine with Other Carts"}
+                </span>
+              </Button>
+            )}
+
+            {discountsEnabled && (
+              <div>
+                <p
+                  className={`mb-0.5 ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
                 >
-                  Apply
-                </Button>
-              </div>
-            </div>
-          )}
-
-          <div className="my-1.5 h-px bg-gray-200 dark:bg-gray-700"></div>
-
-          <div className="flex flex-col gap-1.5">
-            <div className="flex justify-between py-1">
-              <span
-                className={`text-sm ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
-                Subtotal
-              </span>
-              <span
-                className={`text-sm font-medium ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                {formatCurrency(Total)}
-              </span>
-            </div>
-            {discount > 0 && codeType === "promo" && (
-              <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
-                <span className="text-sm">Discount ({appliedCode})</span>
-                <span className="text-sm font-medium">
-                  -{formatCurrency(discount)}
-                </span>
+                  Promo or Referral Code
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={discountCode}
+                    onChange={(e) => setDiscountCode(e.target.value)}
+                    placeholder="Enter promo or referral code"
+                    className={`flex-1 rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+                      theme === "dark"
+                        ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                        : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                    }`}
+                  />
+                  <Button
+                    appearance="primary"
+                    color="green"
+                    className="whitespace-nowrap bg-green-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-green-600 hover:shadow-md"
+                    onClick={handleApplyCode}
+                    loading={validatingCode}
+                  >
+                    Apply
+                  </Button>
+                </div>
               </div>
             )}
-            {referralDiscount > 0 && codeType === "referral" && (
-              <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
-                <span className="text-sm">
-                  Referral Discount ({appliedCode})
+
+            <div className="my-1.5 h-px bg-gray-200 dark:bg-gray-700"></div>
+
+            <div className="flex flex-col gap-1.5">
+              <div className="flex justify-between py-1">
+                <span
+                  className={`text-sm ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Subtotal{" "}
+                  {selectedCartIds.size > 0 &&
+                    `(${selectedCartIds.size + 1} carts)`}
                 </span>
-                <span className="text-sm font-medium">17% off</span>
+                <span
+                  className={`text-sm font-medium ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  {formatCurrency(grandSubtotal)}
+                </span>
               </div>
-            )}
-            <div className="flex justify-between py-1">
-              <span
-                className={`text-sm ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
-                Units
-              </span>
-              <span
-                className={`text-sm font-medium ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                {totalUnits}
-              </span>
-            </div>
-            <div className="flex justify-between py-1">
-              <span
-                className={`text-sm ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
-                Service Fee
-              </span>
-              <span
-                className={`text-sm font-medium ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                {formatCurrency(finalServiceFee)}
-              </span>
-            </div>
-            <div className="flex justify-between py-1">
-              <span
-                className={`text-sm ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
-                Delivery Fee
-              </span>
-              <span
-                className={`text-sm font-medium ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                {formatCurrency(finalDeliveryFee)}
-              </span>
-            </div>
-            <div className="my-3 h-px bg-gray-200 dark:bg-gray-700"></div>
-            <div className="flex justify-between py-1">
-              <span
-                className={`text-lg font-bold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                Total
-              </span>
-              <span className="text-lg font-bold text-green-500 dark:text-green-400">
-                {formatCurrency(finalTotal)}
-              </span>
-            </div>
-            <div className="flex justify-between py-1">
-              <span
-                className={`text-sm ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
-                Delivery Time
-              </span>
-              <span
-                className={`text-sm font-medium text-green-600 dark:text-green-400`}
-              >
-                {deliveryTime}
-              </span>
+              {discount > 0 && codeType === "promo" && (
+                <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
+                  <span className="text-sm">Discount ({appliedCode})</span>
+                  <span className="text-sm font-medium">
+                    -{formatCurrency(discount)}
+                  </span>
+                </div>
+              )}
+              {referralDiscount > 0 && codeType === "referral" && (
+                <div className="flex justify-between py-1 text-green-600 dark:text-green-400">
+                  <span className="text-sm">
+                    Referral Discount ({appliedCode})
+                  </span>
+                  <span className="text-sm font-medium">17% off</span>
+                </div>
+              )}
+              <div className="flex justify-between py-1">
+                <span
+                  className={`text-sm ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Units
+                </span>
+                <span
+                  className={`text-sm font-medium ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  {grandTotalUnits}
+                </span>
+              </div>
+              <div className="flex justify-between py-1">
+                <span
+                  className={`text-sm ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Service Fee
+                </span>
+                <span
+                  className={`text-sm font-medium ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  {formatCurrency(finalServiceFee)}
+                </span>
+              </div>
+              <div className="flex justify-between py-1">
+                <span
+                  className={`text-sm ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Delivery Fee{" "}
+                  {selectedCartIds.size > 0 &&
+                    `(+${selectedCartIds.size} at 70%)`}
+                </span>
+                <span
+                  className={`text-sm font-medium ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  {formatCurrency(finalDeliveryFee)}
+                </span>
+              </div>
+              <div className="my-3 h-px bg-gray-200 dark:bg-gray-700"></div>
+              <div className="flex justify-between py-1">
+                <span
+                  className={`text-lg font-bold ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  Total
+                </span>
+                <span className="text-lg font-bold text-green-500 dark:text-green-400">
+                  {formatCurrency(finalTotal)}
+                </span>
+              </div>
+              <div className="flex justify-between py-1">
+                <span
+                  className={`text-sm ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Delivery Time
+                </span>
+                <span
+                  className={`text-sm font-medium text-green-600 dark:text-green-400`}
+                >
+                  {deliveryTime}
+                </span>
+              </div>
             </div>
             <div className="mt-2">
               <h4
@@ -1679,15 +2334,18 @@ export default function CheckoutItems({
                   </>
                 )}
               </div>
-              <button
-                type="button"
-                className="mt-1 w-full rounded-lg border-2 border-green-500 bg-transparent px-2 py-1 text-xs font-medium text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20"
-                onClick={() => {
-                  setShowAddressModal(true);
-                }}
-              >
-                + Add New Address
-              </button>
+              {/* Hide "Add New Address" button for guest users who already have an address */}
+              {(!isGuest || !selectedAddressId) && (
+                <button
+                  type="button"
+                  className="mt-1 w-full rounded-lg border-2 border-green-500 bg-transparent px-2 py-1 text-xs font-medium text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20"
+                  onClick={() => {
+                    setShowAddressModal(true);
+                  }}
+                >
+                  + Add New Address
+                </button>
+              )}
             </div>
             <div className="mt-2">
               <h4
@@ -1697,100 +2355,132 @@ export default function CheckoutItems({
               >
                 Payment Method
               </h4>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowPaymentDropdown(!showPaymentDropdown);
-                    setShowAddressDropdown(false);
-                  }}
-                  className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
-                    selectedPaymentValue
-                      ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
-                      : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
-                  }`}
-                >
-                  {selectedPaymentValue
-                    ? getPaymentMethodOptions().find(
-                        (opt) => opt.value === selectedPaymentValue
-                      )?.label || "Select payment method"
-                    : "Select payment method"}
-                  <svg
-                    className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
-                      showPaymentDropdown ? "rotate-180" : ""
+
+              {/* For guest users, show only phone input */}
+              {isGuest ? (
+                <div>
+                  <p
+                    className={`mb-2 text-xs ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-600"
                     }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
+                    Pay with MTN Mobile Money
+                  </p>
+                  <input
+                    type="tel"
+                    placeholder="Enter phone number (e.g., 078XXXXXXX)"
+                    value={oneTimePhoneNumber}
+                    onChange={(e) => handleOneTimePhoneChange(e.target.value)}
+                    className={`w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+                      theme === "dark"
+                        ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                        : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                    }`}
+                  />
+                </div>
+              ) : (
+                <>
+                  {/* For regular users, show payment method dropdown */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowPaymentDropdown(!showPaymentDropdown);
+                        setShowAddressDropdown(false);
+                      }}
+                      className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
+                        selectedPaymentValue
+                          ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
+                          : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                      }`}
+                    >
+                      {selectedPaymentValue
+                        ? getPaymentMethodOptions().find(
+                            (opt) => opt.value === selectedPaymentValue
+                          )?.label || "Select payment method"
+                        : "Select payment method"}
+                      <svg
+                        className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
+                          showPaymentDropdown ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+                    {showPaymentDropdown && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-10"
+                          onClick={() => setShowPaymentDropdown(false)}
+                        />
+                        <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                          {getPaymentMethodOptions().map((option) => {
+                            const isWalletInsufficient =
+                              option.value === "wallet" &&
+                              walletBalance < finalTotal;
+                            return (
+                              <button
+                                key={option.value}
+                                type="button"
+                                onClick={() => {
+                                  if (!isWalletInsufficient) {
+                                    handlePaymentMethodChange(option.value);
+                                    setShowPaymentDropdown(false);
+                                  }
+                                }}
+                                disabled={isWalletInsufficient}
+                                className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                                  isWalletInsufficient
+                                    ? "cursor-not-allowed bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
+                                    : selectedPaymentValue === option.value
+                                    ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                                    : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+                                }`}
+                              >
+                                <span
+                                  className={`flex-shrink-0 ${
+                                    isWalletInsufficient
+                                      ? "text-red-500 dark:text-red-400"
+                                      : selectedPaymentValue === option.value
+                                      ? "text-green-600 dark:text-green-400"
+                                      : "text-gray-500 dark:text-gray-400"
+                                  }`}
+                                >
+                                  {getPaymentMethodIcon(
+                                    option.value,
+                                    option.methodType
+                                  )}
+                                </span>
+                                <span className="flex-1">{option.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  {showOneTimePhoneInput && (
+                    <input
+                      type="tel"
+                      placeholder="Enter phone number"
+                      value={oneTimePhoneNumber}
+                      onChange={(e) => handleOneTimePhoneChange(e.target.value)}
+                      className={`mt-2 w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+                        theme === "dark"
+                          ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                          : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                      }`}
                     />
-                  </svg>
-                </button>
-                {showPaymentDropdown && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={() => setShowPaymentDropdown(false)}
-                    />
-                    <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                      {getPaymentMethodOptions().map((option) => {
-                        const isWalletInsufficient =
-                          option.value === "wallet" &&
-                          walletBalance < finalTotal;
-                        return (
-                          <button
-                            key={option.value}
-                            type="button"
-                            onClick={() => {
-                              if (!isWalletInsufficient) {
-                                handlePaymentMethodChange(option.value);
-                                setShowPaymentDropdown(false);
-                              }
-                            }}
-                            disabled={isWalletInsufficient}
-                            className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                              isWalletInsufficient
-                                ? "cursor-not-allowed bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
-                                : selectedPaymentValue === option.value
-                                ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                                : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
-                            }`}
-                          >
-                            <span
-                              className={`flex-shrink-0 ${
-                                isWalletInsufficient
-                                  ? "text-red-500 dark:text-red-400"
-                                  : selectedPaymentValue === option.value
-                                  ? "text-green-600 dark:text-green-400"
-                                  : "text-gray-500 dark:text-gray-400"
-                              }`}
-                            >
-                              {getPaymentMethodIcon(
-                                option.value,
-                                option.methodType
-                              )}
-                            </span>
-                            <span className="flex-1">{option.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
-              </div>
-              {showOneTimePhoneInput && (
-                <input
-                  type="tel"
-                  placeholder="Enter phone number"
-                  value={oneTimePhoneNumber}
-                  onChange={(e) => handleOneTimePhoneChange(e.target.value)}
-                  className="mt-2 w-full rounded-lg border-2 border-gray-300 px-4 py-2.5 text-sm transition-all focus:border-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-green-400"
-                />
+                  )}
+                </>
               )}
             </div>
             {/* Delivery Notes Input */}
@@ -1808,23 +2498,34 @@ export default function CheckoutItems({
                 onChange={(e) => setDeliveryNotes(e.target.value)}
                 placeholder="Enter any delivery instructions or notes"
                 onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on input
-                className="w-full border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-400 dark:focus:ring-green-400/20"
+                className={`w-full rounded-xl border px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+                  theme === "dark"
+                    ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                    : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
+                }`}
               />
             </div>
-            {/* Proceed to Checkout Button */}
-            <div className="mt-4">
-              <Button
-                appearance="primary"
-                color="green"
-                block
-                size="lg"
-                loading={isCheckoutLoading}
-                onClick={handleProceedToCheckout}
-                className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
-              >
-                Proceed to Checkout
-              </Button>
-            </div>
+          </div>
+          {/* Proceed to Checkout Button - Fixed at bottom */}
+          <div
+            className={`border-t p-4 ${
+              theme === "dark"
+                ? "border-gray-700 bg-gray-800"
+                : "border-gray-200 bg-white"
+            }`}
+          >
+            <Button
+              appearance="primary"
+              color="green"
+              block
+              size="lg"
+              loading={isCheckoutLoading}
+              disabled={!canProceedToCheckout() || isCheckoutLoading}
+              onClick={handleProceedToCheckout}
+              className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+            >
+              Proceed to Checkout
+            </Button>
           </div>
         </div>
       </div>
@@ -1848,22 +2549,59 @@ export default function CheckoutItems({
                 theme === "dark" ? "bg-gray-700" : "bg-gray-50"
               }`}
             >
-              <h2
-                className={`text-xl font-bold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                Order Summary
-              </h2>
+              <div className="flex items-center justify-between">
+                <h2
+                  className={`text-xl font-bold ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  Order Summary
+                </h2>
+                {!loadingCarts && availableCarts.length > 0 && (
+                  <Button
+                    appearance="primary"
+                    color="green"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Clear cart details and trigger refetch
+                      setCartDetails({});
+                      setRefetchCartDetails((prev) => prev + 1);
+                      setShowCombineModal(true);
+                    }}
+                    className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
+                  >
+                    <span className="flex items-center gap-2">
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
+                      </svg>
+                      {selectedCartIds.size > 0
+                        ? `${selectedCartIds.size} Combined`
+                        : "Combine Carts"}
+                    </span>
+                  </Button>
+                )}
+              </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex justify-between py-1">
                 <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Subtotal
+                  Subtotal{" "}
+                  {selectedCartIds.size > 0 &&
+                    `(${selectedCartIds.size + 1} carts)`}
                 </span>
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  {formatCurrency(Total)}
+                  {formatCurrency(grandSubtotal)}
                 </span>
               </div>
 
@@ -1893,7 +2631,7 @@ export default function CheckoutItems({
                   Units
                 </span>
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  {totalUnits}
+                  {grandTotalUnits}
                 </span>
               </div>
 
@@ -1908,7 +2646,9 @@ export default function CheckoutItems({
 
               <div className="flex justify-between py-1">
                 <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Delivery Fee
+                  Delivery Fee{" "}
+                  {selectedCartIds.size > 0 &&
+                    `(+${selectedCartIds.size} at 70%)`}
                 </span>
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
                   {formatCurrency(finalDeliveryFee)}
@@ -2013,115 +2753,138 @@ export default function CheckoutItems({
                   </>
                 )}
               </div>
-              <button
-                type="button"
-                className="mt-2 w-full rounded-lg border-2 border-green-500 bg-transparent px-4 py-2 text-sm font-medium text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20"
-                onClick={() => {
-                  setShowAddressModal(true);
-                }}
-              >
-                + Add New Address
-              </button>
+              {/* Hide "Add New Address" button for guest users who already have an address */}
+              {(!isGuest || !selectedAddressId) && (
+                <button
+                  type="button"
+                  className="mt-2 w-full rounded-lg border-2 border-green-500 bg-transparent px-4 py-2 text-sm font-medium text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20"
+                  onClick={() => {
+                    setShowAddressModal(true);
+                  }}
+                >
+                  + Add New Address
+                </button>
+              )}
             </div>
 
             <div className="mt-2">
               <h4 className="mb-0.5 text-sm font-semibold text-gray-900 dark:text-white">
                 Payment Method
               </h4>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowPaymentDropdown(!showPaymentDropdown);
-                    setShowAddressDropdown(false);
-                  }}
-                  className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
-                    selectedPaymentValue
-                      ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
-                      : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
-                  }`}
-                >
-                  {selectedPaymentValue
-                    ? getPaymentMethodOptions().find(
-                        (opt) => opt.value === selectedPaymentValue
-                      )?.label || "Select payment method"
-                    : "Select payment method"}
-                  <svg
-                    className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
-                      showPaymentDropdown ? "rotate-180" : ""
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
+
+              {/* For guest users, show only phone input */}
+              {isGuest ? (
+                <div>
+                  <p className="mb-2 text-xs text-gray-600 dark:text-gray-400">
+                    Pay with MTN Mobile Money
+                  </p>
+                  <input
+                    type="tel"
+                    placeholder="Enter phone number (e.g., 078XXXXXXX)"
+                    value={oneTimePhoneNumber}
+                    onChange={(e) => handleOneTimePhoneChange(e.target.value)}
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20"
+                  />
+                </div>
+              ) : (
+                <>
+                  {/* For regular users, show payment method dropdown */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowPaymentDropdown(!showPaymentDropdown);
+                        setShowAddressDropdown(false);
+                      }}
+                      className={`w-full rounded-lg border-2 px-4 py-2.5 text-left text-sm transition-all ${
+                        selectedPaymentValue
+                          ? "border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-600 dark:bg-gray-800/50 dark:text-white"
+                          : "border-gray-300 bg-white text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                      }`}
+                    >
+                      {selectedPaymentValue
+                        ? getPaymentMethodOptions().find(
+                            (opt) => opt.value === selectedPaymentValue
+                          )?.label || "Select payment method"
+                        : "Select payment method"}
+                      <svg
+                        className={`absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform transition-transform ${
+                          showPaymentDropdown ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+                    {showPaymentDropdown && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-10"
+                          onClick={() => setShowPaymentDropdown(false)}
+                        />
+                        <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                          {getPaymentMethodOptions().map((option) => {
+                            const isWalletInsufficient =
+                              option.value === "wallet" &&
+                              walletBalance < finalTotal;
+                            return (
+                              <button
+                                key={option.value}
+                                type="button"
+                                onClick={() => {
+                                  if (!isWalletInsufficient) {
+                                    handlePaymentMethodChange(option.value);
+                                    setShowPaymentDropdown(false);
+                                  }
+                                }}
+                                disabled={isWalletInsufficient}
+                                className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                                  isWalletInsufficient
+                                    ? "cursor-not-allowed bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
+                                    : selectedPaymentValue === option.value
+                                    ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                                    : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+                                }`}
+                              >
+                                <span
+                                  className={`flex-shrink-0 ${
+                                    isWalletInsufficient
+                                      ? "text-red-500 dark:text-red-400"
+                                      : selectedPaymentValue === option.value
+                                      ? "text-green-600 dark:text-green-400"
+                                      : "text-gray-500 dark:text-gray-400"
+                                  }`}
+                                >
+                                  {getPaymentMethodIcon(
+                                    option.value,
+                                    option.methodType
+                                  )}
+                                </span>
+                                <span className="flex-1">{option.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  {showOneTimePhoneInput && (
+                    <input
+                      type="tel"
+                      placeholder="Enter phone number"
+                      value={oneTimePhoneNumber}
+                      onChange={(e) => handleOneTimePhoneChange(e.target.value)}
+                      className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20"
                     />
-                  </svg>
-                </button>
-                {showPaymentDropdown && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={() => setShowPaymentDropdown(false)}
-                    />
-                    <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                      {getPaymentMethodOptions().map((option) => {
-                        const isWalletInsufficient =
-                          option.value === "wallet" &&
-                          walletBalance < finalTotal;
-                        return (
-                          <button
-                            key={option.value}
-                            type="button"
-                            onClick={() => {
-                              if (!isWalletInsufficient) {
-                                handlePaymentMethodChange(option.value);
-                                setShowPaymentDropdown(false);
-                              }
-                            }}
-                            disabled={isWalletInsufficient}
-                            className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                              isWalletInsufficient
-                                ? "cursor-not-allowed bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
-                                : selectedPaymentValue === option.value
-                                ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                                : "text-gray-900 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
-                            }`}
-                          >
-                            <span
-                              className={`flex-shrink-0 ${
-                                isWalletInsufficient
-                                  ? "text-red-500 dark:text-red-400"
-                                  : selectedPaymentValue === option.value
-                                  ? "text-green-600 dark:text-green-400"
-                                  : "text-gray-500 dark:text-gray-400"
-                              }`}
-                            >
-                              {getPaymentMethodIcon(
-                                option.value,
-                                option.methodType
-                              )}
-                            </span>
-                            <span className="flex-1">{option.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
-              </div>
-              {showOneTimePhoneInput && (
-                <input
-                  type="tel"
-                  placeholder="Enter phone number"
-                  value={oneTimePhoneNumber}
-                  onChange={(e) => handleOneTimePhoneChange(e.target.value)}
-                  className="mt-2 w-full rounded-lg border-2 border-gray-300 px-4 py-2.5 text-sm transition-all focus:border-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-green-400"
-                />
+                  )}
+                </>
               )}
             </div>
 
@@ -2136,7 +2899,7 @@ export default function CheckoutItems({
                     value={discountCode}
                     onChange={(e) => setDiscountCode(e.target.value)}
                     placeholder="Enter promo or referral code"
-                    className="flex-1 border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20"
+                    className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20"
                   />
                   <Button
                     appearance="primary"
@@ -2160,7 +2923,7 @@ export default function CheckoutItems({
                 value={deliveryNotes}
                 onChange={(e) => setDeliveryNotes(e.target.value)}
                 placeholder="Enter any delivery instructions or notes"
-                className="w-full border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-400 dark:focus:ring-green-400/20"
+                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:ring-green-500/20"
               />
             </div>
 
@@ -2169,9 +2932,10 @@ export default function CheckoutItems({
               appearance="primary"
               block
               size="lg"
-              className="mt-6 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
+              className="mt-6 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
               onClick={handleProceedToCheckout}
               loading={isCheckoutLoading}
+              disabled={!canProceedToCheckout() || isCheckoutLoading}
             >
               Proceed to Checkout
             </Button>
@@ -2220,6 +2984,18 @@ export default function CheckoutItems({
           setShowAddressModal(false);
           setTick((t) => t + 1); // Force re-render to update address display
         }}
+      />
+
+      {/* Combine Carts Modal */}
+      <CombineCartsModal
+        isOpen={showCombineModal}
+        onClose={() => setShowCombineModal(false)}
+        availableCarts={availableCarts}
+        cartDetails={cartDetails}
+        selectedCartIds={selectedCartIds}
+        toggleCartSelection={toggleCartSelection}
+        loadingCarts={loadingCarts}
+        onContinue={() => setShowCombineModal(false)}
       />
     </>
   );

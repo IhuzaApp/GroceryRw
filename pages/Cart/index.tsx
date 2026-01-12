@@ -2,6 +2,7 @@ import Image from "next/image";
 import { Input, InputGroup, Button, Checkbox, Panel } from "rsuite";
 import Link from "next/link";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useRouter } from "next/router";
 import RootLayout from "@components/ui/layout";
 import ItemCartTable from "@components/UserCarts/cartsTable";
 import CheckoutItems from "@components/UserCarts/checkout/checkoutCard";
@@ -169,9 +170,12 @@ interface ShopCart {
   name: string;
   logo?: string;
   count: number;
+  latitude?: string;
+  longitude?: string;
 }
 
 export default function CartMainPage() {
+  const router = useRouter();
   const { theme } = useTheme();
   const { isLoggedIn } = useAuth();
   const { restaurants, totalItems, totalPrice, clearRestaurant } =
@@ -204,6 +208,13 @@ export default function CartMainPage() {
   // Refs to avoid dependency issues in callbacks
   const currentShopTotalRef = useRef(0);
   const currentShopUnitsRef = useRef(0);
+
+  // Redirect to home if not logged in
+  useEffect(() => {
+    if (!isLoggedIn) {
+      router.push("/");
+    }
+  }, [isLoggedIn, router]);
 
   // Fetch shop carts
   useEffect(() => {
@@ -542,106 +553,9 @@ export default function CartMainPage() {
     [totalFoodItems, totalShopItems]
   );
 
-  // Show login prompt for guests
+  // Return null while redirecting
   if (!isLoggedIn) {
-    return (
-      <RootLayout>
-        <div className="p-4 md:ml-16">
-          <div className="container mx-auto">
-            <div className="mb-6 flex items-center">
-              <Link
-                href="/"
-                className={`flex items-center ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-700"
-                }`}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="mr-2 h-5 w-5"
-                >
-                  <path d="M19 12H5M12 19l-7-7 7-7" />
-                </svg>
-              </Link>
-              <h1
-                className={`text-2xl font-bold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                Cart
-              </h1>
-            </div>
-
-            <div className="flex min-h-[60vh] flex-col items-center justify-center py-12 text-center">
-              <div
-                className={`rounded-lg p-8 shadow-lg transition-colors duration-200 ${
-                  theme === "dark" ? "bg-gray-800" : "bg-white"
-                }`}
-              >
-                <div className="mb-6 flex justify-center">
-                  <svg
-                    className="h-16 w-16 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="1"
-                      d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
-                    />
-                  </svg>
-                </div>
-                <h2
-                  className={`mb-4 text-2xl font-bold ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  Sign In to View Your Cart
-                </h2>
-                <p
-                  className={`mb-6 ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
-                  You need to be logged in to view and manage your cart.
-                </p>
-                <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-                  <Link
-                    href="/Auth/Login"
-                    className="inline-flex items-center justify-center rounded-md bg-green-500 px-6 py-2.5 text-sm font-medium text-white transition duration-150 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-offset-gray-900"
-                  >
-                    <svg
-                      className="mr-2 h-5 w-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                      />
-                    </svg>
-                    Sign In
-                  </Link>
-                  <Link
-                    href="/Auth/Register"
-                    className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-6 py-2.5 text-sm font-medium text-gray-700 transition duration-150 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 dark:focus:ring-offset-gray-900"
-                  >
-                    Create Account
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </RootLayout>
-    );
+    return null;
   }
 
   return (
@@ -694,8 +608,8 @@ export default function CartMainPage() {
           </div>
         </div>
 
-        <div className="p-4 md:p-4">
-          <div className="container mx-auto">
+        <div className="pb-4 pt-2 md:p-4">
+          <div className="container mx-auto px-0 md:px-4">
             {/* Cart Selection - Desktop Only */}
             <div className="mb-6 hidden items-center md:flex">
               <Link
@@ -729,9 +643,9 @@ export default function CartMainPage() {
             ) : (
               <div className="flex flex-col gap-6 lg:flex-row">
                 {/* Cart Items Column - Restaurant/Shop Selection + Cart Table */}
-                <div className="w-full lg:w-2/3">
+                <div className="w-full pb-44 md:pb-0 lg:w-2/3">
                   {/* Restaurant/Shop Selection - Custom Tailwind Tabs */}
-                  <div className="mb-2 md:mb-6">
+                  <div className="mb-2 px-2 md:mb-6 md:px-0">
                     <div className="flex gap-2 overflow-x-auto pb-2">
                       {hasAnyItems ? (
                         <>
@@ -1006,7 +920,7 @@ export default function CartMainPage() {
                         </>
                       ) : (
                         // Empty state
-                        <div className="flex w-full flex-col items-center justify-center py-8">
+                        <div className="flex w-full flex-col items-center justify-center px-2 py-8 md:px-0">
                           {/* Empty Cart Icon */}
                           <div className="mb-4 flex justify-center">
                             <svg
@@ -1078,7 +992,7 @@ export default function CartMainPage() {
                   ) : selectedRestaurantId && selectedRestaurant ? (
                     <>
                       <h2
-                        className={`mb-4 text-xl font-semibold ${
+                        className={`mb-4 px-2 text-xl font-semibold md:px-0 ${
                           theme === "dark" ? "text-white" : "text-gray-900"
                         }`}
                       >
@@ -1096,7 +1010,7 @@ export default function CartMainPage() {
                   ) : selectedShopId && selectedShop ? (
                     <>
                       <h2
-                        className={`mb-4 text-xl font-semibold ${
+                        className={`mb-4 px-2 text-xl font-semibold md:px-0 ${
                           theme === "dark" ? "text-white" : "text-gray-900"
                         }`}
                       >
@@ -1112,7 +1026,7 @@ export default function CartMainPage() {
                     </>
                   ) : hasAnyItems ? (
                     <div
-                      className={`p-4 text-center ${
+                      className={`p-4 px-2 text-center md:px-4 ${
                         theme === "dark" ? "text-gray-400" : "text-gray-500"
                       }`}
                     >
@@ -1148,8 +1062,16 @@ export default function CartMainPage() {
                                 shopId={selectedShopId!}
                                 Total={total}
                                 totalUnits={units}
-                                shopLat={0} // Will need to fetch shop coordinates from API
-                                shopLng={0} // Will need to fetch shop coordinates from API
+                                shopLat={
+                                  selectedShop.latitude
+                                    ? parseFloat(selectedShop.latitude)
+                                    : 0
+                                }
+                                shopLng={
+                                  selectedShop.longitude
+                                    ? parseFloat(selectedShop.longitude)
+                                    : 0
+                                }
                                 shopAlt={0}
                                 isFoodCart={false}
                               />

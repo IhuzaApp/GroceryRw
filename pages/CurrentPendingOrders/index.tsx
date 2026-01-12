@@ -15,10 +15,8 @@ function CurrentOrdersPage() {
   const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
-      const userId = session?.user?.id;
-      const res = await authenticatedFetch(
-        `/api/queries/all-orders${userId ? `?user_id=${userId}` : ""}`
-      );
+      // Use the new user-orders endpoint that properly filters by user_id
+      const res = await authenticatedFetch(`/api/queries/user-orders`);
       const data = await res.json();
       setOrders(data.orders || []);
     } catch (error) {
@@ -87,20 +85,65 @@ function CurrentOrdersPage() {
     );
   }
 
-  // Count only assigned orders that are not delivered for "Ongoing"
+  // Count all orders that are not delivered for "Ongoing" (includes unassigned orders)
   const pendingCount = orders.filter((o) => {
-    const isAssigned = !!o?.shopper_id || !!o?.assignedTo;
-    return o.status !== "delivered" && isAssigned;
+    return o.status !== "delivered";
   }).length;
   const completedCount = orders.filter((o) => o.status === "delivered").length;
 
   return (
     <AuthGuard requireAuth={true}>
       <RootLayout>
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-16">
-          <div className="w-full py-3 md:py-8">
-            {/* Header Section */}
-            <div className="mb-4 px-3 md:mb-8 md:px-8">
+        <div className="bg-gray-50 dark:bg-gray-900 md:ml-16">
+          {/* Mobile Header */}
+          <div
+            className="relative mb-2 h-32 overflow-hidden rounded-b-3xl sm:hidden"
+            style={{
+              marginTop: "-44px",
+              marginLeft: "-16px",
+              marginRight: "-16px",
+            }}
+          >
+            {/* Background Image */}
+            <div
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+              style={{
+                backgroundImage: "url(/assets/images/mobileheaderbg.jpg)",
+              }}
+            >
+              {/* Overlay for better text readability */}
+              <div className="absolute inset-0 bg-black/20"></div>
+            </div>
+
+            {/* Header Content */}
+            <div className="relative z-10 flex h-full items-center justify-between px-6">
+              <Link
+                href="/"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-md transition-colors hover:bg-white/30"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="h-5 w-5"
+                >
+                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+              </Link>
+              <div className="text-center">
+                <h1 className="text-lg font-semibold !text-white">My Orders</h1>
+                <p className="text-xs !text-white/90">
+                  {orders.length} order{orders.length !== 1 ? "s" : ""}
+                </p>
+              </div>
+              <div className="w-10"></div> {/* Spacer for centering */}
+            </div>
+          </div>
+
+          <div className="w-full pb-3 md:py-8">
+            {/* Desktop Header Section */}
+            <div className="mb-4 hidden px-3 md:mb-8 md:block md:px-8">
               <div className="mb-4 flex items-center justify-between md:mb-6">
                 <div className="flex items-center gap-3 md:gap-4">
                   <Link
@@ -139,12 +182,14 @@ function CurrentOrdersPage() {
                   </div>
                 )}
               </div>
+            </div>
 
-              {/* Filter Tabs - Modern Design */}
+            {/* Filter Tabs - Modern Design */}
+            <div className="mb-4 px-3 md:mb-6 md:px-8">
               <div className="inline-flex w-full rounded-xl border border-gray-200 bg-white p-1 shadow-sm dark:border-gray-700 dark:bg-gray-800 md:w-auto">
                 <button
                   onClick={() => setFilter("pending")}
-                  className={`relative flex items-center gap-2 rounded-lg px-6 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                  className={`relative flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 md:flex-initial md:px-6 ${
                     filter === "pending"
                       ? "bg-gradient-to-r from-green-500 to-green-600 !text-white shadow-md shadow-green-500/30"
                       : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
@@ -182,7 +227,7 @@ function CurrentOrdersPage() {
                 </button>
                 <button
                   onClick={() => setFilter("done")}
-                  className={`relative flex items-center gap-2 rounded-lg px-6 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                  className={`relative flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 md:flex-initial md:px-6 ${
                     filter === "done"
                       ? "bg-gradient-to-r from-green-500 to-green-600 !text-white shadow-md shadow-green-500/30"
                       : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
@@ -222,8 +267,8 @@ function CurrentOrdersPage() {
             </div>
 
             {/* Orders List */}
-            <div className="mx-0 rounded-t-2xl bg-white shadow-sm dark:bg-gray-800 md:mx-8 md:rounded-2xl">
-              <div className="p-3 md:p-6">
+            <div className="mx-0 min-h-screen rounded-t-2xl bg-white pb-20 shadow-sm dark:bg-gray-800 md:mx-8 md:min-h-0 md:rounded-2xl md:pb-6">
+              <div className="px-3 py-4 md:p-6">
                 <UserRecentOrders
                   filter={filter}
                   orders={orders}

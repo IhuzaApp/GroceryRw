@@ -26,10 +26,12 @@ interface Contract {
   status:
     | "draft"
     | "pending"
+    | "waiting_for_supplier"
     | "active"
     | "completed"
     | "terminated"
-    | "expired";
+    | "expired"
+    | "rejected";
   startDate: string;
   endDate: string;
   totalValue: number;
@@ -42,12 +44,14 @@ interface ContractsSectionProps {
   className?: string;
   onViewContract?: (contract: Contract) => void;
   onMessageSupplier?: (supplierId: string) => void;
+  onViewContractById?: (contractId: string) => void;
 }
 
 export function ContractsSection({
   className = "",
   onViewContract,
   onMessageSupplier,
+  onViewContractById,
 }: ContractsSectionProps) {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,13 +63,17 @@ export function ContractsSection({
   const fetchContracts = async () => {
     try {
       setLoading(true);
-      // TODO: Replace with actual API call
-      // const response = await fetch("/api/queries/business-contracts");
-      // const data = await response.json();
-      // setContracts(data.contracts || []);
-      setContracts([]);
+      const response = await fetch("/api/queries/business-contracts");
+      if (response.ok) {
+        const data = await response.json();
+        setContracts(data.contracts || []);
+      } else {
+        console.error("Failed to fetch contracts");
+        setContracts([]);
+      }
     } catch (error) {
       console.error("Error fetching contracts:", error);
+      setContracts([]);
     } finally {
       setLoading(false);
     }
@@ -107,6 +115,20 @@ export function ContractsSection({
             "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
           text: "Expired",
         };
+      case "waiting_for_supplier":
+        return {
+          icon: Clock,
+          className:
+            "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
+          text: "Waiting for Supplier",
+        };
+      case "rejected":
+        return {
+          icon: XCircle,
+          className:
+            "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+          text: "Rejected",
+        };
       default:
         return {
           icon: Clock,
@@ -131,12 +153,41 @@ export function ContractsSection({
     return (
       <div className={`space-y-4 sm:space-y-8 ${className}`}>
         <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl">
-          <div className="flex items-center justify-center p-12">
-            <div className="text-center">
-              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-green-500"></div>
-              <p className="mt-4 text-gray-600 dark:text-gray-400">
-                Loading contracts...
-              </p>
+          <div className="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white p-4 dark:border-gray-700 dark:from-gray-700 dark:to-gray-800 sm:p-6 md:p-8">
+            <div className="animate-pulse space-y-2">
+              <div className="h-8 w-48 rounded bg-gray-200 dark:bg-gray-700"></div>
+              <div className="h-4 w-64 rounded bg-gray-200 dark:bg-gray-700"></div>
+            </div>
+          </div>
+          <div className="p-4 sm:p-6 md:p-8">
+            <div className="space-y-3 sm:space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="animate-pulse rounded-xl border-2 border-gray-100 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl sm:p-6"
+                >
+                  <div className="mb-4 flex flex-col gap-3 sm:mb-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <div className="h-6 w-48 rounded bg-gray-200 dark:bg-gray-700"></div>
+                        <div className="h-6 w-20 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                      </div>
+                      <div className="mb-2 h-4 w-32 rounded bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+                        <div className="h-4 w-24 rounded bg-gray-200 dark:bg-gray-700"></div>
+                        <div className="h-4 w-24 rounded bg-gray-200 dark:bg-gray-700"></div>
+                        <div className="h-4 w-24 rounded bg-gray-200 dark:bg-gray-700"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mb-4 h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                  <div className="flex flex-col gap-2 border-t border-gray-200 pt-4 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-end sm:gap-3 sm:border-0 sm:pt-0">
+                    <div className="h-10 w-28 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="h-10 w-28 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="h-10 w-28 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -149,10 +200,10 @@ export function ContractsSection({
       <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl">
         <div className="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white p-4 dark:border-gray-700 dark:from-gray-700 dark:to-gray-800 sm:p-6 md:p-8">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
-            Active Contracts
+            Contracts
           </h2>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 sm:text-base">
-            Manage your supplier contracts
+            Manage all your contracts (pending, active, completed, etc.)
           </p>
         </div>
         <div className="p-4 sm:p-6 md:p-8">
@@ -169,10 +220,11 @@ export function ContractsSection({
                 </div>
               </div>
               <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white sm:text-xl">
-                No active contracts yet
+                No contracts yet
               </h3>
               <p className="mb-4 text-sm text-gray-600 dark:text-gray-400 sm:mb-6 sm:text-base">
-                Contracts will appear here once quotes are accepted
+                Contracts will appear here once you accept quotes and create
+                contracts
               </p>
               <button
                 onClick={handleViewAcceptedQuotes}
@@ -257,7 +309,13 @@ export function ContractsSection({
                       {/* Action Buttons */}
                       <div className="flex flex-col gap-2 border-t border-gray-200 pt-4 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-end sm:gap-3 sm:border-0 sm:pt-0">
                         <button
-                          onClick={() => onViewContract?.(contract)}
+                          onClick={() => {
+                            if (onViewContractById) {
+                              onViewContractById(contract.id);
+                            } else {
+                              onViewContract?.(contract);
+                            }
+                          }}
                           className="flex items-center justify-center gap-2 rounded-lg border-2 border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-all duration-200 hover:border-green-500 hover:bg-gray-50 active:scale-95 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-gray-700 sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm"
                         >
                           <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />

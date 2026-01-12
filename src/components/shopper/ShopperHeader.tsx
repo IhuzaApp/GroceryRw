@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 import { useTheme } from "@context/ThemeContext";
 import { Button } from "rsuite";
 import TelegramStatusButton from "./TelegramStatusButton";
-
+import NotificationCenter from "./NotificationCenter";
 export default function ShopperHeader() {
   const [isMobile, setIsMobile] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
@@ -213,6 +213,7 @@ export default function ShopperHeader() {
       {/* Right Section */}
       <div className="flex items-center gap-3">
         <div className="hidden items-center gap-2 md:flex">
+          <NotificationCenter />
           <TelegramStatusButton
             variant="primary"
             size="md"

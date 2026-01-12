@@ -20,11 +20,19 @@ const GET_ORDER_DETAILS_FOR_INVOICE = gql`
         id
         name
         email
+        phone
       }
       Shop {
         name
         address
         image
+      }
+      Address {
+        id
+        street
+        city
+        postal_code
+        placeDetails
       }
       Order_Items {
         id
@@ -59,6 +67,14 @@ const GET_REEL_ORDER_DETAILS_FOR_INVOICE = gql`
         id
         name
         email
+        phone
+      }
+      Address {
+        id
+        street
+        city
+        postal_code
+        placeDetails
       }
       Reel {
         id
@@ -94,6 +110,14 @@ const GET_RESTAURANT_ORDER_DETAILS_FOR_INVOICE = gql`
         id
         name
         email
+        phone
+      }
+      Address {
+        id
+        street
+        city
+        postal_code
+        placeDetails
       }
       Restaurant {
         id
@@ -134,6 +158,7 @@ const ADD_INVOICE = gql`
     $tax: String = ""
     $total_amount: String = ""
     $reel_order_id: uuid = ""
+    $Proof: String = ""
   ) {
     insert_Invoices(
       objects: {
@@ -149,11 +174,13 @@ const ADD_INVOICE = gql`
         tax: $tax
         total_amount: $total_amount
         reel_order_id: $reel_order_id
+        Proof: $Proof
       }
     ) {
       returning {
         id
         invoice_number
+        Proof
       }
       affected_rows
     }
@@ -295,11 +322,43 @@ export default async function handler(
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const { orderId, orderType = "regular" } = req.body;
+    const { orderId, orderType = "regular", invoiceProofPhoto } = req.body;
 
     // Validate required fields
     if (!orderId) {
       return res.status(400).json({ error: "Missing required field: orderId" });
+    }
+
+    // Handle invoice proof photo upload if provided
+    let invoiceProofUrl = "";
+    if (invoiceProofPhoto) {
+      try {
+        // Upload to Cloudinary
+        const cloudinaryResponse = await fetch(
+          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              file: invoiceProofPhoto,
+              upload_preset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+              folder: "invoice_proofs",
+            }),
+          }
+        );
+
+        if (!cloudinaryResponse.ok) {
+          console.error("Failed to upload invoice proof to Cloudinary");
+        } else {
+          const cloudinaryData = await cloudinaryResponse.json();
+          invoiceProofUrl = cloudinaryData.secure_url;
+        }
+      } catch (uploadError) {
+        console.error("Error uploading invoice proof:", uploadError);
+        // Continue without the proof URL rather than failing the entire invoice
+      }
     }
 
     // Check if hasuraClient is available (it should be on server side)
@@ -471,6 +530,7 @@ export default async function handler(
         subtotal: subtotalStr,
         tax: taxStr,
         total_amount: totalAmount,
+        Proof: invoiceProofUrl,
       });
     } catch (error) {
       return res
@@ -494,8 +554,22 @@ export default async function handler(
         : isRestaurantOrder
         ? order.User.email
         : order.orderedBy.email,
+      customerPhone: isReelOrder
+        ? order.User?.phone || ""
+        : isRestaurantOrder
+        ? order.User?.phone || ""
+        : order.orderedBy?.phone || "",
       shop: shopName,
       shopAddress: shopAddress,
+      deliveryStreet: order.Address?.street || "",
+      deliveryCity: order.Address?.city || "",
+      deliveryPostalCode: order.Address?.postal_code || "",
+      deliveryPlaceDetails: order.Address?.placeDetails || null,
+      deliveryAddress: order.Address
+        ? `${order.Address.street || ""}, ${order.Address.city || ""}${
+            order.Address.postal_code ? `, ${order.Address.postal_code}` : ""
+          }`
+        : "",
       dateCreated: new Date(order.created_at).toLocaleString(),
       dateCompleted: new Date(order.updated_at).toLocaleString(),
       status: order.status,

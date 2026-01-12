@@ -356,7 +356,7 @@ export default function App({ Component, pageProps }: AppProps) {
                   <ChatProvider>
                     <GoogleMapProvider>
                       <SessionRefreshHandler>
-                        <Toaster position="top-right" />
+                        <Toaster />
                         <Component {...pageProps} />
                         <InstallPrompt />
                       </SessionRefreshHandler>

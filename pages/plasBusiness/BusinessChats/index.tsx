@@ -179,8 +179,63 @@ export default function BusinessChatsPage() {
   if (!authReady) {
     return (
       <RootLayout>
-        <div className="flex h-screen w-full items-center justify-center">
-          <div className="h-16 w-16 animate-spin rounded-full border-b-4 border-t-4 border-green-800"></div>
+        <div className="h-[calc(100vh-6.5rem)] overflow-hidden via-white to-gray-100 dark:from-gray-900 md:fixed md:left-16 md:right-0 md:top-16 md:h-[calc(100vh-4rem)] md:w-[calc(100%-4rem)]">
+          <div className="mx-auto h-full w-full max-w-full p-4 md:p-6">
+            <div className="grid h-full grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
+              {/* Conversations List Skeleton */}
+              <div className="flex h-full min-h-0 animate-pulse flex-col rounded-2xl border border-gray-100 bg-white shadow dark:border-gray-700 dark:bg-gray-800 lg:col-span-1">
+                <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-100 p-4 dark:border-gray-700">
+                  <div className="h-6 w-32 rounded bg-gray-200 dark:bg-gray-700"></div>
+                  <div className="h-10 w-48 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                </div>
+                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div
+                      key={i}
+                      className="space-y-2 rounded-lg border border-gray-100 p-4 dark:border-gray-700"
+                    >
+                      <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="h-3 w-1/2 rounded bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="h-3 w-full rounded bg-gray-200 dark:bg-gray-700"></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Chat Window Skeleton */}
+              <div className="flex h-full min-h-0 animate-pulse flex-col rounded-2xl border border-gray-100 bg-white shadow dark:border-gray-700 dark:bg-gray-800 lg:col-span-2">
+                <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-100 p-4 dark:border-gray-700">
+                  <div className="space-y-2">
+                    <div className="h-5 w-48 rounded bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="h-4 w-32 rounded bg-gray-200 dark:bg-gray-700"></div>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="h-8 w-8 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="h-8 w-8 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="h-8 w-8 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                  </div>
+                </div>
+                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div
+                      key={i}
+                      className={`flex ${
+                        i % 2 === 0 ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      <div className="h-16 w-3/4 rounded-2xl bg-gray-200 dark:bg-gray-700"></div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex-shrink-0 border-t border-gray-100 p-3 dark:border-gray-700">
+                  <div className="flex items-center gap-2">
+                    <div className="h-10 flex-1 rounded-xl bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="h-10 w-24 rounded-xl bg-gray-200 dark:bg-gray-700"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </RootLayout>
     );

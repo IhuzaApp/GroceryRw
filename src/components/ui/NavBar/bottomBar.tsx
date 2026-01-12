@@ -5,8 +5,11 @@ import { useCart } from "../../../context/CartContext";
 import { useTheme } from "../../../context/ThemeContext";
 import { useLanguage } from "../../../context/LanguageContext";
 import { Input, Modal, Button, Loader } from "rsuite";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { useAuth } from "../../../context/AuthContext";
+import { useAuth as useAuthHook } from "../../../hooks/useAuth";
 import { Briefcase } from "lucide-react";
+import GuestUpgradeModal from "../GuestUpgradeModal";
 
 interface NavItemProps {
   icon: React.ReactNode;
@@ -49,9 +52,11 @@ function MoreMenuItem({ icon, label, href, onClick }: MoreMenuItemProps) {
 
   return (
     <Link href={href} passHref onClick={handleClick}>
-      <div className="flex items-center space-x-3 rounded-lg px-4 py-3 text-sm text-gray-700 transition-colors duration-200 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">
-        <span className="text-lg">{icon}</span>
-        <span>{label}</span>
+      <div className="mx-2 flex items-center space-x-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-gray-100 hover:shadow-sm dark:text-gray-200 dark:hover:bg-gray-700">
+        <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center text-lg">
+          {icon}
+        </span>
+        <span className="flex-1">{label}</span>
       </div>
     </Link>
   );
@@ -126,6 +131,8 @@ export default function BottomBar() {
   const [open, setOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const router = useRouter();
+  const { logout } = useAuth();
+  const { isGuest } = useAuthHook();
   const { count } = useCart();
   const { theme, setTheme } = useTheme();
   const { t } = useLanguage();
@@ -133,6 +140,7 @@ export default function BottomBar() {
   const moreRef = useRef<HTMLDivElement>(null);
   const [marketplaceNotificationCount, setMarketplaceNotificationCount] =
     useState(0);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const handleThemeToggle = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
@@ -274,72 +282,75 @@ export default function BottomBar() {
       <div className="fixed bottom-6 right-4 z-50 hidden flex-col items-end gap-2 md:flex">
         {open && (
           <div className="mb-2 flex flex-col items-end gap-2">
-            <DesktopActionButton
-              icon={
-                <svg
-                  width="30px"
-                  height="30px"
-                  viewBox="-0.5 0 25 25"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                  <g
-                    id="SVGRepo_tracerCarrier"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></g>
-                  <g id="SVGRepo_iconCarrier">
-                    {" "}
-                    <path
-                      d="M6.72266 5.47968C6.81011 4.6032 7.11663 3.7628 7.61402 3.03585C8.11141 2.30889 8.78368 1.71874 9.56895 1.31971C10.3542 0.920684 11.2272 0.725607 12.1077 0.752437C12.9881 0.779267 13.8476 1.02714 14.6071 1.47324C15.3666 1.91935 16.0017 2.54934 16.4539 3.30524C16.9061 4.06113 17.1609 4.91863 17.1948 5.79881C17.2287 6.67899 17.0407 7.55355 16.648 8.342C16.2627 9.11563 15.6925 9.78195 14.9883 10.2821"
-                      stroke="#5b428a"
-                      strokeWidth="1.5"
+            {/* AI Support - Only show for non-guest users */}
+            {session?.user && !isGuest && (
+              <DesktopActionButton
+                icon={
+                  <svg
+                    width="30px"
+                    height="30px"
+                    viewBox="-0.5 0 25 25"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                    <g
+                      id="SVGRepo_tracerCarrier"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                    ></path>{" "}
-                    <path
-                      d="M7.43945 3.35268C8.25207 4.19161 9.22512 4.85854 10.3007 5.31379C11.3763 5.76904 12.5325 6.00332 13.7005 6.00268C14.8492 6.00382 15.9865 5.77762 17.0469 5.33742"
-                      stroke="#5b428a"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></path>{" "}
-                    <path
-                      d="M10.8232 9.75268C10.5266 9.75268 10.2366 9.84065 9.98989 10.0055C9.74321 10.1703 9.55096 10.4046 9.43742 10.6787C9.32389 10.9527 9.29419 11.2543 9.35206 11.5453C9.40994 11.8363 9.5528 12.1036 9.76258 12.3133C9.97236 12.5231 10.2396 12.666 10.5306 12.7239C10.8216 12.7817 11.1232 12.752 11.3973 12.6385C11.6714 12.525 11.9056 12.3327 12.0704 12.086C12.2353 11.8394 12.3232 11.5493 12.3232 11.2527C12.3232 10.8549 12.1652 10.4733 11.8839 10.192C11.6026 9.91071 11.2211 9.75268 10.8232 9.75268Z"
-                      stroke="#5b428a"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></path>{" "}
-                    <path
-                      d="M4.82324 7.17467V8.25268C4.82324 9.04832 5.13931 9.81139 5.70192 10.374C6.26453 10.9366 7.02759 11.2527 7.82324 11.2527H9.24649"
-                      stroke="#5b428a"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></path>{" "}
-                    <path
-                      d="M21.7005 23.2527C21.7006 21.4693 21.211 19.7202 20.2852 18.196C19.3632 16.6779 18.0438 15.4409 16.4697 14.6187"
-                      stroke="#5b428a"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></path>{" "}
-                    <path
-                      d="M2.2002 23.2527C2.2 21.4695 2.68926 19.7206 3.61465 18.1963C4.53542 16.6797 5.85284 15.4435 7.42453 14.621"
-                      stroke="#5b428a"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></path>{" "}
-                  </g>
-                </svg>
-              }
-              tooltip="AI Support"
-              onClick={() => {}}
-              bgColor="bg-[#c2a2ff] hover:bg-[#c6aafc]"
-            />
+                    ></g>
+                    <g id="SVGRepo_iconCarrier">
+                      {" "}
+                      <path
+                        d="M6.72266 5.47968C6.81011 4.6032 7.11663 3.7628 7.61402 3.03585C8.11141 2.30889 8.78368 1.71874 9.56895 1.31971C10.3542 0.920684 11.2272 0.725607 12.1077 0.752437C12.9881 0.779267 13.8476 1.02714 14.6071 1.47324C15.3666 1.91935 16.0017 2.54934 16.4539 3.30524C16.9061 4.06113 17.1609 4.91863 17.1948 5.79881C17.2287 6.67899 17.0407 7.55355 16.648 8.342C16.2627 9.11563 15.6925 9.78195 14.9883 10.2821"
+                        stroke="#5b428a"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      ></path>{" "}
+                      <path
+                        d="M7.43945 3.35268C8.25207 4.19161 9.22512 4.85854 10.3007 5.31379C11.3763 5.76904 12.5325 6.00332 13.7005 6.00268C14.8492 6.00382 15.9865 5.77762 17.0469 5.33742"
+                        stroke="#5b428a"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      ></path>{" "}
+                      <path
+                        d="M10.8232 9.75268C10.5266 9.75268 10.2366 9.84065 9.98989 10.0055C9.74321 10.1703 9.55096 10.4046 9.43742 10.6787C9.32389 10.9527 9.29419 11.2543 9.35206 11.5453C9.40994 11.8363 9.5528 12.1036 9.76258 12.3133C9.97236 12.5231 10.2396 12.666 10.5306 12.7239C10.8216 12.7817 11.1232 12.752 11.3973 12.6385C11.6714 12.525 11.9056 12.3327 12.0704 12.086C12.2353 11.8394 12.3232 11.5493 12.3232 11.2527C12.3232 10.8549 12.1652 10.4733 11.8839 10.192C11.6026 9.91071 11.2211 9.75268 10.8232 9.75268Z"
+                        stroke="#5b428a"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      ></path>{" "}
+                      <path
+                        d="M4.82324 7.17467V8.25268C4.82324 9.04832 5.13931 9.81139 5.70192 10.374C6.26453 10.9366 7.02759 11.2527 7.82324 11.2527H9.24649"
+                        stroke="#5b428a"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      ></path>{" "}
+                      <path
+                        d="M21.7005 23.2527C21.7006 21.4693 21.211 19.7202 20.2852 18.196C19.3632 16.6779 18.0438 15.4409 16.4697 14.6187"
+                        stroke="#5b428a"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      ></path>{" "}
+                      <path
+                        d="M2.2002 23.2527C2.2 21.4695 2.68926 19.7206 3.61465 18.1963C4.53542 16.6797 5.85284 15.4435 7.42453 14.621"
+                        stroke="#5b428a"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      ></path>{" "}
+                    </g>
+                  </svg>
+                }
+                tooltip="AI Support"
+                onClick={() => {}}
+                bgColor="bg-[#c2a2ff] hover:bg-[#c6aafc]"
+              />
+            )}
             <DesktopActionButton
               icon={
                 <svg
@@ -375,61 +386,64 @@ export default function BottomBar() {
               href="/map"
               bgColor="bg-[#E6F7FF]  hover:bg-blue-100"
             />
-            <DesktopActionButton
-              icon={
-                <svg
-                  width="30px"
-                  height="30px"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                  <g
-                    id="SVGRepo_tracerCarrier"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></g>
-                  <g id="SVGRepo_iconCarrier">
-                    {" "}
-                    <path
-                      d="M4 8C4 5.17157 4 3.75736 4.87868 2.87868C5.75736 2 7.17157 2 10 2H14C16.8284 2 18.2426 2 19.1213 2.87868C20 3.75736 20 5.17157 20 8V16C20 18.8284 20 20.2426 19.1213 21.1213C18.2426 22 16.8284 22 14 22H10C7.17157 22 5.75736 22 4.87868 21.1213C4 20.2426 4 18.8284 4 16V8Z"
-                      stroke="#c2ab51"
-                      strokeWidth="1.5"
-                    ></path>{" "}
-                    <path
-                      d="M19.8978 16H7.89778C6.96781 16 6.50282 16 6.12132 16.1022C5.08604 16.3796 4.2774 17.1883 4 18.2235"
-                      stroke="#c2ab51"
-                      strokeWidth="1.5"
-                    ></path>{" "}
-                    <path
-                      opacity="0.5"
-                      d="M8 7H16"
-                      stroke="#c2ab51"
-                      strokeWidth="1.5"
+            {/* Recipes - Only show for non-guest logged-in users */}
+            {session?.user && !isGuest && (
+              <DesktopActionButton
+                icon={
+                  <svg
+                    width="30px"
+                    height="30px"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                    <g
+                      id="SVGRepo_tracerCarrier"
                       strokeLinecap="round"
-                    ></path>{" "}
-                    <path
-                      opacity="0.5"
-                      d="M8 10.5H13"
-                      stroke="#c2ab51"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                    ></path>{" "}
-                    <path
-                      opacity="0.5"
-                      d="M13 16V19.5309C13 19.8065 13 19.9443 12.9051 20C12.8103 20.0557 12.6806 19.9941 12.4211 19.8708L11.1789 19.2808C11.0911 19.2391 11.0472 19.2182 11 19.2182C10.9528 19.2182 10.9089 19.2391 10.8211 19.2808L9.57889 19.8708C9.31943 19.9941 9.18971 20.0557 9.09485 20C9 19.9443 9 19.8065 9 19.5309V16.45"
-                      stroke="#c2ab51"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                    ></path>{" "}
-                  </g>
-                </svg>
-              }
-              tooltip="Recipes"
-              href="/Recipes"
-              bgColor="bg-[#FFFAE6]  hover:bg-yellow-100"
-            />
+                      strokeLinejoin="round"
+                    ></g>
+                    <g id="SVGRepo_iconCarrier">
+                      {" "}
+                      <path
+                        d="M4 8C4 5.17157 4 3.75736 4.87868 2.87868C5.75736 2 7.17157 2 10 2H14C16.8284 2 18.2426 2 19.1213 2.87868C20 3.75736 20 5.17157 20 8V16C20 18.8284 20 20.2426 19.1213 21.1213C18.2426 22 16.8284 22 14 22H10C7.17157 22 5.75736 22 4.87868 21.1213C4 20.2426 4 18.8284 4 16V8Z"
+                        stroke="#c2ab51"
+                        strokeWidth="1.5"
+                      ></path>{" "}
+                      <path
+                        d="M19.8978 16H7.89778C6.96781 16 6.50282 16 6.12132 16.1022C5.08604 16.3796 4.2774 17.1883 4 18.2235"
+                        stroke="#c2ab51"
+                        strokeWidth="1.5"
+                      ></path>{" "}
+                      <path
+                        opacity="0.5"
+                        d="M8 7H16"
+                        stroke="#c2ab51"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      ></path>{" "}
+                      <path
+                        opacity="0.5"
+                        d="M8 10.5H13"
+                        stroke="#c2ab51"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      ></path>{" "}
+                      <path
+                        opacity="0.5"
+                        d="M13 16V19.5309C13 19.8065 13 19.9443 12.9051 20C12.8103 20.0557 12.6806 19.9941 12.4211 19.8708L11.1789 19.2808C11.0911 19.2391 11.0472 19.2182 11 19.2182C10.9528 19.2182 10.9089 19.2391 10.8211 19.2808L9.57889 19.8708C9.31943 19.9941 9.18971 20.0557 9.09485 20C9 19.9443 9 19.8065 9 19.5309V16.45"
+                        stroke="#c2ab51"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      ></path>{" "}
+                    </g>
+                  </svg>
+                }
+                tooltip="Recipes"
+                href="/Recipes"
+                bgColor="bg-[#FFFAE6]  hover:bg-yellow-100"
+              />
+            )}
           </div>
         )}
         {/* Main Floating Button (desktop) */}
@@ -473,16 +487,66 @@ export default function BottomBar() {
       {/* Bottom Navigation Bar */}
       {router.pathname !== "/Reels" && (
         <nav className="fixed bottom-0 left-0 z-[9999] flex w-full items-center justify-around border-t border-gray-200 bg-white py-4 shadow-lg transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800 md:hidden">
+          {/* Reels - First icon */}
           <NavItem
-            href="/plasBusiness"
+            href="/Reels"
             icon={
-              <div className="relative">
+              <svg
+                width="30px"
+                height="30px"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                <g
+                  id="SVGRepo_tracerCarrier"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                ></g>
+                <g id="SVGRepo_iconCarrier">
+                  <path
+                    d="M19.5617 7C19.7904 5.69523 18.7863 4.5 17.4617 4.5H6.53788C5.21323 4.5 4.20922 5.69523 4.43784 7"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  ></path>
+                  <path
+                    d="M17.4999 4.5C17.5283 4.24092 17.5425 4.11135 17.5427 4.00435C17.545 2.98072 16.7739 2.12064 15.7561 2.01142C15.6497 2 15.5194 2 15.2588 2H8.74099C8.48035 2 8.35002 2 8.24362 2.01142C7.22584 2.12064 6.45481 2.98072 6.45704 4.00434C6.45727 4.11135 6.47146 4.2409 6.49983 4.5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  ></path>
+                  <path
+                    d="M21.1935 16.793C20.8437 19.2739 20.6689 20.5143 19.7717 21.2572C18.8745 22 17.5512 22 14.9046 22H9.09536C6.44881 22 5.12553 22 4.22834 21.2572C3.33115 20.5143 3.15626 19.2739 2.80648 16.793L2.38351 13.793C1.93748 10.6294 1.71447 9.04765 2.66232 8.02383C3.61017 7 5.29758 7 8.67239 7H15.3276C18.7024 7 20.3898 7 21.3377 8.02383C22.0865 8.83268 22.1045 9.98979 21.8592 12"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  ></path>
+                  <path
+                    d="M14.5812 13.6159C15.1396 13.9621 15.1396 14.8582 14.5812 15.2044L11.2096 17.2945C10.6669 17.6309 10 17.1931 10 16.5003L10 12.32C10 11.6273 10.6669 11.1894 11.2096 11.5258L14.5812 13.6159Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  ></path>
+                </g>
+              </svg>
+            }
+            label="Reels"
+          />
+
+          {/* Recipes - Only show for logged-out users or guest users - Second icon */}
+          {(!session?.user || isGuest) && (
+            <NavItem
+              href="/Recipes"
+              icon={
                 <svg
-                  width="30px"
+                  fill="currentColor"
                   height="30px"
-                  viewBox="0 0 24 24"
-                  fill="none"
+                  width="30px"
+                  version="1.1"
+                  id="Layer_1"
                   xmlns="http://www.w3.org/2000/svg"
+                  xmlnsXlink="http://www.w3.org/1999/xlink"
+                  viewBox="0 0 511.999 511.999"
+                  xmlSpace="preserve"
                   className="text-gray-600 transition-colors duration-200 dark:text-white"
                 >
                   <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
@@ -492,47 +556,130 @@ export default function BottomBar() {
                     strokeLinejoin="round"
                   ></g>
                   <g id="SVGRepo_iconCarrier">
+                    <g>
+                      <g>
+                        <path d="M324.799,68.799c-103.222,0-187.2,83.978-187.2,187.2s83.978,187.2,187.2,187.2s187.2-83.978,187.2-187.2 S428.022,68.799,324.799,68.799z M324.799,407.169c-83.354,0-151.168-67.814-151.168-151.168s67.814-151.17,151.168-151.17 s151.168,67.814,151.168,151.168S408.154,407.169,324.799,407.169z"></path>
+                      </g>
+                    </g>
+                    <g>
+                      <g>
+                        <path d="M324.799,148.019c-59.541,0-107.981,48.44-107.981,107.981s48.44,107.981,107.981,107.981S432.78,315.54,432.78,255.999 S384.34,148.019,324.799,148.019z M324.799,327.95c-39.673,0-71.949-32.276-71.949-71.949s32.276-71.949,71.949-71.949 c39.673,0,71.949,32.276,71.949,71.949S364.472,327.95,324.799,327.95z"></path>
+                      </g>
+                    </g>
+                    <g>
+                      <g>
+                        <path d="M110.491,68.799c-9.95,0-18.016,8.066-18.016,18.016v96.161H81.959V86.815c0-9.95-8.066-18.016-18.016-18.016 c-9.95,0-18.016,8.066-18.016,18.016v96.161h-9.896V86.815c0-9.95-8.066-18.016-18.016-18.016S0,76.866,0,86.815v99.764 c0,17.881,14.547,32.428,32.428,32.428h12.298v206.175c0,9.95,8.066,18.016,18.016,18.016s18.016-8.066,18.016-18.016V219.009 h15.321c17.881,0,32.428-14.547,32.428-32.428V86.815C128.507,76.866,120.441,68.799,110.491,68.799z"></path>
+                      </g>
+                    </g>
+                  </g>
+                </svg>
+              }
+              label="Recipes"
+            />
+          )}
+
+          {/* Business - Only show for non-guest logged-in users - Second icon */}
+          {session?.user && !isGuest && (
+            <NavItem
+              href="/plasBusiness"
+              icon={
+                <div className="relative">
+                  <svg
+                    width="30px"
+                    height="30px"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="text-gray-600 transition-colors duration-200 dark:text-white"
+                  >
+                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                    <g
+                      id="SVGRepo_tracerCarrier"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    ></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <path
+                        d="M3 7V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V7"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      ></path>
+                      <path
+                        d="M3 7L5 7H19L21 7V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V7Z"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      ></path>
+                      <path
+                        d="M8 11H16"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      ></path>
+                      <path
+                        d="M8 15H12"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      ></path>
+                    </g>
+                  </svg>
+                  {marketplaceNotificationCount > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-lg">
+                      {marketplaceNotificationCount > 9
+                        ? "9+"
+                        : marketplaceNotificationCount}
+                    </span>
+                  )}
+                </div>
+              }
+              label={t("nav.marketplace") || "Marketplace"}
+            />
+          )}
+
+          {/* Central Home Button - Third (middle) */}
+          <div className="z-50 -mt-12">
+            <Link href="/" passHref>
+              <div className="flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-green-500 bg-white text-2xl text-green-500 shadow-lg dark:bg-gray-800">
+                <svg
+                  width="24px"
+                  height="24px"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="text-green-500 dark:text-green-400"
+                >
+                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                  <g
+                    id="SVGRepo_tracerCarrier"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  ></g>
+                  <g id="SVGRepo_iconCarrier">
                     <path
-                      d="M3 7V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V7"
+                      d="M22 12.2039V13.725C22 17.6258 22 19.5763 20.8284 20.7881C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.7881C2 19.5763 2 17.6258 2 13.725V12.2039C2 9.91549 2 8.77128 2.5192 7.82274C3.0384 6.87421 3.98695 6.28551 5.88403 5.10813L7.88403 3.86687C9.88939 2.62229 10.8921 2 12 2C13.1079 2 14.1106 2.62229 16.116 3.86687L18.116 5.10812C20.0131 6.28551 20.9616 6.87421 21.4808 7.82274"
                       stroke="currentColor"
                       strokeWidth="1.5"
                       strokeLinecap="round"
-                      strokeLinejoin="round"
                     ></path>
                     <path
-                      d="M3 7L5 7H19L21 7V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V7Z"
+                      d="M15 18H9"
                       stroke="currentColor"
                       strokeWidth="1.5"
                       strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></path>
-                    <path
-                      d="M8 11H16"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></path>
-                    <path
-                      d="M8 15H12"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
                     ></path>
                   </g>
                 </svg>
-                {marketplaceNotificationCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-lg">
-                    {marketplaceNotificationCount > 9
-                      ? "9+"
-                      : marketplaceNotificationCount}
-                  </span>
-                )}
               </div>
-            }
-            label={t("nav.marketplace") || "Marketplace"}
-          />
+            </Link>
+          </div>
+
+          {/* Orders - Fourth icon - Show for all signed in users including guests */}
           <NavItem
             href="/CurrentPendingOrders"
             icon={
@@ -577,86 +724,6 @@ export default function BottomBar() {
               </svg>
             }
             label="My Orders"
-          />
-
-          {/* Central Home Button */}
-          <div className="z-50 -mt-12">
-            <Link href="/" passHref>
-              <div className="flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-green-500 bg-white text-2xl text-green-500 shadow-lg dark:bg-gray-800">
-                <svg
-                  width="24px"
-                  height="24px"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="text-green-500 dark:text-green-400"
-                >
-                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                  <g
-                    id="SVGRepo_tracerCarrier"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></g>
-                  <g id="SVGRepo_iconCarrier">
-                    <path
-                      d="M22 12.2039V13.725C22 17.6258 22 19.5763 20.8284 20.7881C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.7881C2 19.5763 2 17.6258 2 13.725V12.2039C2 9.91549 2 8.77128 2.5192 7.82274C3.0384 6.87421 3.98695 6.28551 5.88403 5.10813L7.88403 3.86687C9.88939 2.62229 10.8921 2 12 2C13.1079 2 14.1106 2.62229 16.116 3.86687L18.116 5.10812C20.0131 6.28551 20.9616 6.87421 21.4808 7.82274"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                    ></path>
-                    <path
-                      d="M15 18H9"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                    ></path>
-                  </g>
-                </svg>
-              </div>
-            </Link>
-          </div>
-          <NavItem
-            href="/Reels"
-            icon={
-              <svg
-                width="30px"
-                height="30px"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                <g
-                  id="SVGRepo_tracerCarrier"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                ></g>
-                <g id="SVGRepo_iconCarrier">
-                  <path
-                    d="M19.5617 7C19.7904 5.69523 18.7863 4.5 17.4617 4.5H6.53788C5.21323 4.5 4.20922 5.69523 4.43784 7"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                  ></path>
-                  <path
-                    d="M17.4999 4.5C17.5283 4.24092 17.5425 4.11135 17.5427 4.00435C17.545 2.98072 16.7739 2.12064 15.7561 2.01142C15.6497 2 15.5194 2 15.2588 2H8.74099C8.48035 2 8.35002 2 8.24362 2.01142C7.22584 2.12064 6.45481 2.98072 6.45704 4.00434C6.45727 4.11135 6.47146 4.2409 6.49983 4.5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                  ></path>
-                  <path
-                    d="M21.1935 16.793C20.8437 19.2739 20.6689 20.5143 19.7717 21.2572C18.8745 22 17.5512 22 14.9046 22H9.09536C6.44881 22 5.12553 22 4.22834 21.2572C3.33115 20.5143 3.15626 19.2739 2.80648 16.793L2.38351 13.793C1.93748 10.6294 1.71447 9.04765 2.66232 8.02383C3.61017 7 5.29758 7 8.67239 7H15.3276C18.7024 7 20.3898 7 21.3377 8.02383C22.0865 8.83268 22.1045 9.98979 21.8592 12"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  ></path>
-                  <path
-                    d="M14.5812 13.6159C15.1396 13.9621 15.1396 14.8582 14.5812 15.2044L11.2096 17.2945C10.6669 17.6309 10 17.1931 10 16.5003L10 12.32C10 11.6273 10.6669 11.1894 11.2096 11.5258L14.5812 13.6159Z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                  ></path>
-                </g>
-              </svg>
-            }
-            label="Reels"
           />
 
           {/* More Menu */}
@@ -710,10 +777,61 @@ export default function BottomBar() {
             {/* More Dropdown Menu */}
             {moreOpen && (
               <div
-                className="absolute bottom-full left-1/2 mb-2 w-64 -translate-x-1/2 transform rounded-lg border border-gray-200 bg-white py-2 shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                className="fixed bottom-20 left-1/2 z-[10000] w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 transform rounded-xl border border-gray-200 bg-white py-2 shadow-2xl dark:border-gray-700 dark:bg-gray-800"
                 ref={moreRef}
               >
-                {session?.user && (
+                {/* Guest Badge - Show for guest users */}
+                {isGuest && (
+                  <div className="mx-3 mb-3 mt-2">
+                    <button
+                      onClick={() => {
+                        setMoreOpen(false);
+                        setShowUpgradeModal(true);
+                      }}
+                      className="w-full transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      <div className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-orange-100 to-yellow-100 px-4 py-3.5 shadow-sm dark:from-orange-900/30 dark:to-yellow-900/30">
+                        <svg
+                          className="h-6 w-6 flex-shrink-0 text-orange-600 dark:text-orange-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                        <div className="flex min-w-0 flex-1 flex-col text-left">
+                          <span className="text-sm font-bold text-orange-700 dark:text-orange-300">
+                            Guest User
+                          </span>
+                          <span className="text-xs text-orange-600/90 dark:text-orange-400/90">
+                            Tap to become a Plas member
+                          </span>
+                        </div>
+                        <svg
+                          className="h-5 w-5 flex-shrink-0 text-orange-600 dark:text-orange-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </div>
+                    </button>
+                  </div>
+                )}
+
+                {/* Profile - Only show for non-guest users */}
+                {session?.user && !isGuest && (
                   <MoreMenuItem
                     icon={
                       <svg
@@ -753,50 +871,54 @@ export default function BottomBar() {
                   />
                 )}
 
-                <MoreMenuItem
-                  icon={
-                    <svg
-                      fill="currentColor"
-                      height="20px"
-                      width="20px"
-                      version="1.1"
-                      id="Layer_1"
-                      xmlns="http://www.w3.org/2000/svg"
-                      xmlnsXlink="http://www.w3.org/1999/xlink"
-                      viewBox="0 0 511.999 511.999"
-                      xmlSpace="preserve"
-                    >
-                      <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                      <g
-                        id="SVGRepo_tracerCarrier"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      ></g>
-                      <g id="SVGRepo_iconCarrier">
-                        <g>
+                {/* Recipes - Only show for non-guest logged-in users */}
+                {session?.user && !isGuest && (
+                  <MoreMenuItem
+                    icon={
+                      <svg
+                        fill="currentColor"
+                        height="20px"
+                        width="20px"
+                        version="1.1"
+                        id="Layer_1"
+                        xmlns="http://www.w3.org/2000/svg"
+                        xmlnsXlink="http://www.w3.org/1999/xlink"
+                        viewBox="0 0 511.999 511.999"
+                        xmlSpace="preserve"
+                      >
+                        <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                        <g
+                          id="SVGRepo_tracerCarrier"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        ></g>
+                        <g id="SVGRepo_iconCarrier">
                           <g>
-                            <path d="M324.799,68.799c-103.222,0-187.2,83.978-187.2,187.2s83.978,187.2,187.2,187.2s187.2-83.978,187.2-187.2 S428.022,68.799,324.799,68.799z M324.799,407.169c-83.354,0-151.168-67.814-151.168-151.168s67.814-151.17,151.168-151.17 s151.168,67.814,151.168,151.168S408.154,407.169,324.799,407.169z"></path>
+                            <g>
+                              <path d="M324.799,68.799c-103.222,0-187.2,83.978-187.2,187.2s83.978,187.2,187.2,187.2s187.2-83.978,187.2-187.2 S428.022,68.799,324.799,68.799z M324.799,407.169c-83.354,0-151.168-67.814-151.168-151.168s67.814-151.17,151.168-151.17 s151.168,67.814,151.168,151.168S408.154,407.169,324.799,407.169z"></path>
+                            </g>
+                          </g>
+                          <g>
+                            <g>
+                              <path d="M324.799,148.019c-59.541,0-107.981,48.44-107.981,107.981s48.44,107.981,107.981,107.981S432.78,315.54,432.78,255.999 S384.34,148.019,324.799,148.019z M324.799,327.95c-39.673,0-71.949-32.276-71.949-71.949s32.276-71.949,71.949-71.949 c39.673,0,71.949,32.276,71.949,71.949S364.472,327.95,324.799,327.95z"></path>
+                            </g>
+                          </g>
+                          <g>
+                            <g>
+                              <path d="M110.491,68.799c-9.95,0-18.016,8.066-18.016,18.016v96.161H81.959V86.815c0-9.95-8.066-18.016-18.016-18.016 c-9.95,0-18.016,8.066-18.016,18.016v96.161h-9.896V86.815c0-9.95-8.066-18.016-18.016-18.016S0,76.866,0,86.815v99.764 c0,17.881,14.547,32.428,32.428,32.428h12.298v206.175c0,9.95,8.066,18.016,18.016,18.016s18.016-8.066,18.016-18.016V219.009 h15.321c17.881,0,32.428-14.547,32.428-32.428V86.815C128.507,76.866,120.441,68.799,110.491,68.799z"></path>
+                            </g>
                           </g>
                         </g>
-                        <g>
-                          <g>
-                            <path d="M324.799,148.019c-59.541,0-107.981,48.44-107.981,107.981s48.44,107.981,107.981,107.981S432.78,315.54,432.78,255.999 S384.34,148.019,324.799,148.019z M324.799,327.95c-39.673,0-71.949-32.276-71.949-71.949s32.276-71.949,71.949-71.949 c39.673,0,71.949,32.276,71.949,71.949S364.472,327.95,324.799,327.95z"></path>
-                          </g>
-                        </g>
-                        <g>
-                          <g>
-                            <path d="M110.491,68.799c-9.95,0-18.016,8.066-18.016,18.016v96.161H81.959V86.815c0-9.95-8.066-18.016-18.016-18.016 c-9.95,0-18.016,8.066-18.016,18.016v96.161h-9.896V86.815c0-9.95-8.066-18.016-18.016-18.016S0,76.866,0,86.815v99.764 c0,17.881,14.547,32.428,32.428,32.428h12.298v206.175c0,9.95,8.066,18.016,18.016,18.016s18.016-8.066,18.016-18.016V219.009 h15.321c17.881,0,32.428-14.547,32.428-32.428V86.815C128.507,76.866,120.441,68.799,110.491,68.799z"></path>
-                          </g>
-                        </g>
-                      </g>
-                    </svg>
-                  }
-                  label="Recipes"
-                  href="/Recipes"
-                  onClick={() => setMoreOpen(false)}
-                />
+                      </svg>
+                    }
+                    label="Recipes"
+                    href="/Recipes"
+                    onClick={() => setMoreOpen(false)}
+                  />
+                )}
 
-                {session?.user && (
+                {/* Messages - Only show for non-guest users */}
+                {session?.user && !isGuest && (
                   <MoreMenuItem
                     icon={
                       <svg
@@ -841,7 +963,7 @@ export default function BottomBar() {
                   />
                 )}
 
-                <div className="my-1 border-t border-gray-200 dark:border-gray-700"></div>
+                <div className="mx-2 my-2 border-t border-gray-200 dark:border-gray-700"></div>
 
                 {!session?.user && (
                   <MoreMenuItem
@@ -896,9 +1018,9 @@ export default function BottomBar() {
                     handleThemeToggle();
                     setMoreOpen(false);
                   }}
-                  className="flex w-full items-center space-x-3 rounded-lg px-4 py-3 text-sm text-gray-700 transition-colors duration-200 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                  className="mx-2 flex w-auto items-center space-x-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-gray-100 hover:shadow-sm dark:text-gray-200 dark:hover:bg-gray-700"
                 >
-                  <span className="text-lg">
+                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center text-lg">
                     {theme === "dark" ? (
                       <svg
                         width="20px"
@@ -991,87 +1113,21 @@ export default function BottomBar() {
                       </svg>
                     )}
                   </span>
-                  <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+                  <span className="flex-1">
+                    {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                  </span>
                 </button>
-
-                {session?.user && (
-                  <MoreMenuItem
-                    icon={
-                      <svg
-                        width="20px"
-                        height="20px"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="text-red-500"
-                      >
-                        <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                        <g
-                          id="SVGRepo_tracerCarrier"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        ></g>
-                        <g id="SVGRepo_iconCarrier">
-                          <path
-                            d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <path
-                            d="M16 17L21 12L16 7"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <path
-                            d="M21 12H9"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </g>
-                      </svg>
-                    }
-                    label="Logout"
-                    href="#"
-                    onClick={async () => {
-                      setMoreOpen(false);
-
-                      // Clear all localStorage data
-                      localStorage.clear();
-
-                      // Clear all sessionStorage data
-                      sessionStorage.clear();
-
-                      // Clear NextAuth cookies manually
-                      document.cookie.split(";").forEach((c) => {
-                        const eqPos = c.indexOf("=");
-                        const name = eqPos > -1 ? c.substr(0, eqPos) : c;
-                        document.cookie = `${name.trim()}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-                        document.cookie = `${name.trim()}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${
-                          window.location.hostname
-                        }`;
-                        document.cookie = `${name.trim()}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.${
-                          window.location.hostname
-                        }`;
-                      });
-
-                      // Use NextAuth signOut function with redirect
-                      await signOut({
-                        redirect: true,
-                      });
-                    }}
-                  />
-                )}
               </div>
             )}
           </div>
         </nav>
       )}
+
+      {/* Guest Upgrade Modal */}
+      <GuestUpgradeModal
+        open={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+      />
     </>
   );
 }

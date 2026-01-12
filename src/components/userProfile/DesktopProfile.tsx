@@ -12,6 +12,7 @@ import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import { useRouter } from "next/router";
 import { useAuth } from "../../context/AuthContext";
+import { useAuth as useAuthHook } from "../../hooks/useAuth";
 import { initiateRoleSwitch } from "../../lib/sessionRefresh";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
 import { useLanguage } from "../../context/LanguageContext";
@@ -76,7 +77,8 @@ export default function DesktopProfile({
   loadingReferral,
 }: DesktopProfileProps) {
   const router = useRouter();
-  const { role, toggleRole } = useAuth();
+  const { role, toggleRole, logout } = useAuth();
+  const { isGuest } = useAuthHook();
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("account");
 
@@ -225,9 +227,15 @@ export default function DesktopProfile({
                     : ""}
                 </p>
                 <div className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
-                  <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                    Premium Member
-                  </span>
+                  {isGuest ? (
+                    <span className="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
+                      Guest User
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                      Premium Member
+                    </span>
+                  )}
                   <span className="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
                     {orderCount} Orders
                   </span>
@@ -360,15 +368,28 @@ export default function DesktopProfile({
                 ) : (
                   <button
                     className={`flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-xs font-semibold !text-white shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
-                      shopperStatus?.needCollection
+                      isGuest
+                        ? "bg-gradient-to-r from-gray-400 to-gray-500"
+                        : shopperStatus?.needCollection
                         ? "bg-gradient-to-r from-orange-500 to-orange-600"
                         : shopperStatus?.status === "pending" ||
                           shopperStatus?.status === "under_review"
                         ? "bg-gradient-to-r from-blue-500 to-blue-600"
                         : "bg-gradient-to-r from-green-500 to-emerald-600"
                     }`}
-                    onClick={handleBecomePlasa}
+                    onClick={() => {
+                      if (isGuest) {
+                        toast.error(
+                          "Please create a full account to become a shopper"
+                        );
+                        return;
+                      }
+                      handleBecomePlasa({
+                        preventDefault: () => {},
+                      } as React.MouseEvent);
+                    }}
                     disabled={
+                      isGuest ||
                       shopperStatus?.status === "pending" ||
                       shopperStatus?.status === "under_review"
                     }
@@ -404,7 +425,9 @@ export default function DesktopProfile({
                       )}
                     </svg>
                     <span className="text-xs !text-white">
-                      {shopperStatus?.needCollection
+                      {isGuest
+                        ? "Not Available"
+                        : shopperStatus?.needCollection
                         ? "Update"
                         : shopperStatus?.status === "pending" ||
                           shopperStatus?.status === "under_review"
@@ -419,21 +442,8 @@ export default function DesktopProfile({
                   className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-red-500 to-red-600 px-3 py-2.5 text-xs font-semibold !text-white shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
                   onClick={async () => {
                     try {
-                      const response = await authenticatedFetch("/api/logout", {
-                        method: "POST",
-                        headers: {
-                          "Content-Type": "application/json",
-                        },
-                      });
-
-                      if (response.ok) {
-                        localStorage.clear();
-                        sessionStorage.clear();
-                        toast.success("Logged out successfully");
-                        router.push("/");
-                      } else {
-                        throw new Error("Logout failed");
-                      }
+                      toast.success("Logging out...");
+                      await logout();
                     } catch (error) {
                       console.error("Logout error:", error);
                       toast.error("Failed to logout");
@@ -591,25 +601,30 @@ export default function DesktopProfile({
                   </svg>
                 ),
               },
-              {
-                key: "payment",
-                label: t("nav.payment"),
-                icon: (
-                  <svg
-                    className="mr-2 h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                    />
-                  </svg>
-                ),
-              },
+              // Hide payment tab for guests
+              ...(!isGuest
+                ? [
+                    {
+                      key: "payment",
+                      label: t("nav.payment"),
+                      icon: (
+                        <svg
+                          className="mr-2 h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                          />
+                        </svg>
+                      ),
+                    },
+                  ]
+                : []),
               {
                 key: "preferences",
                 label: "Preferences",
@@ -630,8 +645,9 @@ export default function DesktopProfile({
                 ),
               },
               // Show referrals tab if user is approved OR not registered (so they can register)
-              // Hide if registered but pending approval
+              // Hide if registered but pending approval OR if user is a guest
               ...(!loadingReferral &&
+              !isGuest &&
               (referralStatus?.approved || !referralStatus?.registered)
                 ? [
                     {

@@ -18,6 +18,8 @@ interface ShopCardProps {
     time: string;
     fee: string;
     open: boolean;
+    rating: number;
+    ratingCount: number;
   };
   getShopImageUrl: (imageUrl: string | undefined) => string;
 }
@@ -119,15 +121,26 @@ const ShopCard: React.FC<ShopCardProps> = ({
     return "/images/shop-placeholder.jpg";
   };
 
+  // Format rating from dynamics (real data from database)
+  // Rating is on a scale of 1-5
+  const hasRating = dynamics.rating > 0 && dynamics.ratingCount > 0;
+  const ratingValue = hasRating ? dynamics.rating.toFixed(1) : "New";
+  const ratingCount = hasRating ? dynamics.ratingCount.toString() : "0";
+
   return (
-    <Link href={getNavigationPath()} className="no-underline">
-      <div className="relative transform cursor-pointer overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:hover:shadow-xl">
-        <div className="relative h-48 w-full bg-gray-100 dark:bg-gray-800">
+    <Link
+      href={getNavigationPath()}
+      className="block no-underline hover:no-underline"
+      style={{ color: "inherit", textDecoration: "none" }}
+    >
+      <div className="relative transform cursor-pointer overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:bg-gray-800">
+        {/* Main Image Banner */}
+        <div className="relative h-40 w-full bg-gray-100 dark:bg-gray-800">
           <Image
             src={getImageUrl()}
             alt={shop.name}
             fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
             style={{
               objectFit: "cover",
               objectPosition: "center",
@@ -143,79 +156,75 @@ const ShopCard: React.FC<ShopCardProps> = ({
             onLoad={() => {}}
           />
 
-          {/* Shop Logo - Top Left */}
+          {/* Shop Logo - Positioned on image */}
           {shop.logo && shop.logo.trim() !== "" && (
-            <div className="absolute left-2 top-2 h-10 w-10 overflow-hidden rounded-full border-2 border-white bg-white shadow-lg">
-              <img
-                src={shop.logo}
-                alt={`${shop.name} logo`}
-                className="h-full w-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-                onLoad={() => {}}
-              />
+            <div className="absolute bottom-4 left-4">
+              <div className="h-14 w-14 rounded-full bg-gradient-to-br from-green-400 via-blue-500 to-purple-600 p-[3px] shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+                <div className="h-full w-full overflow-hidden rounded-full bg-white">
+                  <img
+                    src={shop.logo}
+                    alt={`${shop.name} logo`}
+                    className="h-full w-full rounded-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                    onLoad={() => {}}
+                  />
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Store badge */}
+          {/* Promo Badge - Top Left */}
           {isStore && (
-            <span
-              className={`absolute left-2 rounded-full bg-blue-500 px-2 py-1 text-xs font-semibold text-white shadow-md ${
-                shop.logo && shop.logo.trim() !== "" ? "top-14" : "top-2"
-              }`}
-            >
-              Store
+            <span className="absolute left-3 top-3 rounded-full bg-yellow-400 px-2 py-1 text-xs font-semibold text-gray-900 shadow-md">
+              Promo
             </span>
           )}
 
+          {/* Open/Closed Status - Top Right */}
           {isShopOpen ? (
-            <span className="absolute right-2 top-2 rounded-full bg-green-100 px-2 py-1 text-xs font-bold !text-green-600 shadow-md dark:bg-green-900 dark:!text-green-400">
+            <span className="absolute right-3 top-3 rounded-full bg-green-500 px-2 py-1 text-xs font-bold !text-white shadow-md">
               Open
             </span>
           ) : (
-            <span className="absolute right-2 top-2 rounded-full bg-red-100 px-2 py-1 text-xs font-bold !text-red-600 shadow-md dark:bg-red-900 dark:!text-red-400">
+            <span className="absolute right-3 top-3 rounded-full bg-red-500 px-2 py-1 text-xs font-bold !text-white shadow-md">
               Closed
             </span>
           )}
         </div>
-        <div className="bg-white p-4 dark:bg-gray-800 sm:p-5">
-          <h3 className="mb-1 text-sm font-semibold text-gray-800 dark:text-white sm:text-base">
+
+        {/* Shop Details */}
+        <div className="bg-white p-4 dark:bg-gray-800">
+          <h3 className="mb-2 text-base font-bold text-gray-900 no-underline dark:text-white">
             {shop.name}
           </h3>
-          <p className="hidden text-xs leading-relaxed text-gray-500 dark:text-gray-400 sm:block">
-            {shop.description?.slice(0, 80) || "No description"}
-          </p>
-          {isLoggedIn && (
-            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-300 sm:text-sm">
-              <div className="flex items-center">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="mr-1 h-4 w-4"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 6 12 12 16 14" />
-                </svg>
-                {dynamics.time}
-              </div>
-              <div className="flex items-center">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="mr-1 h-4 w-4"
-                >
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-                {dynamics.distance}
-              </div>
-            </div>
-          )}
+          {/* Price • Delivery Time • Rating */}
+          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+            <span className="font-semibold text-gray-900 dark:text-white">
+              {dynamics.fee !== "N/A" ? dynamics.fee : "Free"}
+            </span>
+            <span>•</span>
+            <span>{dynamics.time}</span>
+            <span>•</span>
+            <span className="flex items-center gap-1 font-semibold">
+              {hasRating ? (
+                <>
+                  <svg
+                    className="h-4 w-4 fill-yellow-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  {ratingValue}
+                </>
+              ) : (
+                ratingValue
+              )}{" "}
+              ({ratingCount})
+            </span>
+          </div>
         </div>
       </div>
     </Link>

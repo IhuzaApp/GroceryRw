@@ -480,7 +480,7 @@ export default function UserRestaurantOrderDetails({
         </div>
       </Panel>
 
-      {/* Delivery & Shopper Information */}
+      {/* Delivery & Plaser Information */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Delivery Information */}
         <Panel className="border border-gray-200 dark:border-gray-700">
@@ -510,12 +510,12 @@ export default function UserRestaurantOrderDetails({
           )}
         </Panel>
 
-        {/* Assigned Shopper Details */}
+        {/* Assigned Plaser Details */}
         <Panel className="border border-gray-200 dark:border-gray-700">
           <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-            Assigned Shopper
+            Assigned Plaser
           </h3>
-          {order.shopper_id ? (
+          {order.Plaser_id ? (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <div className="flex-shrink-0">
@@ -537,18 +537,18 @@ export default function UserRestaurantOrderDetails({
                 </div>
                 <div className="flex-grow">
                   <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Shopper Assigned
+                    Plaser Assigned
                   </h4>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Your order has been assigned to a shopper
+                    Your order has been assigned to a Plaser
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-500">
-                    Shopper ID: {order.shopper_id.slice(-8)}
+                    Plaser ID: {order.Plaser_id.slice(-8)}
                   </p>
                 </div>
               </div>
 
-              {/* Shopper Contact Information */}
+              {/* Plaser Contact Information */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <svg
@@ -583,12 +583,12 @@ export default function UserRestaurantOrderDetails({
                     />
                   </svg>
                   <span className="text-sm text-gray-600 dark:text-gray-400">
-                    💬 Message Shopper
+                    💬 Message Plaser
                   </span>
                 </div>
               </div>
 
-              {/* Shopper Details */}
+              {/* Plaser Details */}
               <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-700">
                 <div className="space-y-1">
                   <p className="text-sm">
@@ -656,7 +656,7 @@ export default function UserRestaurantOrderDetails({
                   </svg>
                 </div>
                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                  Waiting for shopper assignment
+                  Waiting for assignment
                 </p>
               </div>
             </div>

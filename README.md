@@ -24,6 +24,420 @@ A comprehensive grocery delivery platform with advanced revenue tracking, wallet
 
 ### 9. PlasBusiness Management System
 
+### 10. Landing Page & Desktop User Dashboard System
+
+### 11. Combined Order System
+
+---
+
+# Landing Page & Desktop User Dashboard System
+
+## Overview
+
+The Landing Page and Desktop User Dashboard System provides a seamless user experience for both logged-in and non-logged-in users. The system features a Glovo-style landing page for desktop users who haven't logged in, with location selection, category browsing, and smooth transition to the full shopping experience. Once a location and category are selected, users are automatically directed to the Desktop User Dashboard where they can explore shops and stores.
+
+## Key Features
+
+### Landing Page Features
+
+- **Glovo-Style Design**: Modern, clean landing page with green color scheme (#00D9A5)
+- **Location Selection**: Google Maps Places Autocomplete for address input
+- **Current Location Support**: One-click location detection using browser geolocation
+- **Animated Illustrations**: Rotating product illustrations with fade/zoom effects
+- **Category Preview**: Display of active categories after location selection
+- **Sticky Header**: Dynamic header that changes appearance on scroll
+- **Cookie-Based Location Storage**: Saves selected location for session persistence
+- **Guest Access**: Allows non-logged-in users to browse and explore
+
+### Desktop User Dashboard Features
+
+- **Category Browsing**: Horizontal scrollable category list with upside-down avocado-shaped containers
+- **Shop Grid Display**: 4-column grid layout showing shop cards with images
+- **Category Filtering**: Click categories to filter shops by type
+- **Shop Cards**: Image-focused cards with logo, pricing, delivery time, and ratings
+- **Guest Mode**: Non-logged-in users can browse shops after selecting location
+- **Responsive Design**: Optimized for desktop viewing experience
+
+## System Architecture
+
+```mermaid
+graph TB
+    A[User Visits Home Page] --> B{Is Logged In?}
+    B -->|No & Desktop| C[Show Landing Page]
+    B -->|Yes| D[Show Dashboard]
+
+    C --> E[User Selects Location]
+    E --> F[Categories Loaded]
+    F --> G[User Clicks Category]
+    G --> H[Redirect to Dashboard with Category]
+
+    H --> I[Desktop User Dashboard]
+    D --> I
+
+    I --> J[Display Filtered Shops]
+    J --> K[User Browses Shops]
+```
+
+## Components
+
+### 1. Landing Page (`LandingPage.tsx`)
+
+**Location**: `src/components/ui/LandingPage.tsx`
+
+**Key Features**:
+
+- Sticky header with dynamic styling on scroll
+- Google Maps Places Autocomplete integration
+- Geolocation API for current location
+- Animated illustrations component
+- Category display after location selection
+- Address display in header
+
+**State Management**:
+
+- `address`: Current address string
+- `displayAddress`: Short address for header display
+- `categories`: Array of active categories
+- `isScrolled`: Boolean for header styling
+- `autocomplete`: Google Places Autocomplete instance
+
+**Key Functions**:
+
+- `handleUseCurrentLocation()`: Gets user's current location via geolocation API
+- `handleAddressSubmit()`: Processes address selection
+- `fetchCategories()`: Fetches active categories from API
+- Cookie management for location persistence
+
+### 2. Desktop User Dashboard (`DesktopUserDashboard.tsx`)
+
+**Location**: `src/components/user/dashboard/DesktopUserDashboard.tsx`
+
+**Key Features**:
+
+- Category grid with horizontal scrolling
+- Upside-down avocado-shaped category containers
+- 4-column shop grid layout
+- Category filtering
+- Shop card display with images
+
+**Layout Structure**:
+
+```
+┌─────────────────────────────────────┐
+│  Groceries (Heading)                │
+│  [Category Scroll Row]              │
+│  ┌───┐ ┌───┐ ┌───┐ ┌───┐          │
+│  │ 🛒│ │ 🥖│ │ 🥩│ │ 🍽│ ...       │
+│  └───┘ └───┘ └───┘ └───┘          │
+│                                     │
+│  All Stores (Heading)               │
+│  ┌────┐ ┌────┐ ┌────┐ ┌────┐      │
+│  │Shop│ │Shop│ │Shop│ │Shop│      │
+│  │Card│ │Card│ │Card│ │Card│      │
+│  └────┘ └────┘ └────┘ └────┘      │
+│  ┌────┐ ┌────┐ ┌────┐ ┌────┐      │
+│  │Shop│ │Shop│ │Shop│ │Shop│      │
+│  │Card│ │Card│ │Card│ │Card│      │
+│  └────┘ └────┘ └────┘ └────┘      │
+└─────────────────────────────────────┘
+```
+
+### 3. User Dashboard Logic (`UserDashboardLogic.tsx`)
+
+**Location**: `src/components/user/dashboard/shared/UserDashboardLogic.tsx`
+
+**Key Features**:
+
+- Category selection from URL query parameters
+- Shop filtering by category
+- Guest user support (non-logged-in users)
+- Data fetching and caching
+- Location-based shop dynamics
+
+**Key Functions**:
+
+- `handleCategoryClick()`: Filters shops by selected category
+- `filteredShops`: Computed memoized array of filtered shops
+- URL query parameter reading for category selection
+- Guest mode support (doesn't require authentication)
+
+### 4. Shop Card (`ShopCard.tsx`)
+
+**Location**: `src/components/user/dashboard/ShopCard.tsx`
+
+**Key Features**:
+
+- Image-focused design with 160px height
+- Logo positioned at bottom-left of image
+- Price, delivery time, and rating display
+- Promo badges for stores
+- Open/Closed status indicators
+
+**Card Structure**:
+
+```
+┌─────────────────────┐
+│   [Shop Image]      │
+│   [Logo] [Status]   │
+├─────────────────────┤
+│ Shop Name           │
+│ Price • Time • Rating│
+└─────────────────────┘
+```
+
+## User Flow
+
+### For Non-Logged-In Users (Desktop)
+
+1. **Initial Visit**: User sees landing page with hero section
+
+   - Animated illustrations on left
+   - "Grocery delivery" heading
+   - Address input field
+   - "Use current location" button
+
+2. **Location Selection**: User selects location via:
+
+   - Google Maps Autocomplete
+   - Current location button
+   - Location stored in cookies (`temp_address`, `user_latitude`, `user_longitude`)
+
+3. **Category Display**: After location selection:
+
+   - Hero content replaced with category grid
+   - Categories displayed in green section
+   - "What can we get you?" heading
+
+4. **Category Selection**: User clicks a category:
+
+   - URL updates: `/?category={categoryId}`
+   - Page redirects to dashboard view
+   - Dashboard shows filtered shops
+
+5. **Shop Browsing**: User can:
+   - Browse shops in selected category
+   - Click shops to view details
+   - Change category by clicking another
+   - Clear filter to see all shops
+
+### For Logged-In Users
+
+1. **Direct Access**: User goes directly to dashboard
+2. **Full Features**: Access to all dashboard features
+3. **Personalization**: User-specific data and preferences
+
+## Routing Logic
+
+**File**: `pages/index.tsx`
+
+The routing logic determines what to show:
+
+```typescript
+// Check if user has location and category
+const hasLocationAndCategory = categoryParam && hasAddress;
+
+// Show landing page for non-logged-in desktop users without location/category
+if (!isLoggedIn && !isMobile && !hasLocationAndCategory) {
+  return <LandingPage />;
+}
+
+// Show dashboard for all other cases
+return <ResponsiveUserDashboard />;
+```
+
+## Location Management
+
+### Cookie Storage
+
+Location data is stored in cookies:
+
+- `temp_address`: Full formatted address string
+- `user_latitude`: Latitude coordinate
+- `user_longitude`: Longitude coordinate
+
+### Google Maps Integration
+
+**API Requirements**:
+
+- Google Maps Places API key
+- Autocomplete library enabled
+- Geocoding API for reverse geocoding
+
+**Configuration**:
+
+- Restricted to Rwanda (`country: "rw"`)
+- Address type filtering
+- Custom styled dropdown
+
+## Category System
+
+### Category Display
+
+Categories are displayed with:
+
+- **Shape**: Upside-down avocado (wider at top, narrower at bottom)
+- **Background**: Gray-50 (light) / Gray-700 (dark)
+- **Icons**: CategoryIcon component with SVG icons
+- **Layout**: Horizontal scrollable row
+- **Selection**: Visual feedback on selected category
+
+### Category Filtering
+
+When a category is selected:
+
+1. URL updates with `?category={id}` parameter
+2. Dashboard filters shops by category
+3. Selected category highlighted
+4. "Clear Filter" button appears
+
+## Shop Card Design
+
+### Visual Elements
+
+- **Image Height**: 160px (h-40)
+- **Logo Position**: Bottom-left of image
+- **Promo Badge**: Yellow badge for stores (top-left)
+- **Status Badge**: Green (Open) / Red (Closed) (top-right)
+- **Details Format**: "Price • Delivery Time • Rating"
+
+### Data Display
+
+- **Price**: Delivery fee or "Free"
+- **Time**: Estimated delivery time
+- **Rating**: Percentage with review count (e.g., "96% (39)")
+
+## Styling & Design
+
+### Color Scheme
+
+- **Primary Green**: `#00D9A5` (Plas green)
+- **Light Green**: `#A8E6CF`
+- **Dark Green**: `#00A67E`
+- **Category Background**: Gray-50 / Gray-700
+
+### Typography
+
+- **Font Family**: Nunito (body), Poppins (headings)
+- **Headings**: Bold, large sizes (3xl, 4xl, 5xl)
+- **Category Labels**: Small (xs), medium weight
+
+### Animations
+
+- **Category Hover**: Scale and shadow effects
+- **Shop Card Hover**: Translate up with shadow
+- **Image Hover**: Scale effect
+- **Illustrations**: Fade and zoom transitions
+
+## API Integration
+
+### Categories API
+
+**Endpoint**: `/api/queries/categories`
+
+**Response**:
+
+```json
+{
+  "categories": [
+    {
+      "id": "string",
+      "name": "string",
+      "description": "string",
+      "image": "string",
+      "is_active": boolean
+    }
+  ]
+}
+```
+
+### Shops API
+
+**Endpoint**: `/api/queries/shops`
+
+**Response**:
+
+```json
+{
+  "shops": [
+    {
+      "id": "string",
+      "name": "string",
+      "image": "string",
+      "logo": "string",
+      "category_id": "string",
+      "latitude": number,
+      "longitude": number
+    }
+  ]
+}
+```
+
+## Guest User Support
+
+The system allows non-logged-in users to:
+
+- Browse categories
+- View shops
+- Select locations
+- Filter by category
+
+**Limitations for Guests**:
+
+- Cannot place orders (redirected to login)
+- Limited personalization
+- No saved addresses
+
+## Configuration
+
+### Environment Variables
+
+```env
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key
+NEXT_PUBLIC_GOOGLE_MAP_API=your_api_key
+```
+
+### Google Maps Setup
+
+1. Enable Places API
+2. Enable Geocoding API
+3. Add API key to environment variables
+4. Configure API restrictions (optional)
+
+## Files Structure
+
+```
+src/components/
+├── ui/
+│   ├── LandingPage.tsx          # Main landing page component
+│   └── AnimatedIllustrations.tsx # Rotating product illustrations
+└── user/dashboard/
+    ├── DesktopUserDashboard.tsx # Desktop dashboard layout
+    ├── ShopCard.tsx             # Individual shop card component
+    └── shared/
+        ├── UserDashboardLogic.tsx # Business logic hook
+        └── SharedComponents.tsx   # Shared UI components
+
+pages/
+└── index.tsx                    # Main routing logic
+```
+
+## Key Dependencies
+
+- `next/router`: URL routing and query parameters
+- `google.maps.places.Autocomplete`: Address autocomplete
+- `js-cookie`: Cookie management
+- `lucide-react`: Icons
+- `next/image`: Optimized images
+
+## Future Enhancements
+
+- [ ] Add actual rating data from shops
+- [ ] Implement search functionality
+- [ ] Add filters (price range, delivery time)
+- [ ] Save favorite categories
+- [ ] Recent searches
+- [ ] Location history
+
 ---
 
 # Smart Notification & Assignment System
@@ -35,37 +449,46 @@ The Smart Notification & Assignment System provides real-time order distribution
 ## Key Features
 
 - **Real-Time WebSocket Notifications**: Instant order updates instead of polling
-- **Smart Assignment Algorithm**: Prioritizes orders based on shopper performance and proximity
+- **Smart Assignment Algorithm**: Prioritizes orders based on age, shopper performance, and proximity
+- **Age-Based Priority System**: Heavily prioritizes older orders while tracking new ones to prevent lateness
+- **Personalized Notifications**: Each shopper receives recommendations tailored to their location and performance
 - **Assignment Locking**: Prevents multiple shoppers from being assigned the same order
 - **Optimized Batch Processing**: Groups orders by location for efficient distribution
-- **Aged Order Filtering**: Shows only orders 30+ minutes old and unassigned on the map
+- **Dual Display System**: Dashboard shows all orders, map shows aged orders (30+ minutes) to reduce clutter
 - **Travel Time Display**: Shows estimated minutes away instead of raw distance
 - **Multi-Order Type Support**: Handles regular orders, reel orders, and restaurant orders
 - **Restaurant Order Workflow**: Special handling for restaurant confirmation process
-- **Smart Notification Timing**: Notifies shoppers for orders created within last 29 minutes
+- **Comprehensive Order Pool**: ALL pending orders are eligible for notifications regardless of age
 - **Order-Specific Earnings**: Different calculation methods for regular, reel, and restaurant orders
 
 ## System Architecture
 
 ```mermaid
 graph TB
-    A[Order Created] --> B[Smart Assignment Algorithm]
-    B --> C{Order Age Check}
-    C -->|30+ minutes| D[Add to Aged Orders Map]
-    C -->|< 30 minutes| E[Regular Processing]
+    A[Order Created] --> B[Add to Available Orders Pool]
+    B --> C[ALL Orders Eligible for Assignment]
 
-    B --> F[Calculate Priority Score]
-    F --> G[Find Best Shopper]
-    G --> H[Send WebSocket Notification]
-    H --> I[Shopper Receives Toast]
-    I --> J{Shopper Action}
-    J -->|Accept| K[Assign Order]
-    J -->|Skip| L[Find Next Shopper]
-    J -->|Timeout| M[Reassign to Others]
+    C --> D[Shopper's App Polls Smart Assignment API]
+    D --> E[Calculate Age-Based Priority Score]
+    E --> F{Order Age}
+    F -->|30+ minutes| G[Priority: -5 URGENT]
+    F -->|15-30 minutes| H[Priority: -2 WARNING]
+    F -->|5-15 minutes| I[Priority: 0 NORMAL]
+    F -->|0-5 minutes| J[Priority: +2 NEW]
 
-    D --> N[Map Section Display]
-    N --> O[WebSocket Updates]
-    O --> P[Real-time Map Updates]
+    G & H & I & J --> K[Combine with Distance & Performance]
+    K --> L[Find Best Order for THIS Shopper]
+    L --> M[Send Personalized FCM Notification]
+    M --> N[Shopper Receives Toast]
+    N --> O{Shopper Action}
+    O -->|Accept| P[Assign Order]
+    O -->|Skip| Q[Order Remains in Pool]
+    O -->|Timeout 90s| Q
+
+    C --> R[Map Display Filters]
+    R -->|Show only 30+ min| S[Aged Orders on Map]
+    C --> T[Dashboard Display]
+    T -->|Show ALL orders| U[Complete Order List]
 ```
 
 ## Restaurant Orders Integration
@@ -98,8 +521,9 @@ graph TB
 
 2. **Time Filtering**:
 
-   - Uses `updated_at` field instead of `created_at`
-   - Only orders updated within last 29 minutes are shown for notifications
+   - Uses `updated_at` field instead of `created_at` for age calculation
+   - ALL orders are eligible for notifications regardless of age
+   - Age affects priority score (older = higher priority)
    - Falls back to `created_at` if `updated_at` is null
 
 3. **Earnings Calculation**:
@@ -117,15 +541,12 @@ graph TB
 ### Database Queries
 
 ```sql
--- Get available restaurant orders
+-- Get all available restaurant orders (no time restriction)
 SELECT * FROM restaurant_orders
 WHERE status = 'PENDING'
   AND shopper_id IS NULL
-  AND (
-    updated_at >= NOW() - INTERVAL '29 minutes'
-    OR (updated_at IS NULL AND created_at >= NOW() - INTERVAL '29 minutes')
-  )
-ORDER BY updated_at DESC NULLS LAST, created_at DESC;
+ORDER BY updated_at ASC NULLS LAST, created_at ASC;
+-- Note: Ordered by oldest first for priority processing
 ```
 
 ### Earnings Calculation System
@@ -151,29 +572,94 @@ The system uses different earnings calculation methods based on order type:
 
 ### Notification Timing System
 
-The system uses a two-tier timing approach:
+The system uses an age-based priority approach for ALL orders:
 
-1. **Fresh Orders (0-29 minutes)**:
+1. **All Orders Eligible**:
 
-   - Shoppers receive real-time notifications
-   - Orders appear in smart assignment algorithm
-   - WebSocket notifications sent immediately
-   - Orders are actively distributed to shoppers
+   - ALL pending/unassigned orders are in the notification pool
+   - No time-based exclusions
+   - Every order gets assigned eventually
+   - Age affects priority, not eligibility
 
-2. **Aged Orders (30+ minutes)**:
-   - Orders appear on map for manual selection
-   - No active notifications sent
-   - Shoppers can manually accept from map
-   - Used for orders that need special attention
+2. **Age-Based Priority Scoring**:
+
+   - **30+ minutes old**: Priority score -5 (HIGHEST PRIORITY)
+   - **15-30 minutes old**: Priority score -2 (HIGH PRIORITY)
+   - **5-15 minutes old**: Priority score 0 (NORMAL PRIORITY)
+   - **Under 5 minutes**: Priority score +2 (LOWER PRIORITY - but still tracked!)
+
+3. **Display Strategy**:
+   - **Dashboard**: Shows ALL available orders (shoppers can browse everything)
+   - **Map**: Shows only aged orders (30+ minutes) to reduce visual clutter
+   - **Notifications**: Personalized to each shopper based on location and order priority
 
 ### API Integration
 
 All notification and assignment APIs support restaurant orders:
 
-- **`/api/shopper/availableOrders`**: Includes restaurant orders in aged order filtering
-- **`/api/shopper/smart-assign-order`**: Considers restaurant orders in assignment algorithm
+- **`/api/shopper/availableOrders`**: Fetches ALL pending orders (regular, reel, restaurant)
+- **`/api/shopper/smart-assign-order`**: Personalized order recommendation with age-based priority
 - **`/api/websocket/distribute-order`**: Sends restaurant orders via WebSocket
 - **`/api/shopper/process-orders-batch`**: Includes restaurant orders in batch processing
+- **`/api/shopper/todayCompletedOrders`**: Fetches shopper's completed deliveries for the day
+
+## Personalized Notification System
+
+### How It Works
+
+Each shopper receives **personalized order recommendations** based on their unique situation:
+
+1. **Individual Polling**:
+
+   - Each shopper's app independently calls the smart assignment API
+   - Polling interval: 30 seconds (or 2 minutes with FCM active)
+
+2. **Personalized Calculation**:
+
+   - API calculates priority for EACH order relative to THIS shopper
+   - Considers: shopper's location, performance history, and order characteristics
+   - Returns the BEST order for this specific shopper
+
+3. **Targeted Notifications**:
+
+   - FCM notification sent ONLY to the specific shopper
+   - No broadcast notifications to all users
+   - Each shopper sees orders most relevant to them
+
+4. **Cache & Rate Limiting**:
+   ```typescript
+   // Prevents spam - same order not sent to same shopper within 90 seconds
+   const cacheKey = `${shopperId}:${orderId}`;
+   if (!lastSent || now - lastSent > 90000) {
+     sendNotification(shopperId, order);
+   }
+   ```
+
+### Example Scenario
+
+**3 Shoppers Online, 1 Order Available:**
+
+```
+Order: "Shop A to Customer X" (Location: Downtown)
+
+Shopper 1 (Downtown, 2km from order):
+  → Distance: 2km
+  → Priority Score: -2.8 (close + order is 35 min old)
+  → 📱 Gets notified immediately ✅
+
+Shopper 2 (Suburb, 10km from order):
+  → Distance: 10km
+  → Priority Score: +2.2 (far away)
+  → ⏸️ Won't be notified unless Shopper 1 skips
+
+Shopper 3 (Airport, 25km from order):
+  → Distance: 25km
+  → Priority Score: +7.5 (too far)
+  → ❌ Won't be notified about this order
+  → But might get notified about a different order closer to airport
+```
+
+**Result**: System naturally distributes orders to the most appropriate shoppers!
 
 ## Components
 
@@ -222,15 +708,44 @@ sequenceDiagram
    - Order age and priority
 3. **Return Best Order**: Return the highest-scoring order for shopper review
 
-**Priority Score Calculation**:
+**Priority Score Calculation** (Lower = Higher Priority):
 
 ```typescript
+// Calculate order age in minutes
+const ageInMinutes = (Date.now() - orderTimestamp) / 60000;
+
+// Age-based priority boost (MOST IMPORTANT FACTOR - 50% weight)
+let ageFactor;
+if (ageInMinutes >= 30) {
+  ageFactor = -5; // URGENT: Oldest orders get highest priority
+} else if (ageInMinutes >= 15) {
+  ageFactor = -2; // WARNING: Moderately old orders
+} else if (ageInMinutes >= 5) {
+  ageFactor = 0; // NORMAL: Recent orders
+} else {
+  ageFactor = +2; // NEW: Very new orders (lower priority but still tracked)
+}
+
+// Final priority score (lower = better)
 const priorityScore =
-  performanceScore * 0.4 + // 40% performance
-  distanceScore * 0.3 + // 30% proximity
-  ageScore * 0.2 + // 20% order age
-  orderPriority * 0.1; // 10% order priority
+  distance * 0.3 + // 30% - Distance from shopper
+  (5 - avgRating) * 1.5 + // 15% - Shopper performance (inverted)
+  (100 - completionRate) * 0.01 + // 5% - Completion rate
+  ageFactor + // 50% - Order age (DOMINANT FACTOR)
+  Math.random() * 0.3; // 5% - Fairness randomization
+
+// Orders are sorted by priority score (lowest first)
+// Result: Old orders get shown first, but new orders are tracked
 ```
+
+**Why This Works**:
+
+- 🔴 Old orders (30+ min) get massive priority boost → Accepted quickly
+- 🟡 Moderately old orders (15-30 min) get good priority → Won't become late
+- 🟢 Recent orders (5-15 min) get neutral priority → Gradually increase
+- 🆕 New orders (0-5 min) get lower priority → But won't be forgotten
+- 📍 Location still matters → Closer shoppers preferred
+- ⭐ Performance counts → Better shoppers get better orders
 
 ### 3. WebSocket System
 
@@ -271,18 +786,35 @@ const priorityScore =
 - **Visual Markers**: Custom markers for different order types
 - **Interactive Popups**: Order details and acceptance buttons
 
-**Filtering Logic**:
+**Map Filtering Logic** (Map only shows aged orders to reduce clutter):
 
 ```typescript
 const filterAgedUnassignedOrders = (orders) => {
   const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
 
   return orders.filter((order) => {
-    const orderCreatedAt = new Date(order.createdAt);
-    const isAged = orderCreatedAt <= thirtyMinutesAgo;
+    // For restaurant orders, check updated_at; for others, check created_at
+    const referenceTimestamp =
+      order.orderType === "restaurant" && order.updatedAt
+        ? order.updatedAt
+        : order.createdAt;
+
+    const orderTimestamp = new Date(referenceTimestamp);
+    const isAged = orderTimestamp <= thirtyMinutesAgo;
     const isUnassigned = !order.shopper_id || order.shopper_id === null;
 
-    return isAged && isUnassigned;
+    return isAged && isUnassigned; // Map shows only aged orders
+  });
+};
+```
+
+**Dashboard Display Logic** (Dashboard shows ALL orders):
+
+```typescript
+const getAllAvailableOrders = (orders) => {
+  return orders.filter((order) => {
+    const isUnassigned = !order.shopper_id || order.shopper_id === null;
+    return isUnassigned; // Show ALL unassigned orders
   });
 };
 ```
@@ -3094,12 +3626,12 @@ Before showing any notifications, the system checks:
 
   - Orders are sorted by creation time (oldest first)
   - Each order becomes a batch
-  - System tracks batch assignments for 60 seconds
+  - System tracks batch assignments for 90 seconds
   - Prevents duplicate notifications for the same batch
 
 - **Assignment Rules**
   - One batch per shopper
-  - 60-second acceptance window
+  - 90-second acceptance window
   - Batch expires if not accepted within time limit
   - Shopper becomes eligible for new batches after:
     - Current batch expires
@@ -4847,11 +5379,11 @@ The notification system provides real-time order notifications to shoppers with 
 - **Custom Design**: Beautiful, responsive toast components with action buttons
 - **Type Support**: Info, success, warning, and error notification types
 
-#### 2. Two-Stage Notification System
+#### 2. Single Notification System
 
-- **Initial Notification**: Shows immediately when order is assigned (60 seconds)
-- **Warning Notification**: Shows after 40 seconds if not accepted (20 seconds remaining)
+- **Initial Notification**: Shows immediately when order is assigned (90 seconds to respond)
 - **Automatic Cleanup**: Toasts are removed when orders expire or are accepted
+- **Simplified UX**: No warning notifications - shoppers have full 90 seconds to decide
 
 #### 3. Location-Based Filtering
 
@@ -5030,13 +5562,7 @@ CREATE TABLE shopper_notification_settings (
 Order Created → Check Shopper Availability → Assign to Shopper → Show Initial Toast
 ```
 
-#### 2. Warning Stage
-
-```
-40 seconds → Show Warning Toast → 20 seconds remaining → Auto-reassign
-```
-
-#### 3. Cleanup
+#### 2. Cleanup
 
 ```
 Order Expires → Remove Toast → Reassign to Next Shopper
@@ -5055,8 +5581,7 @@ Order Expires → Remove Toast → Reassign to Next Shopper
 #### Timing Settings
 
 - **Check Interval**: 60 seconds between checks
-- **Assignment Timeout**: 60 seconds per assignment
-- **Warning Delay**: 40 seconds before warning
+- **Assignment Timeout**: 90 seconds per assignment (1 minute 30 seconds)
 - **Age Filter**: Only orders within 10 minutes
 
 ### Usage Examples
@@ -10555,3 +11080,589 @@ src/
 - lucide-react for icons
 
 This comprehensive system enables businesses to efficiently manage their operations, connect with suppliers, and streamline the RFQ and quotation process.
+
+---
+
+# Combined Order System
+
+## Overview
+
+The Combined Order System allows users to place multiple orders from different stores simultaneously in a single checkout process. This feature enhances user convenience by enabling them to shop from multiple stores and pay for all orders at once, reducing the friction of multiple separate checkout processes. All orders placed together are linked by a shared Combined Order ID and use a single PIN for delivery verification.
+
+## Key Concepts
+
+### Combined Order ID
+
+A unique identifier (UUID) that groups multiple orders placed together in a single checkout session. All orders within a combined order share this ID, making it easy to track and manage them as a unified transaction.
+
+### Shared PIN
+
+When multiple orders are created as part of a combined order, they all share a single two-digit PIN (00-99) for delivery verification. This simplifies the delivery process by requiring customers to remember only one PIN for all their orders, rather than separate PINs for each store.
+
+### Store Cart
+
+Each store the user shops from maintains its own cart with items, subtotal, service fees, and delivery fees. Users can select which store carts to include in the combined checkout.
+
+## System Architecture
+
+The Combined Order System consists of three main components:
+
+1. **Frontend Combined Checkout Page** - User interface for selecting stores and completing checkout
+2. **Combined Order Creation API** - Backend logic for processing multiple orders atomically
+3. **Combined Order Query API** - Retrieves all orders associated with a Combined Order ID
+
+## User Flow
+
+### Step 1: Shopping from Multiple Stores
+
+Users browse and add items to their carts from different stores. Each store maintains a separate cart with its own items and pricing.
+
+### Step 2: Combined Checkout Page
+
+When users navigate to the combined checkout page, the system:
+
+- Loads all active carts from different stores
+- Calculates individual cart subtotals, service fees, and delivery fees
+- Displays all carts with checkboxes for selection
+- Shows the grand total for selected carts
+
+### Step 3: Store Selection
+
+Users can select which stores to include in the combined order by checking or unchecking cart checkboxes. Only selected carts will be processed during checkout.
+
+### Step 4: Delivery Information
+
+Users must provide:
+
+- Delivery address (can be selected from saved addresses or use current location)
+- Delivery notes (optional comments that apply to all orders)
+- Payment method (wallet, card, or mobile money)
+
+### Step 5: Place Combined Order
+
+When the user clicks the checkout button, the system:
+
+- Validates that at least one cart is selected
+- Ensures delivery address and payment method are set
+- Generates a unique Combined Order ID
+- Generates a single shared PIN for all orders
+- Creates individual orders for each selected store
+- Links all orders with the Combined Order ID and shared PIN
+- Removes cart items and deletes processed carts
+- Redirects user to the orders page with the Combined Order ID
+
+## Fee Calculations
+
+### Service Fee
+
+Each store's cart incurs a service fee calculated as 5% of the cart subtotal. This fee is rounded up to the nearest whole number.
+
+Formula: `Service Fee = Math.ceil(Subtotal × 0.05)`
+
+### Transportation Fee (Delivery Fee)
+
+Each store has its own delivery fee based on the distance between the store location and the delivery address. Currently set to a default of 1000, but can be calculated dynamically based on geographical distance.
+
+### Cart Total
+
+For each store cart: `Cart Total = Subtotal + Service Fee + Transportation Fee`
+
+### Grand Total
+
+The grand total is the sum of all selected cart totals: `Grand Total = Sum of all selected Cart Totals`
+
+## Backend Processing
+
+### Order Creation Process
+
+When the combined order API receives a request, it processes each store in sequence:
+
+#### 1. Fetch Cart and Items
+
+For each store, the system retrieves the user's active cart and all items in that cart, including:
+
+- Product IDs and quantities
+- Current prices (base price and final price)
+- Store information (name, location)
+
+#### 2. Validate Stock Availability
+
+Before creating orders, the system checks product stock levels to ensure all requested quantities are available. If any product has insufficient stock, the entire transaction is aborted with an error message.
+
+#### 3. Calculate Order Total
+
+The actual order total is calculated using the base product prices (what the customer pays to the shop) multiplied by quantities, ensuring accuracy regardless of any cart price discrepancies.
+
+#### 4. Create Order Record
+
+For each store, an order record is created with:
+
+- User ID and Shop ID
+- Delivery address ID
+- Order total (calculated from product prices)
+- Service fee and delivery fee from request
+- Order status set to "PENDING"
+- Combined Order ID (shared across all orders)
+- Shared PIN (same for all orders in this combined order)
+- Delivery time (estimated delivery timestamp)
+- Delivery notes (optional)
+- Discount and voucher code (if applicable)
+
+#### 5. Create Order Items
+
+Individual order items are created for each product in the cart, storing:
+
+- Order ID (links to the created order)
+- Product ID
+- Quantity ordered
+- Price at the time of order (base price)
+
+#### 6. Clear Cart
+
+After successful order creation:
+
+- All cart items for that store are deleted
+- The cart itself is deleted
+
+#### 7. Track Created Orders
+
+The system maintains a list of all successfully created orders with their IDs, PINs, shop IDs, and totals.
+
+### Transaction Safety
+
+The order creation process operates sequentially for each store. If an error occurs at any store (e.g., insufficient stock, database failure), the process stops and returns an error. Orders created before the failure remain in the database, while subsequent stores are not processed.
+
+**Note**: The current implementation does not use database transactions, meaning partial order creation is possible if an error occurs mid-process.
+
+## API Endpoints
+
+### Create Combined Orders
+
+**Endpoint**: `POST /api/mutations/create-combined-orders`
+
+**Purpose**: Creates multiple orders from different stores in a single transaction with a shared Combined Order ID and PIN.
+
+**Request Body**:
+
+```
+{
+  stores: [
+    {
+      store_id: "uuid",
+      delivery_fee: "1000",
+      service_fee: "50",
+      discount: "0" (optional),
+      voucher_code: "SAVE10" (optional)
+    },
+    ...
+  ],
+  delivery_address_id: "uuid",
+  delivery_time: "ISO timestamp",
+  delivery_notes: "string" (optional),
+  payment_method: "mobile_money" | "card" | "wallet",
+  payment_method_id: "uuid" (optional)
+}
+```
+
+**Response**:
+
+```
+{
+  success: true,
+  combined_order_id: "uuid",
+  orders: [
+    {
+      id: "uuid",
+      pin: "42",
+      shop_id: "uuid",
+      total: 15500
+    },
+    ...
+  ],
+  grand_total: 30000,
+  message: "Successfully created 2 orders with combined_order_id"
+}
+```
+
+**Validation Rules**:
+
+- At least one store must be provided
+- Delivery address ID and delivery time are required
+- Each store must have valid store_id, delivery_fee, and service_fee
+- User must have an active cart for each store
+- All products must have sufficient stock
+
+### Query Combined Orders
+
+**Endpoint**: `GET /api/queries/combined-orders?combined_order_id={uuid}`
+
+**Purpose**: Retrieves all orders associated with a specific Combined Order ID.
+
+**Query Parameters**:
+
+- `combined_order_id` (required): The UUID of the combined order
+
+**Response**:
+
+```
+{
+  orders: [
+    {
+      id: "uuid",
+      OrderID: "AUTO123",
+      placedAt: "timestamp",
+      estimatedDelivery: "timestamp",
+      deliveryNotes: "string",
+      total: "15500",
+      serviceFee: "50",
+      deliveryFee: "1000",
+      status: "PENDING",
+      pin: "42",
+      combinedOrderId: "uuid",
+      shop: {
+        id: "uuid",
+        name: "Store Name",
+        address: "Store Address",
+        image: "url",
+        phone: "phone number",
+        latitude: "lat",
+        longitude: "lng"
+      },
+      Order_Items: [
+        {
+          id: "uuid",
+          product_id: "uuid",
+          quantity: 2,
+          price: "5000",
+          product: {
+            id: "uuid",
+            price: "5000",
+            final_price: "4500",
+            image: "url",
+            ProductName: {
+              name: "Product Name",
+              description: "Description"
+            }
+          }
+        },
+        ...
+      ],
+      address: {
+        street: "123 Main St",
+        city: "City",
+        postal_code: "12345",
+        latitude: "lat",
+        longitude: "lng"
+      }
+    },
+    ...
+  ]
+}
+```
+
+**Error Responses**:
+
+- 400: Missing combined_order_id parameter
+- 404: No orders found for the provided combined_order_id
+- 500: Server error during query execution
+
+## Frontend Components
+
+### Combined Checkout Page
+
+**File**: `pages/combined-checkout.tsx`
+
+**Key Features**:
+
+- Displays all user carts from different stores
+- Shows itemized products, quantities, and prices for each cart
+- Allows selection/deselection of store carts
+- Displays fee breakdown (subtotal, service fee, transportation fee)
+- Shows grand total for selected carts
+- Address selection with modal for saved addresses
+- Payment method selector
+- Optional delivery notes input
+- Processes combined order on checkout
+
+**State Management**:
+
+- `storeCarts`: Array of all user's carts with items and fees
+- `userAddress`: Selected delivery address
+- `selectedPaymentMethod`: Chosen payment method
+- `comment`: Delivery notes
+- `isProcessing`: Loading state during checkout
+
+**User Interactions**:
+
+- Toggle cart selection with checkboxes
+- View/hide cart items by selecting carts
+- Change delivery address via modal
+- Select payment method
+- Enter delivery notes
+- Place combined order
+
+### Payment Method Selector
+
+**Component**: `PaymentMethodSelector`
+
+**Purpose**: Allows users to select their preferred payment method for the combined order.
+
+**Payment Options**:
+
+- Wallet (using platform balance)
+- Card (saved credit/debit cards)
+- Mobile Money (MTN MoMo, etc.)
+
+### Cart Items Display
+
+Each store cart displays:
+
+- Store name and logo
+- Number of items in cart
+- Individual product cards with image, name, quantity, and price
+- Subtotal, service fee, and transportation fee
+- Cart total
+
+## Order Tracking
+
+### Viewing Combined Orders
+
+Users can view all orders from a combined order by navigating to the orders page with the Combined Order ID as a query parameter:
+
+`/user-orders?combined_order_id={uuid}`
+
+This displays all orders grouped together, showing:
+
+- Individual order details for each store
+- Shared Combined Order ID
+- Same PIN for all orders
+- Separate order status for each store (since they may be fulfilled independently)
+- Individual tracking for each order
+
+### Order Status Management
+
+Even though orders are created together, each order maintains its own independent status:
+
+- PENDING: Order placed, awaiting shopper assignment
+- ACCEPTED: Shopper assigned and confirmed
+- SHOPPING: Shopper is collecting items
+- DELIVERED: Order delivered to customer
+- CANCELLED: Order cancelled
+
+This independence allows stores to fulfill orders at different times while maintaining the logical grouping of the combined order.
+
+## Delivery Verification
+
+### Single PIN System
+
+All orders in a combined order share a single PIN. When shoppers deliver orders:
+
+- They request the same PIN from the customer for each order
+- Customer provides the single PIN (e.g., "42") for verification
+- Each order is marked as delivered independently using the shared PIN
+
+This simplifies the delivery process significantly, especially when multiple shoppers are delivering orders from the same combined order.
+
+## Benefits
+
+### For Customers
+
+1. **Single Checkout Process**: Shop from multiple stores and pay once
+2. **Unified Payment**: One payment transaction for all orders
+3. **Simplified Delivery**: Remember one PIN for all orders
+4. **Better Organization**: All orders grouped and tracked together
+5. **Time Savings**: Avoid multiple checkout processes
+6. **Convenient Address Selection**: Set one delivery address for all orders
+
+### For the Platform
+
+1. **Increased Order Volume**: Encourages shopping from multiple stores
+2. **Higher Transaction Values**: Combined orders typically have larger totals
+3. **Better User Experience**: Reduces checkout friction
+4. **Operational Efficiency**: Grouped order management
+5. **Revenue Optimization**: Multiple service fees in one transaction
+
+### For Shoppers
+
+1. **Clear Grouping**: Easily identify orders that belong together
+2. **Simplified Verification**: One PIN for multiple orders from the same customer
+3. **Better Context**: Understanding that multiple orders go to the same address
+
+## Database Schema
+
+### Orders Table
+
+Key fields relevant to combined orders:
+
+- `id`: Unique order identifier (UUID)
+- `OrderID`: Human-readable order number (AUTO-generated)
+- `user_id`: Customer who placed the order
+- `shop_id`: Store fulfilling the order
+- `combined_order_id`: Shared identifier for grouped orders (UUID, nullable)
+- `pin`: Two-digit verification code (string)
+- `total`: Order total amount
+- `service_fee`: Platform service fee
+- `delivery_fee`: Transportation fee
+- `discount`: Discount amount (nullable)
+- `voucher_code`: Applied voucher code (nullable)
+- `delivery_address_id`: Delivery location
+- `delivery_time`: Estimated delivery timestamp
+- `delivery_notes`: Customer instructions
+- `status`: Order status
+- `shopper_id`: Assigned shopper (nullable)
+- `created_at`: Order placement timestamp
+
+### Carts Table
+
+Stores user shopping carts:
+
+- `id`: Cart identifier (UUID)
+- `user_id`: Cart owner
+- `shop_id`: Associated store
+- `is_active`: Whether cart is active (boolean)
+
+### Cart_Items Table
+
+Stores items within carts:
+
+- `id`: Item identifier (UUID)
+- `cart_id`: Parent cart
+- `product_id`: Product reference
+- `quantity`: Item quantity
+- `price`: Price at time of adding to cart
+
+## Error Handling
+
+### Validation Errors
+
+- **Empty Store List**: Must provide at least one store
+- **Missing Required Fields**: Delivery address and time must be provided
+- **Invalid Store Data**: Each store must have valid store_id, delivery_fee, and service_fee
+
+### Cart Errors
+
+- **No Active Cart**: User must have an active cart for each store
+- **Empty Cart**: Cart must contain at least one item
+
+### Stock Errors
+
+- **Insufficient Stock**: If any product has insufficient stock, the entire operation fails with details about which product and store caused the issue
+
+### Database Errors
+
+All database errors are caught and returned with a 500 status code and descriptive error message.
+
+## Future Enhancements
+
+### Potential Improvements
+
+1. **Transaction Support**: Implement database transactions to ensure all-or-nothing order creation
+2. **Partial Order Handling**: Allow orders to proceed even if one store fails
+3. **Dynamic Delivery Fees**: Calculate transportation fees based on actual distance
+4. **Delivery Time Optimization**: Coordinate delivery times across multiple stores
+5. **Bulk Shopper Assignment**: Assign multiple orders to a single shopper when possible
+6. **Combined Order Discounts**: Special discounts for placing combined orders
+7. **Order Bundling**: Smart bundling of nearby stores for efficient delivery
+8. **Split Payment**: Allow different payment methods for different stores
+9. **Order Priority**: Priority handling for combined orders
+10. **Enhanced Tracking**: Real-time tracking of all orders in a combined order
+
+### Performance Optimizations
+
+1. **Parallel Processing**: Process multiple stores concurrently instead of sequentially
+2. **Cart Caching**: Cache cart data to reduce database queries
+3. **Batch Operations**: Use batch database operations for order items
+4. **Query Optimization**: Optimize GraphQL queries for better performance
+
+## Testing Considerations
+
+### Test Scenarios
+
+1. **Happy Path**: Successfully create combined orders from multiple stores
+2. **Single Store**: Create combined order with only one store
+3. **Stock Validation**: Test insufficient stock error handling
+4. **Empty Cart**: Test error when cart has no items
+5. **Missing Address**: Test validation of required delivery address
+6. **Invalid Store**: Test error when store doesn't exist
+7. **Payment Method**: Test different payment method selections
+8. **Cart Deletion**: Verify carts are properly cleared after order creation
+9. **Combined Order Query**: Test retrieving orders by combined_order_id
+10. **PIN Generation**: Verify all orders share the same PIN
+
+### Edge Cases
+
+1. **Concurrent Checkout**: Multiple users checking out simultaneously
+2. **Stock Changes**: Stock levels changing during checkout process
+3. **Network Failures**: Handling partial order creation due to network issues
+4. **Large Orders**: Testing with many items and stores
+5. **Address Without ID**: Creating new delivery address during checkout
+
+## Security Considerations
+
+1. **Authentication**: All endpoints require valid user session
+2. **Authorization**: Users can only create orders for their own carts
+3. **Input Validation**: All request parameters are validated
+4. **SQL Injection**: GraphQL parameterized queries prevent injection
+5. **Price Integrity**: Order totals calculated server-side using current product prices
+6. **Cart Ownership**: Verify user owns the carts being processed
+
+## Monitoring and Analytics
+
+### Key Metrics to Track
+
+1. **Combined Order Rate**: Percentage of orders that are part of combined orders
+2. **Average Stores per Combined Order**: Number of stores typically included
+3. **Combined Order Value**: Average transaction size for combined orders
+4. **Completion Rate**: Percentage of successful combined order creations
+5. **Error Rate**: Frequency and types of errors during combined checkout
+6. **Time to Checkout**: How long users spend in combined checkout process
+
+### Business Insights
+
+1. **Store Affinity**: Which stores are commonly shopped together
+2. **User Behavior**: How often users shop from multiple stores
+3. **Revenue Impact**: Additional revenue generated through combined orders
+4. **Cart Abandonment**: Rate of abandoned combined checkouts
+
+## Technical Implementation Notes
+
+### Key Technologies
+
+- **Next.js API Routes**: Backend endpoints for order processing
+- **GraphQL (Hasura)**: Database queries and mutations
+- **UUID v4**: Unique identifier generation for combined order ID
+- **React Hooks**: Frontend state management
+- **Cookies**: Session storage for delivery address
+- **Next-Auth**: User authentication and session management
+
+### Code Organization
+
+```
+pages/
+  api/
+    mutations/
+      create-combined-orders.ts    # Combined order creation
+    queries/
+      combined-orders.ts            # Combined order retrieval
+  combined-checkout.tsx             # Checkout page
+
+src/
+  components/
+    UserCarts/
+      checkout/
+        PaymentMethodSelector.tsx   # Payment selection
+        checkoutCard.tsx           # Cart display component
+```
+
+### Dependencies
+
+- `graphql-request`: GraphQL client for Hasura
+- `uuid`: UUID generation
+- `next-auth`: Authentication
+- `js-cookie`: Cookie management
+- `react-hot-toast`: User notifications
+- `lucide-react`: UI icons
+
+## Conclusion
+
+The Combined Order System provides a seamless multi-store shopping experience that benefits customers, the platform, and shoppers. By grouping orders with a shared Combined Order ID and PIN, the system maintains simplicity while enabling powerful cross-store functionality. The architecture is designed for scalability and can be enhanced with additional features like transaction safety, parallel processing, and intelligent order optimization.

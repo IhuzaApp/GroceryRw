@@ -470,3 +470,143 @@ a:visited {
     outline: none; /* Remove outline when not using keyboard */
   }
 }
+
+/* ===================================
+   TOAST NOTIFICATION SYSTEM
+   ===================================
+   Two separate toast systems:
+   1. Main/Regular Toasts - for app feedback (success, error, info)
+   2. Batch Notifications - for order notifications
+*/
+
+/* Main Toast Container (default react-hot-toast container) */
+/* Target the default toast container that doesn't have batch-notification-container class */
+[data-react-hot-toast] > div:not(.batch-notification-container) {
+  /* Mobile: top-center */
+  top: 1rem !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  right: auto !important;
+}
+
+/* Desktop: bottom-center for main toasts */
+@media (min-width: 768px) {
+  [data-react-hot-toast] > div:not(.batch-notification-container) {
+    top: auto !important;
+    bottom: 2rem !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+}
+
+/* ===================================
+   TOAST NOTIFICATION SEPARATION
+   ===================================
+   This ensures batch notifications and regular notifications
+   use separate toast containers and don't interfere with each other.
+*/
+
+/* Hide batch notifications from the main toast container */
+[data-react-hot-toast]
+  > div:not(.batch-notification-container)
+  .batch-notification-toast,
+[data-react-hot-toast]
+  > div:not(.batch-notification-container)
+  .batch-warning-toast,
+[data-react-hot-toast]
+  > div:not(.batch-notification-container)
+  [class*="batch-notification-toast"],
+[data-react-hot-toast]
+  > div:not(.batch-notification-container)
+  [class*="batch-warning-toast"] {
+  display: none !important;
+}
+
+/* Hide regular notifications from the batch notification container */
+.batch-notification-container
+  > div:not([class*="batch-notification-toast"]):not([class*="batch-warning-toast"]) {
+  display: none !important;
+}
+
+/* Ensure batch container has proper z-index and positioning */
+.batch-notification-container {
+  z-index: 99999 !important;
+}
+
+/* Mobile: Batch notifications at bottom covering nav bar */
+@media (max-width: 767px) {
+  .batch-notification-toast {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    z-index: 99999 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    padding-bottom: env(safe-area-inset-bottom, 0) !important;
+  }
+
+  .batch-notification-toast > div {
+    border-radius: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .batch-warning-toast {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    z-index: 99999 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    padding-bottom: env(safe-area-inset-bottom, 0) !important;
+  }
+
+  .batch-warning-toast > div {
+    border-radius: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15) !important;
+  }
+}
+
+/* Desktop: Keep batch notifications at the top-right on desktop */
+@media (min-width: 768px) {
+  .batch-notification-toast {
+    position: fixed !important;
+    top: 1rem !important;
+    right: 1rem !important;
+    bottom: auto !important;
+    left: auto !important;
+    z-index: 99999 !important;
+  }
+
+  /* Also keep warning toasts at top */
+  .batch-warning-toast {
+    position: fixed !important;
+    top: 1rem !important;
+    right: 1rem !important;
+    bottom: auto !important;
+    left: auto !important;
+    z-index: 99999 !important;
+  }
+}
+
+/* Hide bottom navigation bar when checkout modal is expanded */
+body.hide-bottom-bar nav {
+  display: none !important;
+}
+
+@media (max-width: 767px) {
+  body.hide-bottom-bar nav.fixed.bottom-0 {
+    display: none !important;
+  }
+}
