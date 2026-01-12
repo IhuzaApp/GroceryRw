@@ -19,6 +19,7 @@ const GET_ACTIVE_ORDERS = gql`
       order_by: { created_at: desc }
     ) {
       id
+      OrderID
       created_at
       status
       service_fee
@@ -207,6 +208,7 @@ export default async function handler(
           hasuraClient.request<{
             Orders: Array<{
               id: string;
+              OrderID: number;
               created_at: string;
               status: string;
               service_fee: string | null;
@@ -329,7 +331,7 @@ export default async function handler(
     // Transform regular orders
     const transformedRegularOrders = regularOrders.map((o) => ({
       id: o.id,
-      OrderID: o.id,
+      OrderID: o.OrderID,
       status: o.status,
       createdAt: o.created_at,
       deliveryTime: o.delivery_time || undefined,

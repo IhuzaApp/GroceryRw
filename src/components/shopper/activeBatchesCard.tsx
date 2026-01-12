@@ -1061,7 +1061,7 @@ function ActiveOrderCard({
                 : isRestaurantOrder
                 ? "Restaurant Order"
                 : "Batch"}{" "}
-              #{order.id.slice(0, 6).toUpperCase()}
+              #{order.OrderID}
             </h3>
             <p
               className={`text-sm ${
