@@ -1330,23 +1330,6 @@ export default function NotificationSystem({
           },
         }}
       />
-      
-      {/* FCM connection status indicator (optional UI element in development) */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="fixed right-4 top-4 z-50">
-          <div
-            className={`rounded-lg px-3 py-2 text-xs font-medium ${
-              isInitialized && hasPermission
-                ? "border border-green-200 bg-green-100 text-green-800"
-                : "border border-orange-200 bg-orange-100 text-orange-800"
-            }`}
-          >
-            {isInitialized && hasPermission
-              ? "🔔 FCM Notifications Active"
-              : "📡 Polling Mode"}
-          </div>
-        </div>
-      )}
     </>
   );
 }
