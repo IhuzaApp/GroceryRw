@@ -388,10 +388,13 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
     // Main modal content
     return (
-      <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/70 px-0 backdrop-blur-md md:px-4">
-        <div className={`flex h-full w-full flex-col overflow-hidden shadow-2xl md:h-auto md:max-h-[90vh] md:max-w-2xl md:rounded-2xl ${theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"} md:border`}>
+      <div className="fixed inset-0 z-[9999] flex items-end justify-center p-0 sm:items-center sm:p-4" onClick={() => !confirmingDelivery && !photoUploading && handleClose()}>
+        {/* Backdrop */}
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" aria-hidden="true" />
+        
+        <div className={`relative z-10 flex w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border-0 shadow-2xl sm:max-h-[90vh] sm:rounded-2xl sm:border ${theme === "dark" ? "bg-gray-800 sm:border-gray-700" : "bg-white sm:border-gray-200"}`} onClick={(e) => e.stopPropagation()}>
           {/* Header */}
-          <div className={`flex flex-shrink-0 items-center justify-between border-b px-4 py-4 md:px-6 ${theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-gradient-to-r from-green-50 to-blue-50"}`}>
+          <div className={`flex flex-shrink-0 items-center justify-between px-6 py-6 sm:px-8 ${theme === "dark" ? "border-b border-gray-700" : "border-b border-gray-200"}`}>
             <div className="flex items-center gap-3">
               <div className={`rounded-full p-2 ${theme === "dark" ? "bg-green-600" : "bg-green-100"}`}>
                 <svg className={`h-6 w-6 ${theme === "dark" ? "text-white" : "text-green-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -408,7 +411,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
               </div>
             </div>
             {!photoUploading && !confirmingDelivery && (
-              <button onClick={handleClose} className={`rounded-xl p-2 transition-colors ${theme === "dark" ? "text-gray-400 hover:bg-gray-700 hover:text-gray-200" : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"}`}>
+              <button onClick={handleClose} className={`rounded-lg p-2 transition-colors ${theme === "dark" ? "text-gray-400 hover:bg-gray-700/50 hover:text-gray-200" : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"}`}>
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -417,7 +420,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
           </div>
 
           {/* Body */}
-          <div className={`flex-1 overflow-y-auto px-4 py-4 md:px-6 ${theme === "dark" ? "bg-gray-800 text-gray-100" : "bg-white"}`}>
+          <div className={`max-h-[70vh] flex-1 overflow-y-auto px-6 py-8 sm:px-8 ${theme === "dark" ? "bg-gray-800 text-gray-100" : "bg-white"}`}>
             <div className="space-y-4">
               {/* Delivery Address Section */}
               <div className={`rounded-xl border p-4 ${theme === "dark" ? "border-gray-700 bg-gray-900/50" : "border-gray-200 bg-gray-50"}`}>
