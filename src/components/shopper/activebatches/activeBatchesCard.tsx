@@ -4,10 +4,11 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Button, Panel, Badge, Loader, toaster, Message } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
-import { useAuth } from "../../context/AuthContext";
-import { useTheme } from "../../context/ThemeContext";
-import { logger } from "../../utils/logger";
-import { formatCurrencySync } from "../../utils/formatCurrency";
+import { useAuth } from "../../../context/AuthContext";
+import { useTheme } from "../../../context/ThemeContext";
+import { logger } from "../../../utils/logger";
+import { formatCurrencySync } from "../../../utils/formatCurrency";
+import { ResponsiveBatchView } from "./ResponsiveBatchView";
 
 // Define interfaces for order data
 interface Order {
@@ -430,15 +431,7 @@ export default function ActiveBatches({
 
         {/* Show orders when fetch is successful and we have data */}
         {!isLoading && fetchSuccess && activeOrders.length > 0 && (
-          <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {activeOrders.map((order) => (
-              <ActiveOrderCard
-                key={order.id}
-                order={order}
-                currentTime={currentTime}
-              />
-            ))}
-          </div>
+          <ResponsiveBatchView orders={activeOrders} />
         )}
 
         {/* Show "No Active Orders" when fetch is successful but no data */}
