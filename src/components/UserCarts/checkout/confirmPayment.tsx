@@ -8,17 +8,18 @@ export default function ConfirmPayment() {
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  if (!open) return (
-    <Button
-      appearance="primary"
-      onClick={handleOpen}
-      size="lg"
-      color="green"
-      className="bg-green-500 px-12 font-medium text-white"
-    >
-      Checkout
-    </Button>
-  );
+  if (!open)
+    return (
+      <Button
+        appearance="primary"
+        onClick={handleOpen}
+        size="lg"
+        color="green"
+        className="bg-green-500 px-12 font-medium text-white"
+      >
+        Checkout
+      </Button>
+    );
 
   return (
     <>

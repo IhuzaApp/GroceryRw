@@ -270,7 +270,7 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
         onNewOrder={handleNewOrder}
         onAcceptBatch={handleAcceptBatch}
       />
-      
+
       {/* FCM Status Indicator (only shows in development) */}
       <FCMStatusIndicator />
     </div>

@@ -59,7 +59,9 @@ export default async function handler(
     const order = data[variableName];
 
     if (!order) {
-      return res.status(404).json({ error: "Order not found", verified: false });
+      return res
+        .status(404)
+        .json({ error: "Order not found", verified: false });
     }
 
     // Verify the PIN

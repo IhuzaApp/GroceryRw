@@ -35,23 +35,23 @@ export function calculateDistanceKm(
  */
 export function isMapReady(map: L.Map | null): boolean {
   if (!map) return false;
-  
+
   try {
     // Check if map has a valid container
     const container = map.getContainer();
     if (!container) return false;
-    
+
     // Check if container is attached to DOM
     if (!document.body.contains(container)) return false;
-    
+
     // Check if map has valid center
     const center = map.getCenter();
     if (!center || isNaN(center.lat) || isNaN(center.lng)) return false;
-    
+
     // Check if map has valid zoom
     const zoom = map.getZoom();
     if (zoom === undefined || isNaN(zoom)) return false;
-    
+
     return true;
   } catch (error) {
     return false;
@@ -75,12 +75,12 @@ export function safeAddMarker(
       console.warn(`Cannot add marker ${name}: missing map or marker`);
       return false;
     }
-    
+
     if (!isMapReady(map)) {
       console.warn(`Cannot add marker ${name}: map not ready`);
       return false;
     }
-    
+
     marker.addTo(map);
     return true;
   } catch (error) {
@@ -109,7 +109,10 @@ export function getCookies(): Record<string, string> {
  * @param latitude Latitude coordinate
  * @param longitude Longitude coordinate
  */
-export function saveLocationToCookies(latitude: number, longitude: number): void {
+export function saveLocationToCookies(
+  latitude: number,
+  longitude: number
+): void {
   try {
     const maxAge = 30 * 24 * 60 * 60; // 30 days in seconds
     document.cookie = `user_latitude=${latitude}; path=/; max-age=${maxAge}; SameSite=Lax`;
@@ -233,7 +236,7 @@ export function fitMapBounds(
   maxZoom: number = 15
 ): void {
   if (!map || !isMapReady(map)) return;
-  
+
   try {
     map.fitBounds(bounds, {
       padding,

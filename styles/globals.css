@@ -507,15 +507,24 @@ a:visited {
 */
 
 /* Hide batch notifications from the main toast container */
-[data-react-hot-toast] > div:not(.batch-notification-container) .batch-notification-toast,
-[data-react-hot-toast] > div:not(.batch-notification-container) .batch-warning-toast,
-[data-react-hot-toast] > div:not(.batch-notification-container) [class*="batch-notification-toast"],
-[data-react-hot-toast] > div:not(.batch-notification-container) [class*="batch-warning-toast"] {
+[data-react-hot-toast]
+  > div:not(.batch-notification-container)
+  .batch-notification-toast,
+[data-react-hot-toast]
+  > div:not(.batch-notification-container)
+  .batch-warning-toast,
+[data-react-hot-toast]
+  > div:not(.batch-notification-container)
+  [class*="batch-notification-toast"],
+[data-react-hot-toast]
+  > div:not(.batch-notification-container)
+  [class*="batch-warning-toast"] {
   display: none !important;
 }
 
 /* Hide regular notifications from the batch notification container */
-.batch-notification-container > div:not([class*="batch-notification-toast"]):not([class*="batch-warning-toast"]) {
+.batch-notification-container
+  > div:not([class*="batch-notification-toast"]):not([class*="batch-warning-toast"]) {
   display: none !important;
 }
 

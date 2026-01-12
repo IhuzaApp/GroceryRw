@@ -467,7 +467,7 @@ The Smart Notification & Assignment System provides real-time order distribution
 graph TB
     A[Order Created] --> B[Add to Available Orders Pool]
     B --> C[ALL Orders Eligible for Assignment]
-    
+
     C --> D[Shopper's App Polls Smart Assignment API]
     D --> E[Calculate Age-Based Priority Score]
     E --> F{Order Age}
@@ -475,7 +475,7 @@ graph TB
     F -->|15-30 minutes| H[Priority: -2 WARNING]
     F -->|5-15 minutes| I[Priority: 0 NORMAL]
     F -->|0-5 minutes| J[Priority: +2 NEW]
-    
+
     G & H & I & J --> K[Combine with Distance & Performance]
     K --> L[Find Best Order for THIS Shopper]
     L --> M[Send Personalized FCM Notification]
@@ -484,7 +484,7 @@ graph TB
     O -->|Accept| P[Assign Order]
     O -->|Skip| Q[Order Remains in Pool]
     O -->|Timeout 90s| Q
-    
+
     C --> R[Map Display Filters]
     R -->|Show only 30+ min| S[Aged Orders on Map]
     C --> T[Dashboard Display]
@@ -609,16 +609,19 @@ All notification and assignment APIs support restaurant orders:
 
 Each shopper receives **personalized order recommendations** based on their unique situation:
 
-1. **Individual Polling**: 
+1. **Individual Polling**:
+
    - Each shopper's app independently calls the smart assignment API
    - Polling interval: 30 seconds (or 2 minutes with FCM active)
 
 2. **Personalized Calculation**:
+
    - API calculates priority for EACH order relative to THIS shopper
    - Considers: shopper's location, performance history, and order characteristics
    - Returns the BEST order for this specific shopper
 
 3. **Targeted Notifications**:
+
    - FCM notification sent ONLY to the specific shopper
    - No broadcast notifications to all users
    - Each shopper sees orders most relevant to them
@@ -627,7 +630,7 @@ Each shopper receives **personalized order recommendations** based on their uniq
    ```typescript
    // Prevents spam - same order not sent to same shopper within 90 seconds
    const cacheKey = `${shopperId}:${orderId}`;
-   if (!lastSent || (now - lastSent) > 90000) {
+   if (!lastSent || now - lastSent > 90000) {
      sendNotification(shopperId, order);
    }
    ```
@@ -736,6 +739,7 @@ const priorityScore =
 ```
 
 **Why This Works**:
+
 - 🔴 Old orders (30+ min) get massive priority boost → Accepted quickly
 - 🟡 Moderately old orders (15-30 min) get good priority → Won't become late
 - 🟢 Recent orders (5-15 min) get neutral priority → Gradually increase
@@ -11116,6 +11120,7 @@ Users browse and add items to their carts from different stores. Each store main
 ### Step 2: Combined Checkout Page
 
 When users navigate to the combined checkout page, the system:
+
 - Loads all active carts from different stores
 - Calculates individual cart subtotals, service fees, and delivery fees
 - Displays all carts with checkboxes for selection
@@ -11128,6 +11133,7 @@ Users can select which stores to include in the combined order by checking or un
 ### Step 4: Delivery Information
 
 Users must provide:
+
 - Delivery address (can be selected from saved addresses or use current location)
 - Delivery notes (optional comments that apply to all orders)
 - Payment method (wallet, card, or mobile money)
@@ -11135,6 +11141,7 @@ Users must provide:
 ### Step 5: Place Combined Order
 
 When the user clicks the checkout button, the system:
+
 - Validates that at least one cart is selected
 - Ensures delivery address and payment method are set
 - Generates a unique Combined Order ID
@@ -11173,6 +11180,7 @@ When the combined order API receives a request, it processes each store in seque
 #### 1. Fetch Cart and Items
 
 For each store, the system retrieves the user's active cart and all items in that cart, including:
+
 - Product IDs and quantities
 - Current prices (base price and final price)
 - Store information (name, location)
@@ -11188,6 +11196,7 @@ The actual order total is calculated using the base product prices (what the cus
 #### 4. Create Order Record
 
 For each store, an order record is created with:
+
 - User ID and Shop ID
 - Delivery address ID
 - Order total (calculated from product prices)
@@ -11202,6 +11211,7 @@ For each store, an order record is created with:
 #### 5. Create Order Items
 
 Individual order items are created for each product in the cart, storing:
+
 - Order ID (links to the created order)
 - Product ID
 - Quantity ordered
@@ -11210,6 +11220,7 @@ Individual order items are created for each product in the cart, storing:
 #### 6. Clear Cart
 
 After successful order creation:
+
 - All cart items for that store are deleted
 - The cart itself is deleted
 
@@ -11232,6 +11243,7 @@ The order creation process operates sequentially for each store. If an error occ
 **Purpose**: Creates multiple orders from different stores in a single transaction with a shared Combined Order ID and PIN.
 
 **Request Body**:
+
 ```
 {
   stores: [
@@ -11253,6 +11265,7 @@ The order creation process operates sequentially for each store. If an error occ
 ```
 
 **Response**:
+
 ```
 {
   success: true,
@@ -11272,6 +11285,7 @@ The order creation process operates sequentially for each store. If an error occ
 ```
 
 **Validation Rules**:
+
 - At least one store must be provided
 - Delivery address ID and delivery time are required
 - Each store must have valid store_id, delivery_fee, and service_fee
@@ -11285,9 +11299,11 @@ The order creation process operates sequentially for each store. If an error occ
 **Purpose**: Retrieves all orders associated with a specific Combined Order ID.
 
 **Query Parameters**:
+
 - `combined_order_id` (required): The UUID of the combined order
 
 **Response**:
+
 ```
 {
   orders: [
@@ -11345,6 +11361,7 @@ The order creation process operates sequentially for each store. If an error occ
 ```
 
 **Error Responses**:
+
 - 400: Missing combined_order_id parameter
 - 404: No orders found for the provided combined_order_id
 - 500: Server error during query execution
@@ -11356,6 +11373,7 @@ The order creation process operates sequentially for each store. If an error occ
 **File**: `pages/combined-checkout.tsx`
 
 **Key Features**:
+
 - Displays all user carts from different stores
 - Shows itemized products, quantities, and prices for each cart
 - Allows selection/deselection of store carts
@@ -11367,6 +11385,7 @@ The order creation process operates sequentially for each store. If an error occ
 - Processes combined order on checkout
 
 **State Management**:
+
 - `storeCarts`: Array of all user's carts with items and fees
 - `userAddress`: Selected delivery address
 - `selectedPaymentMethod`: Chosen payment method
@@ -11374,6 +11393,7 @@ The order creation process operates sequentially for each store. If an error occ
 - `isProcessing`: Loading state during checkout
 
 **User Interactions**:
+
 - Toggle cart selection with checkboxes
 - View/hide cart items by selecting carts
 - Change delivery address via modal
@@ -11388,6 +11408,7 @@ The order creation process operates sequentially for each store. If an error occ
 **Purpose**: Allows users to select their preferred payment method for the combined order.
 
 **Payment Options**:
+
 - Wallet (using platform balance)
 - Card (saved credit/debit cards)
 - Mobile Money (MTN MoMo, etc.)
@@ -11395,6 +11416,7 @@ The order creation process operates sequentially for each store. If an error occ
 ### Cart Items Display
 
 Each store cart displays:
+
 - Store name and logo
 - Number of items in cart
 - Individual product cards with image, name, quantity, and price
@@ -11410,6 +11432,7 @@ Users can view all orders from a combined order by navigating to the orders page
 `/user-orders?combined_order_id={uuid}`
 
 This displays all orders grouped together, showing:
+
 - Individual order details for each store
 - Shared Combined Order ID
 - Same PIN for all orders
@@ -11419,6 +11442,7 @@ This displays all orders grouped together, showing:
 ### Order Status Management
 
 Even though orders are created together, each order maintains its own independent status:
+
 - PENDING: Order placed, awaiting shopper assignment
 - ACCEPTED: Shopper assigned and confirmed
 - SHOPPING: Shopper is collecting items
@@ -11432,6 +11456,7 @@ This independence allows stores to fulfill orders at different times while maint
 ### Single PIN System
 
 All orders in a combined order share a single PIN. When shoppers deliver orders:
+
 - They request the same PIN from the customer for each order
 - Customer provides the single PIN (e.g., "42") for verification
 - Each order is marked as delivered independently using the shared PIN
@@ -11468,6 +11493,7 @@ This simplifies the delivery process significantly, especially when multiple sho
 ### Orders Table
 
 Key fields relevant to combined orders:
+
 - `id`: Unique order identifier (UUID)
 - `OrderID`: Human-readable order number (AUTO-generated)
 - `user_id`: Customer who placed the order
@@ -11489,6 +11515,7 @@ Key fields relevant to combined orders:
 ### Carts Table
 
 Stores user shopping carts:
+
 - `id`: Cart identifier (UUID)
 - `user_id`: Cart owner
 - `shop_id`: Associated store
@@ -11497,6 +11524,7 @@ Stores user shopping carts:
 ### Cart_Items Table
 
 Stores items within carts:
+
 - `id`: Item identifier (UUID)
 - `cart_id`: Parent cart
 - `product_id`: Product reference
@@ -11617,7 +11645,7 @@ pages/
     queries/
       combined-orders.ts            # Combined order retrieval
   combined-checkout.tsx             # Checkout page
-  
+
 src/
   components/
     UserCarts/

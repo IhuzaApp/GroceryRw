@@ -7,10 +7,7 @@ import { logger } from "../../../src/utils/logger";
 const GET_AVAILABLE_ORDERS = gql`
   query GetAvailableOrders {
     Orders(
-      where: {
-        shopper_id: { _is_null: true }
-        status: { _eq: "PENDING" }
-      }
+      where: { shopper_id: { _is_null: true }, status: { _eq: "PENDING" } }
       order_by: { created_at: asc }
     ) {
       id
@@ -43,10 +40,7 @@ const GET_AVAILABLE_ORDERS = gql`
 const GET_AVAILABLE_REEL_ORDERS = gql`
   query GetAvailableReelOrders {
     reel_orders(
-      where: {
-        shopper_id: { _is_null: true }
-        status: { _eq: "PENDING" }
-      }
+      where: { shopper_id: { _is_null: true }, status: { _eq: "PENDING" } }
       order_by: { created_at: asc }
     ) {
       id

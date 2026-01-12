@@ -190,14 +190,11 @@ export default async function handler(
     // Fetch all order types in parallel
     const [regularOrdersData, reelOrdersData, restaurantOrdersData] =
       await Promise.all([
-        hasuraClient.request<{ Orders: any[] }>(
-          GET_TODAY_COMPLETED_ORDERS,
-          {
-            shopper_id: shopperId,
-            today_start: todayStart.toISOString(),
-            today_end: todayEnd.toISOString(),
-          }
-        ),
+        hasuraClient.request<{ Orders: any[] }>(GET_TODAY_COMPLETED_ORDERS, {
+          shopper_id: shopperId,
+          today_start: todayStart.toISOString(),
+          today_end: todayEnd.toISOString(),
+        }),
         hasuraClient.request<{ reel_orders: any[] }>(
           GET_TODAY_COMPLETED_REEL_ORDERS,
           {

@@ -29,11 +29,27 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
   ];
 
   const orderStatuses = [
-    { value: "accepted", label: "Accepted", description: "Shopper accepted the batch" },
-    { value: "picked", label: "Picked Up", description: "Items picked from store" },
+    {
+      value: "accepted",
+      label: "Accepted",
+      description: "Shopper accepted the batch",
+    },
+    {
+      value: "picked",
+      label: "Picked Up",
+      description: "Items picked from store",
+    },
     { value: "shopping", label: "Shopping", description: "Currently shopping" },
-    { value: "on_the_way", label: "On The Way", description: "En route to customer" },
-    { value: "at_customer", label: "At Customer", description: "Arrived at delivery location" },
+    {
+      value: "on_the_way",
+      label: "On The Way",
+      description: "En route to customer",
+    },
+    {
+      value: "at_customer",
+      label: "At Customer",
+      description: "Arrived at delivery location",
+    },
     { value: "delivered", label: "Delivered", description: "Order completed" },
   ];
 
@@ -48,38 +64,98 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
     switch (value) {
       case "accepted":
         return (
-          <svg className="h-5 w-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg
+            className="h-5 w-5 text-emerald-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
         );
       case "picked":
         return (
-          <svg className="h-5 w-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          <svg
+            className="h-5 w-5 text-orange-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+            />
           </svg>
         );
       case "shopping":
         return (
-          <svg className="h-5 w-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          <svg
+            className="h-5 w-5 text-yellow-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+            />
           </svg>
         );
       case "on_the_way":
         return (
-          <svg className="h-5 w-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          <svg
+            className="h-5 w-5 text-purple-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 10V3L4 14h7v7l9-11h-7z"
+            />
           </svg>
         );
       case "at_customer":
         return (
-          <svg className="h-5 w-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          <svg
+            className="h-5 w-5 text-indigo-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+            />
           </svg>
         );
       case "delivered":
         return (
-          <svg className="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          <svg
+            className="h-5 w-5 text-green-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
           </svg>
         );
       default:
@@ -91,26 +167,66 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
     switch (value) {
       case "newly_accepted":
         return (
-          <svg className="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          <svg
+            className="h-5 w-5 text-blue-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
           </svg>
         );
       case "late":
         return (
-          <svg className="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          <svg
+            className="h-5 w-5 text-red-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
           </svg>
         );
       case "urgent":
         return (
-          <svg className="h-5 w-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg
+            className="h-5 w-5 text-orange-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
         );
       case "okay":
         return (
-          <svg className="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg
+            className="h-5 w-5 text-green-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
         );
       default:
@@ -142,16 +258,22 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
   return (
     <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
       {/* Left side - Filter buttons (Hidden on mobile) */}
-      <div className="hidden sm:flex flex-wrap items-center gap-3">
+      <div className="hidden flex-wrap items-center gap-3 sm:flex">
         {/* Order Type Filter */}
-        <div className="relative dropdown-container">
+        <div className="dropdown-container relative">
           <button
             onClick={() => setShowOrderTypeDropdown(!showOrderTypeDropdown)}
             className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
               theme === "dark"
                 ? "border-gray-600 bg-gray-800 text-gray-200 hover:bg-gray-700"
                 : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-            } ${filters.orderType ? (theme === "dark" ? "ring-2 ring-blue-500" : "ring-2 ring-blue-400") : ""}`}
+            } ${
+              filters.orderType
+                ? theme === "dark"
+                  ? "ring-2 ring-blue-500"
+                  : "ring-2 ring-blue-400"
+                : ""
+            }`}
           >
             <svg
               className="h-4 w-4"
@@ -167,7 +289,8 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
               />
             </svg>
             {filters.orderType
-              ? orderTypes.find((t) => t.value === filters.orderType)?.label || "Order Type"
+              ? orderTypes.find((t) => t.value === filters.orderType)?.label ||
+                "Order Type"
               : "Order Type"}
             <svg
               className="h-4 w-4"
@@ -207,7 +330,12 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
                         : "text-red-600 hover:bg-gray-100"
                     }`}
                   >
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -218,7 +346,7 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
                     Clear Filter
                   </button>
                 )}
-                
+
                 {/* Order type options */}
                 {orderTypes.map((type) => (
                   <button
@@ -237,15 +365,20 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
                           : "bg-blue-50 text-blue-700"
                         : type.disabled
                         ? theme === "dark"
-                          ? "text-gray-500 cursor-not-allowed"
-                          : "text-gray-400 cursor-not-allowed"
+                          ? "cursor-not-allowed text-gray-500"
+                          : "cursor-not-allowed text-gray-400"
                         : theme === "dark"
                         ? "text-gray-200 hover:bg-gray-700"
                         : "text-gray-700 hover:bg-gray-100"
                     }`}
                   >
                     {type.value === "regular" && (
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -255,7 +388,12 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
                       </svg>
                     )}
                     {type.value === "reel" && (
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -265,7 +403,12 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
                       </svg>
                     )}
                     {type.value === "restaurant" && (
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -275,7 +418,12 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
                       </svg>
                     )}
                     {type.value === "store" && (
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -285,7 +433,12 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
                       </svg>
                     )}
                     {type.value === "plasone" && (
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -306,14 +459,20 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
         </div>
 
         {/* Status Filter */}
-        <div className="relative dropdown-container">
+        <div className="dropdown-container relative">
           <button
             onClick={() => setShowStatusDropdown(!showStatusDropdown)}
             className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
               theme === "dark"
                 ? "border-gray-600 bg-gray-800 text-gray-200 hover:bg-gray-700"
                 : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-            } ${filters.status ? (theme === "dark" ? "ring-2 ring-blue-500" : "ring-2 ring-blue-400") : ""}`}
+            } ${
+              filters.status
+                ? theme === "dark"
+                  ? "ring-2 ring-blue-500"
+                  : "ring-2 ring-blue-400"
+                : ""
+            }`}
           >
             <svg
               className="h-4 w-4"
@@ -329,7 +488,8 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
               />
             </svg>
             {filters.status
-              ? orderStatuses.find((s) => s.value === filters.status)?.label || "Status"
+              ? orderStatuses.find((s) => s.value === filters.status)?.label ||
+                "Status"
               : "Status"}
             <svg
               className="h-4 w-4"
@@ -369,7 +529,12 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
                         : "text-red-600 hover:bg-gray-100"
                     }`}
                   >
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -380,7 +545,7 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
                     Clear Filter
                   </button>
                 )}
-                
+
                 {/* Status options */}
                 {orderStatuses.map((status) => (
                   <button
@@ -402,12 +567,20 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
                     {getStatusIcon(status.value)}
                     <div className="flex-1">
                       <div className="font-medium">{status.label}</div>
-                      <div className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                      <div
+                        className={`text-xs ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
                         {status.description}
                       </div>
                     </div>
                     {filters.status === status.value && (
-                      <svg className="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                      <svg
+                        className="h-4 w-4 text-blue-500"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
                         <path
                           fillRule="evenodd"
                           d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -423,14 +596,20 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
         </div>
 
         {/* Urgency Filter */}
-        <div className="relative dropdown-container">
+        <div className="dropdown-container relative">
           <button
             onClick={() => setShowUrgencyDropdown(!showUrgencyDropdown)}
             className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
               theme === "dark"
                 ? "border-gray-600 bg-gray-800 text-gray-200 hover:bg-gray-700"
                 : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-            } ${filters.urgency ? (theme === "dark" ? "ring-2 ring-blue-500" : "ring-2 ring-blue-400") : ""}`}
+            } ${
+              filters.urgency
+                ? theme === "dark"
+                  ? "ring-2 ring-blue-500"
+                  : "ring-2 ring-blue-400"
+                : ""
+            }`}
           >
             <svg
               className="h-4 w-4"
@@ -446,7 +625,8 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
               />
             </svg>
             {filters.urgency
-              ? urgencyLevels.find((u) => u.value === filters.urgency)?.label || "Priority"
+              ? urgencyLevels.find((u) => u.value === filters.urgency)?.label ||
+                "Priority"
               : "Priority"}
             <svg
               className="h-4 w-4"
@@ -486,7 +666,12 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
                         : "text-red-600 hover:bg-gray-100"
                     }`}
                   >
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -497,7 +682,7 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
                     Clear Filter
                   </button>
                 )}
-                
+
                 {/* Urgency level options */}
                 {urgencyLevels.map((level) => (
                   <button
@@ -519,15 +704,25 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
                     {getUrgencyIcon(level.value)}
                     <div className="flex-1">
                       <div className="font-medium">{level.label}</div>
-                      <div className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                        {level.value === "newly_accepted" && "Just accepted batches"}
+                      <div
+                        className={`text-xs ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
+                        {level.value === "newly_accepted" &&
+                          "Just accepted batches"}
                         {level.value === "late" && "Past delivery time"}
-                        {level.value === "urgent" && "Less than 10 minutes left"}
+                        {level.value === "urgent" &&
+                          "Less than 10 minutes left"}
                         {level.value === "okay" && "No immediate rush"}
                       </div>
                     </div>
                     {filters.urgency === level.value && (
-                      <svg className="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                      <svg
+                        className="h-4 w-4 text-blue-500"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
                         <path
                           fillRule="evenodd"
                           d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -556,7 +751,12 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
               onClick={() => updateFilter("dateRange", undefined)}
               className="hover:text-red-500"
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -594,7 +794,7 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
       </div>
 
       {/* Right side - Search (Full width on mobile) */}
-      <div className="relative flex-1 w-full sm:min-w-[200px] sm:max-w-md">
+      <div className="relative w-full flex-1 sm:min-w-[200px] sm:max-w-md">
         <input
           type="text"
           placeholder="Search..."

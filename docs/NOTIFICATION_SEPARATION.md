@@ -1,28 +1,33 @@
 # Notification System Separation
 
 ## Overview
+
 The notification system has been updated to ensure batch notifications and regular app notifications use completely separate toast containers. This allows batch notifications to be positioned and aligned independently according to their own terms.
 
 ## Changes Made
 
 ### 1. Separate Toast Instances
+
 - **Created** a dedicated `batchToast` instance in `NotificationSystem.tsx` for batch notifications
 - **Regular `toast`** is still used for success/error/info feedback messages throughout the app
 
 ### 2. Dual Toaster System
+
 Two separate `<Toaster>` components now exist:
 
 #### Main Toaster (in `_app.tsx`)
+
 - **Configuration**: `<Toaster />` (no props - all styling done via CSS)
 - **Position**: `top-center` on mobile, `bottom-center` on desktop (CSS-controlled)
 - **Purpose**: Handles all regular app notifications (success, error, info, loading)
 - **Examples**: "Order accepted successfully!", "Failed to load data", etc.
 
 #### Batch Toaster (in `NotificationSystem.tsx`)
+
 - **Position**: `top-right` (customized via CSS per device)
 - **Container Class**: `batch-notification-container`
 - **Purpose**: Handles ONLY batch order notifications
-- **Types**: 
+- **Types**:
   - `batch-notification-toast` - New order cards
   - `batch-warning-toast` - Expiring order warnings
 
@@ -31,6 +36,7 @@ Two separate `<Toaster>` components now exist:
 All toast positioning and styling is now handled purely through CSS, keeping the component files clean:
 
 **Main Toast Positioning:**
+
 ```css
 /* Targets the default react-hot-toast container */
 [data-react-hot-toast] > div:not(.batch-notification-container) {
@@ -52,10 +58,15 @@ All toast positioning and styling is now handled purely through CSS, keeping the
 ```
 
 **Separation Rules:**
+
 ```css
 /* Hide batch notifications from main container */
-[data-react-hot-toast] > div:not(.batch-notification-container) .batch-notification-toast,
-[data-react-hot-toast] > div:not(.batch-notification-container) .batch-warning-toast {
+[data-react-hot-toast]
+  > div:not(.batch-notification-container)
+  .batch-notification-toast,
+[data-react-hot-toast]
+  > div:not(.batch-notification-container)
+  .batch-warning-toast {
   display: none !important;
 }
 
@@ -68,12 +79,14 @@ All toast positioning and styling is now handled purely through CSS, keeping the
 ### 4. Device-Specific Positioning
 
 #### Mobile (< 768px)
+
 - **Main toasts**: Top-center (nav feedback)
 - **Batch notifications**: Bottom of screen, full width, covering nav bar
   - Uses `position: fixed`, `bottom: 0`, full width
   - Includes safe area insets for notched devices
 
 #### Desktop (≥ 768px)
+
 - **Main toasts**: Bottom-center
 - **Batch notifications**: Top-right corner
   - Fixed position at `top: 1rem`, `right: 1rem`
@@ -88,10 +101,12 @@ All toast positioning and styling is now handled purely through CSS, keeping the
 ## File Changes
 
 - **Modified**: `pages/_app.tsx`
+
   - Simplified main `<Toaster />` component (removed all props)
   - All configuration now handled via CSS
 
 - **Modified**: `src/components/shopper/NotificationSystem.tsx`
+
   - Imported `Toaster` component
   - Created `batchToast` reference
   - Replaced all batch notification `toast` calls with `batchToast`

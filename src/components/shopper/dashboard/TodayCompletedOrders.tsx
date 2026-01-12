@@ -34,7 +34,7 @@ function relativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMins / 60);
-  
+
   if (diffHours >= 1) {
     return `${diffHours}h ${diffMins % 60}m ago`;
   }
@@ -50,7 +50,9 @@ export default function TodayCompletedOrders({
   const { theme } = useTheme();
   const [isLoading, setIsLoading] = useState(true);
   const [completedOrders, setCompletedOrders] = useState<CompletedOrder[]>([]);
-  const [sortBy, setSortBy] = useState<"newest" | "earnings" | "distance">("newest");
+  const [sortBy, setSortBy] = useState<"newest" | "earnings" | "distance">(
+    "newest"
+  );
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [isAutoRefreshing, setIsAutoRefreshing] = useState<boolean>(false);
@@ -65,12 +67,13 @@ export default function TodayCompletedOrders({
       }
 
       const data = await response.json();
-      
+
       if (data.success && data.orders) {
         const formattedOrders = data.orders.map((order: any) => ({
           id: order.id,
           shopName: order.shopName || order.restaurantName || "Unknown Shop",
-          shopAddress: order.shopAddress || order.restaurantAddress || "No address",
+          shopAddress:
+            order.shopAddress || order.restaurantAddress || "No address",
           customerAddress: order.customerAddress || "No address",
           distance: order.distance ? `${order.distance} km` : "N/A",
           items: order.itemsCount || 1,
@@ -87,7 +90,7 @@ export default function TodayCompletedOrders({
         setCompletedOrders(sorted);
         setTotalEarnings(data.totalEarnings || 0);
       }
-      
+
       setLastRefreshed(new Date());
     } catch (err) {
       console.error("Error fetching completed orders:", err);
@@ -98,18 +101,23 @@ export default function TodayCompletedOrders({
 
   // Sort orders function
   const sortOrders = useCallback(
-    (orders: CompletedOrder[], criteria: "newest" | "earnings" | "distance") => {
+    (
+      orders: CompletedOrder[],
+      criteria: "newest" | "earnings" | "distance"
+    ) => {
       let sorted = [...orders];
 
       switch (criteria) {
         case "newest":
-          sorted.sort((a, b) => 
-            new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()
+          sorted.sort(
+            (a, b) =>
+              new Date(b.completedAt).getTime() -
+              new Date(a.completedAt).getTime()
           );
           break;
         case "earnings":
-          sorted.sort((a, b) => 
-            parseFloat(b.earnings) - parseFloat(a.earnings)
+          sorted.sort(
+            (a, b) => parseFloat(b.earnings) - parseFloat(a.earnings)
           );
           break;
         case "distance":
@@ -165,33 +173,43 @@ export default function TodayCompletedOrders({
   const OrderCard = ({ order }: { order: CompletedOrder }) => (
     <div
       className={`overflow-hidden rounded-xl border shadow-sm transition-all duration-200 hover:shadow-md ${
-        theme === "dark" 
-          ? "border-gray-700 bg-gray-800" 
+        theme === "dark"
+          ? "border-gray-700 bg-gray-800"
           : "border-gray-200 bg-white"
       }`}
     >
       <div className="p-4">
         <div className="mb-3 flex items-start justify-between">
           <div className="flex-1">
-            <h3 className={`text-lg font-bold ${
-              theme === "dark" ? "text-white" : "text-gray-900"
-            }`}>
+            <h3
+              className={`text-lg font-bold ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
+            >
               {order.shopName}
             </h3>
-            <p className={`text-sm ${
-              theme === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}>
+            <p
+              className={`text-sm ${
+                theme === "dark" ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
               {order.shopAddress}
             </p>
           </div>
-          <div className={`rounded-full px-3 py-1 text-xs font-semibold ${
-            order.orderType === "restaurant"
-              ? "bg-orange-100 text-orange-700"
+          <div
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              order.orderType === "restaurant"
+                ? "bg-orange-100 text-orange-700"
+                : order.orderType === "reel"
+                ? "bg-purple-100 text-purple-700"
+                : "bg-green-100 text-green-700"
+            }`}
+          >
+            {order.orderType === "restaurant"
+              ? "Restaurant"
               : order.orderType === "reel"
-              ? "bg-purple-100 text-purple-700"
-              : "bg-green-100 text-green-700"
-          }`}>
-            {order.orderType === "restaurant" ? "Restaurant" : order.orderType === "reel" ? "Reel" : "Regular"}
+              ? "Reel"
+              : "Regular"}
           </div>
         </div>
 
@@ -209,7 +227,9 @@ export default function TodayCompletedOrders({
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
-            <span className={theme === "dark" ? "text-gray-300" : "text-gray-700"}>
+            <span
+              className={theme === "dark" ? "text-gray-300" : "text-gray-700"}
+            >
               {order.customerAddress}
             </span>
           </div>
@@ -228,7 +248,9 @@ export default function TodayCompletedOrders({
                 <circle cx="12" cy="12" r="10" />
                 <polyline points="12 6 12 12 16 14" />
               </svg>
-              <span className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>
+              <span
+                className={theme === "dark" ? "text-gray-400" : "text-gray-600"}
+              >
                 {relativeTime(order.completedAt)}
               </span>
             </div>
@@ -245,30 +267,40 @@ export default function TodayCompletedOrders({
                 <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
                 <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
               </svg>
-              <span className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>
+              <span
+                className={theme === "dark" ? "text-gray-400" : "text-gray-600"}
+              >
                 {order.items} items
               </span>
             </div>
           </div>
         </div>
 
-        <div className={`flex items-center justify-between border-t pt-3 ${
-          theme === "dark" ? "border-gray-700" : "border-gray-200"
-        }`}>
+        <div
+          className={`flex items-center justify-between border-t pt-3 ${
+            theme === "dark" ? "border-gray-700" : "border-gray-200"
+          }`}
+        >
           <div>
-            <p className={`text-xs ${
-              theme === "dark" ? "text-gray-400" : "text-gray-500"
-            }`}>
+            <p
+              className={`text-xs ${
+                theme === "dark" ? "text-gray-400" : "text-gray-500"
+              }`}
+            >
               Earnings
             </p>
-            <p className={`text-xl font-bold ${
-              theme === "dark" ? "text-green-400" : "text-green-600"
-            }`}>
+            <p
+              className={`text-xl font-bold ${
+                theme === "dark" ? "text-green-400" : "text-green-600"
+              }`}
+            >
               {formatCurrencySync(parseFloat(order.earnings))}
             </p>
           </div>
           <button
-            onClick={() => router.push(`/Plasa/active-batches/batch/${order.id}`)}
+            onClick={() =>
+              router.push(`/Plasa/active-batches/batch/${order.id}`)
+            }
             className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
               theme === "dark"
                 ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
@@ -289,10 +321,13 @@ export default function TodayCompletedOrders({
         <div className="flex items-center justify-between px-4 pt-4">
           <div>
             <h1 className="text-2xl font-bold">Today's Completed Orders</h1>
-            <p className={`text-sm ${
-              theme === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}>
-              {completedOrders.length} orders • Total earnings: {formatCurrencySync(totalEarnings)}
+            <p
+              className={`text-sm ${
+                theme === "dark" ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
+              {completedOrders.length} orders • Total earnings:{" "}
+              {formatCurrencySync(totalEarnings)}
             </p>
           </div>
           <div className="flex items-center space-x-4">
@@ -310,7 +345,8 @@ export default function TodayCompletedOrders({
                 </svg>
               </div>
               <span className="text-xs font-medium text-gray-500">
-                {lastRefreshed && `Updated ${lastRefreshed.toLocaleTimeString()}`}
+                {lastRefreshed &&
+                  `Updated ${lastRefreshed.toLocaleTimeString()}`}
               </span>
             </div>
 
@@ -460,7 +496,9 @@ export default function TodayCompletedOrders({
               theme === "dark" ? "border-gray-700 bg-gray-800" : "bg-white"
             }`}
           >
-            <h3 className="mb-2 text-lg font-medium">No Completed Orders Today</h3>
+            <h3 className="mb-2 text-lg font-medium">
+              No Completed Orders Today
+            </h3>
             <p className="mb-4 text-gray-500">
               You haven't completed any orders yet today.
             </p>
@@ -529,13 +567,16 @@ export default function TodayCompletedOrders({
                     theme === "dark" ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
-                  {completedOrders.length} orders • {formatCurrencySync(totalEarnings)}
+                  {completedOrders.length} orders •{" "}
+                  {formatCurrencySync(totalEarnings)}
                 </p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
               <button
-                onClick={isAutoRefreshing ? toggleAutoRefresh : loadCompletedOrders}
+                onClick={
+                  isAutoRefreshing ? toggleAutoRefresh : loadCompletedOrders
+                }
                 className={`flex items-center rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
                   isAutoRefreshing
                     ? theme === "dark"
@@ -637,9 +678,7 @@ export default function TodayCompletedOrders({
               }`}
             >
               <p
-                className={
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }
+                className={theme === "dark" ? "text-gray-400" : "text-gray-500"}
               >
                 No completed orders today.
               </p>

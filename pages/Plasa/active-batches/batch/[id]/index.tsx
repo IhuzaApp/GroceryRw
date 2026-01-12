@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import ShopperLayout from "@components/shopper/ShopperLayout";
-import { BatchDetailsResponsive, type OrderDetailsType, type OrderItem } from "@components/shopper/activebatches";
+import {
+  BatchDetailsResponsive,
+  type OrderDetailsType,
+  type OrderItem,
+} from "@components/shopper/activebatches";
 import { GetServerSideProps } from "next";
 import { hasuraClient } from "../../../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";

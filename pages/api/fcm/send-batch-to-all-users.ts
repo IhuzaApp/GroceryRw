@@ -115,7 +115,10 @@ export default async function handler(
       orderId,
     });
   } catch (error) {
-    console.error("Error sending batch notifications:", error instanceof Error ? error.message : "Unknown error");
+    console.error(
+      "Error sending batch notifications:",
+      error instanceof Error ? error.message : "Unknown error"
+    );
     return res.status(500).json({
       error: "Failed to send batch notifications to all users",
       details: error instanceof Error ? error.message : "Unknown error",

@@ -307,7 +307,10 @@ export default async function handler(
       console.log("Orders fetched successfully");
     } catch (fetchError) {
       console.error("Error fetching orders from Hasura:", fetchError);
-      console.error("Fetch error details:", JSON.stringify(fetchError, null, 2));
+      console.error(
+        "Fetch error details:",
+        JSON.stringify(fetchError, null, 2)
+      );
       throw new Error(
         `Failed to fetch orders: ${
           fetchError instanceof Error ? fetchError.message : String(fetchError)
@@ -437,11 +440,17 @@ export default async function handler(
   } catch (error) {
     console.error("=== ERROR in ActiveBatches API ===");
     console.error("Error:", error);
-    console.error("Error message:", error instanceof Error ? error.message : String(error));
-    console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
+    console.error(
+      "Error message:",
+      error instanceof Error ? error.message : String(error)
+    );
+    console.error(
+      "Error stack:",
+      error instanceof Error ? error.stack : "No stack trace"
+    );
     console.error("User ID:", userId);
     console.error("Hasura client exists:", !!hasuraClient);
-    
+
     logger.error("Error fetching active batches", "ActiveBatchesAPI", {
       userId,
       error: error instanceof Error ? error.message : String(error),

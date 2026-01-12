@@ -234,7 +234,7 @@ export default function ActiveBatches({
       } ${isMobile ? "pb-16" : ""}`}
     >
       {/* Main Content */}
-      <main className="w-full max-w-[1920px] mx-auto px-3 sm:px-6 py-3 sm:py-6">
+      <main className="mx-auto w-full max-w-[1920px] px-3 py-3 sm:px-6 sm:py-6">
         {/* Page Title - Desktop Only */}
         <div className="mb-4 flex items-center justify-between">
           <p
@@ -261,7 +261,6 @@ export default function ActiveBatches({
             </svg>
           </button>
         </div>
-
 
         {/* Display a warning when user doesn't have the shopper role */}
         {!isLoading && role !== "shopper" && (

@@ -1117,7 +1117,6 @@ export default function BottomBar() {
                     {theme === "dark" ? "Light Mode" : "Dark Mode"}
                   </span>
                 </button>
-
               </div>
             )}
           </div>

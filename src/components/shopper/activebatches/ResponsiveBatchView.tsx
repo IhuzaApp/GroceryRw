@@ -48,7 +48,10 @@ interface ResponsiveBatchViewProps {
   isLoading?: boolean;
 }
 
-export function ResponsiveBatchView({ orders, isLoading = false }: ResponsiveBatchViewProps) {
+export function ResponsiveBatchView({
+  orders,
+  isLoading = false,
+}: ResponsiveBatchViewProps) {
   const { theme } = useTheme();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [filteredOrders, setFilteredOrders] = useState<Order[]>(orders);
@@ -69,7 +72,7 @@ export function ResponsiveBatchView({ orders, isLoading = false }: ResponsiveBat
 
   const calculateUrgency = (order: Order): string => {
     const now = currentTime.getTime();
-    
+
     // Check if newly accepted (status is accepted and created within last hour)
     if (order.status === "accepted") {
       const createdTime = new Date(order.createdAt).getTime();
@@ -89,7 +92,7 @@ export function ResponsiveBatchView({ orders, isLoading = false }: ResponsiveBat
       if (minutesRemaining <= 0) {
         return "late";
       }
-      
+
       // Urgent: 10 minutes or less
       if (minutesRemaining <= 10) {
         return "urgent";
@@ -117,7 +120,9 @@ export function ResponsiveBatchView({ orders, isLoading = false }: ResponsiveBat
 
     // Apply order type filter
     if (filters.orderType) {
-      filtered = filtered.filter((order) => order.orderType === filters.orderType);
+      filtered = filtered.filter(
+        (order) => order.orderType === filters.orderType
+      );
     }
 
     // Apply status filter
@@ -127,7 +132,9 @@ export function ResponsiveBatchView({ orders, isLoading = false }: ResponsiveBat
 
     // Apply urgency filter
     if (filters.urgency) {
-      filtered = filtered.filter((order) => calculateUrgency(order) === filters.urgency);
+      filtered = filtered.filter(
+        (order) => calculateUrgency(order) === filters.urgency
+      );
     }
 
     setFilteredOrders(filtered);

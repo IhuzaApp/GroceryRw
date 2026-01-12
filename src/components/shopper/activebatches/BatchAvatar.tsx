@@ -9,7 +9,7 @@ interface BatchAvatarProps {
 
 export function BatchAvatar({ name, imageUrl, size = "md" }: BatchAvatarProps) {
   const { theme } = useTheme();
-  
+
   const sizeClasses = {
     sm: "h-8 w-8 text-xs",
     md: "h-10 w-10 text-sm",

@@ -8,7 +8,9 @@ const hasuraClient = new GraphQLClient(
   process.env.HASURA_GRAPHQL_URL || process.env.NEXT_PUBLIC_HASURA_GRAPHQL_URL!,
   {
     headers: {
-      "x-hasura-admin-secret": process.env.HASURA_ADMIN_SECRET || process.env.HASURA_GRAPHQL_ADMIN_SECRET!,
+      "x-hasura-admin-secret":
+        process.env.HASURA_ADMIN_SECRET ||
+        process.env.HASURA_GRAPHQL_ADMIN_SECRET!,
     },
   }
 );
@@ -128,7 +130,10 @@ export default async function handler(
     console.log("=".repeat(60));
     console.log("✅ USER UPDATED SUCCESSFULLY IN DATABASE");
     console.log("=".repeat(60));
-    console.log("Updated user:", JSON.stringify(result.update_Users_by_pk, null, 2));
+    console.log(
+      "Updated user:",
+      JSON.stringify(result.update_Users_by_pk, null, 2)
+    );
     console.log("=".repeat(60));
 
     return res.status(200).json({
@@ -142,10 +147,13 @@ export default async function handler(
     console.error("=".repeat(60));
     console.error("Error details:", error);
     if (error.response) {
-      console.error("GraphQL Response:", JSON.stringify(error.response, null, 2));
+      console.error(
+        "GraphQL Response:",
+        JSON.stringify(error.response, null, 2)
+      );
     }
     console.error("=".repeat(60));
-    
+
     return res.status(500).json({
       error: error.message || "Failed to upgrade account",
       details: error.response?.errors || error.response?.error || undefined,

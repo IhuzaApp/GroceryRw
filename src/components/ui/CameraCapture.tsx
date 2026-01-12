@@ -196,7 +196,10 @@ export default function CameraCapture({
       {!showPreview && (
         <div
           className="fixed inset-0 flex items-center justify-center bg-black"
-          style={{ zIndex: 99999999, paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+          style={{
+            zIndex: 99999999,
+            paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          }}
         >
           <div className="relative h-full w-full bg-black">
             <video
@@ -241,7 +244,10 @@ export default function CameraCapture({
       {showPreview && capturedImage && (
         <div
           className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75 p-2 sm:p-4"
-          style={{ zIndex: 99999999, paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+          style={{
+            zIndex: 99999999,
+            paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          }}
         >
           <div className="relative h-full max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-lg bg-black">
             <div className="relative flex h-full flex-col">
