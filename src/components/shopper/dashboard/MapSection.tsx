@@ -2211,20 +2211,31 @@ export default function MapSection({
               icon: userIcon,
             });
 
-            // Check for saved location in cookies
+            // Check for saved location in cookies or use shopperLocation prop
             const cookieMap = getCookies();
-            if (cookieMap["user_latitude"] && cookieMap["user_longitude"]) {
-              const lat = parseFloat(cookieMap["user_latitude"]);
-              const lng = parseFloat(cookieMap["user_longitude"]);
+            let initialLat: number | null = null;
+            let initialLng: number | null = null;
+            
+            // Prioritize shopperLocation prop from parent (most current)
+            if (shopperLocation) {
+              initialLat = shopperLocation.lat;
+              initialLng = shopperLocation.lng;
+              console.log("🗺️ Using shopperLocation prop for initial position", { initialLat, initialLng });
+            } else if (cookieMap["user_latitude"] && cookieMap["user_longitude"]) {
+              // Fall back to cookies
+              initialLat = parseFloat(cookieMap["user_latitude"]);
+              initialLng = parseFloat(cookieMap["user_longitude"]);
+              console.log("🗺️ Using cookie location for initial position", { initialLat, initialLng });
+            }
 
-              if (!isNaN(lat) && !isNaN(lng)) {
-                if (userMarkerRef.current && mapInstance) {
-                  userMarkerRef.current.setLatLng([lat, lng]);
-                  if (isOnline) {
-                    userMarkerRef.current.addTo(mapInstance);
-                    mapInstance.setView([lat, lng], 16);
-                  }
-                }
+            // Set marker position if we have valid coordinates
+            if (initialLat && initialLng && !isNaN(initialLat) && !isNaN(initialLng)) {
+              if (userMarkerRef.current && mapInstance) {
+                userMarkerRef.current.setLatLng([initialLat, initialLng]);
+                // ALWAYS add marker to map if we have a location (regardless of online status)
+                userMarkerRef.current.addTo(mapInstance);
+                mapInstance.setView([initialLat, initialLng], 16);
+                console.log("✅ User marker added to map at initial position");
               }
             }
 
@@ -2922,12 +2933,58 @@ export default function MapSection({
     return R * c;
   };
 
+  // Sync shopperLocation prop with user marker position in real-time
+  useEffect(() => {
+    if (shopperLocation && userMarkerRef.current && mapInstanceRef.current) {
+      console.log("🗺️ SYNCING SHOPPER LOCATION TO MAP", {
+        lat: shopperLocation.lat,
+        lng: shopperLocation.lng,
+        timestamp: new Date().toISOString()
+      });
+      
+      try {
+        // Update user marker position
+        userMarkerRef.current.setLatLng([shopperLocation.lat, shopperLocation.lng]);
+        
+        // Ensure marker is visible on the map
+        if (!mapInstanceRef.current.hasLayer(userMarkerRef.current)) {
+          userMarkerRef.current.addTo(mapInstanceRef.current);
+        }
+        
+        // Update local state
+        setCurrentLocation(shopperLocation);
+        
+        // Save to cookies for persistence
+        saveLocationToCookies(shopperLocation.lat, shopperLocation.lng);
+        
+        console.log("✅ USER MARKER UPDATED ON MAP");
+      } catch (error) {
+        console.error("❌ Error updating user marker:", error);
+      }
+    }
+  }, [shopperLocation]); // Re-run whenever shopperLocation prop changes
+
   // Draw route for notified order
   useEffect(() => {
     // Use shopperLocation passed from parent for route display
     const locationForRoute = shopperLocation || currentLocation;
 
+    console.log("🗺️ ROUTE DRAWING EFFECT TRIGGERED", {
+      hasMapInstance: !!mapInstance,
+      hasLocationForRoute: !!locationForRoute,
+      hasNotifiedOrder: !!notifiedOrder,
+      locationForRoute,
+      notifiedOrderId: notifiedOrder?.id,
+      timestamp: new Date().toISOString()
+    });
+
     if (!mapInstance || !locationForRoute || !notifiedOrder) {
+      console.log("🗺️ Clearing routes - missing requirements", {
+        hasMapInstance: !!mapInstance,
+        hasLocationForRoute: !!locationForRoute,
+        hasNotifiedOrder: !!notifiedOrder
+      });
+      
       // Clear route and markers if no notified order
       if (routePolyline) {
         routePolyline.remove();
@@ -2939,6 +2996,15 @@ export default function MapSection({
       }
       return;
     }
+
+    console.log("🗺️ Drawing route from shopper to customer", {
+      from: locationForRoute,
+      to: {
+        lat: notifiedOrder.customerLatitude,
+        lng: notifiedOrder.customerLongitude
+      },
+      orderId: notifiedOrder.id
+    });
 
     // Clear existing route and markers
     if (routePolyline) {
@@ -2954,6 +3020,7 @@ export default function MapSection({
     const deliveryLng = notifiedOrder.customerLongitude;
 
     if (!deliveryLat || !deliveryLng) {
+      console.warn("⚠️ Missing delivery coordinates", { deliveryLat, deliveryLng });
       return;
     }
 
@@ -2998,6 +3065,12 @@ export default function MapSection({
         }).addTo(currentMapInstance);
 
         setRoutePolyline(polyline);
+
+        console.log("✅ ROUTE DRAWN SUCCESSFULLY", {
+          routePoints: routeCoords.length,
+          orderId: notifiedOrder.id,
+          timestamp: new Date().toISOString()
+        });
 
         // No need to create start marker - permanent shopper marker already shows location
 
@@ -3072,6 +3145,13 @@ export default function MapSection({
         }).addTo(currentMapInstance);
 
         setRoutePolyline(polyline);
+
+        console.log("✅ FALLBACK ROUTE DRAWN (straight line)", {
+          from: fallbackCoords[0],
+          to: fallbackCoords[1],
+          orderId: notifiedOrder.id,
+          timestamp: new Date().toISOString()
+        });
 
         // No need to create start marker - permanent shopper marker already shows location
 
