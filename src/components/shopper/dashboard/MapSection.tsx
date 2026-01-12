@@ -829,7 +829,7 @@ export default function MapSection({
   // Cookie monitoring refs
   const cookieSnapshotRef = useRef<string>("");
 
-  // Filter aged unassigned orders (30+ minutes old, shopper_id is null)
+  // Filter aged unassigned orders (30+ minutes old, shopper_id is null) - for map display only
   const filterAgedUnassignedOrders = (
     orders: MapSectionProps["availableOrders"]
   ) => {
@@ -874,13 +874,13 @@ export default function MapSection({
     return filtered;
   };
 
-  // Use the filtered orders
+  // Use the filtered orders - only aged orders show on map
   const agedUnassignedOrders = useMemo(() => {
     return filterAgedUnassignedOrders(availableOrders || []);
   }, [availableOrders]);
 
   // Combine props orders with real-time aged orders
-  const allAgedOrders = useMemo(() => {
+  const allAvailableOrders = useMemo(() => {
     return [...agedUnassignedOrders, ...realTimeAgedOrders];
   }, [agedUnassignedOrders, realTimeAgedOrders]);
 
@@ -889,7 +889,7 @@ export default function MapSection({
     const handleWebSocketNewOrder = (event: Event) => {
       const customEvent = event as CustomEvent;
       const { order } = customEvent.detail;
-      // Check if order is aged and unassigned
+      // Check if order is aged and unassigned - only show old orders on map
       const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
       const orderCreatedAt = new Date(order.createdAt);
       const isAged = orderCreatedAt <= thirtyMinutesAgo;
@@ -2250,6 +2250,7 @@ export default function MapSection({
   }, [mapLoaded, theme]);
 
   // Re-render map when aged orders change (only when online)
+  // Note: Map only shows orders 30+ minutes old to avoid clutter
   useEffect(() => {
     if (mapInstanceRef.current && mapLoaded && isOnline) {
       // Clear existing order markers
@@ -2258,7 +2259,7 @@ export default function MapSection({
       // Re-initialize map sequence with updated orders
       initMapSequence(mapInstanceRef.current);
     }
-  }, [allAgedOrders, mapLoaded, isOnline]);
+  }, [allAvailableOrders, mapLoaded, isOnline]);
 
   // Re-render map when going online/offline to show/hide order markers
   useEffect(() => {
@@ -2282,7 +2283,7 @@ export default function MapSection({
         clearBusyAreas();
       }
     }
-  }, [showBusyAreas, mapLoaded, pendingOrders, allAgedOrders, theme]);
+  }, [showBusyAreas, mapLoaded, pendingOrders, allAvailableOrders, theme]);
 
   // Function to initialize map sequence
   const initMapSequence = async (map: L.Map) => {
@@ -2561,31 +2562,31 @@ export default function MapSection({
         });
       }
 
-      // Process aged unassigned orders with grouping
-      if (isOnline && allAgedOrders?.length > 0 && map && map.getContainer()) {
-        // Group aged orders by location
-        const groupedAgedOrders = new Map<string, typeof allAgedOrders>();
-        allAgedOrders.forEach((order) => {
+      // Process available unassigned orders with grouping
+      if (isOnline && allAvailableOrders?.length > 0 && map && map.getContainer()) {
+        // Group available orders by location
+        const groupedAvailableOrders = new Map<string, typeof allAvailableOrders>();
+        allAvailableOrders.forEach((order) => {
           if (!order.shopLatitude || !order.shopLongitude) {
             return;
           }
           const key = `${order.shopLatitude.toFixed(
             5
           )},${order.shopLongitude.toFixed(5)}`;
-          if (!groupedAgedOrders.has(key)) {
-            groupedAgedOrders.set(key, []);
+          if (!groupedAvailableOrders.has(key)) {
+            groupedAvailableOrders.set(key, []);
           }
-          groupedAgedOrders.get(key)?.push(order);
+          groupedAvailableOrders.get(key)?.push(order);
         });
 
         // Log grouped orders information
         logger.info(
-          "Aged unassigned orders grouped by location",
+          "Available orders (30+ min old) grouped by location on map",
           "MapSection",
           {
-            totalOrders: allAgedOrders.length,
-            groupCount: groupedAgedOrders.size,
-            groupSizes: Array.from(groupedAgedOrders.entries()).map(
+            totalOrders: allAvailableOrders.length,
+            groupCount: groupedAvailableOrders.size,
+            groupSizes: Array.from(groupedAvailableOrders.entries()).map(
               ([key, orders]) => ({
                 location: key,
                 orderCount: orders.length,
@@ -2596,7 +2597,7 @@ export default function MapSection({
         );
 
         // Process each group of orders
-        groupedAgedOrders.forEach((orders, locationKey) => {
+        groupedAvailableOrders.forEach((orders, locationKey) => {
           const [baseLat, baseLng] = locationKey.split(",").map(Number);
 
           orders.forEach((order, index) => {
@@ -2742,7 +2743,7 @@ export default function MapSection({
     clearBusyAreas();
 
     // Combine all orders for density calculation
-    const allOrders = [...pendingOrders, ...allAgedOrders];
+    const allOrders = [...pendingOrders, ...allAvailableOrders];
     
     if (allOrders.length === 0) {
       return;

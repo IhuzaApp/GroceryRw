@@ -3,16 +3,15 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { logger } from "../../../src/utils/logger";
 
-// Filter for orders 30+ minutes old and unassigned
+// Fetch all available pending orders (unassigned)
 const GET_AVAILABLE_ORDERS = gql`
-  query GetAvailableOrders($thirtyMinutesAgo: timestamptz!) {
+  query GetAvailableOrders {
     Orders(
       where: {
         shopper_id: { _is_null: true }
         status: { _eq: "PENDING" }
-        created_at: { _lte: $thirtyMinutesAgo }
       }
-      order_by: { created_at: desc }
+      order_by: { created_at: asc }
     ) {
       id
       created_at
@@ -40,16 +39,15 @@ const GET_AVAILABLE_ORDERS = gql`
   }
 `;
 
-// Add query for available reel orders (30+ minutes old)
+// Fetch all available reel orders (unassigned)
 const GET_AVAILABLE_REEL_ORDERS = gql`
-  query GetAvailableReelOrders($thirtyMinutesAgo: timestamptz!) {
+  query GetAvailableReelOrders {
     reel_orders(
       where: {
         shopper_id: { _is_null: true }
         status: { _eq: "PENDING" }
-        created_at: { _lte: $thirtyMinutesAgo }
       }
-      order_by: { created_at: desc }
+      order_by: { created_at: asc }
     ) {
       id
       created_at
@@ -84,17 +82,16 @@ const GET_AVAILABLE_REEL_ORDERS = gql`
   }
 `;
 
-// Add query for available restaurant orders (30+ minutes old and unassigned)
+// Fetch all available restaurant orders (unassigned)
 const GET_AVAILABLE_RESTAURANT_ORDERS = gql`
-  query GetAvailableRestaurantOrders($thirtyMinutesAgo: timestamptz!) {
+  query GetAvailableRestaurantOrders {
     restaurant_orders(
       where: {
         shopper_id: { _is_null: true }
         status: { _eq: "PENDING" }
-        updated_at: { _lte: $thirtyMinutesAgo }
         assigned_at: { _is_null: true }
       }
-      order_by: { updated_at: desc_nulls_last, created_at: desc }
+      order_by: { updated_at: asc_nulls_last, created_at: asc }
     ) {
       id
       created_at
@@ -203,11 +200,6 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    // Calculate timestamp for 30 minutes ago (for aged orders on map)
-    const thirtyMinutesAgo = new Date(
-      Date.now() - 30 * 60 * 1000
-    ).toISOString();
-
     // Debug: Test restaurant orders query first
     try {
       const testRestaurantQuery = await hasuraClient.request<{
@@ -221,7 +213,7 @@ export default async function handler(
             name: string;
           } | null;
         }>;
-      }>(GET_AVAILABLE_RESTAURANT_ORDERS, { thirtyMinutesAgo });
+      }>(GET_AVAILABLE_RESTAURANT_ORDERS);
     } catch (error) {
       console.error("❌ Restaurant orders query failed:", error);
       logger.error("Restaurant orders query failed", "AvailableOrders", error);
@@ -253,7 +245,7 @@ export default async function handler(
               aggregate: { count: number | null } | null;
             };
           }>;
-        }>(GET_AVAILABLE_ORDERS, { thirtyMinutesAgo }),
+        }>(GET_AVAILABLE_ORDERS),
         hasuraClient.request<{
           reel_orders: Array<{
             id: string;
@@ -286,7 +278,7 @@ export default async function handler(
               city: string;
             };
           }>;
-        }>(GET_AVAILABLE_REEL_ORDERS, { thirtyMinutesAgo }),
+        }>(GET_AVAILABLE_REEL_ORDERS),
         hasuraClient.request<{
           restaurant_orders: Array<{
             id: string;
@@ -328,7 +320,7 @@ export default async function handler(
               };
             }>;
           }>;
-        }>(GET_AVAILABLE_RESTAURANT_ORDERS, { thirtyMinutesAgo }),
+        }>(GET_AVAILABLE_RESTAURANT_ORDERS),
       ]);
 
     const regularOrders = regularOrdersData.Orders;

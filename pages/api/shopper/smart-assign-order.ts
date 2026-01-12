@@ -20,17 +20,16 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000); // Clean every 5 minutes
 
-// GraphQL query to get available orders for notification
+// GraphQL query to get all available orders for notification
 const GET_AVAILABLE_ORDERS = gql`
-  query GetAvailableOrders($current_time: timestamptz!) {
+  query GetAvailableOrders {
     Orders(
       where: {
         status: { _eq: "PENDING" }
-        created_at: { _gt: $current_time }
         shopper_id: { _is_null: true }
       }
       order_by: { created_at: asc }
-      limit: 20
+      limit: 50
     ) {
       id
       created_at
@@ -60,17 +59,16 @@ const GET_AVAILABLE_ORDERS = gql`
   }
 `;
 
-// GraphQL query to get available reel orders for notification
+// GraphQL query to get all available reel orders for notification
 const GET_AVAILABLE_REEL_ORDERS = gql`
-  query GetAvailableReelOrders($current_time: timestamptz!) {
+  query GetAvailableReelOrders {
     reel_orders(
       where: {
         status: { _eq: "PENDING" }
-        created_at: { _gt: $current_time }
         shopper_id: { _is_null: true }
       }
       order_by: { created_at: asc }
-      limit: 20
+      limit: 50
     ) {
       id
       created_at
@@ -95,23 +93,16 @@ const GET_AVAILABLE_REEL_ORDERS = gql`
   }
 `;
 
-// GraphQL query to get available restaurant orders for notification
+// GraphQL query to get all available restaurant orders for notification
 const GET_AVAILABLE_RESTAURANT_ORDERS = gql`
-  query GetAvailableRestaurantOrders($current_time: timestamptz!) {
+  query GetAvailableRestaurantOrders {
     restaurant_orders(
       where: {
         status: { _eq: "PENDING" }
         shopper_id: { _is_null: true }
-        _or: [
-          { updated_at: { _gte: $current_time } }
-          {
-            updated_at: { _is_null: true }
-            created_at: { _gte: $current_time }
-          }
-        ]
       }
       order_by: { updated_at: asc_nulls_last, created_at: asc }
-      limit: 20
+      limit: 50
     ) {
       id
       created_at
@@ -179,6 +170,7 @@ function calculateDistanceKm(
 }
 
 // Calculate shopper priority score (lower is better)
+// Prioritizes older orders heavily while still considering new ones
 function calculateShopperPriority(
   shopperLocation: { lat: number; lng: number },
   order: any,
@@ -203,12 +195,39 @@ function calculateShopperPriority(
   const completionRate =
     orderCount > 0 ? Math.min(100, (orderCount / 10) * 100) : 0; // Simplified completion rate
 
+  // Calculate order age in minutes
+  const orderTimestamp = order.orderType === "restaurant" && order.updated_at 
+    ? new Date(order.updated_at).getTime() 
+    : new Date(order.created_at).getTime();
+  const ageInMinutes = (Date.now() - orderTimestamp) / 60000;
+
+  // Age factor: heavily prioritize older orders, but don't completely ignore new ones
+  // - Orders 30+ minutes old get maximum priority boost (lowest score)
+  // - Orders 15-30 minutes old get moderate priority boost
+  // - Orders under 15 minutes get less priority boost
+  // - All orders are still considered, ensuring new ones don't get stuck
+  let ageFactor;
+  if (ageInMinutes >= 30) {
+    // Very old orders: strongest priority (lowest score added)
+    ageFactor = -5; // Negative value means higher priority
+  } else if (ageInMinutes >= 15) {
+    // Moderately old orders: good priority
+    ageFactor = -2;
+  } else if (ageInMinutes >= 5) {
+    // Somewhat new orders: neutral priority
+    ageFactor = 0;
+  } else {
+    // Very new orders: lower priority (higher score added)
+    ageFactor = 2;
+  }
+
   // Priority score calculation (lower is better)
   const priorityScore =
-    distance * 0.4 + // Distance weight (40%)
-    (5 - avgRating) * 2 + // Rating weight (inverted, 20%)
-    (100 - completionRate) * 0.01 + // Completion rate weight (10%)
-    Math.random() * 0.5; // Small random factor (10%) for fairness
+    distance * 0.3 + // Distance weight (30%)
+    (5 - avgRating) * 1.5 + // Rating weight (inverted, 15%)
+    (100 - completionRate) * 0.01 + // Completion rate weight (5%)
+    ageFactor + // Age-based priority (50%)
+    Math.random() * 0.3; // Small random factor (5%) for fairness
 
   return priorityScore;
 }
@@ -251,11 +270,8 @@ export default async function handler(
     }
     console.log("hasuraClient is initialized");
 
-    // Get orders created in the last 29 minutes
-    const twentyNineMinutesAgo = new Date(
-      Date.now() - 29 * 60 * 1000
-    ).toISOString();
-    console.log("Fetching orders created after:", twentyNineMinutesAgo);
+    // Fetch all available orders (no time restriction)
+    console.log("Fetching all available orders from Hasura...");
 
     // Fetch regular, reel, and restaurant orders in parallel
     console.log("Fetching orders and shopper performance from Hasura...");
@@ -265,15 +281,9 @@ export default async function handler(
       restaurantOrdersData,
       performanceData,
     ] = await Promise.all([
-      hasuraClient.request(GET_AVAILABLE_ORDERS, {
-        current_time: twentyNineMinutesAgo,
-      }) as any,
-      hasuraClient.request(GET_AVAILABLE_REEL_ORDERS, {
-        current_time: twentyNineMinutesAgo,
-      }) as any,
-      hasuraClient.request(GET_AVAILABLE_RESTAURANT_ORDERS, {
-        current_time: twentyNineMinutesAgo,
-      }) as any,
+      hasuraClient.request(GET_AVAILABLE_ORDERS) as any,
+      hasuraClient.request(GET_AVAILABLE_REEL_ORDERS) as any,
+      hasuraClient.request(GET_AVAILABLE_RESTAURANT_ORDERS) as any,
       hasuraClient.request(GET_SHOPPER_PERFORMANCE, {
         shopper_id: user_id,
       }) as any,
