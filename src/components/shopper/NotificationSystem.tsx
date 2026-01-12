@@ -1053,36 +1053,21 @@ export default function NotificationSystem({
   const checkForNewOrders = async () => {
     // Prevent concurrent API calls
     if (isCheckingOrders.current) {
-      console.log(
-        "[NotificationSystem] ⏸️ Order check already in progress, skipping duplicate call"
-      );
       return;
     }
 
     if (!session?.user?.id || !currentLocation) {
-      console.log(
-        "[NotificationSystem] Missing session or location, skipping check"
-      );
       return;
     }
 
     const now = new Date();
     const currentTime = now.getTime();
-    
-    console.log(
-      `[NotificationSystem] 🔍 Initiating order check (last check: ${Math.floor((currentTime - lastNotificationTime.current) / 1000)}s ago)`
-    );
 
     // Set flag to prevent concurrent calls
     isCheckingOrders.current = true;
 
     // Check if we should skip this check (25-second cooldown to prevent spam)
     if (currentTime - lastNotificationTime.current < 25000) {
-      console.log(
-        `[NotificationSystem] ⏭️ Skipping smart order finder check - ${Math.floor(
-          (25000 - (currentTime - lastNotificationTime.current)) / 1000
-        )}s until next check`
-      );
       isCheckingOrders.current = false; // Reset flag when skipping
       return;
     }
@@ -1116,9 +1101,6 @@ export default function NotificationSystem({
 
       if (data.success && data.order) {
         // Smart order finder found order
-        console.log(
-          `[NotificationSystem] 📦 Order found: ${data.order.id} (${data.order.orderType})`
-        );
         
         // Update lastNotificationTime to prevent rapid API calls
         // This is updated regardless of whether we show a notification
@@ -1200,15 +1182,9 @@ export default function NotificationSystem({
 
           // Smart order finder: Order shown to shopper for review
         } else {
-          console.log(
-            `[NotificationSystem] ⏭️ User already has an active order review (Order ID: ${currentUserAssignment.orderId}), skipping notification`
-          );
           // lastNotificationTime was already updated above to prevent rapid API calls
         }
       } else {
-        console.log(
-          `[NotificationSystem] ${data.message || "No suitable orders available for review"}`
-        );
         // Update lastNotificationTime even when no orders found to prevent rapid polling
         lastNotificationTime.current = currentTime;
       }
@@ -1240,7 +1216,6 @@ export default function NotificationSystem({
     lastNotificationTime.current = 0;
 
     // Starting smart notification system
-    console.log("[NotificationSystem] ✅ Starting notification system");
 
     // Initial check
     checkForNewOrders();
