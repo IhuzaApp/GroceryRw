@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import ShopperLayout from "@components/shopper/ShopperLayout";
-import BatchDetails from "@components/shopper/batchDetails";
+import { BatchDetailsResponsive, type OrderDetailsType, type OrderItem } from "@components/shopper/activebatches";
 import { GetServerSideProps } from "next";
 import { hasuraClient } from "../../../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
@@ -19,30 +19,6 @@ import {
 } from "firebase/firestore";
 import { db } from "../../../../../src/lib/firebase";
 import { AuthGuard } from "../../../../../src/components/AuthGuard";
-
-// Define interfaces for the order data
-interface OrderItem {
-  id: string;
-  quantity: number;
-  price: number;
-  product: {
-    id: string;
-    name: string;
-    image: string;
-    final_price: string;
-    measurement_unit?: string;
-    category?: string;
-    ProductName?: {
-      id: string;
-      name: string;
-      description: string;
-      barcode: string;
-      sku: string;
-      image: string;
-      create_at: string;
-    };
-  };
-}
 
 interface BatchOrderDetailsType {
   id: string;
@@ -230,7 +206,7 @@ function BatchDetailsPage({ orderData, error }: BatchDetailsPageProps) {
 
   return (
     <ShopperLayout>
-      <BatchDetails
+      <BatchDetailsResponsive
         orderData={transformedOrderData as any}
         error={error}
         onUpdateStatus={handleUpdateStatus}

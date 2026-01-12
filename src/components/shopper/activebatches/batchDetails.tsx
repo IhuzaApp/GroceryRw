@@ -21,21 +21,22 @@ import {
 import "rsuite/dist/rsuite.min.css";
 import Link from "next/link";
 import Image from "next/image";
-import { formatCurrency } from "../../lib/formatCurrency";
-import ProductImageModal from "./ProductImageModal";
-import QuantityConfirmationModal from "./QuantityConfirmationModal";
-import PaymentModal from "./PaymentModal";
-import DeliveryConfirmationModal from "./DeliveryConfirmationModal";
-import InvoiceProofModal from "./InvoiceProofModal";
-import { useChat } from "../../context/ChatContext";
-import { isMobileDevice } from "../../lib/formatters";
-import ShopperChatDrawer from "../chat/ShopperChatDrawer";
+import { formatCurrency } from "../../../lib/formatCurrency";
+import ProductImageModal from "../ProductImageModal";
+import QuantityConfirmationModal from "../QuantityConfirmationModal";
+import PaymentModal from "../PaymentModal";
+import DeliveryConfirmationModal from "../DeliveryConfirmationModal";
+import InvoiceProofModal from "../InvoiceProofModal";
+import { useChat } from "../../../context/ChatContext";
+import { isMobileDevice } from "../../../lib/formatters";
+import ShopperChatDrawer from "../../chat/ShopperChatDrawer";
 import {
   recordPaymentTransactions,
   generateInvoice,
-} from "../../lib/walletTransactions";
+} from "../../../lib/walletTransactions";
 import { useSession } from "next-auth/react";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../../context/ThemeContext";
+import { OrderItem, OrderDetailsType, BatchDetailsProps } from "./types";
 
 // Custom CSS for green steps
 const greenStepsStyles = `
@@ -97,132 +98,6 @@ const greenStepsStyles = `
   }
 `;
 
-// Define interfaces for the order data
-interface OrderItem {
-  id: string;
-  quantity: number;
-  price: number;
-  product: {
-    id: string;
-    name: string;
-    image: string;
-    final_price: string;
-    measurement_unit?: string;
-    ProductName?: {
-      id: string;
-      name: string;
-      description: string;
-      barcode: string;
-      sku: string;
-      image: string;
-      create_at: string;
-    };
-  };
-  found?: boolean;
-  foundQuantity?: number;
-}
-
-interface OrderDetailsType {
-  id: string;
-  OrderID: string;
-  placedAt: string;
-  estimatedDelivery: string;
-  deliveryNotes: string;
-  total: number;
-  serviceFee: string;
-  deliveryFee: string;
-  status: string;
-  deliveryPhotoUrl: string;
-  discount: number;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    phone?: string;
-    profile_picture: string;
-  };
-  orderedBy?: {
-    created_at: string;
-    email: string;
-    gender: string;
-    id: string;
-    is_active: boolean;
-    name: string;
-    password_hash: string;
-    phone: string;
-    profile_picture: string;
-    updated_at: string;
-    role: string;
-  };
-  customerId?: string;
-  shop?: {
-    id: string;
-    name: string;
-    address: string;
-    image: string;
-    phone?: string;
-    operating_hours?: any;
-    latitude?: string;
-    longitude?: string;
-  };
-  Order_Items?: OrderItem[];
-  address: {
-    id: string;
-    street: string;
-    city: string;
-    postal_code: string;
-    latitude: string;
-    longitude: string;
-    placeDetails?: any;
-  };
-  assignedTo: {
-    id: string;
-    name: string;
-    profile_picture: string;
-    orders: {
-      aggregate: {
-        count: number;
-      };
-    };
-  };
-  // Add order type and reel-specific fields
-  orderType?: "regular" | "reel" | "restaurant";
-  reel?: {
-    id: string;
-    title: string;
-    description: string;
-    Price: string;
-    Product: string;
-    type: string;
-    video_url: string;
-    restaurant_id?: string | null;
-    user_id?: string | null;
-    isRestaurantUserReel?: boolean;
-    Restaurant?: {
-      id: string;
-      name: string;
-      location: string;
-      lat: number;
-      long: number;
-      phone?: string;
-    };
-    Shops?: {
-      id: string;
-      name: string;
-      address: string;
-      phone?: string;
-    };
-  };
-  quantity?: number;
-  deliveryNote?: string;
-}
-
-interface BatchDetailsProps {
-  orderData: OrderDetailsType | null;
-  error: string | null;
-  onUpdateStatus: (orderId: string, newStatus: string) => Promise<void>;
-}
-
 export default function BatchDetails({
   orderData,
   error,
@@ -272,6 +147,7 @@ export default function BatchDetails({
   const [invoiceLoading, setInvoiceLoading] = useState(false);
   const [showInvoiceProofModal, setShowInvoiceProofModal] = useState(false);
   const [invoiceProofUploaded, setInvoiceProofUploaded] = useState(false);
+  const [activeTab, setActiveTab] = useState<"items" | "details">("items");
   const [walletData, setWalletData] = useState<any>(null);
   const [walletLoading, setWalletLoading] = useState(false);
   const [newMessage, setNewMessage] = useState("");
@@ -699,7 +575,7 @@ export default function BatchDetails({
       let momoReferenceId = "";
       try {
         // First, ensure we have a valid token
-        const { momoTokenManager } = await import("../../lib/momoTokenManager");
+        const { momoTokenManager } = await import("../../../lib/momoTokenManager");
         await momoTokenManager.getValidToken();
 
         const momoResponse = await fetch("/api/momo/transfer", {
@@ -1888,7 +1764,7 @@ export default function BatchDetails({
 
       {/* Main Content */}
       <main className="mx-auto w-full px-0 py-2 pb-20 sm:p-6 sm:pb-6">
-        <div className="overflow-hidden rounded-none bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900 sm:rounded-2xl sm:shadow-xl">
+        <div className="overflow-hidden rounded-none">
           {/* Header with gradient background */}
           <div className={`px-0 py-2 text-gray-900 dark:text-gray-100 sm:p-6`}>
             <div className="flex flex-row items-center justify-between gap-2 px-3 sm:gap-4 sm:px-0">
@@ -1978,9 +1854,35 @@ export default function BatchDetails({
               </div>
             </div>
 
-            {/* Main Info Grid - Hidden during shopping status */}
-            {order.status !== "shopping" && (
-              <div className="grid grid-cols-1 gap-3 sm:gap-8 lg:grid-cols-2">
+            {/* Mobile Tabs - Only visible on mobile */}
+            <div className="border-b border-slate-200 dark:border-slate-700 sm:hidden">
+              <div className="flex">
+                <button
+                  className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                    activeTab === "items"
+                      ? "border-b-2 border-green-600 text-green-600 dark:border-green-500 dark:text-green-500"
+                      : "text-slate-500 dark:text-slate-400"
+                  }`}
+                  onClick={() => setActiveTab("items")}
+                >
+                  Items
+                </button>
+                <button
+                  className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                    activeTab === "details"
+                      ? "border-b-2 border-green-600 text-green-600 dark:border-green-500 dark:text-green-500"
+                      : "text-slate-500 dark:text-slate-400"
+                  }`}
+                  onClick={() => setActiveTab("details")}
+                >
+                  Other Details
+                </button>
+              </div>
+            </div>
+
+            {/* Main Info Grid - Hidden during shopping status on desktop, always visible in "Other Details" tab on mobile */}
+            {(order.status !== "shopping" || activeTab === "details") && (
+              <div className={`grid grid-cols-1 gap-3 sm:gap-8 lg:grid-cols-2 ${activeTab === "details" ? "block" : "hidden sm:grid"}`}>
                 {/* Shop/Reel Info */}
                 <div className="rounded-none border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
                 <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
@@ -2501,34 +2403,9 @@ export default function BatchDetails({
 
             {/* Order Items */}
             {shouldShowOrderDetails() && (
-              <div className="rounded-none border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
-                <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
-                  <span
-                    className={`inline-block rounded-full p-1.5 sm:p-2 ${
-                      order.orderType === "reel"
-                        ? "bg-indigo-100"
-                        : "bg-emerald-100"
-                    }`}
-                  >
-                    <svg
-                      className={`h-4 w-4 sm:h-5 sm:w-5 ${
-                        order.orderType === "reel"
-                          ? "text-indigo-600"
-                          : "text-emerald-600"
-                      }`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 7v4a1 1 0 001 1h3m10 0h3a1 1 0 001-1V7m-1-4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z"
-                      />
-                    </svg>
-                  </span>
-                  <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
+              <div className={`${activeTab === "items" ? "block" : "hidden sm:block"}`}>
+                <div className="mb-3 flex items-center gap-2 px-3 sm:mb-4 sm:gap-3 sm:px-0">
+                  <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
                     {order.orderType === "reel"
                       ? "Reel Details"
                       : "Order Items"}
@@ -2536,23 +2413,23 @@ export default function BatchDetails({
                 </div>
 
                 {order.orderType === "reel" ? (
-                  <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-700 sm:p-4">
-                    <div className="mb-2 text-base text-slate-700 dark:text-slate-200 sm:text-lg">
+                  <div className="rounded-md border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-800 sm:p-4">
+                    <div className="mb-1 font-semibold text-slate-900 dark:text-slate-100">
                       {order.reel?.Product}
                     </div>
-                    <div className="text-sm text-slate-500 dark:text-slate-400 sm:text-base">
-                      Quantity: {order.quantity}
+                    <div className="text-sm text-slate-500 dark:text-slate-400">
+                      Quantity: {order.quantity} pcs
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3">
                     {order.Order_Items?.map((item) => (
                       <div
                         key={item.id}
-                        className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-600 dark:bg-slate-700 sm:gap-3 sm:p-4"
+                        className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-800 sm:gap-4 sm:p-4"
                       >
                         <div
-                          className="h-8 w-8 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg sm:h-12 sm:w-12"
+                          className="h-12 w-12 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg sm:h-14 sm:w-14"
                           onClick={() => showProductImage(item)}
                         >
                           <Image
@@ -2565,8 +2442,8 @@ export default function BatchDetails({
                               item.product.ProductName?.name ||
                               "Unknown Product"
                             }
-                            width={48}
-                            height={48}
+                            width={56}
+                            height={56}
                             className="h-full w-full object-cover"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
@@ -2576,84 +2453,59 @@ export default function BatchDetails({
                         </div>
 
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-xs font-medium text-slate-900 dark:text-slate-100 sm:text-base sm:text-sm">
+                          <p className="mb-1 font-semibold text-slate-900 dark:text-slate-100 sm:text-base">
                             {item.product.ProductName?.name ||
                               "Unknown Product"}
                           </p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
-                            {formatCurrency(item.price)} × {item.quantity}{" "}
-                            {(item.product as any).measurement_unit || "each"}
+                          <p className="text-sm text-slate-500 dark:text-slate-400">
+                            Quantity: {item.quantity}{" "}
+                            {(item.product as any).measurement_unit || "pcs"}
+                          </p>
+                          <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                            {formatCurrency(item.price * item.quantity)}
                           </p>
                           {item.found &&
                             item.foundQuantity &&
                             item.foundQuantity < item.quantity && (
-                              <p className="text-xs text-amber-600 dark:text-amber-400">
+                              <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
                                 Found: {item.foundQuantity} of {item.quantity}
                               </p>
                             )}
                         </div>
 
                         <div className="flex items-center gap-2 sm:gap-3">
-                          <div className="text-xs font-bold text-slate-900 dark:text-slate-100 sm:text-base sm:text-sm">
-                            {formatCurrency(item.price * item.quantity)}
-                          </div>
                           {order.status === "shopping" && (
                             <button
                               onClick={() => toggleItemFound(item, !item.found)}
-                              className={`group relative flex items-center gap-1 overflow-hidden whitespace-nowrap rounded-md px-2 py-1.5 text-xs font-medium transition-all duration-300 sm:gap-1.5 sm:px-2.5 sm:py-1.5 sm:text-xs ${
+                              className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold shadow-md transition-all duration-200 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm ${
                                 item.found
-                                  ? "border-2 border-emerald-300 bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 shadow-lg shadow-emerald-200/50 hover:scale-105 hover:shadow-emerald-300/60 dark:border-emerald-600 dark:from-emerald-900/30 dark:to-green-900/30 dark:text-emerald-200 dark:shadow-emerald-800/30"
-                                  : "border-2 border-slate-300 bg-gradient-to-r from-slate-50 to-gray-50 text-slate-700 shadow-md shadow-slate-200/30 hover:scale-105 hover:border-blue-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 hover:shadow-slate-300/50 dark:border-slate-600 dark:from-slate-700 dark:to-gray-700 dark:text-slate-300 dark:shadow-slate-800/30 dark:hover:border-blue-500 dark:hover:from-blue-900/30 dark:hover:to-indigo-900/30 dark:hover:text-blue-200"
+                                  ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-green-200 hover:from-green-600 hover:to-emerald-600 hover:shadow-lg dark:from-green-600 dark:to-emerald-600 dark:shadow-green-900/50"
+                                  : "border border-gray-300 bg-white text-gray-700 shadow-gray-200 hover:border-green-500 hover:bg-green-50 hover:text-green-700 hover:shadow-lg dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:shadow-gray-900/50 dark:hover:border-green-600 dark:hover:bg-green-900/20 dark:hover:text-green-400"
                               }`}
                             >
-                              {/* Ripple effect overlay */}
-                              <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 transition-opacity duration-150 group-active:opacity-100 dark:bg-white/10"></div>
-                              <div
-                                className={`relative transition-all duration-300 ${
-                                  item.found
-                                    ? "scale-110"
-                                    : "scale-100 group-hover:scale-110"
-                                }`}
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                className="h-4 w-4 sm:h-4 sm:w-4"
                               >
-                                <svg
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="1.5"
-                                  className={`h-2.5 w-2.5 transition-all duration-300 sm:h-3 sm:w-3 ${
-                                    item.found
-                                      ? "text-emerald-600 dark:text-emerald-300"
-                                      : "text-slate-500 group-hover:text-blue-600 dark:text-slate-400 dark:group-hover:text-blue-400"
-                                  }`}
-                                >
-                                  {item.found ? (
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      d="M5 13l4 4L19 7"
-                                      className="animate-pulse"
-                                    />
-                                  ) : (
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                                      className="group-hover:animate-pulse"
-                                    />
-                                  )}
-                                </svg>
-                                {item.found && (
-                                  <div className="absolute inset-0 animate-ping rounded-full bg-emerald-200/50 dark:bg-emerald-800/50"></div>
+                                {item.found ? (
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                ) : (
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                  />
                                 )}
-                              </div>
-                              <span
-                                className={`relative z-10 transition-all duration-300 ${
-                                  item.found
-                                    ? "font-bold"
-                                    : "font-semibold group-hover:font-bold"
-                                }`}
-                              >
-                                {item.found ? "✓ Found" : "Mark Found"}
+                              </svg>
+                              <span>
+                                {item.found ? "Found" : "Mark Found"}
                               </span>
                             </button>
                           )}
@@ -2668,17 +2520,18 @@ export default function BatchDetails({
             {/* Order Summary */}
             {shouldShowOrderDetails() && (
               <div 
-                className={`border border-slate-200 bg-slate-50 p-3 shadow-lg dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6 sm:shadow-none ${
+                className={`overflow-hidden border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl ${
                   order.status === "shopping" 
-                    ? "fixed bottom-[4.5rem] left-0 right-0 z-[9998] rounded-none sm:relative sm:bottom-auto sm:z-auto" 
-                    : "rounded-none"
+                    ? "fixed bottom-[4.5rem] left-0 right-0 z-[9998] rounded-t-3xl border-x-0 border-b-0 shadow-[0_-4px_20px_rgba(0,0,0,0.15)] sm:relative sm:bottom-auto sm:z-auto sm:rounded-2xl sm:border sm:shadow-lg" 
+                    : "rounded-t-2xl border-x-0 border-t-0 shadow-lg sm:rounded-2xl sm:border"
                 }`}
               >
+                {/* Header with Gradient */}
                 <div 
-                  className={`flex items-center gap-2 sm:mb-4 sm:gap-3 ${
+                  className={`bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-4 dark:from-green-900/20 dark:to-emerald-900/20 ${
                     order.status === "shopping" 
-                      ? "mb-0 cursor-pointer sm:mb-3 sm:cursor-default" 
-                      : "mb-3"
+                      ? "cursor-pointer sm:cursor-default" 
+                      : ""
                   }`}
                   onClick={() => {
                     if (order.status === "shopping" && window.innerWidth < 640) {
@@ -2686,60 +2539,65 @@ export default function BatchDetails({
                     }
                   }}
                 >
-                  <span className="inline-block rounded-full bg-slate-100 p-1.5 sm:p-2">
-                    <svg
-                      className="h-4 w-4 text-slate-600 sm:h-5 sm:w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 7v4a1 1 0 001 1h3m10 0h3a1 1 0 001-1V7m-1-4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z"
-                      />
-                    </svg>
-                  </span>
-                  <div className="flex flex-1 items-center justify-between">
-                    <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
-                      Order Summary
-                    </h2>
-                    {order.status === "shopping" && !isSummaryExpanded && (
-                      <span className="text-base font-bold text-green-600 dark:text-green-400 sm:hidden">
-                        {formatCurrency(calculateFoundItemsTotal())}
-                      </span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+                        <svg
+                          className="h-5 w-5 text-green-600 dark:text-green-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                          Order Summary
+                        </h2>
+                        {order.status === "shopping" && !isSummaryExpanded && (
+                          <span className="text-sm font-semibold text-green-600 dark:text-green-400 sm:hidden">
+                            {formatCurrency(calculateFoundItemsTotal())}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {order.status === "shopping" && (
+                      <button
+                        className="sm:hidden"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsSummaryExpanded(!isSummaryExpanded);
+                        }}
+                      >
+                        <svg
+                          className={`h-6 w-6 text-gray-600 transition-transform dark:text-gray-400 ${
+                            isSummaryExpanded ? "rotate-180" : ""
+                          }`}
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </button>
                     )}
                   </div>
-                  {order.status === "shopping" && (
-                    <button
-                      className="sm:hidden"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsSummaryExpanded(!isSummaryExpanded);
-                      }}
-                    >
-                      <svg
-                        className={`h-5 w-5 text-slate-600 transition-transform dark:text-slate-400 ${
-                          isSummaryExpanded ? "rotate-180" : ""
-                        }`}
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    </button>
-                  )}
                 </div>
 
+                {/* Content */}
                 <div 
-                  className={`overflow-y-auto rounded-lg border border-slate-200 bg-white p-3 transition-all duration-300 dark:border-slate-600 dark:bg-slate-700 sm:p-4 ${
+                  className={`overflow-y-auto px-4 py-4 transition-all duration-300 ${
                     order.status === "shopping" && !isSummaryExpanded 
                       ? "hidden sm:block" 
                       : ""
@@ -2748,50 +2606,50 @@ export default function BatchDetails({
                     maxHeight: order.status === "shopping" && isSummaryExpanded ? "50vh" : "auto"
                   }}
                 >
-                  <div className="space-y-2 text-base sm:text-lg">
+                  <div className="space-y-3">
                     {order.orderType === "reel" ? (
                       <>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                           <span>Base Price</span>
-                          <span>
+                          <span className="font-medium">
                             {formatCurrency(
                               parseFloat(order.reel?.Price || "0")
                             )}
                           </span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                           <span>Quantity</span>
-                          <span>{order.quantity}</span>
+                          <span className="font-medium">{order.quantity}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                           <span>Subtotal</span>
-                          <span>
+                          <span className="font-medium">
                             {formatCurrency(
                               parseFloat(order.reel?.Price || "0") *
                                 (order.quantity || 1)
                             )}
                           </span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                           <span>Service Fee</span>
-                          <span>
+                          <span className="font-medium">
                             {formatCurrency(
                               parseFloat(order.serviceFee || "0")
                             )}
                           </span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                           <span>Delivery Fee</span>
-                          <span>
+                          <span className="font-medium">
                             {formatCurrency(
                               parseFloat(order.deliveryFee || "0")
                             )}
                           </span>
                         </div>
                         {systemConfig?.tax && (
-                          <div className="flex justify-between">
+                          <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                             <span>Tax ({systemConfig.tax}%)</span>
-                            <span>
+                            <span className="font-medium">
                               {formatCurrency(
                                 calculateTax(calculateOriginalSubtotal())
                               )}
@@ -2799,48 +2657,48 @@ export default function BatchDetails({
                           </div>
                         )}
                         {order.discount > 0 && (
-                          <div className="flex justify-between text-emerald-600">
+                          <div className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
                             <span>Discount</span>
-                            <span>-{formatCurrency(order.discount)}</span>
+                            <span className="font-medium">-{formatCurrency(order.discount)}</span>
                           </div>
                         )}
-                        <Divider />
-                        <div className="flex justify-between text-lg font-bold sm:text-xl">
-                          <span>Order Total (excluding fees)</span>
-                          <span>
+                        <div className="my-3 border-t border-gray-200 dark:border-gray-700"></div>
+                        <div className="flex justify-between rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 p-3 dark:from-green-900/20 dark:to-emerald-900/20">
+                          <span className="font-bold text-gray-900 dark:text-white">Order Total</span>
+                          <span className="text-lg font-bold text-green-600 dark:text-green-400">
                             {formatCurrency(
                               parseFloat(order.reel?.Price || "0") *
                                 (order.quantity || 1)
                             )}
                           </span>
                         </div>
-                        <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400">
+                        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                           <span>Total with fees</span>
-                          <span>{formatCurrency(order.total)}</span>
+                          <span className="font-medium">{formatCurrency(order.total)}</span>
                         </div>
                       </>
                     ) : (
                       <>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                           <span>Subtotal</span>
-                          <span>
+                          <span className="font-medium">
                             {formatCurrency(calculateOriginalSubtotal())}
                           </span>
                         </div>
 
                         {order.status === "shopping" ? (
                           <>
-                            <div className="flex justify-between">
+                            <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                               <span>Items Found</span>
-                              <span>
+                              <span className="font-medium">
                                 {order.Order_Items?.filter((item) => item.found)
                                   .length || 0}{" "}
-                                of {order.Order_Items?.length || 0}
+                                / {order.Order_Items?.length || 0}
                               </span>
                             </div>
-                            <div className="flex justify-between">
+                            <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                               <span>Units Found</span>
-                              <span>
+                              <span className="font-medium">
                                 {order.Order_Items?.reduce((total, item) => {
                                   if (item.found) {
                                     return (
@@ -2850,16 +2708,16 @@ export default function BatchDetails({
                                   }
                                   return total;
                                 }, 0) || 0}{" "}
-                                of{" "}
+                                /{" "}
                                 {order.Order_Items?.reduce(
                                   (total, item) => total + item.quantity,
                                   0
                                 ) || 0}
                               </span>
                             </div>
-                            <div className="flex justify-between">
+                            <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                               <span>Units Not Found</span>
-                              <span>
+                              <span className="font-medium">
                                 {order.Order_Items?.reduce((total, item) => {
                                   if (!item.found) {
                                     return total + item.quantity;
@@ -2877,9 +2735,9 @@ export default function BatchDetails({
                                 }, 0) || 0}
                               </span>
                             </div>
-                            <div className="flex justify-between text-red-600 dark:text-red-400">
+                            <div className="flex justify-between text-sm text-red-600 dark:text-red-400">
                               <span>Refund Amount</span>
-                              <span>
+                              <span className="font-medium">
                                 -
                                 {formatCurrency(
                                   calculateOriginalSubtotal() -
@@ -2888,9 +2746,9 @@ export default function BatchDetails({
                               </span>
                             </div>
                             {systemConfig?.tax && (
-                              <div className="flex justify-between">
+                              <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                                 <span>Tax ({systemConfig.tax}%)</span>
-                                <span>
+                                <span className="font-medium">
                                   {formatCurrency(
                                     calculateTax(calculateFoundItemsTotal())
                                   )}
@@ -2900,17 +2758,17 @@ export default function BatchDetails({
                           </>
                         ) : (
                           <>
-                            <div className="flex justify-between">
+                            <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                               <span>Delivery Fee</span>
-                              <span>
+                              <span className="font-medium">
                                 {formatCurrency(
                                   parseFloat(order.deliveryFee || "0")
                                 )}
                               </span>
                             </div>
-                            <div className="flex justify-between">
+                            <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                               <span>Service Fee</span>
-                              <span>
+                              <span className="font-medium">
                                 {formatCurrency(
                                   parseFloat(order.serviceFee || "0")
                                 )}
@@ -2920,15 +2778,15 @@ export default function BatchDetails({
                         )}
 
                         {order.discount > 0 && (
-                          <div className="flex justify-between text-emerald-600">
+                          <div className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
                             <span>Discount</span>
-                            <span>-{formatCurrency(order.discount)}</span>
+                            <span className="font-medium">-{formatCurrency(order.discount)}</span>
                           </div>
                         )}
-                        <Divider />
-                        <div className="flex justify-between text-lg font-bold sm:text-xl">
-                          <span>Total</span>
-                          <span>
+                        <div className="my-3 border-t border-gray-200 dark:border-gray-700"></div>
+                        <div className="flex justify-between rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 p-3 dark:from-green-900/20 dark:to-emerald-900/20">
+                          <span className="font-bold text-gray-900 dark:text-white">Total</span>
+                          <span className="text-lg font-bold text-green-600 dark:text-green-400">
                             {order.status === "shopping"
                               ? formatCurrency(calculateFoundItemsTotal())
                               : formatCurrency(calculateOriginalSubtotal())}
@@ -2936,20 +2794,25 @@ export default function BatchDetails({
                         </div>
 
                         {order.status === "shopping" && (
-                          <div className="mt-3 rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-sky-700 dark:border-sky-800 dark:bg-sky-900/20 dark:text-sky-300 sm:mt-4 sm:text-base">
-                            <p>
-                              <strong>Note:</strong> The total reflects only the
-                              value of found items. Service fee (
-                              {formatCurrency(
-                                parseFloat(order.serviceFee || "0")
-                              )}
-                              ) and delivery fee (
-                              {formatCurrency(
-                                parseFloat(order.deliveryFee || "0")
-                              )}
-                              ) were already added to your wallet as earnings
-                              when you started shopping.
-                            </p>
+                          <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/20">
+                            <div className="flex gap-2">
+                              <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <p className="text-sm text-blue-900 dark:text-blue-100">
+                                <strong>Note:</strong> The total reflects only the
+                                value of found items. Service fee (
+                                {formatCurrency(
+                                  parseFloat(order.serviceFee || "0")
+                                )}
+                                ) and delivery fee (
+                                {formatCurrency(
+                                  parseFloat(order.deliveryFee || "0")
+                                )}
+                                ) were already added to your wallet as earnings
+                                when you started shopping.
+                              </p>
+                            </div>
                           </div>
                         )}
                       </>
@@ -2961,11 +2824,16 @@ export default function BatchDetails({
 
             {/* Delivery Notes */}
             {(order.deliveryNotes || order.deliveryNote) && (
-              <div className="rounded-none border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
-                <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
-                  <span className="inline-block rounded-full bg-amber-100 p-1.5 sm:p-2">
+              <div className={`${activeTab === "details" ? "block" : "hidden sm:block"} mt-3`}>
+                <div className="mb-3 flex items-center gap-2 px-3 sm:mb-4 sm:gap-3 sm:px-0">
+                  <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
+                    Delivery Notes
+                  </h2>
+                </div>
+                <div className="mx-3 rounded-md border border-amber-200 bg-amber-50 p-3 dark:border-amber-700 dark:bg-amber-900/20 sm:mx-0 sm:p-4">
+                  <div className="flex gap-2">
                     <svg
-                      className="h-4 w-4 text-amber-600 sm:h-5 sm:w-5"
+                      className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600 dark:text-amber-400"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -2974,18 +2842,13 @@ export default function BatchDetails({
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M13 16h-1v-4h-1m1-4h.01"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                  </span>
-                  <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
-                    Delivery Notes
-                  </h2>
-                </div>
-                <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-700 sm:p-4">
-                  <p className="text-base text-slate-700 dark:text-slate-300 sm:text-lg">
-                    {order.deliveryNotes || order.deliveryNote}
-                  </p>
+                    <p className="text-sm text-amber-900 dark:text-amber-100 sm:text-base">
+                      {order.deliveryNotes || order.deliveryNote}
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
