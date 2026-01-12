@@ -36,7 +36,8 @@ export function BatchTableSkeleton({ rows = 25 }: BatchTableSkeletonProps) {
               <th className="px-6 py-3">Order No</th>
               <th className="px-6 py-3">Order Type</th>
               <th className="px-6 py-3">Name</th>
-              <th className="px-6 py-3">Distance</th>
+              <th className="px-6 py-3">Units</th>
+              <th className="px-6 py-3">Earnings</th>
               <th className="px-6 py-3">Shop/Store</th>
               <th className="px-6 py-3">Time</th>
               <th className="px-6 py-3">Address</th>
@@ -99,10 +100,19 @@ export function BatchTableSkeleton({ rows = 25 }: BatchTableSkeletonProps) {
                   </div>
                 </td>
 
-                {/* Distance */}
+                {/* Units */}
                 <td className="px-6 py-4">
                   <div
                     className={`h-4 w-16 rounded ${
+                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                    } animate-pulse`}
+                  />
+                </td>
+
+                {/* Earnings */}
+                <td className="px-6 py-4">
+                  <div
+                    className={`h-4 w-20 rounded ${
                       theme === "dark" ? "bg-gray-700" : "bg-gray-200"
                     } animate-pulse`}
                   />
