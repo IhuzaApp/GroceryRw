@@ -14,8 +14,12 @@ interface Order {
   deliveryTime?: string;
   shopName: string;
   shopAddress: string;
+  shopLat: number;
+  shopLng: number;
   customerName: string;
   customerAddress: string;
+  customerLat: number;
+  customerLng: number;
   items: number;
   total: number;
   estimatedEarnings: string;
@@ -101,17 +105,64 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
     return `${start} - ${end}`;
   };
 
-  const getRouteText = (order: Order) => {
+  const getOrderTypeBadge = (order: Order) => {
     if (order.orderType === "reel") {
-      return "Quick Batch";
+      return (
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-purple-100 dark:bg-purple-900/20 px-2.5 py-1 text-xs font-medium text-purple-700 dark:text-purple-300">
+          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+          Reel
+        </div>
+      );
     }
     if (order.orderType === "restaurant") {
-      return "Restaurant Order";
+      return (
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-orange-100 dark:bg-orange-900/20 px-2.5 py-1 text-xs font-medium text-orange-700 dark:text-orange-300">
+          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6" />
+          </svg>
+          Restaurant
+        </div>
+      );
     }
-    // Extract city from addresses
-    const fromCity = order.shopAddress?.split(",").pop()?.trim() || "Pickup";
-    const toCity = order.customerAddress?.split(",").pop()?.trim() || "Delivery";
-    return `${fromCity} to ${toCity}`;
+    // Regular order
+    return (
+      <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 dark:bg-emerald-900/20 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
+        Regular
+      </div>
+    );
+  };
+
+  const calculateDistance = (order: Order) => {
+    // Calculate distance between shop and customer using Haversine formula
+    const toRad = (value: number) => (value * Math.PI) / 180;
+    
+    const lat1 = order.shopLat || 0;
+    const lon1 = order.shopLng || 0;
+    const lat2 = order.customerLat || 0;
+    const lon2 = order.customerLng || 0;
+
+    const R = 6371; // Earth's radius in km
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+
+    // Format distance
+    if (distance < 1) {
+      return `${Math.round(distance * 1000)}m`;
+    }
+    return `${distance.toFixed(1)}km`;
   };
 
   return (
@@ -140,10 +191,10 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
                   />
                 </th>
                 <th className="sticky left-12 z-10 px-4 py-3 lg:px-6 bg-inherit whitespace-nowrap">Order No</th>
-                <th className="px-4 py-3 lg:px-6 whitespace-nowrap">Date</th>
+                <th className="px-4 py-3 lg:px-6 whitespace-nowrap">Order Type</th>
                 <th className="px-4 py-3 lg:px-6 whitespace-nowrap">Name</th>
-                <th className="px-4 py-3 lg:px-6 whitespace-nowrap">Routes</th>
-                <th className="px-4 py-3 lg:px-6 whitespace-nowrap">Client</th>
+                <th className="px-4 py-3 lg:px-6 whitespace-nowrap">Distance</th>
+                <th className="px-4 py-3 lg:px-6 whitespace-nowrap">Shop/Store</th>
                 <th className="px-4 py-3 lg:px-6 whitespace-nowrap">Time</th>
                 <th className="px-4 py-3 lg:px-6 whitespace-nowrap">Address</th>
                 <th className="px-4 py-3 lg:px-6 whitespace-nowrap">Status</th>
@@ -184,8 +235,8 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
                   </Link>
                 </td>
 
-                {/* Date */}
-                <td className="px-4 py-4 lg:px-6 whitespace-nowrap">{formatDate(order.createdAt)}</td>
+                {/* Order Type */}
+                <td className="px-4 py-4 lg:px-6 whitespace-nowrap">{getOrderTypeBadge(order)}</td>
 
                 {/* Name with Avatar */}
                 <td className="px-4 py-4 lg:px-6">
@@ -195,10 +246,18 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
                   </div>
                 </td>
 
-                {/* Routes */}
-                <td className="px-4 py-4 lg:px-6 whitespace-nowrap">{getRouteText(order)}</td>
+                {/* Distance */}
+                <td className="px-4 py-4 lg:px-6 whitespace-nowrap">
+                  <div className="flex items-center gap-1.5">
+                    <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span className="font-medium">{calculateDistance(order)}</span>
+                  </div>
+                </td>
 
-                {/* Client */}
+                {/* Shop/Store */}
                 <td className="px-4 py-4 lg:px-6">
                   <ClientTag name={order.shopName} />
                 </td>
