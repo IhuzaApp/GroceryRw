@@ -449,37 +449,46 @@ The Smart Notification & Assignment System provides real-time order distribution
 ## Key Features
 
 - **Real-Time WebSocket Notifications**: Instant order updates instead of polling
-- **Smart Assignment Algorithm**: Prioritizes orders based on shopper performance and proximity
+- **Smart Assignment Algorithm**: Prioritizes orders based on age, shopper performance, and proximity
+- **Age-Based Priority System**: Heavily prioritizes older orders while tracking new ones to prevent lateness
+- **Personalized Notifications**: Each shopper receives recommendations tailored to their location and performance
 - **Assignment Locking**: Prevents multiple shoppers from being assigned the same order
 - **Optimized Batch Processing**: Groups orders by location for efficient distribution
-- **Aged Order Filtering**: Shows only orders 30+ minutes old and unassigned on the map
+- **Dual Display System**: Dashboard shows all orders, map shows aged orders (30+ minutes) to reduce clutter
 - **Travel Time Display**: Shows estimated minutes away instead of raw distance
 - **Multi-Order Type Support**: Handles regular orders, reel orders, and restaurant orders
 - **Restaurant Order Workflow**: Special handling for restaurant confirmation process
-- **Smart Notification Timing**: Notifies shoppers for orders created within last 29 minutes
+- **Comprehensive Order Pool**: ALL pending orders are eligible for notifications regardless of age
 - **Order-Specific Earnings**: Different calculation methods for regular, reel, and restaurant orders
 
 ## System Architecture
 
 ```mermaid
 graph TB
-    A[Order Created] --> B[Smart Assignment Algorithm]
-    B --> C{Order Age Check}
-    C -->|30+ minutes| D[Add to Aged Orders Map]
-    C -->|< 30 minutes| E[Regular Processing]
-
-    B --> F[Calculate Priority Score]
-    F --> G[Find Best Shopper]
-    G --> H[Send WebSocket Notification]
-    H --> I[Shopper Receives Toast]
-    I --> J{Shopper Action}
-    J -->|Accept| K[Assign Order]
-    J -->|Skip| L[Find Next Shopper]
-    J -->|Timeout| M[Reassign to Others]
-
-    D --> N[Map Section Display]
-    N --> O[WebSocket Updates]
-    O --> P[Real-time Map Updates]
+    A[Order Created] --> B[Add to Available Orders Pool]
+    B --> C[ALL Orders Eligible for Assignment]
+    
+    C --> D[Shopper's App Polls Smart Assignment API]
+    D --> E[Calculate Age-Based Priority Score]
+    E --> F{Order Age}
+    F -->|30+ minutes| G[Priority: -5 URGENT]
+    F -->|15-30 minutes| H[Priority: -2 WARNING]
+    F -->|5-15 minutes| I[Priority: 0 NORMAL]
+    F -->|0-5 minutes| J[Priority: +2 NEW]
+    
+    G & H & I & J --> K[Combine with Distance & Performance]
+    K --> L[Find Best Order for THIS Shopper]
+    L --> M[Send Personalized FCM Notification]
+    M --> N[Shopper Receives Toast]
+    N --> O{Shopper Action}
+    O -->|Accept| P[Assign Order]
+    O -->|Skip| Q[Order Remains in Pool]
+    O -->|Timeout 90s| Q
+    
+    C --> R[Map Display Filters]
+    R -->|Show only 30+ min| S[Aged Orders on Map]
+    C --> T[Dashboard Display]
+    T -->|Show ALL orders| U[Complete Order List]
 ```
 
 ## Restaurant Orders Integration
@@ -512,8 +521,9 @@ graph TB
 
 2. **Time Filtering**:
 
-   - Uses `updated_at` field instead of `created_at`
-   - Only orders updated within last 29 minutes are shown for notifications
+   - Uses `updated_at` field instead of `created_at` for age calculation
+   - ALL orders are eligible for notifications regardless of age
+   - Age affects priority score (older = higher priority)
    - Falls back to `created_at` if `updated_at` is null
 
 3. **Earnings Calculation**:
@@ -531,15 +541,12 @@ graph TB
 ### Database Queries
 
 ```sql
--- Get available restaurant orders
+-- Get all available restaurant orders (no time restriction)
 SELECT * FROM restaurant_orders
 WHERE status = 'PENDING'
   AND shopper_id IS NULL
-  AND (
-    updated_at >= NOW() - INTERVAL '29 minutes'
-    OR (updated_at IS NULL AND created_at >= NOW() - INTERVAL '29 minutes')
-  )
-ORDER BY updated_at DESC NULLS LAST, created_at DESC;
+ORDER BY updated_at ASC NULLS LAST, created_at ASC;
+-- Note: Ordered by oldest first for priority processing
 ```
 
 ### Earnings Calculation System
@@ -565,29 +572,91 @@ The system uses different earnings calculation methods based on order type:
 
 ### Notification Timing System
 
-The system uses a two-tier timing approach:
+The system uses an age-based priority approach for ALL orders:
 
-1. **Fresh Orders (0-29 minutes)**:
+1. **All Orders Eligible**:
 
-   - Shoppers receive real-time notifications
-   - Orders appear in smart assignment algorithm
-   - WebSocket notifications sent immediately
-   - Orders are actively distributed to shoppers
+   - ALL pending/unassigned orders are in the notification pool
+   - No time-based exclusions
+   - Every order gets assigned eventually
+   - Age affects priority, not eligibility
 
-2. **Aged Orders (30+ minutes)**:
-   - Orders appear on map for manual selection
-   - No active notifications sent
-   - Shoppers can manually accept from map
-   - Used for orders that need special attention
+2. **Age-Based Priority Scoring**:
+
+   - **30+ minutes old**: Priority score -5 (HIGHEST PRIORITY)
+   - **15-30 minutes old**: Priority score -2 (HIGH PRIORITY)
+   - **5-15 minutes old**: Priority score 0 (NORMAL PRIORITY)
+   - **Under 5 minutes**: Priority score +2 (LOWER PRIORITY - but still tracked!)
+
+3. **Display Strategy**:
+   - **Dashboard**: Shows ALL available orders (shoppers can browse everything)
+   - **Map**: Shows only aged orders (30+ minutes) to reduce visual clutter
+   - **Notifications**: Personalized to each shopper based on location and order priority
 
 ### API Integration
 
 All notification and assignment APIs support restaurant orders:
 
-- **`/api/shopper/availableOrders`**: Includes restaurant orders in aged order filtering
-- **`/api/shopper/smart-assign-order`**: Considers restaurant orders in assignment algorithm
+- **`/api/shopper/availableOrders`**: Fetches ALL pending orders (regular, reel, restaurant)
+- **`/api/shopper/smart-assign-order`**: Personalized order recommendation with age-based priority
 - **`/api/websocket/distribute-order`**: Sends restaurant orders via WebSocket
 - **`/api/shopper/process-orders-batch`**: Includes restaurant orders in batch processing
+- **`/api/shopper/todayCompletedOrders`**: Fetches shopper's completed deliveries for the day
+
+## Personalized Notification System
+
+### How It Works
+
+Each shopper receives **personalized order recommendations** based on their unique situation:
+
+1. **Individual Polling**: 
+   - Each shopper's app independently calls the smart assignment API
+   - Polling interval: 30 seconds (or 2 minutes with FCM active)
+
+2. **Personalized Calculation**:
+   - API calculates priority for EACH order relative to THIS shopper
+   - Considers: shopper's location, performance history, and order characteristics
+   - Returns the BEST order for this specific shopper
+
+3. **Targeted Notifications**:
+   - FCM notification sent ONLY to the specific shopper
+   - No broadcast notifications to all users
+   - Each shopper sees orders most relevant to them
+
+4. **Cache & Rate Limiting**:
+   ```typescript
+   // Prevents spam - same order not sent to same shopper within 90 seconds
+   const cacheKey = `${shopperId}:${orderId}`;
+   if (!lastSent || (now - lastSent) > 90000) {
+     sendNotification(shopperId, order);
+   }
+   ```
+
+### Example Scenario
+
+**3 Shoppers Online, 1 Order Available:**
+
+```
+Order: "Shop A to Customer X" (Location: Downtown)
+
+Shopper 1 (Downtown, 2km from order):
+  → Distance: 2km
+  → Priority Score: -2.8 (close + order is 35 min old)
+  → 📱 Gets notified immediately ✅
+
+Shopper 2 (Suburb, 10km from order):
+  → Distance: 10km
+  → Priority Score: +2.2 (far away)
+  → ⏸️ Won't be notified unless Shopper 1 skips
+
+Shopper 3 (Airport, 25km from order):
+  → Distance: 25km
+  → Priority Score: +7.5 (too far)
+  → ❌ Won't be notified about this order
+  → But might get notified about a different order closer to airport
+```
+
+**Result**: System naturally distributes orders to the most appropriate shoppers!
 
 ## Components
 
@@ -636,15 +705,43 @@ sequenceDiagram
    - Order age and priority
 3. **Return Best Order**: Return the highest-scoring order for shopper review
 
-**Priority Score Calculation**:
+**Priority Score Calculation** (Lower = Higher Priority):
 
 ```typescript
+// Calculate order age in minutes
+const ageInMinutes = (Date.now() - orderTimestamp) / 60000;
+
+// Age-based priority boost (MOST IMPORTANT FACTOR - 50% weight)
+let ageFactor;
+if (ageInMinutes >= 30) {
+  ageFactor = -5; // URGENT: Oldest orders get highest priority
+} else if (ageInMinutes >= 15) {
+  ageFactor = -2; // WARNING: Moderately old orders
+} else if (ageInMinutes >= 5) {
+  ageFactor = 0; // NORMAL: Recent orders
+} else {
+  ageFactor = +2; // NEW: Very new orders (lower priority but still tracked)
+}
+
+// Final priority score (lower = better)
 const priorityScore =
-  performanceScore * 0.4 + // 40% performance
-  distanceScore * 0.3 + // 30% proximity
-  ageScore * 0.2 + // 20% order age
-  orderPriority * 0.1; // 10% order priority
+  distance * 0.3 + // 30% - Distance from shopper
+  (5 - avgRating) * 1.5 + // 15% - Shopper performance (inverted)
+  (100 - completionRate) * 0.01 + // 5% - Completion rate
+  ageFactor + // 50% - Order age (DOMINANT FACTOR)
+  Math.random() * 0.3; // 5% - Fairness randomization
+
+// Orders are sorted by priority score (lowest first)
+// Result: Old orders get shown first, but new orders are tracked
 ```
+
+**Why This Works**:
+- 🔴 Old orders (30+ min) get massive priority boost → Accepted quickly
+- 🟡 Moderately old orders (15-30 min) get good priority → Won't become late
+- 🟢 Recent orders (5-15 min) get neutral priority → Gradually increase
+- 🆕 New orders (0-5 min) get lower priority → But won't be forgotten
+- 📍 Location still matters → Closer shoppers preferred
+- ⭐ Performance counts → Better shoppers get better orders
 
 ### 3. WebSocket System
 
@@ -685,18 +782,35 @@ const priorityScore =
 - **Visual Markers**: Custom markers for different order types
 - **Interactive Popups**: Order details and acceptance buttons
 
-**Filtering Logic**:
+**Map Filtering Logic** (Map only shows aged orders to reduce clutter):
 
 ```typescript
 const filterAgedUnassignedOrders = (orders) => {
   const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
 
   return orders.filter((order) => {
-    const orderCreatedAt = new Date(order.createdAt);
-    const isAged = orderCreatedAt <= thirtyMinutesAgo;
+    // For restaurant orders, check updated_at; for others, check created_at
+    const referenceTimestamp =
+      order.orderType === "restaurant" && order.updatedAt
+        ? order.updatedAt
+        : order.createdAt;
+
+    const orderTimestamp = new Date(referenceTimestamp);
+    const isAged = orderTimestamp <= thirtyMinutesAgo;
     const isUnassigned = !order.shopper_id || order.shopper_id === null;
 
-    return isAged && isUnassigned;
+    return isAged && isUnassigned; // Map shows only aged orders
+  });
+};
+```
+
+**Dashboard Display Logic** (Dashboard shows ALL orders):
+
+```typescript
+const getAllAvailableOrders = (orders) => {
+  return orders.filter((order) => {
+    const isUnassigned = !order.shopper_id || order.shopper_id === null;
+    return isUnassigned; // Show ALL unassigned orders
   });
 };
 ```
