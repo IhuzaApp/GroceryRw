@@ -234,7 +234,7 @@ export default function ActiveBatches({
       } ${isMobile ? "pb-16" : ""}`}
     >
       {/* Main Content */}
-      <main className="max-w-9xl mx-auto p-3 sm:p-6">
+      <main className="w-full max-w-[1920px] mx-auto px-3 sm:px-6 py-3 sm:py-6">
         {/* Page Title - Desktop Only */}
         <div className="mb-4 flex items-center justify-between">
           <p
