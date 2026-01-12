@@ -796,7 +796,6 @@ export default function MapSection({
   const [shopMarkers, setShopMarkers] = useState<L.Marker[]>([]);
   const [userMarker, setUserMarker] = useState<L.Marker | null>(null);
   const [routePolyline, setRoutePolyline] = useState<L.Polyline | null>(null);
-  const [routeStartMarker, setRouteStartMarker] = useState<L.Marker | null>(null);
   const [routeEndMarker, setRouteEndMarker] = useState<L.Marker | null>(null);
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
   const [isMapInitialized, setIsMapInitialized] = useState(false);
@@ -2179,31 +2178,34 @@ export default function MapSection({
                 theme === "dark" ? ["a", "b", "c", "d"] : ["a", "b", "c"],
             }).addTo(mapInstance);
 
-            // Initialize user marker with improved dark theme styling
+            // Initialize user marker with blue dot design
             const userIconHtml = `
           <div style="
-                background: ${theme === "dark" ? "#1f2937" : "white"};
-                border: 2px solid ${theme === "dark" ? "#60a5fa" : "#3b82f6"};
+            background: #3b82f6;
+            border: 3px solid white;
             border-radius: 50%;
-            width: 32px;
-            height: 32px;
+            width: 24px;
+            height: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-                box-shadow: 0 2px 4px ${
-                  theme === "dark" ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.1)"
-                };
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
           ">
-            <span style="font-size: 16px;">👤</span>
+            <div style="
+              width: 8px;
+              height: 8px;
+              background: white;
+              border-radius: 50%;
+            "></div>
           </div>
         `;
 
             const userIcon = L.divIcon({
               html: userIconHtml,
               className: "",
-              iconSize: [32, 32],
-              iconAnchor: [16, 32],
-              popupAnchor: [0, -32],
+              iconSize: [24, 24],
+              iconAnchor: [12, 12],
+              popupAnchor: [0, -24],
             });
 
             userMarkerRef.current = L.marker([-1.9706, 30.1044], {
@@ -2946,10 +2948,6 @@ export default function MapSection({
         routePolyline.remove();
         setRoutePolyline(null);
       }
-      if (routeStartMarker) {
-        routeStartMarker.remove();
-        setRouteStartMarker(null);
-      }
       if (routeEndMarker) {
         routeEndMarker.remove();
         setRouteEndMarker(null);
@@ -2962,20 +2960,18 @@ export default function MapSection({
       console.log('🗺️ Removing existing route polyline');
       routePolyline.remove();
     }
-    if (routeStartMarker) {
-      routeStartMarker.remove();
-    }
     if (routeEndMarker) {
       routeEndMarker.remove();
     }
 
-    // Get pickup location coordinates
-    const pickupLat = notifiedOrder.customerLatitude || notifiedOrder.shopLatitude;
-    const pickupLng = notifiedOrder.customerLongitude || notifiedOrder.shopLongitude;
+    // Get customer delivery address coordinates
+    // Always use customer address for delivery (not shop pickup location)
+    const deliveryLat = notifiedOrder.customerLatitude;
+    const deliveryLng = notifiedOrder.customerLongitude;
 
     console.log('🗺️ Route coordinates:', {
       shopperLocation: { lat: locationForRoute.lat, lng: locationForRoute.lng },
-      pickupLocation: { lat: pickupLat, lng: pickupLng },
+      deliveryLocation: { lat: deliveryLat, lng: deliveryLng },
       notifiedOrderCoords: {
         customerLat: notifiedOrder.customerLatitude,
         customerLng: notifiedOrder.customerLongitude,
@@ -2984,19 +2980,20 @@ export default function MapSection({
       }
     });
 
-    if (!pickupLat || !pickupLng) {
-      console.warn('⚠️ No coordinates found for notified order');
+    if (!deliveryLat || !deliveryLng) {
+      console.warn('⚠️ No customer delivery coordinates found for notified order');
       return;
     }
 
     // Fetch route from OSRM (follows actual roads)
     const fetchRoute = async () => {
       try {
-        console.log('🛣️ Fetching route from OSRM...');
+        console.log('🛣️ Fetching route from OSRM to customer delivery address...');
         
         // OSRM API endpoint (using public demo server)
         // Format: longitude,latitude (note: OSRM uses lon,lat not lat,lon)
-        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${locationForRoute.lng},${locationForRoute.lat};${pickupLng},${pickupLat}?overview=full&geometries=geojson`;
+        // Route: Shopper location → Customer delivery address
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${locationForRoute.lng},${locationForRoute.lat};${deliveryLng},${deliveryLat}?overview=full&geometries=geojson`;
         
         const response = await fetch(osrmUrl);
         const data = await response.json();
@@ -3038,42 +3035,9 @@ export default function MapSection({
 
         setRoutePolyline(polyline);
 
-        // Create start marker (shopper location) - Blue marker
-        const startMarkerIcon = L.divIcon({
-          html: `
-            <div style="
-              background: #3b82f6;
-              border: 3px solid white;
-              border-radius: 50%;
-              width: 24px;
-              height: 24px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            ">
-              <div style="
-                width: 8px;
-                height: 8px;
-                background: white;
-                border-radius: 50%;
-              "></div>
-            </div>
-          `,
-          className: '',
-          iconSize: [24, 24],
-          iconAnchor: [12, 12],
-        });
+        // No need to create start marker - permanent shopper marker already shows location
 
-        const startMarker = L.marker([locationForRoute.lat, locationForRoute.lng], {
-          icon: startMarkerIcon,
-          zIndexOffset: 1000,
-        }).addTo(currentMapInstance);
-
-        startMarker.bindPopup('<b>Your Location</b><br>Starting point');
-        setRouteStartMarker(startMarker);
-
-        // Create end marker (pickup location) - Red pin
+        // Create end marker (customer delivery location) - Red pin
         const endMarkerIcon = L.divIcon({
           html: `
             <div style="position: relative;">
@@ -3105,16 +3069,16 @@ export default function MapSection({
           popupAnchor: [0, -32],
         });
 
-        const endMarker = L.marker([pickupLat, pickupLng], {
+        const endMarker = L.marker([deliveryLat, deliveryLng], {
           icon: endMarkerIcon,
           zIndexOffset: 1001,
         }).addTo(currentMapInstance);
 
-        endMarker.bindPopup(`<b>Pickup Location</b><br>${notifiedOrder.shopName}`);
+        endMarker.bindPopup(`<b>Delivery Address</b><br>${notifiedOrder.customerAddress}`);
         setRouteEndMarker(endMarker);
 
         console.log('✅ Road-following route polyline created and added to map');
-        console.log('✅ Start and end markers added');
+        console.log('✅ Delivery marker added at customer address');
 
         // Fit map bounds to show the entire route including markers
         currentMapInstance.fitBounds(polyline.getBounds(), {
@@ -3140,7 +3104,7 @@ export default function MapSection({
         // Fallback: Draw straight line if routing service fails
         const fallbackCoords: L.LatLngExpression[] = [
           [locationForRoute.lat, locationForRoute.lng],
-          [pickupLat, pickupLng]
+          [deliveryLat, deliveryLng]
         ];
 
         const polyline = L.polyline(fallbackCoords, {
@@ -3152,42 +3116,9 @@ export default function MapSection({
 
         setRoutePolyline(polyline);
 
-        // Create start marker (shopper location) - Blue marker
-        const startMarkerIcon = L.divIcon({
-          html: `
-            <div style="
-              background: #3b82f6;
-              border: 3px solid white;
-              border-radius: 50%;
-              width: 24px;
-              height: 24px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            ">
-              <div style="
-                width: 8px;
-                height: 8px;
-                background: white;
-                border-radius: 50%;
-              "></div>
-            </div>
-          `,
-          className: '',
-          iconSize: [24, 24],
-          iconAnchor: [12, 12],
-        });
+        // No need to create start marker - permanent shopper marker already shows location
 
-        const startMarker = L.marker([locationForRoute.lat, locationForRoute.lng], {
-          icon: startMarkerIcon,
-          zIndexOffset: 1000,
-        }).addTo(currentMapInstance);
-
-        startMarker.bindPopup('<b>Your Location</b><br>Starting point');
-        setRouteStartMarker(startMarker);
-
-        // Create end marker (pickup location) - Red pin
+        // Create end marker (customer delivery location) - Red pin
         const endMarkerIcon = L.divIcon({
           html: `
             <div style="position: relative;">
@@ -3219,15 +3150,15 @@ export default function MapSection({
           popupAnchor: [0, -32],
         });
 
-        const endMarker = L.marker([pickupLat, pickupLng], {
+        const endMarker = L.marker([deliveryLat, deliveryLng], {
           icon: endMarkerIcon,
           zIndexOffset: 1001,
         }).addTo(currentMapInstance);
 
-        endMarker.bindPopup(`<b>Pickup Location</b><br>${notifiedOrder.shopName}`);
+        endMarker.bindPopup(`<b>Delivery Address</b><br>${notifiedOrder.customerAddress}`);
         setRouteEndMarker(endMarker);
 
-        console.log('✅ Fallback route and markers created');
+        console.log('✅ Fallback route to customer delivery address created');
 
         currentMapInstance.fitBounds(polyline.getBounds(), {
           padding: [80, 80],
@@ -3243,9 +3174,6 @@ export default function MapSection({
       console.log('🗺️ Cleaning up route polyline and markers');
       if (routePolyline) {
         routePolyline.remove();
-      }
-      if (routeStartMarker) {
-        routeStartMarker.remove();
       }
       if (routeEndMarker) {
         routeEndMarker.remove();
@@ -3263,9 +3191,6 @@ export default function MapSection({
       }
       if (routePolyline) {
         routePolyline.remove();
-      }
-      if (routeStartMarker) {
-        routeStartMarker.remove();
       }
       if (routeEndMarker) {
         routeEndMarker.remove();

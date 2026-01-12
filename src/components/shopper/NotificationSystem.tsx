@@ -960,16 +960,16 @@ export default function NotificationSystem({
 
       {/* Notification Card */}
       {showMapModal && selectedOrder && (
-        <div className="fixed inset-x-0 bottom-0 z-50">
+        <div className="fixed inset-x-0 bottom-0 z-50 flex md:justify-end md:px-8 md:pb-6">
           {/* Bottom Sheet Card */}
-          <div className="relative w-full rounded-t-3xl bg-white shadow-2xl">
+          <div className="relative w-full md:max-w-md md:rounded-2xl rounded-t-3xl bg-white shadow-2xl">
             {/* Drag Handle */}
             <div className="flex justify-center py-3">
               <div className="h-1 w-12 rounded-full bg-gray-300"></div>
             </div>
 
             <div className="px-6 pb-6">
-              {/* Restaurant Info with Call Button */}
+              {/* Order Info with Directions Button */}
               <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   {/* Avatar */}
@@ -988,16 +988,26 @@ export default function NotificationSystem({
                       />
                     </svg>
                   </div>
-                  {/* Restaurant Name */}
+                  {/* Shop Name */}
                   <div>
-                    <p className="text-xs text-gray-500">Restaurant Name</p>
+                    <p className="text-xs text-gray-500">Shop</p>
                     <p className="text-lg font-bold text-gray-900">
                       {selectedOrder.shopName}
                     </p>
                   </div>
                 </div>
-                {/* Call Button */}
-                <button className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500 shadow-md hover:bg-green-600 transition-colors">
+                {/* Directions Button */}
+                <button 
+                  onClick={() => {
+                    // Open Google Maps with directions to delivery address
+                    const destLat = selectedOrder.customerLatitude;
+                    const destLng = selectedOrder.customerLongitude;
+                    const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`;
+                    window.open(mapsUrl, '_blank');
+                  }}
+                  className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 shadow-md hover:bg-blue-600 transition-colors"
+                  title="Open in Google Maps"
+                >
                   <svg
                     className="h-5 w-5 text-white"
                     fill="none"
@@ -1008,7 +1018,7 @@ export default function NotificationSystem({
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                      d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
                     />
                   </svg>
                 </button>
@@ -1035,7 +1045,7 @@ export default function NotificationSystem({
                   </div>
                 </div>
 
-                {/* Pick Up Location */}
+                {/* Delivery Location */}
                 <div className="relative flex items-start space-x-3 pl-6">
                   {/* Location Pin Icon */}
                   <div className="absolute left-0 flex h-4 w-4 items-center justify-center">
@@ -1050,15 +1060,15 @@ export default function NotificationSystem({
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <p className="text-xs text-gray-500">Pick Up</p>
+                        <p className="text-xs text-gray-500">Delivery Address</p>
                         <p className="text-sm font-medium text-gray-900">
                           {selectedOrder.customerAddress}
                         </p>
                       </div>
                       {/* Time Badge */}
-                      <div className="ml-2 flex items-center space-x-1 rounded-full bg-red-50 px-2 py-1">
+                      <div className="ml-2 flex items-center space-x-1 rounded-full bg-green-50 px-2 py-1">
                         <svg
-                          className="h-3 w-3 text-red-500"
+                          className="h-3 w-3 text-green-600"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -1070,10 +1080,10 @@ export default function NotificationSystem({
                             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span className="text-xs font-medium text-red-600">
+                        <span className="text-xs font-medium text-green-600">
                           {selectedOrder.travelTimeMinutes ||
                             calculateTravelTime(selectedOrder.distance)}{" "}
-                          minute
+                          min
                         </span>
                       </div>
                     </div>
@@ -1121,14 +1131,6 @@ export default function NotificationSystem({
                       {formatCurrencySync(selectedOrder.estimatedEarnings || 0)}
                     </span>
                   </div>
-                </div>
-
-                {/* Payment Info */}
-                <div className="rounded-lg bg-gray-50 px-4 py-3">
-                  <p className="text-sm text-gray-900">
-                    <span className="font-medium">Payment Info :</span>{" "}
-                    <span className="font-semibold text-green-600">Online</span>
-                  </p>
                 </div>
               </div>
 
