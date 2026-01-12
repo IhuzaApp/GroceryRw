@@ -90,6 +90,9 @@ export default function NotificationSystem({
   const isCheckingOrders = useRef<boolean>(false); // Prevent concurrent API calls
   const declinedOrders = useRef<Map<string, number>>(new Map()); // Track declined orders with timestamp
   const lastDeclineTime = useRef<number>(0); // Track when user last declined an order
+  const declineClickCount = useRef<number>(0); // Track decline button clicks
+  const acceptClickCount = useRef<number>(0); // Track accept button clicks
+  const directionsClickCount = useRef<number>(0); // Track directions button clicks
 
   // FCM integration
   const { isInitialized, hasPermission } = useFCMNotifications();
@@ -99,8 +102,18 @@ export default function NotificationSystem({
     const handleFCMNewOrder = (event: CustomEvent) => {
       const { order } = event.detail;
 
+      console.log("📲 FCM NEW ORDER EVENT", {
+        orderId: order.id,
+        timestamp: new Date().toISOString(),
+        isDeclined: declinedOrders.current.has(order.id),
+        alreadyShowing: activeToasts.current.has(order.id)
+      });
+
       // Check if order was declined
       if (declinedOrders.current.has(order.id)) {
+        console.log("🚫 FCM: Order was declined, ignoring", {
+          orderId: order.id
+        });
         return;
       }
 
@@ -435,12 +448,42 @@ export default function NotificationSystem({
     order: Order,
     type: "info" | "success" | "warning" | "error" = "info"
   ) => {
-    // Remove any existing toast for this order
+    console.log("📢 SHOW TOAST CALLED", {
+      orderId: order.id,
+      timestamp: new Date().toISOString(),
+      alreadyShowing: activeToasts.current.has(order.id),
+      isDeclined: declinedOrders.current.has(order.id)
+    });
+    
+    // Check if order was declined - CRITICAL CHECK
+    if (declinedOrders.current.has(order.id)) {
+      console.log("🚫 BLOCKED: Order was declined", {
+        orderId: order.id,
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+    
+    // Check if this order is already being shown - prevent duplicates
     const existingToast = activeToasts.current.get(order.id);
+    if (existingToast === "map-modal" && showMapModal && selectedOrder?.id === order.id) {
+      console.log("🚫 BLOCKED: Notification already showing for this order", {
+        orderId: order.id,
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+    
+    // Remove any existing toast for this order if it's not currently displayed
     if (existingToast) {
       batchToast.dismiss(existingToast);
       activeToasts.current.delete(order.id);
     }
+
+    console.log("✅ SHOWING NOTIFICATION", {
+      orderId: order.id,
+      timestamp: new Date().toISOString()
+    });
 
     // Show full-screen map modal instead of toast
     setSelectedOrder(order);
@@ -799,6 +842,15 @@ export default function NotificationSystem({
         const order = data.order;
         const wasDeclined = declinedOrders.current.has(order.id);
 
+        console.log("🔍 API POLLING CHECK", {
+          orderId: order.id,
+          timestamp: new Date().toISOString(),
+          wasDeclined,
+          hasCurrentAssignment: !!currentUserAssignment,
+          alreadyShowing: activeToasts.current.has(order.id),
+          willShow: !currentUserAssignment && !wasDeclined
+        });
+
         if (!currentUserAssignment && !wasDeclined) {
           
           // Validate order data before showing notification
@@ -933,6 +985,33 @@ export default function NotificationSystem({
     };
   }, []);
 
+  // Track when notification card shows/hides
+  useEffect(() => {
+    if (showMapModal && selectedOrder) {
+      // Reset click counters for new notification
+      declineClickCount.current = 0;
+      acceptClickCount.current = 0;
+      directionsClickCount.current = 0;
+      
+      console.log("🔔 NOTIFICATION CARD DISPLAYED", {
+        orderId: selectedOrder.id,
+        shopName: selectedOrder.shopName,
+        timestamp: new Date().toISOString(),
+        zIndex: "z-50",
+        message: "Click counters reset - tracking clicks for this notification"
+      });
+    } else if (!showMapModal) {
+      console.log("🔕 NOTIFICATION CARD HIDDEN", {
+        timestamp: new Date().toISOString(),
+        finalClickCounts: {
+          decline: declineClickCount.current,
+          accept: acceptClickCount.current,
+          directions: directionsClickCount.current
+        }
+      });
+    }
+  }, [showMapModal, selectedOrder]);
+
   useEffect(() => {
     if (session && currentLocation) {
       // User logged in and location available, starting notification system
@@ -981,9 +1060,46 @@ export default function NotificationSystem({
       {showMapModal && selectedOrder ? (
         <div 
           key={selectedOrder.id}
-          className="fixed inset-x-0 bottom-0 z-50 flex md:justify-end md:px-8 md:pb-6">
+          className="fixed inset-x-0 bottom-0 z-50 flex md:justify-end md:px-8 md:pb-6"
+          onClick={(e) => {
+            // Only log if clicking on the background, not the card itself
+            if (e.target === e.currentTarget) {
+              console.log("📱 NOTIFICATION BACKGROUND CLICKED", {
+                orderId: selectedOrder.id,
+                timestamp: new Date().toISOString()
+              });
+            }
+          }}
+        >
           {/* Bottom Sheet Card */}
-          <div className="relative w-full md:max-w-md md:rounded-2xl rounded-t-3xl bg-white shadow-2xl">
+          <div 
+            ref={(el) => {
+              if (el) {
+                const styles = window.getComputedStyle(el);
+                const parentStyles = window.getComputedStyle(el.parentElement!);
+                console.log("🎨 NOTIFICATION CARD STYLES", {
+                  orderId: selectedOrder.id,
+                  cardZIndex: styles.zIndex,
+                  parentZIndex: parentStyles.zIndex,
+                  position: styles.position,
+                  pointerEvents: styles.pointerEvents,
+                  cardRect: el.getBoundingClientRect(),
+                  message: "Check if card is being overlapped by map elements"
+                });
+              }
+            }}
+            className="relative w-full md:max-w-md md:rounded-2xl rounded-t-3xl bg-white shadow-2xl"
+            onClick={(e) => {
+              console.log("📋 NOTIFICATION CARD CLICKED", {
+                orderId: selectedOrder.id,
+                timestamp: new Date().toISOString(),
+                target: e.target,
+                currentTarget: e.currentTarget,
+                clickX: (e as React.MouseEvent).clientX,
+                clickY: (e as React.MouseEvent).clientY
+              });
+            }}
+          >
             {/* Drag Handle */}
             <div className="flex justify-center py-3">
               <div className="h-1 w-12 rounded-full bg-gray-300"></div>
@@ -1019,7 +1135,35 @@ export default function NotificationSystem({
                 </div>
                 {/* Directions Button */}
                 <button 
+                  onPointerDown={(e) => {
+                    console.log("👆 DIRECTIONS POINTER DOWN", {
+                      orderId: selectedOrder.id,
+                      timestamp: new Date().toISOString(),
+                      pointerType: e.pointerType,
+                      x: e.clientX,
+                      y: e.clientY
+                    });
+                  }}
+                  onPointerUp={(e) => {
+                    console.log("👆 DIRECTIONS POINTER UP", {
+                      orderId: selectedOrder.id,
+                      timestamp: new Date().toISOString(),
+                      pointerType: e.pointerType
+                    });
+                  }}
                   onClick={() => {
+                    directionsClickCount.current += 1;
+                    console.log("🗺️ DIRECTIONS BUTTON CLICKED", {
+                      orderId: selectedOrder.id,
+                      timestamp: new Date().toISOString(),
+                      clickCount: directionsClickCount.current,
+                      totalClicks: `This is click #${directionsClickCount.current}`,
+                      coordinates: {
+                        lat: selectedOrder.customerLatitude,
+                        lng: selectedOrder.customerLongitude
+                      }
+                    });
+                    
                     // Open Google Maps with directions to delivery address
                     const destLat = selectedOrder.customerLatitude;
                     const destLng = selectedOrder.customerLongitude;
@@ -1159,7 +1303,31 @@ export default function NotificationSystem({
               <div className="flex space-x-3">
                 {/* Decline Button */}
                 <button
+                  onPointerDown={(e) => {
+                    console.log("👆 DECLINE POINTER DOWN", {
+                      orderId: selectedOrder.id,
+                      timestamp: new Date().toISOString(),
+                      pointerType: e.pointerType,
+                      x: e.clientX,
+                      y: e.clientY
+                    });
+                  }}
+                  onPointerUp={(e) => {
+                    console.log("👆 DECLINE POINTER UP", {
+                      orderId: selectedOrder.id,
+                      timestamp: new Date().toISOString(),
+                      pointerType: e.pointerType
+                    });
+                  }}
                   onClick={() => {
+                    declineClickCount.current += 1;
+                    console.log("🔴 DECLINE BUTTON CLICKED", {
+                      orderId: selectedOrder.id,
+                      timestamp: new Date().toISOString(),
+                      clickCount: declineClickCount.current,
+                      totalClicks: `This is click #${declineClickCount.current}`
+                    });
+                    
                     // Save order ID before clearing state
                     const orderId = selectedOrder.id;
                     
@@ -1183,6 +1351,14 @@ export default function NotificationSystem({
                     
                     // Notify parent that notification is hidden
                     onNotificationShow?.(null);
+                    
+                    console.log("🔴 DECLINE COMPLETED", { 
+                      orderId,
+                      declinedOrdersCount: declinedOrders.current.size,
+                      declinedOrderIds: Array.from(declinedOrders.current.keys()),
+                      lastDeclineTime: lastDeclineTime.current,
+                      nextCheckAllowedAt: lastDeclineTime.current + 10000
+                    });
                   }}
                   className="flex-1 rounded-xl bg-red-500 py-4 text-base font-bold text-white shadow-lg transition-all hover:bg-red-600 active:scale-95"
                 >
@@ -1191,8 +1367,39 @@ export default function NotificationSystem({
 
                 {/* Accept Batch Button */}
                 <button
+                  onPointerDown={(e) => {
+                    console.log("👆 ACCEPT POINTER DOWN", {
+                      orderId: selectedOrder.id,
+                      timestamp: new Date().toISOString(),
+                      pointerType: e.pointerType,
+                      x: e.clientX,
+                      y: e.clientY
+                    });
+                  }}
+                  onPointerUp={(e) => {
+                    console.log("👆 ACCEPT POINTER UP", {
+                      orderId: selectedOrder.id,
+                      timestamp: new Date().toISOString(),
+                      pointerType: e.pointerType
+                    });
+                  }}
                   onClick={async () => {
+                    acceptClickCount.current += 1;
+                    console.log("🟢 ACCEPT BUTTON CLICKED", {
+                      orderId: selectedOrder.id,
+                      timestamp: new Date().toISOString(),
+                      clickCount: acceptClickCount.current,
+                      totalClicks: `This is click #${acceptClickCount.current}`
+                    });
+                    
                     const success = await handleAcceptOrder(selectedOrder.id);
+                    
+                    console.log("🟢 ACCEPT RESULT", {
+                      orderId: selectedOrder.id,
+                      success,
+                      timestamp: new Date().toISOString()
+                    });
+                    
                     if (success) {
                       setShowMapModal(false);
                       setSelectedOrder(null);
