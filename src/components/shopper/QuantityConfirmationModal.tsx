@@ -302,21 +302,21 @@ export default function QuantityConfirmationModal({
             {/* Barcode Scanning Section - Only for non-weight-based items */}
             {!isWeightBased && (
               <div
-                className={`rounded-2xl border-2 p-4 ${
+                className={`rounded-2xl border p-4 ${
                   theme === "dark"
-                    ? "border-purple-600 bg-purple-900/20"
-                    : "border-purple-200 bg-purple-50"
+                    ? "border-gray-700 bg-gray-800/50"
+                    : "border-gray-200 bg-gray-50"
                 }`}
               >
                 <div className="mb-3 flex items-center gap-3">
                   <div
                     className={`rounded-full p-2 ${
-                      theme === "dark" ? "bg-purple-600" : "bg-purple-100"
+                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
                     }`}
                   >
                     <svg
                       className={`h-5 w-5 ${
-                        theme === "dark" ? "text-white" : "text-purple-600"
+                        theme === "dark" ? "text-gray-300" : "text-gray-600"
                       }`}
                       fill="none"
                       stroke="currentColor"
@@ -596,36 +596,20 @@ export default function QuantityConfirmationModal({
                 {barcodeValidation.message && (
                   <div
                     className={`mt-4 rounded-xl border-l-4 p-3 ${
-                      barcodeValidation.isValid
-                        ? theme === "dark"
-                          ? "border-green-500 bg-green-900/20 text-green-300"
-                          : "border-green-500 bg-green-50 text-green-800"
-                        : theme === "dark"
-                        ? "border-red-500 bg-red-900/20 text-red-300"
-                        : "border-red-500 bg-red-50 text-red-800"
+                      theme === "dark"
+                        ? "border-gray-700 bg-gray-800/50 text-gray-300"
+                        : "border-gray-300 bg-gray-50 text-gray-700"
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <div
                         className={`rounded-full p-1 ${
-                          barcodeValidation.isValid
-                            ? theme === "dark"
-                              ? "bg-green-600"
-                              : "bg-green-100"
-                            : theme === "dark"
-                            ? "bg-red-600"
-                            : "bg-red-100"
+                          theme === "dark" ? "bg-gray-700" : "bg-gray-200"
                         }`}
                       >
                         <svg
                           className={`h-4 w-4 ${
-                            barcodeValidation.isValid
-                              ? theme === "dark"
-                                ? "text-white"
-                                : "text-green-600"
-                              : theme === "dark"
-                              ? "text-white"
-                              : "text-red-600"
+                            theme === "dark" ? "text-gray-300" : "text-gray-600"
                           }`}
                           fill="none"
                           viewBox="0 0 24 24"
@@ -667,21 +651,21 @@ export default function QuantityConfirmationModal({
             {/* Quantity Input Section - Only show if barcode is valid or item is weight-based */}
             {(barcodeValidation.isValid || isWeightBased) && (
               <div
-                className={`rounded-2xl border-2 p-4 ${
+                className={`rounded-2xl border p-4 ${
                   theme === "dark"
-                    ? "border-blue-600 bg-blue-900/20"
-                    : "border-blue-200 bg-blue-50"
+                    ? "border-gray-700 bg-gray-800/50"
+                    : "border-gray-200 bg-gray-50"
                 }`}
               >
                 <div className="mb-3 flex items-center gap-3">
                   <div
                     className={`rounded-full p-2 ${
-                      theme === "dark" ? "bg-blue-600" : "bg-blue-100"
+                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
                     }`}
                   >
                     <svg
                       className={`h-5 w-5 ${
-                        theme === "dark" ? "text-white" : "text-blue-600"
+                        theme === "dark" ? "text-gray-300" : "text-gray-600"
                       }`}
                       fill="none"
                       stroke="currentColor"
@@ -784,60 +768,20 @@ export default function QuantityConfirmationModal({
             {(barcodeValidation.isValid || isWeightBased) && (
               <div
                 className={`rounded-2xl border-l-4 p-4 ${
-                  foundQuantity === 0
-                    ? theme === "dark"
-                      ? "border-red-500 bg-red-900/20 text-red-300"
-                      : "border-red-500 bg-red-50 text-red-800"
-                    : exceedsBudget
-                    ? theme === "dark"
-                      ? "border-red-500 bg-red-900/20 text-red-300"
-                      : "border-red-500 bg-red-50 text-red-800"
-                    : foundQuantity === currentItem.quantity
-                    ? theme === "dark"
-                      ? "border-green-500 bg-green-900/20 text-green-300"
-                      : "border-green-500 bg-green-50 text-green-800"
-                    : theme === "dark"
-                    ? "border-yellow-500 bg-yellow-900/20 text-yellow-300"
-                    : "border-yellow-500 bg-yellow-50 text-yellow-800"
+                  theme === "dark"
+                    ? "border-gray-700 bg-gray-800/50 text-gray-300"
+                    : "border-gray-300 bg-gray-50 text-gray-700"
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div
                     className={`rounded-full p-2 ${
-                      foundQuantity === 0
-                        ? theme === "dark"
-                          ? "bg-red-600"
-                          : "bg-red-100"
-                        : exceedsBudget
-                        ? theme === "dark"
-                          ? "bg-red-600"
-                          : "bg-red-100"
-                        : foundQuantity === currentItem.quantity
-                        ? theme === "dark"
-                          ? "bg-green-600"
-                          : "bg-green-100"
-                        : theme === "dark"
-                        ? "bg-yellow-600"
-                        : "bg-yellow-100"
+                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
                     }`}
                   >
                     <svg
                       className={`h-5 w-5 ${
-                        foundQuantity === 0
-                          ? theme === "dark"
-                            ? "text-white"
-                            : "text-red-600"
-                          : exceedsBudget
-                          ? theme === "dark"
-                            ? "text-white"
-                            : "text-red-600"
-                          : foundQuantity === currentItem.quantity
-                          ? theme === "dark"
-                            ? "text-white"
-                            : "text-green-600"
-                          : theme === "dark"
-                          ? "text-white"
-                          : "text-yellow-600"
+                        theme === "dark" ? "text-gray-300" : "text-gray-600"
                       }`}
                       fill="none"
                       viewBox="0 0 24 24"
