@@ -1124,8 +1124,7 @@ export default function NotificationSystem({
         // This is updated regardless of whether we show a notification
         lastNotificationTime.current = currentTime;
 
-        // Clean up expired order reviews
-        const ninetySecondsAgo = currentTime - 90000;
+        // Clean up expired order reviews (60 seconds)
         batchAssignments.current = batchAssignments.current.filter(
           (assignment) => {
             if (assignment.expiresAt <= currentTime) {
@@ -1162,26 +1161,56 @@ export default function NotificationSystem({
         const order = data.order;
         const wasDeclined = declinedOrders.current.has(order.id);
 
+        // Check if a better order is available (higher earnings)
+        const currentOrderEarnings = currentUserAssignment
+          ? selectedOrder?.estimatedEarnings || 0
+          : 0;
+        const newOrderEarnings = order.estimatedEarnings || 0;
+        const isBetterOrder = newOrderEarnings > currentOrderEarnings;
+
         console.log("🔍 API POLLING CHECK", {
           orderId: order.id,
           timestamp: new Date().toISOString(),
           wasDeclined,
           hasCurrentAssignment: !!currentUserAssignment,
+          currentOrderEarnings,
+          newOrderEarnings,
+          isBetterOrder,
           alreadyShowing: activeToasts.current.has(order.id),
           recentlyShown: showToastLock.current.has(order.id),
           willShow:
-            !currentUserAssignment &&
+            (!currentUserAssignment || isBetterOrder) &&
             !wasDeclined &&
             !activeToasts.current.has(order.id),
         });
 
-        // Skip if order is already showing or was recently shown
+        // Skip if order is already showing
         if (activeToasts.current.has(order.id)) {
           console.log("🔍 API POLLING: Skipping - order already showing");
           return;
         }
 
-        if (!currentUserAssignment && !wasDeclined) {
+        // Show order if: no current assignment OR this is a better order (not declined)
+        if ((!currentUserAssignment || isBetterOrder) && !wasDeclined) {
+          // If replacing a current order, remove the old one first
+          if (currentUserAssignment && isBetterOrder) {
+            console.log("🔄 Replacing current order with better one", {
+              oldOrderId: currentUserAssignment.orderId,
+              oldEarnings: currentOrderEarnings,
+              newOrderId: order.id,
+              newEarnings: newOrderEarnings,
+            });
+            
+            // Remove old assignment
+            batchAssignments.current = batchAssignments.current.filter(
+              (a) => a.orderId !== currentUserAssignment.orderId
+            );
+            
+            // Dismiss old notification
+            removeToastForOrder(currentUserAssignment.orderId);
+          }
+          
+          // Continue with showing new order...
           // Validate order data before showing notification
           if (!order.itemsCount || order.itemsCount === 0) {
             logger.warn(
@@ -1196,7 +1225,7 @@ export default function NotificationSystem({
             shopperId: session.user.id,
             orderId: order.id,
             assignedAt: currentTime,
-            expiresAt: currentTime + 90000, // Expires in 90 seconds (1 minute 30 seconds)
+            expiresAt: currentTime + 60000, // Expires in 60 seconds
             warningShown: false,
             warningTimeout: null,
           };

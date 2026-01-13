@@ -187,7 +187,7 @@ export const useFCMNotifications = (): FCMNotificationHook => {
                 new CustomEvent("fcm-batch-orders", {
                   detail: {
                     orders: orders,
-                    expiresIn: parseInt(data.expiresIn || "90000"), // Default to 90 seconds
+                    expiresIn: parseInt(data.expiresIn || "60000"), // Default to 60 seconds
                     timestamp: parseInt(data.timestamp),
                   },
                 })

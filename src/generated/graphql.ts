@@ -9792,10 +9792,10 @@ export type Mutation_Root = {
   delete_reel_orders?: Maybe<Reel_Orders_Mutation_Response>;
   /** delete single row from the table: "reel_orders" */
   delete_reel_orders_by_pk?: Maybe<Reel_Orders>;
-  /** delete data from the table: "restaurant_dishe_orders" */
-  delete_restaurant_dishe_orders?: Maybe<Restaurant_Dishe_Orders_Mutation_Response>;
-  /** delete single row from the table: "restaurant_dishe_orders" */
-  delete_restaurant_dishe_orders_by_pk?: Maybe<Restaurant_Dishe_Orders>;
+  /** delete data from the table: "restaurant_order_items" */
+  delete_restaurant_order_items?: Maybe<Restaurant_Order_Items_Mutation_Response>;
+  /** delete single row from the table: "restaurant_order_items" */
+  delete_restaurant_order_items_by_pk?: Maybe<Restaurant_Order_Items>;
   /** delete data from the table: "restaurant_dishes" */
   delete_restaurant_dishes?: Maybe<Restaurant_Dishes_Mutation_Response>;
   /** delete single row from the table: "restaurant_dishes" */
@@ -9960,10 +9960,10 @@ export type Mutation_Root = {
   insert_reel_orders?: Maybe<Reel_Orders_Mutation_Response>;
   /** insert a single row into the table: "reel_orders" */
   insert_reel_orders_one?: Maybe<Reel_Orders>;
-  /** insert data into the table: "restaurant_dishe_orders" */
-  insert_restaurant_dishe_orders?: Maybe<Restaurant_Dishe_Orders_Mutation_Response>;
-  /** insert a single row into the table: "restaurant_dishe_orders" */
-  insert_restaurant_dishe_orders_one?: Maybe<Restaurant_Dishe_Orders>;
+  /** insert data into the table: "restaurant_order_items" */
+  insert_restaurant_order_items?: Maybe<Restaurant_Order_Items_Mutation_Response>;
+  /** insert a single row into the table: "restaurant_order_items" */
+  insert_restaurant_order_items_one?: Maybe<Restaurant_Order_Items>;
   /** insert data into the table: "restaurant_dishes" */
   insert_restaurant_dishes?: Maybe<Restaurant_Dishes_Mutation_Response>;
   /** insert a single row into the table: "restaurant_dishes" */
@@ -10224,13 +10224,13 @@ export type Mutation_Root = {
   update_reel_orders_by_pk?: Maybe<Reel_Orders>;
   /** update multiples rows of table: "reel_orders" */
   update_reel_orders_many?: Maybe<Array<Maybe<Reel_Orders_Mutation_Response>>>;
-  /** update data of the table: "restaurant_dishe_orders" */
-  update_restaurant_dishe_orders?: Maybe<Restaurant_Dishe_Orders_Mutation_Response>;
-  /** update single row of the table: "restaurant_dishe_orders" */
-  update_restaurant_dishe_orders_by_pk?: Maybe<Restaurant_Dishe_Orders>;
-  /** update multiples rows of table: "restaurant_dishe_orders" */
-  update_restaurant_dishe_orders_many?: Maybe<
-    Array<Maybe<Restaurant_Dishe_Orders_Mutation_Response>>
+  /** update data of the table: "restaurant_order_items" */
+  update_restaurant_order_items?: Maybe<Restaurant_Order_Items_Mutation_Response>;
+  /** update single row of the table: "restaurant_order_items" */
+  update_restaurant_order_items_by_pk?: Maybe<Restaurant_Order_Items>;
+  /** update multiples rows of table: "restaurant_order_items" */
+  update_restaurant_order_items_many?: Maybe<
+    Array<Maybe<Restaurant_Order_Items_Mutation_Response>>
   >;
   /** update data of the table: "restaurant_dishes" */
   update_restaurant_dishes?: Maybe<Restaurant_Dishes_Mutation_Response>;
@@ -10625,12 +10625,12 @@ export type Mutation_RootDelete_Reel_Orders_By_PkArgs = {
 };
 
 /** mutation root */
-export type Mutation_RootDelete_Restaurant_Dishe_OrdersArgs = {
-  where: Restaurant_Dishe_Orders_Bool_Exp;
+export type Mutation_RootDelete_Restaurant_Order_ItemsArgs = {
+  where: Restaurant_Order_Items_Bool_Exp;
 };
 
 /** mutation root */
-export type Mutation_RootDelete_Restaurant_Dishe_Orders_By_PkArgs = {
+export type Mutation_RootDelete_Restaurant_Order_Items_By_PkArgs = {
   id: Scalars["uuid"]["input"];
 };
 
@@ -11113,15 +11113,15 @@ export type Mutation_RootInsert_Reel_Orders_OneArgs = {
 };
 
 /** mutation root */
-export type Mutation_RootInsert_Restaurant_Dishe_OrdersArgs = {
-  objects: Array<Restaurant_Dishe_Orders_Insert_Input>;
-  on_conflict?: InputMaybe<Restaurant_Dishe_Orders_On_Conflict>;
+export type Mutation_RootInsert_Restaurant_Order_ItemsArgs = {
+  objects: Array<Restaurant_Order_Items_Insert_Input>;
+  on_conflict?: InputMaybe<Restaurant_Order_Items_On_Conflict>;
 };
 
 /** mutation root */
-export type Mutation_RootInsert_Restaurant_Dishe_Orders_OneArgs = {
-  object: Restaurant_Dishe_Orders_Insert_Input;
-  on_conflict?: InputMaybe<Restaurant_Dishe_Orders_On_Conflict>;
+export type Mutation_RootInsert_Restaurant_Order_Items_OneArgs = {
+  object: Restaurant_Order_Items_Insert_Input;
+  on_conflict?: InputMaybe<Restaurant_Order_Items_On_Conflict>;
 };
 
 /** mutation root */
@@ -11855,20 +11855,20 @@ export type Mutation_RootUpdate_Reel_Orders_ManyArgs = {
 };
 
 /** mutation root */
-export type Mutation_RootUpdate_Restaurant_Dishe_OrdersArgs = {
-  _set?: InputMaybe<Restaurant_Dishe_Orders_Set_Input>;
-  where: Restaurant_Dishe_Orders_Bool_Exp;
+export type Mutation_RootUpdate_Restaurant_Order_ItemsArgs = {
+  _set?: InputMaybe<Restaurant_Order_Items_Set_Input>;
+  where: Restaurant_Order_Items_Bool_Exp;
 };
 
 /** mutation root */
-export type Mutation_RootUpdate_Restaurant_Dishe_Orders_By_PkArgs = {
-  _set?: InputMaybe<Restaurant_Dishe_Orders_Set_Input>;
-  pk_columns: Restaurant_Dishe_Orders_Pk_Columns_Input;
+export type Mutation_RootUpdate_Restaurant_Order_Items_By_PkArgs = {
+  _set?: InputMaybe<Restaurant_Order_Items_Set_Input>;
+  pk_columns: Restaurant_Order_Items_Pk_Columns_Input;
 };
 
 /** mutation root */
-export type Mutation_RootUpdate_Restaurant_Dishe_Orders_ManyArgs = {
-  updates: Array<Restaurant_Dishe_Orders_Updates>;
+export type Mutation_RootUpdate_Restaurant_Order_Items_ManyArgs = {
+  updates: Array<Restaurant_Order_Items_Updates>;
 };
 
 /** mutation root */
@@ -13964,11 +13964,11 @@ export type Query_Root = {
   /** fetch data from the table: "reel_orders" using primary key columns */
   reel_orders_by_pk?: Maybe<Reel_Orders>;
   /** An array relationship */
-  restaurant_dishe_orders: Array<Restaurant_Dishe_Orders>;
+  restaurant_order_items: Array<Restaurant_Order_Items>;
   /** An aggregate relationship */
-  restaurant_dishe_orders_aggregate: Restaurant_Dishe_Orders_Aggregate;
-  /** fetch data from the table: "restaurant_dishe_orders" using primary key columns */
-  restaurant_dishe_orders_by_pk?: Maybe<Restaurant_Dishe_Orders>;
+  restaurant_order_items_aggregate: Restaurant_Order_Items_Aggregate;
+  /** fetch data from the table: "restaurant_order_items" using primary key columns */
+  restaurant_order_items_by_pk?: Maybe<Restaurant_Order_Items>;
   /** An array relationship */
   restaurant_dishes: Array<Restaurant_Dishes>;
   /** An aggregate relationship */
@@ -14693,23 +14693,23 @@ export type Query_RootReel_Orders_By_PkArgs = {
   id: Scalars["uuid"]["input"];
 };
 
-export type Query_RootRestaurant_Dishe_OrdersArgs = {
-  distinct_on?: InputMaybe<Array<Restaurant_Dishe_Orders_Select_Column>>;
+export type Query_RootRestaurant_Order_ItemsArgs = {
+  distinct_on?: InputMaybe<Array<Restaurant_Order_Items_Select_Column>>;
   limit?: InputMaybe<Scalars["Int"]["input"]>;
   offset?: InputMaybe<Scalars["Int"]["input"]>;
-  order_by?: InputMaybe<Array<Restaurant_Dishe_Orders_Order_By>>;
-  where?: InputMaybe<Restaurant_Dishe_Orders_Bool_Exp>;
+  order_by?: InputMaybe<Array<Restaurant_Order_Items_Order_By>>;
+  where?: InputMaybe<Restaurant_Order_Items_Bool_Exp>;
 };
 
-export type Query_RootRestaurant_Dishe_Orders_AggregateArgs = {
-  distinct_on?: InputMaybe<Array<Restaurant_Dishe_Orders_Select_Column>>;
+export type Query_RootRestaurant_Order_Items_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Restaurant_Order_Items_Select_Column>>;
   limit?: InputMaybe<Scalars["Int"]["input"]>;
   offset?: InputMaybe<Scalars["Int"]["input"]>;
-  order_by?: InputMaybe<Array<Restaurant_Dishe_Orders_Order_By>>;
-  where?: InputMaybe<Restaurant_Dishe_Orders_Bool_Exp>;
+  order_by?: InputMaybe<Array<Restaurant_Order_Items_Order_By>>;
+  where?: InputMaybe<Restaurant_Order_Items_Bool_Exp>;
 };
 
-export type Query_RootRestaurant_Dishe_Orders_By_PkArgs = {
+export type Query_RootRestaurant_Order_Items_By_PkArgs = {
   id: Scalars["uuid"]["input"];
 };
 
@@ -15631,8 +15631,8 @@ export type Reel_Orders_Variance_Order_By = {
   OrderID?: InputMaybe<Order_By>;
 };
 
-/** columns and relationships of "restaurant_dishe_orders" */
-export type Restaurant_Dishe_Orders = {
+/** columns and relationships of "restaurant_order_items" */
+export type Restaurant_Order_Items = {
   created_at: Scalars["timestamptz"]["output"];
   dish_id: Scalars["uuid"]["output"];
   id: Scalars["uuid"]["output"];
@@ -15645,55 +15645,55 @@ export type Restaurant_Dishe_Orders = {
   restaurant_orders: Restaurant_Orders;
 };
 
-/** aggregated selection of "restaurant_dishe_orders" */
-export type Restaurant_Dishe_Orders_Aggregate = {
-  aggregate?: Maybe<Restaurant_Dishe_Orders_Aggregate_Fields>;
-  nodes: Array<Restaurant_Dishe_Orders>;
+/** aggregated selection of "restaurant_order_items" */
+export type Restaurant_Order_Items_Aggregate = {
+  aggregate?: Maybe<Restaurant_Order_Items_Aggregate_Fields>;
+  nodes: Array<Restaurant_Order_Items>;
 };
 
-export type Restaurant_Dishe_Orders_Aggregate_Bool_Exp = {
-  count?: InputMaybe<Restaurant_Dishe_Orders_Aggregate_Bool_Exp_Count>;
+export type Restaurant_Order_Items_Aggregate_Bool_Exp = {
+  count?: InputMaybe<Restaurant_Order_Items_Aggregate_Bool_Exp_Count>;
 };
 
-export type Restaurant_Dishe_Orders_Aggregate_Bool_Exp_Count = {
-  arguments?: InputMaybe<Array<Restaurant_Dishe_Orders_Select_Column>>;
+export type Restaurant_Order_Items_Aggregate_Bool_Exp_Count = {
+  arguments?: InputMaybe<Array<Restaurant_Order_Items_Select_Column>>;
   distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
-  filter?: InputMaybe<Restaurant_Dishe_Orders_Bool_Exp>;
+  filter?: InputMaybe<Restaurant_Order_Items_Bool_Exp>;
   predicate: Int_Comparison_Exp;
 };
 
-/** aggregate fields of "restaurant_dishe_orders" */
-export type Restaurant_Dishe_Orders_Aggregate_Fields = {
+/** aggregate fields of "restaurant_order_items" */
+export type Restaurant_Order_Items_Aggregate_Fields = {
   count: Scalars["Int"]["output"];
-  max?: Maybe<Restaurant_Dishe_Orders_Max_Fields>;
-  min?: Maybe<Restaurant_Dishe_Orders_Min_Fields>;
+  max?: Maybe<Restaurant_Order_Items_Max_Fields>;
+  min?: Maybe<Restaurant_Order_Items_Min_Fields>;
 };
 
-/** aggregate fields of "restaurant_dishe_orders" */
-export type Restaurant_Dishe_Orders_Aggregate_FieldsCountArgs = {
-  columns?: InputMaybe<Array<Restaurant_Dishe_Orders_Select_Column>>;
+/** aggregate fields of "restaurant_order_items" */
+export type Restaurant_Order_Items_Aggregate_FieldsCountArgs = {
+  columns?: InputMaybe<Array<Restaurant_Order_Items_Select_Column>>;
   distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
-/** order by aggregate values of table "restaurant_dishe_orders" */
-export type Restaurant_Dishe_Orders_Aggregate_Order_By = {
+/** order by aggregate values of table "restaurant_order_items" */
+export type Restaurant_Order_Items_Aggregate_Order_By = {
   count?: InputMaybe<Order_By>;
-  max?: InputMaybe<Restaurant_Dishe_Orders_Max_Order_By>;
-  min?: InputMaybe<Restaurant_Dishe_Orders_Min_Order_By>;
+  max?: InputMaybe<Restaurant_Order_Items_Max_Order_By>;
+  min?: InputMaybe<Restaurant_Order_Items_Min_Order_By>;
 };
 
-/** input type for inserting array relation for remote table "restaurant_dishe_orders" */
-export type Restaurant_Dishe_Orders_Arr_Rel_Insert_Input = {
-  data: Array<Restaurant_Dishe_Orders_Insert_Input>;
+/** input type for inserting array relation for remote table "restaurant_order_items" */
+export type Restaurant_Order_Items_Arr_Rel_Insert_Input = {
+  data: Array<Restaurant_Order_Items_Insert_Input>;
   /** upsert condition */
-  on_conflict?: InputMaybe<Restaurant_Dishe_Orders_On_Conflict>;
+  on_conflict?: InputMaybe<Restaurant_Order_Items_On_Conflict>;
 };
 
-/** Boolean expression to filter rows from the table "restaurant_dishe_orders". All fields are combined with a logical 'AND'. */
-export type Restaurant_Dishe_Orders_Bool_Exp = {
-  _and?: InputMaybe<Array<Restaurant_Dishe_Orders_Bool_Exp>>;
-  _not?: InputMaybe<Restaurant_Dishe_Orders_Bool_Exp>;
-  _or?: InputMaybe<Array<Restaurant_Dishe_Orders_Bool_Exp>>;
+/** Boolean expression to filter rows from the table "restaurant_order_items". All fields are combined with a logical 'AND'. */
+export type Restaurant_Order_Items_Bool_Exp = {
+  _and?: InputMaybe<Array<Restaurant_Order_Items_Bool_Exp>>;
+  _not?: InputMaybe<Restaurant_Order_Items_Bool_Exp>;
+  _or?: InputMaybe<Array<Restaurant_Order_Items_Bool_Exp>>;
   created_at?: InputMaybe<Timestamptz_Comparison_Exp>;
   dish_id?: InputMaybe<Uuid_Comparison_Exp>;
   id?: InputMaybe<Uuid_Comparison_Exp>;
@@ -15704,13 +15704,13 @@ export type Restaurant_Dishe_Orders_Bool_Exp = {
   restaurant_orders?: InputMaybe<Restaurant_Orders_Bool_Exp>;
 };
 
-/** unique or primary key constraints on table "restaurant_dishe_orders" */
-export type Restaurant_Dishe_Orders_Constraint =
+/** unique or primary key constraints on table "restaurant_order_items" */
+export type Restaurant_Order_Items_Constraint =
   /** unique or primary key constraint on columns "id" */
-  "restaurant_dishe_orders_pkey";
+  "restaurant_order_items_pkey";
 
-/** input type for inserting data into table "restaurant_dishe_orders" */
-export type Restaurant_Dishe_Orders_Insert_Input = {
+/** input type for inserting data into table "restaurant_order_items" */
+export type Restaurant_Order_Items_Insert_Input = {
   created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
   dish_id?: InputMaybe<Scalars["uuid"]["input"]>;
   id?: InputMaybe<Scalars["uuid"]["input"]>;
@@ -15722,7 +15722,7 @@ export type Restaurant_Dishe_Orders_Insert_Input = {
 };
 
 /** aggregate max on columns */
-export type Restaurant_Dishe_Orders_Max_Fields = {
+export type Restaurant_Order_Items_Max_Fields = {
   created_at?: Maybe<Scalars["timestamptz"]["output"]>;
   dish_id?: Maybe<Scalars["uuid"]["output"]>;
   id?: Maybe<Scalars["uuid"]["output"]>;
@@ -15731,8 +15731,8 @@ export type Restaurant_Dishe_Orders_Max_Fields = {
   quantity?: Maybe<Scalars["String"]["output"]>;
 };
 
-/** order by max() on columns of table "restaurant_dishe_orders" */
-export type Restaurant_Dishe_Orders_Max_Order_By = {
+/** order by max() on columns of table "restaurant_order_items" */
+export type Restaurant_Order_Items_Max_Order_By = {
   created_at?: InputMaybe<Order_By>;
   dish_id?: InputMaybe<Order_By>;
   id?: InputMaybe<Order_By>;
@@ -15742,7 +15742,7 @@ export type Restaurant_Dishe_Orders_Max_Order_By = {
 };
 
 /** aggregate min on columns */
-export type Restaurant_Dishe_Orders_Min_Fields = {
+export type Restaurant_Order_Items_Min_Fields = {
   created_at?: Maybe<Scalars["timestamptz"]["output"]>;
   dish_id?: Maybe<Scalars["uuid"]["output"]>;
   id?: Maybe<Scalars["uuid"]["output"]>;
@@ -15751,8 +15751,8 @@ export type Restaurant_Dishe_Orders_Min_Fields = {
   quantity?: Maybe<Scalars["String"]["output"]>;
 };
 
-/** order by min() on columns of table "restaurant_dishe_orders" */
-export type Restaurant_Dishe_Orders_Min_Order_By = {
+/** order by min() on columns of table "restaurant_order_items" */
+export type Restaurant_Order_Items_Min_Order_By = {
   created_at?: InputMaybe<Order_By>;
   dish_id?: InputMaybe<Order_By>;
   id?: InputMaybe<Order_By>;
@@ -15761,23 +15761,23 @@ export type Restaurant_Dishe_Orders_Min_Order_By = {
   quantity?: InputMaybe<Order_By>;
 };
 
-/** response of any mutation on the table "restaurant_dishe_orders" */
-export type Restaurant_Dishe_Orders_Mutation_Response = {
+/** response of any mutation on the table "restaurant_order_items" */
+export type Restaurant_Order_Items_Mutation_Response = {
   /** number of rows affected by the mutation */
   affected_rows: Scalars["Int"]["output"];
   /** data from the rows affected by the mutation */
-  returning: Array<Restaurant_Dishe_Orders>;
+  returning: Array<Restaurant_Order_Items>;
 };
 
-/** on_conflict condition type for table "restaurant_dishe_orders" */
-export type Restaurant_Dishe_Orders_On_Conflict = {
-  constraint: Restaurant_Dishe_Orders_Constraint;
-  update_columns?: Array<Restaurant_Dishe_Orders_Update_Column>;
-  where?: InputMaybe<Restaurant_Dishe_Orders_Bool_Exp>;
+/** on_conflict condition type for table "restaurant_order_items" */
+export type Restaurant_Order_Items_On_Conflict = {
+  constraint: Restaurant_Order_Items_Constraint;
+  update_columns?: Array<Restaurant_Order_Items_Update_Column>;
+  where?: InputMaybe<Restaurant_Order_Items_Bool_Exp>;
 };
 
-/** Ordering options when selecting data from "restaurant_dishe_orders". */
-export type Restaurant_Dishe_Orders_Order_By = {
+/** Ordering options when selecting data from "restaurant_order_items". */
+export type Restaurant_Order_Items_Order_By = {
   created_at?: InputMaybe<Order_By>;
   dish_id?: InputMaybe<Order_By>;
   id?: InputMaybe<Order_By>;
@@ -15788,13 +15788,13 @@ export type Restaurant_Dishe_Orders_Order_By = {
   restaurant_orders?: InputMaybe<Restaurant_Orders_Order_By>;
 };
 
-/** primary key columns input for table: restaurant_dishe_orders */
-export type Restaurant_Dishe_Orders_Pk_Columns_Input = {
+/** primary key columns input for table: restaurant_order_items */
+export type Restaurant_Order_Items_Pk_Columns_Input = {
   id: Scalars["uuid"]["input"];
 };
 
-/** select columns of table "restaurant_dishe_orders" */
-export type Restaurant_Dishe_Orders_Select_Column =
+/** select columns of table "restaurant_order_items" */
+export type Restaurant_Order_Items_Select_Column =
   /** column name */
   | "created_at"
   /** column name */
@@ -15808,8 +15808,8 @@ export type Restaurant_Dishe_Orders_Select_Column =
   /** column name */
   | "quantity";
 
-/** input type for updating data in table "restaurant_dishe_orders" */
-export type Restaurant_Dishe_Orders_Set_Input = {
+/** input type for updating data in table "restaurant_order_items" */
+export type Restaurant_Order_Items_Set_Input = {
   created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
   dish_id?: InputMaybe<Scalars["uuid"]["input"]>;
   id?: InputMaybe<Scalars["uuid"]["input"]>;
@@ -15818,16 +15818,16 @@ export type Restaurant_Dishe_Orders_Set_Input = {
   quantity?: InputMaybe<Scalars["String"]["input"]>;
 };
 
-/** Streaming cursor of the table "restaurant_dishe_orders" */
-export type Restaurant_Dishe_Orders_Stream_Cursor_Input = {
+/** Streaming cursor of the table "restaurant_order_items" */
+export type Restaurant_Order_Items_Stream_Cursor_Input = {
   /** Stream column input with initial value */
-  initial_value: Restaurant_Dishe_Orders_Stream_Cursor_Value_Input;
+  initial_value: Restaurant_Order_Items_Stream_Cursor_Value_Input;
   /** cursor ordering */
   ordering?: InputMaybe<Cursor_Ordering>;
 };
 
 /** Initial value of the column from where the streaming should start */
-export type Restaurant_Dishe_Orders_Stream_Cursor_Value_Input = {
+export type Restaurant_Order_Items_Stream_Cursor_Value_Input = {
   created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
   dish_id?: InputMaybe<Scalars["uuid"]["input"]>;
   id?: InputMaybe<Scalars["uuid"]["input"]>;
@@ -15836,8 +15836,8 @@ export type Restaurant_Dishe_Orders_Stream_Cursor_Value_Input = {
   quantity?: InputMaybe<Scalars["String"]["input"]>;
 };
 
-/** update columns of table "restaurant_dishe_orders" */
-export type Restaurant_Dishe_Orders_Update_Column =
+/** update columns of table "restaurant_order_items" */
+export type Restaurant_Order_Items_Update_Column =
   /** column name */
   | "created_at"
   /** column name */
@@ -15851,11 +15851,11 @@ export type Restaurant_Dishe_Orders_Update_Column =
   /** column name */
   | "quantity";
 
-export type Restaurant_Dishe_Orders_Updates = {
+export type Restaurant_Order_Items_Updates = {
   /** sets the columns of the filtered rows to the given values */
-  _set?: InputMaybe<Restaurant_Dishe_Orders_Set_Input>;
+  _set?: InputMaybe<Restaurant_Order_Items_Set_Input>;
   /** filter the rows which have to be updated */
-  where: Restaurant_Dishe_Orders_Bool_Exp;
+  where: Restaurant_Order_Items_Bool_Exp;
 };
 
 /** columns and relationships of "restaurant_dishes" */
@@ -16320,9 +16320,9 @@ export type Restaurant_Orders = {
   /** An object relationship */
   orderedBy: Users;
   /** An array relationship */
-  restaurant_dishe_orders: Array<Restaurant_Dishe_Orders>;
+  restaurant_order_items: Array<Restaurant_Order_Items>;
   /** An aggregate relationship */
-  restaurant_dishe_orders_aggregate: Restaurant_Dishe_Orders_Aggregate;
+  restaurant_order_items_aggregate: Restaurant_Order_Items_Aggregate;
   restaurant_id: Scalars["uuid"]["output"];
   /** An object relationship */
   shopper?: Maybe<Users>;
@@ -16335,21 +16335,21 @@ export type Restaurant_Orders = {
 };
 
 /** columns and relationships of "restaurant_orders" */
-export type Restaurant_OrdersRestaurant_Dishe_OrdersArgs = {
-  distinct_on?: InputMaybe<Array<Restaurant_Dishe_Orders_Select_Column>>;
+export type Restaurant_OrdersRestaurant_Order_ItemsArgs = {
+  distinct_on?: InputMaybe<Array<Restaurant_Order_Items_Select_Column>>;
   limit?: InputMaybe<Scalars["Int"]["input"]>;
   offset?: InputMaybe<Scalars["Int"]["input"]>;
-  order_by?: InputMaybe<Array<Restaurant_Dishe_Orders_Order_By>>;
-  where?: InputMaybe<Restaurant_Dishe_Orders_Bool_Exp>;
+  order_by?: InputMaybe<Array<Restaurant_Order_Items_Order_By>>;
+  where?: InputMaybe<Restaurant_Order_Items_Bool_Exp>;
 };
 
 /** columns and relationships of "restaurant_orders" */
-export type Restaurant_OrdersRestaurant_Dishe_Orders_AggregateArgs = {
-  distinct_on?: InputMaybe<Array<Restaurant_Dishe_Orders_Select_Column>>;
+export type Restaurant_OrdersRestaurant_Order_Items_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Restaurant_Order_Items_Select_Column>>;
   limit?: InputMaybe<Scalars["Int"]["input"]>;
   offset?: InputMaybe<Scalars["Int"]["input"]>;
-  order_by?: InputMaybe<Array<Restaurant_Dishe_Orders_Order_By>>;
-  where?: InputMaybe<Restaurant_Dishe_Orders_Bool_Exp>;
+  order_by?: InputMaybe<Array<Restaurant_Order_Items_Order_By>>;
+  where?: InputMaybe<Restaurant_Order_Items_Bool_Exp>;
 };
 
 /** aggregated selection of "restaurant_orders" */
@@ -16404,8 +16404,8 @@ export type Restaurant_Orders_Bool_Exp = {
   found?: InputMaybe<Boolean_Comparison_Exp>;
   id?: InputMaybe<Uuid_Comparison_Exp>;
   orderedBy?: InputMaybe<Users_Bool_Exp>;
-  restaurant_dishe_orders?: InputMaybe<Restaurant_Dishe_Orders_Bool_Exp>;
-  restaurant_dishe_orders_aggregate?: InputMaybe<Restaurant_Dishe_Orders_Aggregate_Bool_Exp>;
+  restaurant_order_items?: InputMaybe<Restaurant_Order_Items_Bool_Exp>;
+  restaurant_order_items_aggregate?: InputMaybe<Restaurant_Order_Items_Aggregate_Bool_Exp>;
   restaurant_id?: InputMaybe<Uuid_Comparison_Exp>;
   shopper?: InputMaybe<Users_Bool_Exp>;
   shopper_id?: InputMaybe<Uuid_Comparison_Exp>;
@@ -16447,7 +16447,7 @@ export type Restaurant_Orders_Insert_Input = {
   found?: InputMaybe<Scalars["Boolean"]["input"]>;
   id?: InputMaybe<Scalars["uuid"]["input"]>;
   orderedBy?: InputMaybe<Users_Obj_Rel_Insert_Input>;
-  restaurant_dishe_orders?: InputMaybe<Restaurant_Dishe_Orders_Arr_Rel_Insert_Input>;
+  restaurant_order_items?: InputMaybe<Restaurant_Order_Items_Arr_Rel_Insert_Input>;
   restaurant_id?: InputMaybe<Scalars["uuid"]["input"]>;
   shopper?: InputMaybe<Users_Obj_Rel_Insert_Input>;
   shopper_id?: InputMaybe<Scalars["uuid"]["input"]>;
@@ -16541,7 +16541,7 @@ export type Restaurant_Orders_Order_By = {
   found?: InputMaybe<Order_By>;
   id?: InputMaybe<Order_By>;
   orderedBy?: InputMaybe<Users_Order_By>;
-  restaurant_dishe_orders_aggregate?: InputMaybe<Restaurant_Dishe_Orders_Aggregate_Order_By>;
+  restaurant_order_items_aggregate?: InputMaybe<Restaurant_Order_Items_Aggregate_Order_By>;
   restaurant_id?: InputMaybe<Order_By>;
   shopper?: InputMaybe<Users_Order_By>;
   shopper_id?: InputMaybe<Order_By>;
@@ -18270,13 +18270,13 @@ export type Subscription_Root = {
   /** fetch data from the table in a streaming manner: "reel_orders" */
   reel_orders_stream: Array<Reel_Orders>;
   /** An array relationship */
-  restaurant_dishe_orders: Array<Restaurant_Dishe_Orders>;
+  restaurant_order_items: Array<Restaurant_Order_Items>;
   /** An aggregate relationship */
-  restaurant_dishe_orders_aggregate: Restaurant_Dishe_Orders_Aggregate;
-  /** fetch data from the table: "restaurant_dishe_orders" using primary key columns */
-  restaurant_dishe_orders_by_pk?: Maybe<Restaurant_Dishe_Orders>;
-  /** fetch data from the table in a streaming manner: "restaurant_dishe_orders" */
-  restaurant_dishe_orders_stream: Array<Restaurant_Dishe_Orders>;
+  restaurant_order_items_aggregate: Restaurant_Order_Items_Aggregate;
+  /** fetch data from the table: "restaurant_order_items" using primary key columns */
+  restaurant_order_items_by_pk?: Maybe<Restaurant_Order_Items>;
+  /** fetch data from the table in a streaming manner: "restaurant_order_items" */
+  restaurant_order_items_stream: Array<Restaurant_Order_Items>;
   /** An array relationship */
   restaurant_dishes: Array<Restaurant_Dishes>;
   /** An aggregate relationship */
@@ -19219,30 +19219,30 @@ export type Subscription_RootReel_Orders_StreamArgs = {
   where?: InputMaybe<Reel_Orders_Bool_Exp>;
 };
 
-export type Subscription_RootRestaurant_Dishe_OrdersArgs = {
-  distinct_on?: InputMaybe<Array<Restaurant_Dishe_Orders_Select_Column>>;
+export type Subscription_RootRestaurant_Order_ItemsArgs = {
+  distinct_on?: InputMaybe<Array<Restaurant_Order_Items_Select_Column>>;
   limit?: InputMaybe<Scalars["Int"]["input"]>;
   offset?: InputMaybe<Scalars["Int"]["input"]>;
-  order_by?: InputMaybe<Array<Restaurant_Dishe_Orders_Order_By>>;
-  where?: InputMaybe<Restaurant_Dishe_Orders_Bool_Exp>;
+  order_by?: InputMaybe<Array<Restaurant_Order_Items_Order_By>>;
+  where?: InputMaybe<Restaurant_Order_Items_Bool_Exp>;
 };
 
-export type Subscription_RootRestaurant_Dishe_Orders_AggregateArgs = {
-  distinct_on?: InputMaybe<Array<Restaurant_Dishe_Orders_Select_Column>>;
+export type Subscription_RootRestaurant_Order_Items_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Restaurant_Order_Items_Select_Column>>;
   limit?: InputMaybe<Scalars["Int"]["input"]>;
   offset?: InputMaybe<Scalars["Int"]["input"]>;
-  order_by?: InputMaybe<Array<Restaurant_Dishe_Orders_Order_By>>;
-  where?: InputMaybe<Restaurant_Dishe_Orders_Bool_Exp>;
+  order_by?: InputMaybe<Array<Restaurant_Order_Items_Order_By>>;
+  where?: InputMaybe<Restaurant_Order_Items_Bool_Exp>;
 };
 
-export type Subscription_RootRestaurant_Dishe_Orders_By_PkArgs = {
+export type Subscription_RootRestaurant_Order_Items_By_PkArgs = {
   id: Scalars["uuid"]["input"];
 };
 
-export type Subscription_RootRestaurant_Dishe_Orders_StreamArgs = {
+export type Subscription_RootRestaurant_Order_Items_StreamArgs = {
   batch_size: Scalars["Int"]["input"];
-  cursor: Array<InputMaybe<Restaurant_Dishe_Orders_Stream_Cursor_Input>>;
-  where?: InputMaybe<Restaurant_Dishe_Orders_Bool_Exp>;
+  cursor: Array<InputMaybe<Restaurant_Order_Items_Stream_Cursor_Input>>;
+  where?: InputMaybe<Restaurant_Order_Items_Bool_Exp>;
 };
 
 export type Subscription_RootRestaurant_DishesArgs = {
@@ -21236,7 +21236,7 @@ export type AddOrderedDishesMutationVariables = Exact<{
 }>;
 
 export type AddOrderedDishesMutation = {
-  insert_restaurant_dishe_orders?: { affected_rows: number } | null;
+  insert_restaurant_order_items?: { affected_rows: number } | null;
 };
 
 export type AddRestaurantOrdersMutationVariables = Exact<{
@@ -21279,7 +21279,7 @@ export type GetRestaurantOrdersQuery = {
     delivery_address_id: string;
     delivery_photo_url?: string | null;
     updated_at?: string | null;
-    restaurant_dishe_orders: Array<{
+    restaurant_order_items: Array<{
       quantity: string;
       price: string;
       dish_id: string;
@@ -21355,7 +21355,7 @@ export type GetAllRestaurantOrdersQuery = {
     delivery_photo_url?: string | null;
     updated_at?: string | null;
     assigned_at?: string | null;
-    restaurant_dishe_orders: Array<{
+    restaurant_order_items: Array<{
       quantity: string;
       price: string;
       dish_id: string;
@@ -23027,7 +23027,7 @@ export const AddOrderedDishesDocument = gql`
     $id: uuid = ""
     $dish_id: uuid = ""
   ) {
-    insert_restaurant_dishe_orders(
+    insert_restaurant_order_items(
       objects: {
         quantity: $quantity
         price: $price
@@ -23089,7 +23089,7 @@ export const GetRestaurantOrdersDocument = gql`
       discount
       voucher_code
       found
-      restaurant_dishe_orders {
+      restaurant_order_items {
         quantity
         price
         dish_id
@@ -23161,7 +23161,7 @@ export const GetAllRestaurantOrdersDocument = gql`
       discount
       voucher_code
       found
-      restaurant_dishe_orders {
+      restaurant_order_items {
         quantity
         price
         dish_id

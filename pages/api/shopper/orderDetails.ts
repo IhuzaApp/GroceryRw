@@ -333,7 +333,7 @@ const GET_RESTAURANT_ORDER_DETAILS = gql`
         user_id
         is_default
       }
-      restaurant_dishe_orders {
+      restaurant_order_items {
         id
         quantity
         price
@@ -693,7 +693,7 @@ export default async function handler(
       const totalEarnings = deliveryFee; // Restaurant orders don't have service fee
 
       // Format dish items
-      const formattedDishItems = orderData.restaurant_dishe_orders.map(
+      const formattedDishItems = orderData.restaurant_order_items.map(
         (dishOrder: any) => ({
           id: dishOrder.id,
           name: dishOrder.restaurant_dishes?.name || "Unknown Dish",

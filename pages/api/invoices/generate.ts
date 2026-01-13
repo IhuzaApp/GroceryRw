@@ -126,7 +126,7 @@ const GET_RESTAURANT_ORDER_DETAILS_FOR_INVOICE = gql`
         phone
         logo
       }
-      restaurant_dishe_orders {
+      restaurant_order_items {
         id
         quantity
         price
@@ -278,7 +278,7 @@ interface RestaurantOrderDetails {
       phone?: string;
       logo?: string;
     };
-    restaurant_dishe_orders: Array<{
+    restaurant_order_items: Array<{
       id: string;
       quantity: number;
       price: string;
@@ -451,7 +451,7 @@ export default async function handler(
       ];
     } else if (isRestaurantOrder) {
       // For restaurant orders, use the dish orders
-      const dishOrders = order.restaurant_dishe_orders;
+      const dishOrders = order.restaurant_order_items;
 
       itemsTotal = dishOrders.reduce((total: number, dishOrder: any) => {
         return total + parseFloat(dishOrder.price) * dishOrder.quantity;

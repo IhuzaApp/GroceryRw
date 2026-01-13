@@ -388,7 +388,7 @@ export const sendBatchOrdersNotification = async (
         orderCount: totalOrders.toString(),
         totalEarnings: totalEarnings.toString(),
         orders: JSON.stringify(ordersData),
-        expiresIn: "90000", // 90 seconds (1 minute 30 seconds)
+        expiresIn: "60000", // 60 seconds
         timestamp: Date.now().toString(),
       },
     };
