@@ -109,16 +109,17 @@ export default function NotificationSystem({
     if (!(window as any).__notificationSystemInstances) {
       (window as any).__notificationSystemInstances = new Set();
     }
-    
+
     const instances = (window as any).__notificationSystemInstances;
     const hadInstancesBefore = instances.size;
     instances.add(componentId.current);
-    
+
     if (instances.size > 1) {
       console.error("⚠️ DUPLICATE NotificationSystem DETECTED!", {
         activeInstances: Array.from(instances),
         thisComponentId: componentId.current,
-        message: "Multiple NotificationSystem components are running! This will cause duplicate API calls.",
+        message:
+          "Multiple NotificationSystem components are running! This will cause duplicate API calls.",
       });
     } else if (process.env.NODE_ENV === "development") {
       // Only log in development, and only when truly new (not StrictMode remount)
@@ -132,7 +133,7 @@ export default function NotificationSystem({
 
     return () => {
       instances.delete(componentId.current);
-      
+
       // Only log unmount if it's the last instance or if in production
       if (instances.size === 0 || process.env.NODE_ENV === "production") {
         console.log("🔧 NotificationSystem unmounted", {
@@ -160,7 +161,7 @@ export default function NotificationSystem({
   useEffect(() => {
     const updateShopperOnlineStatus = () => {
       const online = checkOnlineStatus();
-      
+
       // Only update and log if status actually changed
       if (online !== isShopperOnline) {
         console.log("👤 NotificationSystem: Shopper online status changed:", {
@@ -169,7 +170,7 @@ export default function NotificationSystem({
           timestamp: new Date().toISOString(),
           componentId: componentId.current,
         });
-        
+
         setIsShopperOnline(online);
 
         // Clear notifications when going offline (only if we were actually running)
@@ -178,7 +179,7 @@ export default function NotificationSystem({
             componentId: componentId.current,
           });
           stopNotificationSystem();
-          
+
           // Close any open notification modals
           setShowMapModal(false);
           setSelectedOrder(null);
@@ -1258,22 +1259,25 @@ export default function NotificationSystem({
 
             // Dismiss old notification
             removeToastForOrder(currentUserAssignment.orderId);
-            
+
             // Wait for exit animation to complete before showing new notification
             console.log("⏳ Waiting for exit animation (500ms)...", {
               oldOrderId: currentUserAssignment.orderId,
               newOrderId: order.id,
             });
-            
+
             setTimeout(() => {
-              console.log("✨ Exit animation complete, showing new notification", {
-                newOrderId: order.id,
-              });
-              
+              console.log(
+                "✨ Exit animation complete, showing new notification",
+                {
+                  newOrderId: order.id,
+                }
+              );
+
               // Now show the new order after old one has disappeared
               showNewOrderNotification(order, currentTime);
             }, 500); // Wait 500ms for exit animation
-            
+
             return; // Exit early, we'll show the new notification after the delay
           }
 
@@ -1327,7 +1331,8 @@ export default function NotificationSystem({
     if (checkInterval.current) {
       console.log("⚠️ Notification system already running, skipping restart", {
         componentId: componentId.current,
-        message: "This is normal in development (React StrictMode causes double effects)",
+        message:
+          "This is normal in development (React StrictMode causes double effects)",
       });
       return;
     }
@@ -1364,10 +1369,10 @@ export default function NotificationSystem({
         hadInterval: checkInterval.current !== null,
       });
     }
-    
+
     // Force release the lock
     isCheckingOrders.current = false;
-    
+
     if (checkInterval.current) {
       clearInterval(checkInterval.current);
       checkInterval.current = null;
@@ -1820,30 +1825,39 @@ export default function NotificationSystem({
                     // 🚀 CALL BACKEND API TO DECLINE OFFER AND ROTATE TO NEXT SHOPPER
                     (async () => {
                       try {
-                        console.log("📡 Calling decline API to rotate to next shopper...", {
-                          orderId,
-                          shopperId: session?.user?.id,
-                        });
-
-                        const declineResponse = await fetch("/api/shopper/decline-offer", {
-                          method: "POST",
-                          headers: {
-                            "Content-Type": "application/json",
-                          },
-                          body: JSON.stringify({
-                            orderId: orderId,
+                        console.log(
+                          "📡 Calling decline API to rotate to next shopper...",
+                          {
+                            orderId,
                             shopperId: session?.user?.id,
-                          }),
-                        });
+                          }
+                        );
+
+                        const declineResponse = await fetch(
+                          "/api/shopper/decline-offer",
+                          {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                              orderId: orderId,
+                              shopperId: session?.user?.id,
+                            }),
+                          }
+                        );
 
                         const declineData = await declineResponse.json();
 
                         if (declineResponse.ok) {
-                          console.log("✅ Decline API successful - order rotated to next shopper:", {
-                            orderId,
-                            nextShopperId: declineData.nextShopper?.id,
-                            message: declineData.message,
-                          });
+                          console.log(
+                            "✅ Decline API successful - order rotated to next shopper:",
+                            {
+                              orderId,
+                              nextShopperId: declineData.nextShopper?.id,
+                              message: declineData.message,
+                            }
+                          );
                         } else {
                           console.error("❌ Decline API failed:", declineData);
                         }
@@ -1897,7 +1911,7 @@ export default function NotificationSystem({
                       setSelectedOrder(null);
                       // Notify parent that notification is hidden
                       onNotificationShow?.(null);
-                      
+
                       // Dispatch custom event
                       window.dispatchEvent(
                         new CustomEvent("notification-order-hidden", {

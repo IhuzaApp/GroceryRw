@@ -1,10 +1,13 @@
 # 🧹 Clean Up Duplicate Order Offers
 
 ## Problem
+
 The system was creating multiple offers for the same shopper-order combination, resulting in duplicate records.
 
 ## ✅ Fix Applied
+
 The code now:
+
 1. **Checks** if shopper already has an active offer for an order
 2. **Extends** the expiry time instead of creating a new offer
 3. **Prevents** duplicate records going forward
@@ -21,10 +24,10 @@ DELETE FROM order_offers
 WHERE id IN (
   SELECT id
   FROM (
-    SELECT 
+    SELECT
       id,
       ROW_NUMBER() OVER (
-        PARTITION BY shopper_id, 
+        PARTITION BY shopper_id,
         COALESCE(order_id, reel_order_id, restaurant_order_id, business_order_id)
         ORDER BY created_at DESC
       ) as row_num
@@ -43,7 +46,7 @@ DELETE FROM order_offers
 WHERE id IN (
   SELECT id
   FROM (
-    SELECT 
+    SELECT
       id,
       ROW_NUMBER() OVER (
         PARTITION BY shopper_id
@@ -61,7 +64,7 @@ WHERE id IN (
 ```sql
 -- Delete all OFFERED offers that are expired
 DELETE FROM order_offers
-WHERE status = 'OFFERED' 
+WHERE status = 'OFFERED'
 AND expires_at < NOW();
 ```
 
@@ -71,7 +74,7 @@ See how many duplicates you have:
 
 ```sql
 -- Count offers per shopper-order combination
-SELECT 
+SELECT
   shopper_id,
   COALESCE(order_id, reel_order_id, restaurant_order_id, business_order_id) as order_id,
   order_type,
@@ -79,8 +82,8 @@ SELECT
   MAX(created_at) as latest_offer
 FROM order_offers
 WHERE status = 'OFFERED'
-GROUP BY 
-  shopper_id, 
+GROUP BY
+  shopper_id,
   COALESCE(order_id, reel_order_id, restaurant_order_id, business_order_id),
   order_type
 HAVING COUNT(*) > 1
@@ -93,7 +96,7 @@ Check that duplicates are gone:
 
 ```sql
 -- Should return 0 rows if duplicates are cleaned up
-SELECT 
+SELECT
   shopper_id,
   COALESCE(order_id, reel_order_id, restaurant_order_id, business_order_id) as order_id,
   COUNT(*) as offer_count
@@ -106,6 +109,7 @@ HAVING COUNT(*) > 1;
 ## 🎯 What Happens Now
 
 ### Before (Problem):
+
 ```
 API called → Create new offer (duplicate!)
 API called → Create new offer (duplicate!)
@@ -113,6 +117,7 @@ API called → Create new offer (duplicate!)
 ```
 
 ### After (Fixed):
+
 ```
 API called → Create new offer ✅
 API called → Extend existing offer ✅ (no duplicate)
@@ -122,6 +127,7 @@ API called → Extend existing offer ✅ (no duplicate)
 ## 📝 Logs You'll See
 
 ### When extending an existing offer:
+
 ```
 🔄 Extending existing offer (preventing duplicate): {
   existingOfferId: '...',
@@ -135,6 +141,7 @@ API called → Extend existing offer ✅ (no duplicate)
 ```
 
 ### When creating a new offer:
+
 ```
 Creating exclusive offer: {
   orderId: '...',

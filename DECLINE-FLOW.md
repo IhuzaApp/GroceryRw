@@ -3,12 +3,14 @@
 ## ✅ What Happens When Shopper Declines
 
 ### **Before the Fix:**
+
 ❌ Only updated local state (localStorage)
 ❌ Order stayed with shopper in database
 ❌ No rotation to next shopper
 ❌ Order was stuck!
 
 ### **After the Fix:**
+
 ✅ Updates local state
 ✅ Calls backend API
 ✅ Marks offer as DECLINED in database
@@ -23,6 +25,7 @@
 ### **Step 1: Shopper Clicks "Decline"**
 
 **Frontend (`NotificationSystem.tsx`):**
+
 ```typescript
 1. Add order to declined list (localStorage)
 2. Hide notification modal
@@ -31,6 +34,7 @@
 ```
 
 **Console Logs:**
+
 ```
 🔴 DECLINE BUTTON CLICKED { orderId, clickCount }
 💾 Saved declined orders to localStorage
@@ -43,6 +47,7 @@
 ### **Step 2: Backend Processes Decline**
 
 **API (`decline-offer.ts`):**
+
 ```typescript
 1. Verify offer exists and belongs to shopper
 2. Mark offer as DECLINED in database
@@ -53,14 +58,15 @@
 ```
 
 **Database Changes:**
+
 ```sql
 -- Current shopper's offer
-UPDATE order_offers 
-SET status = 'DECLINED' 
+UPDATE order_offers
+SET status = 'DECLINED'
 WHERE id = '...';
 
 -- Next shopper's offer
-INSERT INTO order_offers 
+INSERT INTO order_offers
 VALUES (next_shopper_id, order_id, 'OFFERED', ...);
 ```
 
@@ -69,6 +75,7 @@ VALUES (next_shopper_id, order_id, 'OFFERED', ...);
 ### **Step 3: Next Shopper Gets Notified**
 
 **Next Shopper's Device:**
+
 ```
 🔔 FCM Notification received
 📱 Notification card appears
@@ -81,6 +88,7 @@ VALUES (next_shopper_id, order_id, 'OFFERED', ...);
 ## 🎯 What You'll See in Console
 
 ### **Current Shopper (Who Declined):**
+
 ```javascript
 🔴 DECLINE BUTTON CLICKED {
   orderId: '087c257b-...',
@@ -110,6 +118,7 @@ VALUES (next_shopper_id, order_id, 'OFFERED', ...);
 ```
 
 ### **Backend (API Logs):**
+
 ```javascript
 📥 Decline offer API called {
   orderId: '087c257b-...',
@@ -142,6 +151,7 @@ VALUES (next_shopper_id, order_id, 'OFFERED', ...);
 ```
 
 ### **Next Shopper (Receiving Order):**
+
 ```javascript
 📲 FCM NEW ORDER EVENT {
   orderId: '087c257b-...',
@@ -160,16 +170,16 @@ VALUES (next_shopper_id, order_id, 'OFFERED', ...);
 
 ## ⏱️ Timing
 
-| Event | Time | Status |
-|-------|------|--------|
-| **Shopper clicks decline** | T+0s | Button clicked |
-| **Local state updated** | T+0.1s | UI updated |
-| **API called** | T+0.2s | Request sent |
-| **Offer marked DECLINED** | T+0.3s | Database updated |
-| **Next shopper found** | T+0.4s | Eligibility check |
-| **New offer created** | T+0.5s | Database insert |
-| **FCM sent** | T+0.6s | Notification sent |
-| **Next shopper sees order** | T+1s | Notification appears |
+| Event                       | Time   | Status               |
+| --------------------------- | ------ | -------------------- |
+| **Shopper clicks decline**  | T+0s   | Button clicked       |
+| **Local state updated**     | T+0.1s | UI updated           |
+| **API called**              | T+0.2s | Request sent         |
+| **Offer marked DECLINED**   | T+0.3s | Database updated     |
+| **Next shopper found**      | T+0.4s | Eligibility check    |
+| **New offer created**       | T+0.5s | Database insert      |
+| **FCM sent**                | T+0.6s | Notification sent    |
+| **Next shopper sees order** | T+1s   | Notification appears |
 
 **Total time: ~1 second** from decline to next shopper seeing the order! ⚡
 
@@ -186,6 +196,7 @@ Round 3: Shopper C (accepted) → Order assigned! ✅
 ```
 
 **Round affects:**
+
 - Search radius (3km → 5km → 8km)
 - Priority scoring
 - Urgency indicators
@@ -195,6 +206,7 @@ Round 3: Shopper C (accepted) → Order assigned! ✅
 ## 🚫 What Prevents Double-Declining?
 
 ### **10-Second Cooldown:**
+
 ```typescript
 lastDeclineTime.current = Date.now();
 
@@ -205,6 +217,7 @@ if (currentTime - lastDeclineTime.current < 10000) {
 ```
 
 ### **5-Minute Memory:**
+
 ```typescript
 // Declined orders stored for 5 minutes
 declinedOrders.current.set(orderId, Date.now() + 300000);
@@ -220,6 +233,7 @@ if (declinedOrders.current.has(order.id)) {
 ## 🧪 Test the Flow
 
 ### **Test Case 1: Basic Decline**
+
 1. Shopper A receives order
 2. Shopper A clicks "Decline"
 3. Check console: See "📡 Calling decline API"
@@ -227,12 +241,14 @@ if (declinedOrders.current.has(order.id)) {
 5. ✅ Next shopper (B) should receive order within 1 second
 
 ### **Test Case 2: Multiple Declines**
+
 1. Shopper A declines → Goes to B
 2. Shopper B declines → Goes to C
 3. Shopper C declines → Goes to D
 4. ✅ Each rotation happens instantly
 
 ### **Test Case 3: Cooldown**
+
 1. Shopper A declines order X
 2. Within 10 seconds, order Y appears
 3. ✅ Order X should NOT reappear during cooldown
@@ -245,6 +261,7 @@ if (declinedOrders.current.has(order.id)) {
 ### **POST `/api/shopper/decline-offer`**
 
 **Request:**
+
 ```json
 {
   "orderId": "087c257b-4496-4a4f-9909-3920175bd8bc",
@@ -253,6 +270,7 @@ if (declinedOrders.current.has(order.id)) {
 ```
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -266,6 +284,7 @@ if (declinedOrders.current.has(order.id)) {
 ```
 
 **Error Response (400/404):**
+
 ```json
 {
   "success": false,
@@ -290,6 +309,7 @@ if (declinedOrders.current.has(order.id)) {
 **The decline flow now works perfectly!**
 
 When a shopper declines:
+
 1. ✅ Frontend updates local state
 2. ✅ Backend marks offer as DECLINED
 3. ✅ Next shopper is found immediately

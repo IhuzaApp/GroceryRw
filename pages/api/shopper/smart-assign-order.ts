@@ -19,7 +19,7 @@ import {
 //
 // **ACTION-BASED SYSTEM** (No time-based expiry):
 // - Offers stay until shopper explicitly ACCEPTS or DECLINES
-// - If DECLINED → Goes to next shopper immediately  
+// - If DECLINED → Goes to next shopper immediately
 // - If ACCEPTED → Shopper works exclusively, no new offers until delivery
 // - ONE ORDER AT A TIME → Cannot accept new orders while working on one
 //
@@ -565,7 +565,7 @@ export default async function handler(
     // ONE ORDER AT A TIME: Shopper cannot get new offers if they're working
     // on an order. They must complete/deliver it first.
     // ========================================================================
-    
+
     const CHECK_ACTIVE_ORDERS = gql`
       query CheckActiveOrders($shopper_id: uuid!) {
         Orders(
@@ -592,7 +592,7 @@ export default async function handler(
         activeOrderId: activeOrder.id,
         status: activeOrder.status,
       });
-      
+
       return res.status(200).json({
         success: false,
         message: "Complete your current order before accepting new ones",
@@ -693,7 +693,9 @@ export default async function handler(
       // Check if location is fresh enough
       if (locationAge > 30) {
         console.warn(
-          `⚠️ Location is stale (${locationAge.toFixed(1)}s old). Shopper may be offline.`
+          `⚠️ Location is stale (${locationAge.toFixed(
+            1
+          )}s old). Shopper may be offline.`
         );
         await logOfferSkip({
           orderId: "N/A",
@@ -748,7 +750,9 @@ export default async function handler(
         maxDistanceKm = URGENT_MAX_DISTANCE_KM;
         maxEtaMinutes = 60;
         console.log(
-          `⏰ URGENT order ${order.id} (${orderAgeMinutes.toFixed(1)}m old) - using ${maxDistanceKm}km radius`
+          `⏰ URGENT order ${order.id} (${orderAgeMinutes.toFixed(
+            1
+          )}m old) - using ${maxDistanceKm}km radius`
         );
       } else {
         // Get current round for this order
@@ -766,14 +770,20 @@ export default async function handler(
         maxEtaMinutes = roundConfig.maxEtaMinutes;
 
         console.log(
-          `📍 Order ${order.id} round ${nextRound}: max ${maxDistanceKm}km, distance ${distance.toFixed(2)}km`
+          `📍 Order ${
+            order.id
+          } round ${nextRound}: max ${maxDistanceKm}km, distance ${distance.toFixed(
+            2
+          )}km`
         );
       }
 
       // Distance check
       if (distance > maxDistanceKm) {
         console.log(
-          `❌ SKIP: Order ${order.id} too far (${distance.toFixed(2)}km > ${maxDistanceKm}km)`
+          `❌ SKIP: Order ${order.id} too far (${distance.toFixed(
+            2
+          )}km > ${maxDistanceKm}km)`
         );
         await logOfferSkip({
           orderId: order.id,
@@ -814,7 +824,9 @@ export default async function handler(
         eta,
       });
       console.log(
-        `✅ ELIGIBLE: Order ${order.id} (${distance.toFixed(2)}km, ${eta}min ETA)`
+        `✅ ELIGIBLE: Order ${order.id} (${distance.toFixed(
+          2
+        )}km, ${eta}min ETA)`
       );
     }
 
@@ -839,7 +851,11 @@ export default async function handler(
     // to find the best order for THIS shopper
     // ========================================================================
 
-    console.log("Calculating priority for", nearbyOrders.length, "nearby orders");
+    console.log(
+      "Calculating priority for",
+      nearbyOrders.length,
+      "nearby orders"
+    );
 
     // Calculate priority for each order
     const ordersWithPriority = nearbyOrders.map((order) => ({
@@ -882,7 +898,9 @@ export default async function handler(
     const now = new Date();
     const offeredAt = now.toISOString();
     // No time-based expiry - set to 7 days in future (effectively "until action taken")
-    const expiresAt = new Date(now.getTime() + (7 * 24 * 60 * 60 * 1000)).toISOString();
+    const expiresAt = new Date(
+      now.getTime() + 7 * 24 * 60 * 60 * 1000
+    ).toISOString();
 
     // Prepare the order_id field based on order type
     // Set unused foreign keys explicitly to null to avoid constraint violations
@@ -911,9 +929,9 @@ export default async function handler(
     // Check if shopper already has an active offer for this order
     // If yes, just extend the expiry time instead of creating a duplicate
     // ========================================================================
-    
+
     let existingOfferData: any;
-    
+
     if (bestOrder.orderType === "regular") {
       existingOfferData = await hasuraClient.request(
         CHECK_SHOPPER_EXISTING_OFFER_REGULAR,
@@ -1013,9 +1031,9 @@ export default async function handler(
       null // No time-based expiry
     );
 
-      try {
-        await sendNewOrderNotification(user_id, {
-          id: bestOrder.id,
+    try {
+      await sendNewOrderNotification(user_id, {
+        id: bestOrder.id,
         shopName: orderData.shopName,
         customerAddress: orderData.customerAddress,
         distance: orderData.distance,
@@ -1041,7 +1059,7 @@ export default async function handler(
     return res.status(200).json({
       success: true,
       order: orderData,
-      message: existingOffer 
+      message: existingOffer
         ? "Offer refreshed - still waiting for shopper action"
         : "Exclusive offer created - shopper must accept or decline",
       offerId: offerId,

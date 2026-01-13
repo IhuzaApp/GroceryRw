@@ -268,10 +268,7 @@ mutation DeclineOrderOffer($offer_id: uuid!) {
 query GetExpiredOffers {
   order_offers(
     where: {
-      _and: [
-        { status: { _eq: "OFFERED" } }
-        { expires_at: { _lte: "now()" } }
-      ]
+      _and: [{ status: { _eq: "OFFERED" } }, { expires_at: { _lte: "now()" } }]
     }
   ) {
     id

@@ -3,6 +3,7 @@
 ## Problem Identified
 
 The Smart Assignment API was being called **multiple times simultaneously**, causing:
+
 - 🔴 Duplicate database queries to Hasura
 - 🔴 Multiple FCM notifications for the same order
 - 🔴 Wasted server resources
@@ -16,6 +17,7 @@ The Smart Assignment API was being called **multiple times simultaneously**, cau
 2. ❌ **ShopperDashboard.tsx** (line 649) - **DUPLICATE** that only rendered on dashboard
 
 When a shopper was on the dashboard page, **BOTH components were active**, each:
+
 - Running their own API polling intervals
 - Initializing their own FCM listeners
 - Calling `/api/shopper/smart-assign-order` independently
@@ -24,6 +26,7 @@ When a shopper was on the dashboard page, **BOTH components were active**, each:
 ## Solution Applied
 
 ### 1. Removed Duplicate Instance
+
 **File:** `src/components/shopper/dashboard/ShopperDashboard.tsx`
 
 ```typescript
@@ -47,6 +50,7 @@ When a shopper was on the dashboard page, **BOTH components were active**, each:
 ```
 
 ### 2. Added Communication via Custom Events
+
 Since the dashboard needs to know when notifications are shown (to display routes on map), we added custom events:
 
 **File:** `src/components/shopper/NotificationSystem.tsx`
@@ -83,16 +87,26 @@ useEffect(() => {
   };
 
   window.addEventListener("notification-order-shown", handleNotificationShown);
-  window.addEventListener("notification-order-hidden", handleNotificationHidden);
+  window.addEventListener(
+    "notification-order-hidden",
+    handleNotificationHidden
+  );
 
   return () => {
-    window.removeEventListener("notification-order-shown", handleNotificationShown);
-    window.removeEventListener("notification-order-hidden", handleNotificationHidden);
+    window.removeEventListener(
+      "notification-order-shown",
+      handleNotificationShown
+    );
+    window.removeEventListener(
+      "notification-order-hidden",
+      handleNotificationHidden
+    );
   };
 }, []);
 ```
 
 ### 3. Added Better Debugging
+
 **File:** `src/components/shopper/NotificationSystem.tsx`
 
 Added component ID tracking to identify multiple instances:
@@ -131,12 +145,14 @@ console.log("🔓 API POLLING: Lock released", {
 ```
 
 ### 4. Improved Documentation
+
 **File:** `src/components/shopper/ShopperLayout.tsx`
 
 Added clear documentation about the NotificationSystem:
 
 ```typescript
-{/* 
+{
+  /* 
   NotificationSystem - Single instance for all Plasa pages
   This component handles:
   - FCM push notifications
@@ -145,7 +161,8 @@ Added clear documentation about the NotificationSystem:
   - Notification display modal
   
   Only renders when shopper is online (has location cookies)
-*/}
+*/
+}
 ```
 
 ## Architecture Now
@@ -181,6 +198,7 @@ MapSection displays route
 ### Expected Behavior Now
 
 1. **On Dashboard Load:**
+
    ```
    🔧 NotificationSystem mounted { componentId: "abc123" }
    🟢 Starting smart notification system - shopper is online
@@ -190,6 +208,7 @@ MapSection displays route
    ```
 
 2. **On Dashboard Refresh:**
+
    ```
    🔧 NotificationSystem unmounted { componentId: "abc123" }
    🔧 NotificationSystem mounted { componentId: "def456" }
@@ -203,11 +222,13 @@ MapSection displays route
 ### How to Verify
 
 1. **Check Console Logs:**
+
    - Should only see ONE "NotificationSystem mounted" message
    - Should only see ONE "Smart Assignment API called" per interval
    - Should see lock acquire/release messages
 
 2. **Check Server Logs:**
+
    - Should only see ONE API call per 30 seconds (or 2 minutes with FCM)
    - Should only see ONE FCM notification sent per order
 
@@ -218,6 +239,7 @@ MapSection displays route
 ## Benefits
 
 ### Performance
+
 - ✅ 50% reduction in API calls (removed duplicate instance)
 - ✅ 50% reduction in database queries
 - ✅ 50% reduction in FCM notifications
@@ -225,11 +247,13 @@ MapSection displays route
 - ✅ Lower cloud costs
 
 ### Reliability
+
 - ✅ No race conditions between instances
 - ✅ Consistent notification behavior
 - ✅ Cleaner logs for debugging
 
 ### User Experience
+
 - ✅ No duplicate notifications
 - ✅ Faster response times
 - ✅ More efficient battery usage
@@ -237,11 +261,13 @@ MapSection displays route
 ## Files Modified
 
 1. **src/components/shopper/dashboard/ShopperDashboard.tsx**
+
    - Removed duplicate NotificationSystem
    - Removed import
    - Added event listeners for notification updates
 
 2. **src/components/shopper/NotificationSystem.tsx**
+
    - Added component ID for debugging
    - Added custom event dispatching
    - Added better lock logging

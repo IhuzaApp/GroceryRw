@@ -3,27 +3,34 @@
 ## Problems Fixed
 
 ### 1. ❌ Better Orders Not Replacing Current Ones
+
 **Problem:** Shopper seeing order with 3900 earnings while system found order with 4500 earnings
+
 - System had `hasCurrentAssignment` check that blocked ALL new orders
 - Once a notification was shown, no better orders could replace it
 - Shopper missed out on higher-paying orders
 
 **Example from logs:**
+
 ```
 13:17:59 - Shows order af0f7a8d (3900 earnings)
-13:18:27 - API finds order 23b5c595 (4500 earnings) 
+13:18:27 - API finds order 23b5c595 (4500 earnings)
            ❌ BLOCKED: hasCurrentAssignment: true
 13:19:25 - API finds order 23b5c595 (4500 earnings) again
            ❌ BLOCKED: hasCurrentAssignment: true
 ```
 
 ### 2. ❌ Order Timeout Too Long (90 seconds)
+
 **Problem:** Shoppers had 90 seconds to respond, causing orders to sit too long
+
 - User requested 60 seconds
 - Needed to match across all components
 
 ### 3. ❌ Notification Mismatch
+
 **Problem:** Terminal showing one order, UI showing different order
+
 - API returning correct order
 - But UI not updating due to blocking logic
 
@@ -51,11 +58,11 @@ if ((!currentUserAssignment || isBetterOrder) && !wasDeclined) {
       newOrderId: order.id,
       newEarnings: newOrderEarnings,
     });
-    
+
     // Remove old assignment and notification
     removeToastForOrder(currentUserAssignment.orderId);
   }
-  
+
   // Show new better order
   showToast(orderForNotification);
 }
@@ -66,11 +73,13 @@ if ((!currentUserAssignment || isBetterOrder) && !wasDeclined) {
 Changed from 90 seconds to 60 seconds in:
 
 #### NotificationSystem.tsx
+
 ```typescript
 expiresAt: currentTime + 60000, // Expires in 60 seconds
 ```
 
 #### smart-assign-order.ts
+
 ```typescript
 const expireTime = 60000; // 60 seconds
 if (!lastSent || now - lastSent > 60000) {
@@ -79,11 +88,13 @@ if (!lastSent || now - lastSent > 60000) {
 ```
 
 #### fcmService.ts
+
 ```typescript
 expiresIn: "60000", // 60 seconds
 ```
 
 #### useFCMNotifications.ts
+
 ```typescript
 expiresIn: parseInt(data.expiresIn || "60000"), // Default to 60 seconds
 ```
@@ -106,6 +117,7 @@ console.log(
 ## How It Works Now
 
 ### Scenario 1: No Current Order
+
 ```
 API finds order A (3900 earnings)
   ↓
@@ -115,6 +127,7 @@ Show order A ✅
 ```
 
 ### Scenario 2: Better Order Available
+
 ```
 Currently showing order A (3900 earnings)
   ↓
@@ -128,6 +141,7 @@ Show order B ✅
 ```
 
 ### Scenario 3: Worse Order (Ignore)
+
 ```
 Currently showing order B (4500 earnings)
   ↓
@@ -140,6 +154,7 @@ Keep showing order B ✅
 ```
 
 ### Scenario 4: Declined Order (Never Show Again)
+
 ```
 Shopper declined order A
   ↓
@@ -155,6 +170,7 @@ Skip order A ❌
 ## Timeline Changes
 
 ### Before (90 seconds)
+
 ```
 0:00 - Order shown
 0:30 - Still showing
@@ -163,6 +179,7 @@ Skip order A ❌
 ```
 
 ### After (60 seconds)
+
 ```
 0:00 - Order shown
 0:30 - Still showing
@@ -172,6 +189,7 @@ Skip order A ❌
 ## Console Logs to Watch
 
 ### Order Replacement
+
 ```javascript
 🔄 Replacing current order with better one {
   oldOrderId: "af0f7a8d...",
@@ -182,6 +200,7 @@ Skip order A ❌
 ```
 
 ### Smart Matching
+
 ```javascript
 🔍 API POLLING CHECK {
   orderId: "23b5c595...",
@@ -193,6 +212,7 @@ Skip order A ❌
 ```
 
 ### FCM Notification
+
 ```javascript
 ✅ FCM notification sent to shopper: 36672ccc-...
    for order: 23b5c595-...
@@ -202,17 +222,20 @@ Skip order A ❌
 ## Benefits
 
 ### For Shoppers
+
 ✅ **Always see the best available order**
 ✅ **Don't miss higher-paying opportunities**
 ✅ **Faster order assignment (60s instead of 90s)**
 ✅ **Fair rotation - orders reassigned quicker**
 
 ### For Customers
+
 ✅ **Orders get picked up faster**
 ✅ **Better shopper matching**
 ✅ **Less waiting time**
 
 ### For System
+
 ✅ **More efficient order distribution**
 ✅ **Better shopper utilization**
 ✅ **Higher acceptance rates**
@@ -251,6 +274,7 @@ Skip order A ❌
 ## Edge Cases Handled
 
 ### 1. Order Already Showing
+
 ```typescript
 if (activeToasts.current.has(order.id)) {
   console.log("Skipping - order already showing");
@@ -259,12 +283,14 @@ if (activeToasts.current.has(order.id)) {
 ```
 
 ### 2. Same Earnings (No Replacement)
+
 ```typescript
 const isBetterOrder = newOrderEarnings > currentOrderEarnings;
 // Must be GREATER, not equal
 ```
 
 ### 3. Declined Orders Never Return
+
 ```typescript
 const wasDeclined = declinedOrders.current.has(order.id);
 if (wasDeclined) {
@@ -274,6 +300,7 @@ if (wasDeclined) {
 ```
 
 ### 4. FCM Notification Cache
+
 ```typescript
 // Prevents duplicate FCM sends within 60 seconds
 if (!lastSent || now - lastSent > 60000) {
@@ -284,17 +311,20 @@ if (!lastSent || now - lastSent > 60000) {
 ## Files Modified
 
 1. **src/components/shopper/NotificationSystem.tsx**
+
    - ✅ Added order replacement logic
    - ✅ Changed timeout to 60 seconds
    - ✅ Added earnings comparison
    - ✅ Better console logs
 
 2. **pages/api/shopper/smart-assign-order.ts**
+
    - ✅ Changed FCM cache to 60 seconds
    - ✅ Added earnings to logs
    - ✅ Cleanup interval adjusted
 
 3. **src/services/fcmService.ts**
+
    - ✅ Changed expiresIn to 60000
    - ✅ Both single and batch notifications
 
@@ -307,12 +337,14 @@ if (!lastSent || now - lastSent > 60000) {
 ### Issue: Not seeing better orders
 
 **Check:**
+
 1. Better order actually has higher earnings
 2. Current order hasn't expired yet
 3. New order wasn't declined
 4. Console shows "isBetterOrder: true"
 
 **Solution:**
+
 - Check `newOrderEarnings > currentOrderEarnings`
 - Verify smart matching is returning different orders
 - Check declined orders list in localStorage
@@ -320,21 +352,25 @@ if (!lastSent || now - lastSent > 60000) {
 ### Issue: Orders expiring too fast
 
 **Check:**
+
 - Should expire at 60 seconds
 - Check `expiresAt` timestamp in logs
 
 **Solution:**
+
 - All timeouts should be 60000 (60 seconds)
 - If seeing different value, check for old code
 
 ### Issue: Same order to all shoppers not working
 
 **Check:**
+
 - Multiple shoppers online
 - Smart matching returning same order
 - FCM cache not blocking
 
 **Solution:**
+
 - Smart matching picks ONE best order
 - ALL online shoppers get notified
 - First to accept wins
@@ -342,11 +378,13 @@ if (!lastSent || now - lastSent > 60000) {
 ## Performance Impact
 
 ### Before
+
 - ⏱️ Orders held for 90 seconds
 - 🚫 Better orders blocked
 - 📉 Missed opportunities
 
 ### After
+
 - ⏱️ Orders held for 60 seconds (33% faster)
 - ✅ Better orders replace worse ones
 - 📈 Optimal order distribution

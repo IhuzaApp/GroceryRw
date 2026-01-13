@@ -13,6 +13,7 @@ This is a good practice for catching bugs, but it causes some expected behavior 
 ## What is StrictMode?
 
 React StrictMode is a development-only mode that:
+
 - ✅ Helps identify potential problems
 - ✅ Activates additional checks and warnings
 - ✅ **Intentionally double-invokes effects** to catch side effects
@@ -41,7 +42,7 @@ All `useEffect` hooks run **twice** in development:
 useEffect(() => {
   console.log("This will log twice in development");
   // Effect runs
-  
+
   return () => {
     console.log("Cleanup also runs twice");
   };
@@ -51,6 +52,7 @@ useEffect(() => {
 ### 3. Why This is Good
 
 StrictMode helps catch issues like:
+
 - Memory leaks (missing cleanup)
 - Side effects in render
 - Unsafe lifecycle usage
@@ -64,7 +66,8 @@ StrictMode helps catch issues like:
 // If already running, don't restart
 if (checkInterval.current) {
   console.log("⚠️ Notification system already running, skipping restart", {
-    message: "This is normal in development (React StrictMode causes double effects)",
+    message:
+      "This is normal in development (React StrictMode causes double effects)",
   });
   return;
 }
@@ -97,6 +100,7 @@ if (instances.size > 1) {
 ## Production vs Development
 
 ### Development (with StrictMode)
+
 - ✅ Effects run twice
 - ✅ More console logs
 - ✅ Better bug detection
@@ -104,6 +108,7 @@ if (instances.size > 1) {
 - ⚠️ May see duplicate initialization attempts (protected against)
 
 ### Production (without StrictMode)
+
 - ✅ Effects run once
 - ✅ Cleaner console
 - ✅ No extra checks
@@ -115,6 +120,7 @@ if (instances.size > 1) {
 ### Q: Why am I seeing duplicate API calls in development?
 
 **A:** If you see ACTUAL duplicate calls (not just StrictMode):
+
 1. Check the console for "⚠️ DUPLICATE NotificationSystem DETECTED"
 2. Look for multiple "componentId" values
 3. Make sure NotificationSystem is only imported once
@@ -124,6 +130,7 @@ If you only see double effects from same component ID, that's normal StrictMode 
 ### Q: Should I disable StrictMode?
 
 **A:** No! Keep it enabled. Benefits:
+
 - ✅ Catches bugs early
 - ✅ Prepares for future React features
 - ✅ No impact on production
@@ -150,6 +157,7 @@ module.exports = {
 ### Check for Real Duplicates
 
 Look for this error:
+
 ```
 ⚠️ DUPLICATE NotificationSystem DETECTED!
 ```
@@ -162,7 +170,7 @@ Check that `__notificationSystemInstances.size` is 1:
 
 ```javascript
 // In browser console:
-window.__notificationSystemInstances
+window.__notificationSystemInstances;
 // Should have exactly 1 entry
 ```
 

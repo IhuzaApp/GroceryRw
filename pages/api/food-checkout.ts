@@ -218,8 +218,7 @@ export default async function handler(
 
     // Check if all dishes were added successfully
     const totalDishesAdded = dishResults.reduce(
-      (sum, result) =>
-        sum + result.insert_restaurant_order_items.affected_rows,
+      (sum, result) => sum + result.insert_restaurant_order_items.affected_rows,
       0
     );
 
