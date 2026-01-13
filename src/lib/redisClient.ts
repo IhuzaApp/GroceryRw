@@ -48,8 +48,9 @@ export const getRedisClient = (): Redis | null => {
       },
       lazyConnect: true,
       enableOfflineQueue: false, // Don't queue commands when offline
-      tls: REDIS_URL.includes('cloud.redislabs.com') 
-        ? { rejectUnauthorized: false } // Enable TLS for Redis Cloud
+      // Only use TLS if URL explicitly starts with 'rediss://'
+      tls: REDIS_URL.startsWith('rediss://') 
+        ? { rejectUnauthorized: false }
         : undefined,
     });
 
