@@ -28,6 +28,583 @@ A comprehensive grocery delivery platform with advanced revenue tracking, wallet
 
 ### 11. Combined Order System
 
+### 12. **Order Offers & Nearby Assignment System** ⭐ NEW
+
+---
+
+# 🚀 Order Offers & Nearby Assignment System
+
+## Overview
+
+Professional dispatch system following the DoorDash/Uber Eats model with exclusive offers, distance gating, and automatic rotation.
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  LAYER 1: Orders Table (Business Truth)                     │
+│  ✓ Is the order assigned? status, shopper_id                │
+└─────────────────────────────────────────────────────────────┘
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│  LAYER 2: order_offers Table (Dispatch Truth)               │
+│  ✓ Who can see this order right now?                        │
+│  ✓ Exclusive lock with expiration                           │
+└─────────────────────────────────────────────────────────────┘
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│  LAYER 3: Redis (Volatile State)                            │
+│  ✓ GPS locations (TTL: 45s)                                 │
+│  ✓ Online status (TTL-based)                                │
+└─────────────────────────────────────────────────────────────┘
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│  LAYER 4: FCM (Transport Only)                              │
+│  ✓ Delivers notifications, no logic                         │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Key Principles
+
+1. **Server is the source of truth** - Client never decides eligibility
+2. **One order = one shopper at a time** - Exclusive offers with expiration
+3. **Location is volatile** - Redis for GPS, database for offers
+4. **Distance gating** - Only offer to nearby shoppers
+5. **Round-based expansion** - Radius grows if no acceptance (3km → 5km → 8km)
+6. **Everything is auditable** - All skips logged for fairness
+
+## Installation & Setup
+
+### 1. Install Dependencies
+
+```bash
+# Redis is already in package.json (ioredis)
+yarn install
+```
+
+### 2. Set up Redis
+
+**Option A: Local Redis**
+```bash
+brew install redis
+redis-server
+```
+
+**Option B: Redis Cloud (Recommended for Production)**
+- Sign up at https://redis.com/try-free/
+- Get your connection URL
+- Add to `.env`:
+
+```env
+REDIS_URL=redis://username:password@host:port
+```
+
+### 3. Create order_offers Table
+
+Run this in Hasura Console:
+
+```sql
+CREATE TABLE order_offers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  
+  -- Polymorphic order reference
+  order_id UUID REFERENCES Orders(id),
+  reel_order_id UUID REFERENCES reel_orders(id),
+  restaurant_order_id UUID REFERENCES restaurant_orders(id),
+  business_order_id UUID REFERENCES business_product_orders(id),
+  
+  -- Offer details
+  shopper_id UUID NOT NULL REFERENCES Shoppers(id),
+  order_type TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('OFFERED', 'ACCEPTED', 'EXPIRED', 'DECLINED')),
+  
+  -- Timing
+  offered_at TIMESTAMPTZ NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  round_number INTEGER NOT NULL DEFAULT 1,
+  
+  -- Metadata
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  done_on TIMESTAMPTZ
+);
+
+-- Indexes for performance
+CREATE INDEX idx_order_offers_active 
+ON order_offers(status, expires_at) 
+WHERE status = 'OFFERED' AND expires_at > NOW();
+
+CREATE INDEX idx_order_offers_expired 
+ON order_offers(status, expires_at) 
+WHERE status = 'OFFERED' AND expires_at <= NOW();
+
+CREATE INDEX idx_order_offers_shopper 
+ON order_offers(shopper_id, status);
+```
+
+### 4. Configure Hasura Relationships
+
+Add these relationships in Hasura Console:
+
+**Orders table:**
+```yaml
+orderOffers:
+  type: array
+  remote_table: order_offers
+  using:
+    foreign_key_constraint_on:
+      column: order_id
+      table: order_offers
+```
+
+**reel_orders, restaurant_orders** (similar):
+```yaml
+orderOffers:
+  type: array
+  remote_table: order_offers
+  using:
+    foreign_key_constraint_on:
+      column: reel_order_id  # or restaurant_order_id
+      table: order_offers
+```
+
+### 5. Set up Cron Job
+
+The rotation API must run every 10-15 seconds to handle expired offers.
+
+**Option A: Vercel Cron (if on Vercel)**
+
+Add to `vercel.json`:
+```json
+{
+  "crons": [
+    {
+      "path": "/api/shopper/rotate-expired-offers",
+      "schedule": "*/10 * * * * *"
+    }
+  ]
+}
+```
+
+**Option B: External Cron Service**
+- Use EasyCron, cron-job.org, or similar
+- URL: `https://yourapp.com/api/shopper/rotate-expired-offers`
+- Method: POST
+- Interval: Every 10-15 seconds
+
+## API Endpoints
+
+### 1. Location Heartbeat
+
+**Endpoint:** `POST /api/shopper/location-heartbeat`
+
+Stores shopper's real-time location in Redis.
+
+**Request:**
+```json
+{
+  "userId": "shopper-uuid",
+  "lat": 12.345,
+  "lng": 67.890,
+  "accuracy": 10
+}
+```
+
+**Call Frequency:** Every 10-15 seconds when shopper is "Go-Live"
+
+**TTL:** 45 seconds (if not refreshed, shopper is offline)
+
+### 2. Smart Assignment (Create Offer)
+
+**Endpoint:** `POST /api/shopper/smart-assign-order`
+
+Finds best order for shopper with distance gating.
+
+**Request:**
+```json
+{
+  "user_id": "shopper-uuid",
+  "current_location": {
+    "lat": 12.345,
+    "lng": 67.890
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "order": {
+    "id": "order-uuid",
+    "shopName": "Shop Name",
+    "distance": 2.5,
+    "estimatedEarnings": 150,
+    "expiresIn": 60000
+  },
+  "offerId": "offer-uuid"
+}
+```
+
+### 3. Accept Offer
+
+**Endpoint:** `POST /api/shopper/accept-batch`
+
+Accepts an offer with distance re-validation.
+
+**Request:**
+```json
+{
+  "orderId": "order-uuid",
+  "userId": "shopper-uuid"
+}
+```
+
+**Error Codes:**
+- `NO_VALID_OFFER` - Offer expired or doesn't exist
+- `ALREADY_ASSIGNED` - Another shopper got it first
+- `TOO_FAR` - Distance re-validation failed
+
+### 4. Decline Offer
+
+**Endpoint:** `POST /api/shopper/decline-offer`
+
+Explicitly skip an order (triggers immediate rotation).
+
+### 5. Rotate Expired Offers
+
+**Endpoint:** `POST /api/shopper/rotate-expired-offers`
+
+Cron job that rotates expired offers to next shoppers.
+
+## Distance & Radius Configuration
+
+### Round-Based Expansion
+
+Prevents order starvation by gradually expanding radius:
+
+| Round | Max Distance | Max ETA | Duration |
+|-------|-------------|---------|----------|
+| 1     | 3 km        | 15 min  | 60s      |
+| 2     | 5 km        | 25 min  | 60s      |
+| 3     | 8 km        | 40 min  | 90s      |
+
+### Urgent Orders
+
+Orders older than 30 minutes immediately use 10km radius.
+
+## Shopper App Integration
+
+### 1. Location Heartbeat
+
+Add to shopper app when "Go-Live" is active:
+
+```typescript
+// Send location every 10-15 seconds
+useEffect(() => {
+  if (!isGoLive) return;
+  
+  const interval = setInterval(async () => {
+    const location = await getCurrentLocation();
+    
+    await fetch('/api/shopper/location-heartbeat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: shopperId,
+        lat: location.latitude,
+        lng: location.longitude,
+        accuracy: location.accuracy
+      })
+    });
+  }, 12000); // 12 seconds
+  
+  return () => clearInterval(interval);
+}, [isGoLive, shopperId]);
+```
+
+### 2. Handle New Offers
+
+FCM notifications now include `expiresIn` from database:
+
+```typescript
+// In FCM notification handler
+if (notification.data.type === 'new_order') {
+  const expiresIn = parseInt(notification.data.expiresIn); // milliseconds
+  
+  // Show countdown timer
+  showOrderNotification({
+    orderId: notification.data.orderId,
+    expiresAt: Date.now() + expiresIn
+  });
+}
+```
+
+### 3. Accept with Error Handling
+
+```typescript
+try {
+  const response = await fetch('/api/shopper/accept-batch', {
+    method: 'POST',
+    body: JSON.stringify({ orderId, userId })
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    
+    switch (error.code) {
+      case 'NO_VALID_OFFER':
+        toast.error('Offer expired. Refreshing orders...');
+        break;
+      case 'ALREADY_ASSIGNED':
+        toast.error('Another shopper got this order');
+        break;
+      case 'TOO_FAR':
+        toast.error(`You are ${error.distance}km away (max: ${error.maxDistance}km)`);
+        break;
+    }
+  }
+} catch (error) {
+  toast.error('Failed to accept order');
+}
+```
+
+## Monitoring & Debugging
+
+### Check Redis Health
+
+```bash
+# In your app
+GET /api/shopper/redis-health
+
+Response:
+{
+  "connected": true,
+  "latency": 5,
+  "onlineShoppers": 12
+}
+```
+
+### View Skip Logs
+
+Skip logs are stored in Redis for 24 hours:
+
+```typescript
+// Get skip logs for an order
+import { getOrderSkipLogs } from './src/lib/redisClient';
+
+const logs = await getOrderSkipLogs(orderId);
+console.log(logs);
+
+// Example output:
+[
+  {
+    orderId: "...",
+    shopperId: "...",
+    reason: "DISTANCE_TOO_FAR",
+    distance: 7.5,
+    round: 2,
+    timestamp: 1234567890,
+    metadata: { maxDistanceKm: 5 }
+  }
+]
+```
+
+### Analytics Queries
+
+```sql
+-- Orders taking too long
+SELECT 
+  o.id,
+  o.created_at,
+  COUNT(of.id) as rotation_count,
+  MAX(of.round_number) as max_round
+FROM Orders o
+LEFT JOIN order_offers of ON of.order_id = o.id
+WHERE o.status = 'PENDING'
+GROUP BY o.id
+HAVING COUNT(of.id) > 5;
+
+-- Shopper acceptance rates
+SELECT 
+  s.full_name,
+  COUNT(*) FILTER (WHERE of.status = 'ACCEPTED') as accepted,
+  COUNT(*) FILTER (WHERE of.status = 'DECLINED') as declined,
+  COUNT(*) FILTER (WHERE of.status = 'EXPIRED') as expired,
+  ROUND(
+    COUNT(*) FILTER (WHERE of.status = 'ACCEPTED')::numeric / 
+    COUNT(*) * 100, 
+    2
+  ) as acceptance_rate
+FROM order_offers of
+JOIN Shoppers s ON s.id = of.shopper_id
+WHERE of.created_at > NOW() - INTERVAL '7 days'
+GROUP BY s.id, s.full_name
+ORDER BY acceptance_rate DESC;
+```
+
+## Troubleshooting
+
+### Issue: Shoppers not receiving offers
+
+**Check:**
+1. Is location heartbeat working?
+   ```bash
+   # Check Redis for location
+   redis-cli
+   > KEYS shopper:location:*
+   > GET shopper:location:{shopper-id}
+   ```
+
+2. Is shopper within radius?
+   - Round 1: 3km
+   - Round 2: 5km
+   - Round 3: 8km
+
+3. Check skip logs to see why they were filtered out
+
+### Issue: Multiple shoppers seeing same order
+
+**This should never happen.** If it does:
+
+```sql
+-- Find orders with multiple active offers
+SELECT 
+  COALESCE(order_id, reel_order_id, restaurant_order_id) as order_id,
+  COUNT(*) as active_count
+FROM order_offers
+WHERE status = 'OFFERED' 
+  AND expires_at > NOW()
+GROUP BY COALESCE(order_id, reel_order_id, restaurant_order_id)
+HAVING COUNT(*) > 1;
+```
+
+### Issue: Redis connection failing
+
+System gracefully degrades:
+- Uses client location instead of Redis location
+- Skips distance re-validation on accept
+- Logs to console instead of Redis
+
+Fix Redis and system will auto-recover.
+
+## Configuration Options
+
+Edit constants in `smart-assign-order.ts`:
+
+```typescript
+// Offer duration
+const OFFER_DURATION_MS = 60000; // 60 seconds
+
+// Round configurations
+const ROUND_CONFIGS = [
+  { round: 1, maxDistanceKm: 3, maxEtaMinutes: 15, offerDurationMs: 60000 },
+  { round: 2, maxDistanceKm: 5, maxEtaMinutes: 25, offerDurationMs: 60000 },
+  { round: 3, maxDistanceKm: 8, maxEtaMinutes: 40, offerDurationMs: 90000 },
+];
+
+// Urgent orders (old orders)
+const URGENT_ORDER_AGE_MINUTES = 30;
+const URGENT_MAX_DISTANCE_KM = 10;
+```
+
+Edit in `accept-batch.ts`:
+
+```typescript
+// Max distance for acceptance
+const MAX_ACCEPTANCE_DISTANCE_KM = 10;
+```
+
+Edit in `redisClient.ts`:
+
+```typescript
+// Location TTL
+const LOCATION_TTL = 45; // seconds
+
+// Skip log retention
+const SKIP_LOG_TTL = 86400; // 24 hours
+```
+
+## Performance Optimization
+
+### Database Indexes
+
+Already created above. Monitor query performance:
+
+```sql
+-- Check slow queries
+SELECT query, mean_exec_time, calls 
+FROM pg_stat_statements 
+WHERE query LIKE '%order_offers%'
+ORDER BY mean_exec_time DESC;
+```
+
+### Redis Optimization
+
+```bash
+# Check Redis memory usage
+redis-cli INFO memory
+
+# Check key count
+redis-cli DBSIZE
+
+# Monitor commands
+redis-cli MONITOR
+```
+
+### Scaling
+
+- **Redis**: Use Redis Cluster for horizontal scaling
+- **Database**: Partition `order_offers` by `created_at`
+- **Cron**: Run multiple instances with leader election
+
+## Security Considerations
+
+1. **Location Spoofing Prevention**
+   - Redis location required for offers
+   - Distance re-validation on accept
+   - Logged for audit
+
+2. **Offer Hijacking Prevention**
+   - Shopper ID verification on accept
+   - Expiration checks
+   - Atomic transactions
+
+3. **Rate Limiting**
+   - Location heartbeat: max 1/10s per shopper
+   - Smart assignment: max 1/5s per shopper
+   - Accept: max 10/min per shopper
+
+## Migration from Old System
+
+The new system coexists with old code. To migrate:
+
+1. ✅ Create `order_offers` table
+2. ✅ Deploy new APIs
+3. ✅ Set up Redis
+4. ✅ Set up cron job
+5. ⏳ Update shopper app to send heartbeats
+6. ⏳ Update shopper app to use new accept flow
+7. ⏳ Monitor for 48 hours
+8. ⏳ Remove old notification cache
+
+## Support
+
+For issues:
+1. Check logs in API routes
+2. Check Redis connection
+3. Check skip logs for why shoppers are filtered
+4. Review analytics queries
+5. Check cron job is running
+
+For detailed implementation, see:
+- `src/lib/redisClient.ts` - Redis operations
+- `pages/api/shopper/location-heartbeat.ts` - Location storage
+- `pages/api/shopper/smart-assign-order.ts` - Offer creation
+- `pages/api/shopper/accept-batch.ts` - Offer acceptance
+- `pages/api/shopper/rotate-expired-offers.ts` - Rotation logic
+- `pages/api/shopper/decline-offer.ts` - Explicit decline
+
 ---
 
 # Landing Page & Desktop User Dashboard System
