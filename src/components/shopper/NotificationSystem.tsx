@@ -1807,7 +1807,7 @@ export default function NotificationSystem({
                       })
                     );
 
-                    console.log("🔴 DECLINE COMPLETED", {
+                    console.log("🔴 DECLINE COMPLETED (Local)", {
                       orderId,
                       declinedOrdersCount: declinedOrders.current.size,
                       declinedOrderIds: Array.from(
@@ -1816,6 +1816,41 @@ export default function NotificationSystem({
                       lastDeclineTime: lastDeclineTime.current,
                       nextCheckAllowedAt: lastDeclineTime.current + 10000,
                     });
+
+                    // 🚀 CALL BACKEND API TO DECLINE OFFER AND ROTATE TO NEXT SHOPPER
+                    (async () => {
+                      try {
+                        console.log("📡 Calling decline API to rotate to next shopper...", {
+                          orderId,
+                          shopperId: session?.user?.id,
+                        });
+
+                        const declineResponse = await fetch("/api/shopper/decline-offer", {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                            orderId: orderId,
+                            shopperId: session?.user?.id,
+                          }),
+                        });
+
+                        const declineData = await declineResponse.json();
+
+                        if (declineResponse.ok) {
+                          console.log("✅ Decline API successful - order rotated to next shopper:", {
+                            orderId,
+                            nextShopperId: declineData.nextShopper?.id,
+                            message: declineData.message,
+                          });
+                        } else {
+                          console.error("❌ Decline API failed:", declineData);
+                        }
+                      } catch (error) {
+                        console.error("❌ Error calling decline API:", error);
+                      }
+                    })();
                   }}
                   className="flex-1 rounded-xl bg-red-500 py-4 text-base font-bold text-white shadow-lg transition-all hover:bg-red-600 active:scale-95"
                 >
