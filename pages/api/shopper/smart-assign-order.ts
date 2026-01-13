@@ -229,12 +229,10 @@ const GET_CURRENT_ROUND = gql`
   }
 `;
 
-// Query to check if shopper already has an active offer for this order
-const CHECK_SHOPPER_EXISTING_OFFER = gql`
-  query CheckShopperExistingOffer(
-    $order_id: uuid
-    $reel_order_id: uuid
-    $restaurant_order_id: uuid
+// Query to check if shopper already has an active offer for this order (regular)
+const CHECK_SHOPPER_EXISTING_OFFER_REGULAR = gql`
+  query CheckShopperExistingOfferRegular(
+    $order_id: uuid!
     $shopper_id: uuid!
     $order_type: String!
   ) {
@@ -244,13 +242,59 @@ const CHECK_SHOPPER_EXISTING_OFFER = gql`
           { shopper_id: { _eq: $shopper_id } }
           { order_type: { _eq: $order_type } }
           { status: { _in: ["OFFERED"] } }
-          {
-            _or: [
-              { order_id: { _eq: $order_id } }
-              { reel_order_id: { _eq: $reel_order_id } }
-              { restaurant_order_id: { _eq: $restaurant_order_id } }
-            ]
-          }
+          { order_id: { _eq: $order_id } }
+        ]
+      }
+      limit: 1
+    ) {
+      id
+      expires_at
+      round_number
+      status
+    }
+  }
+`;
+
+// Query to check if shopper already has an active offer for this order (reel)
+const CHECK_SHOPPER_EXISTING_OFFER_REEL = gql`
+  query CheckShopperExistingOfferReel(
+    $reel_order_id: uuid!
+    $shopper_id: uuid!
+    $order_type: String!
+  ) {
+    order_offers(
+      where: {
+        _and: [
+          { shopper_id: { _eq: $shopper_id } }
+          { order_type: { _eq: $order_type } }
+          { status: { _in: ["OFFERED"] } }
+          { reel_order_id: { _eq: $reel_order_id } }
+        ]
+      }
+      limit: 1
+    ) {
+      id
+      expires_at
+      round_number
+      status
+    }
+  }
+`;
+
+// Query to check if shopper already has an active offer for this order (restaurant)
+const CHECK_SHOPPER_EXISTING_OFFER_RESTAURANT = gql`
+  query CheckShopperExistingOfferRestaurant(
+    $restaurant_order_id: uuid!
+    $shopper_id: uuid!
+    $order_type: String!
+  ) {
+    order_offers(
+      where: {
+        _and: [
+          { shopper_id: { _eq: $shopper_id } }
+          { order_type: { _eq: $order_type } }
+          { status: { _in: ["OFFERED"] } }
+          { restaurant_order_id: { _eq: $restaurant_order_id } }
         ]
       }
       limit: 1
@@ -867,27 +911,37 @@ export default async function handler(
     // Check if shopper already has an active offer for this order
     // If yes, just extend the expiry time instead of creating a duplicate
     // ========================================================================
-    const checkOfferVariables: any = {
-      shopper_id: user_id,
-      order_type: bestOrder.orderType,
-      order_id: null,
-      reel_order_id: null,
-      restaurant_order_id: null,
-    };
-
-    // Set only the relevant order ID for checking
+    
+    let existingOfferData: any;
+    
     if (bestOrder.orderType === "regular") {
-      checkOfferVariables.order_id = bestOrder.id;
+      existingOfferData = await hasuraClient.request(
+        CHECK_SHOPPER_EXISTING_OFFER_REGULAR,
+        {
+          shopper_id: user_id,
+          order_type: bestOrder.orderType,
+          order_id: bestOrder.id,
+        }
+      );
     } else if (bestOrder.orderType === "reel") {
-      checkOfferVariables.reel_order_id = bestOrder.id;
+      existingOfferData = await hasuraClient.request(
+        CHECK_SHOPPER_EXISTING_OFFER_REEL,
+        {
+          shopper_id: user_id,
+          order_type: bestOrder.orderType,
+          reel_order_id: bestOrder.id,
+        }
+      );
     } else if (bestOrder.orderType === "restaurant") {
-      checkOfferVariables.restaurant_order_id = bestOrder.id;
+      existingOfferData = await hasuraClient.request(
+        CHECK_SHOPPER_EXISTING_OFFER_RESTAURANT,
+        {
+          shopper_id: user_id,
+          order_type: bestOrder.orderType,
+          restaurant_order_id: bestOrder.id,
+        }
+      );
     }
-
-    const existingOfferData = (await hasuraClient.request(
-      CHECK_SHOPPER_EXISTING_OFFER,
-      checkOfferVariables
-    )) as any;
 
     const existingOffer = existingOfferData.order_offers?.[0];
 
