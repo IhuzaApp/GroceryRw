@@ -588,6 +588,56 @@ export default function NotificationSystem({
     );
   };
 
+  /**
+   * Helper function to show a new order notification
+   * This function is called either immediately for new orders,
+   * or after a 400ms delay when replacing an existing notification
+   * to allow for smooth exit animations
+   */
+  const showNewOrderNotification = async (order: any, currentTime: number) => {
+    // Validate order data before showing notification
+    if (!order.itemsCount || order.itemsCount === 0) {
+      logger.warn(
+        "Order has 0 items, skipping notification",
+        "NotificationSystem",
+        { orderId: order.id, orderData: order }
+      );
+      return;
+    }
+
+    const newAssignment: BatchAssignment = {
+      shopperId: session.user.id,
+      orderId: order.id,
+      assignedAt: currentTime,
+      expiresAt: currentTime + 60000, // Expires in 60 seconds
+      warningShown: false,
+      warningTimeout: null,
+    };
+    batchAssignments.current.push(newAssignment);
+
+    // Convert to Order format for compatibility
+    const orderForNotification: Order = {
+      id: order.id,
+      shopName: order.shopName,
+      distance: order.distance,
+      createdAt: order.createdAt,
+      customerAddress: order.customerAddress,
+      itemsCount: order.itemsCount,
+      estimatedEarnings: order.estimatedEarnings || 0,
+      orderType: order.orderType || "regular",
+      travelTimeMinutes: order.travelTimeMinutes,
+      // Include coordinates for map route display
+      shopLatitude: order.shopLatitude,
+      shopLongitude: order.shopLongitude,
+      customerLatitude: order.customerLatitude,
+      customerLongitude: order.customerLongitude,
+    };
+
+    await playNotificationSound({ enabled: true, volume: 0.7 });
+    showToast(orderForNotification);
+    showDesktopNotification(orderForNotification);
+  };
+
   const handleAcceptOrder = async (orderId: string) => {
     if (!session?.user?.id) {
       toast.error("You must be logged in to accept orders");
@@ -1192,7 +1242,7 @@ export default function NotificationSystem({
 
         // Show order if: no current assignment OR this is a better order (not declined)
         if ((!currentUserAssignment || isBetterOrder) && !wasDeclined) {
-          // If replacing a current order, remove the old one first
+          // If replacing a current order, remove the old one first with smooth transition
           if (currentUserAssignment && isBetterOrder) {
             console.log("🔄 Replacing current order with better one", {
               oldOrderId: currentUserAssignment.orderId,
@@ -1200,58 +1250,36 @@ export default function NotificationSystem({
               newOrderId: order.id,
               newEarnings: newOrderEarnings,
             });
-            
+
             // Remove old assignment
             batchAssignments.current = batchAssignments.current.filter(
               (a) => a.orderId !== currentUserAssignment.orderId
             );
-            
+
             // Dismiss old notification
             removeToastForOrder(currentUserAssignment.orderId);
+            
+            // Wait for exit animation to complete before showing new notification
+            console.log("⏳ Waiting for exit animation (500ms)...", {
+              oldOrderId: currentUserAssignment.orderId,
+              newOrderId: order.id,
+            });
+            
+            setTimeout(() => {
+              console.log("✨ Exit animation complete, showing new notification", {
+                newOrderId: order.id,
+              });
+              
+              // Now show the new order after old one has disappeared
+              showNewOrderNotification(order, currentTime);
+            }, 500); // Wait 500ms for exit animation
+            
+            return; // Exit early, we'll show the new notification after the delay
           }
-          
-          // Continue with showing new order...
-          // Validate order data before showing notification
-          if (!order.itemsCount || order.itemsCount === 0) {
-            logger.warn(
-              "Order has 0 items, skipping notification",
-              "NotificationSystem",
-              { orderId: order.id, orderData: order }
-            );
-            return;
-          }
 
-          const newAssignment: BatchAssignment = {
-            shopperId: session.user.id,
-            orderId: order.id,
-            assignedAt: currentTime,
-            expiresAt: currentTime + 60000, // Expires in 60 seconds
-            warningShown: false,
-            warningTimeout: null,
-          };
-          batchAssignments.current.push(newAssignment);
-
-          // Convert to Order format for compatibility
-          const orderForNotification: Order = {
-            id: order.id,
-            shopName: order.shopName,
-            distance: order.distance,
-            createdAt: order.createdAt,
-            customerAddress: order.customerAddress,
-            itemsCount: order.itemsCount,
-            estimatedEarnings: order.estimatedEarnings || 0,
-            orderType: order.orderType || "regular",
-            travelTimeMinutes: order.travelTimeMinutes,
-            // Include coordinates for map route display
-            shopLatitude: order.shopLatitude,
-            shopLongitude: order.shopLongitude,
-            customerLatitude: order.customerLatitude,
-            customerLongitude: order.customerLongitude,
-          };
-
-          await playNotificationSound({ enabled: true, volume: 0.7 });
-          showToast(orderForNotification);
-          showDesktopNotification(orderForNotification);
+          // Continue with showing new order (if not replacing)...
+          // Show the new order notification immediately
+          await showNewOrderNotification(order, currentTime);
 
           // FCM notification is already sent by the backend API (smart-assign-order.ts)
           // No need to send duplicate notification from frontend
