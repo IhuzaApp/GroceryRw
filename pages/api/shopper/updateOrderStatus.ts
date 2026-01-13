@@ -3,6 +3,7 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
+import { processWalletOperation } from "../../../src/lib/walletOperations";
 
 // GraphQL mutation to update regular order status
 const UPDATE_ORDER_STATUS = gql`
@@ -199,47 +200,25 @@ export default async function handler(
       });
     }
 
-    // Handle shopping status - delegate to wallet operations API
+    // Handle shopping status - process wallet operations directly
     // Skip wallet operations for restaurant orders as they don't have shopping phase
     if (status === "shopping" && !isRestaurantOrder) {
       try {
-        const walletResponse = await fetch(
-          `${
-            req.headers.host
-              ? `http://${req.headers.host}`
-              : "http://localhost:3000"
-          }/api/shopper/walletOperations`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Cookie: req.headers.cookie || "",
-            },
-            body: JSON.stringify({
-              orderId,
-              operation: "shopping",
-              isReelOrder,
-              isRestaurantOrder,
-            }),
-          }
+        await processWalletOperation(
+          userId,
+          orderId,
+          "shopping",
+          isReelOrder,
+          isRestaurantOrder,
+          req
         );
-
-        if (!walletResponse.ok) {
-          console.error(
-            "Failed to process wallet operation for shopping:",
-            await walletResponse.text()
-          );
-          return res.status(500).json({
-            error: "Failed to process wallet operation",
-          });
-        }
       } catch (walletError) {
         console.error("Error processing wallet operation:", walletError);
         return res.status(500).json({
           error:
             walletError instanceof Error
               ? walletError.message
-              : "Unknown error",
+              : "Failed to process wallet operation",
         });
       }
     }
@@ -297,46 +276,24 @@ export default async function handler(
       ? updateResult.update_restaurant_orders_by_pk
       : updateResult.update_Orders_by_pk;
 
-    // Handle cancelled status - delegate to wallet operations API
+    // Handle cancelled status - process wallet operations directly
     if (status === "cancelled") {
       try {
-        const walletResponse = await fetch(
-          `${
-            req.headers.host
-              ? `http://${req.headers.host}`
-              : "http://localhost:3000"
-          }/api/shopper/walletOperations`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Cookie: req.headers.cookie || "",
-            },
-            body: JSON.stringify({
-              orderId,
-              operation: "cancelled",
-              isReelOrder,
-              isRestaurantOrder,
-            }),
-          }
+        await processWalletOperation(
+          userId,
+          orderId,
+          "cancelled",
+          isReelOrder,
+          isRestaurantOrder,
+          req
         );
-
-        if (!walletResponse.ok) {
-          console.error(
-            "Failed to process wallet operation for cancelled:",
-            await walletResponse.text()
-          );
-          return res.status(500).json({
-            error: "Failed to process wallet operation",
-          });
-        }
       } catch (walletError) {
         console.error("Error processing wallet operation:", walletError);
         return res.status(500).json({
           error:
             walletError instanceof Error
               ? walletError.message
-              : "Unknown error",
+              : "Failed to process wallet operation",
         });
       }
     }
