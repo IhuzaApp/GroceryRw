@@ -11,20 +11,93 @@ export const useFCMNotifications = (): FCMNotificationHook => {
   const { data: session } = useSession();
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasPermission, setHasPermission] = useState(false);
+  const [isOnline, setIsOnline] = useState(false);
+
+  // Check if shopper is online (has location cookies)
+  const checkOnlineStatus = () => {
+    const cookies = document.cookie
+      .split("; ")
+      .reduce((acc: Record<string, string>, cur) => {
+        const [k, v] = cur.split("=");
+        acc[k] = v;
+        return acc;
+      }, {} as Record<string, string>);
+
+    return Boolean(cookies["user_latitude"] && cookies["user_longitude"]);
+  };
+
+  // Monitor online status
+  useEffect(() => {
+    const updateOnlineStatus = () => {
+      const online = checkOnlineStatus();
+      // Only update and log if status actually changed
+      if (online !== isOnline) {
+        setIsOnline(online);
+        console.log("👤 FCM: Shopper online status changed:", {
+          wasOnline: isOnline,
+          isNowOnline: online,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    };
+
+    // Initial check
+    updateOnlineStatus();
+
+    // Listen for go live toggle events
+    const handleToggle = () => {
+      setTimeout(updateOnlineStatus, 300);
+    };
+    window.addEventListener("toggleGoLive", handleToggle);
+
+    // Poll for cookie changes every 10 seconds (reduced from 5)
+    const intervalId = setInterval(updateOnlineStatus, 10000);
+
+    return () => {
+      window.removeEventListener("toggleGoLive", handleToggle);
+      clearInterval(intervalId);
+    };
+  }, [isOnline]); // Add isOnline as dependency to check against current value
 
   useEffect(() => {
-    if (!session?.user?.id) return;
+    // Only initialize FCM when shopper is online
+    if (!session?.user?.id || !isOnline) {
+      if (!isOnline && isInitialized) {
+        console.log("🔴 Shopper went offline - FCM paused");
+        setIsInitialized(false);
+        setHasPermission(false);
+      }
+      return;
+    }
 
     let unsubscribe: (() => void) | null = null;
 
     const init = async () => {
       try {
+        console.log("🟢 Shopper is online - Initializing FCM for user:", session.user.id);
+
         // Initialize FCM and set up message listener
         unsubscribe = await initializeFCM(session.user.id, (payload) => {
           const { notification, data } = payload;
 
+          // CRITICAL: Check page visibility before dispatching events
+          // This prevents notifications from showing when user is on another page/tab
+          if (document.hidden) {
+            console.log("🚫 FCM Hook: Page hidden, not dispatching event", {
+              type: data?.type,
+              timestamp: new Date().toISOString(),
+            });
+            return;
+          }
+
           // Dispatch custom events based on notification type
           const type = data?.type;
+
+          console.log("📲 FCM Hook: Dispatching event", {
+            type,
+            pageVisible: !document.hidden,
+            timestamp: new Date().toISOString(),
+          });
 
           switch (type) {
             case "new_order":
@@ -50,24 +123,40 @@ export const useFCMNotifications = (): FCMNotificationHook => {
                 );
               }
 
-              window.dispatchEvent(
-                new CustomEvent("fcm-new-order", {
-                  detail: {
-                    order: {
-                      id: data.orderId,
-                      shopName: data.shopName,
-                      distance: parseFloat(data.distance),
-                      travelTimeMinutes: parseInt(data.travelTimeMinutes),
-                      customerAddress: data.customerAddress,
-                      estimatedEarnings: parseFloat(data.estimatedEarnings),
-                      orderType: data.orderType,
-                      createdAt: new Date().toISOString(),
+              // Double-check page visibility before dispatching
+              if (!document.hidden) {
+                window.dispatchEvent(
+                  new CustomEvent("fcm-new-order", {
+                    detail: {
+                      order: {
+                        id: data.orderId,
+                        shopName: data.shopName,
+                        distance: parseFloat(data.distance),
+                        travelTimeMinutes: parseInt(data.travelTimeMinutes),
+                        customerAddress: data.customerAddress,
+                        estimatedEarnings: parseFloat(data.estimatedEarnings),
+                        orderType: data.orderType,
+                        createdAt: new Date().toISOString(),
+                        // Add coordinates if available
+                        shopLatitude: data.shopLatitude
+                          ? parseFloat(data.shopLatitude)
+                          : undefined,
+                        shopLongitude: data.shopLongitude
+                          ? parseFloat(data.shopLongitude)
+                          : undefined,
+                        customerLatitude: data.customerLatitude
+                          ? parseFloat(data.customerLatitude)
+                          : undefined,
+                        customerLongitude: data.customerLongitude
+                          ? parseFloat(data.customerLongitude)
+                          : undefined,
+                      },
+                      expiresIn: parseInt(data.expiresIn || "90000"), // Default to 90 seconds
+                      timestamp: parseInt(data.timestamp),
                     },
-                    expiresIn: parseInt(data.expiresIn || "90000"), // Default to 90 seconds
-                    timestamp: parseInt(data.timestamp),
-                  },
-                })
-              );
+                  })
+                );
+              }
               break;
 
             case "batch_orders":
@@ -106,6 +195,7 @@ export const useFCMNotifications = (): FCMNotificationHook => {
               break;
 
             case "order_expired":
+              // Order expiration can be dispatched even if page is hidden
               window.dispatchEvent(
                 new CustomEvent("fcm-order-expired", {
                   detail: {
@@ -153,6 +243,7 @@ export const useFCMNotifications = (): FCMNotificationHook => {
                 );
               }
 
+              // Chat messages can be dispatched even if page is hidden (user might come back)
               window.dispatchEvent(
                 new CustomEvent("fcm-chat-message", {
                   detail: {
@@ -171,14 +262,23 @@ export const useFCMNotifications = (): FCMNotificationHook => {
         });
 
         if (unsubscribe && typeof unsubscribe === "function") {
+          console.log("✅ FCM Hook: Successfully initialized with push notifications");
           setIsInitialized(true);
           setHasPermission(true);
         } else {
+          console.log(
+            "ℹ️ FCM Hook: FCM not available, using API polling instead (this is normal)"
+          );
+          // Not an error - app will use API polling instead
           setIsInitialized(false);
           setHasPermission(false);
         }
       } catch (error) {
-        console.error("Failed to initialize FCM:", error);
+        console.warn(
+          "⚠️ FCM Hook: Initialization failed (non-critical), using API polling:",
+          error
+        );
+        // Not an error - app will use API polling instead
         setIsInitialized(false);
         setHasPermission(false);
       }
@@ -188,10 +288,11 @@ export const useFCMNotifications = (): FCMNotificationHook => {
 
     return () => {
       if (unsubscribe) {
+        console.log("🧹 Cleaning up FCM subscription");
         unsubscribe();
       }
     };
-  }, [session?.user?.id]);
+  }, [session?.user?.id, isOnline]); // Re-initialize when online status changes
 
   return {
     isInitialized,
