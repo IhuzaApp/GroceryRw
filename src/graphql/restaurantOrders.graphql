@@ -5,7 +5,7 @@ mutation addOrderedDishes(
   $id: uuid = ""
   $dish_id: uuid = ""
 ) {
-  insert_restaurant_dishe_orders(
+  insert_restaurant_order_items(
     objects: {
       quantity: $quantity
       price: $price
@@ -136,7 +136,7 @@ query GetAllRestaurantOrders {
     discount
     voucher_code
     found
-    restaurant_dishe_orders {
+    restaurant_order_items {
       quantity
       price
       dish_id

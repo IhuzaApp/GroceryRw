@@ -509,7 +509,7 @@ export const getServerSideProps: GetServerSideProps<
               latitude
               longitude
             }
-            restaurant_dishe_orders {
+            restaurant_order_items {
               id
               quantity
               price

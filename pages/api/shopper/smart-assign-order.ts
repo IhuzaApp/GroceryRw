@@ -8,17 +8,17 @@ import { sendNewOrderNotification } from "../../../src/services/fcmService";
 // Key format: "shopperId:orderId" -> timestamp
 const notificationCache = new Map<string, number>();
 
-// Clean up old entries every 5 minutes (orders expire after 90 seconds)
+// Clean up old entries every 2 minutes (orders expire after 60 seconds)
 setInterval(() => {
   const now = Date.now();
-  const expireTime = 90000; // 90 seconds
+  const expireTime = 60000; // 60 seconds
 
   for (const [key, timestamp] of notificationCache.entries()) {
     if (now - timestamp > expireTime) {
       notificationCache.delete(key);
     }
   }
-}, 5 * 60 * 1000); // Clean every 5 minutes
+}, 2 * 60 * 1000); // Clean every 2 minutes
 
 // GraphQL query to get all available orders for notification
 const GET_AVAILABLE_ORDERS = gql`
@@ -437,8 +437,8 @@ export default async function handler(
     const lastSent = notificationCache.get(cacheKey);
     const now = Date.now();
 
-    // Only send FCM if we haven't sent it in the last 90 seconds (order expiry time)
-    if (!lastSent || now - lastSent > 90000) {
+    // Only send FCM if we haven't sent it in the last 60 seconds (order expiry time)
+    if (!lastSent || now - lastSent > 60000) {
       // Send FCM notification to the shopper
       try {
         await sendNewOrderNotification(user_id, {
@@ -458,7 +458,9 @@ export default async function handler(
           "✅ FCM notification sent to shopper:",
           user_id,
           "for order:",
-          bestOrder.id
+          bestOrder.id,
+          "| Earnings:",
+          orderForNotification.estimatedEarnings
         );
       } catch (fcmError) {
         console.error("Failed to send FCM notification:", fcmError);

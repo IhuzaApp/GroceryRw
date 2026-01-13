@@ -137,7 +137,7 @@ const GET_ACTIVE_RESTAURANT_ORDERS = gql`
         street
         city
       }
-      restaurant_dishe_orders {
+      restaurant_order_items {
         id
         quantity
       }
@@ -297,7 +297,7 @@ export default async function handler(
                 street: string;
                 city: string;
               };
-              restaurant_dishe_orders: Array<{
+              restaurant_order_items: Array<{
                 id: string;
                 quantity: string;
               }>;
@@ -409,7 +409,7 @@ export default async function handler(
       customerAddress: `${o.Address.street}, ${o.Address.city}`,
       customerLat: parseFloat(o.Address.latitude),
       customerLng: parseFloat(o.Address.longitude),
-      items: o.restaurant_dishe_orders.length, // Count of dish orders
+      items: o.restaurant_order_items.length, // Count of dish orders
       total: parseFloat(o.total || "0"),
       estimatedEarnings: parseFloat(o.delivery_fee || "0").toFixed(2),
       orderType: "restaurant" as const,

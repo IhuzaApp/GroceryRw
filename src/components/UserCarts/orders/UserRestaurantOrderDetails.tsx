@@ -75,7 +75,7 @@ export default function UserRestaurantOrderDetails({
 
     // Calculate total preparation time from all dishes
     const totalPrepTimeMinutes =
-      order.restaurant_dishe_orders?.reduce((total, item) => {
+      order.restaurant_order_items?.reduce((total, item) => {
         const prepTime = item.dish?.preparingTime || "0min";
         const minutes = parseInt(prepTime.replace(/[^\d]/g, "")) || 0;
         return Math.max(total, minutes); // Use the longest preparation time
@@ -670,7 +670,7 @@ export default function UserRestaurantOrderDetails({
           Order Items ({order.itemsCount} dishes)
         </h3>
         <div className="space-y-4">
-          {order.restaurant_dishe_orders?.map((item: any, index: number) => (
+          {order.restaurant_order_items?.map((item: any, index: number) => (
             <div
               key={index}
               className="flex flex-col gap-3 border-b border-gray-100 pb-4 last:border-b-0 last:pb-0 sm:flex-row sm:items-center sm:gap-4"

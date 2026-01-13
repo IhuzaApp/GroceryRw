@@ -56,7 +56,7 @@ const CREATE_FOOD_ORDER = gql`
   }
 `;
 
-// Mutation to add dishes to a food order (using restaurant_dishe_orders table)
+// Mutation to add dishes to a food order (using restaurant_order_items table)
 const ADD_DISHES_TO_ORDER = gql`
   mutation AddDishesToOrder(
     $order_id: uuid!
@@ -64,7 +64,7 @@ const ADD_DISHES_TO_ORDER = gql`
     $quantity: String!
     $price: String!
   ) {
-    insert_restaurant_dishe_orders(
+    insert_restaurant_order_items(
       objects: {
         order_id: $order_id
         dish_id: $dish_id
@@ -219,7 +219,7 @@ export default async function handler(
     // Check if all dishes were added successfully
     const totalDishesAdded = dishResults.reduce(
       (sum, result) =>
-        sum + result.insert_restaurant_dishe_orders.affected_rows,
+        sum + result.insert_restaurant_order_items.affected_rows,
       0
     );
 
