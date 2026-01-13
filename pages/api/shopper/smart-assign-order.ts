@@ -210,31 +210,6 @@ const GET_SHOPPER_PERFORMANCE = gql`
   }
 `;
 
-// Query to check if shopper already has an active offer for this order
-const CHECK_EXISTING_OFFER = gql`
-  query CheckExistingOffer($shopper_id: uuid!, $order_id: uuid!) {
-    order_offers(
-      where: {
-        _and: [
-          { shopper_id: { _eq: $shopper_id } }
-          {
-            _or: [
-              { order_id: { _eq: $order_id } }
-              { reel_order_id: { _eq: $order_id } }
-              { restaurant_order_id: { _eq: $order_id } }
-            ]
-          }
-          { status: { _eq: "OFFERED" } }
-          { expires_at: { _gt: "now()" } }
-        ]
-      }
-    ) {
-      id
-      expires_at
-    }
-  }
-`;
-
 // Query to get current round number for an order
 const GET_CURRENT_ROUND = gql`
   query GetCurrentRound($order_id: uuid!) {
@@ -846,49 +821,7 @@ export default async function handler(
     });
 
     // ========================================================================
-    // STEP 3: Check if shopper already has an active offer for this order
-    // ========================================================================
-    // If they do, just return the existing offer instead of creating a new one
-    // ========================================================================
-
-    const existingOfferData = (await hasuraClient.request(
-      CHECK_EXISTING_OFFER,
-      {
-        shopper_id: user_id,
-        order_id: bestOrder.id,
-      }
-    )) as any;
-
-    const existingOffer = existingOfferData.order_offers?.[0];
-
-    if (existingOffer) {
-      const expiresAt = new Date(existingOffer.expires_at);
-      const now = new Date();
-      const remainingMs = expiresAt.getTime() - now.getTime();
-
-      console.log(
-        "✅ Shopper already has active offer for this order. Remaining time:",
-        Math.floor(remainingMs / 1000),
-        "seconds"
-      );
-
-      // Return the order with remaining time
-      const orderData = formatOrderForResponse(
-        bestOrder,
-        shopperLocation, // Use validated shopper location
-        remainingMs
-      );
-
-      return res.status(200).json({
-        success: true,
-        order: orderData,
-        message: "Existing offer found",
-        expiresIn: remainingMs,
-      });
-    }
-
-    // ========================================================================
-    // STEP 4: Create Exclusive Offer (THIS IS THE LOCK)
+    // STEP 3: Create Exclusive Offer (THIS IS THE LOCK)
     // ========================================================================
     // Insert one row into order_offers
     // This row is the exclusive lock - only this shopper can see the order
