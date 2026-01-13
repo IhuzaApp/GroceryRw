@@ -4,27 +4,39 @@ import { gql } from "graphql-request";
 import { logger } from "../../../src/utils/logger";
 import { sendNewOrderNotification } from "../../../src/services/fcmService";
 
-// In-memory cache to track which orders were sent to which shoppers
-// Key format: "shopperId:orderId" -> timestamp
-const notificationCache = new Map<string, number>();
+// ============================================================================
+// SYSTEM DESIGN: Dispatch with Exclusive Offers
+// ============================================================================
+// Orders table = business truth (is the order assigned?)
+// order_offers table = dispatch truth (who can currently see this order?)
+// FCM = transport only (no logic, just deliver messages)
+//
+// Key principle: One order can only be offered to ONE shopper at a time.
+// Each offer is exclusive for 60 seconds, then rotates to the next shopper.
+// ============================================================================
 
-// Clean up old entries every 2 minutes (orders expire after 60 seconds)
-setInterval(() => {
-  const now = Date.now();
-  const expireTime = 60000; // 60 seconds
+const OFFER_DURATION_MS = 60000; // 60 seconds
 
-  for (const [key, timestamp] of notificationCache.entries()) {
-    if (now - timestamp > expireTime) {
-      notificationCache.delete(key);
-    }
-  }
-}, 2 * 60 * 1000); // Clean every 2 minutes
-
-// GraphQL query to get all available orders for notification
-const GET_AVAILABLE_ORDERS = gql`
-  query GetAvailableOrders {
+// GraphQL query to get eligible orders (no active offers, not assigned)
+const GET_ELIGIBLE_ORDERS = gql`
+  query GetEligibleOrders {
     Orders(
-      where: { status: { _eq: "PENDING" }, shopper_id: { _is_null: true } }
+      where: {
+        _and: [
+          { status: { _eq: "PENDING" } }
+          { shopper_id: { _is_null: true } }
+          {
+            _not: {
+              orderOffers: {
+                _and: [
+                  { status: { _eq: "OFFERED" } }
+                  { expires_at: { _gt: "now()" } }
+                ]
+              }
+            }
+          }
+        ]
+      }
       order_by: { created_at: asc }
       limit: 50
     ) {
@@ -56,11 +68,25 @@ const GET_AVAILABLE_ORDERS = gql`
   }
 `;
 
-// GraphQL query to get all available reel orders for notification
-const GET_AVAILABLE_REEL_ORDERS = gql`
-  query GetAvailableReelOrders {
+const GET_ELIGIBLE_REEL_ORDERS = gql`
+  query GetEligibleReelOrders {
     reel_orders(
-      where: { status: { _eq: "PENDING" }, shopper_id: { _is_null: true } }
+      where: {
+        _and: [
+          { status: { _eq: "PENDING" } }
+          { shopper_id: { _is_null: true } }
+          {
+            _not: {
+              orderOffers: {
+                _and: [
+                  { status: { _eq: "OFFERED" } }
+                  { expires_at: { _gt: "now()" } }
+                ]
+              }
+            }
+          }
+        ]
+      }
       order_by: { created_at: asc }
       limit: 50
     ) {
@@ -87,11 +113,25 @@ const GET_AVAILABLE_REEL_ORDERS = gql`
   }
 `;
 
-// GraphQL query to get all available restaurant orders for notification
-const GET_AVAILABLE_RESTAURANT_ORDERS = gql`
-  query GetAvailableRestaurantOrders {
+const GET_ELIGIBLE_RESTAURANT_ORDERS = gql`
+  query GetEligibleRestaurantOrders {
     restaurant_orders(
-      where: { status: { _eq: "PENDING" }, shopper_id: { _is_null: true } }
+      where: {
+        _and: [
+          { status: { _eq: "PENDING" } }
+          { shopper_id: { _is_null: true } }
+          {
+            _not: {
+              orderOffers: {
+                _and: [
+                  { status: { _eq: "OFFERED" } }
+                  { expires_at: { _gt: "now()" } }
+                ]
+              }
+            }
+          }
+        ]
+      }
       order_by: { updated_at: asc_nulls_last, created_at: asc }
       limit: 50
     ) {
@@ -137,8 +177,84 @@ const GET_SHOPPER_PERFORMANCE = gql`
   }
 `;
 
-// Note: We don't auto-assign orders anymore
-// Shoppers must explicitly accept orders through the accept-batch API
+// Query to check if shopper already has an active offer for this order
+const CHECK_EXISTING_OFFER = gql`
+  query CheckExistingOffer($shopper_id: uuid!, $order_id: uuid!) {
+    order_offers(
+      where: {
+        _and: [
+          { shopper_id: { _eq: $shopper_id } }
+          {
+            _or: [
+              { order_id: { _eq: $order_id } }
+              { reel_order_id: { _eq: $order_id } }
+              { restaurant_order_id: { _eq: $order_id } }
+            ]
+          }
+          { status: { _eq: "OFFERED" } }
+          { expires_at: { _gt: "now()" } }
+        ]
+      }
+    ) {
+      id
+      expires_at
+    }
+  }
+`;
+
+// Query to get current round number for an order
+const GET_CURRENT_ROUND = gql`
+  query GetCurrentRound($order_id: uuid!, $order_type: String!) {
+    order_offers(
+      where: {
+        _or: [
+          { order_id: { _eq: $order_id } }
+          { reel_order_id: { _eq: $order_id } }
+          { restaurant_order_id: { _eq: $order_id } }
+        ]
+      }
+      order_by: { round_number: desc }
+      limit: 1
+    ) {
+      round_number
+    }
+  }
+`;
+
+// Mutation to create an exclusive offer
+const CREATE_ORDER_OFFER = gql`
+  mutation CreateOrderOffer(
+    $order_id: uuid
+    $reel_order_id: uuid
+    $restaurant_order_id: uuid
+    $shopper_id: uuid!
+    $order_type: String!
+    $offered_at: timestamptz!
+    $expires_at: timestamptz!
+    $round_number: Int!
+  ) {
+    insert_order_offers_one(
+      object: {
+        order_id: $order_id
+        reel_order_id: $reel_order_id
+        restaurant_order_id: $restaurant_order_id
+        shopper_id: $shopper_id
+        order_type: $order_type
+        status: "OFFERED"
+        offered_at: $offered_at
+        expires_at: $expires_at
+        round_number: $round_number
+      }
+    ) {
+      id
+      shopper_id
+      status
+      offered_at
+      expires_at
+      round_number
+    }
+  }
+`;
 
 // Haversine formula to calculate distance in kilometers
 function calculateDistanceKm(
@@ -158,6 +274,87 @@ function calculateDistanceKm(
       Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
+}
+
+// Calculate travel time in minutes (assuming 20 km/h average speed)
+function calculateTravelTime(distanceKm: number): number {
+  const averageSpeedKmh = 20;
+  const travelTimeHours = distanceKm / averageSpeedKmh;
+  return Math.round(travelTimeHours * 60);
+}
+
+// Format order data for API response
+function formatOrderForResponse(
+  order: any,
+  shopperLocation: { lat: number; lng: number },
+  expiresInMs: number
+): any {
+  const distance = calculateDistanceKm(
+    shopperLocation.lat,
+    shopperLocation.lng,
+    parseFloat(order.Address?.latitude || order.address?.latitude),
+    parseFloat(order.Address?.longitude || order.address?.longitude)
+  );
+
+  // Calculate items count based on order type
+  let itemsCount = 1; // Default
+  if (order.orderType === "regular") {
+    const unitsCount =
+      order.Order_Items_aggregate?.aggregate?.sum?.quantity || 0;
+    const itemsTypeCount = order.Order_Items_aggregate?.aggregate?.count || 0;
+    itemsCount = unitsCount || itemsTypeCount || 1;
+  } else if (order.orderType === "reel") {
+    itemsCount = order.quantity || 1;
+  } else if (order.orderType === "restaurant") {
+    itemsCount = order.items || order.quantity || 1;
+  }
+
+  return {
+    id: order.id,
+    shopName:
+      order.Shop?.name ||
+      order.Reel?.title ||
+      order.Restaurant?.name ||
+      "Unknown Shop",
+    distance: distance,
+    travelTimeMinutes: calculateTravelTime(distance),
+    createdAt: order.created_at,
+    customerAddress: `${order.Address?.street || order.address?.street}, ${
+      order.Address?.city || order.address?.city
+    }`,
+    itemsCount: itemsCount,
+    estimatedEarnings:
+      order.orderType === "restaurant"
+        ? parseFloat(order.delivery_fee || "0")
+        : parseFloat(order.service_fee || "0") +
+          parseFloat(order.delivery_fee || "0"),
+    orderType: order.orderType,
+    priority: order.priority,
+    expiresIn: expiresInMs,
+    // Add coordinates for map route display
+    shopLatitude: parseFloat(
+      order.Shop?.latitude || order.Restaurant?.lat || "0"
+    ),
+    shopLongitude: parseFloat(
+      order.Shop?.longitude || order.Restaurant?.long || "0"
+    ),
+    customerLatitude: parseFloat(
+      order.Address?.latitude || order.address?.latitude || "0"
+    ),
+    customerLongitude: parseFloat(
+      order.Address?.longitude || order.address?.longitude || "0"
+    ),
+    // Add restaurant-specific fields
+    ...(order.orderType === "restaurant" && {
+      restaurant: order.Restaurant,
+      total: parseFloat(order.total || "0"),
+      deliveryTime: order.delivery_time,
+    }),
+    // Add reel-specific fields
+    ...(order.orderType === "reel" && {
+      reel: order.Reel,
+    }),
+  };
 }
 
 // Calculate shopper priority score (lower is better)
@@ -230,7 +427,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  console.log("=== Smart Assignment API called ===");
+  console.log("=== Smart Assignment API (with Exclusive Offers) ===");
   console.log("Method:", req.method);
 
   if (req.method !== "POST") {
@@ -255,39 +452,41 @@ export default async function handler(
       });
     }
 
-    console.log("Checking hasuraClient...");
     if (!hasuraClient) {
       console.error("Hasura client is not initialized!");
       throw new Error("Hasura client is not initialized");
     }
-    console.log("hasuraClient is initialized");
 
-    // Fetch all available orders (no time restriction)
-    console.log("Fetching all available orders from Hasura...");
+    // ========================================================================
+    // STEP 1: Find Eligible Orders
+    // ========================================================================
+    // Orders are eligible only if:
+    // - Order status = PENDING
+    // - shopper_id IS NULL
+    // - NO active offer (status=OFFERED, expires_at > now())
+    // ========================================================================
 
-    // Fetch regular, reel, and restaurant orders in parallel
-    console.log("Fetching orders and shopper performance from Hasura...");
+    console.log("Fetching eligible orders (no active offers)...");
     const [
       regularOrdersData,
       reelOrdersData,
       restaurantOrdersData,
       performanceData,
     ] = await Promise.all([
-      hasuraClient.request(GET_AVAILABLE_ORDERS) as any,
-      hasuraClient.request(GET_AVAILABLE_REEL_ORDERS) as any,
-      hasuraClient.request(GET_AVAILABLE_RESTAURANT_ORDERS) as any,
+      hasuraClient.request(GET_ELIGIBLE_ORDERS) as any,
+      hasuraClient.request(GET_ELIGIBLE_REEL_ORDERS) as any,
+      hasuraClient.request(GET_ELIGIBLE_RESTAURANT_ORDERS) as any,
       hasuraClient.request(GET_SHOPPER_PERFORMANCE, {
         shopper_id: user_id,
       }) as any,
     ]);
-    console.log("Data fetched successfully from Hasura");
 
     const availableOrders = regularOrdersData.Orders || [];
     const availableReelOrders = reelOrdersData.reel_orders || [];
     const availableRestaurantOrders =
       restaurantOrdersData.restaurant_orders || [];
 
-    console.log("Available orders counts:", {
+    console.log("Eligible orders (no active offers):", {
       regular: availableOrders.length,
       reel: availableReelOrders.length,
       restaurant: availableRestaurantOrders.length,
@@ -314,13 +513,20 @@ export default async function handler(
     ];
 
     if (allOrders.length === 0) {
-      console.log("No available orders found");
+      console.log("No eligible orders found");
       return res.status(200).json({
         success: false,
         message: "No available orders at the moment",
         orders: [],
       });
     }
+
+    // ========================================================================
+    // STEP 2: Select the Next Shopper for Each Order
+    // ========================================================================
+    // Use smart logic (distance, age, rating, completion rate, random factor)
+    // to find the best order for THIS shopper
+    // ========================================================================
 
     console.log("Calculating priority for", allOrders.length, "orders");
 
@@ -337,149 +543,161 @@ export default async function handler(
     // Sort by priority (lowest first)
     ordersWithPriority.sort((a, b) => a.priority - b.priority);
 
-    // Get the best order for the shopper to see (don't assign yet)
+    // Get the best order for this shopper
     const bestOrder = ordersWithPriority[0];
-    console.log("Best order selected:", {
+    console.log("Best order for this shopper:", {
       id: bestOrder.id,
       type: bestOrder.orderType,
       priority: bestOrder.priority,
     });
 
-    // Calculate distance and travel time
-    const distance = calculateDistanceKm(
-      current_location.lat,
-      current_location.lng,
-      parseFloat(bestOrder.Address?.latitude || bestOrder.address?.latitude),
-      parseFloat(bestOrder.Address?.longitude || bestOrder.address?.longitude)
-    );
+    // ========================================================================
+    // STEP 3: Check if shopper already has an active offer for this order
+    // ========================================================================
+    // If they do, just return the existing offer instead of creating a new one
+    // ========================================================================
 
-    // Calculate travel time in minutes (assuming 20 km/h average speed)
-    const calculateTravelTime = (distanceKm: number): number => {
-      const averageSpeedKmh = 20;
-      const travelTimeHours = distanceKm / averageSpeedKmh;
-      return Math.round(travelTimeHours * 60);
-    };
+    const existingOfferData = (await hasuraClient.request(
+      CHECK_EXISTING_OFFER,
+      {
+        shopper_id: user_id,
+        order_id: bestOrder.id,
+      }
+    )) as any;
 
-    // Calculate items count based on order type
-    let itemsCount = 1; // Default
-    if (bestOrder.orderType === "regular") {
-      // For regular orders, use Order_Items aggregate - sum gives total units, count gives number of different items
-      const unitsCount =
-        bestOrder.Order_Items_aggregate?.aggregate?.sum?.quantity || 0;
-      const itemsTypeCount =
-        bestOrder.Order_Items_aggregate?.aggregate?.count || 0;
-      itemsCount = unitsCount || itemsTypeCount || 1; // Prefer units count (total quantity)
-    } else if (bestOrder.orderType === "reel") {
-      // For reel orders, use quantity field
-      itemsCount = bestOrder.quantity || 1;
-    } else if (bestOrder.orderType === "restaurant") {
-      // For restaurant orders, we'll need to check the correct field name
-      itemsCount = bestOrder.items || bestOrder.quantity || 1;
+    const existingOffer = existingOfferData.order_offers?.[0];
+
+    if (existingOffer) {
+      const expiresAt = new Date(existingOffer.expires_at);
+      const now = new Date();
+      const remainingMs = expiresAt.getTime() - now.getTime();
+
+      console.log(
+        "✅ Shopper already has active offer for this order. Remaining time:",
+        Math.floor(remainingMs / 1000),
+        "seconds"
+      );
+
+      // Return the order with remaining time
+      const orderData = formatOrderForResponse(
+        bestOrder,
+        current_location,
+        remainingMs
+      );
+
+      return res.status(200).json({
+        success: true,
+        order: orderData,
+        message: "Existing offer found",
+        expiresIn: remainingMs,
+      });
     }
 
-    // Format order for notification (don't assign yet)
-    const orderForNotification = {
-      id: bestOrder.id,
-      shopName:
-        bestOrder.Shop?.name ||
-        bestOrder.Reel?.title ||
-        bestOrder.Restaurant?.name ||
-        "Unknown Shop",
-      distance: distance,
-      travelTimeMinutes: calculateTravelTime(distance),
-      createdAt: bestOrder.created_at,
-      customerAddress: `${
-        bestOrder.Address?.street || bestOrder.address?.street
-      }, ${bestOrder.Address?.city || bestOrder.address?.city}`,
-      itemsCount: itemsCount,
-      estimatedEarnings:
-        bestOrder.orderType === "restaurant"
-          ? parseFloat(bestOrder.delivery_fee || "0") // Restaurant orders: delivery only
-          : parseFloat(bestOrder.service_fee || "0") +
-            parseFloat(bestOrder.delivery_fee || "0"), // Regular and reel orders: service + delivery
-      orderType: bestOrder.orderType,
-      priority: bestOrder.priority,
-      // Add coordinates for map route display
-      shopLatitude: parseFloat(
-        bestOrder.Shop?.latitude || bestOrder.Restaurant?.lat || "0"
-      ),
-      shopLongitude: parseFloat(
-        bestOrder.Shop?.longitude || bestOrder.Restaurant?.long || "0"
-      ),
-      customerLatitude: parseFloat(
-        bestOrder.Address?.latitude || bestOrder.address?.latitude || "0"
-      ),
-      customerLongitude: parseFloat(
-        bestOrder.Address?.longitude || bestOrder.address?.longitude || "0"
-      ),
-      // Add restaurant-specific fields
-      ...(bestOrder.orderType === "restaurant" && {
-        restaurant: bestOrder.Restaurant,
-        total: parseFloat(bestOrder.total || "0"),
-        deliveryTime: bestOrder.delivery_time,
-      }),
-      // Add reel-specific fields
-      ...(bestOrder.orderType === "reel" && {
-        reel: bestOrder.Reel,
-      }),
+    // ========================================================================
+    // STEP 4: Create Exclusive Offer (THIS IS THE LOCK)
+    // ========================================================================
+    // Insert one row into order_offers
+    // This row is the exclusive lock - only this shopper can see the order
+    // ========================================================================
+
+    // Get current round number for this order
+    const roundData = (await hasuraClient.request(GET_CURRENT_ROUND, {
+      order_id: bestOrder.id,
+      order_type: bestOrder.orderType,
+    })) as any;
+
+    const currentRound = roundData.order_offers?.[0]?.round_number || 0;
+    const nextRound = currentRound + 1;
+
+    const now = new Date();
+    const offeredAt = now.toISOString();
+    const expiresAt = new Date(now.getTime() + OFFER_DURATION_MS).toISOString();
+
+    // Prepare the order_id field based on order type
+    const offerVariables: any = {
+      shopper_id: user_id,
+      order_type: bestOrder.orderType,
+      offered_at: offeredAt,
+      expires_at: expiresAt,
+      round_number: nextRound,
     };
 
-    console.log("Returning order notification:", {
-      orderId: orderForNotification.id,
-      orderType: orderForNotification.orderType,
-      distance: orderForNotification.distance,
-      estimatedEarnings: orderForNotification.estimatedEarnings,
-      itemsCount: orderForNotification.itemsCount,
+    if (bestOrder.orderType === "regular") {
+      offerVariables.order_id = bestOrder.id;
+    } else if (bestOrder.orderType === "reel") {
+      offerVariables.reel_order_id = bestOrder.id;
+    } else if (bestOrder.orderType === "restaurant") {
+      offerVariables.restaurant_order_id = bestOrder.id;
+    }
+
+    console.log("Creating exclusive offer:", {
+      orderId: bestOrder.id,
+      orderType: bestOrder.orderType,
+      shopperId: user_id,
+      round: nextRound,
+      expiresIn: OFFER_DURATION_MS / 1000 + "s",
     });
 
-    // Check if we already sent FCM notification for this order to this shopper
-    const cacheKey = `${user_id}:${bestOrder.id}`;
-    const lastSent = notificationCache.get(cacheKey);
-    const now = Date.now();
+    const offerResult = (await hasuraClient.request(
+      CREATE_ORDER_OFFER,
+      offerVariables
+    )) as any;
 
-    // Only send FCM if we haven't sent it in the last 60 seconds (order expiry time)
-    if (!lastSent || now - lastSent > 60000) {
-      // Send FCM notification to the shopper
-      try {
-        await sendNewOrderNotification(user_id, {
-          id: bestOrder.id,
-          shopName: orderForNotification.shopName,
-          customerAddress: orderForNotification.customerAddress,
-          distance: orderForNotification.distance,
-          itemsCount: orderForNotification.itemsCount,
-          travelTimeMinutes: orderForNotification.travelTimeMinutes,
-          estimatedEarnings: orderForNotification.estimatedEarnings,
-          orderType: orderForNotification.orderType,
-        });
+    if (!offerResult.insert_order_offers_one) {
+      throw new Error("Failed to create order offer");
+    }
 
-        // Cache this notification
-        notificationCache.set(cacheKey, now);
-        console.log(
-          "✅ FCM notification sent to shopper:",
-          user_id,
-          "for order:",
-          bestOrder.id,
-          "| Earnings:",
-          orderForNotification.estimatedEarnings
-        );
-      } catch (fcmError) {
-        console.error("Failed to send FCM notification:", fcmError);
-        // Continue even if notification fails
-      }
-    } else {
-      const timeSinceLastSent = Math.floor((now - lastSent) / 1000);
+    console.log("✅ Exclusive offer created:", {
+      offerId: offerResult.insert_order_offers_one.id,
+      round: nextRound,
+    });
+
+    // ========================================================================
+    // STEP 5: Send FCM Notification (Aligned with Offer)
+    // ========================================================================
+    // FCM payload represents the OFFER, not just the order
+    // expiresIn must match the database expires_at
+    // ========================================================================
+
+    const orderData = formatOrderForResponse(
+      bestOrder,
+      current_location,
+      OFFER_DURATION_MS
+    );
+
+    try {
+      await sendNewOrderNotification(user_id, {
+        id: bestOrder.id,
+        shopName: orderData.shopName,
+        customerAddress: orderData.customerAddress,
+        distance: orderData.distance,
+        itemsCount: orderData.itemsCount,
+        travelTimeMinutes: orderData.travelTimeMinutes,
+        estimatedEarnings: orderData.estimatedEarnings,
+        orderType: orderData.orderType,
+        expiresInMs: OFFER_DURATION_MS, // Pass the actual expiry time from database
+      });
+
       console.log(
-        `⏭️ Skipping FCM notification - already sent ${timeSinceLastSent}s ago to shopper:`,
+        "✅ FCM notification sent (offer-aligned) to shopper:",
         user_id,
         "for order:",
-        bestOrder.id
+        bestOrder.id,
+        "| Expires in:",
+        OFFER_DURATION_MS / 1000,
+        "seconds"
       );
+    } catch (fcmError) {
+      console.error("Failed to send FCM notification:", fcmError);
+      // Continue even if notification fails - shopper can still poll
     }
 
     return res.status(200).json({
       success: true,
-      order: orderForNotification,
-      message: "Order found - shopper can accept or skip",
+      order: orderData,
+      message: "Exclusive offer created - shopper can accept or skip",
+      offerId: offerResult.insert_order_offers_one.id,
+      expiresIn: OFFER_DURATION_MS,
     });
   } catch (error) {
     console.error("=== ERROR in Smart Assignment API ===");

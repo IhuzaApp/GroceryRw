@@ -317,6 +317,7 @@ export const sendNewOrderNotification = async (
     estimatedEarnings: number;
     orderType: string;
     customerAddress: string;
+    expiresInMs?: number; // Optional: if not provided, defaults to 60000ms
   }
 ): Promise<void> => {
   try {
@@ -326,6 +327,9 @@ export const sendNewOrderNotification = async (
       );
       return;
     }
+
+    // Use provided expiresInMs or default to 60 seconds
+    const expiresInMs = orderData.expiresInMs || 60000;
 
     const payload: NotificationPayload = {
       title: `New ${orderData.orderType} batch available!`,
@@ -341,7 +345,7 @@ export const sendNewOrderNotification = async (
         travelTimeMinutes: orderData.travelTimeMinutes.toString(),
         estimatedEarnings: orderData.estimatedEarnings.toString(),
         customerAddress: orderData.customerAddress,
-        expiresIn: "90000", // 90 seconds (1 minute 30 seconds)
+        expiresIn: expiresInMs.toString(), // Now derived from database offer
         timestamp: Date.now().toString(),
       },
     };
