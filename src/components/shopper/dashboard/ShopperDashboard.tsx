@@ -10,7 +10,6 @@ import { useTheme } from "../../../context/ThemeContext";
 import { useRouter } from "next/router";
 import { useFCMNotifications } from "../../../hooks/useFCMNotifications";
 import TodayCompletedOrders from "./TodayCompletedOrders";
-import NotificationSystem from "../NotificationSystem";
 
 // Dynamically load MapSection only on client (disable SSR)
 const MapSection = dynamic(() => import("./MapSection"), {
@@ -405,6 +404,39 @@ export default function ShopperDashboard() {
     setLastRefreshed(new Date());
   }, [loadOrders]);
 
+  // Listen for notification events to update map
+  useEffect(() => {
+    const handleNotificationShown = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { order } = customEvent.detail;
+      setNotifiedOrder(order);
+    };
+
+    const handleNotificationHidden = (event: Event) => {
+      setNotifiedOrder(null);
+    };
+
+    window.addEventListener(
+      "notification-order-shown",
+      handleNotificationShown
+    );
+    window.addEventListener(
+      "notification-order-hidden",
+      handleNotificationHidden
+    );
+
+    return () => {
+      window.removeEventListener(
+        "notification-order-shown",
+        handleNotificationShown
+      );
+      window.removeEventListener(
+        "notification-order-hidden",
+        handleNotificationHidden
+      );
+    };
+  }, []);
+
   // WebSocket event listeners for seamless background updates
   useEffect(() => {
     const handleWebSocketNewOrder = (event: Event) => {
@@ -645,19 +677,11 @@ export default function ShopperDashboard() {
           />
         </div>
 
-        {/* Notification System - Overlays on Map */}
-        <NotificationSystem
-          currentLocation={currentLocation}
-          onNewOrder={handleNewOrder}
-          onAcceptBatch={(orderId) => {
-            // Refresh orders after accepting
-            loadOrders();
-          }}
-          onNotificationShow={(order) => {
-            // Update notified order to show route on map
-            setNotifiedOrder(order);
-          }}
-        />
+        {/* 
+          NOTE: NotificationSystem is already rendered in ShopperLayout
+          and works across all Plasa pages. We don't need a duplicate here.
+          The ShopperLayout instance handles all notification logic.
+        */}
 
         {/* Today's Completed Orders Section */}
         <TodayCompletedOrders

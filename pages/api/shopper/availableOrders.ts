@@ -115,16 +115,6 @@ const GET_AVAILABLE_RESTAURANT_ORDERS = gql`
         street
         city
       }
-      restaurant_dishe_orders {
-        id
-        quantity
-        price
-        restaurant_dishes {
-          id
-          name
-          description
-        }
-      }
     }
   }
 `;
@@ -561,7 +551,7 @@ export default async function handler(
 
       // Calculate total items count from dish orders
       const totalItems =
-        order.restaurant_dishe_orders?.reduce(
+        order.restaurant_order_items?.reduce(
           (sum, dish) => sum + (dish.quantity || 0),
           0
         ) || 1;
@@ -598,7 +588,7 @@ export default async function handler(
         customerName: order.orderedBy?.name || "Unknown Customer",
         customerPhone: order.orderedBy?.phone || "",
         customerEmail: order.orderedBy?.email || "",
-        dishes: order.restaurant_dishe_orders || [],
+        dishes: order.restaurant_order_items || [],
         total: parseFloat(order.total || "0"),
         assignedAt: order.assigned_at,
       };

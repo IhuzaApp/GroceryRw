@@ -13,12 +13,33 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
+// Check if Firebase config is valid
+const hasValidFirebaseConfig = () => {
+  return !!(
+    firebaseConfig.apiKey &&
+    firebaseConfig.projectId &&
+    firebaseConfig.messagingSenderId &&
+    firebaseConfig.appId
+  );
+};
+
 // Initialize Firebase with proper guards
 let app;
 try {
-  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+  if (!hasValidFirebaseConfig()) {
+    console.debug(
+      "📱 FCM: Firebase config incomplete (FCM features will be disabled). This is normal if you haven't set up Firebase yet."
+    );
+    app = null;
+  } else {
+    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+    console.debug("📱 FCM: Firebase app initialized");
+  }
 } catch (error) {
-  console.warn("Firebase initialization failed:", error);
+  console.debug(
+    "📱 FCM: Firebase initialization failed (non-critical):",
+    error
+  );
   app = null;
 }
 const db = app ? getFirestore(app) : null;
@@ -30,11 +51,14 @@ let isRegisteringServiceWorker = false;
 let registrationPromise: Promise<ServiceWorkerRegistration | null> | null =
   null;
 
-if (typeof window !== "undefined") {
+if (typeof window !== "undefined" && app) {
   try {
     messaging = getMessaging(app);
+    console.debug("📱 FCM: Messaging initialized");
   } catch (error) {
-    console.warn("Firebase Messaging not supported in this browser:", error);
+    console.debug(
+      "📱 FCM: Messaging not supported in this browser (this is normal for Safari, incognito mode, etc.)"
+    );
   }
 }
 
@@ -135,22 +159,41 @@ const getServiceWorkerRegistration =
  */
 export const getFCMToken = async (): Promise<string | null> => {
   try {
-    if (!messaging) return null;
+    if (!messaging) {
+      console.debug("📱 FCM: Messaging not initialized");
+      return null;
+    }
 
     const hasPermission = await requestNotificationPermission();
-    if (!hasPermission) return null;
+    if (!hasPermission) {
+      console.debug(
+        "📱 FCM: No notification permission (this is normal if user declined or browser doesn't support)"
+      );
+      return null;
+    }
 
     // Use singleton service worker registration
-    await getServiceWorkerRegistration();
+    const swRegistration = await getServiceWorkerRegistration();
+    if (!swRegistration) {
+      console.debug("📱 FCM: Service worker not available");
+      return null;
+    }
 
     const token = await getToken(messaging, {
       vapidKey:
         "BHlNUbElLjZwdCrqi9LxcPStpMhVtwpf1HRRUJA-iP1eqiXERJWSibJCiPwLJuOBOjRPT70RJL5n64EZxJgQfr4",
     });
 
+    if (!token) {
+      console.debug("📱 FCM: Failed to get token from Firebase");
+      return null;
+    }
+
+    console.log("✅ FCM: Token obtained successfully");
     return token;
   } catch (error) {
-    console.error("Error getting FCM token:", error);
+    // Silent fail with debug info
+    console.debug("📱 FCM: Error getting token (non-critical):", error);
     return null;
   }
 };
@@ -306,16 +349,26 @@ export const initializeFCM = async (
     const token = await getFCMToken();
 
     if (!token) {
-      console.error("Failed to get FCM token");
+      // Silent fail - FCM is optional, app works fine without it
+      console.warn(
+        "⚠️ FCM not available. This is normal if:",
+        "\n- Browser doesn't support push notifications (Safari on iOS, incognito mode)",
+        "\n- Notification permission was denied",
+        "\n- Service worker failed to register",
+        "\n- Firebase credentials are missing",
+        "\n\nThe app will continue to work with API polling for notifications."
+      );
       return null;
     }
 
     await saveFCMTokenToServer(userId, token);
     const unsubscribe = setupFCMListener(onMessageReceived);
 
+    console.log("✅ FCM initialized successfully");
     return unsubscribe;
   } catch (error) {
-    console.error("Error initializing FCM:", error);
+    // Silent fail - FCM is optional
+    console.warn("⚠️ FCM initialization failed (non-critical):", error);
     return null;
   }
 };

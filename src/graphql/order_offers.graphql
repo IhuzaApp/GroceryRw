@@ -1,0 +1,342 @@
+# Query to check if an order has any active offers
+query GetActiveOrderOffers(
+  $order_id: uuid
+  $reel_order_id: uuid
+  $restaurant_order_id: uuid
+  $business_order_id: uuid
+) {
+  order_offers(
+    where: {
+      _and: [
+        {
+          _or: [
+            { order_id: { _eq: $order_id } }
+            { reel_order_id: { _eq: $reel_order_id } }
+            { restaurant_order_id: { _eq: $restaurant_order_id } }
+            { business_order_id: { _eq: $business_order_id } }
+          ]
+        }
+        { status: { _eq: "OFFERED" } }
+        { expires_at: { _gt: "now()" } }
+      ]
+    }
+  ) {
+    id
+    shopper_id
+    status
+    offered_at
+    expires_at
+    round_number
+  }
+}
+
+# Query to get all orders that are eligible for new offers (no active offers)
+query GetEligibleOrders {
+  Orders(
+    where: {
+      _and: [
+        { status: { _eq: "PENDING" } }
+        { shopper_id: { _is_null: true } }
+        {
+          _not: {
+            orderOffers: {
+              _and: [
+                { status: { _eq: "OFFERED" } }
+                { expires_at: { _gt: "now()" } }
+              ]
+            }
+          }
+        }
+      ]
+    }
+    order_by: { created_at: asc }
+    limit: 50
+  ) {
+    id
+    created_at
+    shop_id
+    service_fee
+    delivery_fee
+    Shop {
+      name
+      latitude
+      longitude
+    }
+    Address {
+      latitude
+      longitude
+      street
+      city
+    }
+    Order_Items_aggregate {
+      aggregate {
+        count
+        sum {
+          quantity
+        }
+      }
+    }
+  }
+}
+
+# Query to get eligible reel orders
+query GetEligibleReelOrders {
+  reel_orders(
+    where: {
+      _and: [
+        { status: { _eq: "PENDING" } }
+        { shopper_id: { _is_null: true } }
+        {
+          _not: {
+            orderOffers: {
+              _and: [
+                { status: { _eq: "OFFERED" } }
+                { expires_at: { _gt: "now()" } }
+              ]
+            }
+          }
+        }
+      ]
+    }
+    order_by: { created_at: asc }
+    limit: 50
+  ) {
+    id
+    created_at
+    service_fee
+    delivery_fee
+    total
+    quantity
+    Reel {
+      title
+      type
+    }
+    user: User {
+      name
+    }
+    address: Address {
+      latitude
+      longitude
+      street
+      city
+    }
+  }
+}
+
+# Query to get eligible restaurant orders
+query GetEligibleRestaurantOrders {
+  restaurant_orders(
+    where: {
+      _and: [
+        { status: { _eq: "PENDING" } }
+        { shopper_id: { _is_null: true } }
+        {
+          _not: {
+            orderOffers: {
+              _and: [
+                { status: { _eq: "OFFERED" } }
+                { expires_at: { _gt: "now()" } }
+              ]
+            }
+          }
+        }
+      ]
+    }
+    order_by: { updated_at: asc_nulls_last, created_at: asc }
+    limit: 50
+  ) {
+    id
+    created_at
+    delivery_fee
+    total
+    delivery_time
+    Restaurant {
+      name
+      lat
+      long
+    }
+    orderedBy {
+      name
+    }
+    Address {
+      latitude
+      longitude
+      street
+      city
+    }
+  }
+}
+
+# Mutation to create a new offer
+mutation CreateOrderOffer(
+  $order_id: uuid
+  $reel_order_id: uuid
+  $restaurant_order_id: uuid
+  $business_order_id: uuid
+  $shopper_id: uuid!
+  $order_type: String!
+  $offered_at: timestamptz!
+  $expires_at: timestamptz!
+  $round_number: Int!
+) {
+  insert_order_offers_one(
+    object: {
+      order_id: $order_id
+      reel_order_id: $reel_order_id
+      restaurant_order_id: $restaurant_order_id
+      business_order_id: $business_order_id
+      shopper_id: $shopper_id
+      order_type: $order_type
+      status: "OFFERED"
+      offered_at: $offered_at
+      expires_at: $expires_at
+      round_number: $round_number
+    }
+  ) {
+    id
+    shopper_id
+    status
+    offered_at
+    expires_at
+    round_number
+  }
+}
+
+# Query to verify an offer belongs to a shopper
+query VerifyOrderOffer(
+  $order_id: uuid
+  $reel_order_id: uuid
+  $restaurant_order_id: uuid
+  $business_order_id: uuid
+  $shopper_id: uuid!
+) {
+  order_offers(
+    where: {
+      _and: [
+        {
+          _or: [
+            { order_id: { _eq: $order_id } }
+            { reel_order_id: { _eq: $reel_order_id } }
+            { restaurant_order_id: { _eq: $restaurant_order_id } }
+            { business_order_id: { _eq: $business_order_id } }
+          ]
+        }
+        { shopper_id: { _eq: $shopper_id } }
+        { status: { _eq: "OFFERED" } }
+        { expires_at: { _gt: "now()" } }
+      ]
+    }
+  ) {
+    id
+    shopper_id
+    status
+    offered_at
+    expires_at
+    round_number
+  }
+}
+
+# Mutation to accept an offer
+mutation AcceptOrderOffer($offer_id: uuid!) {
+  update_order_offers_by_pk(
+    pk_columns: { id: $offer_id }
+    _set: { status: "ACCEPTED", updated_at: "now()" }
+  ) {
+    id
+    status
+    shopper_id
+    order_id
+    reel_order_id
+    restaurant_order_id
+    business_order_id
+    order_type
+  }
+}
+
+# Mutation to decline an offer
+mutation DeclineOrderOffer($offer_id: uuid!) {
+  update_order_offers_by_pk(
+    pk_columns: { id: $offer_id }
+    _set: { status: "DECLINED", updated_at: "now()" }
+  ) {
+    id
+    status
+  }
+}
+
+# Query to find expired offers
+query GetExpiredOffers {
+  order_offers(
+    where: {
+      _and: [{ status: { _eq: "OFFERED" } }, { expires_at: { _lte: "now()" } }]
+    }
+  ) {
+    id
+    order_id
+    reel_order_id
+    restaurant_order_id
+    business_order_id
+    order_type
+    shopper_id
+    round_number
+    offered_at
+    expires_at
+  }
+}
+
+# Mutation to mark offers as expired
+mutation MarkOfferExpired($offer_id: uuid!) {
+  update_order_offers_by_pk(
+    pk_columns: { id: $offer_id }
+    _set: { status: "EXPIRED", updated_at: "now()" }
+  ) {
+    id
+    status
+  }
+}
+
+# Query to get the current round number for an order
+query GetCurrentRoundNumber(
+  $order_id: uuid
+  $reel_order_id: uuid
+  $restaurant_order_id: uuid
+  $business_order_id: uuid
+) {
+  order_offers(
+    where: {
+      _or: [
+        { order_id: { _eq: $order_id } }
+        { reel_order_id: { _eq: $reel_order_id } }
+        { restaurant_order_id: { _eq: $restaurant_order_id } }
+        { business_order_id: { _eq: $business_order_id } }
+      ]
+    }
+    order_by: { round_number: desc }
+    limit: 1
+  ) {
+    round_number
+  }
+}
+
+# Query to get shoppers who have already been offered a specific order
+query GetShoppersAlreadyOffered(
+  $order_id: uuid
+  $reel_order_id: uuid
+  $restaurant_order_id: uuid
+  $business_order_id: uuid
+) {
+  order_offers(
+    where: {
+      _or: [
+        { order_id: { _eq: $order_id } }
+        { reel_order_id: { _eq: $reel_order_id } }
+        { restaurant_order_id: { _eq: $restaurant_order_id } }
+        { business_order_id: { _eq: $business_order_id } }
+      ]
+    }
+  ) {
+    shopper_id
+    status
+    round_number
+  }
+}

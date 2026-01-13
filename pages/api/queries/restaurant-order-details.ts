@@ -24,7 +24,7 @@ const GET_RESTAURANT_ORDER_DETAILS = gql`
       discount
       voucher_code
       found
-      restaurant_dishe_orders {
+      restaurant_order_items {
         quantity
         price
         dish_id
@@ -107,7 +107,7 @@ interface RestaurantOrderDetailsResponse {
     discount: string;
     voucher_code: string;
     found: boolean;
-    restaurant_dishe_orders: Array<{
+    restaurant_order_items: Array<{
       quantity: string;
       price: string;
       dish_id: string;
@@ -228,9 +228,9 @@ export default async function handler(
     }
 
     // Enrich the order data
-    const itemsCount = restaurantOrder.restaurant_dishe_orders?.length ?? 0;
+    const itemsCount = restaurantOrder.restaurant_order_items?.length ?? 0;
     const unitsCount =
-      restaurantOrder.restaurant_dishe_orders?.reduce((sum, item) => {
+      restaurantOrder.restaurant_order_items?.reduce((sum, item) => {
         return sum + parseInt(item.quantity || "0");
       }, 0) ?? 0;
 
@@ -282,7 +282,7 @@ export default async function handler(
       Address: restaurantOrder.Address,
       Restaurant: restaurantOrder.Restaurant,
       // Include dish orders with dish details
-      restaurant_dishe_orders: restaurantOrder.restaurant_dishe_orders.map(
+      restaurant_order_items: restaurantOrder.restaurant_order_items.map(
         (item) => ({
           ...item,
           dish: item.restaurant_dishes,

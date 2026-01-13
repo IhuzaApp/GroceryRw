@@ -70,7 +70,7 @@ const ADD_DISHES_TO_ORDER = `
     $price: String!,
     $discount: String
   ) {
-    insert_restaurant_dish_orders(
+    insert_restaurant_order_items(
       objects: {
         order_id: $order_id,
         dish_id: $dish_id,
@@ -134,7 +134,7 @@ const GET_RESTAURANT_ORDER = `
         longitude
         altitude
       }
-      restaurant_dish_orders {
+      restaurant_order_items {
         id
         dish_id
         quantity
@@ -185,7 +185,7 @@ interface CreateRestaurantOrderResponse {
 }
 
 interface AddDishesResponse {
-  insert_restaurant_dish_orders: {
+  insert_restaurant_order_items: {
     affected_rows: number;
     returning: {
       id: string;
@@ -287,7 +287,7 @@ export default async function handler(
 
     // Check if all dishes were added successfully
     const totalDishesAdded = dishResults.reduce(
-      (sum, result) => sum + result.insert_restaurant_dish_orders.affected_rows,
+      (sum, result) => sum + result.insert_restaurant_order_items.affected_rows,
       0
     );
 
