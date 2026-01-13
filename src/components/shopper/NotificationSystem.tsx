@@ -94,14 +94,180 @@ export default function NotificationSystem({
   const acceptClickCount = useRef<number>(0); // Track accept button clicks
   const directionsClickCount = useRef<number>(0); // Track directions button clicks
   const showToastLock = useRef<Map<string, number>>(new Map()); // Prevent duplicate showToast calls
+  const pageLoadTimestamp = useRef<number>(Date.now()); // Track when page was loaded
+  const isPageVisible = useRef<boolean>(true); // Track if page is visible
+  const lastUserActivityTime = useRef<number>(Date.now()); // Track last user activity
+  const [isShopperOnline, setIsShopperOnline] = useState(false); // Track if shopper is online (has location cookies)
+  const componentId = useRef<string>(Math.random().toString(36).substring(7)); // Unique component ID for debugging
 
   // FCM integration
   const { isInitialized, hasPermission } = useFCMNotifications();
+
+  // Log component mount for debugging duplicate instances
+  useEffect(() => {
+    // Track active instances globally to detect duplicates
+    if (!(window as any).__notificationSystemInstances) {
+      (window as any).__notificationSystemInstances = new Set();
+    }
+    
+    const instances = (window as any).__notificationSystemInstances;
+    const hadInstancesBefore = instances.size;
+    instances.add(componentId.current);
+    
+    if (instances.size > 1) {
+      console.error("⚠️ DUPLICATE NotificationSystem DETECTED!", {
+        activeInstances: Array.from(instances),
+        thisComponentId: componentId.current,
+        message: "Multiple NotificationSystem components are running! This will cause duplicate API calls.",
+      });
+    } else if (process.env.NODE_ENV === "development") {
+      // Only log in development, and only when truly new (not StrictMode remount)
+      if (hadInstancesBefore === 0) {
+        console.log("🔧 NotificationSystem mounted", {
+          componentId: componentId.current,
+          note: "StrictMode may cause this to appear twice in development",
+        });
+      }
+    }
+
+    return () => {
+      instances.delete(componentId.current);
+      
+      // Only log unmount if it's the last instance or if in production
+      if (instances.size === 0 || process.env.NODE_ENV === "production") {
+        console.log("🔧 NotificationSystem unmounted", {
+          componentId: componentId.current,
+          remainingInstances: instances.size,
+        });
+      }
+    };
+  }, []);
+
+  // Check if shopper is online (has location cookies)
+  const checkOnlineStatus = () => {
+    const cookies = document.cookie
+      .split("; ")
+      .reduce((acc: Record<string, string>, cur) => {
+        const [k, v] = cur.split("=");
+        acc[k] = v;
+        return acc;
+      }, {} as Record<string, string>);
+
+    return Boolean(cookies["user_latitude"] && cookies["user_longitude"]);
+  };
+
+  // Monitor online status
+  useEffect(() => {
+    const updateShopperOnlineStatus = () => {
+      const online = checkOnlineStatus();
+      
+      // Only update and log if status actually changed
+      if (online !== isShopperOnline) {
+        console.log("👤 NotificationSystem: Shopper online status changed:", {
+          wasOnline: isShopperOnline,
+          isNowOnline: online,
+          timestamp: new Date().toISOString(),
+          componentId: componentId.current,
+        });
+        
+        setIsShopperOnline(online);
+
+        // Clear notifications when going offline (only if we were actually running)
+        if (!online && checkInterval.current !== null) {
+          console.log("🔴 Going offline - stopping notification system", {
+            componentId: componentId.current,
+          });
+          stopNotificationSystem();
+          
+          // Close any open notification modals
+          setShowMapModal(false);
+          setSelectedOrder(null);
+          onNotificationShow?.(null);
+        }
+      }
+    };
+
+    // Initial check
+    updateShopperOnlineStatus();
+
+    // Listen for go live toggle events
+    const handleToggle = () => {
+      setTimeout(updateShopperOnlineStatus, 300);
+    };
+    window.addEventListener("toggleGoLive", handleToggle);
+
+    // Poll for cookie changes every 10 seconds
+    const intervalId = setInterval(updateShopperOnlineStatus, 10000);
+
+    return () => {
+      window.removeEventListener("toggleGoLive", handleToggle);
+      clearInterval(intervalId);
+    };
+  }, [isShopperOnline]); // Check against current value
+
+  // Load declined orders from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("declined_orders");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const now = Date.now();
+        // Only restore orders that haven't expired (5 minutes)
+        Object.entries(parsed).forEach(([orderId, expiresAt]) => {
+          if ((expiresAt as number) > now) {
+            declinedOrders.current.set(orderId, expiresAt as number);
+          }
+        });
+        console.log("📦 Restored declined orders from localStorage", {
+          count: declinedOrders.current.size,
+          orders: Array.from(declinedOrders.current.keys()),
+        });
+      }
+    } catch (error) {
+      console.error("Failed to load declined orders from localStorage:", error);
+    }
+  }, []);
+
+  // Track page visibility and user activity
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      isPageVisible.current = !document.hidden;
+      if (!document.hidden) {
+        lastUserActivityTime.current = Date.now();
+      }
+      console.log("👁️ Page visibility changed:", {
+        visible: isPageVisible.current,
+        timestamp: new Date().toISOString(),
+      });
+    };
+
+    const handleUserActivity = () => {
+      lastUserActivityTime.current = Date.now();
+    };
+
+    // Add event listeners
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleUserActivity);
+    window.addEventListener("mousemove", handleUserActivity);
+    window.addEventListener("touchstart", handleUserActivity);
+    window.addEventListener("click", handleUserActivity);
+    window.addEventListener("keydown", handleUserActivity);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleUserActivity);
+      window.removeEventListener("mousemove", handleUserActivity);
+      window.removeEventListener("touchstart", handleUserActivity);
+      window.removeEventListener("click", handleUserActivity);
+      window.removeEventListener("keydown", handleUserActivity);
+    };
+  }, []);
 
   // FCM event listeners
   useEffect(() => {
     const handleFCMNewOrder = (event: CustomEvent) => {
       const { order } = event.detail;
+      const now = Date.now();
 
       console.log("📲 FCM NEW ORDER EVENT", {
         orderId: order.id,
@@ -109,7 +275,36 @@ export default function NotificationSystem({
         isDeclined: declinedOrders.current.has(order.id),
         alreadyShowing: activeToasts.current.has(order.id),
         recentlyShown: showToastLock.current.has(order.id),
+        pageVisible: isPageVisible.current,
+        timeSincePageLoad: now - pageLoadTimestamp.current,
+        timeSinceLastActivity: now - lastUserActivityTime.current,
       });
+
+      // CRITICAL: Don't show notifications within 10 seconds of page load (prevent page refresh spam)
+      if (now - pageLoadTimestamp.current < 10000) {
+        console.log("🚫 FCM: Blocking - page just loaded/refreshed", {
+          orderId: order.id,
+          timeSincePageLoad: now - pageLoadTimestamp.current,
+        });
+        return;
+      }
+
+      // CRITICAL: Only show notifications if page is visible and user is active
+      if (!isPageVisible.current) {
+        console.log("🚫 FCM: Blocking - page not visible", {
+          orderId: order.id,
+        });
+        return;
+      }
+
+      // Check if user has been inactive for more than 5 minutes
+      if (now - lastUserActivityTime.current > 300000) {
+        console.log("🚫 FCM: Blocking - user inactive for too long", {
+          orderId: order.id,
+          inactiveTime: now - lastUserActivityTime.current,
+        });
+        return;
+      }
 
       // Check if order was declined
       if (declinedOrders.current.has(order.id)) {
@@ -152,11 +347,37 @@ export default function NotificationSystem({
 
     const handleFCMBatchOrders = (event: CustomEvent) => {
       const { orders } = event.detail;
+      const now = Date.now();
 
       console.log("📲 FCM BATCH ORDERS EVENT", {
         orderCount: orders.length,
         timestamp: new Date().toISOString(),
+        pageVisible: isPageVisible.current,
+        timeSincePageLoad: now - pageLoadTimestamp.current,
+        timeSinceLastActivity: now - lastUserActivityTime.current,
       });
+
+      // CRITICAL: Don't show notifications within 10 seconds of page load
+      if (now - pageLoadTimestamp.current < 10000) {
+        console.log("🚫 FCM BATCH: Blocking - page just loaded/refreshed", {
+          timeSincePageLoad: now - pageLoadTimestamp.current,
+        });
+        return;
+      }
+
+      // CRITICAL: Only show notifications if page is visible and user is active
+      if (!isPageVisible.current) {
+        console.log("🚫 FCM BATCH: Blocking - page not visible");
+        return;
+      }
+
+      // Check if user has been inactive for more than 5 minutes
+      if (now - lastUserActivityTime.current > 300000) {
+        console.log("🚫 FCM BATCH: Blocking - user inactive for too long", {
+          inactiveTime: now - lastUserActivityTime.current,
+        });
+        return;
+      }
 
       // Show notifications for each order
       orders.forEach((order: any) => {
@@ -547,6 +768,13 @@ export default function NotificationSystem({
     // Notify parent component about the order being shown
     onNotificationShow?.(order);
 
+    // Dispatch custom event for other components (e.g., MapSection) to listen to
+    window.dispatchEvent(
+      new CustomEvent("notification-order-shown", {
+        detail: { order },
+      })
+    );
+
     // Store a placeholder in activeToasts to track this order
     activeToasts.current.set(order.id, "map-modal");
 
@@ -798,8 +1026,11 @@ export default function NotificationSystem({
   };
 
   const checkForNewOrders = async () => {
-    // Prevent concurrent API calls
+    // CRITICAL: Prevent concurrent API calls with early return
     if (isCheckingOrders.current) {
+      console.log("🔒 API POLLING: Already checking for orders, skipping", {
+        timestamp: new Date().toISOString(),
+      });
       return;
     }
 
@@ -807,11 +1038,45 @@ export default function NotificationSystem({
       return;
     }
 
+    // CRITICAL: Only check if shopper is online (has location cookies)
+    if (!isShopperOnline) {
+      console.log("🚫 API POLLING: Skipping - shopper is offline");
+      return;
+    }
+
     const now = new Date();
     const currentTime = now.getTime();
 
-    // Set flag to prevent concurrent calls
+    // Set flag IMMEDIATELY to prevent concurrent calls
     isCheckingOrders.current = true;
+    console.log("🔒 API POLLING: Lock acquired", {
+      timestamp: new Date().toISOString(),
+    });
+
+    // CRITICAL: Don't check for new orders within 15 seconds of page load
+    if (currentTime - pageLoadTimestamp.current < 15000) {
+      console.log("🚫 API POLLING: Skipping - page just loaded/refreshed", {
+        timeSincePageLoad: currentTime - pageLoadTimestamp.current,
+      });
+      isCheckingOrders.current = false;
+      return;
+    }
+
+    // CRITICAL: Only check if page is visible and user is active
+    if (!isPageVisible.current) {
+      console.log("🚫 API POLLING: Skipping - page not visible");
+      isCheckingOrders.current = false;
+      return;
+    }
+
+    // Check if user has been inactive for more than 5 minutes
+    if (currentTime - lastUserActivityTime.current > 300000) {
+      console.log("🚫 API POLLING: Skipping - user inactive for too long", {
+        inactiveTime: currentTime - lastUserActivityTime.current,
+      });
+      isCheckingOrders.current = false;
+      return;
+    }
 
     // Check if user just declined an order (10-second cooldown)
     if (currentTime - lastDeclineTime.current < 10000) {
@@ -984,28 +1249,45 @@ export default function NotificationSystem({
     } finally {
       // Always reset the flag when done
       isCheckingOrders.current = false;
+      console.log("🔓 API POLLING: Lock released", {
+        timestamp: new Date().toISOString(),
+      });
     }
   };
 
   const startNotificationSystem = () => {
     if (!session?.user?.id || !currentLocation) return;
 
+    // CRITICAL: Only start if shopper is online
+    if (!isShopperOnline) {
+      console.log("🚫 Cannot start notification system - shopper is offline", {
+        componentId: componentId.current,
+      });
+      return;
+    }
+
     // If already running, don't restart
     if (checkInterval.current) {
-      logger.debug(
-        "Notification system already running, skipping restart",
-        "NotificationSystem"
-      );
+      console.log("⚠️ Notification system already running, skipping restart", {
+        componentId: componentId.current,
+        message: "This is normal in development (React StrictMode causes double effects)",
+      });
       return;
     }
 
     // Reset notification state
     lastNotificationTime.current = 0;
 
-    // Starting smart notification system
+    console.log("🟢 Starting smart notification system - shopper is online", {
+      componentId: componentId.current,
+      isDevelopment: process.env.NODE_ENV === "development",
+      hasStrictMode: "React StrictMode may cause duplicate logs in development",
+    });
 
-    // Initial check
-    checkForNewOrders();
+    // Initial check with slight delay to prevent race conditions and StrictMode double-calls
+    setTimeout(() => {
+      checkForNewOrders();
+    }, 2000); // Increased to 2 seconds
 
     // Set up interval for checking (less frequent when FCM is active)
     const intervalTime = isInitialized ? 120000 : 30000; // 2 minutes with FCM, 30 seconds without
@@ -1017,7 +1299,18 @@ export default function NotificationSystem({
   };
 
   const stopNotificationSystem = () => {
-    // Stopping notification system
+    // Only log if something was actually running
+    if (checkInterval.current || isListening) {
+      console.log("🔴 Stopping notification system", {
+        componentId: componentId.current,
+        wasListening: isListening,
+        hadInterval: checkInterval.current !== null,
+      });
+    }
+    
+    // Force release the lock
+    isCheckingOrders.current = false;
+    
     if (checkInterval.current) {
       clearInterval(checkInterval.current);
       checkInterval.current = null;
@@ -1077,29 +1370,38 @@ export default function NotificationSystem({
   }, [showMapModal, selectedOrder]);
 
   useEffect(() => {
-    if (session && currentLocation) {
-      // User logged in and location available, starting notification system
+    if (session && currentLocation && isShopperOnline) {
+      console.log("✅ All requirements met - starting notification system", {
+        hasSession: !!session,
+        hasLocation: !!currentLocation,
+        isShopperOnline,
+      });
       startNotificationSystem();
     } else {
-      logger.warn(
-        "Missing requirements for notification system",
-        "NotificationSystem",
-        {
-          hasSession: !!session,
-          hasLocation: !!currentLocation,
-        }
-      );
+      if (!isShopperOnline) {
+        console.log("🚫 Shopper is offline - notification system stopped");
+      } else {
+        logger.warn(
+          "Missing requirements for notification system",
+          "NotificationSystem",
+          {
+            hasSession: !!session,
+            hasLocation: !!currentLocation,
+            isShopperOnline,
+          }
+        );
+      }
       stopNotificationSystem();
     }
 
     // Cleanup on unmount or when dependencies change
     return () => {
-      // Don't stop when location updates, only when session changes
-      if (!session) {
+      // Don't stop when location updates, only when session or online status changes
+      if (!session || !isShopperOnline) {
         stopNotificationSystem();
       }
     };
-  }, [session?.user?.id]); // Only depend on session user ID, not location
+  }, [session?.user?.id, isShopperOnline]); // Depend on session user ID and online status
 
   // The component renders a separate Toaster for batch notifications
   return (
@@ -1398,9 +1700,30 @@ export default function NotificationSystem({
 
                     // Save order ID before clearing state
                     const orderId = selectedOrder.id;
+                    const expiresAt = Date.now() + 300000; // 5 minutes
 
                     // Add to declined orders list (expires after 5 minutes)
-                    declinedOrders.current.set(orderId, Date.now() + 300000);
+                    declinedOrders.current.set(orderId, expiresAt);
+
+                    // Persist to localStorage
+                    try {
+                      const declinedObj: Record<string, number> = {};
+                      declinedOrders.current.forEach((value, key) => {
+                        declinedObj[key] = value;
+                      });
+                      localStorage.setItem(
+                        "declined_orders",
+                        JSON.stringify(declinedObj)
+                      );
+                      console.log("💾 Saved declined orders to localStorage", {
+                        count: declinedOrders.current.size,
+                      });
+                    } catch (error) {
+                      console.error(
+                        "Failed to save declined orders to localStorage:",
+                        error
+                      );
+                    }
 
                     // Set decline cooldown (10 seconds before showing next notification)
                     lastDeclineTime.current = Date.now();
@@ -1419,6 +1742,13 @@ export default function NotificationSystem({
 
                     // Notify parent that notification is hidden
                     onNotificationShow?.(null);
+
+                    // Dispatch custom event
+                    window.dispatchEvent(
+                      new CustomEvent("notification-order-hidden", {
+                        detail: { orderId },
+                      })
+                    );
 
                     console.log("🔴 DECLINE COMPLETED", {
                       orderId,
@@ -1475,6 +1805,13 @@ export default function NotificationSystem({
                       setSelectedOrder(null);
                       // Notify parent that notification is hidden
                       onNotificationShow?.(null);
+                      
+                      // Dispatch custom event
+                      window.dispatchEvent(
+                        new CustomEvent("notification-order-hidden", {
+                          detail: { orderId: selectedOrder.id },
+                        })
+                      );
                     }
                   }}
                   disabled={acceptingOrders.has(selectedOrder.id)}

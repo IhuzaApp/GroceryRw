@@ -264,7 +264,16 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
         </main>
       </div>
 
-      {/* NotificationSystem works across all Plasa pages */}
+      {/* 
+        NotificationSystem - Single instance for all Plasa pages
+        This component handles:
+        - FCM push notifications
+        - API polling for new orders
+        - Smart order matching
+        - Notification display modal
+        
+        Only renders when shopper is online (has location cookies)
+      */}
       <NotificationSystem
         currentLocation={isOnline ? currentLocation : null}
         onNewOrder={handleNewOrder}
