@@ -17,14 +17,15 @@ import {
 // Redis = volatile state (GPS location, online status)
 // FCM = transport only (no logic, just deliver messages)
 //
-// Key principle: One order can only be offered to ONE shopper at a time.
-// Each offer is exclusive for 60 seconds, then rotates to the next shopper.
+// **ACTION-BASED SYSTEM** (No time-based expiry):
+// - Offers stay until shopper explicitly ACCEPTS or DECLINES
+// - If DECLINED → Goes to next shopper immediately  
+// - If ACCEPTED → Shopper works exclusively, no new offers until delivery
+// - ONE ORDER AT A TIME → Cannot accept new orders while working on one
 //
 // Distance Gating: Only offer to shoppers within radius (3km → 5km → 8km)
 // Location Validation: Shopper must have fresh location (< 30s old)
 // ============================================================================
-
-const OFFER_DURATION_MS = 60000; // 60 seconds
 
 // ============================================================================
 // DISTANCE & RADIUS CONFIGURATION
@@ -248,6 +249,54 @@ const GET_CURRENT_ROUND = gql`
       order_by: { round_number: desc }
       limit: 1
     ) {
+      round_number
+    }
+  }
+`;
+
+// Query to check if shopper already has an active offer for this order
+const CHECK_SHOPPER_EXISTING_OFFER = gql`
+  query CheckShopperExistingOffer(
+    $order_id: uuid
+    $reel_order_id: uuid
+    $restaurant_order_id: uuid
+    $shopper_id: uuid!
+    $order_type: String!
+  ) {
+    order_offers(
+      where: {
+        _and: [
+          { shopper_id: { _eq: $shopper_id } }
+          { order_type: { _eq: $order_type } }
+          { status: { _in: ["OFFERED"] } }
+          {
+            _or: [
+              { order_id: { _eq: $order_id } }
+              { reel_order_id: { _eq: $reel_order_id } }
+              { restaurant_order_id: { _eq: $restaurant_order_id } }
+            ]
+          }
+        ]
+      }
+      limit: 1
+    ) {
+      id
+      expires_at
+      round_number
+      status
+    }
+  }
+`;
+
+// Mutation to update existing offer expiry time
+const UPDATE_OFFER_EXPIRY = gql`
+  mutation UpdateOfferExpiry($offer_id: uuid!, $expires_at: timestamptz!) {
+    update_order_offers_by_pk(
+      pk_columns: { id: $offer_id }
+      _set: { expires_at: $expires_at, offered_at: "now()" }
+    ) {
+      id
+      expires_at
       round_number
     }
   }
@@ -490,6 +539,51 @@ export default async function handler(
       console.error("Hasura client is not initialized!");
       throw new Error("Hasura client is not initialized");
     }
+
+    // ========================================================================
+    // STEP 0: Check if shopper already has active orders
+    // ========================================================================
+    // ONE ORDER AT A TIME: Shopper cannot get new offers if they're working
+    // on an order. They must complete/deliver it first.
+    // ========================================================================
+    
+    const CHECK_ACTIVE_ORDERS = gql`
+      query CheckActiveOrders($shopper_id: uuid!) {
+        Orders(
+          where: {
+            shopper_id: { _eq: $shopper_id }
+            status: { _in: ["accepted", "in_progress", "picked_up"] }
+          }
+          limit: 1
+        ) {
+          id
+          status
+        }
+      }
+    `;
+
+    const activeOrdersData = (await hasuraClient.request(CHECK_ACTIVE_ORDERS, {
+      shopper_id: user_id,
+    })) as any;
+
+    if (activeOrdersData.Orders && activeOrdersData.Orders.length > 0) {
+      const activeOrder = activeOrdersData.Orders[0];
+      console.log("🚫 Shopper already has active order:", {
+        shopperId: user_id,
+        activeOrderId: activeOrder.id,
+        status: activeOrder.status,
+      });
+      
+      return res.status(200).json({
+        success: false,
+        message: "Complete your current order before accepting new ones",
+        reason: "ACTIVE_ORDER_IN_PROGRESS",
+        activeOrderId: activeOrder.id,
+        activeOrderStatus: activeOrder.status,
+      });
+    }
+
+    console.log("✅ Shopper has no active orders - can receive new offers");
 
     // ========================================================================
     // STEP 1: Find Eligible Orders
@@ -810,7 +904,8 @@ export default async function handler(
 
     const now = new Date();
     const offeredAt = now.toISOString();
-    const expiresAt = new Date(now.getTime() + OFFER_DURATION_MS).toISOString();
+    // No time-based expiry - set to 7 days in future (effectively "until action taken")
+    const expiresAt = new Date(now.getTime() + (7 * 24 * 60 * 60 * 1000)).toISOString();
 
     // Prepare the order_id field based on order type
     // Set unused foreign keys explicitly to null to avoid constraint violations
@@ -835,27 +930,88 @@ export default async function handler(
       offerVariables.restaurant_order_id = bestOrder.id;
     }
 
-    console.log("Creating exclusive offer:", {
-      orderId: bestOrder.id,
-      orderType: bestOrder.orderType,
-      shopperId: user_id,
-      round: nextRound,
-      expiresIn: OFFER_DURATION_MS / 1000 + "s",
-    });
+    // ========================================================================
+    // Check if shopper already has an active offer for this order
+    // If yes, just extend the expiry time instead of creating a duplicate
+    // ========================================================================
+    const checkOfferVariables: any = {
+      shopper_id: user_id,
+      order_type: bestOrder.orderType,
+      order_id: null,
+      reel_order_id: null,
+      restaurant_order_id: null,
+    };
 
-    const offerResult = (await hasuraClient.request(
-      CREATE_ORDER_OFFER,
-      offerVariables
-    )) as any;
-
-    if (!offerResult.insert_order_offers_one) {
-      throw new Error("Failed to create order offer");
+    // Set only the relevant order ID for checking
+    if (bestOrder.orderType === "regular") {
+      checkOfferVariables.order_id = bestOrder.id;
+    } else if (bestOrder.orderType === "reel") {
+      checkOfferVariables.reel_order_id = bestOrder.id;
+    } else if (bestOrder.orderType === "restaurant") {
+      checkOfferVariables.restaurant_order_id = bestOrder.id;
     }
 
-    console.log("✅ Exclusive offer created:", {
-      offerId: offerResult.insert_order_offers_one.id,
-      round: nextRound,
-    });
+    const existingOfferData = (await hasuraClient.request(
+      CHECK_SHOPPER_EXISTING_OFFER,
+      checkOfferVariables
+    )) as any;
+
+    const existingOffer = existingOfferData.order_offers?.[0];
+
+    let offerId: string;
+    let offerRound: number;
+
+    if (existingOffer) {
+      // Shopper already has an active offer for this order - just extend the expiry
+      console.log("🔄 Extending existing offer (preventing duplicate):", {
+        existingOfferId: existingOffer.id,
+        orderId: bestOrder.id,
+        shopperId: user_id,
+        currentExpiry: existingOffer.expires_at,
+        newExpiry: expiresAt,
+        round: existingOffer.round_number,
+      });
+
+      const updateResult = (await hasuraClient.request(UPDATE_OFFER_EXPIRY, {
+        offer_id: existingOffer.id,
+        expires_at: expiresAt,
+      })) as any;
+
+      offerId = existingOffer.id;
+      offerRound = existingOffer.round_number;
+
+      console.log("✅ Offer expiry extended:", {
+        offerId,
+        newExpiresAt: expiresAt,
+        round: offerRound,
+      });
+    } else {
+      // No existing offer - create a new one
+      console.log("Creating exclusive offer:", {
+        orderId: bestOrder.id,
+        orderType: bestOrder.orderType,
+        shopperId: user_id,
+        round: nextRound,
+        note: "No time limit - shopper must accept or decline",
+      });
+
+      const offerResult = (await hasuraClient.request(
+        CREATE_ORDER_OFFER,
+        offerVariables
+      )) as any;
+
+      if (!offerResult.insert_order_offers_one) {
+        throw new Error("Failed to create order offer");
+      }
+
+      offerId = offerResult.insert_order_offers_one.id;
+      offerRound = nextRound;
+
+      console.log("✅ Exclusive offer created:", {
+        offerId,
+        round: offerRound,
+      });
+    }
 
     // ========================================================================
     // STEP 5: Send FCM Notification (Aligned with Offer)
@@ -867,7 +1023,7 @@ export default async function handler(
     const orderData = formatOrderForResponse(
       bestOrder,
       shopperLocation, // Use validated shopper location
-      OFFER_DURATION_MS
+      null // No time-based expiry
     );
 
       try {
@@ -880,17 +1036,15 @@ export default async function handler(
         travelTimeMinutes: orderData.travelTimeMinutes,
         estimatedEarnings: orderData.estimatedEarnings,
         orderType: orderData.orderType,
-        expiresInMs: OFFER_DURATION_MS, // Pass the actual expiry time from database
+        expiresInMs: null, // No expiry - shopper must accept or decline
       });
 
       console.log(
-        "✅ FCM notification sent (offer-aligned) to shopper:",
+        "✅ FCM notification sent to shopper:",
         user_id,
         "for order:",
         bestOrder.id,
-        "| Expires in:",
-        OFFER_DURATION_MS / 1000,
-        "seconds"
+        "| No time limit - waiting for explicit action"
       );
     } catch (fcmError) {
       console.error("Failed to send FCM notification:", fcmError);
@@ -900,9 +1054,14 @@ export default async function handler(
     return res.status(200).json({
       success: true,
       order: orderData,
-      message: "Exclusive offer created - shopper can accept or skip",
-      offerId: offerResult.insert_order_offers_one.id,
-      expiresIn: OFFER_DURATION_MS,
+      message: existingOffer 
+        ? "Offer refreshed - still waiting for shopper action"
+        : "Exclusive offer created - shopper must accept or decline",
+      offerId: offerId,
+      round: offerRound,
+      expiresIn: null, // No time limit
+      wasExtended: !!existingOffer,
+      note: "Action-based system: offer stays until shopper accepts or declines",
     });
   } catch (error) {
     console.error("=== ERROR in Smart Assignment API ===");
