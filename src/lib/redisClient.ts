@@ -31,7 +31,9 @@ export const getRedisClient = (): Redis | null => {
         // Stop retrying after 3 attempts to avoid spam
         if (times > 3) {
           if (!hasLoggedError) {
-            console.warn("⚠️ Redis connection failed after 3 attempts. Running in degraded mode.");
+            console.warn(
+              "⚠️ Redis connection failed after 3 attempts. Running in degraded mode."
+            );
             hasLoggedError = true;
           }
           return null; // Stop retrying
@@ -49,7 +51,7 @@ export const getRedisClient = (): Redis | null => {
       lazyConnect: true,
       enableOfflineQueue: false, // Don't queue commands when offline
       // Only use TLS if URL explicitly starts with 'rediss://'
-      tls: REDIS_URL.startsWith('rediss://') 
+      tls: REDIS_URL.startsWith("rediss://")
         ? { rejectUnauthorized: false }
         : undefined,
     });
@@ -63,7 +65,9 @@ export const getRedisClient = (): Redis | null => {
       // Only log once to avoid spam
       if (!hasLoggedError) {
         console.warn("⚠️ Redis unavailable:", err.message);
-        console.warn("   System will work in degraded mode (no location tracking)");
+        console.warn(
+          "   System will work in degraded mode (no location tracking)"
+        );
         hasLoggedError = true;
       }
     });
@@ -193,9 +197,7 @@ export const getMultipleShopperLocations = async (
 /**
  * Check if shopper is online (has fresh location)
  */
-export const isShopperOnline = async (
-  shopperId: string
-): Promise<boolean> => {
+export const isShopperOnline = async (shopperId: string): Promise<boolean> => {
   const location = await getShopperLocation(shopperId);
   if (!location) {
     return false;
@@ -224,9 +226,7 @@ export const getOnlineShoppers = async (): Promise<string[]> => {
     }
 
     // Extract shopper IDs from keys
-    const shopperIds = keys.map((key) =>
-      key.replace(LOCATION_KEY_PREFIX, "")
-    );
+    const shopperIds = keys.map((key) => key.replace(LOCATION_KEY_PREFIX, ""));
 
     // Filter to only those with fresh locations
     const onlineShoppers: string[] = [];
@@ -293,7 +293,9 @@ export const logOfferSkip = async (log: OfferSkipLog): Promise<void> => {
       return;
     }
 
-    const key = `${SKIP_LOG_PREFIX}${log.orderId}:${log.shopperId}:${Date.now()}`;
+    const key = `${SKIP_LOG_PREFIX}${log.orderId}:${
+      log.shopperId
+    }:${Date.now()}`;
     const value = JSON.stringify({
       ...log,
       timestamp: Date.now(),

@@ -5,6 +5,7 @@
 ### **BROADCAST MODEL** (Not Round-Robin)
 
 The current system uses a **"broadcast"** approach where:
+
 - ✅ **ALL online shoppers see the SAME best order**
 - ✅ **First to accept wins**
 - ❌ **NO rotation or fairness tracking**
@@ -36,31 +37,34 @@ const checkForNewOrders = async () => {
 function calculateShopperPriority(shopperLocation, order, performance) {
   // Distance factor (30% weight)
   const distance = calculateDistanceKm(shopper, order);
-  
+
   // Order age factor (50% weight) - SAME for all shoppers
   let ageFactor;
-  if (ageInMinutes >= 30) ageFactor = -5;  // Oldest = highest priority
+  if (ageInMinutes >= 30) ageFactor = -5; // Oldest = highest priority
   else if (ageInMinutes >= 15) ageFactor = -2;
   else if (ageInMinutes >= 5) ageFactor = 0;
   else ageFactor = 2; // Newest = lowest priority
-  
+
   // Shopper rating (15% weight) - DIFFERENT per shopper
   const ratingScore = (5 - avgRating) * 1.5;
-  
+
   // Completion rate (5% weight) - DIFFERENT per shopper
   const completionScore = (100 - completionRate) * 0.01;
-  
+
   // Small randomization (5% weight) - DIFFERENT per call
   const randomFactor = Math.random() * 0.3;
-  
+
   // Final priority (LOWER = BETTER)
-  return distance * 0.3 + ratingScore + completionScore + ageFactor + randomFactor;
+  return (
+    distance * 0.3 + ratingScore + completionScore + ageFactor + randomFactor
+  );
 }
 ```
 
 ### Step 3: Same Order Selected for Most Shoppers
 
 **Example Scenario:**
+
 - 5 shoppers online in the same area
 - 3 orders available:
   - Order A: 30 mins old, 4km away, 3900 RWF
@@ -69,13 +73,13 @@ function calculateShopperPriority(shopperLocation, order, performance) {
 
 **Priority Calculation:**
 
-| Shopper | Order A Score | Order B Score | Order C Score | Winner |
-|---------|---------------|---------------|---------------|---------|
-| Shopper 1 | **-3.2** ⭐ | -0.5 | 1.8 | Order A |
-| Shopper 2 | **-3.1** ⭐ | -0.6 | 1.7 | Order A |
-| Shopper 3 | **-3.3** ⭐ | -0.4 | 1.9 | Order A |
-| Shopper 4 | **-3.0** ⭐ | -0.7 | 1.6 | Order A |
-| Shopper 5 | **-3.2** ⭐ | -0.5 | 2.0 | Order A |
+| Shopper   | Order A Score | Order B Score | Order C Score | Winner  |
+| --------- | ------------- | ------------- | ------------- | ------- |
+| Shopper 1 | **-3.2** ⭐   | -0.5          | 1.8           | Order A |
+| Shopper 2 | **-3.1** ⭐   | -0.6          | 1.7           | Order A |
+| Shopper 3 | **-3.3** ⭐   | -0.4          | 1.9           | Order A |
+| Shopper 4 | **-3.0** ⭐   | -0.7          | 1.6           | Order A |
+| Shopper 5 | **-3.2** ⭐   | -0.5          | 2.0           | Order A |
 
 **Result:** ALL 5 shoppers see Order A simultaneously! 🔔🔔🔔🔔🔔
 
@@ -93,10 +97,11 @@ function calculateShopperPriority(shopperLocation, order, performance) {
 The randomization is **VERY SMALL**:
 
 ```typescript
-Math.random() * 0.3  // Only 5% of total priority calculation
+Math.random() * 0.3; // Only 5% of total priority calculation
 ```
 
 **Weight Distribution:**
+
 - 📏 **Distance:** 30%
 - ⏰ **Order Age:** 50%
 - ⭐ **Shopper Rating:** 15%
@@ -104,6 +109,7 @@ Math.random() * 0.3  // Only 5% of total priority calculation
 - 🎲 **Random:** 5% (0-0.3 points)
 
 **Impact:**
+
 - ✅ **Good:** Ensures nearby, older orders are prioritized
 - ❌ **Limited:** Not enough to create fair rotation
 - ❌ **Problem:** Same shoppers might consistently win
@@ -113,6 +119,7 @@ Math.random() * 0.3  // Only 5% of total priority calculation
 ### What's Missing:
 
 #### ❌ No Shopper Rotation Tracking
+
 ```typescript
 // NOT IMPLEMENTED
 const shopperRotation = {
@@ -123,6 +130,7 @@ const shopperRotation = {
 ```
 
 #### ❌ No Priority Boosting for Inactive Shoppers
+
 ```typescript
 // NOT IMPLEMENTED
 if (timeSinceLastOrder > 5 * 60 * 1000) {
@@ -131,6 +139,7 @@ if (timeSinceLastOrder > 5 * 60 * 1000) {
 ```
 
 #### ❌ No Order Count Balancing
+
 ```typescript
 // NOT IMPLEMENTED
 if (shopperOrderCount < averageOrderCount) {
@@ -161,6 +170,7 @@ if (shopperOrderCount < averageOrderCount) {
 ### Q: "How is distribution working?"
 
 **A:** **BROADCAST to all online shoppers**
+
 - Same order goes to ALL shoppers in the area
 - Each shopper's app independently polls the API
 - Algorithm calculates best order (usually same for all)
@@ -169,6 +179,7 @@ if (shopperOrderCount < averageOrderCount) {
 ### Q: "How is rotation working?"
 
 **A:** **NO ROTATION CURRENTLY**
+
 - No tracking of who got what order
 - No fairness algorithm
 - No priority boosting for shoppers who haven't gotten orders
@@ -177,6 +188,7 @@ if (shopperOrderCount < averageOrderCount) {
 ### Q: "How is randomization working?"
 
 **A:** **MINIMAL (5%)**
+
 - Small random factor: `Math.random() * 0.3`
 - Adds 0 to 0.3 points to priority score
 - Not enough to significantly change order selection
@@ -188,32 +200,35 @@ if (shopperOrderCount < averageOrderCount) {
 
 ```typescript
 // Track shopper activity
-const shopperStats = new Map<string, {
-  lastOrderTime: number;
-  orderCount: number;
-  acceptedCount: number;
-}>();
+const shopperStats = new Map<
+  string,
+  {
+    lastOrderTime: number;
+    orderCount: number;
+    acceptedCount: number;
+  }
+>();
 
 // Boost priority for shoppers who need orders
 function calculatePriorityWithRotation(shopper, order) {
   let priority = calculateShopperPriority(shopper, order);
-  
+
   const stats = shopperStats.get(shopper.id);
   const timeSinceLastOrder = Date.now() - stats.lastOrderTime;
-  
+
   // Boost shoppers who haven't gotten orders recently
   if (timeSinceLastOrder > 10 * 60 * 1000) {
     priority -= 3; // Strong boost after 10 mins
   } else if (timeSinceLastOrder > 5 * 60 * 1000) {
     priority -= 1.5; // Moderate boost after 5 mins
   }
-  
+
   // Boost shoppers with fewer orders
   const avgOrders = getAverageOrderCount();
   if (stats.orderCount < avgOrders * 0.7) {
     priority -= 2; // Help new or slow shoppers
   }
-  
+
   return priority;
 }
 ```
@@ -224,19 +239,19 @@ function calculatePriorityWithRotation(shopper, order) {
 // Instead of showing to all, assign to best shopper
 async function smartAssignToOne(order) {
   const onlineShoppers = await getOnlineShoppers();
-  
+
   // Calculate score for each shopper
-  const shopperScores = onlineShoppers.map(shopper => ({
+  const shopperScores = onlineShoppers.map((shopper) => ({
     shopper,
-    score: calculatePriorityWithRotation(shopper, order)
+    score: calculatePriorityWithRotation(shopper, order),
   }));
-  
+
   // Sort by score (lowest = best)
   shopperScores.sort((a, b) => a.score - b.score);
-  
+
   // Show to ONLY the best shopper
   await sendNotificationToShopper(shopperScores[0].shopper, order);
-  
+
   // If they don't accept in 20 seconds, show to next shopper
   setTimeout(() => {
     if (!orderAccepted) {
@@ -272,11 +287,11 @@ const zones = [
 function assignOrderInZone(order, zone) {
   const shoppersInZone = getShoppersInZone(zone);
   const nextShopperIndex = zone.currentRotationIndex;
-  
+
   // Round-robin within zone
   const selectedShopper = shoppersInZone[nextShopperIndex];
   zone.currentRotationIndex = (nextShopperIndex + 1) % shoppersInZone.length;
-  
+
   return selectedShopper;
 }
 ```
@@ -292,6 +307,7 @@ function assignOrderInZone(order, zone) {
 ```
 
 **Expected:**
+
 ```
 Shopper 1: 🔔 Order af0f7a8d (3900 RWF) shown
 Shopper 2: 🔔 Order af0f7a8d (3900 RWF) shown  ✅ SAME
@@ -306,6 +322,7 @@ Shopper 3: 🔔 Order af0f7a8d (3900 RWF) shown  ✅ SAME
 ```
 
 **Expected:**
+
 ```
 Shopper 2 (13:15:03): ✅ Order assigned successfully
 Shopper 1 (13:15:05): ❌ Order no longer available
@@ -320,6 +337,7 @@ Shopper 3 (13:15:07): ❌ Order no longer available
 ```
 
 **Expected:**
+
 ```
 13:15 - Shopper 2 accepts order 1 ✅
 13:18 - Shopper 2 accepts order 2 ✅
@@ -332,11 +350,13 @@ Shopper 3 (13:15:07): ❌ Order no longer available
 ### For Current "Broadcast" System:
 
 1. **Keep if you want competition-based assignment**
+
    - Fast shoppers get rewarded
    - Orders get picked up quickly
    - Simple to maintain
 
 2. **Add rotation tracking**
+
    - Track when each shopper last got an order
    - Boost priority for shoppers who haven't gotten orders
    - Balance order distribution
@@ -349,11 +369,13 @@ Shopper 3 (13:15:07): ❌ Order no longer available
 ### For Better Fairness:
 
 1. **Implement round-robin**
+
    - Track shopper order in queue
    - Rotate who gets shown orders first
    - Guarantee everyone gets a chance
 
 2. **Add cooldown period**
+
    - After accepting order, shopper gets lower priority for 5 mins
    - Allows other shoppers to catch up
    - Better distribution
@@ -366,6 +388,7 @@ Shopper 3 (13:15:07): ❌ Order no longer available
 ## 🎯 Summary
 
 ### Current System:
+
 ✅ **Broadcast Model** - All see same order
 ✅ **First Come First Served** - Fastest wins
 ✅ **No Rotation** - Same shoppers can dominate
@@ -373,6 +396,7 @@ Shopper 3 (13:15:07): ❌ Order no longer available
 ✅ **Age + Distance Priority** - Oldest orders first
 
 ### To Add Fairness:
+
 📝 Track shopper order history
 📝 Boost priority for inactive shoppers
 📝 Add cooldown after accepting
@@ -380,6 +404,7 @@ Shopper 3 (13:15:07): ❌ Order no longer available
 📝 Implement round-robin
 
 ### Trade-offs:
+
 ⚖️ **Speed vs Fairness**
 ⚖️ **Competition vs Rotation**
 ⚖️ **Simplicity vs Complexity**

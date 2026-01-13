@@ -15,6 +15,7 @@ node scripts/test-redis.js
 ```
 
 Expected output:
+
 ```
 ✅ Connected!
 ✅ PING response: PONG (5ms)
@@ -30,6 +31,7 @@ npm run dev
 ```
 
 You should see:
+
 ```
 ✅ Redis connected successfully
 ```
@@ -55,22 +57,27 @@ redis://[username]:[password]@[host]:[port]
 ## 🔧 Troubleshooting
 
 ### "WRONGPASS" Error
+
 → Password is incorrect. Get the correct password from Redis Cloud dashboard.
 
 ### "Connection timeout"
+
 → Check if the host and port are correct.
 
 ### "SSL/TLS error"
+
 → Make sure you're using `redis://` (not `rediss://`)
 
 ## ✨ What Redis Does
 
 When Redis is connected:
+
 - ✅ Stores shopper GPS locations (TTL: 45 seconds)
 - ✅ Tracks online status in real-time
 - ✅ Enables distance-based order assignment
 - ✅ Logs offer skip events for debugging
 
 When Redis is unavailable:
+
 - ⚠️ App falls back to client-provided location
 - ⚠️ Still works, just without real-time location tracking

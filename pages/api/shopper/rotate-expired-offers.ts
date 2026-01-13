@@ -26,7 +26,10 @@ const GET_EXPIRED_OFFERS = gql`
   query GetExpiredOffers {
     order_offers(
       where: {
-        _and: [{ status: { _eq: "OFFERED" } }, { expires_at: { _lte: "now()" } }]
+        _and: [
+          { status: { _eq: "OFFERED" } }
+          { expires_at: { _lte: "now()" } }
+        ]
       }
     ) {
       id

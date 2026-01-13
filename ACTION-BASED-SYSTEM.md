@@ -3,6 +3,7 @@
 ## ✅ What Changed
 
 ### **OLD SYSTEM (Time-Based)**
+
 - ❌ 60-second countdown timer
 - ❌ Auto-expires if no action
 - ❌ Automatic rotation to next shopper
@@ -10,6 +11,7 @@
 - ❌ Background cron job needed for expiry
 
 ### **NEW SYSTEM (Action-Based)**
+
 - ✅ **No time limit** - Offer stays until action taken
 - ✅ **Explicit actions only** - Shopper must accept or decline
 - ✅ **One order at a time** - Cannot work on multiple orders
@@ -21,6 +23,7 @@
 ## 🔄 Complete Flow
 
 ### 1️⃣ **Order becomes available**
+
 ```
 New order created (status: PENDING)
         ↓
@@ -34,6 +37,7 @@ Sends FCM notification
 ```
 
 ### 2️⃣ **Shopper sees offer**
+
 ```
 Notification appears on shopper's device
         ↓
@@ -45,6 +49,7 @@ Must choose: ACCEPT or DECLINE
 ```
 
 ### 3️⃣ **If Shopper DECLINES**
+
 ```
 Shopper clicks "Decline"
         ↓
@@ -58,6 +63,7 @@ Original shopper can see other orders
 ```
 
 ### 4️⃣ **If Shopper ACCEPTS**
+
 ```
 Shopper clicks "Accept"
         ↓
@@ -73,6 +79,7 @@ Works exclusively on this order
 ```
 
 ### 5️⃣ **After Delivery**
+
 ```
 Shopper completes delivery
         ↓
@@ -101,14 +108,14 @@ if (shopper has orders with status in ["accepted", "in_progress", "picked_up"]) 
 
 ### **Shopper Statuses:**
 
-| Status | Can See New Offers? | Reason |
-|--------|-------------------|--------|
-| **No active orders** | ✅ YES | Available to work |
-| **Has OFFERED** | ✅ YES | Just viewing, not committed |
-| **Has ACCEPTED** | ❌ NO | Working on order |
-| **Has IN_PROGRESS** | ❌ NO | Currently shopping |
-| **Has PICKED_UP** | ❌ NO | Delivering order |
-| **Delivered all orders** | ✅ YES | Available again |
+| Status                   | Can See New Offers? | Reason                      |
+| ------------------------ | ------------------- | --------------------------- |
+| **No active orders**     | ✅ YES              | Available to work           |
+| **Has OFFERED**          | ✅ YES              | Just viewing, not committed |
+| **Has ACCEPTED**         | ❌ NO               | Working on order            |
+| **Has IN_PROGRESS**      | ❌ NO               | Currently shopping          |
+| **Has PICKED_UP**        | ❌ NO               | Delivering order            |
+| **Delivered all orders** | ✅ YES              | Available again             |
 
 ---
 
@@ -142,6 +149,7 @@ OFFERED → Waiting for action (no time limit)
 ### **Notification Card:**
 
 **Before:**
+
 ```
 New Order Available!
 ⏰ 60 seconds remaining
@@ -149,6 +157,7 @@ New Order Available!
 ```
 
 **After:**
+
 ```
 New Order Available!
 Take your time to review
@@ -170,6 +179,7 @@ Take your time to review
 ### **`/api/shopper/smart-assign-order`**
 
 **Response when shopper is available:**
+
 ```json
 {
   "success": true,
@@ -182,6 +192,7 @@ Take your time to review
 ```
 
 **Response when shopper has active order:**
+
 ```json
 {
   "success": false,
@@ -195,6 +206,7 @@ Take your time to review
 ### **`/api/shopper/decline-offer`**
 
 **Still works the same:**
+
 - Marks offer as DECLINED
 - Immediately triggers rotation to next shopper
 - Returns list of available orders
@@ -202,6 +214,7 @@ Take your time to review
 ### **`/api/shopper/accept-batch`**
 
 **Enhanced with active order check:**
+
 - Verifies shopper doesn't have active orders
 - Atomically accepts offer and assigns order
 - Prevents accepting while working on another order
@@ -211,6 +224,7 @@ Take your time to review
 ## 🚫 What Was Removed
 
 ### **1. Time-Based Expiry Logic**
+
 ```typescript
 // ❌ REMOVED
 const OFFER_DURATION_MS = 60000;
@@ -218,6 +232,7 @@ expiresAt = now + OFFER_DURATION_MS;
 ```
 
 ### **2. Auto-Rotation Cron Job**
+
 ```typescript
 // ❌ NOT NEEDED ANYMORE
 // pages/api/shopper/rotate-expired-offers.ts
@@ -226,6 +241,7 @@ expiresAt = now + OFFER_DURATION_MS;
 **Why?** Offers don't expire on time - only on action!
 
 ### **3. Countdown Timers in UI**
+
 ```typescript
 // ❌ REMOVED from frontend
 <Timer expiresAt={offer.expires_at} />
@@ -236,6 +252,7 @@ expiresAt = now + OFFER_DURATION_MS;
 ## ✅ What to Test
 
 ### **Test Case 1: Basic Flow**
+
 1. Create a new order
 2. Shopper receives notification
 3. No countdown timer visible
@@ -244,6 +261,7 @@ expiresAt = now + OFFER_DURATION_MS;
 6. ✅ Cannot see new orders while working
 
 ### **Test Case 2: Decline Flow**
+
 1. Shopper receives offer
 2. Shopper clicks "Decline"
 3. Offer goes to next shopper immediately
@@ -251,12 +269,14 @@ expiresAt = now + OFFER_DURATION_MS;
 5. ✅ System finds next eligible shopper
 
 ### **Test Case 3: One at a Time**
+
 1. Shopper accepts Order A
 2. API called for new offers
 3. System responds: "Complete your current order"
 4. ✅ Shopper doesn't see Order B until A is delivered
 
 ### **Test Case 4: After Delivery**
+
 1. Shopper delivers Order A
 2. Order status = "delivered"
 3. API called for new offers
@@ -267,6 +287,7 @@ expiresAt = now + OFFER_DURATION_MS;
 ## 📝 Logs to Look For
 
 ### **Shopper Available:**
+
 ```
 ✅ Shopper has no active orders - can receive new offers
 Creating exclusive offer: { orderId: '...', note: 'No time limit' }
@@ -274,6 +295,7 @@ Creating exclusive offer: { orderId: '...', note: 'No time limit' }
 ```
 
 ### **Shopper Busy:**
+
 ```
 🚫 Shopper already has active order: {
   shopperId: '...',
@@ -283,6 +305,7 @@ Creating exclusive offer: { orderId: '...', note: 'No time limit' }
 ```
 
 ### **Offer Created:**
+
 ```
 ✅ Exclusive offer created: {
   offerId: '...',
@@ -297,7 +320,7 @@ Creating exclusive offer: { orderId: '...', note: 'No time limit' }
 
 1. **✅ Simpler System** - No expiry management
 2. **✅ Better UX** - No pressure from countdown
-3. **✅ Clearer Intent** - Shoppers must decide explicitly  
+3. **✅ Clearer Intent** - Shoppers must decide explicitly
 4. **✅ One Focus** - Work on one order at a time
 5. **✅ No Spam** - Can't be overwhelmed with multiple orders
 6. **✅ Professional** - Like Uber Eats/DoorDash model

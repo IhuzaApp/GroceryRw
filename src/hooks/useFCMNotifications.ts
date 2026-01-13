@@ -74,7 +74,10 @@ export const useFCMNotifications = (): FCMNotificationHook => {
 
     const init = async () => {
       try {
-        console.log("🟢 Shopper is online - Initializing FCM for user:", session.user.id);
+        console.log(
+          "🟢 Shopper is online - Initializing FCM for user:",
+          session.user.id
+        );
 
         // Initialize FCM and set up message listener
         unsubscribe = await initializeFCM(session.user.id, (payload) => {
@@ -262,7 +265,9 @@ export const useFCMNotifications = (): FCMNotificationHook => {
         });
 
         if (unsubscribe && typeof unsubscribe === "function") {
-          console.log("✅ FCM Hook: Successfully initialized with push notifications");
+          console.log(
+            "✅ FCM Hook: Successfully initialized with push notifications"
+          );
           setIsInitialized(true);
           setHasPermission(true);
         } else {

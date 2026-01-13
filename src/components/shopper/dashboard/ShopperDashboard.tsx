@@ -416,12 +416,24 @@ export default function ShopperDashboard() {
       setNotifiedOrder(null);
     };
 
-    window.addEventListener("notification-order-shown", handleNotificationShown);
-    window.addEventListener("notification-order-hidden", handleNotificationHidden);
+    window.addEventListener(
+      "notification-order-shown",
+      handleNotificationShown
+    );
+    window.addEventListener(
+      "notification-order-hidden",
+      handleNotificationHidden
+    );
 
     return () => {
-      window.removeEventListener("notification-order-shown", handleNotificationShown);
-      window.removeEventListener("notification-order-hidden", handleNotificationHidden);
+      window.removeEventListener(
+        "notification-order-shown",
+        handleNotificationShown
+      );
+      window.removeEventListener(
+        "notification-order-hidden",
+        handleNotificationHidden
+      );
     };
   }, []);
 

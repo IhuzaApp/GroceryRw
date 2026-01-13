@@ -36,7 +36,10 @@ try {
     console.debug("📱 FCM: Firebase app initialized");
   }
 } catch (error) {
-  console.debug("📱 FCM: Firebase initialization failed (non-critical):", error);
+  console.debug(
+    "📱 FCM: Firebase initialization failed (non-critical):",
+    error
+  );
   app = null;
 }
 const db = app ? getFirestore(app) : null;

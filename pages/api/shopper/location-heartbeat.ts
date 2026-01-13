@@ -1,7 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
-import { setShopperLocation, ShopperLocation } from "../../../src/lib/redisClient";
+import {
+  setShopperLocation,
+  ShopperLocation,
+} from "../../../src/lib/redisClient";
 
 // ============================================================================
 // LOCATION HEARTBEAT API

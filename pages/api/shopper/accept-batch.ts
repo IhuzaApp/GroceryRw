@@ -336,7 +336,9 @@ export default async function handler(
       );
 
       console.log(
-        `📍 Distance re-validation: ${distance.toFixed(2)}km (max: ${MAX_ACCEPTANCE_DISTANCE_KM}km)`
+        `📍 Distance re-validation: ${distance.toFixed(
+          2
+        )}km (max: ${MAX_ACCEPTANCE_DISTANCE_KM}km)`
       );
 
       if (distance > MAX_ACCEPTANCE_DISTANCE_KM) {
@@ -355,9 +357,7 @@ export default async function handler(
         });
       }
 
-      console.log(
-        `✅ Distance re-validation passed: ${distance.toFixed(2)}km`
-      );
+      console.log(`✅ Distance re-validation passed: ${distance.toFixed(2)}km`);
     } else {
       console.log(
         "⚠️ Skipping distance re-validation (Redis unavailable or location expired)"

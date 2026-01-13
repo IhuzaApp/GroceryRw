@@ -3,7 +3,9 @@
 ## Issues Identified & Fixed
 
 ### 1. ❌ Duplicate NotificationSystem Components
+
 **Problem:** Two instances running simultaneously
+
 - `ShopperLayout.tsx` - Global instance
 - `ShopperDashboard.tsx` - Dashboard-specific duplicate
 
@@ -11,12 +13,15 @@
 **Result:** ✅ 50% reduction in API calls
 
 ### 2. ❌ Excessive Online Status Checking
+
 **Problem:** "Shopper online status changed" logging every few milliseconds
+
 - Logging even when status didn't change
 - Polling too frequently (every 5 seconds)
 - React StrictMode causing double effects
 
-**Fix:** 
+**Fix:**
+
 - Only log when status actually changes
 - Increased polling interval to 10 seconds
 - Added comparison before updating state
@@ -24,8 +29,10 @@
 **Result:** ✅ 90% reduction in logs
 
 ### 3. ❌ React StrictMode Confusion
+
 **Problem:** Development logs showing duplicates (expected behavior)
-**Fix:** 
+**Fix:**
+
 - Added detection for REAL duplicates vs StrictMode
 - Added informative console messages
 - Created documentation explaining StrictMode
@@ -33,8 +40,10 @@
 **Result:** ✅ Clear distinction between expected and unexpected behavior
 
 ### 4. ❌ Notifications Triggering When Offline
+
 **Problem:** Notifications showing even when shopper wasn't online
 **Fix:**
+
 - FCM only initializes when shopper has location cookies
 - NotificationSystem checks online status before polling
 - Auto-stop when going offline
@@ -42,8 +51,10 @@
 **Result:** ✅ No wasted notifications
 
 ### 5. ❌ Notifications on Page Refresh
+
 **Problem:** Notifications appearing immediately after refresh/navigation
 **Fix:**
+
 - 15-second cooldown after page load
 - Page visibility tracking
 - User activity monitoring
@@ -97,16 +108,19 @@ Every notification must pass ALL these checks:
 ### ✅ Expected Logs (Good)
 
 #### Single Instance
+
 ```
 🔧 NotificationSystem mounted { componentId: "abc123" }
 ```
 
 #### Online/Offline Changes
+
 ```
 👤 FCM: Shopper online status changed: { wasOnline: false, isNowOnline: true }
 ```
 
 #### API Polling
+
 ```
 🔒 API POLLING: Lock acquired
 === Smart Assignment API called ===
@@ -115,6 +129,7 @@ Every notification must pass ALL these checks:
 ```
 
 #### StrictMode (Development Only)
+
 ```
 ⚠️ Notification system already running, skipping restart
 { message: "This is normal in development (React StrictMode causes double effects)" }
@@ -123,23 +138,29 @@ Every notification must pass ALL these checks:
 ### ❌ Warning Logs (Needs Attention)
 
 #### Duplicate Instance
+
 ```
 ⚠️ DUPLICATE NotificationSystem DETECTED!
 { activeInstances: ["abc123", "def456"] }
 ```
+
 **Action:** Check for multiple `<NotificationSystem>` imports
 
 #### Lock Already Held
+
 ```
 🔒 API POLLING: Already checking for orders, skipping
 ```
+
 **Action:** If this appears frequently, check for race conditions
 
 #### Multiple Mounts
+
 ```
 🔧 NotificationSystem mounted { componentId: "abc123" }
 🔧 NotificationSystem mounted { componentId: "def456" }  // Different ID = real duplicate!
 ```
+
 **Action:** Find and remove duplicate component
 
 ## Testing Checklist
@@ -147,19 +168,23 @@ Every notification must pass ALL these checks:
 ### ✅ Development Testing
 
 1. **Check Console on Load**
+
    - Should see: ONE "NotificationSystem mounted"
    - Should NOT see: "DUPLICATE NotificationSystem DETECTED"
 
 2. **Go Online**
+
    - Click "Start Plas"
    - Should see: "Shopper online status changed"
    - Should see: "Starting smart notification system"
 
 3. **Wait for API Call**
+
    - Should see: ONE "Smart Assignment API called" per interval
    - Should see: Lock acquired → released
 
 4. **Go Offline**
+
    - Click "Go Offline"
    - Should see: "Shopper went offline"
    - Should see: "Stopping notification system"
@@ -176,6 +201,7 @@ npm run start
 ```
 
 1. **No StrictMode Duplicates**
+
    - Effects only run once
    - Cleaner console
 
@@ -186,6 +212,7 @@ npm run start
 ## Performance Improvements
 
 ### Before Fix
+
 - 🔴 2x API calls (duplicate components)
 - 🔴 2x FCM notifications
 - 🔴 2x database queries
@@ -194,6 +221,7 @@ npm run start
 - 🔴 Notifications on page refresh
 
 ### After Fix
+
 - ✅ 1x API calls (single component)
 - ✅ 1x FCM notifications (with cache)
 - ✅ 1x database queries
@@ -202,6 +230,7 @@ npm run start
 - ✅ 15-second cooldown after refresh
 
 ### Metrics
+
 - **API Calls:** 50% reduction
 - **Database Queries:** 50% reduction
 - **FCM Sends:** 50% reduction
@@ -212,11 +241,13 @@ npm run start
 ## Files Modified
 
 1. `src/components/shopper/dashboard/ShopperDashboard.tsx`
+
    - ❌ Removed duplicate `<NotificationSystem>`
    - ✅ Added event listeners for notification updates
    - ✅ Removed import
 
 2. `src/components/shopper/NotificationSystem.tsx`
+
    - ✅ Added component ID tracking
    - ✅ Added duplicate instance detection
    - ✅ Added custom event dispatching
@@ -225,12 +256,14 @@ npm run start
    - ✅ Added StrictMode handling
 
 3. `src/hooks/useFCMNotifications.ts`
+
    - ✅ Added online status monitoring
    - ✅ Only initialize when online
    - ✅ Auto-cleanup when offline
    - ✅ Improved status change detection
 
 4. `src/services/fcmClient.ts`
+
    - ✅ Better error handling
    - ✅ Non-critical failure messages
    - ✅ Validation checks
@@ -241,17 +274,20 @@ npm run start
 ## Documentation Created
 
 1. `docs/SMART_MATCHING_AND_FCM_IMPROVEMENTS.md`
+
    - Smart matching algorithm explanation
    - FCM protection layers
    - Online status requirements
    - Testing procedures
 
 2. `docs/DUPLICATE_NOTIFICATION_FIX.md`
+
    - Duplicate component issue
    - Fix implementation
    - Architecture changes
 
 3. `docs/REACT_STRICTMODE_NOTES.md`
+
    - StrictMode explanation
    - Expected development behavior
    - Production vs development
@@ -266,11 +302,13 @@ npm run start
 ### Issue: Still seeing duplicate API calls
 
 **Check:**
+
 1. Browser console for "DUPLICATE NotificationSystem DETECTED"
 2. Count of "NotificationSystem mounted" logs
 3. Verify only ONE `<NotificationSystem>` in codebase
 
 **Solution:**
+
 ```bash
 # Search for NotificationSystem usage
 grep -r "<NotificationSystem" src/
@@ -280,45 +318,54 @@ grep -r "<NotificationSystem" src/
 ### Issue: Notifications not showing
 
 **Check:**
+
 1. Online status: "Shopper online status changed: true"
 2. Location cookies set
 3. "Starting smart notification system" log
 
 **Solution:**
+
 - Click "Start Plas" to go online
 - Check browser cookies for `user_latitude` and `user_longitude`
 
 ### Issue: Too many console logs
 
 **Check:**
+
 - Running in development mode (StrictMode active)
 
 **Solution:**
+
 - This is normal in development
 - Test production build for clean logs
 
 ## Success Criteria
 
 ✅ **Single Component Instance**
+
 - Only one NotificationSystem mounted
 - No duplicate detection errors
 
 ✅ **Smart Matching Works**
+
 - API called every 30 seconds (or 2 minutes with FCM)
 - Returns best order based on priority
 - Notifications only when online
 
 ✅ **FCM Integration**
+
 - Initializes when online
 - Cleans up when offline
 - Non-critical failures handled gracefully
 
 ✅ **Clean Console**
+
 - Status changes logged only when changed
 - Lock acquisition/release logged
 - No excessive logs
 
 ✅ **Production Ready**
+
 - No StrictMode artifacts
 - Optimized performance
 - Comprehensive error handling
@@ -328,14 +375,17 @@ grep -r "<NotificationSystem" src/
 ### Optional Enhancements
 
 1. **Add Global State Management**
+
    - Redux or Zustand for notification state
    - Easier cross-component communication
 
 2. **Add Server-Side Rate Limiting**
+
    - Additional protection against spam
    - Per-user request limits
 
 3. **Add Metrics Tracking**
+
    - Monitor notification show rates
    - Track decline reasons
    - Measure order acceptance times
@@ -348,6 +398,7 @@ grep -r "<NotificationSystem" src/
 ## Conclusion
 
 All issues have been identified and fixed:
+
 - ✅ Duplicate components removed
 - ✅ Online status properly tracked
 - ✅ StrictMode behavior documented
