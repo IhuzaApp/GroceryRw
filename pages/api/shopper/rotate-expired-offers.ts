@@ -494,8 +494,13 @@ export default async function handler(
           offered_at: offeredAt,
           expires_at: expiresAt,
           round_number: nextRound,
+          order_id: null,
+          reel_order_id: null,
+          restaurant_order_id: null,
+          business_order_id: null,
         };
 
+        // Set only the relevant order ID based on type
         if (expiredOffer.order_type === "regular") {
           offerVariables.order_id = orderId;
         } else if (expiredOffer.order_type === "reel") {

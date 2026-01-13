@@ -115,16 +115,6 @@ const GET_AVAILABLE_RESTAURANT_ORDERS = gql`
         street
         city
       }
-      restaurant_order_items {
-        id
-        quantity
-        price
-        restaurant_dishes {
-          id
-          name
-          description
-        }
-      }
     }
   }
 `;

@@ -3,16 +3,22 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { getShopperLocation } from "../../../src/lib/redisClient";
 
 // ============================================================================
-// ACCEPT BATCH WITH OFFER VERIFICATION
+// ACCEPT BATCH WITH OFFER VERIFICATION + DISTANCE RE-VALIDATION
 // ============================================================================
 // This API now implements atomic offer verification and order assignment:
 // 1. Verify the offer exists and belongs to this shopper
 // 2. Verify the offer hasn't expired
-// 3. Update order_offers.status = ACCEPTED
-// 4. Update order.shopper_id and order.status = accepted
+// 3. RE-VALIDATE: Verify shopper is still nearby (critical anti-cheat)
+// 4. Update order_offers.status = ACCEPTED
+// 5. Update order.shopper_id and order.status = accepted
 // ============================================================================
+
+// Max allowed distance for acceptance (in kilometers)
+// This should match or be slightly larger than the max offer radius
+const MAX_ACCEPTANCE_DISTANCE_KM = 10;
 
 const ACCEPT_BATCH_MUTATION = gql`
   mutation AcceptBatch(
@@ -224,6 +230,29 @@ export default async function handler(
     });
 
     // ========================================================================
+    // STEP 1.5: DISTANCE RE-VALIDATION (Critical Anti-Cheat)
+    // ========================================================================
+    // Professional systems re-validate location on accept to prevent:
+    // - Spoofed locations
+    // - Shoppers accepting from far away
+    // - Race conditions with movement
+    // ========================================================================
+
+    const shopperLocation = await getShopperLocation(userId);
+
+    if (!shopperLocation) {
+      console.warn(
+        "⚠️ No location found for shopper at acceptance time:",
+        userId
+      );
+      console.warn("   This could mean:");
+      console.warn("   - Redis unavailable (degraded mode)");
+      console.warn("   - Shopper went offline");
+      console.warn("   - Location TTL expired");
+      console.warn("   Proceeding with acceptance (graceful degradation)");
+    }
+
+    // ========================================================================
     // STEP 2: Check if the order exists and is still available
     // ========================================================================
 
@@ -262,6 +291,77 @@ export default async function handler(
         error: "This batch is no longer available for assignment",
         code: "INVALID_STATUS",
       });
+    }
+
+    // ========================================================================
+    // STEP 2.5: DISTANCE RE-VALIDATION CHECK
+    // ========================================================================
+    // Verify shopper is still nearby (prevents location spoofing)
+    // ========================================================================
+
+    if (shopperLocation) {
+      // Get order location
+      const orderLat = parseFloat(
+        order.Address?.latitude || order.address?.latitude || "0"
+      );
+      const orderLng = parseFloat(
+        order.Address?.longitude || order.address?.longitude || "0"
+      );
+
+      // Calculate distance using Haversine formula
+      const calculateDistance = (
+        lat1: number,
+        lon1: number,
+        lat2: number,
+        lon2: number
+      ): number => {
+        const R = 6371; // Earth radius in km
+        const dLat = (lat2 - lat1) * (Math.PI / 180);
+        const dLon = (lon2 - lon1) * (Math.PI / 180);
+        const a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(lat1 * (Math.PI / 180)) *
+            Math.cos(lat2 * (Math.PI / 180)) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+      };
+
+      const distance = calculateDistance(
+        shopperLocation.lat,
+        shopperLocation.lng,
+        orderLat,
+        orderLng
+      );
+
+      console.log(
+        `📍 Distance re-validation: ${distance.toFixed(2)}km (max: ${MAX_ACCEPTANCE_DISTANCE_KM}km)`
+      );
+
+      if (distance > MAX_ACCEPTANCE_DISTANCE_KM) {
+        console.error(
+          `❌ DISTANCE RE-VALIDATION FAILED: Shopper is ${distance.toFixed(
+            2
+          )}km away (max: ${MAX_ACCEPTANCE_DISTANCE_KM}km)`
+        );
+        return res.status(403).json({
+          error: `You are too far from the order location (${distance.toFixed(
+            1
+          )}km away)`,
+          code: "TOO_FAR",
+          distance: distance.toFixed(2),
+          maxDistance: MAX_ACCEPTANCE_DISTANCE_KM,
+        });
+      }
+
+      console.log(
+        `✅ Distance re-validation passed: ${distance.toFixed(2)}km`
+      );
+    } else {
+      console.log(
+        "⚠️ Skipping distance re-validation (Redis unavailable or location expired)"
+      );
     }
 
     // ========================================================================
