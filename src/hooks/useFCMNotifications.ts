@@ -30,14 +30,9 @@ export const useFCMNotifications = (): FCMNotificationHook => {
   useEffect(() => {
     const updateOnlineStatus = () => {
       const online = checkOnlineStatus();
-      // Only update and log if status actually changed
+      // Only update if status actually changed
       if (online !== isOnline) {
         setIsOnline(online);
-        console.log("👤 FCM: Shopper online status changed:", {
-          wasOnline: isOnline,
-          isNowOnline: online,
-          timestamp: new Date().toISOString(),
-        });
       }
     };
 
@@ -86,21 +81,11 @@ export const useFCMNotifications = (): FCMNotificationHook => {
           // CRITICAL: Check page visibility before dispatching events
           // This prevents notifications from showing when user is on another page/tab
           if (document.hidden) {
-            console.log("🚫 FCM Hook: Page hidden, not dispatching event", {
-              type: data?.type,
-              timestamp: new Date().toISOString(),
-            });
             return;
           }
 
           // Dispatch custom events based on notification type
           const type = data?.type;
-
-          console.log("📲 FCM Hook: Dispatching event", {
-            type,
-            pageVisible: !document.hidden,
-            timestamp: new Date().toISOString(),
-          });
 
           switch (type) {
             case "new_order":
@@ -272,17 +257,13 @@ export const useFCMNotifications = (): FCMNotificationHook => {
           setHasPermission(true);
         } else {
           console.log(
-            "ℹ️ FCM Hook: FCM not available, using API polling instead (this is normal)"
+            "FCM not available, using API polling instead"
           );
           // Not an error - app will use API polling instead
           setIsInitialized(false);
           setHasPermission(false);
         }
       } catch (error) {
-        console.warn(
-          "⚠️ FCM Hook: Initialization failed (non-critical), using API polling:",
-          error
-        );
         // Not an error - app will use API polling instead
         setIsInitialized(false);
         setHasPermission(false);
