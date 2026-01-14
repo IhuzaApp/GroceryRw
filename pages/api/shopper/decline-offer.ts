@@ -16,6 +16,8 @@ import { logger } from "../../../src/utils/logger";
 // ============================================================================
 
 // Query to verify the offer belongs to this shopper and is still valid
+// Note: In action-based system, offers don't expire - they stay until accepted/declined
+// So we only check for OFFERED status, not expiration
 const VERIFY_ORDER_OFFER = gql`
   query VerifyOrderOffer($orderId: uuid!, $shopperId: uuid!) {
     order_offers(
@@ -30,9 +32,10 @@ const VERIFY_ORDER_OFFER = gql`
           }
           { shopper_id: { _eq: $shopperId } }
           { status: { _eq: "OFFERED" } }
-          { expires_at: { _gt: "now()" } }
         ]
       }
+      order_by: { offered_at: desc }
+      limit: 1
     ) {
       id
       shopper_id
@@ -104,7 +107,8 @@ export default async function handler(
     // - Offer must exist for this order
     // - Offer must belong to this shopper (shopper_id = shopperId)
     // - Offer must be in OFFERED state
-    // - Offer must not have expired (expires_at > now())
+    // Note: In action-based system, offers don't expire - they stay until
+    // accepted or declined, so we don't check expires_at
     // ========================================================================
 
     console.log("Verifying offer for decline - order:", orderId, "shopper:", shopperId);
@@ -117,15 +121,74 @@ export default async function handler(
     const offer = offerResponse.order_offers?.[0];
 
     if (!offer) {
+      // Check if there are any offers for this order/shopper combination (any status)
+      const CHECK_ANY_OFFER = gql`
+        query CheckAnyOffer($orderId: uuid!, $shopperId: uuid!) {
+          order_offers(
+            where: {
+              _and: [
+                {
+                  _or: [
+                    { order_id: { _eq: $orderId } }
+                    { reel_order_id: { _eq: $orderId } }
+                    { restaurant_order_id: { _eq: $orderId } }
+                  ]
+                }
+                { shopper_id: { _eq: $shopperId } }
+              ]
+            }
+            order_by: { offered_at: desc }
+            limit: 5
+          ) {
+            id
+            status
+            offered_at
+            expires_at
+            round_number
+            order_id
+            reel_order_id
+            restaurant_order_id
+          }
+        }
+      `;
+
+      const anyOfferResponse = (await hasuraClient.request(CHECK_ANY_OFFER, {
+        orderId,
+        shopperId: shopperId,
+      })) as any;
+
+      const anyOffers = anyOfferResponse.order_offers || [];
+
       console.warn(
-        "❌ Offer verification failed - no valid offer found for order:",
+        "❌ Offer verification failed - no valid OFFERED offer found for order:",
         orderId,
         "shopper:",
-        shopperId
+        shopperId,
+        "Found offers with other statuses:",
+        anyOffers.map((o: any) => ({
+          id: o.id,
+          status: o.status,
+          round: o.round_number,
+        }))
       );
+
+      if (anyOffers.length > 0) {
+        const statuses = anyOffers.map((o: any) => o.status).join(", ");
+        return res.status(403).json({
+          error:
+            `You don't have an active offer for this order. Found offers with status: ${statuses}. The offer may have already been accepted, declined, or expired.`,
+          code: "NO_VALID_OFFER",
+          foundOffers: anyOffers.map((o: any) => ({
+            id: o.id,
+            status: o.status,
+            round: o.round_number,
+          })),
+        });
+      }
+
       return res.status(403).json({
         error:
-          "You don't have an active offer for this order, or the offer has expired",
+          "You don't have an active offer for this order. It may have already been accepted, declined, or assigned to another shopper.",
         code: "NO_VALID_OFFER",
       });
     }
