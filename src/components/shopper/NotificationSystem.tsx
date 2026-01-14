@@ -627,6 +627,20 @@ export default function NotificationSystem({
       customerLongitude: order.customerLongitude,
     };
 
+    // Store active offer in localStorage for persistence across page refreshes
+    try {
+      localStorage.setItem(
+        "active_offer",
+        JSON.stringify({
+          order: orderForNotification,
+          expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(), // 4 hours
+          assignedAt: currentTime,
+        })
+      );
+    } catch (error) {
+      logger.warn("Failed to store active offer in localStorage", "NotificationSystem", error);
+    }
+
     await playNotificationSound({ enabled: true, volume: 0.7 });
     showToast(orderForNotification);
     showDesktopNotification(orderForNotification);
@@ -1332,6 +1346,65 @@ export default function NotificationSystem({
   }, []);
 
   // Track when notification card shows/hides
+  // Check for active offers on mount and restore notification
+  const checkForActiveOffer = async () => {
+    if (!session?.user?.id || !currentLocation || !isShopperOnline) {
+      return;
+    }
+
+    try {
+      // Check localStorage first for quick restore
+      const storedActiveOffer = localStorage.getItem("active_offer");
+      if (storedActiveOffer) {
+        try {
+          const offer = JSON.parse(storedActiveOffer);
+          // Verify offer is still valid (not expired)
+          if (offer.expiresAt && new Date(offer.expiresAt) > new Date()) {
+            // Restore notification from localStorage
+            showNewOrderNotification(offer.order, Date.now());
+            return; // Exit early, offer restored from cache
+          } else {
+            // Offer expired, remove from localStorage
+            localStorage.removeItem("active_offer");
+          }
+        } catch (e) {
+          // Invalid stored data, remove it
+          localStorage.removeItem("active_offer");
+        }
+      }
+
+      // Query backend to check for active offers
+      const response = await fetch("/api/shopper/smart-assign-order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          current_location: currentLocation,
+          user_id: session.user.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.order) {
+        // Active offer found - show notification immediately
+        // showNewOrderNotification will store it in localStorage
+        const order = data.order;
+        await showNewOrderNotification(order, Date.now());
+      } else if (data.reason === "ACTIVE_OFFER_PENDING") {
+        // Shopper has an active offer but API didn't return order details
+        // This shouldn't happen, but if it does, we'll check again in the normal polling
+      }
+    } catch (error) {
+      logger.error(
+        "Error checking for active offer on mount",
+        "NotificationSystem",
+        error
+      );
+    }
+  };
+
   useEffect(() => {
     if (showMapModal && selectedOrder) {
       // Reset click counters for new notification
@@ -1340,6 +1413,14 @@ export default function NotificationSystem({
       directionsClickCount.current = 0;
     }
   }, [showMapModal, selectedOrder]);
+
+  // Check for active offers immediately on mount
+  useEffect(() => {
+    if (session?.user?.id && currentLocation && isShopperOnline) {
+      // Check for active offers immediately (before normal polling starts)
+      checkForActiveOffer();
+    }
+  }, [session?.user?.id, currentLocation, isShopperOnline]);
 
   useEffect(() => {
     if (session && currentLocation && isShopperOnline) {
@@ -1638,6 +1719,13 @@ export default function NotificationSystem({
                         "Failed to save declined orders to localStorage:",
                         error
                       );
+                    }
+
+                    // Clear active offer from localStorage since it's been declined
+                    try {
+                      localStorage.removeItem("active_offer");
+                    } catch (error) {
+                      logger.warn("Failed to clear active offer from localStorage", "NotificationSystem", error);
                     }
 
                     // Set decline cooldown (10 seconds before showing next notification)
