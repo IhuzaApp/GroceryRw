@@ -557,6 +557,12 @@ export default async function handler(
     // on an order. They must complete/deliver it first.
     // ========================================================================
 
+    // ========================================================================
+    // Check if shopper has 2 or more active orders (not delivered)
+    // ========================================================================
+    // Shoppers can work on up to 2 orders at a time
+    // If they have 2 active orders, block new offers until at least one is delivered
+    // ========================================================================
     const CHECK_ACTIVE_ORDERS = gql`
       query CheckActiveOrders($shopper_id: uuid!) {
         Orders(
@@ -564,7 +570,6 @@ export default async function handler(
             shopper_id: { _eq: $shopper_id }
             status: { _in: ["accepted", "in_progress", "picked_up"] }
           }
-          limit: 1
         ) {
           id
           status
@@ -576,37 +581,54 @@ export default async function handler(
       shopper_id: user_id,
     })) as any;
 
-    if (activeOrdersData.Orders && activeOrdersData.Orders.length > 0) {
-      const activeOrder = activeOrdersData.Orders[0];
-      console.log("🚫 Shopper already has active order:", {
+    const activeOrders = activeOrdersData.Orders || [];
+    const activeOrderCount = activeOrders.length;
+
+    if (activeOrderCount >= 2) {
+      console.log("🚫 Shopper already has 2 active orders (not delivered) - cannot receive new offers:", {
         shopperId: user_id,
-        activeOrderId: activeOrder.id,
-        status: activeOrder.status,
+        activeOrderCount: activeOrderCount,
+        orders: activeOrders.map((order: any) => ({
+          orderId: order.id,
+          status: order.status,
+        })),
       });
 
       return res.status(200).json({
         success: false,
-        message: "Complete your current order before accepting new ones",
-        reason: "ACTIVE_ORDER_IN_PROGRESS",
-        activeOrderId: activeOrder.id,
-        activeOrderStatus: activeOrder.status,
+        message: `You have ${activeOrderCount} active orders. Please deliver at least one before receiving new offers`,
+        reason: "MAX_ACTIVE_ORDERS_REACHED",
+        activeOrderCount: activeOrderCount,
+        maxAllowed: 2,
+        activeOrders: activeOrders.map((order: any) => ({
+          orderId: order.id,
+          status: order.status,
+        })),
+        note: "You can work on up to 2 orders at a time. Deliver at least one to receive new offers",
       });
     }
 
+    if (activeOrderCount === 1) {
+      console.log("✅ Shopper has 1 active order - can still receive new offers (max 2 active orders)");
+    } else {
+      console.log("✅ Shopper has no active orders - can receive new offers");
+    }
+
     // ========================================================================
-    // Check if shopper already has 2 or more active OFFERED offers
+    // Check if shopper already has an active OFFERED offer
     // ========================================================================
-    // Shoppers can have up to 2 active offers at a time
-    // If they have 2 or more, block new offers until they accept/decline one
+    // One offer at a time rule: Shoppers can only have ONE pending offer
+    // They must accept or decline it before receiving a new offer
     // ========================================================================
-    const CHECK_ACTIVE_OFFERED_OFFERS = gql`
-      query CheckActiveOfferedOffers($shopper_id: uuid!) {
+    const CHECK_ACTIVE_OFFERED_OFFER = gql`
+      query CheckActiveOfferedOffer($shopper_id: uuid!) {
         order_offers(
           where: {
             shopper_id: { _eq: $shopper_id }
             status: { _eq: "OFFERED" }
             expires_at: { _gt: "now()" }
           }
+          limit: 1
         ) {
           id
           order_id
@@ -620,58 +642,46 @@ export default async function handler(
       }
     `;
 
-    const activeOfferedOffersData = (await hasuraClient.request(
-      CHECK_ACTIVE_OFFERED_OFFERS,
+    const activeOfferedOfferData = (await hasuraClient.request(
+      CHECK_ACTIVE_OFFERED_OFFER,
       {
         shopper_id: user_id,
       }
     )) as any;
 
-    const activeOfferedOffers =
-      activeOfferedOffersData.order_offers || [];
-    const activeOfferedCount = activeOfferedOffers.length;
+    if (
+      activeOfferedOfferData.order_offers &&
+      activeOfferedOfferData.order_offers.length > 0
+    ) {
+      const activeOffer = activeOfferedOfferData.order_offers[0];
+      const orderId =
+        activeOffer.order_id ||
+        activeOffer.reel_order_id ||
+        activeOffer.restaurant_order_id;
 
-    if (activeOfferedCount >= 2) {
-      console.log("🚫 Shopper already has 2 or more active OFFERED offers:", {
+      console.log("🚫 Shopper already has an active OFFERED offer - cannot receive new offer:", {
         shopperId: user_id,
-        activeOfferCount: activeOfferedCount,
-        offers: activeOfferedOffers.map((offer: any) => ({
-          offerId: offer.id,
-          orderId:
-            offer.order_id ||
-            offer.reel_order_id ||
-            offer.restaurant_order_id,
-          orderType: offer.order_type,
-        })),
+        offerId: activeOffer.id,
+        orderId: orderId,
+        orderType: activeOffer.order_type,
+        status: activeOffer.status,
+        expiresAt: activeOffer.expires_at,
+        round: activeOffer.round_number,
       });
 
       return res.status(200).json({
         success: false,
-        message: `You have ${activeOfferedCount} pending offers. Please accept or decline at least one before receiving new offers`,
-        reason: "MAX_OFFERS_REACHED",
-        activeOfferCount: activeOfferedCount,
-        maxAllowed: 2,
-        activeOffers: activeOfferedOffers.map((offer: any) => ({
-          offerId: offer.id,
-          orderId:
-            offer.order_id ||
-            offer.reel_order_id ||
-            offer.restaurant_order_id,
-          orderType: offer.order_type,
-        })),
-        note: "You can have up to 2 active offers at a time. Accept or decline one to receive new offers",
+        message:
+          "You have a pending offer. Please accept or decline it before receiving new offers",
+        reason: "ACTIVE_OFFER_PENDING",
+        activeOfferId: activeOffer.id,
+        activeOrderId: orderId,
+        activeOrderType: activeOffer.order_type,
+        note: "Action-based system: You must accept or decline your current offer before receiving a new one",
       });
     }
 
-    if (activeOfferedCount > 0) {
-      console.log(
-        `✅ Shopper has ${activeOfferedCount} active OFFERED offer(s) - can receive one more (max 2)`
-      );
-    }
-
-    console.log(
-      `✅ Shopper has no active orders and ${activeOfferedCount} pending offer(s) - can receive new offers (max 2)`
-    );
+    console.log("✅ Shopper has no active orders or pending offers - can receive new offer");
 
     // ========================================================================
     // STEP 1: Find Eligible Orders
