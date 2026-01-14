@@ -157,6 +157,21 @@ const ACCEPT_ORDER_OFFER = gql`
   }
 `;
 
+// Query to check if shopper already has active orders
+const CHECK_ACTIVE_ORDERS = gql`
+  query CheckActiveOrders($shopper_id: uuid!) {
+    Orders(
+      where: {
+        shopper_id: { _eq: $shopper_id }
+        status: { _in: ["accepted", "in_progress", "picked_up"] }
+      }
+    ) {
+      id
+      status
+    }
+  }
+`;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -228,6 +243,31 @@ export default async function handler(
       round: offer.round_number,
       expiresAt: offer.expires_at,
     });
+
+    // ========================================================================
+    // STEP 1.2: Check if shopper already has max active orders
+    // ========================================================================
+    // Shoppers can work on up to 2 orders at a time
+    // ========================================================================
+
+    const activeOrdersData = (await hasuraClient.request(CHECK_ACTIVE_ORDERS, {
+      shopper_id: userId,
+    })) as any;
+
+    const activeOrders = activeOrdersData.Orders || [];
+    const activeOrderCount = activeOrders.length;
+
+    if (activeOrderCount >= 2) {
+      console.warn(
+        "❌ Acceptance blocked - shopper already has 2 active orders:",
+        userId
+      );
+      return res.status(403).json({
+        error: `You already have ${activeOrderCount} active orders. Please deliver at least one before accepting more.`,
+        code: "MAX_ACTIVE_ORDERS_REACHED",
+        activeOrderCount,
+      });
+    }
 
     // ========================================================================
     // STEP 1.5: DISTANCE RE-VALIDATION (Critical Anti-Cheat)
