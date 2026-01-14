@@ -48,16 +48,14 @@ export default function NotificationCenter() {
       const history = JSON.parse(
         localStorage.getItem("fcm_notification_history") || "[]"
       );
-      // Filter to only show chat messages and order notifications
-      const relevantNotifications = history.filter(
-        (n: NotificationItem) =>
-          n.type === "chat_message" ||
-          n.type === "new_order" ||
-          n.type === "batch_orders"
+      // Show ALL FCM notifications (no filtering)
+      // Sort by timestamp (newest first)
+      const sortedNotifications = history.sort(
+        (a: NotificationItem, b: NotificationItem) => b.timestamp - a.timestamp
       );
-      setNotifications(relevantNotifications);
+      setNotifications(sortedNotifications);
       setUnreadCount(
-        relevantNotifications.filter((n: NotificationItem) => !n.read).length
+        sortedNotifications.filter((n: NotificationItem) => !n.read).length
       );
     } catch (error) {
       console.error("Error loading notification history:", error);
@@ -78,34 +76,135 @@ export default function NotificationCenter() {
   };
 
   const clearAll = () => {
-    // Only clear chat and order notifications, keep other types
-    const allHistory = JSON.parse(
-      localStorage.getItem("fcm_notification_history") || "[]"
-    );
-    const otherNotifications = allHistory.filter(
-      (n: NotificationItem) =>
-        n.type !== "chat_message" &&
-        n.type !== "new_order" &&
-        n.type !== "batch_orders"
-    );
-    localStorage.setItem(
-      "fcm_notification_history",
-      JSON.stringify(otherNotifications)
-    );
+    // Clear all notifications
+    localStorage.setItem("fcm_notification_history", JSON.stringify([]));
     setNotifications([]);
     setUnreadCount(0);
   };
 
   const getNotificationIcon = (type: string) => {
+    const iconClass = `h-5 w-5 ${getNotificationColor(type)}`;
+    
     switch (type) {
       case "chat_message":
-        return "💬";
+        return (
+          <svg
+            className={iconClass}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+            />
+          </svg>
+        );
       case "new_order":
-        return "📦";
+        return (
+          <svg
+            className={iconClass}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+            />
+          </svg>
+        );
       case "batch_orders":
-        return "📋";
+        return (
+          <svg
+            className={iconClass}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+            />
+          </svg>
+        );
+      case "order_expired":
+        return (
+          <svg
+            className={iconClass}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        );
+      case "test":
+        return (
+          <svg
+            className={iconClass}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+            />
+          </svg>
+        );
+      case "warning":
+        return (
+          <svg
+            className={iconClass}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+        );
       default:
-        return "🔔";
+        return (
+          <svg
+            className={iconClass}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+            />
+          </svg>
+        );
     }
   };
 
@@ -117,6 +216,12 @@ export default function NotificationCenter() {
         return theme === "dark" ? "text-green-400" : "text-green-600";
       case "batch_orders":
         return theme === "dark" ? "text-purple-400" : "text-purple-600";
+      case "order_expired":
+        return theme === "dark" ? "text-orange-400" : "text-orange-600";
+      case "test":
+        return theme === "dark" ? "text-gray-400" : "text-gray-600";
+      case "warning":
+        return theme === "dark" ? "text-yellow-400" : "text-yellow-600";
       default:
         return theme === "dark" ? "text-gray-400" : "text-gray-600";
     }
@@ -200,14 +305,14 @@ export default function NotificationCenter() {
             >
               <div>
                 <h3 className="text-lg font-semibold">
-                  Messages & Orders {unreadCount > 0 && `(${unreadCount})`}
+                  Notifications {unreadCount > 0 && `(${unreadCount})`}
                 </h3>
                 <p
                   className={`text-xs ${
                     theme === "dark" ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
-                  Chat messages and order notifications
+                  All FCM push notifications
                 </p>
               </div>
               <div className="flex gap-2">
@@ -251,9 +356,9 @@ export default function NotificationCenter() {
                       d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
                     />
                   </svg>
-                  <p className="mt-2">No messages or orders yet</p>
+                  <p className="mt-2">No notifications yet</p>
                   <p className="text-xs">
-                    Chat messages and new orders will appear here
+                    FCM push notifications will appear here
                   </p>
                 </div>
               ) : (
@@ -296,9 +401,13 @@ export default function NotificationCenter() {
                       ) {
                         window.location.href = `/Messages/${notification.orderId}`;
                       } else if (
-                        notification.type === "new_order" &&
+                        (notification.type === "new_order" ||
+                          notification.type === "batch_orders") &&
                         notification.orderId
                       ) {
+                        window.location.href = `/Plasa/active-batches`;
+                      } else if (notification.type === "batch_orders") {
+                        // Batch orders without specific orderId
                         window.location.href = `/Plasa/active-batches`;
                       }
                     }}
@@ -312,13 +421,9 @@ export default function NotificationCenter() {
                               : "bg-gray-400"
                           }`}
                         />
-                        <span
-                          className={`text-2xl ${getNotificationColor(
-                            notification.type
-                          )}`}
-                        >
+                        <div className="flex-shrink-0">
                           {getNotificationIcon(notification.type)}
-                        </span>
+                        </div>
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
