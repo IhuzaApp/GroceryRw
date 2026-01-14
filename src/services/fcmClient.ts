@@ -1,6 +1,12 @@
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 import { initializeApp, getApps } from "firebase/app";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
+import {
+  idbAddNotification,
+  idbClearNotifications,
+  idbGetAllNotifications,
+  type StoredNotification,
+} from "./fcmNotificationStore";
 
 // Firebase config - using environment variables
 const firebaseConfig = {
@@ -339,6 +345,89 @@ export const setupFCMListener = (
 };
 
 /**
+ * Sync any SW-stored notifications (IndexedDB) into localStorage
+ * so the existing NotificationCenter (localStorage-based) can display them.
+ */
+export async function syncStoredNotificationsToLocalStorage(): Promise<void> {
+  if (typeof window === "undefined") return;
+  if (!("indexedDB" in window)) return;
+  try {
+    const idbItems = await idbGetAllNotifications();
+    if (!idbItems.length) return;
+
+    const existing = JSON.parse(
+      localStorage.getItem("fcm_notification_history") || "[]"
+    ) as StoredNotification[];
+
+    // Merge by timestamp (keyPath), keep newest first, cap at 50
+    const mergedMap = new Map<number, StoredNotification>();
+    for (const n of existing) {
+      if (typeof n?.timestamp === "number") mergedMap.set(n.timestamp, n);
+    }
+    for (const n of idbItems) {
+      if (typeof n?.timestamp === "number") mergedMap.set(n.timestamp, n);
+    }
+
+    const merged = Array.from(mergedMap.values()).sort(
+      (a, b) => (b.timestamp || 0) - (a.timestamp || 0)
+    );
+    localStorage.setItem(
+      "fcm_notification_history",
+      JSON.stringify(merged.slice(0, 50))
+    );
+
+    // Clear IDB once synced so we don't re-merge forever
+    await idbClearNotifications();
+  } catch (e) {
+    // non-fatal
+  }
+}
+
+/**
+ * Listen for SW-posted background messages to update in-app history instantly.
+ */
+export function setupServiceWorkerFCMBridge(
+  onMessageReceived: (payload: any) => void
+): (() => void) {
+  if (typeof window === "undefined") return () => {};
+  if (!("serviceWorker" in navigator)) return () => {};
+
+  const handler = async (event: MessageEvent) => {
+    if (!event?.data || event.data.type !== "FCM_BACKGROUND_MESSAGE") return;
+    const payload = event.data.payload;
+    try {
+      // Also persist to IDB in the page context as a fallback
+      const type = payload?.data?.type || "unknown";
+      const entry: StoredNotification = {
+        title:
+          payload?.notification?.title ||
+          payload?.data?.title ||
+          "New Notification",
+        body:
+          payload?.notification?.body ||
+          payload?.data?.body ||
+          payload?.data?.message ||
+          "",
+        timestamp: Date.now(),
+        type,
+        read: false,
+        ...(payload?.data || {}),
+      };
+      await idbAddNotification(entry);
+      // Keep localStorage in sync so NotificationCenter badge updates quickly
+      await syncStoredNotificationsToLocalStorage();
+    } catch (e) {
+      // ignore
+    }
+
+    onMessageReceived(payload);
+  };
+
+  navigator.serviceWorker.addEventListener("message", handler);
+  return () => navigator.serviceWorker.removeEventListener("message", handler);
+}
+
+/**
  * Initialize FCM for a user
  */
 export const initializeFCM = async (
@@ -363,9 +452,20 @@ export const initializeFCM = async (
 
     await saveFCMTokenToServer(userId, token);
     const unsubscribe = setupFCMListener(onMessageReceived);
+    // Pull in any notifications received while the app was closed/backgrounded
+    await syncStoredNotificationsToLocalStorage();
+    // Bridge SW->page messages for instant in-app updates
+    const unsubscribeBridge = setupServiceWorkerFCMBridge(onMessageReceived);
 
     console.log("✅ FCM initialized successfully");
-    return unsubscribe;
+    return () => {
+      try {
+        unsubscribeBridge();
+      } catch (e) {
+        // ignore
+      }
+      unsubscribe();
+    };
   } catch (error) {
     // Silent fail - FCM is optional
     console.warn("⚠️ FCM initialization failed (non-critical):", error);
