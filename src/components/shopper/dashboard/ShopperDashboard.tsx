@@ -569,89 +569,127 @@ export default function ShopperDashboard() {
     };
   }, [sortBy, sortOrders]);
 
-  // Initializing loading screen
-  if (isInitializing) {
-    return (
-      <ShopperLayout>
-        <div className="flex h-screen w-full flex-col bg-gray-50 pt-6">
-          {/* Skeleton Map */}
-          <div className="px-4">
-            <Placeholder.Graph
-              active
-              height={300}
-              className="w-full rounded-md"
-            />
-          </div>
+  // Show skeleton loading when initializing or map not loaded
+  const showSkeleton = isInitializing || !mapLoaded || (isLoading && availableOrders.length === 0);
 
-          {/* Skeleton Header */}
-          <div className="px-6 pt-6">
-            <Grid fluid>
-              <Row>
-                <Col xs={12}>
-                  <Placeholder.Paragraph rows={1} graph="circle" active />
-                </Col>
-                <Col xs={12}>
-                  <div className="flex justify-end">
-                    <Placeholder.Graph active width={150} height={32} />
-                  </div>
-                </Col>
-              </Row>
-            </Grid>
-          </div>
-
-          {/* Skeleton Sort Buttons */}
-          <div className="px-6 pb-4 pt-3">
-            <Grid fluid>
-              <Row>
-                <Col xs={24}>
-                  <div className="flex space-x-2">
-                    <Placeholder.Graph active width={80} height={28} />
-                    <Placeholder.Graph active width={80} height={28} />
-                    <Placeholder.Graph active width={80} height={28} />
-                    <Placeholder.Graph active width={80} height={28} />
-                  </div>
-                </Col>
-              </Row>
-            </Grid>
-          </div>
-
-          {/* Skeleton Orders */}
-          <div className="px-6 pt-2">
-            <Grid fluid>
-              <Row className="gap-4">
-                <Col xs={24} md={12} lg={8}>
-                  <Panel bordered className="h-[180px]">
-                    <Placeholder.Paragraph rows={3} active />
-                    <div className="mt-4 flex justify-between">
-                      <Placeholder.Graph active width={70} height={24} />
-                      <Placeholder.Graph active width={120} height={24} />
-                    </div>
-                  </Panel>
-                </Col>
-                <Col xs={24} md={12} lg={8}>
-                  <Panel bordered className="h-[180px]">
-                    <Placeholder.Paragraph rows={3} active />
-                    <div className="mt-4 flex justify-between">
-                      <Placeholder.Graph active width={70} height={24} />
-                      <Placeholder.Graph active width={120} height={24} />
-                    </div>
-                  </Panel>
-                </Col>
-                <Col xs={24} md={12} lg={8}>
-                  <Panel bordered className="h-[180px]">
-                    <Placeholder.Paragraph rows={3} active />
-                    <div className="mt-4 flex justify-between">
-                      <Placeholder.Graph active width={70} height={24} />
-                      <Placeholder.Graph active width={120} height={24} />
-                    </div>
-                  </Panel>
-                </Col>
-              </Row>
-            </Grid>
+  // Skeleton loading component
+  const SkeletonLoader = () => (
+    <ShopperLayout>
+      <div
+        className={`${
+          isMobile ? "relative h-screen overflow-hidden" : "min-h-screen"
+        } ${
+          theme === "dark"
+            ? "bg-gray-900 text-gray-100"
+            : "bg-gray-50 text-gray-900"
+        }`}
+      >
+        {/* Skeleton Map - Full screen on mobile */}
+        <div
+          className={isMobile ? "fixed z-0" : "w-full"}
+          style={isMobile ? {
+            left: 0,
+            right: 0,
+            top: '3.5rem',
+            width: '100vw',
+            height: 'calc(100vh - 3.5rem)'
+          } : {}}
+        >
+          <div
+            className={`h-full w-full overflow-hidden rounded-none md:h-[600px] md:rounded-lg ${
+              theme === "dark" ? "bg-gray-800" : "bg-gray-200"
+            }`}
+          >
+            {/* Map skeleton with animated shimmer */}
+            <div className="relative h-full w-full overflow-hidden">
+              {/* Animated background */}
+              <div
+                className={`absolute inset-0 ${
+                  theme === "dark" ? "bg-gray-800" : "bg-gray-200"
+                }`}
+              />
+              {/* Shimmer effect */}
+              <div
+                className={`absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/10 to-transparent ${
+                  theme === "dark" ? "via-white/5" : "via-gray-300/20"
+                }`}
+              />
+              {/* Map controls skeleton */}
+              <div className="absolute left-4 top-4 z-10 flex flex-col gap-2">
+                <div
+                  className={`h-8 w-8 rounded ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                  } animate-pulse`}
+                />
+                <div
+                  className={`h-8 w-8 rounded ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                  } animate-pulse`}
+                />
+              </div>
+              {/* Earnings badge skeleton */}
+              <div className="absolute left-1/2 top-4 z-10 -translate-x-1/2">
+                <div
+                  className={`h-12 w-32 rounded-full ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                  } animate-pulse`}
+                />
+              </div>
+              {/* Map style button skeleton */}
+              <div className="absolute right-4 top-4 z-10">
+                <div
+                  className={`h-10 w-10 rounded ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                  } animate-pulse`}
+                />
+              </div>
+            </div>
           </div>
         </div>
-      </ShopperLayout>
-    );
+
+        {/* Skeleton for Today's Completed Orders (mobile bottom sheet) */}
+        {isMobile && (
+          <div
+            className={`fixed bottom-0 left-0 right-0 z-10 rounded-t-lg border-t ${
+              theme === "dark"
+                ? "border-gray-700 bg-gray-800"
+                : "border-gray-200 bg-white"
+            }`}
+            style={{ height: '200px' }}
+          >
+            <div className="p-4">
+              <div
+                className={`mb-4 h-1 w-12 rounded-full ${
+                  theme === "dark" ? "bg-gray-600" : "bg-gray-300"
+                } mx-auto`}
+              />
+              <div className="space-y-3">
+                <div
+                  className={`h-4 w-24 rounded ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                  } animate-pulse`}
+                />
+                <div className="flex gap-2">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className={`h-20 flex-1 rounded-lg ${
+                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                      } animate-pulse`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </ShopperLayout>
+  );
+
+  // Show skeleton while loading
+  if (showSkeleton) {
+    return <SkeletonLoader />;
   }
 
   return (
