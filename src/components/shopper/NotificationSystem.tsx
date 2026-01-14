@@ -78,14 +78,49 @@ export default function NotificationSystem({
   const [notificationPermission, setNotificationPermission] =
     useState<NotificationPermission>("default");
   const [audioLoaded, setAudioLoaded] = useState(false);
+  const [isShopperOnline, setIsShopperOnline] = useState(false); // Track if shopper is online (has location cookies)
+  const [activeOrderCount, setActiveOrderCount] = useState<number>(0);
+  const [showMapModal, setShowMapModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [acceptingOrders, setAcceptingOrders] = useState<Set<string>>(
     new Set()
   ); // Track orders being accepted
   const [decliningOrders, setDecliningOrders] = useState<Set<string>>(
     new Set()
   ); // Track orders being declined
-  const [showMapModal, setShowMapModal] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  // Helper to fetch active order count
+  const fetchActiveOrderCount = async () => {
+    if (!session?.user?.id) return 0;
+    try {
+      const response = await fetch("/api/shopper/activeOrders");
+      if (!response.ok) return activeOrderCount;
+      const data = await response.json();
+      const count = data.orders?.length || 0;
+      setActiveOrderCount(count);
+
+      // If shopper has 2 or more orders, clear any pending notifications
+      if (count >= 2 && selectedOrder) {
+        console.log("🧹 Clearing notifications: Shopper reached 2 active orders");
+        setShowMapModal(false);
+        setSelectedOrder(null);
+        onNotificationShow?.(null);
+      }
+
+      return count;
+    } catch (error) {
+      return activeOrderCount;
+    }
+  };
+
+  // Poll for active order count every 30 seconds
+  useEffect(() => {
+    if (session?.user?.id && isShopperOnline) {
+      fetchActiveOrderCount();
+      const interval = setInterval(fetchActiveOrderCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [session?.user?.id, isShopperOnline]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const checkInterval = useRef<NodeJS.Timeout | null>(null);
   const lastNotificationTime = useRef<number>(0);
@@ -102,7 +137,6 @@ export default function NotificationSystem({
   const pageLoadTimestamp = useRef<number>(Date.now()); // Track when page was loaded
   const isPageVisible = useRef<boolean>(true); // Track if page is visible
   const lastUserActivityTime = useRef<number>(Date.now()); // Track last user activity
-  const [isShopperOnline, setIsShopperOnline] = useState(false); // Track if shopper is online (has location cookies)
   const componentId = useRef<string>(Math.random().toString(36).substring(7)); // Unique component ID for debugging
 
   // FCM integration
@@ -287,6 +321,15 @@ export default function NotificationSystem({
         return;
       }
 
+      // Check if shopper already has 2 or more active orders - CRITICAL GUARD
+      if (activeOrderCount >= 2) {
+        console.log("🚫 FCM: Blocking - shopper already has 2 active orders", {
+          orderId: order.id,
+          activeOrderCount,
+        });
+        return;
+      }
+
       // Check if order was declined
       if (declinedOrders.current.has(order.id)) {
         console.log("🚫 FCM: Order was declined, ignoring", {
@@ -364,6 +407,15 @@ export default function NotificationSystem({
 
       // Show notifications for each order
       orders.forEach((order: any) => {
+        // Check if shopper already has 2 or more active orders - CRITICAL GUARD
+        if (activeOrderCount >= 2) {
+          console.log("🚫 FCM BATCH: Blocking - shopper already has 2 active orders", {
+            orderId: order.id,
+            activeOrderCount,
+          });
+          return;
+        }
+
         // Check if order was declined
         if (declinedOrders.current.has(order.id)) {
           return;
@@ -759,6 +811,15 @@ export default function NotificationSystem({
   ) => {
     const now = Date.now();
 
+    // Check if shopper already has 2 or more active orders - CRITICAL GUARD
+    if (activeOrderCount >= 2 && type === "info") {
+      console.log("🚫 showToast: Blocking - shopper already has 2 active orders", {
+        orderId: order.id,
+        activeOrderCount,
+      });
+      return;
+    }
+
     // Check if order was declined - CRITICAL CHECK
     if (declinedOrders.current.has(order.id)) {
       return;
@@ -1133,6 +1194,7 @@ export default function NotificationSystem({
 
       if (data.success && data.order) {
         // Smart order finder found order
+        setActiveOrderCount(data.activeOrderCount || 0); // Update count if provided
 
         // Update lastNotificationTime to prevent rapid API calls
         // This is updated regardless of whether we show a notification
@@ -1246,6 +1308,20 @@ export default function NotificationSystem({
         } else {
           // lastNotificationTime was already updated above to prevent rapid API calls
         }
+      } else if (data.reason === "MAX_ACTIVE_ORDERS_REACHED") {
+        console.log("🚫 Shopper reached max active orders limit", {
+          count: data.activeOrderCount,
+        });
+        setActiveOrderCount(data.activeOrderCount || 2);
+        
+        // Clear any pending notifications since shopper can't accept more
+        if (selectedOrder) {
+          setShowMapModal(false);
+          setSelectedOrder(null);
+          onNotificationShow?.(null);
+        }
+        
+        lastNotificationTime.current = currentTime;
       } else {
         // Update lastNotificationTime even when no orders found to prevent rapid polling
         lastNotificationTime.current = currentTime;
@@ -1346,16 +1422,30 @@ export default function NotificationSystem({
     }
 
     try {
-      // Check localStorage first for quick restore
+      // 1. Always check current workload first before showing ANY notification
+      // This prevents the card from flashing on page refresh/change if they have 2 orders
+      const currentCount = await fetchActiveOrderCount();
+      if (currentCount >= 2) {
+        console.log("🚫 Blocking active offer check: Shopper has 2+ active orders");
+        localStorage.removeItem("active_offer");
+        // Ensure any existing card is hidden
+        setShowMapModal(false);
+        setSelectedOrder(null);
+        return;
+      }
+
+      // 2. Check localStorage first for quick restore
       const storedActiveOffer = localStorage.getItem("active_offer");
       if (storedActiveOffer) {
         try {
           const offer = JSON.parse(storedActiveOffer);
           // Verify offer is still valid (not expired)
           if (offer.expiresAt && new Date(offer.expiresAt) > new Date()) {
-            // Restore notification from localStorage
-            showNewOrderNotification(offer.order, Date.now());
-            return; // Exit early, offer restored from cache
+            // Double check count again before showing restored offer
+            if (activeOrderCount < 2) {
+              showNewOrderNotification(offer.order, Date.now());
+              return; // Exit early, offer restored from cache
+            }
           } else {
             // Offer expired, remove from localStorage
             localStorage.removeItem("active_offer");
@@ -1366,7 +1456,7 @@ export default function NotificationSystem({
         }
       }
 
-      // Query backend to check for active offers
+      // 3. Query backend to check for active offers if nothing in localStorage or it was invalid
       const response = await fetch("/api/shopper/smart-assign-order", {
         method: "POST",
         headers: {
@@ -1387,7 +1477,17 @@ export default function NotificationSystem({
           ...data.order,
           offerId: data.offerId, // Include offerId from API response
         };
-        await showNewOrderNotification(order, Date.now());
+        
+        // Final guard before showing
+        if (activeOrderCount < 2) {
+          await showNewOrderNotification(order, Date.now());
+        }
+      } else if (data.reason === "MAX_ACTIVE_ORDERS_REACHED") {
+        // Sync active order count and ensure storage is clean
+        setActiveOrderCount(data.activeOrderCount || 2);
+        localStorage.removeItem("active_offer");
+        setShowMapModal(false);
+        setSelectedOrder(null);
       } else if (data.reason === "ACTIVE_OFFER_PENDING") {
         // Shopper has an active offer but API didn't return order details
         // This shouldn't happen, but if it does, we'll check again in the normal polling
