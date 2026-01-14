@@ -1079,10 +1079,7 @@ export default function NotificationSystem({
   const checkForNewOrders = async () => {
     // CRITICAL: Prevent concurrent API calls with early return
     if (isCheckingOrders.current) {
-      console.log("🔒 API POLLING: Already checking for orders, skipping", {
-        timestamp: new Date().toISOString(),
-      });
-      return;
+      return; // Silent skip - already checking
     }
 
     if (!session?.user?.id || !currentLocation) {
@@ -1091,8 +1088,7 @@ export default function NotificationSystem({
 
     // CRITICAL: Only check if shopper is online (has location cookies)
     if (!isShopperOnline) {
-      console.log("🚫 API POLLING: Skipping - shopper is offline");
-      return;
+      return; // Silent skip - shopper offline
     }
 
     const now = new Date();
@@ -1100,45 +1096,35 @@ export default function NotificationSystem({
 
     // Set flag IMMEDIATELY to prevent concurrent calls
     isCheckingOrders.current = true;
-    console.log("🔒 API POLLING: Lock acquired", {
-      timestamp: new Date().toISOString(),
-    });
 
     // CRITICAL: Don't check for new orders within 15 seconds of page load
     if (currentTime - pageLoadTimestamp.current < 15000) {
-      console.log("🚫 API POLLING: Skipping - page just loaded/refreshed", {
-        timeSincePageLoad: currentTime - pageLoadTimestamp.current,
-      });
       isCheckingOrders.current = false;
-      return;
+      return; // Silent skip - page just loaded
     }
 
     // CRITICAL: Only check if page is visible and user is active
     if (!isPageVisible.current) {
-      console.log("🚫 API POLLING: Skipping - page not visible");
       isCheckingOrders.current = false;
-      return;
+      return; // Silent skip - page not visible
     }
 
     // Check if user has been inactive for more than 5 minutes
     if (currentTime - lastUserActivityTime.current > 300000) {
-      console.log("🚫 API POLLING: Skipping - user inactive for too long", {
-        inactiveTime: currentTime - lastUserActivityTime.current,
-      });
       isCheckingOrders.current = false;
-      return;
+      return; // Silent skip - user inactive
     }
 
     // Check if user just declined an order (10-second cooldown)
     if (currentTime - lastDeclineTime.current < 10000) {
       isCheckingOrders.current = false;
-      return;
+      return; // Silent skip - decline cooldown
     }
 
     // Check if we should skip this check (25-second cooldown to prevent spam)
     if (currentTime - lastNotificationTime.current < 25000) {
       isCheckingOrders.current = false; // Reset flag when skipping
-      return;
+      return; // Silent skip - rate limiting
     }
 
     // Using smart order finder system to find best order
@@ -1219,26 +1205,9 @@ export default function NotificationSystem({
         const newOrderEarnings = order.estimatedEarnings || 0;
         const isBetterOrder = newOrderEarnings > currentOrderEarnings;
 
-        console.log("🔍 API POLLING CHECK", {
-          orderId: order.id,
-          timestamp: new Date().toISOString(),
-          wasDeclined,
-          hasCurrentAssignment: !!currentUserAssignment,
-          currentOrderEarnings,
-          newOrderEarnings,
-          isBetterOrder,
-          alreadyShowing: activeToasts.current.has(order.id),
-          recentlyShown: showToastLock.current.has(order.id),
-          willShow:
-            (!currentUserAssignment || isBetterOrder) &&
-            !wasDeclined &&
-            !activeToasts.current.has(order.id),
-        });
-
         // Skip if order is already showing
         if (activeToasts.current.has(order.id)) {
-          console.log("🔍 API POLLING: Skipping - order already showing");
-          return;
+          return; // Silent skip - order already showing
         }
 
         // Show order if: no current assignment OR this is a better order (not declined)
@@ -1310,9 +1279,6 @@ export default function NotificationSystem({
     } finally {
       // Always reset the flag when done
       isCheckingOrders.current = false;
-      console.log("🔓 API POLLING: Lock released", {
-        timestamp: new Date().toISOString(),
-      });
     }
   };
 
@@ -1352,7 +1318,8 @@ export default function NotificationSystem({
     }, 2000); // Increased to 2 seconds
 
     // Set up interval for checking (less frequent when FCM is active)
-    const intervalTime = isInitialized ? 120000 : 30000; // 2 minutes with FCM, 30 seconds without
+    // Polling is mainly a backup - FCM handles most notifications
+    const intervalTime = isInitialized ? 180000 : 60000; // 3 minutes with FCM, 1 minute without
     checkInterval.current = setInterval(() => {
       checkForNewOrders();
     }, intervalTime);
