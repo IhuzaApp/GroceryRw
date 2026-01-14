@@ -219,10 +219,6 @@ export default function NotificationSystem({
             declinedOrders.current.set(orderId, expiresAt as number);
           }
         });
-        console.log("📦 Restored declined orders from localStorage", {
-          count: declinedOrders.current.size,
-          orders: Array.from(declinedOrders.current.keys()),
-        });
       }
     } catch (error) {
       console.error("Failed to load declined orders from localStorage:", error);
@@ -384,9 +380,6 @@ export default function NotificationSystem({
       orders.forEach((order: any) => {
         // Check if order was declined
         if (declinedOrders.current.has(order.id)) {
-          console.log("🚫 FCM BATCH: Order was declined, ignoring", {
-            orderId: order.id,
-          });
           return;
         }
 
@@ -754,33 +747,14 @@ export default function NotificationSystem({
   ) => {
     const now = Date.now();
 
-    console.log("📢 SHOW TOAST CALLED", {
-      orderId: order.id,
-      timestamp: new Date().toISOString(),
-      alreadyShowing: activeToasts.current.has(order.id),
-      isDeclined: declinedOrders.current.has(order.id),
-      lastShownAt: showToastLock.current.get(order.id),
-      callStack: new Error().stack?.split("\n").slice(2, 5).join(" <- "), // Show where this was called from
-    });
-
     // Check if order was declined - CRITICAL CHECK
     if (declinedOrders.current.has(order.id)) {
-      console.log("🚫 BLOCKED: Order was declined", {
-        orderId: order.id,
-        timestamp: new Date().toISOString(),
-      });
       return;
     }
 
     // DEDUPLICATION LOCK: Prevent showing same order within 2 seconds
     const lastShown = showToastLock.current.get(order.id);
     if (lastShown && now - lastShown < 2000) {
-      console.log("🚫 BLOCKED: Order shown too recently (deduplication)", {
-        orderId: order.id,
-        lastShownAt: new Date(lastShown).toISOString(),
-        timeSinceLastShow: `${now - lastShown}ms`,
-        timestamp: new Date().toISOString(),
-      });
       return;
     }
 
@@ -791,10 +765,6 @@ export default function NotificationSystem({
       showMapModal &&
       selectedOrder?.id === order.id
     ) {
-      console.log("🚫 BLOCKED: Notification already showing for this order", {
-        orderId: order.id,
-        timestamp: new Date().toISOString(),
-      });
       return;
     }
 
@@ -803,11 +773,6 @@ export default function NotificationSystem({
       batchToast.dismiss(existingToast);
       activeToasts.current.delete(order.id);
     }
-
-    console.log("✅ SHOWING NOTIFICATION", {
-      orderId: order.id,
-      timestamp: new Date().toISOString(),
-    });
 
     // Set deduplication lock
     showToastLock.current.set(order.id, now);
@@ -1330,11 +1295,6 @@ export default function NotificationSystem({
   const stopNotificationSystem = () => {
     // Only log if something was actually running
     if (checkInterval.current || isListening) {
-      console.log("🔴 Stopping notification system", {
-        componentId: componentId.current,
-        wasListening: isListening,
-        hadInterval: checkInterval.current !== null,
-      });
     }
 
     // Force release the lock
@@ -1378,33 +1338,11 @@ export default function NotificationSystem({
       declineClickCount.current = 0;
       acceptClickCount.current = 0;
       directionsClickCount.current = 0;
-
-      console.log("🔔 NOTIFICATION CARD DISPLAYED", {
-        orderId: selectedOrder.id,
-        shopName: selectedOrder.shopName,
-        timestamp: new Date().toISOString(),
-        zIndex: "z-50",
-        message: "Click counters reset - tracking clicks for this notification",
-      });
-    } else if (!showMapModal) {
-      console.log("🔕 NOTIFICATION CARD HIDDEN", {
-        timestamp: new Date().toISOString(),
-        finalClickCounts: {
-          decline: declineClickCount.current,
-          accept: acceptClickCount.current,
-          directions: directionsClickCount.current,
-        },
-      });
     }
   }, [showMapModal, selectedOrder]);
 
   useEffect(() => {
     if (session && currentLocation && isShopperOnline) {
-      console.log("✅ All requirements met - starting notification system", {
-        hasSession: !!session,
-        hasLocation: !!currentLocation,
-        isShopperOnline,
-      });
       startNotificationSystem();
     } else {
       if (!isShopperOnline) {
@@ -1458,42 +1396,12 @@ export default function NotificationSystem({
           className="fixed inset-x-0 bottom-0 z-50 flex md:justify-end md:px-8 md:pb-6"
           onClick={(e) => {
             // Only log if clicking on the background, not the card itself
-            if (e.target === e.currentTarget) {
-              console.log("📱 NOTIFICATION BACKGROUND CLICKED", {
-                orderId: selectedOrder.id,
-                timestamp: new Date().toISOString(),
-              });
-            }
+            // Background click handler
           }}
         >
           {/* Bottom Sheet Card */}
           <div
-            ref={(el) => {
-              if (el) {
-                const styles = window.getComputedStyle(el);
-                const parentStyles = window.getComputedStyle(el.parentElement!);
-                console.log("🎨 NOTIFICATION CARD STYLES", {
-                  orderId: selectedOrder.id,
-                  cardZIndex: styles.zIndex,
-                  parentZIndex: parentStyles.zIndex,
-                  position: styles.position,
-                  pointerEvents: styles.pointerEvents,
-                  cardRect: el.getBoundingClientRect(),
-                  message: "Check if card is being overlapped by map elements",
-                });
-              }
-            }}
             className="relative w-full rounded-t-3xl bg-white shadow-2xl md:max-w-md md:rounded-2xl"
-            onClick={(e) => {
-              console.log("📋 NOTIFICATION CARD CLICKED", {
-                orderId: selectedOrder.id,
-                timestamp: new Date().toISOString(),
-                target: e.target,
-                currentTarget: e.currentTarget,
-                clickX: (e as React.MouseEvent).clientX,
-                clickY: (e as React.MouseEvent).clientY,
-              });
-            }}
           >
             {/* Drag Handle */}
             <div className="flex justify-center py-3">
@@ -1702,30 +1610,8 @@ export default function NotificationSystem({
               <div className="flex space-x-3">
                 {/* Decline Button */}
                 <button
-                  onPointerDown={(e) => {
-                    console.log("👆 DECLINE POINTER DOWN", {
-                      orderId: selectedOrder.id,
-                      timestamp: new Date().toISOString(),
-                      pointerType: e.pointerType,
-                      x: e.clientX,
-                      y: e.clientY,
-                    });
-                  }}
-                  onPointerUp={(e) => {
-                    console.log("👆 DECLINE POINTER UP", {
-                      orderId: selectedOrder.id,
-                      timestamp: new Date().toISOString(),
-                      pointerType: e.pointerType,
-                    });
-                  }}
                   onClick={() => {
                     declineClickCount.current += 1;
-                    console.log("🔴 DECLINE BUTTON CLICKED", {
-                      orderId: selectedOrder.id,
-                      timestamp: new Date().toISOString(),
-                      clickCount: declineClickCount.current,
-                      totalClicks: `This is click #${declineClickCount.current}`,
-                    });
 
                     // Save order ID before clearing state
                     const orderId = selectedOrder.id;
@@ -1779,15 +1665,6 @@ export default function NotificationSystem({
                       })
                     );
 
-                    console.log("🔴 DECLINE COMPLETED (Local)", {
-                      orderId,
-                      declinedOrdersCount: declinedOrders.current.size,
-                      declinedOrderIds: Array.from(
-                        declinedOrders.current.keys()
-                      ),
-                      lastDeclineTime: lastDeclineTime.current,
-                      nextCheckAllowedAt: lastDeclineTime.current + 10000,
-                    });
 
                     // 🚀 CALL BACKEND API TO DECLINE OFFER AND ROTATE TO NEXT SHOPPER
                     (async () => {
@@ -1849,21 +1726,8 @@ export default function NotificationSystem({
                       y: e.clientY,
                     });
                   }}
-                  onPointerUp={(e) => {
-                    console.log("👆 ACCEPT POINTER UP", {
-                      orderId: selectedOrder.id,
-                      timestamp: new Date().toISOString(),
-                      pointerType: e.pointerType,
-                    });
-                  }}
                   onClick={async () => {
                     acceptClickCount.current += 1;
-                    console.log("🟢 ACCEPT BUTTON CLICKED", {
-                      orderId: selectedOrder.id,
-                      timestamp: new Date().toISOString(),
-                      clickCount: acceptClickCount.current,
-                      totalClicks: `This is click #${acceptClickCount.current}`,
-                    });
 
                     const success = await handleAcceptOrder(selectedOrder.id);
 
