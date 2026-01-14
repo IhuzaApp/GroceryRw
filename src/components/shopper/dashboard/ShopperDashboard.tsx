@@ -658,7 +658,7 @@ export default function ShopperDashboard() {
     <ShopperLayout>
       <div
         className={`${
-          isMobile ? "relative h-full overflow-hidden" : "min-h-screen"
+          isMobile ? "relative h-screen overflow-hidden" : "min-h-screen"
         } ${
           theme === "dark"
             ? "bg-gray-900 text-gray-100"
@@ -667,13 +667,13 @@ export default function ShopperDashboard() {
       >
         {/* Map Section */}
         <div 
-          className="w-full"
+          className={isMobile ? "fixed z-0" : "w-full"}
           style={isMobile ? { 
-            width: 'calc(100% + 1.5rem)', 
-            marginLeft: '-0.75rem', 
-            marginRight: '-0.75rem', 
-            marginTop: '-0.75rem',
-            position: 'relative'
+            left: 0,
+            right: 0,
+            top: '3.5rem',
+            width: '100vw',
+            height: 'calc(100vh - 3.5rem)'
           } : {}}
         >
           <MapSection
