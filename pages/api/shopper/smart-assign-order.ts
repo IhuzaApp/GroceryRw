@@ -888,9 +888,9 @@ export default async function handler(
 
     const now = new Date();
     const offeredAt = now.toISOString();
-    // No time-based expiry - set to 7 days in future (effectively "until action taken")
+    // Set expiry to 4 hours from now (fallback safety - action-based system means shopper must accept/decline)
     const expiresAt = new Date(
-      now.getTime() + 7 * 24 * 60 * 60 * 1000
+      now.getTime() + 4 * 60 * 60 * 1000
     ).toISOString();
 
     // Prepare the order_id field based on order type

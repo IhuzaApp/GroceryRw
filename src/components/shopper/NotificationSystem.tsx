@@ -1809,7 +1809,7 @@ export default function NotificationSystem({
                             },
                             body: JSON.stringify({
                               orderId: orderId,
-                              shopperId: session?.user?.id,
+                              userId: session?.user?.id,
                             }),
                           }
                         );
