@@ -666,7 +666,16 @@ export default function ShopperDashboard() {
         }`}
       >
         {/* Map Section */}
-        <div className="w-full">
+        <div 
+          className="w-full"
+          style={isMobile ? { 
+            width: 'calc(100% + 1.5rem)', 
+            marginLeft: '-0.75rem', 
+            marginRight: '-0.75rem', 
+            marginTop: '-0.75rem',
+            position: 'relative'
+          } : {}}
+        >
           <MapSection
             mapLoaded={mapLoaded}
             availableOrders={availableOrders}

@@ -3328,10 +3328,10 @@ export default function MapSection({
   // If the dashboard is initializing, show a simpler loading state
   if (isInitializing) {
     return (
-      <div className="relative w-full">
+      <div className="relative w-full md:rounded-lg">
         <div
           ref={mapRef}
-          className={`h-[calc(100vh-4rem-5.5rem)] overflow-hidden rounded-lg md:h-[600px] ${
+          className={`h-[calc(100vh-3.5rem)] overflow-hidden rounded-none md:h-[600px] md:rounded-lg ${
             theme === "dark" ? "bg-gray-900" : "bg-gray-100"
           }`}
         />
@@ -3360,7 +3360,7 @@ export default function MapSection({
   }
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full md:rounded-lg">
       {/* Daily Earnings Badge */}
       {!isExpanded && (
         <div
@@ -3435,7 +3435,7 @@ export default function MapSection({
 
       <div
         ref={mapRef}
-        className={`h-[calc(100vh-4rem-5.5rem)] overflow-hidden rounded-lg md:h-[600px] ${
+        className={`h-[calc(100vh-3.5rem)] overflow-hidden rounded-none md:h-[600px] md:rounded-lg ${
           theme === "dark" ? "bg-gray-900" : "bg-gray-100"
         }`}
       />
