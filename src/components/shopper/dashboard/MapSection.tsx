@@ -1094,6 +1094,24 @@ export default function MapSection({
         return false;
       }
 
+      // Check if map panes are initialized (critical for appendChild to work)
+      // Leaflet uses panes to organize layers, and these must exist before adding markers
+      const panes = (map as any)._panes;
+      if (!panes || !panes.overlayPane) {
+        console.warn(
+          `Map panes not initialized when adding marker for ${name}`
+        );
+        return false;
+      }
+
+      // Check if overlayPane is in the DOM
+      if (!document.body.contains(panes.overlayPane)) {
+        console.warn(
+          `Map overlayPane not in DOM when adding marker for ${name}`
+        );
+        return false;
+      }
+
       // If all checks pass, add the marker
       marker.addTo(map);
       return true;
@@ -2253,10 +2271,46 @@ export default function MapSection({
               }
             }
 
-            // Wait for next frame before initializing markers
-            requestAnimationFrame(() => {
-              if (!isCancelled && mapInstance && mapInstance.getContainer()) {
+            // Wait for map to be fully ready before initializing markers
+            // This is especially important when theme changes cause map recreation
+            let retryCount = 0;
+            const MAX_RETRIES = 20; // Maximum 1 second of retries (20 * 50ms)
+            
+            const waitForMapReady = () => {
+              if (isCancelled || !mapInstance) return;
+              
+              retryCount++;
+              if (retryCount > MAX_RETRIES) {
+                console.warn("Map initialization timeout - proceeding anyway");
+                if (mapInstance) {
+                  initMapSequence(mapInstance);
+                }
+                return;
+              }
+              
+              const container = mapInstance.getContainer();
+              const panes = (mapInstance as any)._panes;
+              
+              // Check if map is fully initialized with all panes
+              if (
+                container &&
+                panes &&
+                panes.overlayPane &&
+                document.body.contains(container) &&
+                document.body.contains(panes.overlayPane) &&
+                (mapInstance as any)._loaded
+              ) {
                 initMapSequence(mapInstance);
+              } else {
+                // Retry after a short delay if map isn't ready yet
+                setTimeout(waitForMapReady, 50);
+              }
+            };
+
+            // Start waiting for map to be ready
+            requestAnimationFrame(() => {
+              if (!isCancelled && mapInstance) {
+                waitForMapReady();
               }
             });
           } catch (error) {
