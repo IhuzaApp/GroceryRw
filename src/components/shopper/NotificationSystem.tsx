@@ -81,6 +81,9 @@ export default function NotificationSystem({
   const [acceptingOrders, setAcceptingOrders] = useState<Set<string>>(
     new Set()
   ); // Track orders being accepted
+  const [decliningOrders, setDecliningOrders] = useState<Set<string>>(
+    new Set()
+  ); // Track orders being declined
   const [showMapModal, setShowMapModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -1475,11 +1478,11 @@ export default function NotificationSystem({
         >
           {/* Bottom Sheet Card */}
           <div
-            className="relative w-full rounded-t-3xl bg-white shadow-2xl md:max-w-md md:rounded-2xl"
+            className="relative w-full rounded-t-3xl bg-white dark:bg-gray-800 shadow-2xl md:max-w-md md:rounded-2xl"
           >
             {/* Drag Handle */}
             <div className="flex justify-center py-3">
-              <div className="h-1 w-12 rounded-full bg-gray-300"></div>
+              <div className="h-1 w-12 rounded-full bg-gray-300 dark:bg-gray-600"></div>
             </div>
 
             <div className="px-6 pb-6">
@@ -1504,8 +1507,8 @@ export default function NotificationSystem({
                   </div>
                   {/* Shop Name */}
                   <div>
-                    <p className="text-xs text-gray-500">Shop</p>
-                    <p className="text-lg font-bold text-gray-900">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Shop</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
                       {selectedOrder.shopName}
                     </p>
                   </div>
@@ -1578,8 +1581,8 @@ export default function NotificationSystem({
                     <div className="h-2 w-2 rounded-full bg-white"></div>
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs text-gray-500">You</p>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">You</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       {currentLocation
                         ? `${currentLocation.lat.toFixed(
                             4
@@ -1604,17 +1607,17 @@ export default function NotificationSystem({
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           Delivery Address
                         </p>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           {selectedOrder.customerAddress}
                         </p>
                       </div>
                       {/* Time Badge */}
-                      <div className="ml-2 flex items-center space-x-1 rounded-full bg-green-50 px-2 py-1">
+                      <div className="ml-2 flex items-center space-x-1 rounded-full bg-green-50 dark:bg-green-900/30 px-2 py-1">
                         <svg
-                          className="h-3 w-3 text-green-600"
+                          className="h-3 w-3 text-green-600 dark:text-green-400"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -1626,7 +1629,7 @@ export default function NotificationSystem({
                             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span className="text-xs font-medium text-green-600">
+                        <span className="text-xs font-medium text-green-600 dark:text-green-400">
                           {selectedOrder.travelTimeMinutes ||
                             calculateTravelTime(selectedOrder.distance)}{" "}
                           min
@@ -1640,10 +1643,10 @@ export default function NotificationSystem({
               {/* Order Details */}
               <div className="mb-5 space-y-3">
                 {/* Items and Earnings */}
-                <div className="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3">
+                <div className="flex items-center justify-between rounded-lg bg-gray-50 dark:bg-gray-700 px-4 py-3">
                   <div className="flex items-center space-x-2">
                     <svg
-                      className="h-5 w-5 text-gray-600"
+                      className="h-5 w-5 text-gray-600 dark:text-gray-300"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -1655,13 +1658,13 @@ export default function NotificationSystem({
                         d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
                       />
                     </svg>
-                    <span className="text-sm font-medium text-gray-900">
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       {selectedOrder.itemsCount || 0} Items
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <svg
-                      className="h-5 w-5 text-green-600"
+                      className="h-5 w-5 text-green-600 dark:text-green-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -1673,7 +1676,7 @@ export default function NotificationSystem({
                         d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    <span className="text-sm font-bold text-green-600">
+                    <span className="text-sm font-bold text-green-600 dark:text-green-400">
                       {formatCurrencySync(selectedOrder.estimatedEarnings || 0)}
                     </span>
                   </div>
@@ -1689,6 +1692,13 @@ export default function NotificationSystem({
                       toast.error("You must be logged in to decline orders");
                       return;
                     }
+
+                    // Prevent multiple decline attempts
+                    if (decliningOrders.has(selectedOrder.id)) {
+                      return;
+                    }
+
+                    setDecliningOrders((prev) => new Set(prev).add(selectedOrder.id));
 
                     declineClickCount.current += 1;
 
@@ -1786,11 +1796,46 @@ export default function NotificationSystem({
                       setShowMapModal(false);
                       setSelectedOrder(null);
                       onNotificationShow?.(null);
+                    } finally {
+                      setDecliningOrders((prev) => {
+                        const newSet = new Set(prev);
+                        newSet.delete(selectedOrder.id);
+                        return newSet;
+                      });
                     }
                   }}
-                  className="flex-1 rounded-xl bg-red-500 py-4 text-base font-bold text-white shadow-lg transition-all hover:bg-red-600 active:scale-95"
+                  disabled={decliningOrders.has(selectedOrder.id) || acceptingOrders.has(selectedOrder.id)}
+                  className={`flex-1 rounded-xl py-4 text-base font-bold text-white shadow-lg transition-all active:scale-95 ${
+                    decliningOrders.has(selectedOrder.id) || acceptingOrders.has(selectedOrder.id)
+                      ? "cursor-not-allowed bg-red-400"
+                      : "bg-red-500 hover:bg-red-600"
+                  }`}
                 >
-                  Decline
+                  <span className="flex items-center justify-center gap-2">
+                    {decliningOrders.has(selectedOrder.id) && (
+                      <svg
+                        className="h-5 w-5 animate-spin text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    )}
+                    {decliningOrders.has(selectedOrder.id) ? "Declining..." : "Decline"}
+                  </span>
                 </button>
 
                 {/* Accept Batch Button */}
@@ -1829,16 +1874,40 @@ export default function NotificationSystem({
                       );
                     }
                   }}
-                  disabled={acceptingOrders.has(selectedOrder.id)}
+                  disabled={acceptingOrders.has(selectedOrder.id) || decliningOrders.has(selectedOrder.id)}
                   className={`flex-1 rounded-xl py-4 text-base font-bold text-white shadow-lg transition-all active:scale-95 ${
-                    acceptingOrders.has(selectedOrder.id)
-                      ? "cursor-not-allowed bg-gray-400"
+                    acceptingOrders.has(selectedOrder.id) || decliningOrders.has(selectedOrder.id)
+                      ? "cursor-not-allowed bg-green-400"
                       : "bg-green-500 hover:bg-green-600"
                   }`}
                 >
-                  {acceptingOrders.has(selectedOrder.id)
-                    ? "Accepting..."
-                    : "Accept Batch"}
+                  <span className="flex items-center justify-center gap-2">
+                    {acceptingOrders.has(selectedOrder.id) && (
+                      <svg
+                        className="h-5 w-5 animate-spin text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    )}
+                    {acceptingOrders.has(selectedOrder.id)
+                      ? "Accepting..."
+                      : "Accept Batch"}
+                  </span>
                 </button>
               </div>
             </div>
