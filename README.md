@@ -36,7 +36,7 @@ A comprehensive grocery delivery platform with advanced revenue tracking, wallet
 
 ## Overview
 
-Professional dispatch system following the DoorDash/Uber Eats model with exclusive offers, distance gating, and automatic rotation.
+Professional dispatch system following the DoorDash/Uber Eats model with exclusive offers, distance gating, and action-based rotation. The system uses an action-based approach where offers remain with shoppers until they explicitly accept or decline, ensuring shoppers have time to review orders without pressure from countdown timers.
 
 ## Architecture
 
@@ -67,11 +67,14 @@ Professional dispatch system following the DoorDash/Uber Eats model with exclusi
 ## Key Principles
 
 1. **Server is the source of truth** - Client never decides eligibility
-2. **One order = one shopper at a time** - Exclusive offers with expiration
-3. **Location is volatile** - Redis for GPS, database for offers
-4. **Distance gating** - Only offer to nearby shoppers
-5. **Round-based expansion** - Radius grows if no acceptance (3km → 5km → 8km)
-6. **Everything is auditable** - All skips logged for fairness
+2. **Action-based system** - Offers stay until shopper explicitly accepts or declines (no time-based expiry)
+3. **One order at a time** - Shoppers cannot see new offers while working on an active order
+4. **Location is volatile** - Redis for GPS, database for offers
+5. **Distance gating** - Only offer to nearby shoppers
+6. **Round-based expansion** - Radius grows if declined (3km → 5km → 8km)
+7. **Instant rotation on decline** - When shopper declines, order immediately goes to next shopper
+8. **Everything is auditable** - All skips logged for fairness
+9. **Duplicate prevention** - System checks for existing offers and extends them instead of creating duplicates
 
 ## Installation & Setup
 
@@ -172,9 +175,11 @@ orderOffers:
       table: order_offers
 ```
 
-### 5. Set up Cron Job
+### 5. Cron Job (Optional - Not Required for Action-Based System)
 
-The rotation API must run every 10-15 seconds to handle expired offers.
+**Note**: With the action-based system, offers don't expire on time - they only rotate when shoppers explicitly decline. The cron job is no longer required for normal operation.
+
+However, if you want to clean up very old offers (e.g., offers older than 7 days), you can optionally set up:
 
 **Option A: Vercel Cron (if on Vercel)**
 
@@ -185,7 +190,7 @@ Add to `vercel.json`:
   "crons": [
     {
       "path": "/api/shopper/rotate-expired-offers",
-      "schedule": "*/10 * * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
@@ -196,7 +201,7 @@ Add to `vercel.json`:
 - Use EasyCron, cron-job.org, or similar
 - URL: `https://yourapp.com/api/shopper/rotate-expired-offers`
 - Method: POST
-- Interval: Every 10-15 seconds
+- Interval: Once daily (for cleanup only)
 
 ## API Endpoints
 
@@ -239,7 +244,7 @@ Finds best order for shopper with distance gating.
 }
 ```
 
-**Response:**
+**Response (when shopper is available):**
 
 ```json
 {
@@ -248,12 +253,32 @@ Finds best order for shopper with distance gating.
     "id": "order-uuid",
     "shopName": "Shop Name",
     "distance": 2.5,
-    "estimatedEarnings": 150,
-    "expiresIn": 60000
+    "estimatedEarnings": 150
   },
-  "offerId": "offer-uuid"
+  "offerId": "offer-uuid",
+  "message": "Exclusive offer created - shopper must accept or decline",
+  "expiresIn": null,
+  "note": "Action-based system: offer stays until shopper accepts or declines"
 }
 ```
+
+**Response (when shopper has active order):**
+
+```json
+{
+  "success": false,
+  "message": "Complete your current order before accepting new ones",
+  "reason": "ACTIVE_ORDER_IN_PROGRESS",
+  "activeOrderId": "order-uuid",
+  "activeOrderStatus": "accepted"
+}
+```
+
+**Behavior:**
+- System checks if shopper has active orders (status: accepted, in_progress, picked_up)
+- If active order exists, shopper cannot receive new offers
+- If no active orders, creates exclusive offer with no time limit
+- If offer already exists for this shopper-order combination, extends it instead of creating duplicate
 
 ### 3. Accept Offer
 
@@ -272,37 +297,64 @@ Accepts an offer with distance re-validation.
 
 **Error Codes:**
 
-- `NO_VALID_OFFER` - Offer expired or doesn't exist
+- `NO_VALID_OFFER` - Offer doesn't exist or was already processed
 - `ALREADY_ASSIGNED` - Another shopper got it first
-- `TOO_FAR` - Distance re-validation failed
+- `TOO_FAR` - Distance re-validation failed (shopper moved too far)
+- `ACTIVE_ORDER_IN_PROGRESS` - Shopper already has an active order and cannot accept new ones
 
 ### 4. Decline Offer
 
 **Endpoint:** `POST /api/shopper/decline-offer`
 
-Explicitly skip an order (triggers immediate rotation).
+Explicitly skip an order (triggers immediate rotation to next shopper).
 
-### 5. Rotate Expired Offers
+**Request:**
 
-**Endpoint:** `POST /api/shopper/rotate-expired-offers`
+```json
+{
+  "orderId": "order-uuid",
+  "shopperId": "shopper-uuid"
+}
+```
 
-Cron job that rotates expired offers to next shoppers.
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Offer declined and rotated to next shopper",
+  "offerId": "offer-uuid",
+  "nextShopper": {
+    "id": "next-shopper-uuid",
+    "distance": 3.2
+  }
+}
+```
+
+**Behavior:**
+- Marks current offer as DECLINED in database
+- Immediately finds next eligible shopper
+- Creates new offer for next shopper
+- Sends FCM notification to next shopper
+- Total time from decline to next shopper seeing order: ~1 second
 
 ## Distance & Radius Configuration
 
 ### Round-Based Expansion
 
-Prevents order starvation by gradually expanding radius:
+Prevents order starvation by gradually expanding radius when orders are declined:
 
-| Round | Max Distance | Max ETA | Duration |
-| ----- | ------------ | ------- | -------- |
-| 1     | 3 km         | 15 min  | 60s      |
-| 2     | 5 km         | 25 min  | 60s      |
-| 3     | 8 km         | 40 min  | 90s      |
+| Round | Max Distance | Max ETA | Note |
+| ----- | ------------ | ------- | ---- |
+| 1     | 3 km         | 15 min  | Initial offer radius |
+| 2     | 5 km         | 25 min  | After first decline |
+| 3     | 8 km         | 40 min  | After second decline |
+
+**Note**: With action-based system, there is no time duration. Offers stay until shopper accepts or declines. Round number increments each time an order is declined and rotated to the next shopper.
 
 ### Urgent Orders
 
-Orders older than 30 minutes immediately use 10km radius.
+Orders older than 30 minutes immediately use 10km radius to ensure they get assigned quickly.
 
 ## Shopper App Integration
 
@@ -336,20 +388,24 @@ useEffect(() => {
 
 ### 2. Handle New Offers
 
-FCM notifications now include `expiresIn` from database:
+With the action-based system, offers have no time limit. Shoppers must explicitly accept or decline:
 
 ```typescript
 // In FCM notification handler
 if (notification.data.type === "new_order") {
-  const expiresIn = parseInt(notification.data.expiresIn); // milliseconds
-
-  // Show countdown timer
+  // Show notification without countdown timer
   showOrderNotification({
     orderId: notification.data.orderId,
-    expiresAt: Date.now() + expiresIn,
+    // No expiresAt - offer stays until action taken
   });
 }
 ```
+
+**Key Points:**
+- No countdown timers in UI
+- Shopper can review order carefully
+- Must take explicit action (accept or decline)
+- If better order arrives, old notification fades out smoothly before new one appears
 
 ### 3. Accept with Error Handling
 
@@ -365,7 +421,7 @@ try {
 
     switch (error.code) {
       case "NO_VALID_OFFER":
-        toast.error("Offer expired. Refreshing orders...");
+        toast.error("Offer no longer available. Refreshing orders...");
         break;
       case "ALREADY_ASSIGNED":
         toast.error("Another shopper got this order");
@@ -375,12 +431,90 @@ try {
           `You are ${error.distance}km away (max: ${error.maxDistance}km)`
         );
         break;
+      case "ACTIVE_ORDER_IN_PROGRESS":
+        toast.error("Complete your current order before accepting new ones");
+        break;
     }
   }
 } catch (error) {
   toast.error("Failed to accept order");
 }
 ```
+
+## Action-Based System Flow
+
+### Complete Order Lifecycle
+
+**1. Order Creation and Assignment:**
+- New order is created with status PENDING
+- System finds best nearby shopper based on distance, order age, and shopper performance
+- System checks if shopper has any active orders (accepted, in_progress, picked_up)
+- If shopper is busy, order is skipped and next shopper is considered
+- If shopper is available, exclusive offer is created in order_offers table
+- FCM notification is sent to shopper's device
+- Notification appears on shopper's screen with order details
+
+**2. Shopper Review Period:**
+- Offer stays visible on shopper's device with no time limit
+- Shopper can review order details, distance, earnings, and route
+- No countdown timer or pressure to make quick decision
+- If better order becomes available, old notification smoothly fades out (400ms transition) before new one appears
+
+**3. Shopper Actions:**
+
+**If Shopper Accepts:**
+- Offer status changes to ACCEPTED in database
+- Order is assigned to shopper (shopper_id set, status becomes accepted)
+- Shopper immediately enters exclusive work mode
+- System prevents shopper from seeing any new offers until current order is delivered
+- Shopper works on order through shopping, picking up, and delivery stages
+- After delivery, order status becomes delivered
+- Shopper becomes available again and can receive new offers
+
+**If Shopper Declines:**
+- Shopper clicks decline button in notification
+- Frontend calls decline API endpoint
+- Offer status changes to DECLINED in database
+- System immediately finds next eligible shopper (within radius, online, no active orders)
+- New offer is created for next shopper
+- FCM notification is sent to next shopper
+- Next shopper sees order within approximately 1 second
+- Original shopper can see other available orders
+- Round number increments for tracking purposes
+
+**4. After Delivery:**
+- Order status changes to delivered
+- Shopper automatically becomes available for new offers
+- System can now show new orders to this shopper
+- Cycle repeats for next order
+
+### Key Behaviors
+
+**One Order at a Time Rule:**
+- System enforces that shoppers can only work on one order at a time
+- When shopper accepts an order, they cannot see or accept new offers
+- This ensures shoppers focus on completing current delivery before taking new ones
+- Prevents overwhelming shoppers with multiple simultaneous orders
+
+**Duplicate Prevention:**
+- System checks if shopper already has an active offer for an order before creating new one
+- If offer exists, system extends the expiry time instead of creating duplicate
+- This prevents database from filling with redundant offer records
+- Ensures clean data and better performance
+
+**Smooth Notification Transitions:**
+- When better order arrives while shopper is viewing another order
+- Old notification card smoothly fades out over 400 milliseconds
+- Brief pause allows visual transition to complete
+- New notification card then fades in
+- Creates professional, polished user experience without jarring instant replacements
+
+**Instant Decline Rotation:**
+- When shopper declines, rotation happens immediately
+- No waiting period or delay
+- Next shopper is found and notified within 1 second
+- Ensures orders don't get stuck with declined shoppers
+- Maintains fair distribution across all available shoppers
 
 ## Monitoring & Debugging
 
@@ -1046,11 +1180,15 @@ The Smart Notification & Assignment System provides real-time order distribution
 
 ## Key Features
 
-- **Real-Time WebSocket Notifications**: Instant order updates instead of polling
+- **Action-Based System**: Offers stay with shoppers until they explicitly accept or decline (no time-based expiry)
+- **One Order at a Time**: Shoppers cannot see new offers while working on an active order
+- **Instant Decline Rotation**: When shopper declines, order immediately goes to next shopper (~1 second)
+- **Smooth Notification Transitions**: Old notifications fade out before new ones appear (400ms transition)
 - **Smart Assignment Algorithm**: Prioritizes orders based on age, shopper performance, and proximity
 - **Age-Based Priority System**: Heavily prioritizes older orders while tracking new ones to prevent lateness
 - **Personalized Notifications**: Each shopper receives recommendations tailored to their location and performance
 - **Assignment Locking**: Prevents multiple shoppers from being assigned the same order
+- **Duplicate Prevention**: System checks for existing offers and extends them instead of creating duplicates
 - **Optimized Batch Processing**: Groups orders by location for efficient distribution
 - **Dual Display System**: Dashboard shows all orders, map shows aged orders (30+ minutes) to reduce clutter
 - **Travel Time Display**: Shows estimated minutes away instead of raw distance
@@ -1079,9 +1217,9 @@ graph TB
     L --> M[Send Personalized FCM Notification]
     M --> N[Shopper Receives Toast]
     N --> O{Shopper Action}
-    O -->|Accept| P[Assign Order]
-    O -->|Skip| Q[Order Remains in Pool]
-    O -->|Timeout 90s| Q
+    O -->|Accept| P[Assign Order - Shopper Works Exclusively]
+    O -->|Decline| Q[Immediately Rotate to Next Shopper]
+    O -->|No Action| R[Offer Stays - No Time Limit]
 
     C --> R[Map Display Filters]
     R -->|Show only 30+ min| S[Aged Orders on Map]
@@ -1267,6 +1405,12 @@ Shopper 3 (Airport, 25km from order):
 
 **Key Features**:
 
+- **Action-Based Notifications**: No countdown timers - offers stay until shopper takes action
+- **Smooth Transitions**: When better order arrives, old notification fades out (400ms) before new one appears
+- **Decline API Integration**: When shopper declines, immediately calls backend API to rotate order to next shopper
+- **One Order at a Time Enforcement**: Prevents showing new notifications when shopper has active orders
+- **Duplicate Prevention**: Tracks declined orders locally and prevents re-showing within 5 minutes
+- **10-Second Cooldown**: After declining, waits 10 seconds before showing next notification
 - WebSocket integration for real-time updates
 - Toast notifications with SVG icons
 - Travel time calculation and display
@@ -1435,11 +1579,15 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[Shopper Receives Notification] --> B{Action}
-    B -->|Accept| C[Assign Order Atomically]
-    B -->|Skip| D[Find Next Best Shopper]
-    B -->|Timeout| E[Reassign to Others]
+    B -->|Accept| C[Assign Order Atomically - Shopper Works Exclusively]
+    B -->|Decline| D[Mark Offer as DECLINED - Rotate to Next Shopper Immediately]
+    B -->|No Action| E[Offer Stays - No Time Limit]
 
-    C --> F[Update Order Status]
+    C --> F[Update Order Status - Shopper Cannot See New Offers]
+    D --> G[Find Next Eligible Shopper]
+    G --> H[Create New Offer - Send FCM Notification]
+    H --> I[Next Shopper Sees Order Within 1 Second]
+    E --> J[Shopper Can Review Order Without Pressure]
     F --> G[Remove from Available Pool]
     G --> H[Send Confirmation]
 

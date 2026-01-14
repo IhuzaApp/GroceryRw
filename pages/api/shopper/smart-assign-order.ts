@@ -61,10 +61,7 @@ const GET_ELIGIBLE_ORDERS = gql`
           {
             _not: {
               orderOffers: {
-                _and: [
-                  { status: { _eq: "OFFERED" } }
-                  { expires_at: { _gt: "now()" } }
-                ]
+                status: { _eq: "OFFERED" }
               }
             }
           }
@@ -111,10 +108,7 @@ const GET_ELIGIBLE_REEL_ORDERS = gql`
           {
             _not: {
               orderOffers: {
-                _and: [
-                  { status: { _eq: "OFFERED" } }
-                  { expires_at: { _gt: "now()" } }
-                ]
+                status: { _eq: "OFFERED" }
               }
             }
           }
@@ -156,10 +150,7 @@ const GET_ELIGIBLE_RESTAURANT_ORDERS = gql`
           {
             _not: {
               orderOffers: {
-                _and: [
-                  { status: { _eq: "OFFERED" } }
-                  { expires_at: { _gt: "now()" } }
-                ]
+                status: { _eq: "OFFERED" }
               }
             }
           }
@@ -965,8 +956,10 @@ export default async function handler(
 
     let offerId: string;
     let offerRound: number;
+    let isExtendingOffer = false; // Track if we're extending vs creating
 
     if (existingOffer) {
+      isExtendingOffer = true; // Mark that we're extending
       // Shopper already has an active offer for this order - just extend the expiry
       console.log("🔄 Extending existing offer (preventing duplicate):", {
         existingOfferId: existingOffer.id,
@@ -991,31 +984,151 @@ export default async function handler(
         round: offerRound,
       });
     } else {
-      // No existing offer - create a new one
-      console.log("Creating exclusive offer:", {
-        orderId: bestOrder.id,
-        orderType: bestOrder.orderType,
-        shopperId: user_id,
-        round: nextRound,
-        note: "No time limit - shopper must accept or decline",
-      });
-
-      const offerResult = (await hasuraClient.request(
-        CREATE_ORDER_OFFER,
-        offerVariables
-      )) as any;
-
-      if (!offerResult.insert_order_offers_one) {
-        throw new Error("Failed to create order offer");
+      // No existing offer found - but double-check before creating to prevent race conditions
+      // Re-check one more time to ensure no duplicate was created between our check and now
+      let finalCheckData: any;
+      if (bestOrder.orderType === "regular") {
+        finalCheckData = await hasuraClient.request(
+          CHECK_SHOPPER_EXISTING_OFFER_REGULAR,
+          {
+            shopper_id: user_id,
+            order_type: bestOrder.orderType,
+            order_id: bestOrder.id,
+          }
+        );
+      } else if (bestOrder.orderType === "reel") {
+        finalCheckData = await hasuraClient.request(
+          CHECK_SHOPPER_EXISTING_OFFER_REEL,
+          {
+            shopper_id: user_id,
+            order_type: bestOrder.orderType,
+            reel_order_id: bestOrder.id,
+          }
+        );
+      } else if (bestOrder.orderType === "restaurant") {
+        finalCheckData = await hasuraClient.request(
+          CHECK_SHOPPER_EXISTING_OFFER_RESTAURANT,
+          {
+            shopper_id: user_id,
+            order_type: bestOrder.orderType,
+            restaurant_order_id: bestOrder.id,
+          }
+        );
       }
 
-      offerId = offerResult.insert_order_offers_one.id;
-      offerRound = nextRound;
+      const finalCheckOffer = finalCheckData.order_offers?.[0];
 
-      console.log("✅ Exclusive offer created:", {
-        offerId,
-        round: offerRound,
-      });
+      if (finalCheckOffer) {
+        // Another request created the offer between our checks - extend it instead
+        console.log("🔄 Race condition detected - offer created by another request, extending:", {
+          existingOfferId: finalCheckOffer.id,
+          orderId: bestOrder.id,
+          shopperId: user_id,
+        });
+
+        const updateResult = (await hasuraClient.request(UPDATE_OFFER_EXPIRY, {
+          offer_id: finalCheckOffer.id,
+          expires_at: expiresAt,
+        })) as any;
+
+        offerId = finalCheckOffer.id;
+        offerRound = finalCheckOffer.round_number;
+
+        console.log("✅ Offer extended (race condition handled):", {
+          offerId,
+          round: offerRound,
+        });
+        isExtendingOffer = true; // Mark that we're extending, not creating
+      } else {
+        // Confirmed no existing offer - safe to create new one
+        console.log("Creating exclusive offer:", {
+          orderId: bestOrder.id,
+          orderType: bestOrder.orderType,
+          shopperId: user_id,
+          round: nextRound,
+          note: "No time limit - shopper must accept or decline",
+        });
+
+        try {
+          const offerResult = (await hasuraClient.request(
+            CREATE_ORDER_OFFER,
+            offerVariables
+          )) as any;
+
+          if (!offerResult.insert_order_offers_one) {
+            throw new Error("Failed to create order offer");
+          }
+
+          offerId = offerResult.insert_order_offers_one.id;
+          offerRound = nextRound;
+
+          console.log("✅ Exclusive offer created:", {
+            offerId,
+            round: offerRound,
+          });
+        } catch (error: any) {
+          // Handle potential unique constraint violation
+          if (error.message?.includes("duplicate") || error.message?.includes("unique constraint")) {
+            console.warn("⚠️ Duplicate offer detected during creation, checking for existing offer:", {
+              orderId: bestOrder.id,
+              shopperId: user_id,
+            });
+            
+            // One final check - maybe another request created it
+            let recoveryCheckData: any;
+            if (bestOrder.orderType === "regular") {
+              recoveryCheckData = await hasuraClient.request(
+                CHECK_SHOPPER_EXISTING_OFFER_REGULAR,
+                {
+                  shopper_id: user_id,
+                  order_type: bestOrder.orderType,
+                  order_id: bestOrder.id,
+                }
+              );
+            } else if (bestOrder.orderType === "reel") {
+              recoveryCheckData = await hasuraClient.request(
+                CHECK_SHOPPER_EXISTING_OFFER_REEL,
+                {
+                  shopper_id: user_id,
+                  order_type: bestOrder.orderType,
+                  reel_order_id: bestOrder.id,
+                }
+              );
+            } else if (bestOrder.orderType === "restaurant") {
+              recoveryCheckData = await hasuraClient.request(
+                CHECK_SHOPPER_EXISTING_OFFER_RESTAURANT,
+                {
+                  shopper_id: user_id,
+                  order_type: bestOrder.orderType,
+                  restaurant_order_id: bestOrder.id,
+                }
+              );
+            }
+
+            const recoveryOffer = recoveryCheckData.order_offers?.[0];
+            if (recoveryOffer) {
+              // Found it - extend instead
+              const updateResult = (await hasuraClient.request(UPDATE_OFFER_EXPIRY, {
+                offer_id: recoveryOffer.id,
+                expires_at: expiresAt,
+              })) as any;
+
+              offerId = recoveryOffer.id;
+              offerRound = recoveryOffer.round_number;
+              isExtendingOffer = true; // Mark that we're extending, not creating
+
+              console.log("✅ Recovered from duplicate - extended existing offer:", {
+                offerId,
+                round: offerRound,
+              });
+            } else {
+              throw error; // Re-throw if we can't recover
+            }
+          } else {
+            throw error; // Re-throw other errors
+          }
+        }
+      }
     }
 
     // ========================================================================
@@ -1031,41 +1144,49 @@ export default async function handler(
       null // No time-based expiry
     );
 
-    try {
-      await sendNewOrderNotification(user_id, {
-        id: bestOrder.id,
-        shopName: orderData.shopName,
-        customerAddress: orderData.customerAddress,
-        distance: orderData.distance,
-        itemsCount: orderData.itemsCount,
-        travelTimeMinutes: orderData.travelTimeMinutes,
-        estimatedEarnings: orderData.estimatedEarnings,
-        orderType: orderData.orderType,
-        expiresInMs: null, // No expiry - shopper must accept or decline
-      });
+    // Only send FCM notification for NEW offers, not when extending existing ones
+    // This prevents duplicate notifications when polling refreshes the same offer
+    if (!isExtendingOffer) {
+      try {
+        await sendNewOrderNotification(user_id, {
+          id: bestOrder.id,
+          shopName: orderData.shopName,
+          customerAddress: orderData.customerAddress,
+          distance: orderData.distance,
+          itemsCount: orderData.itemsCount,
+          travelTimeMinutes: orderData.travelTimeMinutes,
+          estimatedEarnings: orderData.estimatedEarnings,
+          orderType: orderData.orderType,
+          expiresInMs: null, // No expiry - shopper must accept or decline
+        });
 
+        console.log(
+          "✅ FCM notification sent to shopper:",
+          user_id,
+          "for order:",
+          bestOrder.id,
+          "| No time limit - waiting for explicit action"
+        );
+      } catch (fcmError) {
+        console.error("Failed to send FCM notification:", fcmError);
+        // Continue even if notification fails - shopper can still poll
+      }
+    } else {
       console.log(
-        "✅ FCM notification sent to shopper:",
-        user_id,
-        "for order:",
-        bestOrder.id,
-        "| No time limit - waiting for explicit action"
+        "⏭️ Skipping FCM notification - extending existing offer (preventing duplicate notification)"
       );
-    } catch (fcmError) {
-      console.error("Failed to send FCM notification:", fcmError);
-      // Continue even if notification fails - shopper can still poll
     }
 
     return res.status(200).json({
       success: true,
       order: orderData,
-      message: existingOffer
+      message: isExtendingOffer
         ? "Offer refreshed - still waiting for shopper action"
         : "Exclusive offer created - shopper must accept or decline",
       offerId: offerId,
       round: offerRound,
       expiresIn: null, // No time limit
-      wasExtended: !!existingOffer,
+      wasExtended: isExtendingOffer,
       note: "Action-based system: offer stays until shopper accepts or declines",
     });
   } catch (error) {
