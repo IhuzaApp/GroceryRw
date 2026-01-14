@@ -68,7 +68,7 @@ Professional dispatch system following the DoorDash/Uber Eats model with exclusi
 
 1. **Server is the source of truth** - Client never decides eligibility
 2. **Action-based system** - Offers stay until shopper explicitly accepts or declines (no time-based expiry)
-3. **One order at a time** - Shoppers cannot see new offers while working on an active order
+3. **Up to 2 active orders** - Shoppers can work on up to 2 orders simultaneously, but cannot receive new offers if they have 2 active orders or a pending OFFERED offer
 4. **Location is volatile** - Redis for GPS, database for offers
 5. **Distance gating** - Only offer to nearby shoppers
 6. **Round-based expansion** - Radius grows if declined (3km → 5km → 8km)
@@ -490,11 +490,14 @@ try {
 
 ### Key Behaviors
 
-**One Order at a Time Rule:**
-- System enforces that shoppers can only work on one order at a time
-- When shopper accepts an order, they cannot see or accept new offers
-- This ensures shoppers focus on completing current delivery before taking new ones
-- Prevents overwhelming shoppers with multiple simultaneous orders
+**Active Orders and Offer Limits:**
+- Shoppers can work on up to 2 active orders simultaneously (accepted/in_progress/picked_up)
+- If shopper has 2 active orders, they cannot receive new offers until at least one is delivered
+- If shopper has 1 active order, they can still receive new offers (up to 2 total active orders)
+- Shoppers can only have ONE pending OFFERED offer at a time
+- If shopper has a pending OFFERED offer, they must accept or decline it before receiving a new offer
+- This ensures shoppers focus on completing deliveries while allowing flexibility for multiple orders
+- Prevents overwhelming shoppers with too many simultaneous orders
 
 **Duplicate Prevention:**
 - System checks if shopper already has an active offer for an order before creating new one
@@ -1181,7 +1184,7 @@ The Smart Notification & Assignment System provides real-time order distribution
 ## Key Features
 
 - **Action-Based System**: Offers stay with shoppers until they explicitly accept or decline (no time-based expiry)
-- **One Order at a Time**: Shoppers cannot see new offers while working on an active order
+- **Up to 2 Active Orders**: Shoppers can work on up to 2 orders simultaneously, but cannot receive new offers if they have 2 active orders or a pending OFFERED offer
 - **Instant Decline Rotation**: When shopper declines, order immediately goes to next shopper (~1 second)
 - **Smooth Notification Transitions**: Old notifications fade out before new ones appear (400ms transition)
 - **Smart Assignment Algorithm**: Prioritizes orders based on age, shopper performance, and proximity
@@ -1408,7 +1411,7 @@ Shopper 3 (Airport, 25km from order):
 - **Action-Based Notifications**: No countdown timers - offers stay until shopper takes action
 - **Smooth Transitions**: When better order arrives, old notification fades out (400ms) before new one appears
 - **Decline API Integration**: When shopper declines, immediately calls backend API to rotate order to next shopper
-- **One Order at a Time Enforcement**: Prevents showing new notifications when shopper has active orders
+- **Active Orders Enforcement**: Prevents showing new notifications when shopper has 2 active orders or a pending OFFERED offer
 - **Duplicate Prevention**: Tracks declined orders locally and prevents re-showing within 5 minutes
 - **10-Second Cooldown**: After declining, waits 10 seconds before showing next notification
 - WebSocket integration for real-time updates
