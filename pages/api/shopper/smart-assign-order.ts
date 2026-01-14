@@ -593,7 +593,74 @@ export default async function handler(
       });
     }
 
-    console.log("✅ Shopper has no active orders - can receive new offers");
+    // ========================================================================
+    // Check if shopper already has an active OFFERED offer
+    // ========================================================================
+    // One order at a time rule: Shopper cannot receive new offers
+    // if they already have an OFFERED offer waiting for action
+    // ========================================================================
+    const CHECK_ACTIVE_OFFERED_OFFER = gql`
+      query CheckActiveOfferedOffer($shopper_id: uuid!) {
+        order_offers(
+          where: {
+            shopper_id: { _eq: $shopper_id }
+            status: { _eq: "OFFERED" }
+            expires_at: { _gt: "now()" }
+          }
+          limit: 1
+        ) {
+          id
+          order_id
+          reel_order_id
+          restaurant_order_id
+          order_type
+          status
+          expires_at
+          round_number
+        }
+      }
+    `;
+
+    const activeOfferedOfferData = (await hasuraClient.request(
+      CHECK_ACTIVE_OFFERED_OFFER,
+      {
+        shopper_id: user_id,
+      }
+    )) as any;
+
+    if (
+      activeOfferedOfferData.order_offers &&
+      activeOfferedOfferData.order_offers.length > 0
+    ) {
+      const activeOffer = activeOfferedOfferData.order_offers[0];
+      const orderId =
+        activeOffer.order_id ||
+        activeOffer.reel_order_id ||
+        activeOffer.restaurant_order_id;
+
+      console.log("🚫 Shopper already has an active OFFERED offer:", {
+        shopperId: user_id,
+        offerId: activeOffer.id,
+        orderId: orderId,
+        orderType: activeOffer.order_type,
+        status: activeOffer.status,
+        expiresAt: activeOffer.expires_at,
+        round: activeOffer.round_number,
+      });
+
+      return res.status(200).json({
+        success: false,
+        message:
+          "You have a pending offer. Please accept or decline it before receiving new offers",
+        reason: "ACTIVE_OFFER_PENDING",
+        activeOfferId: activeOffer.id,
+        activeOrderId: orderId,
+        activeOrderType: activeOffer.order_type,
+        note: "Action-based system: You must accept or decline the current offer first",
+      });
+    }
+
+    console.log("✅ Shopper has no active orders or pending offers - can receive new offers");
 
     // ========================================================================
     // STEP 1: Find Eligible Orders
