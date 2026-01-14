@@ -25,6 +25,8 @@ interface Order {
   shopLongitude?: number;
   customerLatitude?: number;
   customerLongitude?: number;
+  // Offer ID for declining offers
+  offerId?: string;
   // Add other order properties as needed
 }
 
@@ -314,6 +316,8 @@ export default function NotificationSystem({
         shopLongitude: order.shopLongitude,
         customerLatitude: order.customerLatitude,
         customerLongitude: order.customerLongitude,
+        // Include offerId if available
+        offerId: order.offerId,
       };
 
       // Show notification
@@ -385,6 +389,8 @@ export default function NotificationSystem({
           shopLongitude: order.shopLongitude,
           customerLatitude: order.customerLatitude,
           customerLongitude: order.customerLongitude,
+          // Include offerId if available
+          offerId: order.offerId,
         };
 
         showToast(orderForNotification);
@@ -578,6 +584,14 @@ export default function NotificationSystem({
       return;
     }
 
+    if (!session?.user?.id) {
+      logger.warn(
+        "Cannot show notification - no session",
+        "NotificationSystem"
+      );
+      return;
+    }
+
     const newAssignment: BatchAssignment = {
       shopperId: session.user.id,
       orderId: order.id,
@@ -604,6 +618,8 @@ export default function NotificationSystem({
       shopLongitude: order.shopLongitude,
       customerLatitude: order.customerLatitude,
       customerLongitude: order.customerLongitude,
+      // Include offerId if available
+      offerId: order.offerId,
     };
 
     // Store active offer in localStorage for persistence across page refreshes
@@ -1141,11 +1157,11 @@ export default function NotificationSystem({
         );
 
         // Clean up expired declined orders
-        for (const [orderId, expiresAt] of declinedOrders.current.entries()) {
+        Array.from(declinedOrders.current.entries()).forEach(([orderId, expiresAt]) => {
           if (expiresAt <= currentTime) {
             declinedOrders.current.delete(orderId);
           }
-        }
+        });
 
         // Check if user already has an active order review
         const currentUserAssignment = batchAssignments.current.find(
@@ -1153,7 +1169,10 @@ export default function NotificationSystem({
         );
 
         // Check if this order was declined
-        const order = data.order;
+        const order = {
+          ...data.order,
+          offerId: data.offerId, // Include offerId from API response
+        };
         const wasDeclined = declinedOrders.current.has(order.id);
 
         // Check if a better order is available (higher earnings)
@@ -1361,7 +1380,10 @@ export default function NotificationSystem({
       if (data.success && data.order) {
         // Active offer found - show notification immediately
         // showNewOrderNotification will store it in localStorage
-        const order = data.order;
+        const order = {
+          ...data.order,
+          offerId: data.offerId, // Include offerId from API response
+        };
         await showNewOrderNotification(order, Date.now());
       } else if (data.reason === "ACTIVE_OFFER_PENDING") {
         // Shopper has an active offer but API didn't return order details
@@ -1662,70 +1684,109 @@ export default function NotificationSystem({
               <div className="flex space-x-3">
                 {/* Decline Button */}
                 <button
-                  onClick={() => {
+                  onClick={async () => {
+                    if (!session?.user?.id) {
+                      toast.error("You must be logged in to decline orders");
+                      return;
+                    }
+
                     declineClickCount.current += 1;
 
                     // Save order ID before clearing state
                     const orderId = selectedOrder.id;
                     const expiresAt = Date.now() + 300000; // 5 minutes
 
-                    // Add to declined orders list (expires after 5 minutes)
-                    declinedOrders.current.set(orderId, expiresAt);
-
-                    // Persist to localStorage
                     try {
-                      const declinedObj: Record<string, number> = {};
-                      declinedOrders.current.forEach((value, key) => {
-                        declinedObj[key] = value;
+                      // Call the decline-offer API to update the database
+                      const response = await fetch("/api/shopper/decline-offer", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                          orderId: orderId,
+                          shopperId: session.user.id,
+                        }),
                       });
-                      localStorage.setItem(
-                        "declined_orders",
-                        JSON.stringify(declinedObj)
-                      );
-                      console.log("💾 Saved declined orders to localStorage", {
-                        count: declinedOrders.current.size,
+
+                      const data = await response.json();
+
+                      if (!response.ok) {
+                        throw new Error(data.error || "Failed to decline offer");
+                      }
+
+                      console.log("✅ Offer declined successfully", {
+                        orderId,
+                        offerId: data.offerId,
+                        roundNumber: data.roundNumber,
                       });
-                    } catch (error) {
-                      console.error(
-                        "Failed to save declined orders to localStorage:",
-                        error
+
+                      // Add to declined orders list (expires after 5 minutes)
+                      declinedOrders.current.set(orderId, expiresAt);
+
+                      // Persist to localStorage
+                      try {
+                        const declinedObj: Record<string, number> = {};
+                        declinedOrders.current.forEach((value, key) => {
+                          declinedObj[key] = value;
+                        });
+                        localStorage.setItem(
+                          "declined_orders",
+                          JSON.stringify(declinedObj)
+                        );
+                        console.log("💾 Saved declined orders to localStorage", {
+                          count: declinedOrders.current.size,
+                        });
+                      } catch (error) {
+                        console.error(
+                          "Failed to save declined orders to localStorage:",
+                          error
+                        );
+                      }
+
+                      // Clear active offer from localStorage since it's been declined
+                      try {
+                        localStorage.removeItem("active_offer");
+                      } catch (error) {
+                        logger.warn("Failed to clear active offer from localStorage", "NotificationSystem", error);
+                      }
+
+                      // Set decline cooldown (10 seconds before showing next notification)
+                      lastDeclineTime.current = Date.now();
+
+                      // Remove from tracking
+                      removeToastForOrder(orderId);
+
+                      // Remove from local state
+                      batchAssignments.current = batchAssignments.current.filter(
+                        (assignment) => assignment.orderId !== orderId
                       );
-                    }
 
-                    // Clear active offer from localStorage since it's been declined
-                    try {
-                      localStorage.removeItem("active_offer");
+                      // Close the notification modal
+                      setShowMapModal(false);
+                      setSelectedOrder(null);
+
+                      // Notify parent that notification is hidden
+                      onNotificationShow?.(null);
+
+                      // Dispatch custom event
+                      window.dispatchEvent(
+                        new CustomEvent("notification-order-hidden", {
+                          detail: { orderId },
+                        })
+                      );
+
+                      toast.success("Order declined");
                     } catch (error) {
-                      logger.warn("Failed to clear active offer from localStorage", "NotificationSystem", error);
+                      const errorMessage =
+                        error instanceof Error ? error.message : "Failed to decline order";
+                      console.error("❌ Error declining offer:", error);
+                      toast.error(errorMessage);
+                      // Still close the modal even if API call failed
+                      setShowMapModal(false);
+                      setSelectedOrder(null);
+                      onNotificationShow?.(null);
                     }
-
-                    // Set decline cooldown (10 seconds before showing next notification)
-                    lastDeclineTime.current = Date.now();
-
-                    // Remove from tracking
-                    removeToastForOrder(orderId);
-
-                    // Remove from local state
-                    batchAssignments.current = batchAssignments.current.filter(
-                      (assignment) => assignment.orderId !== orderId
-                    );
-
-                    // Close the notification modal
-                    setShowMapModal(false);
-                    setSelectedOrder(null);
-
-                    // Notify parent that notification is hidden
-                    onNotificationShow?.(null);
-
-                    // Dispatch custom event
-                    window.dispatchEvent(
-                      new CustomEvent("notification-order-hidden", {
-                        detail: { orderId },
-                      })
-                    );
-
-
-                    // Note: Offer will be rotated to next shopper automatically through normal polling
                   }}
                   className="flex-1 rounded-xl bg-red-500 py-4 text-base font-bold text-white shadow-lg transition-all hover:bg-red-600 active:scale-95"
                 >
