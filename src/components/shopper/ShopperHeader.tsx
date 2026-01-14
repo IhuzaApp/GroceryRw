@@ -77,79 +77,43 @@ export default function ShopperHeader() {
         </div>
 
         {/* Right actions - Mobile */}
-        <div className="flex items-center gap-2">
-          {/* Status indicator dot */}
-          <span
-            className={`inline-block h-2 w-2 rounded-full ${
-              isOnline ? "animate-pulse bg-green-500" : "bg-gray-400"
-            }`}
-            title={isOnline ? "Online" : "Offline"}
-          />
+        <div className="flex items-center gap-3">
+          {/* Notification Center */}
+          <NotificationCenter />
 
-          {/* Toggle button */}
+          {/* Power button - Icon only */}
           <button
             onClick={() => window.dispatchEvent(new Event("toggleGoLive"))}
-            className={`relative overflow-hidden rounded-xl px-4 py-2 text-sm font-bold transition-all duration-300 active:scale-95 ${
+            className={`relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 active:scale-95 ${
               isOnline
                 ? theme === "dark"
-                  ? "border border-red-400/20 bg-gradient-to-br from-red-500 via-red-600 to-red-700 text-white shadow-lg shadow-red-500/30 hover:shadow-red-500/40"
-                  : "border border-red-400/20 bg-gradient-to-br from-red-500 via-red-600 to-red-700 text-white shadow-lg shadow-red-500/30 hover:shadow-red-500/40"
+                  ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                  : "bg-red-500/10 text-red-600 hover:bg-red-500/20"
                 : theme === "dark"
-                ? "border border-green-400/20 bg-gradient-to-br from-green-500 via-green-600 to-green-700 text-white shadow-lg shadow-green-500/30 hover:shadow-green-500/40"
-                : "border border-green-400/20 bg-gradient-to-br from-green-500 via-green-600 to-green-700 text-white shadow-lg shadow-green-500/30 hover:shadow-green-500/40"
+                ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
+                : "bg-green-500/10 text-green-600 hover:bg-green-500/20"
             }`}
+            title={isOnline ? "Go Offline" : "Go Online"}
           >
-            {/* Background glow effect */}
-            <div
-              className={`absolute inset-0 rounded-xl blur-sm ${
-                isOnline ? "bg-red-500/20" : "bg-green-500/20"
-              }`}
-            />
+            {/* Status indicator ring */}
+            {isOnline && (
+              <span className="absolute inset-0 animate-ping rounded-full bg-red-500 opacity-20" />
+            )}
 
-            {/* Content */}
-            <span className="relative z-10 flex items-center gap-1.5">
-              {isOnline ? (
-                <>
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2.5}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                  Go Offline
-                </>
-              ) : (
-                <>
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2.5}
-                      d="M13 10V3L4 14h7v7l9-11h-7z"
-                    />
-                  </svg>
-                  Go Online
-                </>
-              )}
-            </span>
-
-            {/* Shimmer effect */}
-            <div className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 transition-all duration-500 hover:translate-x-full hover:opacity-100" />
-
-            {/* Ripple effect on tap */}
-            <div className="absolute inset-0 scale-0 rounded-xl bg-white/20 transition-transform duration-200 active:scale-100" />
+            {/* Power icon - standard power symbol */}
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              strokeWidth={2.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M5.636 5.636a9 9 0 1012.728 0M12 3v9"
+              />
+            </svg>
           </button>
         </div>
       </header>

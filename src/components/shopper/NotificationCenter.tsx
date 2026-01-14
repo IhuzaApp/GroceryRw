@@ -3,6 +3,20 @@
 import React, { useState, useEffect } from "react";
 import { useTheme } from "../../context/ThemeContext";
 
+// Check if mobile
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  return isMobile;
+};
+
 interface NotificationItem {
   title: string;
   body: string;
@@ -16,6 +30,7 @@ interface NotificationItem {
 
 export default function NotificationCenter() {
   const { theme } = useTheme();
+  const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -156,18 +171,22 @@ export default function NotificationCenter() {
         )}
       </button>
 
-      {/* Notification Dropdown */}
+      {/* Notification Dropdown/Modal */}
       {isOpen && (
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 z-40"
+            className="fixed inset-0 z-40 bg-black/50"
             onClick={() => setIsOpen(false)}
           />
 
-          {/* Dropdown Panel */}
+          {/* Dropdown Panel - Full screen on mobile, dropdown on desktop */}
           <div
-            className={`absolute right-0 top-12 z-50 w-96 rounded-lg shadow-2xl ${
+            className={`${
+              isMobile
+                ? "fixed inset-x-0 bottom-0 top-16 z-50 rounded-t-2xl"
+                : "absolute right-0 top-12 z-50 w-96 rounded-lg shadow-2xl"
+            } ${
               theme === "dark"
                 ? "border border-gray-700 bg-gray-800"
                 : "border border-gray-200 bg-white"
@@ -212,7 +231,11 @@ export default function NotificationCenter() {
             </div>
 
             {/* Notifications List */}
-            <div className="max-h-96 overflow-y-auto">
+            <div
+              className={`overflow-y-auto ${
+                isMobile ? "max-h-[calc(100vh-12rem)]" : "max-h-96"
+              }`}
+            >
               {notifications.length === 0 ? (
                 <div className="p-8 text-center text-gray-500">
                   <svg
