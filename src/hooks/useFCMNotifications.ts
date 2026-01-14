@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { initializeFCM, setupFCMListener } from "../services/fcmClient";
+import { initializeFCM } from "../services/fcmClient";
 
 interface FCMNotificationHook {
   isInitialized: boolean;
