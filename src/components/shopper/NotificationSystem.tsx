@@ -733,10 +733,18 @@ export default function NotificationSystem({
       if (success) {
         // Remove toast and show success message
         removeToastForOrder(orderId);
-        toast.success("Order accepted successfully! 🎉");
-
-        // Call parent callback if provided
-        onAcceptBatch?.(orderId);
+        
+        // Update active order count to reflect the new accepted order
+        await fetchActiveOrderCount();
+        
+        // Clear the active offer from localStorage
+        try {
+          localStorage.removeItem("active_offer");
+        } catch (error) {
+          logger.warn("Failed to clear active offer from localStorage", "NotificationSystem", error);
+        }
+        
+        toast.success("Order accepted successfully! 🎉 Check your active batches to start working on it.");
 
         return true;
       }
