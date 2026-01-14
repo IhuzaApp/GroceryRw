@@ -3360,7 +3360,7 @@ export default function MapSection({
   }
 
   return (
-    <div className="relative w-full md:rounded-lg">
+    <div className="relative w-full h-full md:rounded-lg">
       {/* Daily Earnings Badge */}
       {!isExpanded && (
         <div
@@ -3435,7 +3435,7 @@ export default function MapSection({
 
       <div
         ref={mapRef}
-        className={`h-[calc(100vh-3.5rem)] overflow-hidden rounded-none md:h-[600px] md:rounded-lg ${
+        className={`h-full w-full overflow-hidden rounded-none md:h-[600px] md:w-auto md:rounded-lg ${
           theme === "dark" ? "bg-gray-900" : "bg-gray-100"
         }`}
       />
