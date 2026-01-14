@@ -122,25 +122,11 @@ export default function NotificationSystem({
           "Multiple NotificationSystem components are running! This will cause duplicate API calls.",
       });
     } else if (process.env.NODE_ENV === "development") {
-      // Only log in development, and only when truly new (not StrictMode remount)
-      if (hadInstancesBefore === 0) {
-        console.log("🔧 NotificationSystem mounted", {
-          componentId: componentId.current,
-          note: "StrictMode may cause this to appear twice in development",
-        });
-      }
     }
 
     return () => {
       instances.delete(componentId.current);
 
-      // Only log unmount if it's the last instance or if in production
-      if (instances.size === 0 || process.env.NODE_ENV === "production") {
-        console.log("🔧 NotificationSystem unmounted", {
-          componentId: componentId.current,
-          remainingInstances: instances.size,
-        });
-      }
     };
   }, []);
 
@@ -162,15 +148,8 @@ export default function NotificationSystem({
     const updateShopperOnlineStatus = () => {
       const online = checkOnlineStatus();
 
-      // Only update and log if status actually changed
+      // Only update if status actually changed
       if (online !== isShopperOnline) {
-        console.log("👤 NotificationSystem: Shopper online status changed:", {
-          wasOnline: isShopperOnline,
-          isNowOnline: online,
-          timestamp: new Date().toISOString(),
-          componentId: componentId.current,
-        });
-
         setIsShopperOnline(online);
 
         // Clear notifications when going offline (only if we were actually running)
@@ -1266,19 +1245,11 @@ export default function NotificationSystem({
 
     // CRITICAL: Only start if shopper is online
     if (!isShopperOnline) {
-      console.log("🚫 Cannot start notification system - shopper is offline", {
-        componentId: componentId.current,
-      });
       return;
     }
 
     // If already running, don't restart
     if (checkInterval.current) {
-      console.log("⚠️ Notification system already running, skipping restart", {
-        componentId: componentId.current,
-        message:
-          "This is normal in development (React StrictMode causes double effects)",
-      });
       return;
     }
 
@@ -1427,7 +1398,7 @@ export default function NotificationSystem({
       startNotificationSystem();
     } else {
       if (!isShopperOnline) {
-        console.log("🚫 Shopper is offline - notification system stopped");
+        // Shopper is offline - notification system stopped
       } else {
         logger.warn(
           "Missing requirements for notification system",
