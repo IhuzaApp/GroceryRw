@@ -220,6 +220,75 @@ const GET_CURRENT_ROUND = gql`
   }
 `;
 
+// Query to check if shopper has already declined a regular order
+const CHECK_SHOPPER_DECLINED_ORDER_REGULAR = gql`
+  query CheckShopperDeclinedOrderRegular(
+    $order_id: uuid!
+    $shopper_id: uuid!
+  ) {
+    order_offers(
+      where: {
+        _and: [
+          { order_id: { _eq: $order_id } }
+          { shopper_id: { _eq: $shopper_id } }
+          { status: { _eq: "DECLINED" } }
+        ]
+      }
+      limit: 1
+    ) {
+      id
+      status
+      round_number
+    }
+  }
+`;
+
+// Query to check if shopper has already declined a reel order
+const CHECK_SHOPPER_DECLINED_ORDER_REEL = gql`
+  query CheckShopperDeclinedOrderReel(
+    $reel_order_id: uuid!
+    $shopper_id: uuid!
+  ) {
+    order_offers(
+      where: {
+        _and: [
+          { reel_order_id: { _eq: $reel_order_id } }
+          { shopper_id: { _eq: $shopper_id } }
+          { status: { _eq: "DECLINED" } }
+        ]
+      }
+      limit: 1
+    ) {
+      id
+      status
+      round_number
+    }
+  }
+`;
+
+// Query to check if shopper has already declined a restaurant order
+const CHECK_SHOPPER_DECLINED_ORDER_RESTAURANT = gql`
+  query CheckShopperDeclinedOrderRestaurant(
+    $restaurant_order_id: uuid!
+    $shopper_id: uuid!
+  ) {
+    order_offers(
+      where: {
+        _and: [
+          { restaurant_order_id: { _eq: $restaurant_order_id } }
+          { shopper_id: { _eq: $shopper_id } }
+          { status: { _eq: "DECLINED" } }
+        ]
+      }
+      limit: 1
+    ) {
+      id
+      status
+      round_number
+    }
+  }
+`;
+
 // Query to check if shopper already has an active offer for this order (regular)
 const CHECK_SHOPPER_EXISTING_OFFER_REGULAR = gql`
   query CheckShopperExistingOfferRegular(
@@ -894,6 +963,64 @@ export default async function handler(
           },
         });
         continue;
+      }
+
+      // Check if shopper has already declined this order
+      // Use separate queries for each order type to avoid null UUID issues
+      let declinedCheck: any = { order_offers: [] };
+      
+      try {
+        if (order.orderType === "regular") {
+          declinedCheck = await hasuraClient.request(
+            CHECK_SHOPPER_DECLINED_ORDER_REGULAR,
+            {
+              order_id: order.id,
+              shopper_id: user_id,
+            }
+          ) as any;
+        } else if (order.orderType === "reel") {
+          declinedCheck = await hasuraClient.request(
+            CHECK_SHOPPER_DECLINED_ORDER_REEL,
+            {
+              reel_order_id: order.id,
+              shopper_id: user_id,
+            }
+          ) as any;
+        } else if (order.orderType === "restaurant") {
+          declinedCheck = await hasuraClient.request(
+            CHECK_SHOPPER_DECLINED_ORDER_RESTAURANT,
+            {
+              restaurant_order_id: order.id,
+              shopper_id: user_id,
+            }
+          ) as any;
+        }
+
+        if (declinedCheck.order_offers && declinedCheck.order_offers.length > 0) {
+          console.log(
+            `❌ SKIP: Order ${order.id} was already declined by this shopper (round ${declinedCheck.order_offers[0].round_number})`
+          );
+          await logOfferSkip({
+            orderId: order.id,
+            shopperId: user_id,
+            reason: "ALREADY_DECLINED",
+            distance,
+            metadata: {
+              declinedRound: declinedCheck.order_offers[0].round_number,
+            },
+          });
+          continue;
+        }
+      } catch (error) {
+        // Log error but don't block the order - better to show it than fail silently
+        console.error("Error checking declined order status:", error);
+        logger.error("Error checking declined order", "SmartAssignOrder", {
+          orderId: order.id,
+          orderType: order.orderType,
+          shopperId: user_id,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        // Continue processing - don't skip the order if we can't check declined status
       }
 
       // Order passes all checks
