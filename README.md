@@ -275,6 +275,7 @@ Finds best order for shopper with distance gating.
 ```
 
 **Behavior:**
+
 - System checks if shopper has active orders (status: accepted, in_progress, picked_up)
 - If active order exists, shopper cannot receive new offers
 - If no active orders, creates exclusive offer with no time limit
@@ -332,6 +333,7 @@ Explicitly skip an order (triggers immediate rotation to next shopper).
 ```
 
 **Behavior:**
+
 - Marks current offer as DECLINED in database
 - Immediately finds next eligible shopper
 - Creates new offer for next shopper
@@ -344,10 +346,10 @@ Explicitly skip an order (triggers immediate rotation to next shopper).
 
 Prevents order starvation by gradually expanding radius when orders are declined:
 
-| Round | Max Distance | Max ETA | Note |
-| ----- | ------------ | ------- | ---- |
+| Round | Max Distance | Max ETA | Note                 |
+| ----- | ------------ | ------- | -------------------- |
 | 1     | 3 km         | 15 min  | Initial offer radius |
-| 2     | 5 km         | 25 min  | After first decline |
+| 2     | 5 km         | 25 min  | After first decline  |
 | 3     | 8 km         | 40 min  | After second decline |
 
 **Note**: With action-based system, there is no time duration. Offers stay until shopper accepts or declines. Round number increments each time an order is declined and rotated to the next shopper.
@@ -402,6 +404,7 @@ if (notification.data.type === "new_order") {
 ```
 
 **Key Points:**
+
 - No countdown timers in UI
 - Shopper can review order carefully
 - Must take explicit action (accept or decline)
@@ -446,6 +449,7 @@ try {
 ### Complete Order Lifecycle
 
 **1. Order Creation and Assignment:**
+
 - New order is created with status PENDING
 - System finds best nearby shopper based on distance, order age, and shopper performance
 - System checks if shopper has any active orders (accepted, in_progress, picked_up)
@@ -455,6 +459,7 @@ try {
 - Notification appears on shopper's screen with order details
 
 **2. Shopper Review Period:**
+
 - Offer stays visible on shopper's device with no time limit
 - Shopper can review order details, distance, earnings, and route
 - No countdown timer or pressure to make quick decision
@@ -463,6 +468,7 @@ try {
 **3. Shopper Actions:**
 
 **If Shopper Accepts:**
+
 - Offer status changes to ACCEPTED in database
 - Order is assigned to shopper (shopper_id set, status becomes accepted)
 - Shopper immediately enters exclusive work mode
@@ -472,6 +478,7 @@ try {
 - Shopper becomes available again and can receive new offers
 
 **If Shopper Declines:**
+
 - Shopper clicks decline button in notification
 - Frontend calls decline API endpoint
 - Offer status changes to DECLINED in database
@@ -483,6 +490,7 @@ try {
 - Round number increments for tracking purposes
 
 **4. After Delivery:**
+
 - Order status changes to delivered
 - Shopper automatically becomes available for new offers
 - System can now show new orders to this shopper
@@ -491,6 +499,7 @@ try {
 ### Key Behaviors
 
 **Active Orders and Offer Limits:**
+
 - Shoppers can work on up to 2 active orders simultaneously (accepted/in_progress/picked_up)
 - If shopper has 2 active orders, they cannot receive new offers until at least one is delivered
 - If shopper has 1 active order, they can still receive new offers (up to 2 total active orders)
@@ -500,12 +509,14 @@ try {
 - Prevents overwhelming shoppers with too many simultaneous orders
 
 **Duplicate Prevention:**
+
 - System checks if shopper already has an active offer for an order before creating new one
 - If offer exists, system extends the expiry time instead of creating duplicate
 - This prevents database from filling with redundant offer records
 - Ensures clean data and better performance
 
 **Smooth Notification Transitions:**
+
 - When better order arrives while shopper is viewing another order
 - Old notification card smoothly fades out over 400 milliseconds
 - Brief pause allows visual transition to complete
@@ -513,6 +524,7 @@ try {
 - Creates professional, polished user experience without jarring instant replacements
 
 **Instant Decline Rotation:**
+
 - When shopper declines, rotation happens immediately
 - No waiting period or delay
 - Next shopper is found and notified within 1 second

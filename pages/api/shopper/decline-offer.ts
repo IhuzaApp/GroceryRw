@@ -82,8 +82,8 @@ export default async function handler(
   const { orderId, shopperId } = req.body;
 
   if (!orderId || !shopperId) {
-    return res.status(400).json({ 
-      error: "Order ID and Shopper ID are required" 
+    return res.status(400).json({
+      error: "Order ID and Shopper ID are required",
     });
   }
 
@@ -111,7 +111,12 @@ export default async function handler(
     // accepted or declined, so we don't check expires_at
     // ========================================================================
 
-    console.log("Verifying offer for decline - order:", orderId, "shopper:", shopperId);
+    console.log(
+      "Verifying offer for decline - order:",
+      orderId,
+      "shopper:",
+      shopperId
+    );
 
     const offerResponse = (await hasuraClient.request(VERIFY_ORDER_OFFER, {
       orderId,
@@ -175,8 +180,7 @@ export default async function handler(
       if (anyOffers.length > 0) {
         const statuses = anyOffers.map((o: any) => o.status).join(", ");
         return res.status(403).json({
-          error:
-            `You don't have an active offer for this order. Found offers with status: ${statuses}. The offer may have already been accepted, declined, or expired.`,
+          error: `You don't have an active offer for this order. Found offers with status: ${statuses}. The offer may have already been accepted, declined, or expired.`,
           code: "NO_VALID_OFFER",
           foundOffers: anyOffers.map((o: any) => ({
             id: o.id,
@@ -206,12 +210,9 @@ export default async function handler(
 
     console.log("Declining offer...");
 
-    const declineResponse = (await hasuraClient.request(
-      DECLINE_ORDER_OFFER,
-      {
-        offerId: offer.id,
-      }
-    )) as any;
+    const declineResponse = (await hasuraClient.request(DECLINE_ORDER_OFFER, {
+      offerId: offer.id,
+    })) as any;
 
     if (!declineResponse.update_order_offers_by_pk) {
       console.error("❌ Failed to decline offer");

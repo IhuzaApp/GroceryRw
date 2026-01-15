@@ -190,7 +190,10 @@ const GET_AVAILABLE_SHOPPERS = gql`
       }
       orderOffers_aggregate(
         where: {
-          _and: [{ status: { _eq: "OFFERED" } }, { expires_at: { _gt: "now()" } }]
+          _and: [
+            { status: { _eq: "OFFERED" } }
+            { expires_at: { _gt: "now()" } }
+          ]
         }
       ) {
         aggregate {

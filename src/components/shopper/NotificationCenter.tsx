@@ -84,7 +84,7 @@ export default function NotificationCenter() {
 
   const getNotificationIcon = (type: string) => {
     const iconClass = `h-5 w-5 ${getNotificationColor(type)}`;
-    
+
     switch (type) {
       case "chat_message":
         return (

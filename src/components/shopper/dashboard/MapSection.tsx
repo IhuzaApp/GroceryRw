@@ -772,7 +772,7 @@ export default function MapSection({
   const watchIdRef = useRef<number | null>(null);
   const [isOnline, setIsOnline] = useState(false);
   const isOnlineRef = useRef(isOnline);
-  
+
   // Keep ref in sync with state
   useEffect(() => {
     isOnlineRef.current = isOnline;
@@ -894,7 +894,6 @@ export default function MapSection({
   const allAvailableOrders = useMemo(() => {
     return [...agedUnassignedOrders];
   }, [agedUnassignedOrders]);
-
 
   // Map style URLs using free OpenStreetMap tiles
   const mapStyles = {
@@ -1079,7 +1078,12 @@ export default function MapSection({
       if (!document.body.contains(panes.overlayPane)) {
         // Retry after a short delay
         setTimeout(() => {
-          if (map && (map as any)._panes && (map as any)._panes.overlayPane && document.body.contains((map as any)._panes.overlayPane)) {
+          if (
+            map &&
+            (map as any)._panes &&
+            (map as any)._panes.overlayPane &&
+            document.body.contains((map as any)._panes.overlayPane)
+          ) {
             try {
               marker.addTo(map);
             } catch (err) {
@@ -1835,7 +1839,7 @@ export default function MapSection({
 
       setIsOnline(true);
       locationErrorCountRef.current = 0;
-      
+
       // Show simple success toast
       toaster.push(
         <Message type="success" closable>
@@ -2093,7 +2097,7 @@ export default function MapSection({
     // Wait for ref to be attached and DOM to be ready
     const checkRefAndInit = () => {
       if (isCancelled) return;
-      
+
       if (!mapRef.current) {
         // Retry if ref is not attached yet (can happen when mapLoaded becomes true in same render)
         requestAnimationFrame(checkRefAndInit);
@@ -2132,32 +2136,32 @@ export default function MapSection({
             try {
               // Create new map instance with type assertion and null check
               mapInstance = L.map(mapRef.current as HTMLElement, {
-              center: [-1.9706, 30.1044],
-              zoom: 14,
-              minZoom: 3,
-              maxZoom: 19,
-              scrollWheelZoom: true,
-              attributionControl: false,
-            });
+                center: [-1.9706, 30.1044],
+                zoom: 14,
+                minZoom: 3,
+                maxZoom: 19,
+                scrollWheelZoom: true,
+                attributionControl: false,
+              });
 
-            // Store map instance
-            mapInstanceRef.current = mapInstance;
-            setMapInstance(mapInstance); // Update state for route drawing
+              // Store map instance
+              mapInstanceRef.current = mapInstance;
+              setMapInstance(mapInstance); // Update state for route drawing
 
-            // Add initial tile layer with proper subdomain configuration
-            L.tileLayer(mapStyles[theme], {
-              maxZoom: 19,
-              minZoom: 3,
-              attribution:
-                theme === "dark"
-                  ? '&copy; <a href="https://carto.com/">CARTO</a>'
-                  : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-              subdomains:
-                theme === "dark" ? ["a", "b", "c", "d"] : ["a", "b", "c"],
-            }).addTo(mapInstance);
+              // Add initial tile layer with proper subdomain configuration
+              L.tileLayer(mapStyles[theme], {
+                maxZoom: 19,
+                minZoom: 3,
+                attribution:
+                  theme === "dark"
+                    ? '&copy; <a href="https://carto.com/">CARTO</a>'
+                    : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                subdomains:
+                  theme === "dark" ? ["a", "b", "c", "d"] : ["a", "b", "c"],
+              }).addTo(mapInstance);
 
-            // Initialize user marker with blue dot design
-            const userIconHtml = `
+              // Initialize user marker with blue dot design
+              const userIconHtml = `
           <div style="
             background: #3b82f6;
             border: 3px solid white;
@@ -2178,105 +2182,106 @@ export default function MapSection({
           </div>
         `;
 
-            const userIcon = L.divIcon({
-              html: userIconHtml,
-              className: "",
-              iconSize: [24, 24],
-              iconAnchor: [12, 12],
-              popupAnchor: [0, -24],
-            });
+              const userIcon = L.divIcon({
+                html: userIconHtml,
+                className: "",
+                iconSize: [24, 24],
+                iconAnchor: [12, 12],
+                popupAnchor: [0, -24],
+              });
 
-            userMarkerRef.current = L.marker([-1.9706, 30.1044], {
-              icon: userIcon,
-            });
+              userMarkerRef.current = L.marker([-1.9706, 30.1044], {
+                icon: userIcon,
+              });
 
-            // Check for saved location in cookies or use shopperLocation prop
-            const cookieMap = getCookies();
-            let initialLat: number | null = null;
-            let initialLng: number | null = null;
+              // Check for saved location in cookies or use shopperLocation prop
+              const cookieMap = getCookies();
+              let initialLat: number | null = null;
+              let initialLng: number | null = null;
 
-            // Prioritize shopperLocation prop from parent (most current)
-            if (shopperLocation) {
-              initialLat = shopperLocation.lat;
-              initialLng = shopperLocation.lng;
-            } else if (
-              cookieMap["user_latitude"] &&
-              cookieMap["user_longitude"]
-            ) {
-              // Fall back to cookies
-              initialLat = parseFloat(cookieMap["user_latitude"]);
-              initialLng = parseFloat(cookieMap["user_longitude"]);
-            }
-
-            // Set marker position if we have valid coordinates
-            if (
-              initialLat &&
-              initialLng &&
-              !isNaN(initialLat) &&
-              !isNaN(initialLng)
-            ) {
-              if (userMarkerRef.current && mapInstance) {
-                userMarkerRef.current.setLatLng([initialLat, initialLng]);
-                // ALWAYS add marker to map if we have a location (regardless of online status)
-                userMarkerRef.current.addTo(mapInstance);
-                mapInstance.setView([initialLat, initialLng], 16);
+              // Prioritize shopperLocation prop from parent (most current)
+              if (shopperLocation) {
+                initialLat = shopperLocation.lat;
+                initialLng = shopperLocation.lng;
+              } else if (
+                cookieMap["user_latitude"] &&
+                cookieMap["user_longitude"]
+              ) {
+                // Fall back to cookies
+                initialLat = parseFloat(cookieMap["user_latitude"]);
+                initialLng = parseFloat(cookieMap["user_longitude"]);
               }
-            }
 
-            // Wait for map to be fully ready before initializing markers
-            // This is especially important when theme changes cause map recreation
-            let retryCount = 0;
-            const MAX_RETRIES = 20; // Maximum 1 second of retries (20 * 50ms)
-            
-            const waitForMapReady = () => {
-              if (isCancelled || !mapInstance) {
-                return;
-              }
-              
-              retryCount++;
-              
-              if (retryCount > MAX_RETRIES) {
-                if (mapInstance) {
-                  initMapSequence(mapInstance);
+              // Set marker position if we have valid coordinates
+              if (
+                initialLat &&
+                initialLng &&
+                !isNaN(initialLat) &&
+                !isNaN(initialLng)
+              ) {
+                if (userMarkerRef.current && mapInstance) {
+                  userMarkerRef.current.setLatLng([initialLat, initialLng]);
+                  // ALWAYS add marker to map if we have a location (regardless of online status)
+                  userMarkerRef.current.addTo(mapInstance);
+                  mapInstance.setView([initialLat, initialLng], 16);
                 }
-                return;
               }
-              
-              const container = mapInstance.getContainer();
-              const panes = (mapInstance as any)._panes;
-              
-              const isReady = container &&
-                panes &&
-                panes.overlayPane &&
-                document.body.contains(container) &&
-                document.body.contains(panes.overlayPane) &&
-                (mapInstance as any)._loaded;
-              
-              // Check if map is fully initialized with all panes
-              if (isReady) {
-                // Add a small delay to ensure panes are fully ready for marker addition
-                setTimeout(() => {
-                  if (!isCancelled && mapInstance) {
+
+              // Wait for map to be fully ready before initializing markers
+              // This is especially important when theme changes cause map recreation
+              let retryCount = 0;
+              const MAX_RETRIES = 20; // Maximum 1 second of retries (20 * 50ms)
+
+              const waitForMapReady = () => {
+                if (isCancelled || !mapInstance) {
+                  return;
+                }
+
+                retryCount++;
+
+                if (retryCount > MAX_RETRIES) {
+                  if (mapInstance) {
                     initMapSequence(mapInstance);
                   }
-                }, 100);
-              } else {
-                // Retry after a short delay if map isn't ready yet
-                setTimeout(waitForMapReady, 50);
-              }
-            };
-            requestAnimationFrame(() => {
-              if (!isCancelled && mapInstance) {
-                waitForMapReady();
-              }
-            });
-          } catch (error) {
-            // Silent fail
-          }
-        }, 50); // 50ms delay to ensure cleanup is complete
-      } catch (error) {
-        // Silent fail
-      }
+                  return;
+                }
+
+                const container = mapInstance.getContainer();
+                const panes = (mapInstance as any)._panes;
+
+                const isReady =
+                  container &&
+                  panes &&
+                  panes.overlayPane &&
+                  document.body.contains(container) &&
+                  document.body.contains(panes.overlayPane) &&
+                  (mapInstance as any)._loaded;
+
+                // Check if map is fully initialized with all panes
+                if (isReady) {
+                  // Add a small delay to ensure panes are fully ready for marker addition
+                  setTimeout(() => {
+                    if (!isCancelled && mapInstance) {
+                      initMapSequence(mapInstance);
+                    }
+                  }, 100);
+                } else {
+                  // Retry after a short delay if map isn't ready yet
+                  setTimeout(waitForMapReady, 50);
+                }
+              };
+              requestAnimationFrame(() => {
+                if (!isCancelled && mapInstance) {
+                  waitForMapReady();
+                }
+              });
+            } catch (error) {
+              // Silent fail
+            }
+          }, 50); // 50ms delay to ensure cleanup is complete
+        } catch (error) {
+          // Silent fail
+        }
       });
     };
 
@@ -2296,7 +2301,7 @@ export default function MapSection({
         mapInstanceRef.current = null;
       }
     };
-    
+
     // Start checking for ref attachment
     checkRefAndInit();
   }, [mapLoaded, theme]);
@@ -2320,7 +2325,7 @@ export default function MapSection({
       if (!isOnline) {
         // Clear tracked markers
         clearOrderMarkers();
-        
+
         // Also clear any markers that might be on the map but not tracked
         // Iterate through all layers and remove order markers
         if (mapInstanceRef.current) {
@@ -2352,7 +2357,7 @@ export default function MapSection({
             }
           });
         }
-        
+
         clearBusyAreas(); // Clear busy areas when offline
         setPendingOrders([]); // Clear pending orders state
         setShowBusyAreas(false); // Disable busy areas when offline
@@ -2377,14 +2382,21 @@ export default function MapSection({
         clearBusyAreas();
       }
     }
-  }, [showBusyAreas, mapLoaded, pendingOrders, allAvailableOrders, theme, isOnline]);
+  }, [
+    showBusyAreas,
+    mapLoaded,
+    pendingOrders,
+    allAvailableOrders,
+    theme,
+    isOnline,
+  ]);
 
   // Function to initialize map sequence
   const initMapSequence = async (map: L.Map) => {
     if (!map || !map.getContainer()) {
       return;
     }
-    
+
     // If offline, only load shops and restaurants, skip order markers
     if (!isOnline) {
       // Clear any existing order markers first
@@ -2409,7 +2421,7 @@ export default function MapSection({
       ]);
 
       const restaurants = restaurantsData.restaurants || [];
-      
+
       // Check current online status (use ref to get latest value)
       const currentlyOnline = isOnlineRef.current;
 
@@ -2685,11 +2697,7 @@ export default function MapSection({
       const stillOnlineForAvailable = isOnlineRef.current;
       if (!stillOnlineForAvailable) {
         clearOrderMarkers();
-      } else if (
-        allAvailableOrders?.length > 0 &&
-        map &&
-        map.getContainer()
-      ) {
+      } else if (allAvailableOrders?.length > 0 && map && map.getContainer()) {
         // Group available orders by location
         const groupedAvailableOrders = new Map<
           string,
@@ -2795,17 +2803,17 @@ export default function MapSection({
           });
         });
       }
-      } catch (error) {
-        // Silent fail
-      }
-      
-      // Final check - if we went offline during processing, clear everything
-      const finalOnlineCheck = isOnlineRef.current;
-      if (!finalOnlineCheck) {
-        clearOrderMarkers();
-        setPendingOrders([]);
-      }
-    };
+    } catch (error) {
+      // Silent fail
+    }
+
+    // Final check - if we went offline during processing, clear everything
+    const finalOnlineCheck = isOnlineRef.current;
+    if (!finalOnlineCheck) {
+      clearOrderMarkers();
+      setPendingOrders([]);
+    }
+  };
 
   // Update useEffect to fetch today's completed earnings
   useEffect(() => {
@@ -2847,13 +2855,13 @@ export default function MapSection({
       orderMarkersRef.current = [];
       return;
     }
-    
+
     orderMarkersRef.current.forEach((marker, index) => {
       try {
         if (!marker) {
           return;
         }
-        
+
         // Check if marker is a valid Leaflet marker (has remove method)
         if (typeof marker.remove !== "function") {
           // Try to remove from map directly
@@ -2866,7 +2874,7 @@ export default function MapSection({
           }
           return;
         }
-        
+
         // Check if marker is on the map (only if getMap method exists)
         if (typeof marker.getMap === "function") {
           const map = marker.getMap();
@@ -3400,7 +3408,7 @@ export default function MapSection({
 
   // Always render the map container so mapRef is available when mapLoaded becomes true
   return (
-    <div className="relative w-full h-full md:rounded-lg">
+    <div className="relative h-full w-full md:rounded-lg">
       {/* Daily Earnings Badge */}
       {!isExpanded && (
         <div
@@ -3484,10 +3492,10 @@ export default function MapSection({
             theme === "dark" ? "bg-gray-900" : "bg-gray-100"
           }`}
           style={{
-            position: 'relative',
+            position: "relative",
             zIndex: 1,
-            visibility: mapLoaded ? 'visible' : 'visible',
-            opacity: mapLoaded ? 1 : 0.5
+            visibility: mapLoaded ? "visible" : "visible",
+            opacity: mapLoaded ? 1 : 0.5,
           }}
         />
         {!mapLoaded && (
@@ -3573,19 +3581,19 @@ export default function MapSection({
               }`}
               title={showBusyAreas ? "Hide busy areas" : "Show busy areas"}
             >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              className="h-5 w-5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-              />
-            </svg>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                className="h-5 w-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                />
+              </svg>
               <span className="hidden md:inline">
                 {showBusyAreas ? "Hide" : "Show"} Busy Areas
               </span>

@@ -369,7 +369,10 @@ export default function ShopperDashboard() {
           // This is expected when cookies aren't available and geolocation fails
           // Only log in development for debugging
           if (process.env.NODE_ENV === "development") {
-            console.log("Geolocation unavailable or timed out (this is normal if location cookies aren't set):", err.message);
+            console.log(
+              "Geolocation unavailable or timed out (this is normal if location cookies aren't set):",
+              err.message
+            );
           }
         },
         { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
@@ -447,7 +450,6 @@ export default function ShopperDashboard() {
     };
   }, []);
 
-
   // Show skeleton loading when initializing or map not loaded
   // Don't show skeleton based on isLoading when map is loaded and initialized - map should show even without orders
   const showSkeleton = isInitializing || !mapLoaded;
@@ -467,13 +469,17 @@ export default function ShopperDashboard() {
         {/* Skeleton Map - Full screen on mobile */}
         <div
           className={isMobile ? "fixed z-0" : "w-full"}
-          style={isMobile ? {
-            left: 0,
-            right: 0,
-            top: '3.5rem',
-            width: '100vw',
-            height: 'calc(100vh - 3.5rem)'
-          } : {}}
+          style={
+            isMobile
+              ? {
+                  left: 0,
+                  right: 0,
+                  top: "3.5rem",
+                  width: "100vw",
+                  height: "calc(100vh - 3.5rem)",
+                }
+              : {}
+          }
         >
           <div
             className={`h-full w-full overflow-hidden rounded-none md:h-[600px] md:rounded-lg ${
@@ -535,7 +541,7 @@ export default function ShopperDashboard() {
                 ? "border-gray-700 bg-gray-800"
                 : "border-gray-200 bg-white"
             }`}
-            style={{ height: '200px' }}
+            style={{ height: "200px" }}
           >
             <div className="p-4">
               <div
@@ -584,18 +590,22 @@ export default function ShopperDashboard() {
         }`}
       >
         {/* Map Section */}
-        <div 
+        <div
           className={isMobile ? "fixed z-10" : "w-full"}
-          style={isMobile ? { 
-            left: 0,
-            right: 0,
-            top: '3.5rem',
-            width: '100vw',
-            height: 'calc(100vh - 3.5rem)',
-            pointerEvents: 'auto'
-          } : {
-            pointerEvents: 'auto'
-          }}
+          style={
+            isMobile
+              ? {
+                  left: 0,
+                  right: 0,
+                  top: "3.5rem",
+                  width: "100vw",
+                  height: "calc(100vh - 3.5rem)",
+                  pointerEvents: "auto",
+                }
+              : {
+                  pointerEvents: "auto",
+                }
+          }
         >
           <MapSection
             mapLoaded={mapLoaded}

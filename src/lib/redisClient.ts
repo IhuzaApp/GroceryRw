@@ -151,7 +151,12 @@ export const setShopperLocation = async (
     return true;
   } catch (error) {
     // Only log if it's not a connection-related error
-    if (!(error instanceof Error && error.message.includes("Stream isn't writeable"))) {
+    if (
+      !(
+        error instanceof Error &&
+        error.message.includes("Stream isn't writeable")
+      )
+    ) {
       console.error("❌ Error storing location in Redis:", error);
     }
     return false;
@@ -196,7 +201,12 @@ export const getShopperLocation = async (
     return JSON.parse(value) as ShopperLocation;
   } catch (error) {
     // Only log if it's not a connection-related error
-    if (!(error instanceof Error && error.message.includes("Stream isn't writeable"))) {
+    if (
+      !(
+        error instanceof Error &&
+        error.message.includes("Stream isn't writeable")
+      )
+    ) {
       console.error("❌ Error getting location from Redis:", error);
     }
     return null;
@@ -357,7 +367,12 @@ export const logOfferSkip = async (log: OfferSkipLog): Promise<void> => {
     await client.setex(key, SKIP_LOG_TTL, value);
   } catch (error) {
     // Only log if it's not a connection-related error
-    if (!(error instanceof Error && error.message.includes("Stream isn't writeable"))) {
+    if (
+      !(
+        error instanceof Error &&
+        error.message.includes("Stream isn't writeable")
+      )
+    ) {
       console.error("❌ Error logging skip:", error);
     }
     // Fallback to console

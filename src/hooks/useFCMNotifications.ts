@@ -87,7 +87,7 @@ export const useFCMNotifications = (): FCMNotificationHook => {
             const notificationHistory = JSON.parse(
               localStorage.getItem("fcm_notification_history") || "[]"
             );
-            
+
             // Create notification entry from notification object or data
             const notificationEntry = {
               title: notification?.title || data?.title || "New Notification",
@@ -101,7 +101,7 @@ export const useFCMNotifications = (): FCMNotificationHook => {
               // Include any additional data
               ...(data || {}),
             };
-            
+
             notificationHistory.unshift(notificationEntry);
             if (notificationHistory.length > 50) {
               notificationHistory.pop();
@@ -121,7 +121,6 @@ export const useFCMNotifications = (): FCMNotificationHook => {
 
           switch (type) {
             case "new_order":
-
               // Double-check page visibility before dispatching
               if (!document.hidden) {
                 window.dispatchEvent(
@@ -197,7 +196,6 @@ export const useFCMNotifications = (): FCMNotificationHook => {
               break;
 
             case "chat_message":
-
               // Chat messages can be dispatched even if page is hidden (user might come back)
               window.dispatchEvent(
                 new CustomEvent("fcm-chat-message", {
@@ -223,9 +221,7 @@ export const useFCMNotifications = (): FCMNotificationHook => {
           setIsInitialized(true);
           setHasPermission(true);
         } else {
-          console.log(
-            "FCM not available, using API polling instead"
-          );
+          console.log("FCM not available, using API polling instead");
           // Not an error - app will use API polling instead
           setIsInitialized(false);
           setHasPermission(false);
