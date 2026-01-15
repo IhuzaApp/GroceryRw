@@ -1062,17 +1062,13 @@ export default function MapSection({
       // Leaflet uses panes to organize layers, and these must exist before adding markers
       const panes = (map as any)._panes;
       if (!panes || !panes.overlayPane) {
-        console.warn(
-          `🗺️ [MapSection] Map panes not initialized when adding marker for ${name} - will retry`
-        );
         // Retry after a short delay if panes aren't ready
         setTimeout(() => {
           if (map && (map as any)._panes && (map as any)._panes.overlayPane) {
             try {
               marker.addTo(map);
-              console.log(`🗺️ [MapSection] Successfully added marker for ${name} after retry`);
             } catch (err) {
-              console.error(`🗺️ [MapSection] Error adding marker for ${name} after retry:`, err);
+              // Silent fail
             }
           }
         }, 100);
@@ -1081,17 +1077,13 @@ export default function MapSection({
 
       // Check if overlayPane is in the DOM
       if (!document.body.contains(panes.overlayPane)) {
-        console.warn(
-          `🗺️ [MapSection] Map overlayPane not in DOM when adding marker for ${name} - will retry`
-        );
         // Retry after a short delay
         setTimeout(() => {
           if (map && (map as any)._panes && (map as any)._panes.overlayPane && document.body.contains((map as any)._panes.overlayPane)) {
             try {
               marker.addTo(map);
-              console.log(`🗺️ [MapSection] Successfully added marker for ${name} after retry`);
             } catch (err) {
-              console.error(`🗺️ [MapSection] Error adding marker for ${name} after retry:`, err);
+              // Silent fail
             }
           }
         }, 100);
@@ -2035,12 +2027,7 @@ export default function MapSection({
         try {
           mapInstanceRef.current.setView([-1.9706, 30.1044], 14);
         } catch (error) {
-          console.error("🗺️ [MapSection] Error resetting map view:", error);
-        }
-      } else {
-        // Silently skip if map isn't ready - this is expected during initialization
-        if (process.env.NODE_ENV === "development") {
-          console.log("🗺️ [MapSection] Map not ready for resetting view (this is normal during initialization)");
+          // Silent fail
         }
       }
     }
@@ -2096,15 +2083,7 @@ export default function MapSection({
 
   // Main map initialization effect
   useEffect(() => {
-    console.log("🗺️ [MapSection] Map initialization effect triggered:", {
-      mapLoaded,
-      hasMapRef: !!mapRef.current,
-      isOnline,
-      theme,
-    });
-    
     if (!mapLoaded) {
-      console.log("🗺️ [MapSection] Map not loaded yet, skipping initialization");
       return;
     }
 
@@ -2116,50 +2095,39 @@ export default function MapSection({
       if (isCancelled) return;
       
       if (!mapRef.current) {
-        console.log("🗺️ [MapSection] mapRef.current is null, retrying...");
         // Retry if ref is not attached yet (can happen when mapLoaded becomes true in same render)
         requestAnimationFrame(checkRefAndInit);
         return;
       }
-      
-      console.log("🗺️ [MapSection] mapRef.current is available, proceeding with initialization");
 
       // Wait for next frame to ensure DOM is ready
       const timer = requestAnimationFrame(() => {
         if (isCancelled) {
-          console.log("🗺️ [MapSection] Initialization cancelled");
           return;
         }
-
-        console.log("🗺️ [MapSection] Starting map cleanup and initialization");
 
         try {
           // Cleanup existing map with proper error handling
           if (mapInstanceRef.current) {
-            console.log("🗺️ [MapSection] Cleaning up existing map instance");
             try {
               mapInstanceRef.current.off(); // Remove all event listeners
               mapInstanceRef.current.remove();
             } catch (e) {
-              console.warn("Error removing map:", e);
+              // Silent fail
             }
             mapInstanceRef.current = null;
           }
 
           // Clear the map container HTML to ensure clean state
           if (mapRef.current) {
-            console.log("🗺️ [MapSection] Clearing map container HTML");
             mapRef.current.innerHTML = "";
           }
 
           // Wait a tick to ensure cleanup is complete
           setTimeout(() => {
             if (isCancelled || !mapRef.current) {
-              console.log("🗺️ [MapSection] Initialization cancelled or mapRef lost");
               return;
             }
-
-            console.log("🗺️ [MapSection] Creating new Leaflet map instance");
 
             try {
               // Create new map instance with type assertion and null check
@@ -2175,14 +2143,8 @@ export default function MapSection({
             // Store map instance
             mapInstanceRef.current = mapInstance;
             setMapInstance(mapInstance); // Update state for route drawing
-            console.log("🗺️ [MapSection] Map instance created and stored:", {
-              center: mapInstance.getCenter(),
-              zoom: mapInstance.getZoom(),
-              theme,
-            });
 
             // Add initial tile layer with proper subdomain configuration
-            console.log("🗺️ [MapSection] Adding tile layer with style:", mapStyles[theme]);
             L.tileLayer(mapStyles[theme], {
               maxZoom: 19,
               minZoom: 3,
@@ -2237,10 +2199,6 @@ export default function MapSection({
             if (shopperLocation) {
               initialLat = shopperLocation.lat;
               initialLng = shopperLocation.lng;
-              console.log(
-                "🗺️ Using shopperLocation prop for initial position",
-                { initialLat, initialLng }
-              );
             } else if (
               cookieMap["user_latitude"] &&
               cookieMap["user_longitude"]
@@ -2248,10 +2206,6 @@ export default function MapSection({
               // Fall back to cookies
               initialLat = parseFloat(cookieMap["user_latitude"]);
               initialLng = parseFloat(cookieMap["user_longitude"]);
-              console.log("🗺️ Using cookie location for initial position", {
-                initialLat,
-                initialLng,
-              });
             }
 
             // Set marker position if we have valid coordinates
@@ -2266,7 +2220,6 @@ export default function MapSection({
                 // ALWAYS add marker to map if we have a location (regardless of online status)
                 userMarkerRef.current.addTo(mapInstance);
                 mapInstance.setView([initialLat, initialLng], 16);
-                console.log("✅ User marker added to map at initial position");
               }
             }
 
@@ -2277,17 +2230,13 @@ export default function MapSection({
             
             const waitForMapReady = () => {
               if (isCancelled || !mapInstance) {
-                console.log("🗺️ [MapSection] waitForMapReady cancelled or no map instance");
                 return;
               }
               
               retryCount++;
-              console.log("🗺️ [MapSection] Checking map readiness, attempt:", retryCount);
               
               if (retryCount > MAX_RETRIES) {
-                console.warn("🗺️ [MapSection] Map initialization timeout - proceeding anyway");
                 if (mapInstance) {
-                  console.log("🗺️ [MapSection] Calling initMapSequence after timeout");
                   initMapSequence(mapInstance);
                 }
                 return;
@@ -2303,52 +2252,35 @@ export default function MapSection({
                 document.body.contains(panes.overlayPane) &&
                 (mapInstance as any)._loaded;
               
-              console.log("🗺️ [MapSection] Map readiness check:", {
-                hasContainer: !!container,
-                hasPanes: !!panes,
-                hasOverlayPane: !!panes?.overlayPane,
-                containerInBody: container ? document.body.contains(container) : false,
-                overlayPaneInBody: panes?.overlayPane ? document.body.contains(panes.overlayPane) : false,
-                isLoaded: (mapInstance as any)._loaded,
-                isReady,
-              });
-              
               // Check if map is fully initialized with all panes
               if (isReady) {
-                console.log("🗺️ [MapSection] Map is ready! Waiting additional 100ms for panes to fully initialize before adding markers");
                 // Add a small delay to ensure panes are fully ready for marker addition
                 setTimeout(() => {
                   if (!isCancelled && mapInstance) {
-                    console.log("🗺️ [MapSection] Calling initMapSequence after delay");
                     initMapSequence(mapInstance);
                   }
                 }, 100);
               } else {
                 // Retry after a short delay if map isn't ready yet
-                console.log("🗺️ [MapSection] Map not ready yet, retrying in 50ms");
                 setTimeout(waitForMapReady, 50);
               }
             };
-
-            // Start waiting for map to be ready
-            console.log("🗺️ [MapSection] Waiting for map to be fully ready");
             requestAnimationFrame(() => {
               if (!isCancelled && mapInstance) {
                 waitForMapReady();
               }
             });
           } catch (error) {
-            console.error("🗺️ [MapSection] Error initializing map:", error);
+            // Silent fail
           }
         }, 50); // 50ms delay to ensure cleanup is complete
       } catch (error) {
-        console.error("🗺️ [MapSection] Error during map cleanup:", error);
+        // Silent fail
       }
       });
     };
 
     // Start checking for ref attachment
-    console.log("🗺️ [MapSection] Starting checkRefAndInit");
     checkRefAndInit();
 
     // Cleanup function
@@ -2386,8 +2318,6 @@ export default function MapSection({
     if (mapInstanceRef.current && mapLoaded) {
       // Clear existing order markers when going offline
       if (!isOnline) {
-        console.log("🗺️ [MapSection] Going offline - clearing all order-related markers and data");
-        
         // Clear tracked markers
         clearOrderMarkers();
         
@@ -2415,7 +2345,6 @@ export default function MapSection({
                       popupContent.includes("items") ||
                       popupContent.includes("earnings"))
                   ) {
-                    console.log("🗺️ [MapSection] Removing untracked order marker");
                     mapInstanceRef.current.removeLayer(layer);
                   }
                 }
@@ -2427,9 +2356,7 @@ export default function MapSection({
         clearBusyAreas(); // Clear busy areas when offline
         setPendingOrders([]); // Clear pending orders state
         setShowBusyAreas(false); // Disable busy areas when offline
-        console.log("🗺️ [MapSection] Offline cleanup complete - only shops and restaurants remain visible");
       } else {
-        console.log("🗺️ [MapSection] Going online - re-initializing map sequence");
         // Re-initialize map sequence when going online (to show order markers)
         initMapSequence(mapInstanceRef.current);
       }
@@ -2442,11 +2369,9 @@ export default function MapSection({
   useEffect(() => {
     if (mapInstanceRef.current && mapLoaded) {
       if (showBusyAreas && isOnline) {
-        console.log("🗺️ [MapSection] Rendering busy areas");
         renderBusyAreas(mapInstanceRef.current);
       } else {
         if (!isOnline && showBusyAreas) {
-          console.log("🗺️ [MapSection] Clearing busy areas - shopper is offline");
           setShowBusyAreas(false);
         }
         clearBusyAreas();
@@ -2456,26 +2381,17 @@ export default function MapSection({
 
   // Function to initialize map sequence
   const initMapSequence = async (map: L.Map) => {
-    console.log("🗺️ [MapSection] initMapSequence called:", {
-      hasMap: !!map,
-      hasContainer: map ? !!map.getContainer() : false,
-      isOnline,
-    });
-    
     if (!map || !map.getContainer()) {
-      console.warn("🗺️ [MapSection] initMapSequence: Map or container not available");
       return;
     }
     
     // If offline, only load shops and restaurants, skip order markers
     if (!isOnline) {
-      console.log("🗺️ [MapSection] initMapSequence: Offline - only loading shops and restaurants");
       // Clear any existing order markers first
       clearOrderMarkers();
     }
 
     try {
-      console.log("🗺️ [MapSection] Fetching shops, restaurants, and pending orders...");
       // Load all data in parallel
       const [shopsResponse, restaurantsResponse, pendingOrdersResponse] =
         await Promise.all([
@@ -2485,12 +2401,6 @@ export default function MapSection({
             ? fetch("/api/shopper/pendingOrders")
             : Promise.resolve({ json: () => [] }),
         ]);
-      
-      console.log("🗺️ [MapSection] Data fetched:", {
-        shopsStatus: shopsResponse.status,
-        restaurantsStatus: restaurantsResponse.status,
-        pendingOrdersStatus: pendingOrdersResponse.status,
-      });
 
       const [shops, restaurantsData, pendingOrders] = await Promise.all([
         shopsResponse.json() as Promise<Shop[]>,
@@ -2502,18 +2412,9 @@ export default function MapSection({
       
       // Check current online status (use ref to get latest value)
       const currentlyOnline = isOnlineRef.current;
-      
-      console.log("🗺️ [MapSection] Data parsed:", {
-        shopsCount: shops.length,
-        restaurantsCount: restaurants.length,
-        pendingOrdersCount: pendingOrders.length,
-        isOnlineAtStart: isOnline,
-        isOnlineNow: currentlyOnline,
-      });
 
       // Check if we went offline during the fetch - if so, clear markers and abort
       if (!currentlyOnline) {
-        console.log("🗺️ [MapSection] Went offline during fetch - clearing markers and aborting order processing");
         clearOrderMarkers();
         setPendingOrders([]);
         // Still process shops and restaurants (always visible)
@@ -2523,7 +2424,6 @@ export default function MapSection({
       }
 
       // Process shops (always visible regardless of online status)
-      console.log("🗺️ [MapSection] Processing shops (always visible)");
       setShops(shops);
       if (map && map.getContainer()) {
         shops.forEach((shop: Shop) => {
@@ -2684,10 +2584,8 @@ export default function MapSection({
       // Process pending orders with grouping - only when online
       // Double-check isOnline here in case it changed during async operations
       if (!isOnline) {
-        console.log("🗺️ [MapSection] Skipping pending orders - went offline");
         clearOrderMarkers();
       } else if (map && map.getContainer()) {
-        console.log("🗺️ [MapSection] Processing pending orders:", pendingOrders.length);
         // Group pending orders by location
         const groupedPendingOrders = new Map<string, PendingOrder[]>();
         pendingOrders.forEach((order) => {
@@ -2786,14 +2684,12 @@ export default function MapSection({
       // Double-check isOnline here in case it changed during async operations
       const stillOnlineForAvailable = isOnlineRef.current;
       if (!stillOnlineForAvailable) {
-        console.log("🗺️ [MapSection] Skipping available orders - went offline during processing");
         clearOrderMarkers();
       } else if (
         allAvailableOrders?.length > 0 &&
         map &&
         map.getContainer()
       ) {
-        console.log("🗺️ [MapSection] Processing available orders:", allAvailableOrders.length);
         // Group available orders by location
         const groupedAvailableOrders = new Map<
           string,
@@ -2900,25 +2796,15 @@ export default function MapSection({
         });
       }
       } catch (error) {
-        console.error("🗺️ [MapSection] Error in map sequence:", error);
+        // Silent fail
       }
       
       // Final check - if we went offline during processing, clear everything
       const finalOnlineCheck = isOnlineRef.current;
       if (!finalOnlineCheck) {
-        console.log("🗺️ [MapSection] Went offline during processing - clearing all order markers");
         clearOrderMarkers();
         setPendingOrders([]);
       }
-      
-      console.log("🗺️ [MapSection] initMapSequence complete:", {
-        shopsCount: shops.length,
-        restaurantsCount: restaurants.length,
-        pendingOrdersProcessed: finalOnlineCheck ? pendingOrders.length : 0,
-        availableOrdersProcessed: finalOnlineCheck && allAvailableOrders?.length > 0 ? allAvailableOrders.length : 0,
-        isOnlineAtStart: isOnline,
-        isOnlineAtEnd: finalOnlineCheck,
-      });
     };
 
   // Update useEffect to fetch today's completed earnings
@@ -2957,10 +2843,7 @@ export default function MapSection({
 
   // Helper function to clear order markers
   const clearOrderMarkers = () => {
-    console.log("🗺️ [MapSection] clearOrderMarkers: Clearing", orderMarkersRef.current.length, "markers");
-    
     if (!mapInstanceRef.current) {
-      console.warn("🗺️ [MapSection] clearOrderMarkers: No map instance available");
       orderMarkersRef.current = [];
       return;
     }
@@ -2968,19 +2851,17 @@ export default function MapSection({
     orderMarkersRef.current.forEach((marker, index) => {
       try {
         if (!marker) {
-          console.warn(`🗺️ [MapSection] Marker at index ${index} is null/undefined`);
           return;
         }
         
         // Check if marker is a valid Leaflet marker (has remove method)
         if (typeof marker.remove !== "function") {
-          console.warn(`🗺️ [MapSection] Marker at index ${index} is not a valid Leaflet marker`);
           // Try to remove from map directly
           if (mapInstanceRef.current) {
             try {
               mapInstanceRef.current.removeLayer(marker as any);
             } catch (e) {
-              console.warn(`🗺️ [MapSection] Could not remove invalid marker at index ${index}:`, e);
+              // Silent fail
             }
           }
           return;
@@ -2991,32 +2872,26 @@ export default function MapSection({
           const map = marker.getMap();
           if (map) {
             map.removeLayer(marker);
-            console.log(`🗺️ [MapSection] Removed marker ${index} from map using removeLayer`);
           } else {
             // Marker not on map, just remove it
             marker.remove();
-            console.log(`🗺️ [MapSection] Removed marker ${index} using remove()`);
           }
         } else {
           // Marker doesn't have getMap, try remove() directly
           marker.remove();
-          console.log(`🗺️ [MapSection] Removed marker ${index} using remove() (no getMap)`);
         }
       } catch (error) {
-        console.warn(`🗺️ [MapSection] Error removing marker at index ${index}:`, error);
         // Force remove from map if it exists
         try {
           if (mapInstanceRef.current && marker) {
             mapInstanceRef.current.removeLayer(marker as any);
-            console.log(`🗺️ [MapSection] Force removed marker ${index} from map`);
           }
         } catch (e) {
-          console.warn(`🗺️ [MapSection] Error force removing marker ${index}:`, e);
+          // Silent fail
         }
       }
     });
     orderMarkersRef.current = [];
-    console.log("🗺️ [MapSection] clearOrderMarkers: All markers cleared");
   };
 
   // Helper function to clear shop markers
@@ -3044,7 +2919,6 @@ export default function MapSection({
   // Helper function to calculate and render busy areas
   const renderBusyAreas = (map: L.Map) => {
     if (!showBusyAreas || !isOnline) {
-      console.log("🗺️ [MapSection] Skipping busy areas render:", { showBusyAreas, isOnline });
       return;
     }
 
@@ -3053,8 +2927,6 @@ export default function MapSection({
 
     // Combine all orders for density calculation
     const allOrders = [...pendingOrders, ...allAvailableOrders];
-    
-    console.log("🗺️ [MapSection] Rendering busy areas with orders:", allOrders.length);
 
     if (allOrders.length === 0) {
       return;
@@ -3231,12 +3103,6 @@ export default function MapSection({
   // Sync shopperLocation prop with user marker position in real-time
   useEffect(() => {
     if (shopperLocation && userMarkerRef.current && mapInstanceRef.current) {
-      console.log("🗺️ SYNCING SHOPPER LOCATION TO MAP", {
-        lat: shopperLocation.lat,
-        lng: shopperLocation.lng,
-        timestamp: new Date().toISOString(),
-      });
-
       try {
         // Update user marker position
         userMarkerRef.current.setLatLng([
@@ -3267,22 +3133,7 @@ export default function MapSection({
     // Use shopperLocation passed from parent for route display
     const locationForRoute = shopperLocation || currentLocation;
 
-    console.log("🗺️ ROUTE DRAWING EFFECT TRIGGERED", {
-      hasMapInstance: !!mapInstance,
-      hasLocationForRoute: !!locationForRoute,
-      hasNotifiedOrder: !!notifiedOrder,
-      locationForRoute,
-      notifiedOrderId: notifiedOrder?.id,
-      timestamp: new Date().toISOString(),
-    });
-
     if (!mapInstance || !locationForRoute || !notifiedOrder) {
-      console.log("🗺️ Clearing routes - missing requirements", {
-        hasMapInstance: !!mapInstance,
-        hasLocationForRoute: !!locationForRoute,
-        hasNotifiedOrder: !!notifiedOrder,
-      });
-
       // Clear route and markers if no notified order
       if (routePolyline) {
         routePolyline.remove();
@@ -3294,15 +3145,6 @@ export default function MapSection({
       }
       return;
     }
-
-    console.log("🗺️ Drawing route from shopper to customer", {
-      from: locationForRoute,
-      to: {
-        lat: notifiedOrder.customerLatitude,
-        lng: notifiedOrder.customerLongitude,
-      },
-      orderId: notifiedOrder.id,
-    });
 
     // Clear existing route and markers
     if (routePolyline) {
@@ -3541,7 +3383,6 @@ export default function MapSection({
 
   // If the dashboard is initializing, show a simpler loading state
   if (isInitializing) {
-    console.log("🗺️ [MapSection] Dashboard is initializing, showing loading state");
     return (
       <div className="relative w-full md:rounded-lg">
         <div
@@ -3558,14 +3399,6 @@ export default function MapSection({
   }
 
   // Always render the map container so mapRef is available when mapLoaded becomes true
-  console.log("🗺️ [MapSection] Rendering component:", {
-    mapLoaded,
-    isInitializing,
-    isOnline,
-    hasMapRef: !!mapRef.current,
-    hasMapInstance: !!mapInstanceRef.current,
-  });
-  
   return (
     <div className="relative w-full h-full md:rounded-lg">
       {/* Daily Earnings Badge */}
@@ -3644,10 +3477,6 @@ export default function MapSection({
         <div
           ref={(el) => {
             if (el !== mapRef.current) {
-              console.log("🗺️ [MapSection] mapRef attached to DOM element:", {
-                hasElement: !!el,
-                mapLoaded,
-              });
               mapRef.current = el;
             }
           }}
@@ -3661,24 +3490,19 @@ export default function MapSection({
             opacity: mapLoaded ? 1 : 0.5
           }}
         />
-        {(() => {
-          if (!mapLoaded) {
-            console.log("🗺️ [MapSection] Rendering loading overlay - mapLoaded is false");
-          }
-          return !mapLoaded ? (
-            <div
-              className={`absolute inset-0 z-10 flex items-center justify-center ${
-                theme === "dark" ? "bg-gray-900/90" : "bg-gray-100/90"
-              }`}
-            >
-              <Loader
-                size="lg"
-                content="Loading map..."
-                className={theme === "dark" ? "rs-loader-dark" : ""}
-              />
-            </div>
-          ) : null;
-        })()}
+        {!mapLoaded && (
+          <div
+            className={`absolute inset-0 z-10 flex items-center justify-center ${
+              theme === "dark" ? "bg-gray-900/90" : "bg-gray-100/90"
+            }`}
+          >
+            <Loader
+              size="lg"
+              content="Loading map..."
+              className={theme === "dark" ? "rs-loader-dark" : ""}
+            />
+          </div>
+        )}
       </div>
 
       {mapLoaded && (
