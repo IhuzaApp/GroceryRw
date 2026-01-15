@@ -141,8 +141,13 @@ export default function ShopperDashboard() {
   const loadOrders = useCallback(async () => {
     if (!currentLocation || !isOnline) {
       // Cannot load orders: no location or user offline
+      console.log("🗺️ [ShopperDashboard] loadOrders: Skipping (offline or no location)", {
+        hasLocation: !!currentLocation,
+        isOnline,
+      });
       setAvailableOrders([]);
       setSortedOrders([]);
+      setIsLoading(false); // Ensure loading state is cleared when offline
       return;
     }
 
@@ -313,7 +318,11 @@ export default function ShopperDashboard() {
 
   // Effect to handle map loading simulation
   useEffect(() => {
-    const timer = setTimeout(() => setMapLoaded(true), 1500);
+    console.log("🗺️ [ShopperDashboard] Starting map loading simulation");
+    const timer = setTimeout(() => {
+      console.log("🗺️ [ShopperDashboard] Setting mapLoaded to true");
+      setMapLoaded(true);
+    }, 1500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -361,7 +370,14 @@ export default function ShopperDashboard() {
             lat: pos.coords.latitude,
             lng: pos.coords.longitude,
           }),
-        (err) => console.error("Error fetching location:", err),
+        (err) => {
+          // Silently handle geolocation errors (timeout, permission denied, etc.)
+          // This is expected when cookies aren't available and geolocation fails
+          // Only log in development for debugging
+          if (process.env.NODE_ENV === "development") {
+            console.log("Geolocation unavailable or timed out (this is normal if location cookies aren't set):", err.message);
+          }
+        },
         { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
       );
     }
@@ -393,7 +409,13 @@ export default function ShopperDashboard() {
 
   // Effect to handle initialization state
   useEffect(() => {
+    console.log("🗺️ [ShopperDashboard] Checking initialization state:", {
+      currentLocation,
+      mapLoaded,
+      isInitializing,
+    });
     if (currentLocation || mapLoaded) {
+      console.log("🗺️ [ShopperDashboard] Setting isInitializing to false");
       setIsInitializing(false);
     }
   }, [currentLocation, mapLoaded]);
@@ -437,140 +459,23 @@ export default function ShopperDashboard() {
     };
   }, []);
 
-  // WebSocket event listeners for seamless background updates
-  useEffect(() => {
-    const handleWebSocketNewOrder = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const { order } = customEvent.detail;
-
-      // Add new order to the list seamlessly (no age filtering)
-      setAvailableOrders((prev) => {
-        const exists = prev.some(
-          (existingOrder) => existingOrder.id === order.id
-        );
-        if (!exists) {
-          const orderCreatedAt = new Date(order.createdAt);
-          const newOrder = {
-            id: order.id,
-            shopName: order.shopName || "Unknown Shop",
-            shopAddress: order.shopAddress || "No address available",
-            customerAddress: order.customerAddress || "No address available",
-            distance: `${order.distance} km`,
-            items: order.itemsCount || 0,
-            total: (order.earnings || 0).toString(),
-            estimatedEarnings: (order.earnings || 0).toString(),
-            createdAt: relativeTime(order.createdAt),
-            status: order.status || "PENDING",
-            rawDistance:
-              typeof order.distance === "number"
-                ? order.distance
-                : parseFloat(order.distance) || 0,
-            rawEarnings:
-              typeof order.earnings === "number"
-                ? order.earnings
-                : parseFloat(order.earnings) || 0,
-            rawCreatedAt: orderCreatedAt.getTime(),
-            minutesAgo: Math.floor(
-              (Date.now() - orderCreatedAt.getTime()) / 60000
-            ),
-            priorityLevel: order.priorityLevel || 1,
-            shopLatitude: order.shopLatitude,
-            shopLongitude: order.shopLongitude,
-            customerLatitude: order.customerLatitude,
-            customerLongitude: order.customerLongitude,
-            travelTimeMinutes: order.travelTimeMinutes,
-            orderType: order.orderType || "regular",
-            reel: order.reel,
-            quantity: order.quantity,
-            deliveryNote: order.deliveryNote,
-            customerName: order.customerName,
-            customerPhone: order.customerPhone,
-          };
-          return [newOrder, ...prev];
-        }
-        return prev;
-      });
-
-      // Update sorted orders
-      setSortedOrders((prev) => {
-        const exists = prev.some(
-          (existingOrder) => existingOrder.id === order.id
-        );
-        if (!exists) {
-          const orderCreatedAt = new Date(order.createdAt);
-          const newOrder = {
-            id: order.id,
-            shopName: order.shopName || "Unknown Shop",
-            shopAddress: order.shopAddress || "No address available",
-            customerAddress: order.customerAddress || "No address available",
-            distance: `${order.distance} km`,
-            items: order.itemsCount || 0,
-            total: (order.earnings || 0).toString(),
-            estimatedEarnings: (order.earnings || 0).toString(),
-            createdAt: relativeTime(order.createdAt),
-            status: order.status || "PENDING",
-            rawDistance:
-              typeof order.distance === "number"
-                ? order.distance
-                : parseFloat(order.distance) || 0,
-            rawEarnings:
-              typeof order.earnings === "number"
-                ? order.earnings
-                : parseFloat(order.earnings) || 0,
-            rawCreatedAt: orderCreatedAt.getTime(),
-            minutesAgo: Math.floor(
-              (Date.now() - orderCreatedAt.getTime()) / 60000
-            ),
-            priorityLevel: order.priorityLevel || 1,
-            shopLatitude: order.shopLatitude,
-            shopLongitude: order.shopLongitude,
-            customerLatitude: order.customerLatitude,
-            customerLongitude: order.customerLongitude,
-            travelTimeMinutes: order.travelTimeMinutes,
-            orderType: order.orderType || "regular",
-            reel: order.reel,
-            quantity: order.quantity,
-            deliveryNote: order.deliveryNote,
-            customerName: order.customerName,
-            customerPhone: order.customerPhone,
-          };
-          return sortOrders([newOrder, ...prev], sortBy);
-        }
-        return prev;
-      });
-    };
-
-    const handleWebSocketOrderExpired = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const { orderId } = customEvent.detail;
-
-      // Remove order from both lists seamlessly
-      setAvailableOrders((prev) =>
-        prev.filter((order) => order.id !== orderId)
-      );
-      setSortedOrders((prev) => prev.filter((order) => order.id !== orderId));
-    };
-
-    window.addEventListener("websocket-new-order", handleWebSocketNewOrder);
-    window.addEventListener(
-      "websocket-order-expired",
-      handleWebSocketOrderExpired
-    );
-
-    return () => {
-      window.removeEventListener(
-        "websocket-new-order",
-        handleWebSocketNewOrder
-      );
-      window.removeEventListener(
-        "websocket-order-expired",
-        handleWebSocketOrderExpired
-      );
-    };
-  }, [sortBy, sortOrders]);
 
   // Show skeleton loading when initializing or map not loaded
-  const showSkeleton = isInitializing || !mapLoaded || (isLoading && availableOrders.length === 0);
+  // Don't show skeleton based on isLoading when map is loaded and initialized - map should show even without orders
+  const showSkeleton = isInitializing || !mapLoaded;
+  
+  // Debug skeleton condition
+  useEffect(() => {
+    console.log("🗺️ [ShopperDashboard] Skeleton condition check:", {
+      showSkeleton,
+      isInitializing,
+      mapLoaded,
+      isLoading,
+      availableOrdersLength: availableOrders.length,
+      isOnline,
+      reason: isInitializing ? "isInitializing" : !mapLoaded ? "!mapLoaded" : "none",
+    });
+  }, [showSkeleton, isInitializing, mapLoaded, isLoading, availableOrders.length, isOnline]);
 
   // Skeleton loading component
   const SkeletonLoader = () => (
@@ -689,8 +594,16 @@ export default function ShopperDashboard() {
 
   // Show skeleton while loading
   if (showSkeleton) {
+    console.log("🗺️ [ShopperDashboard] Rendering SkeletonLoader - conditions:", {
+      isInitializing,
+      mapLoaded,
+      isLoading,
+      availableOrdersLength: availableOrders.length,
+    });
     return <SkeletonLoader />;
   }
+  
+  console.log("🗺️ [ShopperDashboard] Rendering actual map component");
 
   return (
     <ShopperLayout>
@@ -705,14 +618,17 @@ export default function ShopperDashboard() {
       >
         {/* Map Section */}
         <div 
-          className={isMobile ? "fixed z-0" : "w-full"}
+          className={isMobile ? "fixed z-10" : "w-full"}
           style={isMobile ? { 
             left: 0,
             right: 0,
             top: '3.5rem',
             width: '100vw',
-            height: 'calc(100vh - 3.5rem)'
-          } : {}}
+            height: 'calc(100vh - 3.5rem)',
+            pointerEvents: 'auto'
+          } : {
+            pointerEvents: 'auto'
+          }}
         >
           <MapSection
             mapLoaded={mapLoaded}

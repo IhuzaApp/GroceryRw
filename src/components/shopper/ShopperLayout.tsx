@@ -82,7 +82,14 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
             lat: pos.coords.latitude,
             lng: pos.coords.longitude,
           }),
-        (err) => console.error("Error fetching location:", err),
+        (err) => {
+          // Silently handle geolocation errors (timeout, permission denied, etc.)
+          // This is expected when cookies aren't available and geolocation fails
+          // Only log in development for debugging
+          if (process.env.NODE_ENV === "development") {
+            console.log("Geolocation unavailable or timed out (this is normal if location cookies aren't set):", err.message);
+          }
+        },
         { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
       );
     }
