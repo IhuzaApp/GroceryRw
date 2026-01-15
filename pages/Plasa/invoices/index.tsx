@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import ShopperLayout from "../../../src/components/shopper/ShopperLayout";
 import { Loader, Button } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
@@ -20,6 +21,7 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
   initialInvoices = [],
   initialError = null,
 }) => {
+  const router = useRouter();
   const [invoices, setInvoices] = useState<Invoice[]>(initialInvoices);
   const [loading, setLoading] = useState(!initialInvoices.length);
   const [error, setError] = useState<string | null>(initialError);
@@ -64,20 +66,18 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
         navigator.userAgent
       );
-    const baseUrl =
-      process.env.NODE_ENV === "production"
-        ? process.env.NEXT_PUBLIC_APP_URL || "https://plas.rw"
-        : window.location.origin;
 
     if (isMobile) {
-      // For mobile, open PDF directly
-      const pdfUrl = `${baseUrl}/api/invoices/${invoiceId}?pdf=true`;
-      window.open(pdfUrl, "_blank");
+      // For mobile, navigate to PDF in same tab
+      const pdfUrl = `/api/invoices/${invoiceId}?pdf=true`;
+      router.push(pdfUrl);
     } else {
-      // For desktop, open invoice page with hash
-      const hash = orderType === "reel" ? "#reel" : "#regularOrder";
-      const invoiceUrl = `${baseUrl}/Plasa/invoices/${invoiceId}${hash}`;
-      window.open(invoiceUrl, "_blank");
+      // For desktop, navigate to invoice page with hash in same tab
+      const hash = orderType === "reel" ? "reel" : "regularOrder";
+      router.push({
+        pathname: `/Plasa/invoices/${invoiceId}`,
+        hash: hash,
+      });
     }
   };
 
