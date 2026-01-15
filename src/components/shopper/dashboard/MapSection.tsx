@@ -1945,12 +1945,15 @@ export default function MapSection({
         userMarkerRef.current.remove();
       }
 
-      reduceToastDuplicates(
-        "going-offline",
-        <Message showIcon type="info" header="Offline">
-          Your location is now hidden. You are offline.
+      // Show simple offline toast
+      toaster.push(
+        <Message type="info" closable>
+          You are now offline
         </Message>,
-        { placement: "topEnd", duration: 3000 }
+        {
+          placement: "topEnd",
+          duration: 3000,
+        }
       );
     }
   };
