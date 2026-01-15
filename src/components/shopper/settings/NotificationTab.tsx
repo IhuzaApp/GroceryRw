@@ -20,6 +20,17 @@ import PlusIcon from "@rsuite/icons/Plus";
 import CloseIcon from "@rsuite/icons/Close";
 import toast from "react-hot-toast";
 
+interface NotificationItem {
+  title: string;
+  body: string;
+  timestamp: number;
+  type: string;
+  read: boolean;
+  orderId?: string;
+  conversationId?: string;
+  senderName?: string;
+}
+
 interface Location {
   id: string;
   name: string;
@@ -85,6 +96,10 @@ export default function NotificationTab() {
     google.maps.places.AutocompletePrediction[]
   >([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  
+  // Notification history state
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [showNotificationHistory, setShowNotificationHistory] = useState(false);
 
   // Load existing settings
   useEffect(() => {
@@ -92,6 +107,33 @@ export default function NotificationTab() {
       loadNotificationSettings();
     }
   }, [session?.user?.id]);
+
+  // Load notification history
+  const loadNotificationHistory = () => {
+    try {
+      const history = JSON.parse(
+        localStorage.getItem("fcm_notification_history") || "[]"
+      );
+      // Filter for new_order and batch_orders types
+      const orderNotifications = history.filter(
+        (n: NotificationItem) => n.type === "new_order" || n.type === "batch_orders"
+      );
+      // Sort by timestamp (newest first)
+      const sortedNotifications = orderNotifications.sort(
+        (a: NotificationItem, b: NotificationItem) => b.timestamp - a.timestamp
+      );
+      setNotifications(sortedNotifications);
+    } catch (error) {
+      console.error("Error loading notification history:", error);
+    }
+  };
+
+  // Load notifications on mount and refresh periodically
+  useEffect(() => {
+    loadNotificationHistory();
+    const interval = setInterval(loadNotificationHistory, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Initialize Google Maps services
   useEffect(() => {
@@ -727,6 +769,244 @@ export default function NotificationTab() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Notification History Section */}
+      <div
+        className={`mb-6 rounded-lg border p-4 ${
+          theme === "dark"
+            ? "border-gray-700 bg-gray-800"
+            : "border-gray-200 bg-white"
+        }`}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h4
+            className={`font-medium ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}
+          >
+            New Order Notifications
+          </h4>
+          <Button
+            appearance="subtle"
+            size="sm"
+            onClick={() => {
+              setShowNotificationHistory(!showNotificationHistory);
+              if (!showNotificationHistory) {
+                loadNotificationHistory();
+              }
+            }}
+          >
+            {showNotificationHistory ? "Hide" : "Show"} History
+          </Button>
+        </div>
+        
+        {showNotificationHistory && (
+          <div className="max-h-96 overflow-y-auto">
+            {notifications.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                <p>No new order notifications yet</p>
+                <p className="text-xs mt-1">
+                  New order notifications will appear here
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {notifications.map((notification, index) => (
+                  <div
+                    key={index}
+                    className={`cursor-pointer rounded border p-3 transition-colors ${
+                      theme === "dark"
+                        ? "border-gray-600 hover:bg-gray-700"
+                        : "border-gray-200 hover:bg-gray-50"
+                    } ${
+                      !notification.read
+                        ? "bg-blue-50 dark:bg-blue-900/20"
+                        : ""
+                    }`}
+                    onClick={() => {
+                      // Mark as read when clicked
+                      if (!notification.read) {
+                        const allHistory = JSON.parse(
+                          localStorage.getItem("fcm_notification_history") || "[]"
+                        );
+                        const updatedHistory = allHistory.map(
+                          (n: NotificationItem) =>
+                            n.timestamp === notification.timestamp
+                              ? { ...n, read: true }
+                              : n
+                        );
+                        localStorage.setItem(
+                          "fcm_notification_history",
+                          JSON.stringify(updatedHistory)
+                        );
+                        loadNotificationHistory();
+                      }
+
+                      // Navigate to relevant page
+                      if (
+                        (notification.type === "new_order" ||
+                          notification.type === "batch_orders") &&
+                        notification.orderId
+                      ) {
+                        window.location.href = `/Plasa/active-batches`;
+                      }
+                    }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`h-2 w-2 rounded-full ${
+                            !notification.read
+                              ? "animate-pulse bg-blue-500"
+                              : "bg-gray-400"
+                          }`}
+                        />
+                        <div className="flex-shrink-0">
+                          {getNotificationIcon(notification.type)}
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium">{notification.title}</h4>
+                          <span className="text-xs text-gray-500">
+                            {formatTime(notification.timestamp)}
+                          </span>
+                        </div>
+                        <p
+                          className={`mt-1 text-sm ${
+                            theme === "dark" ? "text-gray-400" : "text-gray-600"
+                          }`}
+                        >
+                          {notification.body}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Notification History Section */}
+      <div
+        className={`mb-6 rounded-lg border p-4 ${
+          theme === "dark"
+            ? "border-gray-700 bg-gray-800"
+            : "border-gray-200 bg-white"
+        }`}
+      >
+        <div className="mb-4 flex items-center justify-between">
+          <h4
+            className={`font-medium ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}
+          >
+            New Order Notifications
+          </h4>
+          <Button
+            appearance="subtle"
+            size="sm"
+            onClick={() => {
+              setShowNotificationHistory(!showNotificationHistory);
+              if (!showNotificationHistory) {
+                loadNotificationHistory();
+              }
+            }}
+          >
+            {showNotificationHistory ? "Hide" : "Show"} History
+          </Button>
+        </div>
+        
+        {showNotificationHistory && (
+          <div className="max-h-96 overflow-y-auto">
+            {notifications.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                <p>No new order notifications yet</p>
+                <p className="mt-1 text-xs">
+                  New order notifications will appear here
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {notifications.map((notification, index) => (
+                  <div
+                    key={index}
+                    className={`cursor-pointer rounded border p-3 transition-colors ${
+                      theme === "dark"
+                        ? "border-gray-600 hover:bg-gray-700"
+                        : "border-gray-200 hover:bg-gray-50"
+                    } ${
+                      !notification.read
+                        ? "bg-blue-50 dark:bg-blue-900/20"
+                        : ""
+                    }`}
+                    onClick={() => {
+                      // Mark as read when clicked
+                      if (!notification.read) {
+                        const allHistory = JSON.parse(
+                          localStorage.getItem("fcm_notification_history") || "[]"
+                        );
+                        const updatedHistory = allHistory.map(
+                          (n: NotificationItem) =>
+                            n.timestamp === notification.timestamp
+                              ? { ...n, read: true }
+                              : n
+                        );
+                        localStorage.setItem(
+                          "fcm_notification_history",
+                          JSON.stringify(updatedHistory)
+                        );
+                        loadNotificationHistory();
+                      }
+
+                      // Navigate to relevant page
+                      if (
+                        (notification.type === "new_order" ||
+                          notification.type === "batch_orders") &&
+                        notification.orderId
+                      ) {
+                        window.location.href = `/Plasa/active-batches`;
+                      }
+                    }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`h-2 w-2 rounded-full ${
+                            !notification.read
+                              ? "animate-pulse bg-blue-500"
+                              : "bg-gray-400"
+                          }`}
+                        />
+                        <div className="flex-shrink-0">
+                          {getNotificationIcon(notification.type)}
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium">{notification.title}</h4>
+                          <span className="text-xs text-gray-500">
+                            {formatTime(notification.timestamp)}
+                          </span>
+                        </div>
+                        <p
+                          className={`mt-1 text-sm ${
+                            theme === "dark" ? "text-gray-400" : "text-gray-600"
+                          }`}
+                        >
+                          {notification.body}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Save Button */}
