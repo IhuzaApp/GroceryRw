@@ -1057,16 +1057,38 @@ export default function MapSection({
       const panes = (map as any)._panes;
       if (!panes || !panes.overlayPane) {
         console.warn(
-          `Map panes not initialized when adding marker for ${name}`
+          `🗺️ [MapSection] Map panes not initialized when adding marker for ${name} - will retry`
         );
+        // Retry after a short delay if panes aren't ready
+        setTimeout(() => {
+          if (map && (map as any)._panes && (map as any)._panes.overlayPane) {
+            try {
+              marker.addTo(map);
+              console.log(`🗺️ [MapSection] Successfully added marker for ${name} after retry`);
+            } catch (err) {
+              console.error(`🗺️ [MapSection] Error adding marker for ${name} after retry:`, err);
+            }
+          }
+        }, 100);
         return false;
       }
 
       // Check if overlayPane is in the DOM
       if (!document.body.contains(panes.overlayPane)) {
         console.warn(
-          `Map overlayPane not in DOM when adding marker for ${name}`
+          `🗺️ [MapSection] Map overlayPane not in DOM when adding marker for ${name} - will retry`
         );
+        // Retry after a short delay
+        setTimeout(() => {
+          if (map && (map as any)._panes && (map as any)._panes.overlayPane && document.body.contains((map as any)._panes.overlayPane)) {
+            try {
+              marker.addTo(map);
+              console.log(`🗺️ [MapSection] Successfully added marker for ${name} after retry`);
+            } catch (err) {
+              console.error(`🗺️ [MapSection] Error adding marker for ${name} after retry:`, err);
+            }
+          }
+        }, 100);
         return false;
       }
 
@@ -2028,20 +2050,25 @@ export default function MapSection({
       // Reset active tracking state
       setIsActivelyTracking(false);
 
-      // Reset map view when offline
+      // Reset map view when offline - only if map is fully ready
       if (
         mapInstanceRef.current &&
         typeof mapInstanceRef.current.setView === "function" &&
         mapInstanceRef.current.getContainer() &&
-        (mapInstanceRef.current as any)._loaded
+        (mapInstanceRef.current as any)._loaded &&
+        (mapInstanceRef.current as any)._panes &&
+        (mapInstanceRef.current as any)._panes.overlayPane
       ) {
         try {
           mapInstanceRef.current.setView([-1.9706, 30.1044], 14);
         } catch (error) {
-          console.error("Error resetting map view:", error);
+          console.error("🗺️ [MapSection] Error resetting map view:", error);
         }
       } else {
-        console.warn("Map not ready for resetting view");
+        // Silently skip if map isn't ready - this is expected during initialization
+        if (process.env.NODE_ENV === "development") {
+          console.log("🗺️ [MapSection] Map not ready for resetting view (this is normal during initialization)");
+        }
       }
     }
 
@@ -2315,8 +2342,14 @@ export default function MapSection({
               
               // Check if map is fully initialized with all panes
               if (isReady) {
-                console.log("🗺️ [MapSection] Map is ready! Calling initMapSequence");
-                initMapSequence(mapInstance);
+                console.log("🗺️ [MapSection] Map is ready! Waiting additional 100ms for panes to fully initialize before adding markers");
+                // Add a small delay to ensure panes are fully ready for marker addition
+                setTimeout(() => {
+                  if (!isCancelled && mapInstance) {
+                    console.log("🗺️ [MapSection] Calling initMapSequence after delay");
+                    initMapSequence(mapInstance);
+                  }
+                }, 100);
               } else {
                 // Retry after a short delay if map isn't ready yet
                 console.log("🗺️ [MapSection] Map not ready yet, retrying in 50ms");
@@ -3631,10 +3664,10 @@ export default function MapSection({
             </button>
           )}
 
-          {/* Add tracking mode indicator */}
+          {/* Add tracking mode indicator - hidden on mobile */}
           {isOnline && (
             <div
-              className={`absolute bottom-20 left-1/2 z-[1000] -translate-x-1/2 transform rounded-xl px-4 py-2 text-sm font-medium shadow-lg backdrop-blur-lg transition-all duration-200 ${
+              className={`absolute bottom-20 left-1/2 z-[1000] hidden -translate-x-1/2 transform rounded-xl px-4 py-2 text-sm font-medium shadow-lg backdrop-blur-lg transition-all duration-200 md:block ${
                 theme === "dark"
                   ? "border border-gray-700/50 bg-gray-800/90 text-gray-100"
                   : "border border-gray-200/50 bg-white/90 text-gray-900"
@@ -3718,41 +3751,47 @@ export default function MapSection({
             <button
               onClick={refreshLocation}
               disabled={isRefreshingLocation}
-              className={`absolute bottom-24 right-5 z-[1001] h-12 w-12 rounded-xl shadow-lg backdrop-blur-lg transition-all duration-200 hover:shadow-xl active:scale-95 md:bottom-5 md:h-10 md:w-10 ${
+              className={`absolute bottom-36 right-5 z-[1001] h-10 w-10 rounded-xl shadow-lg backdrop-blur-lg transition-all duration-200 hover:shadow-xl active:scale-95 md:bottom-5 md:h-10 md:w-10 ${
                 theme === "dark"
                   ? isRefreshingLocation
-                    ? "bg-gradient-to-r from-blue-700 to-blue-800 text-gray-300 shadow-blue-700/30"
-                    : "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-blue-500/30 hover:shadow-blue-500/40"
+                    ? "bg-gradient-to-r from-green-700 to-green-800 text-gray-300 shadow-green-700/30"
+                    : "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-green-500/30 hover:shadow-green-500/40"
                   : isRefreshingLocation
-                  ? "bg-gradient-to-r from-blue-300 to-blue-400 text-white shadow-blue-300/30"
-                  : "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-blue-500/30 hover:shadow-blue-500/40"
+                  ? "bg-gradient-to-r from-green-300 to-green-400 text-white shadow-green-300/30"
+                  : "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-green-500/30 hover:shadow-green-500/40"
               }`}
               title="Refresh location"
             >
               <div className="flex h-full w-full items-center justify-center p-2">
                 {isRefreshingLocation ? (
-                  <span
-                    className={`inline-block h-full w-full animate-spin rounded-full border-2 ${
-                      theme === "dark"
-                        ? "border-gray-300 border-t-transparent"
-                        : "border-white border-t-transparent"
-                    }`}
-                  ></span>
-                ) : (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-full w-full"
+                    className="h-5 w-5 animate-spin"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
-                    strokeWidth={2}
+                    strokeWidth={2.5}
                   >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      d="M1 4v6h6M23 20v-6h-6"
+                      d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 4.992h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
                     />
-                    <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
+                  </svg>
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 4.992h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+                    />
                   </svg>
                 )}
               </div>
