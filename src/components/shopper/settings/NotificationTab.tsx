@@ -96,7 +96,7 @@ export default function NotificationTab() {
     google.maps.places.AutocompletePrediction[]
   >([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  
+
   // Notification history state
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [showNotificationHistory, setShowNotificationHistory] = useState(false);
@@ -116,7 +116,8 @@ export default function NotificationTab() {
       );
       // Filter for new_order and batch_orders types
       const orderNotifications = history.filter(
-        (n: NotificationItem) => n.type === "new_order" || n.type === "batch_orders"
+        (n: NotificationItem) =>
+          n.type === "new_order" || n.type === "batch_orders"
       );
       // Sort by timestamp (newest first)
       const sortedNotifications = orderNotifications.sort(
@@ -779,7 +780,7 @@ export default function NotificationTab() {
             : "border-gray-200 bg-white"
         }`}
       >
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <h4
             className={`font-medium ${
               theme === "dark" ? "text-white" : "text-gray-900"
@@ -800,13 +801,13 @@ export default function NotificationTab() {
             {showNotificationHistory ? "Hide" : "Show"} History
           </Button>
         </div>
-        
+
         {showNotificationHistory && (
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
                 <p>No new order notifications yet</p>
-                <p className="text-xs mt-1">
+                <p className="mt-1 text-xs">
                   New order notifications will appear here
                 </p>
               </div>
@@ -820,15 +821,14 @@ export default function NotificationTab() {
                         ? "border-gray-600 hover:bg-gray-700"
                         : "border-gray-200 hover:bg-gray-50"
                     } ${
-                      !notification.read
-                        ? "bg-blue-50 dark:bg-blue-900/20"
-                        : ""
+                      !notification.read ? "bg-blue-50 dark:bg-blue-900/20" : ""
                     }`}
                     onClick={() => {
                       // Mark as read when clicked
                       if (!notification.read) {
                         const allHistory = JSON.parse(
-                          localStorage.getItem("fcm_notification_history") || "[]"
+                          localStorage.getItem("fcm_notification_history") ||
+                            "[]"
                         );
                         const updatedHistory = allHistory.map(
                           (n: NotificationItem) =>
@@ -919,7 +919,7 @@ export default function NotificationTab() {
             {showNotificationHistory ? "Hide" : "Show"} History
           </Button>
         </div>
-        
+
         {showNotificationHistory && (
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
@@ -939,15 +939,14 @@ export default function NotificationTab() {
                         ? "border-gray-600 hover:bg-gray-700"
                         : "border-gray-200 hover:bg-gray-50"
                     } ${
-                      !notification.read
-                        ? "bg-blue-50 dark:bg-blue-900/20"
-                        : ""
+                      !notification.read ? "bg-blue-50 dark:bg-blue-900/20" : ""
                     }`}
                     onClick={() => {
                       // Mark as read when clicked
                       if (!notification.read) {
                         const allHistory = JSON.parse(
-                          localStorage.getItem("fcm_notification_history") || "[]"
+                          localStorage.getItem("fcm_notification_history") ||
+                            "[]"
                         );
                         const updatedHistory = allHistory.map(
                           (n: NotificationItem) =>

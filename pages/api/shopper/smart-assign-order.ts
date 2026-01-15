@@ -58,13 +58,7 @@ const GET_ELIGIBLE_ORDERS = gql`
         _and: [
           { status: { _eq: "PENDING" } }
           { shopper_id: { _is_null: true } }
-          {
-            _not: {
-              orderOffers: {
-                status: { _eq: "OFFERED" }
-              }
-            }
-          }
+          { _not: { orderOffers: { status: { _eq: "OFFERED" } } } }
         ]
       }
       order_by: { created_at: asc }
@@ -105,13 +99,7 @@ const GET_ELIGIBLE_REEL_ORDERS = gql`
         _and: [
           { status: { _eq: "PENDING" } }
           { shopper_id: { _is_null: true } }
-          {
-            _not: {
-              orderOffers: {
-                status: { _eq: "OFFERED" }
-              }
-            }
-          }
+          { _not: { orderOffers: { status: { _eq: "OFFERED" } } } }
         ]
       }
       order_by: { created_at: asc }
@@ -147,13 +135,7 @@ const GET_ELIGIBLE_RESTAURANT_ORDERS = gql`
         _and: [
           { status: { _eq: "PENDING" } }
           { shopper_id: { _is_null: true } }
-          {
-            _not: {
-              orderOffers: {
-                status: { _eq: "OFFERED" }
-              }
-            }
-          }
+          { _not: { orderOffers: { status: { _eq: "OFFERED" } } } }
         ]
       }
       order_by: { updated_at: asc_nulls_last, created_at: asc }
@@ -222,10 +204,7 @@ const GET_CURRENT_ROUND = gql`
 
 // Query to check if shopper has already declined a regular order
 const CHECK_SHOPPER_DECLINED_ORDER_REGULAR = gql`
-  query CheckShopperDeclinedOrderRegular(
-    $order_id: uuid!
-    $shopper_id: uuid!
-  ) {
+  query CheckShopperDeclinedOrderRegular($order_id: uuid!, $shopper_id: uuid!) {
     order_offers(
       where: {
         _and: [
@@ -654,14 +633,17 @@ export default async function handler(
     const activeOrderCount = activeOrders.length;
 
     if (activeOrderCount >= 2) {
-      console.log("🚫 Shopper already has 2 active orders (not delivered) - cannot receive new offers:", {
-        shopperId: user_id,
-        activeOrderCount: activeOrderCount,
-        orders: activeOrders.map((order: any) => ({
-          orderId: order.id,
-          status: order.status,
-        })),
-      });
+      console.log(
+        "🚫 Shopper already has 2 active orders (not delivered) - cannot receive new offers:",
+        {
+          shopperId: user_id,
+          activeOrderCount: activeOrderCount,
+          orders: activeOrders.map((order: any) => ({
+            orderId: order.id,
+            status: order.status,
+          })),
+        }
+      );
 
       return res.status(200).json({
         success: false,
@@ -678,7 +660,9 @@ export default async function handler(
     }
 
     if (activeOrderCount === 1) {
-      console.log("✅ Shopper has 1 active order - can still receive new offers (max 2 active orders)");
+      console.log(
+        "✅ Shopper has 1 active order - can still receive new offers (max 2 active orders)"
+      );
     } else {
       console.log("✅ Shopper has no active orders - can receive new offers");
     }
@@ -728,15 +712,18 @@ export default async function handler(
         activeOffer.reel_order_id ||
         activeOffer.restaurant_order_id;
 
-      console.log("🚫 Shopper already has an active OFFERED offer - cannot receive new offer:", {
-        shopperId: user_id,
-        offerId: activeOffer.id,
-        orderId: orderId,
-        orderType: activeOffer.order_type,
-        status: activeOffer.status,
-        expiresAt: activeOffer.expires_at,
-        round: activeOffer.round_number,
-      });
+      console.log(
+        "🚫 Shopper already has an active OFFERED offer - cannot receive new offer:",
+        {
+          shopperId: user_id,
+          offerId: activeOffer.id,
+          orderId: orderId,
+          orderType: activeOffer.order_type,
+          status: activeOffer.status,
+          expiresAt: activeOffer.expires_at,
+          round: activeOffer.round_number,
+        }
+      );
 
       return res.status(200).json({
         success: false,
@@ -750,7 +737,9 @@ export default async function handler(
       });
     }
 
-    console.log("✅ Shopper has no active orders or pending offers - can receive new offer");
+    console.log(
+      "✅ Shopper has no active orders or pending offers - can receive new offer"
+    );
 
     // ========================================================================
     // STEP 1: Find Eligible Orders
@@ -968,35 +957,38 @@ export default async function handler(
       // Check if shopper has already declined this order
       // Use separate queries for each order type to avoid null UUID issues
       let declinedCheck: any = { order_offers: [] };
-      
+
       try {
         if (order.orderType === "regular") {
-          declinedCheck = await hasuraClient.request(
+          declinedCheck = (await hasuraClient.request(
             CHECK_SHOPPER_DECLINED_ORDER_REGULAR,
             {
               order_id: order.id,
               shopper_id: user_id,
             }
-          ) as any;
+          )) as any;
         } else if (order.orderType === "reel") {
-          declinedCheck = await hasuraClient.request(
+          declinedCheck = (await hasuraClient.request(
             CHECK_SHOPPER_DECLINED_ORDER_REEL,
             {
               reel_order_id: order.id,
               shopper_id: user_id,
             }
-          ) as any;
+          )) as any;
         } else if (order.orderType === "restaurant") {
-          declinedCheck = await hasuraClient.request(
+          declinedCheck = (await hasuraClient.request(
             CHECK_SHOPPER_DECLINED_ORDER_RESTAURANT,
             {
               restaurant_order_id: order.id,
               shopper_id: user_id,
             }
-          ) as any;
+          )) as any;
         }
 
-        if (declinedCheck.order_offers && declinedCheck.order_offers.length > 0) {
+        if (
+          declinedCheck.order_offers &&
+          declinedCheck.order_offers.length > 0
+        ) {
           console.log(
             `❌ SKIP: Order ${order.id} was already declined by this shopper (round ${declinedCheck.order_offers[0].round_number})`
           );
@@ -1235,11 +1227,14 @@ export default async function handler(
 
       if (finalCheckOffer) {
         // Another request created the offer between our checks - extend it instead
-        console.log("🔄 Race condition detected - offer created by another request, extending:", {
-          existingOfferId: finalCheckOffer.id,
-          orderId: bestOrder.id,
-          shopperId: user_id,
-        });
+        console.log(
+          "🔄 Race condition detected - offer created by another request, extending:",
+          {
+            existingOfferId: finalCheckOffer.id,
+            orderId: bestOrder.id,
+            shopperId: user_id,
+          }
+        );
 
         const updateResult = (await hasuraClient.request(UPDATE_OFFER_EXPIRY, {
           offer_id: finalCheckOffer.id,
@@ -1283,12 +1278,18 @@ export default async function handler(
           });
         } catch (error: any) {
           // Handle potential unique constraint violation
-          if (error.message?.includes("duplicate") || error.message?.includes("unique constraint")) {
-            console.warn("⚠️ Duplicate offer detected during creation, checking for existing offer:", {
-              orderId: bestOrder.id,
-              shopperId: user_id,
-            });
-            
+          if (
+            error.message?.includes("duplicate") ||
+            error.message?.includes("unique constraint")
+          ) {
+            console.warn(
+              "⚠️ Duplicate offer detected during creation, checking for existing offer:",
+              {
+                orderId: bestOrder.id,
+                shopperId: user_id,
+              }
+            );
+
             // One final check - maybe another request created it
             let recoveryCheckData: any;
             if (bestOrder.orderType === "regular") {
@@ -1323,19 +1324,25 @@ export default async function handler(
             const recoveryOffer = recoveryCheckData.order_offers?.[0];
             if (recoveryOffer) {
               // Found it - extend instead
-              const updateResult = (await hasuraClient.request(UPDATE_OFFER_EXPIRY, {
-                offer_id: recoveryOffer.id,
-                expires_at: expiresAt,
-              })) as any;
+              const updateResult = (await hasuraClient.request(
+                UPDATE_OFFER_EXPIRY,
+                {
+                  offer_id: recoveryOffer.id,
+                  expires_at: expiresAt,
+                }
+              )) as any;
 
               offerId = recoveryOffer.id;
               offerRound = recoveryOffer.round_number;
               isExtendingOffer = true; // Mark that we're extending, not creating
 
-              console.log("✅ Recovered from duplicate - extended existing offer:", {
-                offerId,
-                round: offerRound,
-              });
+              console.log(
+                "✅ Recovered from duplicate - extended existing offer:",
+                {
+                  offerId,
+                  round: offerRound,
+                }
+              );
             } else {
               throw error; // Re-throw if we can't recover
             }

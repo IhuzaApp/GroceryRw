@@ -101,7 +101,9 @@ export default function NotificationSystem({
 
       // If shopper has 2 or more orders, clear any pending notifications
       if (count >= 2 && selectedOrder) {
-        console.log("🧹 Clearing notifications: Shopper reached 2 active orders");
+        console.log(
+          "🧹 Clearing notifications: Shopper reached 2 active orders"
+        );
         setShowMapModal(false);
         setSelectedOrder(null);
         onNotificationShow?.(null);
@@ -165,7 +167,6 @@ export default function NotificationSystem({
 
     return () => {
       instances.delete(componentId.current);
-
     };
   }, []);
 
@@ -409,10 +410,13 @@ export default function NotificationSystem({
       orders.forEach((order: any) => {
         // Check if shopper already has 2 or more active orders - CRITICAL GUARD
         if (activeOrderCount >= 2) {
-          console.log("🚫 FCM BATCH: Blocking - shopper already has 2 active orders", {
-            orderId: order.id,
-            activeOrderCount,
-          });
+          console.log(
+            "🚫 FCM BATCH: Blocking - shopper already has 2 active orders",
+            {
+              orderId: order.id,
+              activeOrderCount,
+            }
+          );
           return;
         }
 
@@ -688,7 +692,11 @@ export default function NotificationSystem({
         })
       );
     } catch (error) {
-      logger.warn("Failed to store active offer in localStorage", "NotificationSystem", error);
+      logger.warn(
+        "Failed to store active offer in localStorage",
+        "NotificationSystem",
+        error
+      );
     }
 
     await playNotificationSound({ enabled: true, volume: 0.7 });
@@ -813,10 +821,13 @@ export default function NotificationSystem({
 
     // Check if shopper already has 2 or more active orders - CRITICAL GUARD
     if (activeOrderCount >= 2 && type === "info") {
-      console.log("🚫 showToast: Blocking - shopper already has 2 active orders", {
-        orderId: order.id,
-        activeOrderCount,
-      });
+      console.log(
+        "🚫 showToast: Blocking - shopper already has 2 active orders",
+        {
+          orderId: order.id,
+          activeOrderCount,
+        }
+      );
       return;
     }
 
@@ -1222,11 +1233,13 @@ export default function NotificationSystem({
         );
 
         // Clean up expired declined orders
-        Array.from(declinedOrders.current.entries()).forEach(([orderId, expiresAt]) => {
-          if (expiresAt <= currentTime) {
-            declinedOrders.current.delete(orderId);
+        Array.from(declinedOrders.current.entries()).forEach(
+          ([orderId, expiresAt]) => {
+            if (expiresAt <= currentTime) {
+              declinedOrders.current.delete(orderId);
+            }
           }
-        });
+        );
 
         // Check if user already has an active order review
         const currentUserAssignment = batchAssignments.current.find(
@@ -1313,14 +1326,14 @@ export default function NotificationSystem({
           count: data.activeOrderCount,
         });
         setActiveOrderCount(data.activeOrderCount || 2);
-        
+
         // Clear any pending notifications since shopper can't accept more
         if (selectedOrder) {
           setShowMapModal(false);
           setSelectedOrder(null);
           onNotificationShow?.(null);
         }
-        
+
         lastNotificationTime.current = currentTime;
       } else {
         // Update lastNotificationTime even when no orders found to prevent rapid polling
@@ -1426,7 +1439,9 @@ export default function NotificationSystem({
       // This prevents the card from flashing on page refresh/change if they have 2 orders
       const currentCount = await fetchActiveOrderCount();
       if (currentCount >= 2) {
-        console.log("🚫 Blocking active offer check: Shopper has 2+ active orders");
+        console.log(
+          "🚫 Blocking active offer check: Shopper has 2+ active orders"
+        );
         localStorage.removeItem("active_offer");
         // Ensure any existing card is hidden
         setShowMapModal(false);
@@ -1477,7 +1492,7 @@ export default function NotificationSystem({
           ...data.order,
           offerId: data.offerId, // Include offerId from API response
         };
-        
+
         // Final guard before showing
         if (activeOrderCount < 2) {
           await showNewOrderNotification(order, Date.now());
@@ -1577,9 +1592,7 @@ export default function NotificationSystem({
           }}
         >
           {/* Bottom Sheet Card */}
-          <div
-            className="relative w-full rounded-t-3xl bg-white dark:bg-gray-800 shadow-2xl md:max-w-md md:rounded-2xl"
-          >
+          <div className="relative w-full rounded-t-3xl bg-white shadow-2xl dark:bg-gray-800 md:max-w-md md:rounded-2xl">
             {/* Drag Handle */}
             <div className="flex justify-center py-3">
               <div className="h-1 w-12 rounded-full bg-gray-300 dark:bg-gray-600"></div>
@@ -1607,7 +1620,9 @@ export default function NotificationSystem({
                   </div>
                   {/* Shop Name */}
                   <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Shop</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Shop
+                    </p>
                     <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
                       {selectedOrder.shopName}
                     </p>
@@ -1681,7 +1696,9 @@ export default function NotificationSystem({
                     <div className="h-2 w-2 rounded-full bg-white"></div>
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">You</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      You
+                    </p>
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       {currentLocation
                         ? `${currentLocation.lat.toFixed(
@@ -1715,7 +1732,7 @@ export default function NotificationSystem({
                         </p>
                       </div>
                       {/* Time Badge */}
-                      <div className="ml-2 flex items-center space-x-1 rounded-full bg-green-50 dark:bg-green-900/30 px-2 py-1">
+                      <div className="ml-2 flex items-center space-x-1 rounded-full bg-green-50 px-2 py-1 dark:bg-green-900/30">
                         <svg
                           className="h-3 w-3 text-green-600 dark:text-green-400"
                           fill="none"
@@ -1743,7 +1760,7 @@ export default function NotificationSystem({
               {/* Order Details */}
               <div className="mb-5 space-y-3">
                 {/* Items and Earnings */}
-                <div className="flex items-center justify-between rounded-lg bg-gray-50 dark:bg-gray-700 px-4 py-3">
+                <div className="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3 dark:bg-gray-700">
                   <div className="flex items-center space-x-2">
                     <svg
                       className="h-5 w-5 text-gray-600 dark:text-gray-300"
@@ -1798,7 +1815,9 @@ export default function NotificationSystem({
                       return;
                     }
 
-                    setDecliningOrders((prev) => new Set(prev).add(selectedOrder.id));
+                    setDecliningOrders((prev) =>
+                      new Set(prev).add(selectedOrder.id)
+                    );
 
                     declineClickCount.current += 1;
 
@@ -1808,21 +1827,26 @@ export default function NotificationSystem({
 
                     try {
                       // Call the decline-offer API to update the database
-                      const response = await fetch("/api/shopper/decline-offer", {
-                        method: "POST",
-                        headers: {
-                          "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                          orderId: orderId,
-                          shopperId: session.user.id,
-                        }),
-                      });
+                      const response = await fetch(
+                        "/api/shopper/decline-offer",
+                        {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                            orderId: orderId,
+                            shopperId: session.user.id,
+                          }),
+                        }
+                      );
 
                       const data = await response.json();
 
                       if (!response.ok) {
-                        throw new Error(data.error || "Failed to decline offer");
+                        throw new Error(
+                          data.error || "Failed to decline offer"
+                        );
                       }
 
                       console.log("✅ Offer declined successfully", {
@@ -1844,9 +1868,12 @@ export default function NotificationSystem({
                           "declined_orders",
                           JSON.stringify(declinedObj)
                         );
-                        console.log("💾 Saved declined orders to localStorage", {
-                          count: declinedOrders.current.size,
-                        });
+                        console.log(
+                          "💾 Saved declined orders to localStorage",
+                          {
+                            count: declinedOrders.current.size,
+                          }
+                        );
                       } catch (error) {
                         console.error(
                           "Failed to save declined orders to localStorage:",
@@ -1858,7 +1885,11 @@ export default function NotificationSystem({
                       try {
                         localStorage.removeItem("active_offer");
                       } catch (error) {
-                        logger.warn("Failed to clear active offer from localStorage", "NotificationSystem", error);
+                        logger.warn(
+                          "Failed to clear active offer from localStorage",
+                          "NotificationSystem",
+                          error
+                        );
                       }
 
                       // Set decline cooldown (10 seconds before showing next notification)
@@ -1868,9 +1899,10 @@ export default function NotificationSystem({
                       removeToastForOrder(orderId);
 
                       // Remove from local state
-                      batchAssignments.current = batchAssignments.current.filter(
-                        (assignment) => assignment.orderId !== orderId
-                      );
+                      batchAssignments.current =
+                        batchAssignments.current.filter(
+                          (assignment) => assignment.orderId !== orderId
+                        );
 
                       // Close the notification modal
                       setShowMapModal(false);
@@ -1889,7 +1921,9 @@ export default function NotificationSystem({
                       toast.success("Order declined");
                     } catch (error) {
                       const errorMessage =
-                        error instanceof Error ? error.message : "Failed to decline order";
+                        error instanceof Error
+                          ? error.message
+                          : "Failed to decline order";
                       console.error("❌ Error declining offer:", error);
                       toast.error(errorMessage);
                       // Still close the modal even if API call failed
@@ -1904,9 +1938,13 @@ export default function NotificationSystem({
                       });
                     }
                   }}
-                  disabled={decliningOrders.has(selectedOrder.id) || acceptingOrders.has(selectedOrder.id)}
+                  disabled={
+                    decliningOrders.has(selectedOrder.id) ||
+                    acceptingOrders.has(selectedOrder.id)
+                  }
                   className={`flex-1 rounded-xl py-4 text-base font-bold text-white shadow-lg transition-all active:scale-95 ${
-                    decliningOrders.has(selectedOrder.id) || acceptingOrders.has(selectedOrder.id)
+                    decliningOrders.has(selectedOrder.id) ||
+                    acceptingOrders.has(selectedOrder.id)
                       ? "cursor-not-allowed bg-red-400"
                       : "bg-red-500 hover:bg-red-600"
                   }`}
@@ -1934,7 +1972,9 @@ export default function NotificationSystem({
                         ></path>
                       </svg>
                     )}
-                    {decliningOrders.has(selectedOrder.id) ? "Declining..." : "Decline"}
+                    {decliningOrders.has(selectedOrder.id)
+                      ? "Declining..."
+                      : "Decline"}
                   </span>
                 </button>
 
@@ -1974,9 +2014,13 @@ export default function NotificationSystem({
                       );
                     }
                   }}
-                  disabled={acceptingOrders.has(selectedOrder.id) || decliningOrders.has(selectedOrder.id)}
+                  disabled={
+                    acceptingOrders.has(selectedOrder.id) ||
+                    decliningOrders.has(selectedOrder.id)
+                  }
                   className={`flex-1 rounded-xl py-4 text-base font-bold text-white shadow-lg transition-all active:scale-95 ${
-                    acceptingOrders.has(selectedOrder.id) || decliningOrders.has(selectedOrder.id)
+                    acceptingOrders.has(selectedOrder.id) ||
+                    decliningOrders.has(selectedOrder.id)
                       ? "cursor-not-allowed bg-green-400"
                       : "bg-green-500 hover:bg-green-600"
                   }`}

@@ -87,7 +87,10 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
           // This is expected when cookies aren't available and geolocation fails
           // Only log in development for debugging
           if (process.env.NODE_ENV === "development") {
-            console.log("Geolocation unavailable or timed out (this is normal if location cookies aren't set):", err.message);
+            console.log(
+              "Geolocation unavailable or timed out (this is normal if location cookies aren't set):",
+              err.message
+            );
           }
         },
         { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }

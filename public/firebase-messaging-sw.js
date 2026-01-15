@@ -16,8 +16,13 @@ const messaging = firebase.messaging();
 
 // Handle background messages
 messaging.onBackgroundMessage((payload) => {
-  const notificationTitle = payload.notification?.title || payload.data?.title || "New Message";
-  const notificationBody = payload.notification?.body || payload.data?.body || payload.data?.message || "You have a new message";
+  const notificationTitle =
+    payload.notification?.title || payload.data?.title || "New Message";
+  const notificationBody =
+    payload.notification?.body ||
+    payload.data?.body ||
+    payload.data?.message ||
+    "You have a new message";
   const notificationOptions = {
     body: notificationBody,
     icon: "/assets/logos/PlasIcon.png",

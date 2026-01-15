@@ -86,24 +86,32 @@ export default function ShopperHeader() {
             onClick={async () => {
               if (isOnline) {
                 // Going offline - clear location cookies
-                document.cookie = "user_latitude=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-                document.cookie = "user_longitude=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                document.cookie =
+                  "user_latitude=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                document.cookie =
+                  "user_longitude=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                 setIsOnline(false);
               } else {
                 // Going online - get current location
                 if (navigator.geolocation) {
                   try {
-                    const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-                      navigator.geolocation.getCurrentPosition(
-                        resolve,
-                        reject,
-                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-                      );
-                    });
-                    
+                    const position = await new Promise<GeolocationPosition>(
+                      (resolve, reject) => {
+                        navigator.geolocation.getCurrentPosition(
+                          resolve,
+                          reject,
+                          {
+                            enableHighAccuracy: true,
+                            timeout: 10000,
+                            maximumAge: 0,
+                          }
+                        );
+                      }
+                    );
+
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
-                    
+
                     // Set location cookies
                     document.cookie = `user_latitude=${lat}; path=/; max-age=86400; SameSite=Lax`;
                     document.cookie = `user_longitude=${lng}; path=/; max-age=86400; SameSite=Lax`;
@@ -111,13 +119,15 @@ export default function ShopperHeader() {
                   } catch (error) {
                     console.error("Error getting location:", error);
                     // Show error toast
-                    toast.error("Could not get your location. Please check your settings.");
+                    toast.error(
+                      "Could not get your location. Please check your settings."
+                    );
                   }
                 } else {
                   console.error("Geolocation is not supported");
                 }
               }
-              
+
               // Dispatch event for other components to update
               window.dispatchEvent(new Event("toggleGoLive"));
             }}

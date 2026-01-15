@@ -388,7 +388,7 @@ export async function syncStoredNotificationsToLocalStorage(): Promise<void> {
  */
 export function setupServiceWorkerFCMBridge(
   onMessageReceived: (payload: any) => void
-): (() => void) {
+): () => void {
   if (typeof window === "undefined") return () => {};
   if (!("serviceWorker" in navigator)) return () => {};
 
