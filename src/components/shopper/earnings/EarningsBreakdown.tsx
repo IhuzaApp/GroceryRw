@@ -18,11 +18,13 @@ interface EarningsComponent {
 interface EarningsBreakdownProps {
   storeBreakdown: StoreBreakdown[];
   earningsComponents: EarningsComponent[];
+  hideEarningsComponents?: boolean;
 }
 
 const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
   storeBreakdown,
   earningsComponents,
+  hideEarningsComponents = false,
 }) => {
   const { theme } = useTheme();
 
@@ -32,7 +34,7 @@ const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
   };
 
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+    <div className={hideEarningsComponents ? "" : "grid grid-cols-1 gap-6 md:grid-cols-2"}>
       {/* Store Type Breakdown */}
       <div>
         <h3
@@ -84,6 +86,7 @@ const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
       </div>
 
       {/* Earnings Components */}
+      {!hideEarningsComponents && (
       <div>
         <h3
           className={`mb-4 font-medium ${
@@ -138,6 +141,7 @@ const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
           ))}
         </div>
       </div>
+      )}
     </div>
   );
 };
