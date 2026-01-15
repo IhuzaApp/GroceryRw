@@ -45,6 +45,14 @@ export default function MapSection({
   const [showBusyAreas, setShowBusyAreas] = useState(false);
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
 
+  // Responsive zoom helper: More zoomed out on mobile (level 8 as requested)
+  const getFocusZoom = useCallback(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      return 13; // Level 8 for mobile as requested
+    }
+    return 16; // Standard zoom for desktop
+  }, []);
+
   // Refs
   const isOnlineRef = useRef(isOnline);
   const watchIdRef = useRef<number | null>(null);
@@ -60,7 +68,7 @@ export default function MapSection({
     isOnlineRef.current = isOnline;
   }, [isOnline]);
 
-  // Helper: Filter aged unassigned orders
+  // Helper: Filter aged unassigned orders (optional: keeping it if needed for logic elsewhere, but we'll use all available orders for the map)
   const agedUnassignedOrders = useMemo(() => {
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
     return (availableOrders || []).filter((order) => {
@@ -79,7 +87,7 @@ export default function MapSection({
     });
   }, [availableOrders]);
 
-  const allAvailableOrders = useMemo(() => [...agedUnassignedOrders], [agedUnassignedOrders]);
+  const allAvailableOrders = useMemo(() => availableOrders || [], [availableOrders]);
 
   // Helper: Reduce duplicate toasts
   const reduceToastDuplicates = useCallback((toastType: string, content: React.ReactNode, options: any = {}) => {
@@ -156,7 +164,7 @@ export default function MapSection({
       if (userMarkerRef.current && mapInstanceRef.current) {
         userMarkerRef.current.setLatLng([latitude, longitude]);
         userMarkerRef.current.addTo(mapInstanceRef.current);
-        mapInstanceRef.current.setView([latitude, longitude], 16);
+        mapInstanceRef.current.setView([latitude, longitude], getFocusZoom());
       }
       setIsOnline(true);
       locationErrorCountRef.current = 0;
@@ -180,7 +188,7 @@ export default function MapSection({
           if (userMarkerRef.current && mapInstanceRef.current) {
             userMarkerRef.current.setLatLng([lat, lng]);
             userMarkerRef.current.addTo(mapInstanceRef.current);
-            mapInstanceRef.current.setView([lat, lng], 16);
+            mapInstanceRef.current.setView([lat, lng], getFocusZoom());
           }
           setIsOnline(true);
           setIsRefreshingLocation(false);
@@ -255,30 +263,80 @@ export default function MapSection({
       const restaurantsData = await restRes.json();
       const pendingData = await pendRes.json();
 
-      if (!isOnlineRef.current) {
-        setShops(shopsData);
-        setRestaurants(restaurantsData.restaurants || []);
-        return;
-      }
-
       setShops(shopsData);
       setRestaurants(restaurantsData.restaurants || []);
-      setPendingOrders(pendingData);
+      
+      if (isOnline) {
+        setPendingOrders(pendingData);
+      }
 
       // Render shops
       shopsData.forEach((shop: Shop) => {
         const lat = parseFloat(shop.latitude);
         const lng = parseFloat(shop.longitude);
         if (isNaN(lat) || isNaN(lng)) return;
+        
+        const shopIconHtml = `
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+            ${MapUtils.createShopMarkerIcon(shop.is_active, theme)}
+            <div style="font-size: 11px; font-weight: 800; color: ${shop.is_active ? (theme === 'dark' ? '#fff' : '#1f2937') : '#9ca3af'}; white-space: nowrap; text-shadow: ${theme === 'dark' ? '0 0 4px rgba(0,0,0,0.8)' : '0 0 4px rgba(255,255,255,0.8)'};">
+              ${shop.name}
+            </div>
+          </div>
+        `;
+
         const marker = L.marker([lat, lng], {
           icon: L.divIcon({
-            html: `<div style="display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 800; color: ${shop.is_active ? (theme === 'dark' ? '#fff' : '#1f2937') : '#9ca3af'};"><span>🛒</span>${shop.name}</div>`,
-            className: ""
+            html: shopIconHtml,
+            className: "",
+            iconSize: [40, 56],
+            iconAnchor: [20, 32],
+            popupAnchor: [0, -32],
           }),
           zIndexOffset: 500
-        }).addTo(map);
-        marker.bindPopup(`<strong>${shop.name}</strong>`);
+        });
+        
+        if (MapUtils.safeAddMarker(marker, map, shop.name)) {
+          marker.bindPopup(`<strong>${shop.name}</strong>${shop.is_active ? "" : " (Disabled)"}`);
+          orderMarkersRef.current.push(marker); // Reusing orderMarkersRef for all markers to simplify clearing
+        }
       });
+
+      // Render restaurants
+      const actualRestaurants = restaurantsData.restaurants || [];
+      actualRestaurants.forEach((rest: Restaurant) => {
+        const lat = parseFloat(rest.lat || "");
+        const lng = parseFloat(rest.long || "");
+        if (isNaN(lat) || isNaN(lng)) return;
+
+        const restIconHtml = `
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+            ${MapUtils.createRestaurantMarkerIcon(theme)}
+            <div style="font-size: 11px; font-weight: 800; color: ${theme === 'dark' ? '#fff' : '#1f2937'}; white-space: nowrap; text-shadow: ${theme === 'dark' ? '0 0 4px rgba(0,0,0,0.8)' : '0 0 4px rgba(255,255,255,0.8)'};">
+              ${rest.name}
+            </div>
+          </div>
+        `;
+
+        const marker = L.marker([lat, lng], {
+          icon: L.divIcon({
+            html: restIconHtml,
+            className: "",
+            iconSize: [40, 56],
+            iconAnchor: [20, 32],
+            popupAnchor: [0, -32],
+          }),
+          zIndexOffset: 400
+        });
+
+        if (MapUtils.safeAddMarker(marker, map, rest.name)) {
+          marker.bindPopup(`<strong>${rest.name}</strong>`);
+          orderMarkersRef.current.push(marker);
+        }
+      });
+
+      // If offline, stop here
+      if (!isOnline) return;
 
       // Render pending orders with grouping
       const grouped = new Map<string, PendingOrder[]>();
@@ -293,11 +351,15 @@ export default function MapSection({
         orders.forEach((order, idx) => {
           const offset = MapUtils.calculateMarkerOffset(idx, orders.length);
           const marker = L.marker([lat + offset.lat, lng + offset.lng], {
-            icon: L.divIcon({ html: `<div style="background: #10b981; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: white;">${MapUtils.formatEarningsDisplay(formatCurrencySync(order.earnings))}</div>`, className: "" }),
+            icon: L.divIcon({ html: `<div style="background: #10b981; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: white; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-weight: bold;">${MapUtils.formatEarningsDisplay(formatCurrencySync(order.earnings))}</div>`, className: "" }),
             zIndexOffset: 1000 + idx
-          }).addTo(map);
-          marker.bindPopup(MapPopups.createPopupHTML(order, theme, true));
-          attachAcceptHandler(marker, order.id, map, "regular");
+          });
+          
+          if (MapUtils.safeAddMarker(marker, map, `pending-${order.id}`)) {
+            marker.bindPopup(MapPopups.createPopupHTML(order, theme, true));
+            attachAcceptHandler(marker, order.id, map, "regular");
+            orderMarkersRef.current.push(marker);
+          }
         });
       });
 
@@ -305,15 +367,18 @@ export default function MapSection({
       allAvailableOrders.forEach((order, idx) => {
         if (!order.shopLatitude || !order.shopLongitude) return;
         const marker = L.marker([order.shopLatitude, order.shopLongitude], {
-          icon: L.divIcon({ html: `<div style="background: #3b82f6; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: white;">${MapUtils.formatEarningsDisplay(order.estimatedEarnings || "0")}</div>`, className: "" }),
+          icon: L.divIcon({ html: `<div style="background: #3b82f6; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: white; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-weight: bold;">${MapUtils.formatEarningsDisplay(order.estimatedEarnings || "0")}</div>`, className: "" }),
           zIndexOffset: 1000
-        }).addTo(map);
-        marker.bindPopup(MapPopups.createPopupHTML(order, theme, false));
-        attachAcceptHandler(marker, order.id, map, order.orderType || "regular");
-        orderMarkersRef.current.push(marker);
+        });
+        
+        if (MapUtils.safeAddMarker(marker, map, `available-${order.id}`)) {
+          marker.bindPopup(MapPopups.createPopupHTML(order, theme, false));
+          attachAcceptHandler(marker, order.id, map, order.orderType || "regular");
+          orderMarkersRef.current.push(marker);
+        }
       });
 
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error("Error in initMapSequence:", e); }
   }, [isOnline, theme, allAvailableOrders, clearOrderMarkers, attachAcceptHandler]);
 
   // Busy Areas Logic
@@ -337,10 +402,21 @@ export default function MapSection({
     if (!mapLoaded || !mapRef.current) return;
     
     // Check if the container already has a map instance
-    // This prevents the "Map container is being reused" error in Leaflet
     const container = mapRef.current;
-    if ((container as any)._leaflet_id) {
-      return; 
+    
+    // IMPORTANT: If we're already initializing or there's an instance, 
+    // we should let the cleanup function handle it or avoid double-init.
+    if ((container as any)._leaflet_id && mapInstanceRef.current) {
+      // If theme changed, we might just want to update the tile layer 
+      // instead of re-creating the whole map to avoid race conditions.
+      const currentMap = mapInstanceRef.current;
+      currentMap.eachLayer((layer) => {
+        if (layer instanceof L.TileLayer) {
+          currentMap.removeLayer(layer);
+        }
+      });
+      L.tileLayer(theme === "dark" ? MAP_STYLES.dark : MAP_STYLES.light).addTo(currentMap);
+      return;
     }
 
     if (mapInstanceRef.current) {
@@ -355,7 +431,8 @@ export default function MapSection({
     const map = L.map(container, { 
       center: DEFAULT_MAP_CENTER, 
       zoom: DEFAULT_MAP_ZOOM, 
-      attributionControl: false 
+      attributionControl: false,
+      zoomAnimation: false // Disabling zoom animation during init helps prevent _leaflet_pos errors
     });
     
     mapInstanceRef.current = map;
@@ -365,8 +442,11 @@ export default function MapSection({
     const cookies = MapUtils.getCookies();
     if (cookies["user_latitude"]) {
       const lat = parseFloat(cookies["user_latitude"]), lng = parseFloat(cookies["user_longitude"]);
-      userMarkerRef.current = L.marker([lat, lng], { icon: L.divIcon({ html: MapUtils.createUserMarkerIcon(), className: "" }) }).addTo(map);
-      map.setView([lat, lng], 16);
+      const marker = L.marker([lat, lng], { icon: L.divIcon({ html: MapUtils.createUserMarkerIcon(), className: "" }) });
+      if (MapUtils.safeAddMarker(marker, map, "user-marker")) {
+        userMarkerRef.current = marker;
+        map.setView([lat, lng], getFocusZoom(), { animate: false }); // Use responsive zoom
+      }
     }
 
     initMapSequence(map);
@@ -374,7 +454,10 @@ export default function MapSection({
     return () => { 
       if (mapInstanceRef.current) {
         try {
-          mapInstanceRef.current.remove();
+          // Check if map is still in the DOM before removing
+          if (container && (container as any)._leaflet_id) {
+            mapInstanceRef.current.remove();
+          }
         } catch (e) {
           console.warn("Error during map cleanup:", e);
         }
@@ -385,6 +468,19 @@ export default function MapSection({
   }, [mapLoaded, theme, isInitializing, initMapSequence]);
 
   useEffect(() => { if (mapInstance && isOnline) initMapSequence(mapInstance); }, [allAvailableOrders, isOnline, mapInstance]);
+  
+  // Real-time updates for batches when shopper is active
+  useEffect(() => {
+    if (!mapInstance || !isOnline) return;
+    
+    // Poll for new batches (pending orders, shops, etc.) every 30 seconds
+    const interval = setInterval(() => {
+      initMapSequence(mapInstance);
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, [mapInstance, isOnline, initMapSequence]);
+
   useEffect(() => { if (mapInstance) renderBusyAreas(mapInstance); }, [showBusyAreas, isOnline, mapInstance]);
 
   // Fetch earnings
