@@ -43,6 +43,44 @@ export interface PendingOrder {
   addressCity: string;
 }
 
+// Available Order type (from availableOrders prop)
+export interface AvailableOrder {
+  id: string;
+  shopName: string;
+  shopAddress: string;
+  customerAddress: string;
+  distance: string;
+  items: number;
+  total: string;
+  estimatedEarnings: string;
+  createdAt: string;
+  rawCreatedAt?: string;
+  updatedAt?: string;
+  shopLatitude?: number;
+  shopLongitude?: number;
+  customerLatitude?: number;
+  customerLongitude?: number;
+  priorityLevel?: number;
+  minutesAgo?: number;
+  status?: string;
+  orderType?: "regular" | "reel" | "restaurant";
+  shopper_id?: string | null;
+  earnings?: number; // Added to match some usages
+  reel?: {
+    id: string;
+    title: string;
+    description: string;
+    Price: string;
+    Product: string;
+    type: string;
+    video_url: string;
+  };
+  quantity?: number;
+  deliveryNote?: string;
+  customerName?: string;
+  customerPhone?: string;
+}
+
 // Location type
 export interface Location {
   lat: number;
@@ -57,73 +95,13 @@ export interface LocationHistoryEntry {
   accuracy: number;
 }
 
-// Map refs type
-export interface MapRefs {
-  mapInstanceRef: React.MutableRefObject<L.Map | null>;
-  userMarkerRef: React.MutableRefObject<L.Marker | null>;
-  shopMarkersRef: React.MutableRefObject<L.Marker[]>;
-  orderMarkersRef: React.MutableRefObject<L.Marker[]>;
-  watchIdRef: React.MutableRefObject<number | null>;
-  locationErrorCountRef: React.MutableRefObject<number>;
-  activeToastTypesRef: React.MutableRefObject<Set<string>>;
-  busyAreaCirclesRef: React.MutableRefObject<L.Circle[]>;
-  locationUpdateTimeoutRef: React.MutableRefObject<NodeJS.Timeout | null>;
-  locationRetryTimeoutRef: React.MutableRefObject<NodeJS.Timeout | null>;
-  lastLocationRef: React.MutableRefObject<Location | null>;
-  locationUpdateCountRef: React.MutableRefObject<number>;
-  lastAccuracyRef: React.MutableRefObject<number | null>;
-  locationHistoryRef: React.MutableRefObject<LocationHistoryEntry[]>;
-  cookieSnapshotRef: React.MutableRefObject<string>;
-}
-
-// Map state type
-export interface MapState {
-  currentLocation: Location | null;
-  setCurrentLocation: (location: Location | null) => void;
-  isOnline: boolean;
-  setIsOnline: (online: boolean) => void;
-  isRefreshingLocation: boolean;
-  setIsRefreshingLocation: (refreshing: boolean) => void;
-  isActivelyTracking: boolean;
-  setIsActivelyTracking: (tracking: boolean) => void;
-  routePolyline: L.Polyline | null;
-  setRoutePolyline: (polyline: L.Polyline | null) => void;
-  routeEndMarker: L.Marker | null;
-  setRouteEndMarker: (marker: L.Marker | null) => void;
-  mapInstance: L.Map | null;
-  setMapInstance: (map: L.Map | null) => void;
-  locationError: string | null;
-  setLocationError: (error: string | null) => void;
-  locationAccuracy: number | null;
-  setLocationAccuracy: (accuracy: number | null) => void;
-  lastLocationUpdate: Date | null;
-  setLastLocationUpdate: (date: Date | null) => void;
-  locationHistory: LocationHistoryEntry[];
-  setLocationHistory: (history: LocationHistoryEntry[]) => void;
-}
-
-// Notified order type (from props)
-export interface NotifiedOrder {
-  id: string;
-  shopName: string;
-  distance: number;
-  customerAddress: string;
-  customerLatitude?: number;
-  customerLongitude?: number;
-  shopLatitude?: number;
-  shopLongitude?: number;
-  itemsCount?: number;
-  estimatedEarnings?: number;
-  orderType?: "regular" | "reel" | "restaurant";
-}
-
 // Map section props type
 export interface MapSectionProps {
   mapLoaded: boolean;
-  availableOrders: any[];
+  availableOrders: AvailableOrder[];
   isInitializing?: boolean;
   isExpanded?: boolean;
-  notifiedOrder?: NotifiedOrder | null;
+  notifiedOrder?: any;
   shopperLocation?: Location | null;
 }
 
