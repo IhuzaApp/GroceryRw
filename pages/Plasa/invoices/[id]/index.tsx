@@ -35,6 +35,8 @@ interface InvoiceData {
   serviceFee: number;
   deliveryFee: number;
   total: number;
+  Proof?: string;
+  delivery_photo_url?: string;
 }
 
 interface InvoicePageProps {
@@ -52,6 +54,7 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
   const [loading, setLoading] = useState(!initialInvoiceData);
   const [errorMessage, setErrorMessage] = useState<string | null>(error);
   const [orderType, setOrderType] = useState<string>("regular");
+  const [showProofModal, setShowProofModal] = useState(false);
 
   useEffect(() => {
     if (initialInvoiceData?.orderType) {
@@ -206,35 +209,55 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
   // Calculate VAT (0% for now)
   const vat = 0;
 
+  // Get proof image URL
+  const proofImageUrl = invoiceData.delivery_photo_url || invoiceData.Proof;
+  const hasProof = !!proofImageUrl;
+
   return (
     <ShopperLayout>
       <div className={`min-h-screen ${theme === "dark" ? "bg-gray-900" : "bg-gray-50"} py-8`}>
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           {/* Action Buttons */}
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <button
               onClick={goBack}
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              className={`group flex w-full items-center justify-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-semibold transition-all duration-200 sm:w-auto ${
                 theme === "dark"
-                  ? "text-gray-300 hover:bg-gray-800"
-                  : "text-gray-700 hover:bg-gray-100"
+                  ? "border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-600 hover:bg-gray-700"
+                  : "border-gray-300 bg-white text-gray-700 shadow-sm hover:border-gray-400 hover:bg-gray-50 hover:shadow"
               }`}
             >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5 transition-transform duration-200 group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Back
             </button>
 
-            <button
-              onClick={handleDownload}
-              className="flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Download PDF
-            </button>
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-3">
+              {hasProof && (
+                <button
+                  onClick={() => setShowProofModal(true)}
+                  className="group relative flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-green-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-green-500/40 active:scale-95 sm:w-auto sm:px-7"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-green-500 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+                  <svg className="relative h-5 w-5 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="relative">View Proof</span>
+                </button>
+              )}
+
+              <button
+                onClick={handleDownload}
+                className="group relative flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/40 active:scale-95 sm:w-auto sm:px-7"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+                <svg className="relative h-5 w-5 transition-transform duration-300 group-hover:translate-y-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span className="relative">Download PDF</span>
+              </button>
+            </div>
           </div>
 
           {/* Invoice Card */}
@@ -430,6 +453,43 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
           </div>
         </div>
       </div>
+
+      {/* Proof Image Modal */}
+      {showProofModal && proofImageUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4 sm:p-6 md:p-8"
+          onClick={() => setShowProofModal(false)}
+        >
+          <div className="relative w-full max-w-full sm:max-w-4xl">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowProofModal(false)}
+              className="absolute -top-10 right-0 z-10 rounded-full bg-white p-2 text-gray-800 shadow-lg transition-colors hover:bg-gray-200 sm:-top-12 sm:p-2.5"
+              aria-label="Close modal"
+            >
+              <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Image Container */}
+            <div className="flex items-center justify-center">
+              <img
+                src={proofImageUrl}
+                alt="Delivery Proof"
+                className="h-auto max-h-[80vh] w-full rounded-lg object-contain shadow-2xl sm:max-h-[85vh] md:max-h-[90vh]"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+
+            {/* Image Info - Mobile Only */}
+            <div className="mt-4 rounded-lg bg-white bg-opacity-90 p-3 text-center sm:hidden">
+              <p className="text-sm font-medium text-gray-800">Delivery Proof Image</p>
+              <p className="mt-1 text-xs text-gray-600">Tap outside to close</p>
+            </div>
+          </div>
+        </div>
+      )}
     </ShopperLayout>
   );
 }
