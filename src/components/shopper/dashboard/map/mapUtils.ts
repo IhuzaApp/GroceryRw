@@ -1,11 +1,15 @@
 import L from "leaflet";
-import { formatCurrencySync } from "../../../../utils/formatCurrency";
-import { logger } from "../../../../utils/logger";
+import { Location } from "./mapTypes";
 
 /**
  * Calculate distance between two coordinates using Haversine formula
+ * @param lat1 Latitude of first point
+ * @param lon1 Longitude of first point
+ * @param lat2 Latitude of second point
+ * @param lon2 Longitude of second point
+ * @returns Distance in kilometers
  */
-export function getDistanceKm(
+export function calculateDistanceKm(
   lat1: number,
   lon1: number,
   lat2: number,
@@ -26,105 +30,54 @@ export function getDistanceKm(
 
 /**
  * Check if a Leaflet map is ready and fully initialized
+ * @param map Leaflet map instance
+ * @returns true if map is ready
  */
-export const isMapReady = (map: L.Map | null): boolean => {
+export function isMapReady(map: L.Map | null): boolean {
+  if (!map) return false;
+
   try {
-    return (
-      !!map &&
-      typeof map.setView === "function" &&
-      !!map.getContainer() &&
-      !!(map as any)._loaded
-    );
+    // Check if map has a valid container
+    const container = map.getContainer();
+    if (!container) return false;
+
+    // Check if container is attached to DOM
+    if (!document.body.contains(container)) return false;
+
+    // Check if map has valid center
+    const center = map.getCenter();
+    if (!center || isNaN(center.lat) || isNaN(center.lng)) return false;
+
+    // Check if map has valid zoom
+    const zoom = map.getZoom();
+    if (zoom === undefined || isNaN(zoom)) return false;
+
+    return true;
   } catch (error) {
-    console.error("Error checking map readiness:", error);
     return false;
   }
-};
-
-/**
- * Get cookies as a key-value map
- */
-export const getCookies = (): Record<string, string> => {
-  const cookies: Record<string, string> = {};
-  if (typeof document === "undefined") return cookies;
-  document.cookie.split("; ").forEach((cookie) => {
-    const [name, value] = cookie.split("=");
-    if (name && value) {
-      cookies[name] = decodeURIComponent(value);
-    }
-  });
-  return cookies;
-};
-
-/**
- * Save location to cookies for persistence
- */
-export const saveLocationToCookies = (lat: number, lng: number) => {
-  if (typeof document === "undefined") return;
-  const previousCookies = getCookies();
-
-  document.cookie = `user_latitude=${lat}; path=/; max-age=86400`; // 24 hours
-  document.cookie = `user_longitude=${lng}; path=/; max-age=86400`;
-
-  logger.info("Location cookies updated", "mapUtils", {
-    previous: {
-      latitude: previousCookies["user_latitude"],
-      longitude: previousCookies["user_longitude"],
-    },
-    current: { latitude: lat, longitude: lng },
-    timestamp: new Date().toISOString(),
-  });
-};
-
-/**
- * Format earnings for marker display
- */
-export const formatEarningsDisplay = (amount: string) => {
-  const value = parseFloat(amount.replace(/[^0-9.]/g, ""));
-  if (isNaN(value)) return amount;
-  if (value >= 1000) {
-    return `${(value / 1000).toFixed(1)}k`;
-  }
-  return Math.round(value).toString();
-};
-
-/**
- * Calculate offset for clustered markers
- */
-export const calculateMarkerOffset = (
-  index: number,
-  total: number,
-  baseRadius: number = 30
-) => {
-  if (total === 1) return { lat: 0, lng: 0 };
-  const angle = (2 * Math.PI * index) / total;
-  return {
-    lat: (baseRadius / 111111) * Math.cos(angle),
-    lng: (baseRadius / 111111) * Math.sin(angle),
-  };
-};
+}
 
 /**
  * Safely add a marker to the map
+ * @param marker Leaflet marker
+ * @param map Leaflet map instance
+ * @param name Marker name for logging
+ * @returns true if successful
  */
-export const safeAddMarker = (
+export function safeAddMarker(
   marker: L.Marker,
   map: L.Map | null,
   name: string
-): boolean => {
+): boolean {
   try {
-    if (!map) return false;
-    const container = map.getContainer();
-    if (!container || !document.body.contains(container)) return false;
-    if (!(map as any)._loaded) return false;
+    if (!map || !marker) {
+      console.warn(`Cannot add marker ${name}: missing map or marker`);
+      return false;
+    }
 
-    const panes = (map as any)._panes;
-    if (!panes || !panes.overlayPane || !document.body.contains(panes.overlayPane)) {
-      setTimeout(() => {
-        if (map && (map as any)._panes?.overlayPane) {
-          try { marker.addTo(map); } catch (err) {}
-        }
-      }, 100);
+    if (!isMapReady(map)) {
+      console.warn(`Cannot add marker ${name}: map not ready`);
       return false;
     }
 
@@ -134,42 +87,46 @@ export const safeAddMarker = (
     console.error(`Error safely adding marker for ${name}:`, error);
     return false;
   }
-};
+}
 
 /**
- * Create shop marker SVG icon
+ * Get cookies as a key-value map
+ * @returns Object with cookie key-value pairs
  */
-export const createShopMarkerIcon = (isActive: boolean, theme: "light" | "dark") => {
-  const color = isActive ? "#10b981" : "#9ca3af";
-  return `
-    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" fill="${color}" stroke="white" stroke-width="2" stroke-linejoin="round"/>
-        <path d="M9 22V12H15V22" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </div>
-  `;
-};
+export function getCookies(): Record<string, string> {
+  const cookies: Record<string, string> = {};
+  document.cookie.split("; ").forEach((cookie) => {
+    const [key, value] = cookie.split("=");
+    if (key && value) {
+      cookies[key] = decodeURIComponent(value);
+    }
+  });
+  return cookies;
+}
 
 /**
- * Create restaurant marker SVG icon
+ * Save location to cookies for persistence
+ * @param latitude Latitude coordinate
+ * @param longitude Longitude coordinate
  */
-export const createRestaurantMarkerIcon = (theme: "light" | "dark") => {
-  const color = theme === "dark" ? "#f97316" : "#ea580c";
-  return `
-    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="12" cy="12" r="10" fill="${color}" stroke="white" stroke-width="2"/>
-        <path d="M8 7V12M12 7V12M16 7V12M12 17V12" stroke="white" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-    </div>
-  `;
-};
+export function saveLocationToCookies(
+  latitude: number,
+  longitude: number
+): void {
+  try {
+    const maxAge = 30 * 24 * 60 * 60; // 30 days in seconds
+    document.cookie = `user_latitude=${latitude}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    document.cookie = `user_longitude=${longitude}; path=/; max-age=${maxAge}; SameSite=Lax`;
+  } catch (error) {
+    console.error("Error saving location to cookies:", error);
+  }
+}
 
 /**
- * Get single location from browser
+ * Get single location from browser geolocation API
+ * @returns Promise with GeolocationPosition
  */
-export const getSingleLocation = () => {
+export function getSingleLocation(): Promise<GeolocationPosition> {
   return new Promise<GeolocationPosition>((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error("Geolocation not supported"));
@@ -182,12 +139,36 @@ export const getSingleLocation = () => {
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   });
-};
+}
 
 /**
- * Create user marker icon
+ * Create a custom divIcon for Leaflet markers
+ * @param html HTML string for the icon
+ * @param iconSize Size of the icon [width, height]
+ * @param iconAnchor Anchor point [x, y]
+ * @param popupAnchor Popup anchor point [x, y]
+ * @returns Leaflet DivIcon
  */
-export const createUserMarkerIcon = () => {
+export function createCustomDivIcon(
+  html: string,
+  iconSize: [number, number] = [24, 24],
+  iconAnchor: [number, number] = [12, 12],
+  popupAnchor: [number, number] = [0, -24]
+): L.DivIcon {
+  return L.divIcon({
+    html,
+    className: "",
+    iconSize,
+    iconAnchor,
+    popupAnchor,
+  });
+}
+
+/**
+ * Create user marker icon (blue dot)
+ * @returns HTML string for user marker
+ */
+export function createUserMarkerIcon(): string {
   return `
     <div style="
       background: #3b82f6;
@@ -208,4 +189,60 @@ export const createUserMarkerIcon = () => {
       "></div>
     </div>
   `;
-};
+}
+
+/**
+ * Create delivery location marker icon (red pin)
+ * @returns HTML string for delivery marker
+ */
+export function createDeliveryMarkerIcon(): string {
+  return `
+    <div style="position: relative;">
+      <div style="
+        background: #ef4444;
+        border: 3px solid white;
+        border-radius: 50% 50% 50% 0;
+        width: 32px;
+        height: 32px;
+        transform: rotate(-45deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+      ">
+        <div style="
+          width: 10px;
+          height: 10px;
+          background: white;
+          border-radius: 50%;
+          transform: rotate(45deg);
+        "></div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Fit map bounds to show specific coordinates
+ * @param map Leaflet map instance
+ * @param bounds Bounds to fit
+ * @param padding Optional padding [top/bottom, left/right]
+ * @param maxZoom Optional maximum zoom level
+ */
+export function fitMapBounds(
+  map: L.Map | null,
+  bounds: L.LatLngBounds,
+  padding: [number, number] = [50, 50],
+  maxZoom: number = 15
+): void {
+  if (!map || !isMapReady(map)) return;
+
+  try {
+    map.fitBounds(bounds, {
+      padding,
+      maxZoom,
+    });
+  } catch (error) {
+    console.error("Error fitting map bounds:", error);
+  }
+}
