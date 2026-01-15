@@ -771,6 +771,12 @@ export default function MapSection({
   const [pendingOrders, setPendingOrders] = useState<PendingOrder[]>([]);
   const watchIdRef = useRef<number | null>(null);
   const [isOnline, setIsOnline] = useState(false);
+  const isOnlineRef = useRef(isOnline);
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    isOnlineRef.current = isOnline;
+  }, [isOnline]);
   const [dailyEarnings, setDailyEarnings] = useState(0);
   const [completedOrdersCount, setCompletedOrdersCount] = useState(0);
   const [loadingEarnings, setLoadingEarnings] = useState(true);
@@ -2491,11 +2497,27 @@ export default function MapSection({
 
       const restaurants = restaurantsData.restaurants || [];
       
+      // Check current online status (use ref to get latest value)
+      const currentlyOnline = isOnlineRef.current;
+      
       console.log("🗺️ [MapSection] Data parsed:", {
         shopsCount: shops.length,
         restaurantsCount: restaurants.length,
         pendingOrdersCount: pendingOrders.length,
+        isOnlineAtStart: isOnline,
+        isOnlineNow: currentlyOnline,
       });
+
+      // Check if we went offline during the fetch - if so, clear markers and abort
+      if (!currentlyOnline) {
+        console.log("🗺️ [MapSection] Went offline during fetch - clearing markers and aborting order processing");
+        clearOrderMarkers();
+        setPendingOrders([]);
+        // Still process shops and restaurants (always visible)
+        setShops(shops);
+        setRestaurants(restaurants);
+        return;
+      }
 
       // Process shops (always visible regardless of online status)
       console.log("🗺️ [MapSection] Processing shops (always visible)");
@@ -2657,7 +2679,11 @@ export default function MapSection({
       }
 
       // Process pending orders with grouping - only when online
-      if (isOnline && map && map.getContainer()) {
+      // Double-check isOnline here in case it changed during async operations
+      if (!isOnline) {
+        console.log("🗺️ [MapSection] Skipping pending orders - went offline");
+        clearOrderMarkers();
+      } else if (map && map.getContainer()) {
         console.log("🗺️ [MapSection] Processing pending orders:", pendingOrders.length);
         // Group pending orders by location
         const groupedPendingOrders = new Map<string, PendingOrder[]>();
@@ -2754,8 +2780,12 @@ export default function MapSection({
       }
 
       // Process available unassigned orders with grouping - only when online
-      if (
-        isOnline &&
+      // Double-check isOnline here in case it changed during async operations
+      const stillOnlineForAvailable = isOnlineRef.current;
+      if (!stillOnlineForAvailable) {
+        console.log("🗺️ [MapSection] Skipping available orders - went offline during processing");
+        clearOrderMarkers();
+      } else if (
         allAvailableOrders?.length > 0 &&
         map &&
         map.getContainer()
@@ -2870,12 +2900,21 @@ export default function MapSection({
         console.error("🗺️ [MapSection] Error in map sequence:", error);
       }
       
+      // Final check - if we went offline during processing, clear everything
+      const finalOnlineCheck = isOnlineRef.current;
+      if (!finalOnlineCheck) {
+        console.log("🗺️ [MapSection] Went offline during processing - clearing all order markers");
+        clearOrderMarkers();
+        setPendingOrders([]);
+      }
+      
       console.log("🗺️ [MapSection] initMapSequence complete:", {
         shopsCount: shops.length,
         restaurantsCount: restaurants.length,
-        pendingOrdersProcessed: isOnline ? pendingOrders.length : 0,
-        availableOrdersProcessed: isOnline && allAvailableOrders?.length > 0 ? allAvailableOrders.length : 0,
-        isOnline,
+        pendingOrdersProcessed: finalOnlineCheck ? pendingOrders.length : 0,
+        availableOrdersProcessed: finalOnlineCheck && allAvailableOrders?.length > 0 ? allAvailableOrders.length : 0,
+        isOnlineAtStart: isOnline,
+        isOnlineAtEnd: finalOnlineCheck,
       });
     };
 
@@ -2923,29 +2962,53 @@ export default function MapSection({
       return;
     }
     
-    orderMarkersRef.current.forEach((marker) => {
+    orderMarkersRef.current.forEach((marker, index) => {
       try {
-        if (marker) {
-          // Check if marker is on the map
+        if (!marker) {
+          console.warn(`🗺️ [MapSection] Marker at index ${index} is null/undefined`);
+          return;
+        }
+        
+        // Check if marker is a valid Leaflet marker (has remove method)
+        if (typeof marker.remove !== "function") {
+          console.warn(`🗺️ [MapSection] Marker at index ${index} is not a valid Leaflet marker`);
+          // Try to remove from map directly
+          if (mapInstanceRef.current) {
+            try {
+              mapInstanceRef.current.removeLayer(marker as any);
+            } catch (e) {
+              console.warn(`🗺️ [MapSection] Could not remove invalid marker at index ${index}:`, e);
+            }
+          }
+          return;
+        }
+        
+        // Check if marker is on the map (only if getMap method exists)
+        if (typeof marker.getMap === "function") {
           const map = marker.getMap();
           if (map) {
             map.removeLayer(marker);
-            console.log("🗺️ [MapSection] Removed marker from map using removeLayer");
+            console.log(`🗺️ [MapSection] Removed marker ${index} from map using removeLayer`);
           } else {
-            // Try remove() as fallback
+            // Marker not on map, just remove it
             marker.remove();
-            console.log("🗺️ [MapSection] Removed marker using remove()");
+            console.log(`🗺️ [MapSection] Removed marker ${index} using remove()`);
           }
+        } else {
+          // Marker doesn't have getMap, try remove() directly
+          marker.remove();
+          console.log(`🗺️ [MapSection] Removed marker ${index} using remove() (no getMap)`);
         }
       } catch (error) {
-        console.warn("🗺️ [MapSection] Error removing marker:", error);
+        console.warn(`🗺️ [MapSection] Error removing marker at index ${index}:`, error);
         // Force remove from map if it exists
         try {
           if (mapInstanceRef.current && marker) {
-            mapInstanceRef.current.removeLayer(marker);
+            mapInstanceRef.current.removeLayer(marker as any);
+            console.log(`🗺️ [MapSection] Force removed marker ${index} from map`);
           }
         } catch (e) {
-          console.warn("🗺️ [MapSection] Error force removing marker:", e);
+          console.warn(`🗺️ [MapSection] Error force removing marker ${index}:`, e);
         }
       }
     });
