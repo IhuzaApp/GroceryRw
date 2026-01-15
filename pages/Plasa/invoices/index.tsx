@@ -8,7 +8,6 @@ import { useTheme } from "../../../src/context/ThemeContext";
 import { logger } from "../../../src/utils/logger";
 import {
   InvoiceFilters,
-  ProofUploadModal,
   InvoicePagination,
   InvoicesTable,
   Invoice,
@@ -29,8 +28,6 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [showProofModal, setShowProofModal] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const { theme } = useTheme();
 
   // Fetch invoices
@@ -62,25 +59,6 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
   }, []);
 
   // Event handlers
-  const handleUploadProof = (invoiceId: string, proofImage: string) => {
-    // Update the invoice in the list
-    setInvoices((prev) =>
-      prev.map((inv) =>
-        inv.id === invoiceId ? { ...inv, Proof: proofImage } : inv
-      )
-    );
-  };
-
-  const openProofModal = (invoice: Invoice) => {
-    setSelectedInvoice(invoice);
-    setShowProofModal(true);
-  };
-
-  const closeProofModal = () => {
-    setShowProofModal(false);
-    setSelectedInvoice(null);
-  };
-
   const handleViewDetails = (invoiceId: string, orderType: string) => {
     const isMobile =
       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -193,7 +171,6 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
           <InvoicesTable
             invoices={filteredInvoices}
             onViewDetails={handleViewDetails}
-            onUploadProof={openProofModal}
             loading={loading}
           />
 
@@ -205,14 +182,6 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
           />
         </div>
       </div>
-
-      {/* Proof Upload Modal */}
-      <ProofUploadModal
-        open={showProofModal}
-        onClose={closeProofModal}
-        invoice={selectedInvoice}
-        onUploadSuccess={handleUploadProof}
-      />
     </ShopperLayout>
   );
 };
