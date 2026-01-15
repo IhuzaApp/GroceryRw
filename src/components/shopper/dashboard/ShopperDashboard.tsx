@@ -141,10 +141,6 @@ export default function ShopperDashboard() {
   const loadOrders = useCallback(async () => {
     if (!currentLocation || !isOnline) {
       // Cannot load orders: no location or user offline
-      console.log("🗺️ [ShopperDashboard] loadOrders: Skipping (offline or no location)", {
-        hasLocation: !!currentLocation,
-        isOnline,
-      });
       setAvailableOrders([]);
       setSortedOrders([]);
       setIsLoading(false); // Ensure loading state is cleared when offline
@@ -318,9 +314,7 @@ export default function ShopperDashboard() {
 
   // Effect to handle map loading simulation
   useEffect(() => {
-    console.log("🗺️ [ShopperDashboard] Starting map loading simulation");
     const timer = setTimeout(() => {
-      console.log("🗺️ [ShopperDashboard] Setting mapLoaded to true");
       setMapLoaded(true);
     }, 1500);
     return () => clearTimeout(timer);
@@ -409,13 +403,7 @@ export default function ShopperDashboard() {
 
   // Effect to handle initialization state
   useEffect(() => {
-    console.log("🗺️ [ShopperDashboard] Checking initialization state:", {
-      currentLocation,
-      mapLoaded,
-      isInitializing,
-    });
     if (currentLocation || mapLoaded) {
-      console.log("🗺️ [ShopperDashboard] Setting isInitializing to false");
       setIsInitializing(false);
     }
   }, [currentLocation, mapLoaded]);
@@ -463,19 +451,6 @@ export default function ShopperDashboard() {
   // Show skeleton loading when initializing or map not loaded
   // Don't show skeleton based on isLoading when map is loaded and initialized - map should show even without orders
   const showSkeleton = isInitializing || !mapLoaded;
-  
-  // Debug skeleton condition
-  useEffect(() => {
-    console.log("🗺️ [ShopperDashboard] Skeleton condition check:", {
-      showSkeleton,
-      isInitializing,
-      mapLoaded,
-      isLoading,
-      availableOrdersLength: availableOrders.length,
-      isOnline,
-      reason: isInitializing ? "isInitializing" : !mapLoaded ? "!mapLoaded" : "none",
-    });
-  }, [showSkeleton, isInitializing, mapLoaded, isLoading, availableOrders.length, isOnline]);
 
   // Skeleton loading component
   const SkeletonLoader = () => (
@@ -594,16 +569,8 @@ export default function ShopperDashboard() {
 
   // Show skeleton while loading
   if (showSkeleton) {
-    console.log("🗺️ [ShopperDashboard] Rendering SkeletonLoader - conditions:", {
-      isInitializing,
-      mapLoaded,
-      isLoading,
-      availableOrdersLength: availableOrders.length,
-    });
     return <SkeletonLoader />;
   }
-  
-  console.log("🗺️ [ShopperDashboard] Rendering actual map component");
 
   return (
     <ShopperLayout>
