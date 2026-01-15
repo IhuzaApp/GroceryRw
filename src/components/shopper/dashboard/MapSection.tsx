@@ -1837,6 +1837,17 @@ export default function MapSection({
 
       setIsOnline(true);
       locationErrorCountRef.current = 0;
+      
+      // Show simple success toast
+      toaster.push(
+        <Message type="success" closable>
+          You are now online
+        </Message>,
+        {
+          placement: "topEnd",
+          duration: 3000,
+        }
+      );
     } catch (error) {
       console.error("Error getting current position:", error);
       locationErrorCountRef.current += 1;
@@ -1845,17 +1856,15 @@ export default function MapSection({
         showLocationTroubleshootingGuide();
       }
 
-      reduceToastDuplicates(
-        "location-error",
-        <Message
-          showIcon
-          type="error"
-          header="Location Error"
-          className={theme === "dark" ? "rs-message-dark" : ""}
-        >
+      // Show simple error toast
+      toaster.push(
+        <Message type="error" closable>
           Could not get your location. Please check your settings.
         </Message>,
-        { placement: "topEnd", duration: 5000 }
+        {
+          placement: "topEnd",
+          duration: 5000,
+        }
       );
     } finally {
       setIsRefreshingLocation(false);
@@ -1891,60 +1900,15 @@ export default function MapSection({
           setIsOnline(true);
           setIsRefreshingLocation(false);
 
-          // Ask user if they want to enable active tracking
-          reduceToastDuplicates(
-            "saved-location-prompt",
-            <Message
-              showIcon
-              type="info"
-              header="Using Saved Location"
-              closable
-              className={theme === "dark" ? "rs-message-dark" : ""}
-            >
-              <div>
-                <p>
-                  Using your saved location. Would you like to enable active
-                  tracking?
-                </p>
-                <div className="mt-2 flex space-x-2">
-                  <Button
-                    appearance="primary"
-                    size="sm"
-                    onClick={() => {
-                      setIsActivelyTracking(true);
-                      startLocationTracking();
-                    }}
-                    className={theme === "dark" ? "rs-btn-dark" : ""}
-                  >
-                    Enable Tracking
-                  </Button>
-                  <Button
-                    appearance="subtle"
-                    size="sm"
-                    onClick={() => {
-                      setIsActivelyTracking(false);
-                      reduceToastDuplicates(
-                        "static-location-info",
-                        <Message
-                          showIcon
-                          type="info"
-                          header="Static Location"
-                          className={theme === "dark" ? "rs-message-dark" : ""}
-                        >
-                          Using static location. Use the refresh button to
-                          update.
-                        </Message>,
-                        { placement: "topEnd", duration: 3000 }
-                      );
-                    }}
-                    className={theme === "dark" ? "rs-btn-dark" : ""}
-                  >
-                    Stay Static
-                  </Button>
-                </div>
-              </div>
+          // Show simple success toast
+          toaster.push(
+            <Message type="success" closable>
+              You are now online
             </Message>,
-            { placement: "topEnd", duration: 10000 }
+            {
+              placement: "topEnd",
+              duration: 3000,
+            }
           );
         } catch (error) {
           console.error("Error setting position from cookies:", error);
@@ -2414,7 +2378,43 @@ export default function MapSection({
       // Clear existing order markers when going offline
       if (!isOnline) {
         console.log("🗺️ [MapSection] Going offline - clearing all order-related markers and data");
+        
+        // Clear tracked markers
         clearOrderMarkers();
+        
+        // Also clear any markers that might be on the map but not tracked
+        // Iterate through all layers and remove order markers
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.eachLayer((layer: any) => {
+            // Check if it's a marker (not a tile layer, not a circle, not shop/restaurant markers)
+            if (layer instanceof L.Marker) {
+              // Skip user marker, shop markers, and restaurant markers
+              if (
+                layer !== userMarkerRef.current &&
+                !shopMarkersRef.current.includes(layer) &&
+                !orderMarkersRef.current.includes(layer)
+              ) {
+                // Check if marker has order-related popup content or is an order marker
+                const popup = layer.getPopup();
+                if (popup) {
+                  const popupContent = popup.getContent();
+                  // If popup contains order-related text, remove it
+                  if (
+                    typeof popupContent === "string" &&
+                    (popupContent.includes("Order #") ||
+                      popupContent.includes("Accept Batch") ||
+                      popupContent.includes("items") ||
+                      popupContent.includes("earnings"))
+                  ) {
+                    console.log("🗺️ [MapSection] Removing untracked order marker");
+                    mapInstanceRef.current.removeLayer(layer);
+                  }
+                }
+              }
+            }
+          });
+        }
+        
         clearBusyAreas(); // Clear busy areas when offline
         setPendingOrders([]); // Clear pending orders state
         setShowBusyAreas(false); // Disable busy areas when offline
@@ -2456,6 +2456,13 @@ export default function MapSection({
     if (!map || !map.getContainer()) {
       console.warn("🗺️ [MapSection] initMapSequence: Map or container not available");
       return;
+    }
+    
+    // If offline, only load shops and restaurants, skip order markers
+    if (!isOnline) {
+      console.log("🗺️ [MapSection] initMapSequence: Offline - only loading shops and restaurants");
+      // Clear any existing order markers first
+      clearOrderMarkers();
     }
 
     try {
@@ -2908,10 +2915,42 @@ export default function MapSection({
 
   // Helper function to clear order markers
   const clearOrderMarkers = () => {
+    console.log("🗺️ [MapSection] clearOrderMarkers: Clearing", orderMarkersRef.current.length, "markers");
+    
+    if (!mapInstanceRef.current) {
+      console.warn("🗺️ [MapSection] clearOrderMarkers: No map instance available");
+      orderMarkersRef.current = [];
+      return;
+    }
+    
     orderMarkersRef.current.forEach((marker) => {
-      if (marker) marker.remove();
+      try {
+        if (marker) {
+          // Check if marker is on the map
+          const map = marker.getMap();
+          if (map) {
+            map.removeLayer(marker);
+            console.log("🗺️ [MapSection] Removed marker from map using removeLayer");
+          } else {
+            // Try remove() as fallback
+            marker.remove();
+            console.log("🗺️ [MapSection] Removed marker using remove()");
+          }
+        }
+      } catch (error) {
+        console.warn("🗺️ [MapSection] Error removing marker:", error);
+        // Force remove from map if it exists
+        try {
+          if (mapInstanceRef.current && marker) {
+            mapInstanceRef.current.removeLayer(marker);
+          }
+        } catch (e) {
+          console.warn("🗺️ [MapSection] Error force removing marker:", e);
+        }
+      }
     });
     orderMarkersRef.current = [];
+    console.log("🗺️ [MapSection] clearOrderMarkers: All markers cleared");
   };
 
   // Helper function to clear shop markers
