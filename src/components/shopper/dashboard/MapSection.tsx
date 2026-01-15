@@ -765,7 +765,6 @@ export default function MapSection({
 }: MapSectionProps) {
   const { theme } = useTheme();
   const { isInitialized } = useFCMNotifications();
-  const [realTimeAgedOrders, setRealTimeAgedOrders] = useState<any[]>([]);
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [shops, setShops] = useState<Shop[]>([]);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -885,52 +884,11 @@ export default function MapSection({
     return filterAgedUnassignedOrders(availableOrders || []);
   }, [availableOrders]);
 
-  // Combine props orders with real-time aged orders
+  // Combine props orders (no longer using websocket real-time orders)
   const allAvailableOrders = useMemo(() => {
-    return [...agedUnassignedOrders, ...realTimeAgedOrders];
-  }, [agedUnassignedOrders, realTimeAgedOrders]);
+    return [...agedUnassignedOrders];
+  }, [agedUnassignedOrders]);
 
-  // Listen for WebSocket events
-  useEffect(() => {
-    const handleWebSocketNewOrder = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const { order } = customEvent.detail;
-      // Check if order is aged and unassigned - only show old orders on map
-      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-      const orderCreatedAt = new Date(order.createdAt);
-      const isAged = orderCreatedAt <= thirtyMinutesAgo;
-      const isUnassigned = !order.shopper_id || order.shopper_id === null;
-
-      if (isAged && isUnassigned) {
-        setRealTimeAgedOrders((prev) => [...prev, order]);
-      }
-    };
-
-    const handleWebSocketOrderExpired = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const { orderId } = customEvent.detail;
-      setRealTimeAgedOrders((prev) =>
-        prev.filter((order) => order.id !== orderId)
-      );
-    };
-
-    window.addEventListener("websocket-new-order", handleWebSocketNewOrder);
-    window.addEventListener(
-      "websocket-order-expired",
-      handleWebSocketOrderExpired
-    );
-
-    return () => {
-      window.removeEventListener(
-        "websocket-new-order",
-        handleWebSocketNewOrder
-      );
-      window.removeEventListener(
-        "websocket-order-expired",
-        handleWebSocketOrderExpired
-      );
-    };
-  }, []);
 
   // Map style URLs using free OpenStreetMap tiles
   const mapStyles = {
@@ -2138,39 +2096,74 @@ export default function MapSection({
 
   // Main map initialization effect
   useEffect(() => {
-    if (!mapRef.current || !mapLoaded) return;
+    console.log("🗺️ [MapSection] Map initialization effect triggered:", {
+      mapLoaded,
+      hasMapRef: !!mapRef.current,
+      isOnline,
+      theme,
+    });
+    
+    if (!mapLoaded) {
+      console.log("🗺️ [MapSection] Map not loaded yet, skipping initialization");
+      return;
+    }
 
     let mapInstance: L.Map | null = null;
     let isCancelled = false;
 
-    // Wait for next frame to ensure DOM is ready
-    const timer = requestAnimationFrame(() => {
+    // Wait for ref to be attached and DOM to be ready
+    const checkRefAndInit = () => {
       if (isCancelled) return;
+      
+      if (!mapRef.current) {
+        console.log("🗺️ [MapSection] mapRef.current is null, retrying...");
+        // Retry if ref is not attached yet (can happen when mapLoaded becomes true in same render)
+        requestAnimationFrame(checkRefAndInit);
+        return;
+      }
+      
+      console.log("🗺️ [MapSection] mapRef.current is available, proceeding with initialization");
 
-      try {
-        // Cleanup existing map with proper error handling
-        if (mapInstanceRef.current) {
-          try {
-            mapInstanceRef.current.off(); // Remove all event listeners
-            mapInstanceRef.current.remove();
-          } catch (e) {
-            console.warn("Error removing map:", e);
+      // Wait for next frame to ensure DOM is ready
+      const timer = requestAnimationFrame(() => {
+        if (isCancelled) {
+          console.log("🗺️ [MapSection] Initialization cancelled");
+          return;
+        }
+
+        console.log("🗺️ [MapSection] Starting map cleanup and initialization");
+
+        try {
+          // Cleanup existing map with proper error handling
+          if (mapInstanceRef.current) {
+            console.log("🗺️ [MapSection] Cleaning up existing map instance");
+            try {
+              mapInstanceRef.current.off(); // Remove all event listeners
+              mapInstanceRef.current.remove();
+            } catch (e) {
+              console.warn("Error removing map:", e);
+            }
+            mapInstanceRef.current = null;
           }
-          mapInstanceRef.current = null;
-        }
 
-        // Clear the map container HTML to ensure clean state
-        if (mapRef.current) {
-          mapRef.current.innerHTML = "";
-        }
+          // Clear the map container HTML to ensure clean state
+          if (mapRef.current) {
+            console.log("🗺️ [MapSection] Clearing map container HTML");
+            mapRef.current.innerHTML = "";
+          }
 
-        // Wait a tick to ensure cleanup is complete
-        setTimeout(() => {
-          if (isCancelled || !mapRef.current) return;
+          // Wait a tick to ensure cleanup is complete
+          setTimeout(() => {
+            if (isCancelled || !mapRef.current) {
+              console.log("🗺️ [MapSection] Initialization cancelled or mapRef lost");
+              return;
+            }
 
-          try {
-            // Create new map instance with type assertion and null check
-            mapInstance = L.map(mapRef.current as HTMLElement, {
+            console.log("🗺️ [MapSection] Creating new Leaflet map instance");
+
+            try {
+              // Create new map instance with type assertion and null check
+              mapInstance = L.map(mapRef.current as HTMLElement, {
               center: [-1.9706, 30.1044],
               zoom: 14,
               minZoom: 3,
@@ -2182,8 +2175,14 @@ export default function MapSection({
             // Store map instance
             mapInstanceRef.current = mapInstance;
             setMapInstance(mapInstance); // Update state for route drawing
+            console.log("🗺️ [MapSection] Map instance created and stored:", {
+              center: mapInstance.getCenter(),
+              zoom: mapInstance.getZoom(),
+              theme,
+            });
 
             // Add initial tile layer with proper subdomain configuration
+            console.log("🗺️ [MapSection] Adding tile layer with style:", mapStyles[theme]);
             L.tileLayer(mapStyles[theme], {
               maxZoom: 19,
               minZoom: 3,
@@ -2277,12 +2276,18 @@ export default function MapSection({
             const MAX_RETRIES = 20; // Maximum 1 second of retries (20 * 50ms)
             
             const waitForMapReady = () => {
-              if (isCancelled || !mapInstance) return;
+              if (isCancelled || !mapInstance) {
+                console.log("🗺️ [MapSection] waitForMapReady cancelled or no map instance");
+                return;
+              }
               
               retryCount++;
+              console.log("🗺️ [MapSection] Checking map readiness, attempt:", retryCount);
+              
               if (retryCount > MAX_RETRIES) {
-                console.warn("Map initialization timeout - proceeding anyway");
+                console.warn("🗺️ [MapSection] Map initialization timeout - proceeding anyway");
                 if (mapInstance) {
+                  console.log("🗺️ [MapSection] Calling initMapSequence after timeout");
                   initMapSequence(mapInstance);
                 }
                 return;
@@ -2291,41 +2296,58 @@ export default function MapSection({
               const container = mapInstance.getContainer();
               const panes = (mapInstance as any)._panes;
               
-              // Check if map is fully initialized with all panes
-              if (
-                container &&
+              const isReady = container &&
                 panes &&
                 panes.overlayPane &&
                 document.body.contains(container) &&
                 document.body.contains(panes.overlayPane) &&
-                (mapInstance as any)._loaded
-              ) {
+                (mapInstance as any)._loaded;
+              
+              console.log("🗺️ [MapSection] Map readiness check:", {
+                hasContainer: !!container,
+                hasPanes: !!panes,
+                hasOverlayPane: !!panes?.overlayPane,
+                containerInBody: container ? document.body.contains(container) : false,
+                overlayPaneInBody: panes?.overlayPane ? document.body.contains(panes.overlayPane) : false,
+                isLoaded: (mapInstance as any)._loaded,
+                isReady,
+              });
+              
+              // Check if map is fully initialized with all panes
+              if (isReady) {
+                console.log("🗺️ [MapSection] Map is ready! Calling initMapSequence");
                 initMapSequence(mapInstance);
               } else {
                 // Retry after a short delay if map isn't ready yet
+                console.log("🗺️ [MapSection] Map not ready yet, retrying in 50ms");
                 setTimeout(waitForMapReady, 50);
               }
             };
 
             // Start waiting for map to be ready
+            console.log("🗺️ [MapSection] Waiting for map to be fully ready");
             requestAnimationFrame(() => {
               if (!isCancelled && mapInstance) {
                 waitForMapReady();
               }
             });
           } catch (error) {
-            console.error("Error initializing map:", error);
+            console.error("🗺️ [MapSection] Error initializing map:", error);
           }
         }, 50); // 50ms delay to ensure cleanup is complete
       } catch (error) {
-        console.error("Error during map cleanup:", error);
+        console.error("🗺️ [MapSection] Error during map cleanup:", error);
       }
-    });
+      });
+    };
+
+    // Start checking for ref attachment
+    console.log("🗺️ [MapSection] Starting checkRefAndInit");
+    checkRefAndInit();
 
     // Cleanup function
     return () => {
       isCancelled = true;
-      cancelAnimationFrame(timer);
       if (mapInstanceRef.current) {
         try {
           mapInstanceRef.current.off();
@@ -2336,6 +2358,9 @@ export default function MapSection({
         mapInstanceRef.current = null;
       }
     };
+    
+    // Start checking for ref attachment
+    checkRefAndInit();
   }, [mapLoaded, theme]);
 
   // Re-render map when aged orders change (only when online)
@@ -2350,35 +2375,58 @@ export default function MapSection({
     }
   }, [allAvailableOrders, mapLoaded, isOnline]);
 
-  // Re-render map when going online/offline to show/hide order markers
+  // Re-render map when going online/offline - always show shops/restaurants
   useEffect(() => {
     if (mapInstanceRef.current && mapLoaded) {
       // Clear existing order markers when going offline
       if (!isOnline) {
+        console.log("🗺️ [MapSection] Going offline - clearing all order-related markers and data");
         clearOrderMarkers();
+        clearBusyAreas(); // Clear busy areas when offline
+        setPendingOrders([]); // Clear pending orders state
+        setShowBusyAreas(false); // Disable busy areas when offline
+        console.log("🗺️ [MapSection] Offline cleanup complete - only shops and restaurants remain visible");
       } else {
-        // Re-initialize map sequence when going online
+        console.log("🗺️ [MapSection] Going online - re-initializing map sequence");
+        // Re-initialize map sequence when going online (to show order markers)
         initMapSequence(mapInstanceRef.current);
       }
+      // Note: Shops and restaurants are always shown regardless of online status
+      // They are loaded during initial map initialization
     }
   }, [isOnline, mapLoaded]);
 
-  // Handle busy areas toggle
+  // Handle busy areas toggle - only show when online
   useEffect(() => {
     if (mapInstanceRef.current && mapLoaded) {
-      if (showBusyAreas) {
+      if (showBusyAreas && isOnline) {
+        console.log("🗺️ [MapSection] Rendering busy areas");
         renderBusyAreas(mapInstanceRef.current);
       } else {
+        if (!isOnline && showBusyAreas) {
+          console.log("🗺️ [MapSection] Clearing busy areas - shopper is offline");
+          setShowBusyAreas(false);
+        }
         clearBusyAreas();
       }
     }
-  }, [showBusyAreas, mapLoaded, pendingOrders, allAvailableOrders, theme]);
+  }, [showBusyAreas, mapLoaded, pendingOrders, allAvailableOrders, theme, isOnline]);
 
   // Function to initialize map sequence
   const initMapSequence = async (map: L.Map) => {
-    if (!map || !map.getContainer()) return;
+    console.log("🗺️ [MapSection] initMapSequence called:", {
+      hasMap: !!map,
+      hasContainer: map ? !!map.getContainer() : false,
+      isOnline,
+    });
+    
+    if (!map || !map.getContainer()) {
+      console.warn("🗺️ [MapSection] initMapSequence: Map or container not available");
+      return;
+    }
 
     try {
+      console.log("🗺️ [MapSection] Fetching shops, restaurants, and pending orders...");
       // Load all data in parallel
       const [shopsResponse, restaurantsResponse, pendingOrdersResponse] =
         await Promise.all([
@@ -2388,6 +2436,12 @@ export default function MapSection({
             ? fetch("/api/shopper/pendingOrders")
             : Promise.resolve({ json: () => [] }),
         ]);
+      
+      console.log("🗺️ [MapSection] Data fetched:", {
+        shopsStatus: shopsResponse.status,
+        restaurantsStatus: restaurantsResponse.status,
+        pendingOrdersStatus: pendingOrdersResponse.status,
+      });
 
       const [shops, restaurantsData, pendingOrders] = await Promise.all([
         shopsResponse.json() as Promise<Shop[]>,
@@ -2396,8 +2450,15 @@ export default function MapSection({
       ]);
 
       const restaurants = restaurantsData.restaurants || [];
+      
+      console.log("🗺️ [MapSection] Data parsed:", {
+        shopsCount: shops.length,
+        restaurantsCount: restaurants.length,
+        pendingOrdersCount: pendingOrders.length,
+      });
 
       // Process shops (always visible regardless of online status)
+      console.log("🗺️ [MapSection] Processing shops (always visible)");
       setShops(shops);
       if (map && map.getContainer()) {
         shops.forEach((shop: Shop) => {
@@ -2555,8 +2616,9 @@ export default function MapSection({
         });
       }
 
-      // Process pending orders with grouping
+      // Process pending orders with grouping - only when online
       if (isOnline && map && map.getContainer()) {
+        console.log("🗺️ [MapSection] Processing pending orders:", pendingOrders.length);
         // Group pending orders by location
         const groupedPendingOrders = new Map<string, PendingOrder[]>();
         pendingOrders.forEach((order) => {
@@ -2651,13 +2713,14 @@ export default function MapSection({
         });
       }
 
-      // Process available unassigned orders with grouping
+      // Process available unassigned orders with grouping - only when online
       if (
         isOnline &&
         allAvailableOrders?.length > 0 &&
         map &&
         map.getContainer()
       ) {
+        console.log("🗺️ [MapSection] Processing available orders:", allAvailableOrders.length);
         // Group available orders by location
         const groupedAvailableOrders = new Map<
           string,
@@ -2763,10 +2826,18 @@ export default function MapSection({
           });
         });
       }
-    } catch (error) {
-      console.error("Error in map sequence:", error);
-    }
-  };
+      } catch (error) {
+        console.error("🗺️ [MapSection] Error in map sequence:", error);
+      }
+      
+      console.log("🗺️ [MapSection] initMapSequence complete:", {
+        shopsCount: shops.length,
+        restaurantsCount: restaurants.length,
+        pendingOrdersProcessed: isOnline ? pendingOrders.length : 0,
+        availableOrdersProcessed: isOnline && allAvailableOrders?.length > 0 ? allAvailableOrders.length : 0,
+        isOnline,
+      });
+    };
 
   // Update useEffect to fetch today's completed earnings
   useEffect(() => {
@@ -2834,13 +2905,18 @@ export default function MapSection({
 
   // Helper function to calculate and render busy areas
   const renderBusyAreas = (map: L.Map) => {
-    if (!showBusyAreas) return;
+    if (!showBusyAreas || !isOnline) {
+      console.log("🗺️ [MapSection] Skipping busy areas render:", { showBusyAreas, isOnline });
+      return;
+    }
 
     // Clear existing busy areas
     clearBusyAreas();
 
     // Combine all orders for density calculation
     const allOrders = [...pendingOrders, ...allAvailableOrders];
+    
+    console.log("🗺️ [MapSection] Rendering busy areas with orders:", allOrders.length);
 
     if (allOrders.length === 0) {
       return;
@@ -3327,6 +3403,7 @@ export default function MapSection({
 
   // If the dashboard is initializing, show a simpler loading state
   if (isInitializing) {
+    console.log("🗺️ [MapSection] Dashboard is initializing, showing loading state");
     return (
       <div className="relative w-full md:rounded-lg">
         <div
@@ -3342,23 +3419,15 @@ export default function MapSection({
     );
   }
 
-  // Show map loading state when map is not ready but dashboard is initialized
-  if (!mapLoaded) {
-    return (
-      <div
-        className={`flex h-[300px] w-full items-center justify-center md:h-[400px] ${
-          theme === "dark" ? "bg-gray-900" : "bg-gray-100"
-        }`}
-      >
-        <Loader
-          size="lg"
-          content="Loading map..."
-          className={theme === "dark" ? "rs-loader-dark" : ""}
-        />
-      </div>
-    );
-  }
-
+  // Always render the map container so mapRef is available when mapLoaded becomes true
+  console.log("🗺️ [MapSection] Rendering component:", {
+    mapLoaded,
+    isInitializing,
+    isOnline,
+    hasMapRef: !!mapRef.current,
+    hasMapInstance: !!mapInstanceRef.current,
+  });
+  
   return (
     <div className="relative w-full h-full md:rounded-lg">
       {/* Daily Earnings Badge */}
@@ -3433,25 +3502,46 @@ export default function MapSection({
         </div>
       )}
 
-      <div
-        ref={mapRef}
-        className={`h-full w-full overflow-hidden rounded-none md:h-[600px] md:w-auto md:rounded-lg ${
-          theme === "dark" ? "bg-gray-900" : "bg-gray-100"
-        }`}
-      />
-      {!mapLoaded && (
+      <div className="relative h-full w-full">
         <div
-          className={`absolute inset-0 flex items-center justify-center ${
-            theme === "dark" ? "bg-gray-900/90" : "bg-gray-100/90"
+          ref={(el) => {
+            if (el !== mapRef.current) {
+              console.log("🗺️ [MapSection] mapRef attached to DOM element:", {
+                hasElement: !!el,
+                mapLoaded,
+              });
+              mapRef.current = el;
+            }
+          }}
+          className={`h-full w-full overflow-hidden rounded-none md:h-[600px] md:w-auto md:rounded-lg ${
+            theme === "dark" ? "bg-gray-900" : "bg-gray-100"
           }`}
-        >
-          <Loader
-            size="lg"
-            content="Loading map..."
-            className={theme === "dark" ? "rs-loader-dark" : ""}
-          />
-        </div>
-      )}
+          style={{
+            position: 'relative',
+            zIndex: 1,
+            visibility: mapLoaded ? 'visible' : 'visible',
+            opacity: mapLoaded ? 1 : 0.5
+          }}
+        />
+        {(() => {
+          if (!mapLoaded) {
+            console.log("🗺️ [MapSection] Rendering loading overlay - mapLoaded is false");
+          }
+          return !mapLoaded ? (
+            <div
+              className={`absolute inset-0 z-10 flex items-center justify-center ${
+                theme === "dark" ? "bg-gray-900/90" : "bg-gray-100/90"
+              }`}
+            >
+              <Loader
+                size="lg"
+                content="Loading map..."
+                className={theme === "dark" ? "rs-loader-dark" : ""}
+              />
+            </div>
+          ) : null;
+        })()}
+      </div>
 
       {mapLoaded && (
         <>
@@ -3506,20 +3596,21 @@ export default function MapSection({
             </span>
           </button>
 
-          {/* Busy Areas Toggle Button */}
-          <button
-            onClick={() => setShowBusyAreas(!showBusyAreas)}
-            className={`absolute right-4 top-4 z-[1000] flex items-center gap-2 rounded-lg px-4 py-2.5 font-semibold shadow-lg backdrop-blur-lg transition-all duration-200 hover:shadow-xl active:scale-95 ${
-              showBusyAreas
-                ? theme === "dark"
-                  ? "bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-purple-500/30 hover:shadow-purple-500/40"
-                  : "bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-purple-500/30 hover:shadow-purple-500/40"
-                : theme === "dark"
-                ? "border border-gray-700/50 bg-gray-800/90 text-gray-100 hover:bg-gray-700/90"
-                : "border border-gray-200/50 bg-white/90 text-gray-900 hover:bg-gray-50/90"
-            }`}
-            title={showBusyAreas ? "Hide busy areas" : "Show busy areas"}
-          >
+          {/* Busy Areas Toggle Button - only show when online */}
+          {isOnline && (
+            <button
+              onClick={() => setShowBusyAreas(!showBusyAreas)}
+              className={`absolute right-4 top-4 z-[1000] flex items-center gap-2 rounded-lg px-4 py-2.5 font-semibold shadow-lg backdrop-blur-lg transition-all duration-200 hover:shadow-xl active:scale-95 ${
+                showBusyAreas
+                  ? theme === "dark"
+                    ? "bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-purple-500/30 hover:shadow-purple-500/40"
+                    : "bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-purple-500/30 hover:shadow-purple-500/40"
+                  : theme === "dark"
+                  ? "border border-gray-700/50 bg-gray-800/90 text-gray-100 hover:bg-gray-700/90"
+                  : "border border-gray-200/50 bg-white/90 text-gray-900 hover:bg-gray-50/90"
+              }`}
+              title={showBusyAreas ? "Hide busy areas" : "Show busy areas"}
+            >
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -3533,11 +3624,12 @@ export default function MapSection({
                 d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
               />
             </svg>
-            <span className="hidden md:inline">
-              {showBusyAreas ? "Hide" : "Show"} Busy Areas
-            </span>
-            {showBusyAreas && <span className="text-xs opacity-80">🔥</span>}
-          </button>
+              <span className="hidden md:inline">
+                {showBusyAreas ? "Hide" : "Show"} Busy Areas
+              </span>
+              {showBusyAreas && <span className="text-xs opacity-80">🔥</span>}
+            </button>
+          )}
 
           {/* Add tracking mode indicator */}
           {isOnline && (

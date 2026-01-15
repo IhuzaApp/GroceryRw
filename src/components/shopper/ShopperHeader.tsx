@@ -9,11 +9,9 @@ import { useTheme } from "@context/ThemeContext";
 import { Button } from "rsuite";
 import TelegramStatusButton from "./TelegramStatusButton";
 import NotificationCenter from "./NotificationCenter";
-import toast from "react-hot-toast";
 export default function ShopperHeader() {
   const [isMobile, setIsMobile] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
-  const [isTogglingOnline, setIsTogglingOnline] = useState(false);
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
 
@@ -54,79 +52,6 @@ export default function ShopperHeader() {
     };
   }, []);
 
-  // Handle online/offline toggle
-  const handleToggleOnline = async () => {
-    if (isTogglingOnline) return; // Prevent multiple clicks
-    
-    setIsTogglingOnline(true);
-    
-    try {
-      if (isOnline) {
-        // Go offline: Clear location cookies
-        document.cookie = "user_latitude=; path=/; max-age=0";
-        document.cookie = "user_longitude=; path=/; max-age=0";
-        setIsOnline(false);
-        
-        // Dispatch event to notify other components
-        window.dispatchEvent(new Event("toggleGoLive"));
-        
-        toast.success("You're now offline. You won't receive new order notifications.", {
-          icon: "🔴",
-          duration: 3000,
-        });
-        
-        console.log("🔴 Shopper went offline");
-      } else {
-        // Go online: Get location and set cookies
-        if (navigator.geolocation) {
-          const loadingToast = toast.loading("Getting your location...");
-          
-          try {
-            const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-              navigator.geolocation.getCurrentPosition(resolve, reject, {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0,
-              });
-            });
-
-            const { latitude, longitude } = position.coords;
-            
-            // Set location cookies (1 hour expiry)
-            const expires = new Date(Date.now() + 60 * 60 * 1000).toUTCString();
-            document.cookie = `user_latitude=${latitude}; path=/; expires=${expires}`;
-            document.cookie = `user_longitude=${longitude}; path=/; expires=${expires}`;
-            
-            setIsOnline(true);
-            
-            // Dispatch event to notify other components
-            window.dispatchEvent(new Event("toggleGoLive"));
-            
-            toast.dismiss(loadingToast);
-            toast.success("You're now online! You'll receive order notifications.", {
-              icon: "🟢",
-              duration: 3000,
-            });
-            
-            console.log("🟢 Shopper went online", { latitude, longitude });
-          } catch (error) {
-            toast.dismiss(loadingToast);
-            console.error("Error getting location:", error);
-            toast.error("Please enable location access to go online and receive orders.", {
-              duration: 5000,
-            });
-          }
-        } else {
-          toast.error("Geolocation is not supported by your browser. Please use a modern browser to go online.", {
-            duration: 5000,
-          });
-        }
-      }
-    } finally {
-      setIsTogglingOnline(false);
-    }
-  };
-
   if (isMobile) {
     return (
       <header
@@ -158,14 +83,46 @@ export default function ShopperHeader() {
 
           {/* Power button - Icon only */}
           <button
-            onClick={handleToggleOnline}
-            disabled={isTogglingOnline}
+            onClick={async () => {
+              if (isOnline) {
+                // Going offline - clear location cookies
+                document.cookie = "user_latitude=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                document.cookie = "user_longitude=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                setIsOnline(false);
+              } else {
+                // Going online - get current location
+                if (navigator.geolocation) {
+                  try {
+                    const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+                      navigator.geolocation.getCurrentPosition(
+                        resolve,
+                        reject,
+                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                      );
+                    });
+                    
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    // Set location cookies
+                    document.cookie = `user_latitude=${lat}; path=/; max-age=86400; SameSite=Lax`;
+                    document.cookie = `user_longitude=${lng}; path=/; max-age=86400; SameSite=Lax`;
+                    setIsOnline(true);
+                  } catch (error) {
+                    console.error("Error getting location:", error);
+                    // Show error toast
+                    toast.error("Could not get your location. Please check your settings.");
+                  }
+                } else {
+                  console.error("Geolocation is not supported");
+                }
+              }
+              
+              // Dispatch event for other components to update
+              window.dispatchEvent(new Event("toggleGoLive"));
+            }}
             className={`relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 active:scale-95 ${
-              isTogglingOnline
-                ? theme === "dark"
-                  ? "cursor-wait bg-gray-500/20 text-gray-400"
-                  : "cursor-wait bg-gray-500/10 text-gray-600"
-                : isOnline
+              isOnline
                 ? theme === "dark"
                   ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
                   : "bg-red-500/10 text-red-600 hover:bg-red-500/20"
@@ -173,49 +130,27 @@ export default function ShopperHeader() {
                 ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
                 : "bg-green-500/10 text-green-600 hover:bg-green-500/20"
             }`}
-            title={isTogglingOnline ? "Processing..." : isOnline ? "Go Offline (Stop Receiving Orders)" : "Go Online (Start Receiving Orders)"}
+            title={isOnline ? "Go Offline" : "Go Online"}
           >
             {/* Status indicator ring */}
-            {isOnline && !isTogglingOnline && (
+            {isOnline && (
               <span className="absolute inset-0 animate-ping rounded-full bg-red-500 opacity-20" />
             )}
 
-            {/* Loading spinner or Power icon */}
-            {isTogglingOnline ? (
-              <svg
-                className="h-5 w-5 animate-spin"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
-            ) : (
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                strokeWidth={2.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M5.636 5.636a9 9 0 1012.728 0M12 3v9"
-                />
-              </svg>
-            )}
+            {/* Power icon - standard power symbol */}
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              strokeWidth={2.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M5.636 5.636a9 9 0 1012.728 0M12 3v9"
+              />
+            </svg>
           </button>
         </div>
       </header>
