@@ -454,7 +454,6 @@ export default async function handler(
             delivery_photo_url
             delivery_time
             discount
-            found
             id
             service_fee
             shop_id
@@ -464,6 +463,11 @@ export default async function handler(
             updated_at
             user_id
             voucher_code
+            Shop {
+              id
+              name
+              address
+            }
             Order_Items {
               created_at
               id

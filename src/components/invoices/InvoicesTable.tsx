@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useRouter } from "next/router";
 import { useTheme } from "../../context/ThemeContext";
 import { Invoice } from "./types";
 import { formatCurrencySync } from "../../utils/formatCurrency";
@@ -14,6 +15,7 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
   onViewDetails,
   loading = false,
 }) => {
+  const router = useRouter();
   const { theme } = useTheme();
   const [selectedInvoices, setSelectedInvoices] = useState<Set<string>>(new Set());
   const [selectAll, setSelectAll] = useState(false);
@@ -149,18 +151,18 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
         navigator.userAgent
       );
-    const baseUrl =
-      process.env.NODE_ENV === "production"
-        ? process.env.NEXT_PUBLIC_APP_URL || "https://plas.rw"
-        : window.location.origin;
 
     if (isMobile) {
-      const pdfUrl = `${baseUrl}/api/invoices/${invoice.id}?pdf=true`;
-      window.open(pdfUrl, "_blank");
+      // For mobile, navigate to PDF in same tab
+      const pdfUrl = `/api/invoices/${invoice.id}?pdf=true`;
+      router.push(pdfUrl);
     } else {
-      const hash = invoice.order_type === "reel" ? "#reel" : "#regularOrder";
-      const invoiceUrl = `${baseUrl}/Plasa/invoices/${invoice.id}${hash}`;
-      window.open(invoiceUrl, "_blank");
+      // For desktop, navigate to invoice page with hash in same tab
+      const hash = invoice.order_type === "reel" ? "reel" : "regularOrder";
+      router.push({
+        pathname: `/Plasa/invoices/${invoice.id}`,
+        hash: hash,
+      });
     }
   };
 
