@@ -38,25 +38,41 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   };
 
   // Get avatar color based on type
+  // Categorize transaction types
+  const getTransactionCategory = (type: string) => {
+    const typeLC = type.toLowerCase();
+    
+    // Earnings/Income types
+    const earningTypes = ['earning', 'credit', 'payment', 'payments', 'income', 'bonus', 'tip', 'tips'];
+    
+    // Payout/Expense types  
+    const payoutTypes = ['payout', 'payouts', 'debit', 'expense', 'expenses', 'reserve', 'withdrawal', 'fee', 'refund'];
+    
+    if (earningTypes.some(t => typeLC.includes(t))) return 'earning';
+    if (payoutTypes.some(t => typeLC.includes(t))) return 'payout';
+    
+    return 'other';
+  };
+
   const getAvatarColor = (type: string) => {
+    const category = getTransactionCategory(type);
     const colors = {
-      credit: "bg-green-100 text-green-600",
-      debit: "bg-red-100 text-red-600",
-      payout: "bg-blue-100 text-blue-600",
-      earning: "bg-purple-100 text-purple-600",
+      earning: "bg-green-100 text-green-600",
+      payout: "bg-red-100 text-red-600",
+      other: "bg-gray-100 text-gray-600",
     };
-    return colors[type.toLowerCase() as keyof typeof colors] || "bg-gray-100 text-gray-600";
+    return colors[category as keyof typeof colors] || "bg-gray-100 text-gray-600";
   };
 
   // Get account badge color
   const getAccountBadgeColor = (type: string) => {
+    const category = getTransactionCategory(type);
     const colors = {
-      credit: "bg-green-50 text-green-700 border-green-200",
-      debit: "bg-red-50 text-red-700 border-red-200",
-      payout: "bg-blue-50 text-blue-700 border-blue-200",
-      earning: "bg-purple-50 text-purple-700 border-purple-200",
+      earning: "bg-green-50 text-green-700 border-green-200",
+      payout: "bg-red-50 text-red-700 border-red-200",
+      other: "bg-gray-50 text-gray-700 border-gray-200",
     };
-    return colors[type.toLowerCase() as keyof typeof colors] || "bg-gray-50 text-gray-700 border-gray-200";
+    return colors[category as keyof typeof colors] || "bg-gray-50 text-gray-700 border-gray-200";
   };
 
   // Format date
@@ -71,9 +87,20 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
 
   // Filter transactions
   const filteredTransactions = transactions.filter((transaction) => {
-    const matchesFilter = filter === "all" || transaction.type.toLowerCase() === filter;
+    const category = getTransactionCategory(transaction.type);
+    
+    let matchesFilter = false;
+    if (filter === "all") {
+      matchesFilter = true;
+    } else if (filter === "earning") {
+      matchesFilter = category === "earning";
+    } else if (filter === "payout") {
+      matchesFilter = category === "payout";
+    }
+    
     const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       transaction.id.toLowerCase().includes(searchTerm.toLowerCase());
+    
     return matchesFilter && matchesSearch;
   });
 
@@ -90,25 +117,73 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
       {/* Header with Filters */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         {/* Filter Tabs */}
-        <div className="flex items-center gap-2">
-          {[
-            { id: "all", label: "All", icon: "📊" },
-            { id: "earning", label: "Earnings", icon: "💰" },
-            { id: "payout", label: "Payouts", icon: "💳" },
-          ].map((tab) => (
+        <div className="flex items-center gap-3">
+          {(() => {
+            const earningsCount = transactions.filter(t => getTransactionCategory(t.type) === 'earning').length;
+            const payoutsCount = transactions.filter(t => getTransactionCategory(t.type) === 'payout').length;
+            
+            return [
+              { 
+                id: "all", 
+                label: "All Transactions",
+                count: transactions.length,
+                icon: (
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  </svg>
+                )
+              },
+              { 
+                id: "earning", 
+                label: "Earnings",
+                count: earningsCount,
+                icon: (
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                )
+              },
+              { 
+                id: "payout", 
+                label: "Payouts",
+                count: payoutsCount,
+                icon: (
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
+                )
+              },
+            ];
+          })().map((tab) => (
             <button
               key={tab.id}
               onClick={() => setFilter(tab.id)}
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              className={`group relative flex items-center gap-3 rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 ${
                 filter === tab.id
-                  ? "bg-green-500 text-white shadow-sm"
+                  ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/30"
                   : theme === "dark"
-                  ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
+                  : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-green-300"
               }`}
             >
-              <span>{tab.icon}</span>
-              <span>{tab.label}</span>
+              <span className={`transition-transform ${filter === tab.id ? 'scale-110' : 'group-hover:scale-110'}`}>
+                {tab.icon}
+              </span>
+              <div className="flex items-center gap-2">
+                <span>{tab.label}</span>
+                <span className={`flex h-6 min-w-[24px] items-center justify-center rounded-full px-2 text-xs font-bold ${
+                  filter === tab.id
+                    ? "bg-white/20 text-white"
+                    : theme === "dark"
+                    ? "bg-gray-700 text-gray-300"
+                    : "bg-gray-100 text-gray-600"
+                }`}>
+                  {tab.count}
+                </span>
+              </div>
+              {filter === tab.id && (
+                <div className="absolute -bottom-1 left-1/2 h-1 w-12 -translate-x-1/2 rounded-full bg-white"></div>
+              )}
             </button>
           ))}
         </div>
@@ -160,7 +235,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           <table className="w-full">
             <thead>
               <tr className={`border-b ${theme === "dark" ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-gray-50"}`}>
-                <th className="px-6 py-4 text-left">
+                <th className="w-20 px-4 py-4 text-left">
                   <div className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -186,15 +261,12 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
                   Status
                 </th>
-                <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
-                  Actions
-                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center">
+                  <td colSpan={6} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <svg className="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
@@ -213,14 +285,14 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                         : "hover:bg-gray-50"
                     }`}
                   >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-2">
                         <input
                           type="checkbox"
                           className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
                         />
-                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {transaction.id}
+                        <span className="text-xs font-mono text-gray-500 dark:text-gray-400">
+                          #{transaction.id.slice(-4)}
                         </span>
                       </div>
                     </td>
@@ -233,21 +305,42 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                           <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                             {transaction.description}
                           </div>
-                          {transaction.orderId && (
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                              Order #{transaction.orderNumber}
-                            </div>
-                          )}
+                          <div className="mt-1 flex flex-wrap gap-2 text-xs text-gray-500 dark:text-gray-400">
+                            {transaction.orderId && (
+                              <span className="inline-flex items-center gap-1">
+                                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                </svg>
+                                Order #{transaction.orderNumber}
+                              </span>
+                            )}
+                            <span className="inline-flex items-center gap-1">
+                              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              {transaction.type} Fee
+                            </span>
+                            {transaction.time && (
+                              <span className="inline-flex items-center gap-1">
+                                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                {transaction.time}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`text-sm font-semibold ${
-                        transaction.type.toLowerCase() === 'credit' || transaction.type.toLowerCase() === 'earning'
+                        getTransactionCategory(transaction.type) === 'earning'
                           ? "text-green-600"
+                          : getTransactionCategory(transaction.type) === 'payout'
+                          ? "text-red-600"
                           : "text-gray-900 dark:text-gray-100"
                       }`}>
-                        {transaction.type.toLowerCase() === 'debit' ? '-' : '+'}{formatCurrencySync(transaction.amount)}
+                        {getTransactionCategory(transaction.type) === 'payout' ? '-' : '+'}{formatCurrencySync(transaction.amount)}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -259,11 +352,6 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                       <div className="text-sm text-gray-900 dark:text-gray-100">
                         {formatDate(transaction.date)}
                       </div>
-                      {transaction.time && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {transaction.time}
-                        </div>
-                      )}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
@@ -275,35 +363,6 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                       }`}>
                         {transaction.status}
                       </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
-                          title="View details"
-                        >
-                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                        </button>
-                        <button
-                          className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
-                          title="Edit"
-                        >
-                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </button>
-                        <button
-                          className="rounded-lg p-2 text-gray-400 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/20"
-                          title="Delete"
-                        >
-                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
                     </td>
                   </tr>
                 ))
