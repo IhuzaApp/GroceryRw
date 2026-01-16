@@ -331,11 +331,13 @@ const EarningsPage: React.FC = () => {
         body: JSON.stringify({ amount }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to request payout");
-      }
-
       const data = await response.json();
+
+      if (!response.ok) {
+        // Extract the error message from the API response
+        const errorMessage = data.message || data.error || "Failed to request payout";
+        throw new Error(errorMessage);
+      }
       
       if (data.success) {
         // Refresh wallet data
