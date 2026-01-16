@@ -212,102 +212,98 @@ const TransactionCardsMobile: React.FC<TransactionCardsMobileProps> = ({
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {sortedDateGroups.map((dateLabel) => (
-            <div key={dateLabel} className="mb-4">
-              {/* Date Header */}
-              <div className="mb-3 px-0.5">
-                <h3
-                  className={`text-xs font-bold uppercase tracking-wider ${
-                    theme === "dark" ? "text-gray-500" : "text-gray-400"
+        <div>
+          {sortedDateGroups.map((dateLabel, groupIndex) => (
+          <div key={dateLabel} className={groupIndex > 0 ? "mt-6" : ""}>
+            {/* Date Header */}
+            <h3
+              className={`mb-3 text-xs font-bold uppercase tracking-wider ${
+                theme === "dark" ? "text-gray-500" : "text-gray-400"
+              }`}
+            >
+              {dateLabel}
+            </h3>
+
+            {/* Transaction Cards */}
+            {groupedTransactions[dateLabel].map((transaction) => {
+              const avatarStyle = getAvatarStyle(transaction.type);
+              const category = getTransactionCategory(transaction.type);
+              const isIncome = category === "income";
+
+              return (
+                <div
+                  key={transaction.id}
+                  className={`mb-3 rounded-2xl p-4 shadow-lg transition-transform active:scale-98 ${
+                    theme === "dark" ? "bg-gray-800" : "bg-white"
                   }`}
                 >
-                  {dateLabel}
-                </h3>
-              </div>
-
-              {/* Transaction Cards - Individual cards matching Overview style */}
-              <div className="space-y-3">
-                {groupedTransactions[dateLabel].map((transaction) => {
-                  const avatarStyle = getAvatarStyle(transaction.type);
-                  const category = getTransactionCategory(transaction.type);
-                  const isIncome = category === "income";
-
-                  return (
+                  <div className="flex items-center gap-3">
+                    {/* Avatar */}
                     <div
-                      key={transaction.id}
-                      className={`rounded-2xl p-4 shadow-lg transition-all active:scale-[0.98] ${
-                        theme === "dark"
-                          ? "bg-gray-800"
-                          : "bg-white"
-                      }`}
+                      className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold ${avatarStyle.bg} ${avatarStyle.text}`}
                     >
-                      <div className="flex items-center gap-3">
-                        {/* Avatar/Icon */}
-                        <div
-                          className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold ${avatarStyle.bg} ${avatarStyle.text}`}
-                        >
-                          {getInitials(transaction.description)}
-                        </div>
-
-                        {/* Transaction Info */}
-                        <div className="flex-1 min-w-0">
-                          <h4
-                            className={`text-sm font-semibold leading-tight truncate ${
-                              theme === "dark" ? "text-gray-100" : "text-gray-900"
-                            }`}
-                          >
-                            {transaction.description}
-                          </h4>
-                          <p
-                            className={`text-xs mt-1 leading-tight ${
-                              theme === "dark" ? "text-gray-400" : "text-gray-500"
-                            }`}
-                          >
-                            {new Date(transaction.date).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            })}
-                            {" • "}
-                            {formatTime(transaction.date, transaction.time)}
-                          </p>
-                        </div>
-
-                        {/* Amount and Status */}
-                        <div className="flex flex-col items-end flex-shrink-0 gap-1">
-                          <span
-                            className={`text-base font-bold leading-tight ${
-                              isIncome
-                                ? "text-green-600 dark:text-green-500"
-                                : "text-red-600 dark:text-red-500"
-                            }`}
-                          >
-                            {isIncome ? "+" : "-"}{formatCurrencySync(transaction.amount)}
-                          </span>
-                          <span
-                            className={`text-[11px] font-medium leading-tight capitalize ${
-                              transaction.status.toLowerCase() === "completed" || transaction.status.toLowerCase() === "receive"
-                                ? "text-green-600 dark:text-green-500"
-                                : transaction.status.toLowerCase() === "pending"
-                                ? "text-yellow-600 dark:text-yellow-500"
-                                : transaction.status.toLowerCase() === "paid"
-                                ? "text-red-600 dark:text-red-500"
-                                : theme === "dark"
-                                ? "text-gray-400"
-                                : "text-gray-500"
-                            }`}
-                          >
-                            {transaction.status}
-                          </span>
-                        </div>
-                      </div>
+                      {getInitials(transaction.description)}
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+
+                    {/* Transaction Details */}
+                    <div className="flex-1 min-w-0">
+                      <h4
+                        className={`text-sm font-semibold truncate ${
+                          theme === "dark" ? "text-gray-100" : "text-gray-900"
+                        }`}
+                      >
+                        {transaction.description}
+                      </h4>
+                      <p
+                        className={`mt-1 text-xs ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
+                        {new Date(transaction.date).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                        {" • "}
+                        {formatTime(transaction.date, transaction.time)}
+                      </p>
+                    </div>
+
+                    {/* Amount & Status */}
+                    <div className="flex flex-col items-end flex-shrink-0">
+                      <span
+                        className={`text-base font-bold ${
+                          isIncome
+                            ? "text-green-600 dark:text-green-500"
+                            : "text-red-600 dark:text-red-500"
+                        }`}
+                      >
+                        {isIncome ? "+" : "-"}
+                        {formatCurrencySync(transaction.amount)}
+                      </span>
+                      <span
+                        className={`mt-1 text-xs font-medium capitalize ${
+                          transaction.status.toLowerCase() === "completed" ||
+                          transaction.status.toLowerCase() === "receive"
+                            ? "text-green-600 dark:text-green-500"
+                            : transaction.status.toLowerCase() === "pending"
+                            ? "text-yellow-600 dark:text-yellow-500"
+                            : transaction.status.toLowerCase() === "paid"
+                            ? "text-red-600 dark:text-red-500"
+                            : theme === "dark"
+                            ? "text-gray-400"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        {transaction.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ))}
         </div>
       )}
     </div>
