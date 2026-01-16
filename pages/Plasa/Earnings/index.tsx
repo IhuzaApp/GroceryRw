@@ -512,7 +512,7 @@ const EarningsPage: React.FC = () => {
 
               {/* Payments Tab Content */}
               {activeTab === 'payments' && (
-                <>
+                <div>
                   {/* Desktop View - Table */}
                   <div className="hidden md:block">
                     <TransactionTable
@@ -522,13 +522,13 @@ const EarningsPage: React.FC = () => {
                   </div>
 
                   {/* Mobile View - Cards */}
-                  <div className="md:hidden">
+                  <div className="block md:hidden">
                     <TransactionCardsMobile
                       transactions={transactions}
                       isLoading={walletLoading}
                     />
                   </div>
-                </>
+                </div>
               )}
 
               {/* Achievements Tab Content */}
