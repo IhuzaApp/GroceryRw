@@ -33,13 +33,13 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
 
   return (
     <div
-      className={`rounded-2xl p-6 shadow-lg ${
+      className={`rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg ${
         theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
       }`}
     >
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-sm font-medium opacity-70">Schedule</h3>
-        <button className="text-gray-400 hover:text-gray-600">
+        <h3 className="text-xs sm:text-sm font-medium opacity-70">Schedule</h3>
+        <button className="text-gray-400 hover:text-gray-600 hidden sm:block">
           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
           </svg>
@@ -47,11 +47,11 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
+        <div className="flex items-center justify-center py-6 sm:py-8">
+          <div className="h-6 w-6 sm:h-8 sm:w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
         </div>
       ) : (
-        <div className="text-xs">
+        <div className="text-[10px] sm:text-xs">
           <div className="mb-2 grid grid-cols-7 gap-1 text-center font-medium opacity-60">
             <div>Su</div>
             <div>Mo</div>

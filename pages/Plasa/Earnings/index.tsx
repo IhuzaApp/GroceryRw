@@ -284,11 +284,9 @@ const EarningsPage: React.FC = () => {
     }
   };
 
-  const handlePeriodChange = (value: string | null, event: SyntheticEvent) => {
-    if (value) {
-      setPeriod(value);
-      fetchDailyEarnings(value);
-    }
+  const handlePeriodChange = (value: string) => {
+    setPeriod(value);
+    fetchDailyEarnings(value);
   };
 
   // Format number with decimal places but no currency symbol
@@ -363,50 +361,44 @@ const EarningsPage: React.FC = () => {
         <meta name="robots" content="noindex, nofollow" />
       </Head>
       <ShopperLayout>
-        <div
-          className={`min-h-screen p-6 ${
-            theme === "dark"
-              ? "bg-gray-900 text-gray-100"
-              : "bg-gray-50 text-gray-900"
-          }`}
-        >
-          {/* Loading State */}
-          {!isInitialized && (
-            <div className="flex h-full items-center justify-center">
-              <Loader size="lg" />
-            </div>
-          )}
+        {/* Loading State */}
+        {!isInitialized && (
+          <div className="flex h-full items-center justify-center">
+            <Loader size="lg" />
+          </div>
+        )}
 
-          {/* New Dashboard Layout */}
-          {isInitialized && (
-            <div className="container mx-auto max-w-7xl">
-              {/* Custom Tailwind Tabs */}
-              <div className="mb-6">
-                <div className="border-b border-gray-200">
-                  <nav className="-mb-px flex space-x-8">
+        {/* New Dashboard Layout */}
+        {isInitialized && (
+          <div className="container mx-auto max-w-7xl">
+              {/* Custom Tailwind Tabs - Mobile Responsive */}
+              <div className="mb-4 sm:mb-6">
+                <div className="border-b border-gray-200 dark:border-gray-700">
+                  {/* Mobile: Horizontal Scroll, Desktop: Normal */}
+                  <nav className="-mb-px flex overflow-x-auto scrollbar-hide space-x-2 sm:space-x-4 md:space-x-8">
                     {[
                       { id: 'overview', label: 'Overview', icon: (
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                         </svg>
                       )},
-                      { id: 'breakdown', label: 'Earnings Breakdown', icon: (
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      { id: 'breakdown', label: 'Breakdown', mobileLabel: 'Breakdown', icon: (
+                        <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                         </svg>
                       )},
-                      { id: 'recent-orders', label: 'Recent Orders', icon: (
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      { id: 'recent-orders', label: 'Orders', mobileLabel: 'Orders', icon: (
+                        <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                         </svg>
                       )},
-                      { id: 'payments', label: 'Payment History', icon: (
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      { id: 'payments', label: 'Payments', mobileLabel: 'Payments', icon: (
+                        <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                       )},
-                      { id: 'achievements', label: 'Achievements', icon: (
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      { id: 'achievements', label: 'Badges', mobileLabel: 'Badges', icon: (
+                        <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                         </svg>
                       )},
@@ -414,16 +406,17 @@ const EarningsPage: React.FC = () => {
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-medium transition-colors ${
+                        className={`flex items-center justify-center gap-1.5 sm:gap-2 border-b-2 px-4 sm:px-3 md:px-1 py-3 sm:py-4 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap min-w-[45%] sm:min-w-0 flex-shrink-0 ${
                           activeTab === tab.id
-                            ? 'border-green-500 text-green-600'
+                            ? 'border-green-500 text-green-600 dark:text-green-400'
                             : theme === 'dark'
                             ? 'border-transparent text-gray-400 hover:border-gray-600 hover:text-gray-300'
                             : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                         }`}
                       >
                         {tab.icon}
-                        <span>{tab.label}</span>
+                        <span className="hidden sm:inline">{tab.label}</span>
+                        <span className="sm:hidden">{tab.mobileLabel || tab.label}</span>
                       </button>
                     ))}
                   </nav>
@@ -434,7 +427,7 @@ const EarningsPage: React.FC = () => {
               {activeTab === 'overview' && (
                 <>
               {/* Top Grid - Stats Cards */}
-              <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 items-start">
+              <div className="mb-3 sm:mb-4 md:mb-6 grid grid-cols-1 gap-3 sm:gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-4 items-start">
                 <TotalBalanceCard
                   wallet={wallet}
                   isLoading={walletLoading}
@@ -459,7 +452,7 @@ const EarningsPage: React.FC = () => {
               </div>
 
               {/* Main Content Grid */}
-              <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <div className="mb-3 sm:mb-4 md:mb-6 grid grid-cols-1 gap-3 sm:gap-4 md:gap-6 lg:grid-cols-3">
                 {/* Earning Overview Chart - Takes 2 columns */}
                 <EarningOverviewChart
                   totalEarnings={earningsStats.totalEarnings}
@@ -477,7 +470,7 @@ const EarningsPage: React.FC = () => {
               </div>
 
               {/* Bottom Grid - Major Expenses, Asset Valuation, Promo */}
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:gap-4 md:gap-6 lg:grid-cols-3">
                 {/* Earnings Components */}
                 <EarningsComponentsCard
                   earningsComponents={earningsStats.earningsComponents}
@@ -505,7 +498,7 @@ const EarningsPage: React.FC = () => {
               {/* Breakdown Tab Content */}
               {activeTab === 'breakdown' && (
                 <div
-                  className={`rounded-2xl p-6 shadow-lg ${
+                  className={`rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg ${
                     theme === "dark"
                       ? "bg-gray-800 text-white"
                       : "bg-white text-gray-900"
@@ -543,7 +536,7 @@ const EarningsPage: React.FC = () => {
               {/* Recent Orders Tab Content */}
               {activeTab === 'recent-orders' && (
                 <div
-                  className={`rounded-2xl p-6 shadow-lg ${
+                  className={`rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg ${
                     theme === "dark"
                       ? "bg-gray-800 text-white"
                       : "bg-white text-gray-900"
@@ -573,21 +566,21 @@ const EarningsPage: React.FC = () => {
 
               {/* Achievements Tab Content */}
               {activeTab === 'achievements' && (
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 items-start">
+                <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 items-start">
                   {/* Left Column - Working Towards Achievements */}
                   <div
-                    className={`rounded-2xl p-6 shadow-lg ${
+                    className={`rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg ${
                       theme === "dark"
                         ? "bg-gray-800 text-white"
                         : "bg-white text-gray-900"
                     }`}
                   >
-                    <h3 className="mb-4 text-lg font-bold">Working Towards</h3>
+                    <h3 className="mb-3 sm:mb-4 text-base sm:text-lg font-bold">Working Towards</h3>
                     <AchievementBadges />
                   </div>
 
                   {/* Right Column - Insights & Tips */}
-                  <div className="space-y-6">
+                  <div className="space-y-4 sm:space-y-6">
                     {/* Performance Insights */}
                     {earningsStats.performance && (
                       <PerformanceInsights
@@ -624,8 +617,7 @@ const EarningsPage: React.FC = () => {
                 </div>
               )}
             </div>
-          )}
-        </div>
+        )}
       </ShopperLayout>
     </AuthGuard>
   );
