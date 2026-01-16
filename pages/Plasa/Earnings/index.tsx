@@ -14,6 +14,10 @@ import PerformanceMetrics from "@components/shopper/earnings/PerformanceMetrics"
 import EarningsGoals from "@components/shopper/earnings/EarningsGoals";
 import PaymentHistory from "@components/shopper/earnings/PaymentHistory";
 import TransactionTable from "@components/shopper/earnings/TransactionTable";
+import TotalBalanceCard from "@components/shopper/earnings/TotalBalanceCard";
+import TotalTransactionsCard from "@components/shopper/earnings/TotalTransactionsCard";
+import TotalSpendCard from "@components/shopper/earnings/TotalSpendCard";
+import ScheduleCard from "@components/shopper/earnings/ScheduleCard";
 import AchievementBadges from "@components/shopper/earnings/AchievementBadges";
 import AchievementBadgesMobile from "@components/shopper/earnings/AchievementBadgesMobile";
 import EarningsTipsMobile from "@components/shopper/earnings/EarningsTipsMobile";
@@ -307,20 +311,34 @@ const EarningsPage: React.FC = () => {
     { name: 'Marvin McKinney', points: 980 },
   ];
 
-  // Helper function to check if a day is a working day
-  const isWorkingDay = (dayNumber: number) => {
-    if (shopperSchedule.length === 0) return true; // If no schedule, assume all days are working
-    
-    // Get current date and calculate the day of week for the given day number
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
-    const date = new Date(year, month, dayNumber);
-    const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    
-    // Check if this day of week is in the schedule and is_available
-    const scheduleForDay = shopperSchedule.find(s => s.day_of_week === dayOfWeek);
-    return scheduleForDay ? scheduleForDay.is_available : false;
+  // Handle withdrawal/payout request
+  const handleWithdrawal = async (amount: number) => {
+    try {
+      const response = await authenticatedFetch("/api/shopper/requestPayout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ amount }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to request payout");
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Refresh wallet data
+        await fetchWalletData();
+        logger.info("Payout requested successfully", "EarningsPage", { amount });
+      } else {
+        throw new Error(data.message || "Failed to request payout");
+      }
+    } catch (error) {
+      logger.error("Error requesting payout", "EarningsPage", error);
+      throw error;
+    }
   };
 
   return (
@@ -406,171 +424,27 @@ const EarningsPage: React.FC = () => {
                 <>
               {/* Top Grid - Stats Cards */}
               <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                {/* Total Balance Card */}
-                <div
-                  className={`rounded-2xl p-6 shadow-lg ${
-                    theme === "dark"
-                      ? "bg-gray-800 text-white"
-                      : "bg-white text-gray-900"
-                  }`}
-                >
-                  <div className="mb-2 flex items-center justify-between">
-                    <h3 className="text-sm font-medium opacity-70">Total Balance</h3>
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="mb-4">
-                    <p className="text-3xl font-bold">
-                      {formatCurrency(wallet?.availableBalance || 1450000)}
-                    </p>
-                    <p className="mt-1 text-sm text-green-500">
-                      Available spend: {formatCurrency(wallet?.availableBalance || 30000)}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button className="flex-1 rounded-full bg-green-500 px-4 py-2 text-sm font-medium text-white hover:bg-green-600">
-                      Transfer
-                    </button>
-                    <button className="flex-1 rounded-full border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50">
-                      Withdraw
-                    </button>
-                  </div>
-                </div>
-
-                {/* Total Transaction Card */}
-                <div
-                  className={`rounded-2xl p-6 shadow-lg ${
-                    theme === "dark"
-                      ? "bg-gray-800 text-white"
-                      : "bg-white text-gray-900"
-                  }`}
-                >
-                  <div className="mb-2 flex items-center justify-between">
-                    <h3 className="text-sm font-medium opacity-70">Total transaction</h3>
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="mb-4">
-                    <p className="text-3xl font-bold">{earningsStats.completedOrders || 57}</p>
-                    <p className="mt-1 text-sm opacity-60">
-                      Pending Transaction: 10
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button className="rounded-full bg-green-500 px-4 py-2 text-xs font-medium text-white">
-                      Success
-                    </button>
-                    <button className="rounded-full border border-gray-300 px-4 py-2 text-xs font-medium">
-                      Pending
-                    </button>
-                  </div>
-                </div>
-
-                {/* Total Spend Card */}
-                <div
-                  className={`rounded-2xl p-6 shadow-lg ${
-                    theme === "dark"
-                      ? "bg-gray-800 text-white"
-                      : "bg-white text-gray-900"
-                  }`}
-                >
-                  <div className="mb-2 flex items-center justify-between">
-                    <h3 className="text-sm font-medium opacity-70">Total spend</h3>
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="mb-4">
-                    <p className="text-3xl font-bold">{formatCurrency(earningsStats.totalEarnings || 1115000)}</p>
-                    <p className="mt-1 text-sm opacity-60">
-                      Completed: {earningsStats.completedOrders || 0} orders
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button className="rounded-full bg-green-500 px-4 py-2 text-xs font-medium text-white">
-                      All Time
-                    </button>
-                    <button className="rounded-full border border-gray-300 px-4 py-2 text-xs font-medium">
-                      This Month
-                    </button>
-                  </div>
-                </div>
-
-                {/* Schedule Calendar Card */}
-                <div
-                  className={`rounded-2xl p-6 shadow-lg ${
-                    theme === "dark"
-                      ? "bg-gray-800 text-white"
-                      : "bg-white text-gray-900"
-                  }`}
-                >
-                  <div className="mb-2 flex items-center justify-between">
-                    <h3 className="text-sm font-medium opacity-70">Schedule</h3>
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="text-xs">
-                    <div className="mb-2 grid grid-cols-7 gap-1 text-center font-medium opacity-60">
-                      <div>Su</div>
-                      <div>Mo</div>
-                      <div>Tu</div>
-                      <div>We</div>
-                      <div>Th</div>
-                      <div>Fr</div>
-                      <div>Sa</div>
-                    </div>
-                    <div className="grid grid-cols-7 gap-1 text-center">
-                      {(() => {
-                        const today = new Date();
-                        const currentDay = today.getDate();
-                        const year = today.getFullYear();
-                        const month = today.getMonth();
-                        const firstDay = new Date(year, month, 1).getDay();
-                        const daysInMonth = new Date(year, month + 1, 0).getDate();
-                        const cells = [];
-                        
-                        // Add empty cells for days before the month starts
-                        for (let i = 0; i < firstDay; i++) {
-                          cells.push(<div key={`empty-${i}`} className="p-1"></div>);
-                        }
-                        
-                        // Add cells for each day of the month
-                        for (let day = 1; day <= daysInMonth; day++) {
-                          const isToday = day === currentDay;
-                          const isWorking = isWorkingDay(day);
-                          
-                          cells.push(
-                            <div
-                              key={day}
-                              className={`rounded-full p-1 ${
-                                isToday
-                                  ? "bg-green-500 text-white font-bold"
-                                  : !isWorking
-                                  ? "bg-red-500 text-white"
-                                  : "hover:bg-gray-100"
-                              }`}
-                            >
-                              {day}
-                            </div>
-                          );
-                        }
-                        
-                        return cells;
-                      })()}
-                    </div>
-                  </div>
-                </div>
+                <TotalBalanceCard
+                  wallet={wallet}
+                  isLoading={walletLoading}
+                  onWithdraw={handleWithdrawal}
+                />
+                
+                <TotalTransactionsCard
+                  transactions={transactions}
+                  completedOrders={earningsStats.completedOrders}
+                  isLoading={loading}
+                />
+                
+                <TotalSpendCard
+                  earningsStats={earningsStats}
+                  isLoading={loading}
+                />
+                
+                <ScheduleCard
+                  shopperSchedule={shopperSchedule}
+                  isLoading={loading}
+                />
               </div>
 
               {/* Main Content Grid */}
