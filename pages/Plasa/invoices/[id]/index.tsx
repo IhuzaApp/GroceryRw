@@ -145,7 +145,11 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
   if (loading) {
     return (
       <ShopperLayout>
-        <div className={`min-h-screen ${theme === "dark" ? "bg-gray-900" : "bg-gray-50"} py-8`}>
+        <div
+          className={`min-h-screen ${
+            theme === "dark" ? "bg-gray-900" : "bg-gray-50"
+          } py-8`}
+        >
           <div className="mx-auto max-w-5xl px-4">
             <div className="animate-pulse">
               <div className="mb-8 h-10 w-32 rounded bg-gray-200 dark:bg-gray-700"></div>
@@ -172,7 +176,9 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
               <div className="text-center">
                 <div className="mb-4">
                   <svg
-                    className={`mx-auto h-16 w-16 ${theme === "dark" ? "text-red-400" : "text-red-500"}`}
+                    className={`mx-auto h-16 w-16 ${
+                      theme === "dark" ? "text-red-400" : "text-red-500"
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -215,7 +221,11 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
 
   return (
     <ShopperLayout>
-      <div className={`min-h-screen ${theme === "dark" ? "bg-gray-900" : "bg-gray-50"} py-8`}>
+      <div
+        className={`min-h-screen ${
+          theme === "dark" ? "bg-gray-900" : "bg-gray-50"
+        } py-8`}
+      >
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           {/* Action Buttons */}
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -227,8 +237,18 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
                   : "border-gray-300 bg-white text-gray-700 shadow-sm hover:border-gray-400 hover:bg-gray-50 hover:shadow"
               }`}
             >
-              <svg className="h-5 w-5 transition-transform duration-200 group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <svg
+                className="h-5 w-5 transition-transform duration-200 group-hover:-translate-x-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
               Back
             </button>
@@ -240,8 +260,18 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
                   className="group relative flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-green-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-green-500/40 active:scale-95 sm:w-auto sm:px-7"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-green-500 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
-                  <svg className="relative h-5 w-5 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <svg
+                    className="relative h-5 w-5 transition-transform duration-300 group-hover:scale-110"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
                   </svg>
                   <span className="relative">View Proof</span>
                 </button>
@@ -252,8 +282,18 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
                 className="group relative flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-gradient-to-r from-purple-600 to-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-purple-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/40 active:scale-95 sm:w-auto sm:px-7"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-violet-500 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
-                <svg className="relative h-5 w-5 transition-transform duration-300 group-hover:translate-y-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <svg
+                  className="relative h-5 w-5 transition-transform duration-300 group-hover:translate-y-0.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
                 </svg>
                 <span className="relative">Download PDF</span>
               </button>
@@ -261,34 +301,58 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
           </div>
 
           {/* Invoice Card */}
-          <div className={`rounded-2xl shadow-sm ${theme === "dark" ? "bg-gray-800" : "bg-white"}`}>
+          <div
+            className={`rounded-2xl shadow-sm ${
+              theme === "dark" ? "bg-gray-800" : "bg-white"
+            }`}
+          >
             <div className="p-8 sm:p-12">
               {/* Header */}
               <div className="mb-8 flex flex-col justify-between gap-6 sm:flex-row sm:items-start">
                 <div>
-                  <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                  <p
+                    className={`text-sm ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
                     Date
                   </p>
-                  <h1 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                  <h1
+                    className={`text-lg font-semibold ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     {invoiceData.dateCreated}
                   </h1>
-                  <h2 className={`mt-4 text-3xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                  <h2
+                    className={`mt-4 text-3xl font-bold ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     Invoice
                   </h2>
                 </div>
 
                 <div className="text-right">
-                  <div className="flex items-center justify-end gap-3 mb-2">
+                  <div className="mb-2 flex items-center justify-end gap-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-600">
                       <span className="text-xl font-bold text-white">P</span>
                     </div>
                     <div>
-                      <h3 className={`text-xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                      <h3
+                        className={`text-xl font-bold ${
+                          theme === "dark" ? "text-white" : "text-gray-900"
+                        }`}
+                      >
                         PLAS DESIGNS
                       </h3>
                     </div>
                   </div>
-                  <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                  <p
+                    className={`text-sm ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
                     {invoiceData.shopAddress}
                   </p>
                 </div>
@@ -296,10 +360,18 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
 
               {/* Greeting */}
               <div className="mb-8">
-                <p className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                <p
+                  className={`text-lg font-semibold ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
                   Dear {invoiceData.customer},
                 </p>
-                <p className={`mt-2 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                <p
+                  className={`mt-2 text-sm ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-600"
+                  }`}
+                >
                   Here are your order details, We thank you for your purchase.
                 </p>
               </div>
@@ -308,20 +380,40 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
               <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
                 {/* Order ID */}
                 <div>
-                  <p className={`mb-2 text-xs font-medium uppercase tracking-wide ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                  <p
+                    className={`mb-2 text-xs font-medium uppercase tracking-wide ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
                     Order ID
                   </p>
-                  <p className={`text-base font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                  <p
+                    className={`text-base font-semibold ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     #{invoiceData.orderNumber}
                   </p>
                   <div className="mt-3">
-                    <p className={`text-xs font-medium uppercase tracking-wide ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                    <p
+                      className={`text-xs font-medium uppercase tracking-wide ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
                       Billing Address
                     </p>
-                    <p className={`mt-1 text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                    <p
+                      className={`mt-1 text-sm ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
                       {invoiceData.customer}
                     </p>
-                    <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                    <p
+                      className={`text-sm ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
                       {invoiceData.customerEmail}
                     </p>
                   </div>
@@ -329,20 +421,40 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
 
                 {/* Invoice ID */}
                 <div>
-                  <p className={`mb-2 text-xs font-medium uppercase tracking-wide ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                  <p
+                    className={`mb-2 text-xs font-medium uppercase tracking-wide ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
                     Invoice ID
                   </p>
-                  <p className={`text-base font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                  <p
+                    className={`text-base font-semibold ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     #{invoiceData.invoiceNumber}
                   </p>
                   <div className="mt-3">
-                    <p className={`text-xs font-medium uppercase tracking-wide ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                    <p
+                      className={`text-xs font-medium uppercase tracking-wide ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
                       Shipping Address
                     </p>
-                    <p className={`mt-1 text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                    <p
+                      className={`mt-1 text-sm ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
                       {invoiceData.shop}
                     </p>
-                    <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                    <p
+                      className={`text-sm ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
                       {invoiceData.shopAddress}
                     </p>
                   </div>
@@ -350,20 +462,40 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
 
                 {/* Shipment ID */}
                 <div>
-                  <p className={`mb-2 text-xs font-medium uppercase tracking-wide ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                  <p
+                    className={`mb-2 text-xs font-medium uppercase tracking-wide ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
                     Shipment ID
                   </p>
-                  <p className={`text-base font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                  <p
+                    className={`text-base font-semibold ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     #SP-{String(invoiceData.orderNumber).slice(-6)}
                   </p>
                   <div className="mt-3">
-                    <p className={`text-xs font-medium uppercase tracking-wide ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                    <p
+                      className={`text-xs font-medium uppercase tracking-wide ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
                       Shipment Date & Time
                     </p>
-                    <p className={`mt-1 text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                    <p
+                      className={`mt-1 text-sm ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
                       {invoiceData.dateCompleted}
                     </p>
-                    <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                    <p
+                      className={`text-sm ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
                       12:00 PM
                     </p>
                   </div>
@@ -374,48 +506,114 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
               <div className="overflow-hidden">
                 <table className="w-full">
                   <thead>
-                    <tr className={`border-y ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}>
-                      <th className={`py-4 text-left text-xs font-semibold uppercase tracking-wide ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                    <tr
+                      className={`border-y ${
+                        theme === "dark" ? "border-gray-700" : "border-gray-200"
+                      }`}
+                    >
+                      <th
+                        className={`py-4 text-left text-xs font-semibold uppercase tracking-wide ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
                         ITEMS
                       </th>
-                      <th className={`py-4 text-left text-xs font-semibold uppercase tracking-wide ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                      <th
+                        className={`py-4 text-left text-xs font-semibold uppercase tracking-wide ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
                         SKU
                       </th>
-                      <th className={`py-4 text-center text-xs font-semibold uppercase tracking-wide ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                      <th
+                        className={`py-4 text-center text-xs font-semibold uppercase tracking-wide ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
                         QTY
                       </th>
-                      <th className={`py-4 text-right text-xs font-semibold uppercase tracking-wide ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                      <th
+                        className={`py-4 text-right text-xs font-semibold uppercase tracking-wide ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
                         TOTAL
                       </th>
                     </tr>
                   </thead>
-                  <tbody className={`divide-y ${theme === "dark" ? "divide-gray-700" : "divide-gray-100"}`}>
+                  <tbody
+                    className={`divide-y ${
+                      theme === "dark" ? "divide-gray-700" : "divide-gray-100"
+                    }`}
+                  >
                     {invoiceData.items.map((item, index) => (
                       <tr key={index}>
                         <td className="py-4">
                           <div className="flex items-center gap-3">
-                            <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${theme === "dark" ? "bg-gray-700" : "bg-gray-100"}`}>
-                              <svg className={`h-6 w-6 ${theme === "dark" ? "text-gray-400" : "text-gray-400"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            <div
+                              className={`flex h-12 w-12 items-center justify-center rounded-lg ${
+                                theme === "dark" ? "bg-gray-700" : "bg-gray-100"
+                              }`}
+                            >
+                              <svg
+                                className={`h-6 w-6 ${
+                                  theme === "dark"
+                                    ? "text-gray-400"
+                                    : "text-gray-400"
+                                }`}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                                />
                               </svg>
                             </div>
                             <div>
-                              <p className={`font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                              <p
+                                className={`font-medium ${
+                                  theme === "dark"
+                                    ? "text-white"
+                                    : "text-gray-900"
+                                }`}
+                              >
                                 {item.name}
                               </p>
-                              <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                              <p
+                                className={`text-sm ${
+                                  theme === "dark"
+                                    ? "text-gray-400"
+                                    : "text-gray-500"
+                                }`}
+                              >
                                 Delivery Date: {invoiceData.dateCompleted}
                               </p>
                             </div>
                           </div>
                         </td>
-                        <td className={`py-4 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                        <td
+                          className={`py-4 ${
+                            theme === "dark" ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
                           {String(index + 1).padStart(5, "0")}
                         </td>
-                        <td className={`py-4 text-center ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                        <td
+                          className={`py-4 text-center ${
+                            theme === "dark" ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
                           {item.quantity}
                         </td>
-                        <td className={`py-4 text-right font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                        <td
+                          className={`py-4 text-right font-semibold ${
+                            theme === "dark" ? "text-white" : "text-gray-900"
+                          }`}
+                        >
                           {formatCurrency(item.total)}
                         </td>
                       </tr>
@@ -428,21 +626,55 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
               <div className="mt-8 flex justify-end">
                 <div className="w-full max-w-sm space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>Subtotal</span>
-                    <span className={`font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                    <span
+                      className={
+                        theme === "dark" ? "text-gray-400" : "text-gray-600"
+                      }
+                    >
+                      Subtotal
+                    </span>
+                    <span
+                      className={`font-semibold ${
+                        theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                    >
                       {formatCurrency(invoiceData.subtotal)}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>Vat (0%)</span>
-                    <span className={`font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                    <span
+                      className={
+                        theme === "dark" ? "text-gray-400" : "text-gray-600"
+                      }
+                    >
+                      Vat (0%)
+                    </span>
+                    <span
+                      className={`font-semibold ${
+                        theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                    >
                       {formatCurrency(vat)}
                     </span>
                   </div>
-                  <div className={`border-t pt-3 ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`}>
+                  <div
+                    className={`border-t pt-3 ${
+                      theme === "dark" ? "border-gray-700" : "border-gray-200"
+                    }`}
+                  >
                     <div className="flex justify-between">
-                      <span className={`font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Grand Total</span>
-                      <span className={`text-lg font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                      <span
+                        className={`font-semibold ${
+                          theme === "dark" ? "text-white" : "text-gray-900"
+                        }`}
+                      >
+                        Grand Total
+                      </span>
+                      <span
+                        className={`text-lg font-bold ${
+                          theme === "dark" ? "text-white" : "text-gray-900"
+                        }`}
+                      >
                         {formatCurrency(invoiceData.total)}
                       </span>
                     </div>
@@ -467,8 +699,18 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
               className="absolute -top-10 right-0 z-10 rounded-full bg-white p-2 text-gray-800 shadow-lg transition-colors hover:bg-gray-200 sm:-top-12 sm:p-2.5"
               aria-label="Close modal"
             >
-              <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="h-5 w-5 sm:h-6 sm:w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
 
@@ -484,7 +726,9 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
 
             {/* Image Info - Mobile Only */}
             <div className="mt-4 rounded-lg bg-white bg-opacity-90 p-3 text-center sm:hidden">
-              <p className="text-sm font-medium text-gray-800">Delivery Proof Image</p>
+              <p className="text-sm font-medium text-gray-800">
+                Delivery Proof Image
+              </p>
               <p className="mt-1 text-xs text-gray-600">Tap outside to close</p>
             </div>
           </div>

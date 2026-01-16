@@ -143,13 +143,13 @@ const EarningsTabs: React.FC<EarningsTabsProps> = ({
       >
         <div
           ref={tabsRef}
-          className="overflow-x-auto scrollbar-hide"
+          className="scrollbar-hide overflow-x-auto"
           style={{
             scrollbarWidth: "none",
             msOverflowStyle: "none",
           }}
         >
-          <nav className="flex -mb-px min-w-full">
+          <nav className="-mb-px flex min-w-full">
             {tabs.map((tab, index) => (
               <button
                 key={tab.id}
@@ -157,10 +157,10 @@ const EarningsTabs: React.FC<EarningsTabsProps> = ({
                 onClick={() => onTabChange(tab.id)}
                 className={`
                   group relative flex items-center justify-center gap-2
-                  px-4 sm:px-6 lg:px-8 py-4
-                  text-sm font-medium whitespace-nowrap
-                  transition-all duration-200
-                  focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
+                  whitespace-nowrap px-4 py-4 text-sm
+                  font-medium transition-all duration-200
+                  focus:outline-none focus:ring-2
+                  focus:ring-green-500 focus:ring-offset-2 sm:px-6 lg:px-8
                   ${index === 0 ? "ml-0" : ""}
                   ${
                     activeTab === tab.id
@@ -210,10 +210,8 @@ const EarningsTabs: React.FC<EarningsTabsProps> = ({
                   <span
                     className={`
                     absolute bottom-0 left-0 right-0 h-0.5
-                    transition-all duration-200 opacity-0 group-hover:opacity-100
-                    ${
-                      theme === "dark" ? "bg-gray-600" : "bg-gray-300"
-                    }
+                    opacity-0 transition-all duration-200 group-hover:opacity-100
+                    ${theme === "dark" ? "bg-gray-600" : "bg-gray-300"}
                   `}
                   />
                 )}
@@ -224,7 +222,7 @@ const EarningsTabs: React.FC<EarningsTabsProps> = ({
       </div>
 
       {/* Mobile: Show active tab label below tabs */}
-      <div className="sm:hidden mt-3 text-center">
+      <div className="mt-3 text-center sm:hidden">
         <span
           className={`text-sm font-medium ${
             theme === "dark" ? "text-gray-300" : "text-gray-700"

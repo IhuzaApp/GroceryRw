@@ -27,19 +27,21 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
     const date = new Date(year, month, dayNumber);
     const dayOfWeek = date.getDay();
 
-    const scheduleForDay = shopperSchedule.find((s) => s.day_of_week === dayOfWeek);
+    const scheduleForDay = shopperSchedule.find(
+      (s) => s.day_of_week === dayOfWeek
+    );
     return scheduleForDay ? scheduleForDay.is_available : false;
   };
 
   return (
     <div
-      className={`rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg ${
+      className={`rounded-xl p-4 shadow-lg sm:rounded-2xl sm:p-6 ${
         theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
       }`}
     >
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-xs sm:text-sm font-medium opacity-70">Schedule</h3>
-        <button className="text-gray-400 hover:text-gray-600 hidden sm:block">
+        <h3 className="text-xs font-medium opacity-70 sm:text-sm">Schedule</h3>
+        <button className="hidden text-gray-400 hover:text-gray-600 sm:block">
           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
           </svg>
@@ -48,7 +50,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
 
       {isLoading ? (
         <div className="flex items-center justify-center py-6 sm:py-8">
-          <div className="h-6 w-6 sm:h-8 sm:w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
+          <div className="h-6 w-6 animate-spin rounded-full border-4 border-green-500 border-t-transparent sm:h-8 sm:w-8"></div>
         </div>
       ) : (
         <div className="text-[10px] sm:text-xs">
@@ -86,7 +88,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
                     key={day}
                     className={`rounded-full p-1 transition-colors ${
                       isToday
-                        ? "bg-green-500 text-white font-bold"
+                        ? "bg-green-500 font-bold text-white"
                         : !isWorking
                         ? "bg-red-500 text-white"
                         : theme === "dark"
@@ -102,7 +104,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
               return cells;
             })()}
           </div>
-          
+
           {/* Legend */}
           <div className="mt-3 flex items-center justify-center gap-4 text-xs">
             <div className="flex items-center gap-1">

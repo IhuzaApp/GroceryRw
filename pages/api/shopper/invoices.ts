@@ -7,121 +7,125 @@ import { logger } from "../../../src/utils/logger";
 
 // GraphQL query to fetch shopper invoices
 const GET_SHOPPER_INVOICES = gql`
- query getInvoiceDetials($shopper_id: uuid!, $limit: Int!, $offset: Int) {
-  Invoices(where: {Order: {shopper_id: {_eq: $shopper_id}}}, order_by: {created_at: desc}, limit: $limit, offset: $offset) {
-    created_at
-    Proof
-    customer_id
-    delivery_fee
-    discount
-    id
-    status
-    service_fee
-    restarurant_order_id
-    reel_order_id
-    order_id
-    invoice_number
-    invoice_items
-    subtotal
-    tax
-    total_amount
-    User {
+  query getInvoiceDetials($shopper_id: uuid!, $limit: Int!, $offset: Int) {
+    Invoices(
+      where: { Order: { shopper_id: { _eq: $shopper_id } } }
+      order_by: { created_at: desc }
+      limit: $limit
+      offset: $offset
+    ) {
       created_at
-      email
-      gender
-      id
-      is_active
-      is_guest
-      name
-      password_hash
-      phone
-      profile_picture
-      role
-      updated_at
-      shopper {
-        Employment_id
-        Police_Clearance_Cert
-        active
-        address
-        background_check_completed
-        collection_comment
-        created_at
-        drivingLicense_Image
-        driving_license
-        full_name
-        guarantor
-        national_id
-        longitude
-        latitude
-        id
-        guarantorRelationship
-        guarantorPhone
-        mutual_StatusCertificate
-        mutual_status
-        phone
-        phone_number
-        profile_photo
-        proofOfResidency
-        updated_at
-        transport_mode
-        telegram_id
-        status
-        signature
-      }
-    }
-    Order {
-      OrderID
-      assigned_at
-      combined_order_id
-      created_at
-      delivery_address_id
+      Proof
+      customer_id
       delivery_fee
-      delivery_notes
-      delivery_photo_url
-      delivery_time
       discount
       id
-      service_fee
-      shop_id
-      shopper_id
       status
-      total
-      updated_at
-      user_id
-      voucher_code
-      Shop {
+      service_fee
+      restarurant_order_id
+      reel_order_id
+      order_id
+      invoice_number
+      invoice_items
+      subtotal
+      tax
+      total_amount
+      User {
+        created_at
+        email
+        gender
         id
+        is_active
+        is_guest
         name
-        address
-      }
-      Address {
-        street
-        city
-        postal_code
-      }
-      Order_Items {
-        id
-        price
-        product_id
-        quantity
-        Product {
+        password_hash
+        phone
+        profile_picture
+        role
+        updated_at
+        shopper {
+          Employment_id
+          Police_Clearance_Cert
+          active
+          address
+          background_check_completed
+          collection_comment
+          created_at
+          drivingLicense_Image
+          driving_license
+          full_name
+          guarantor
+          national_id
+          longitude
+          latitude
           id
-          final_price
-          image
-          ProductName {
-            name
+          guarantorRelationship
+          guarantorPhone
+          mutual_StatusCertificate
+          mutual_status
+          phone
+          phone_number
+          profile_photo
+          proofOfResidency
+          updated_at
+          transport_mode
+          telegram_id
+          status
+          signature
+        }
+      }
+      Order {
+        OrderID
+        assigned_at
+        combined_order_id
+        created_at
+        delivery_address_id
+        delivery_fee
+        delivery_notes
+        delivery_photo_url
+        delivery_time
+        discount
+        id
+        service_fee
+        shop_id
+        shopper_id
+        status
+        total
+        updated_at
+        user_id
+        voucher_code
+        Shop {
+          id
+          name
+          address
+        }
+        Address {
+          street
+          city
+          postal_code
+        }
+        Order_Items {
+          id
+          price
+          product_id
+          quantity
+          Product {
+            id
+            final_price
+            image
+            ProductName {
+              name
+            }
           }
         }
       }
     }
-  }
-  Invoices_aggregate(where: {User: {id: {_eq: $shopper_id}}}) {
-    aggregate {
-      count
+    Invoices_aggregate(where: { User: { id: { _eq: $shopper_id } } }) {
+      aggregate {
+        count
+      }
     }
   }
-}
-
 `;
 
 interface Invoice {
@@ -190,7 +194,10 @@ export default async function handler(
   }
 
   try {
-    console.log("Invoices API: Request received", { method: req.method, query: req.query });
+    console.log("Invoices API: Request received", {
+      method: req.method,
+      query: req.query,
+    });
 
     // Authenticate user
     const session = (await getServerSession(
@@ -199,10 +206,10 @@ export default async function handler(
       authOptions as any
     )) as any;
 
-    console.log("Invoices API: Session status", { 
-      hasSession: !!session, 
+    console.log("Invoices API: Session status", {
+      hasSession: !!session,
       userId: session?.user?.id,
-      userRole: session?.user?.role 
+      userRole: session?.user?.role,
     });
 
     if (!session?.user?.id) {
@@ -215,7 +222,12 @@ export default async function handler(
     const limit = 10; // Items per page
     const offset = (page - 1) * limit;
 
-    console.log("Invoices API: Fetching for shopper", { shopperId, page, limit, offset });
+    console.log("Invoices API: Fetching for shopper", {
+      shopperId,
+      page,
+      limit,
+      offset,
+    });
 
     if (!hasuraClient) {
       console.error("Invoices API: Hasura client not initialized");
@@ -311,9 +323,9 @@ export default async function handler(
       offset,
     });
 
-    console.log("Invoices API: Data fetched successfully", { 
+    console.log("Invoices API: Data fetched successfully", {
       invoiceCount: data.Invoices?.length,
-      totalCount: data.Invoices_aggregate?.aggregate?.count 
+      totalCount: data.Invoices_aggregate?.aggregate?.count,
     });
 
     // Transform all invoices (both regular and reel orders)
@@ -325,8 +337,12 @@ export default async function handler(
 
       if (isReelOrder || isRestaurantOrder) {
         // Handle reel or restaurant order invoice
-        const orderType = isReelOrder ? ("reel" as const) : ("restaurant" as const);
-        const orderId = isReelOrder ? invoice.reel_order_id : invoice.restarurant_order_id;
+        const orderType = isReelOrder
+          ? ("reel" as const)
+          : ("restaurant" as const);
+        const orderId = isReelOrder
+          ? invoice.reel_order_id
+          : invoice.restarurant_order_id;
 
         return {
           id: invoice.id, // Use the actual invoice ID
@@ -353,11 +369,17 @@ export default async function handler(
           order_status: "completed",
           Proof: invoice.Proof,
           delivery_photo_url: invoice.Order?.delivery_photo_url,
-          reel_title: invoice.invoice_items?.[0]?.description || (isReelOrder ? "Reel Order" : "Restaurant Order"),
+          reel_title:
+            invoice.invoice_items?.[0]?.description ||
+            (isReelOrder ? "Reel Order" : "Restaurant Order"),
           reel_details: {
-            title: invoice.invoice_items?.[0]?.description || (isReelOrder ? "Reel Order" : "Restaurant Order"),
+            title:
+              invoice.invoice_items?.[0]?.description ||
+              (isReelOrder ? "Reel Order" : "Restaurant Order"),
             description: invoice.invoice_items?.[0]?.description || "",
-            product: invoice.invoice_items?.[0]?.name || (isReelOrder ? "Reel" : "Restaurant"),
+            product:
+              invoice.invoice_items?.[0]?.name ||
+              (isReelOrder ? "Reel" : "Restaurant"),
             quantity: invoice.invoice_items?.[0]?.quantity || 1,
           },
         };
@@ -394,7 +416,9 @@ export default async function handler(
       }
     });
 
-    console.log("Invoices API: Transformation complete", { transformedCount: transformedInvoices.length });
+    console.log("Invoices API: Transformation complete", {
+      transformedCount: transformedInvoices.length,
+    });
 
     // Sort by creation date
     const sortedInvoices = transformedInvoices.sort(
@@ -422,10 +446,13 @@ export default async function handler(
     });
   } catch (error) {
     console.error("Invoices API: Error caught", error);
-    if (error && typeof error === 'object' && 'response' in error) {
-      console.error("Invoices API: Hasura Error Response", JSON.stringify((error as any).response, null, 2));
+    if (error && typeof error === "object" && "response" in error) {
+      console.error(
+        "Invoices API: Hasura Error Response",
+        JSON.stringify((error as any).response, null, 2)
+      );
     }
-    
+
     logger.error(
       "Error fetching shopper invoices",
       "ShopperInvoicesAPI",

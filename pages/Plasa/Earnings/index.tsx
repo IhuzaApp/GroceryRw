@@ -142,10 +142,12 @@ const EarningsPage: React.FC = () => {
     busiestHourCount: number;
     totalOrders: number;
   } | null>(null);
-  const [shopperSchedule, setShopperSchedule] = useState<{
-    day_of_week: number;
-    is_available: boolean;
-  }[]>([]);
+  const [shopperSchedule, setShopperSchedule] = useState<
+    {
+      day_of_week: number;
+      is_available: boolean;
+    }[]
+  >([]);
 
   // Effect to handle mobile detection
   useEffect(() => {
@@ -306,7 +308,19 @@ const EarningsPage: React.FC = () => {
 
   // Get monthly earnings data for the chart
   const getMonthlyData = () => {
-    const months = ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
     return months.map((month, index) => ({
       month,
       earnings: dailyEarnings[index]?.total || Math.random() * 100000,
@@ -315,9 +329,9 @@ const EarningsPage: React.FC = () => {
 
   // Sample top income earners data
   const topIncome = [
-    { name: 'Ralph Edwards', points: 1220 },
-    { name: 'Bessie Cooper', points: 1024 },
-    { name: 'Marvin McKinney', points: 980 },
+    { name: "Ralph Edwards", points: 1220 },
+    { name: "Bessie Cooper", points: 1024 },
+    { name: "Marvin McKinney", points: 980 },
   ];
 
   // Handle withdrawal/payout request
@@ -335,14 +349,17 @@ const EarningsPage: React.FC = () => {
 
       if (!response.ok) {
         // Extract the error message from the API response
-        const errorMessage = data.message || data.error || "Failed to request payout";
+        const errorMessage =
+          data.message || data.error || "Failed to request payout";
         throw new Error(errorMessage);
       }
-      
+
       if (data.success) {
         // Refresh wallet data
         await fetchWalletData();
-        logger.info("Payout requested successfully", "EarningsPage", { amount });
+        logger.info("Payout requested successfully", "EarningsPage", {
+          amount,
+        });
       } else {
         throw new Error(data.message || "Failed to request payout");
       }
@@ -374,216 +391,219 @@ const EarningsPage: React.FC = () => {
         {isInitialized && (
           <div className="container mx-auto max-w-7xl">
             {/* Tabs Navigation */}
-            <EarningsTabs
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-            />
+            <EarningsTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-              {/* Tab Content */}
-              {activeTab === 'overview' && (
-                <>
-              {/* Top Grid - Stats Cards */}
-              <div className="mb-3 sm:mb-4 md:mb-6 grid grid-cols-1 gap-3 sm:gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-4 items-start">
-                <TotalBalanceCard
-                  wallet={wallet}
-                  isLoading={walletLoading}
-                  onWithdraw={handleWithdrawal}
-                />
-                
-                <TotalTransactionsCard
-                  transactions={transactions}
-                  completedOrders={earningsStats.completedOrders}
-                  isLoading={loading}
-                />
-                
-                <TotalSpendCard
-                  earningsStats={earningsStats}
-                  isLoading={loading}
-                />
-                
-                <ScheduleCard
-                  shopperSchedule={shopperSchedule}
-                  isLoading={loading}
-                />
-              </div>
+            {/* Tab Content */}
+            {activeTab === "overview" && (
+              <>
+                {/* Top Grid - Stats Cards */}
+                <div className="mb-3 grid grid-cols-1 items-start gap-3 sm:mb-4 sm:gap-4 md:mb-6 md:grid-cols-2 md:gap-6 lg:grid-cols-4">
+                  <TotalBalanceCard
+                    wallet={wallet}
+                    isLoading={walletLoading}
+                    onWithdraw={handleWithdrawal}
+                  />
 
-              {/* Main Content Grid */}
-              <div className="mb-3 sm:mb-4 md:mb-6 grid grid-cols-1 gap-3 sm:gap-4 md:gap-6 lg:grid-cols-3">
-                {/* Earning Overview Chart - Takes 2 columns */}
-                <EarningOverviewChart
-                  totalEarnings={earningsStats.totalEarnings}
-                  period={period}
-                  onPeriodChange={handlePeriodChange}
-                  dailyEarnings={dailyEarnings}
-                  isLoading={dailyEarningsLoading}
-                />
+                  <TotalTransactionsCard
+                    transactions={transactions}
+                    completedOrders={earningsStats.completedOrders}
+                    isLoading={loading}
+                  />
 
-                {/* Top Stores by Earnings */}
-                <TopStoresCard
-                  storeBreakdown={earningsStats.storeBreakdown}
-                  isLoading={loading}
-                />
-              </div>
+                  <TotalSpendCard
+                    earningsStats={earningsStats}
+                    isLoading={loading}
+                  />
 
-              {/* Bottom Grid - Major Expenses, Asset Valuation, Promo */}
-              <div className="grid grid-cols-1 gap-3 sm:gap-4 md:gap-6 lg:grid-cols-3">
-                {/* Earnings Components */}
-                <EarningsComponentsCard
-                  earningsComponents={earningsStats.earningsComponents}
-                  totalEarnings={earningsStats.totalEarnings}
-                  isLoading={loading}
-                />
-
-                {/* Performance Metrics */}
-                <PerformanceMetricsCard
-                  performance={earningsStats.performance}
-                  rating={earningsStats.rating}
-                  isLoading={loading}
-                />
-
-                {/* Busiest Times Card */}
-                <BusiestTimesCard
-                  activitySummary={activitySummary}
-                  isLoading={loading}
-                />
-              </div>
-
-                </>
-              )}
-
-              {/* Breakdown Tab Content */}
-              {activeTab === 'breakdown' && (
-                <div
-                  className={`rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg ${
-                    theme === "dark"
-                      ? "bg-gray-800 text-white"
-                      : "bg-white text-gray-900"
-                  }`}
-                >
-                  {loading ? (
-                    <div className="flex justify-center py-8">
-                      <Loader size="md" content="Loading earnings data..." />
-                    </div>
-                  ) : !earningsStats.storeBreakdown || !earningsStats.earningsComponents ? (
-                    <div className="py-8 text-center opacity-60">
-                      <p>No earnings breakdown data available.</p>
-                    </div>
-                  ) : (
-                    <>
-                      <EarningsBreakdown
-                        storeBreakdown={earningsStats.storeBreakdown.map((store) => ({
-                          ...store,
-                          amount: parseFloat(store.amount.toFixed(2)),
-                        }))}
-                        earningsComponents={earningsStats.earningsComponents.map((component) => ({
-                          ...component,
-                          amount: parseFloat(component.amount.toFixed(2)),
-                        }))}
-                        hideEarningsComponents={true}
-                      />
-                      <div className="mt-6">
-                        <ActivityHeatmap hideSummary={true} />
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-
-              {/* Recent Orders Tab Content */}
-              {activeTab === 'recent-orders' && (
-                <div
-                  className={`rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg ${
-                    theme === "dark"
-                      ? "bg-gray-800 text-white"
-                      : "bg-white text-gray-900"
-                  }`}
-                >
-                  <RecentOrdersList
-                    orders={[]}
-                    isLoading={false}
-                    pageSize={10}
-                    currentPage={1}
-                    totalOrders={0}
-                    onPageChange={() => {}}
-                    serverPagination={false}
+                  <ScheduleCard
+                    shopperSchedule={shopperSchedule}
+                    isLoading={loading}
                   />
                 </div>
-              )}
 
-              {/* Payments Tab Content */}
-              {activeTab === 'payments' && (
-                <div>
-                  {/* Desktop View - Table */}
-                  <div className="hidden md:block">
-                    <TransactionTable
-                      transactions={transactions}
-                      isLoading={walletLoading}
-                    />
-                  </div>
+                {/* Main Content Grid */}
+                <div className="mb-3 grid grid-cols-1 gap-3 sm:mb-4 sm:gap-4 md:mb-6 md:gap-6 lg:grid-cols-3">
+                  {/* Earning Overview Chart - Takes 2 columns */}
+                  <EarningOverviewChart
+                    totalEarnings={earningsStats.totalEarnings}
+                    period={period}
+                    onPeriodChange={handlePeriodChange}
+                    dailyEarnings={dailyEarnings}
+                    isLoading={dailyEarningsLoading}
+                  />
 
-                  {/* Mobile View - Cards */}
-                  <div className="block md:hidden">
-                    <TransactionCardsMobile
-                      transactions={transactions}
-                      isLoading={walletLoading}
-                    />
-                  </div>
+                  {/* Top Stores by Earnings */}
+                  <TopStoresCard
+                    storeBreakdown={earningsStats.storeBreakdown}
+                    isLoading={loading}
+                  />
                 </div>
-              )}
 
-              {/* Achievements Tab Content */}
-              {activeTab === 'achievements' && (
-                <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 items-start">
-                  {/* Left Column - Working Towards Achievements */}
-                  <div
-                    className={`rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg ${
-                      theme === "dark"
-                        ? "bg-gray-800 text-white"
-                        : "bg-white text-gray-900"
-                    }`}
-                  >
-                    <h3 className="mb-3 sm:mb-4 text-base sm:text-lg font-bold">Working Towards</h3>
-                    <AchievementBadges />
+                {/* Bottom Grid - Major Expenses, Asset Valuation, Promo */}
+                <div className="grid grid-cols-1 gap-3 sm:gap-4 md:gap-6 lg:grid-cols-3">
+                  {/* Earnings Components */}
+                  <EarningsComponentsCard
+                    earningsComponents={earningsStats.earningsComponents}
+                    totalEarnings={earningsStats.totalEarnings}
+                    isLoading={loading}
+                  />
+
+                  {/* Performance Metrics */}
+                  <PerformanceMetricsCard
+                    performance={earningsStats.performance}
+                    rating={earningsStats.rating}
+                    isLoading={loading}
+                  />
+
+                  {/* Busiest Times Card */}
+                  <BusiestTimesCard
+                    activitySummary={activitySummary}
+                    isLoading={loading}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Breakdown Tab Content */}
+            {activeTab === "breakdown" && (
+              <div
+                className={`rounded-xl p-4 shadow-lg sm:rounded-2xl sm:p-6 ${
+                  theme === "dark"
+                    ? "bg-gray-800 text-white"
+                    : "bg-white text-gray-900"
+                }`}
+              >
+                {loading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader size="md" content="Loading earnings data..." />
                   </div>
+                ) : !earningsStats.storeBreakdown ||
+                  !earningsStats.earningsComponents ? (
+                  <div className="py-8 text-center opacity-60">
+                    <p>No earnings breakdown data available.</p>
+                  </div>
+                ) : (
+                  <>
+                    <EarningsBreakdown
+                      storeBreakdown={earningsStats.storeBreakdown.map(
+                        (store) => ({
+                          ...store,
+                          amount: parseFloat(store.amount.toFixed(2)),
+                        })
+                      )}
+                      earningsComponents={earningsStats.earningsComponents.map(
+                        (component) => ({
+                          ...component,
+                          amount: parseFloat(component.amount.toFixed(2)),
+                        })
+                      )}
+                      hideEarningsComponents={true}
+                    />
+                    <div className="mt-6">
+                      <ActivityHeatmap hideSummary={true} />
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
 
-                  {/* Right Column - Insights & Tips */}
-                  <div className="space-y-4 sm:space-y-6">
-                    {/* Performance Insights */}
-                    {earningsStats.performance && (
-                      <PerformanceInsights
-                        performance={earningsStats.performance}
-                        isLoading={loading}
-                      />
-                    )}
+            {/* Recent Orders Tab Content */}
+            {activeTab === "recent-orders" && (
+              <div
+                className={`rounded-xl p-4 shadow-lg sm:rounded-2xl sm:p-6 ${
+                  theme === "dark"
+                    ? "bg-gray-800 text-white"
+                    : "bg-white text-gray-900"
+                }`}
+              >
+                <RecentOrdersList
+                  orders={[]}
+                  isLoading={false}
+                  pageSize={10}
+                  currentPage={1}
+                  totalOrders={0}
+                  onPageChange={() => {}}
+                  serverPagination={false}
+                />
+              </div>
+            )}
 
-                    {/* Delivery Stats */}
-                    <DeliveryStatsCard
-                      stats={{
-                        totalKilometers: 0,
-                        totalItems: 0,
-                        avgTimePerOrder: 0,
-                        storesVisited: earningsStats.storeBreakdown?.length || 0,
-                      }}
+            {/* Payments Tab Content */}
+            {activeTab === "payments" && (
+              <div>
+                {/* Desktop View - Table */}
+                <div className="hidden md:block">
+                  <TransactionTable
+                    transactions={transactions}
+                    isLoading={walletLoading}
+                  />
+                </div>
+
+                {/* Mobile View - Cards */}
+                <div className="block md:hidden">
+                  <TransactionCardsMobile
+                    transactions={transactions}
+                    isLoading={walletLoading}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Achievements Tab Content */}
+            {activeTab === "achievements" && (
+              <div className="grid grid-cols-1 items-start gap-4 sm:gap-6 lg:grid-cols-2">
+                {/* Left Column - Working Towards Achievements */}
+                <div
+                  className={`rounded-xl p-4 shadow-lg sm:rounded-2xl sm:p-6 ${
+                    theme === "dark"
+                      ? "bg-gray-800 text-white"
+                      : "bg-white text-gray-900"
+                  }`}
+                >
+                  <h3 className="mb-3 text-base font-bold sm:mb-4 sm:text-lg">
+                    Working Towards
+                  </h3>
+                  <AchievementBadges />
+                </div>
+
+                {/* Right Column - Insights & Tips */}
+                <div className="space-y-4 sm:space-y-6">
+                  {/* Performance Insights */}
+                  {earningsStats.performance && (
+                    <PerformanceInsights
+                      performance={earningsStats.performance}
                       isLoading={loading}
                     />
+                  )}
 
-                    {/* Earnings Goals */}
-                    {earningsStats.goals && (
-                      <EarningsGoalsProgress
-                        goals={earningsStats.goals}
-                        isLoading={loading}
-                      />
-                    )}
+                  {/* Delivery Stats */}
+                  <DeliveryStatsCard
+                    stats={{
+                      totalKilometers: 0,
+                      totalItems: 0,
+                      avgTimePerOrder: 0,
+                      storesVisited: earningsStats.storeBreakdown?.length || 0,
+                    }}
+                    isLoading={loading}
+                  />
 
-                    {/* Tips to Boost Earnings */}
-                    <EarningsTipsCard
-                      performance={earningsStats.performance}
-                      completedOrders={earningsStats.completedOrders}
+                  {/* Earnings Goals */}
+                  {earningsStats.goals && (
+                    <EarningsGoalsProgress
+                      goals={earningsStats.goals}
+                      isLoading={loading}
                     />
-                  </div>
+                  )}
+
+                  {/* Tips to Boost Earnings */}
+                  <EarningsTipsCard
+                    performance={earningsStats.performance}
+                    completedOrders={earningsStats.completedOrders}
+                  />
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+          </div>
         )}
       </ShopperLayout>
     </AuthGuard>

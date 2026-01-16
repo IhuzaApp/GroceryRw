@@ -17,7 +17,9 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
 }) => {
   const router = useRouter();
   const { theme } = useTheme();
-  const [selectedInvoices, setSelectedInvoices] = useState<Set<string>>(new Set());
+  const [selectedInvoices, setSelectedInvoices] = useState<Set<string>>(
+    new Set()
+  );
   const [selectAll, setSelectAll] = useState(false);
 
   // Toggle individual invoice selection
@@ -37,14 +39,14 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
     if (selectAll) {
       setSelectedInvoices(new Set());
     } else {
-      setSelectedInvoices(new Set(invoices.map(inv => inv.id)));
+      setSelectedInvoices(new Set(invoices.map((inv) => inv.id)));
     }
     setSelectAll(!selectAll);
   };
 
   // Generate avatar initials
   const getInitials = (name: string) => {
-    const names = name.split(' ');
+    const names = name.split(" ");
     if (names.length >= 2) {
       return `${names[0][0]}${names[1][0]}`.toUpperCase();
     }
@@ -54,14 +56,14 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
   // Get avatar color based on name
   const getAvatarColor = (name: string) => {
     const colors = [
-      'bg-blue-500 text-white',
-      'bg-purple-500 text-white', 
-      'bg-green-500 text-white',
-      'bg-yellow-500 text-white',
-      'bg-red-500 text-white',
-      'bg-indigo-500 text-white',
-      'bg-pink-500 text-white',
-      'bg-teal-500 text-white',
+      "bg-blue-500 text-white",
+      "bg-purple-500 text-white",
+      "bg-green-500 text-white",
+      "bg-yellow-500 text-white",
+      "bg-red-500 text-white",
+      "bg-indigo-500 text-white",
+      "bg-pink-500 text-white",
+      "bg-teal-500 text-white",
     ];
     const index = name.charCodeAt(0) % colors.length;
     return colors[index];
@@ -70,26 +72,34 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
   // Get category/account color
   const getCategoryColor = (orderType: string, shopName?: string) => {
     const categories: Record<string, string> = {
-      'Marketing': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      'IT Services': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-      'Sales Bonus': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-      'Operations': 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-      'HR / Payroll': 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400',
-      'Consulting': 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
+      Marketing:
+        "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+      "IT Services":
+        "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+      "Sales Bonus":
+        "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+      Operations:
+        "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+      "HR / Payroll":
+        "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400",
+      Consulting:
+        "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400",
     };
 
-    if (orderType === 'reel') {
-      return 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400';
-    } else if (orderType === 'restaurant') {
-      return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
+    if (orderType === "reel") {
+      return "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400";
+    } else if (orderType === "restaurant") {
+      return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
     }
-    
+
     // Try to match shop name to category
-    const matchedCategory = Object.keys(categories).find(cat => 
+    const matchedCategory = Object.keys(categories).find((cat) =>
       shopName?.toLowerCase().includes(cat.toLowerCase())
     );
-    
-    return matchedCategory ? categories[matchedCategory] : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
+
+    return matchedCategory
+      ? categories[matchedCategory]
+      : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300";
   };
 
   const getStatusBadge = (status: string) => {
@@ -240,7 +250,9 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
         <table className="w-full">
           <thead
             className={`border-b ${
-              theme === "dark" ? "border-gray-700 bg-gray-800/30" : "border-gray-100 bg-gray-50"
+              theme === "dark"
+                ? "border-gray-700 bg-gray-800/30"
+                : "border-gray-100 bg-gray-50"
             }`}
           >
             <tr>
@@ -250,7 +262,7 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                   checked={selectAll}
                   onChange={toggleSelectAll}
                   className={`h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 ${
-                    theme === "dark" ? "bg-gray-700 border-gray-600" : ""
+                    theme === "dark" ? "border-gray-600 bg-gray-700" : ""
                   }`}
                 />
               </th>
@@ -314,10 +326,8 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
               <tr
                 key={invoice.id}
                 className={`${
-                  theme === "dark"
-                    ? "hover:bg-gray-700/30"
-                    : "hover:bg-gray-50"
-                } transition-colors cursor-pointer`}
+                  theme === "dark" ? "hover:bg-gray-700/30" : "hover:bg-gray-50"
+                } cursor-pointer transition-colors`}
                 onClick={() => onViewDetails(invoice.id, invoice.order_type)}
               >
                 {/* Checkbox */}
@@ -330,7 +340,7 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                       toggleInvoiceSelection(invoice.id);
                     }}
                     className={`h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 ${
-                      theme === "dark" ? "bg-gray-700 border-gray-600" : ""
+                      theme === "dark" ? "border-gray-600 bg-gray-700" : ""
                     }`}
                   />
                 </td>
@@ -349,7 +359,11 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                 {/* To/From with Avatar */}
                 <td className="px-4 py-4">
                   <div className="flex items-center space-x-3">
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold ${getAvatarColor(invoice.customer_name)}`}>
+                    <div
+                      className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold ${getAvatarColor(
+                        invoice.customer_name
+                      )}`}
+                    >
                       {getInitials(invoice.customer_name)}
                     </div>
                     <span
@@ -375,7 +389,12 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
 
                 {/* Account/Category Tag */}
                 <td className="px-4 py-4">
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getCategoryColor(invoice.order_type, invoice.shop_name)}`}>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getCategoryColor(
+                      invoice.order_type,
+                      invoice.shop_name
+                    )}`}
+                  >
                     {invoice.order_type === "regular"
                       ? invoice.shop_name || "Shop"
                       : invoice.order_type === "reel"
@@ -402,7 +421,9 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                       theme === "dark" ? "text-gray-300" : "text-gray-700"
                     }`}
                   >
-                    {invoice.status === "paid" ? "Invoice Payment" : "Request Payment"}
+                    {invoice.status === "paid"
+                      ? "Invoice Payment"
+                      : "Request Payment"}
                   </span>
                 </td>
 
@@ -416,14 +437,29 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                       }}
                       className={`rounded-lg p-2 transition-colors ${
                         theme === "dark"
-                          ? "hover:bg-gray-600 text-gray-400 hover:text-gray-200"
-                          : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+                          ? "text-gray-400 hover:bg-gray-600 hover:text-gray-200"
+                          : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                       }`}
                       title="View invoice"
                     >
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
                       </svg>
                     </button>
                     <button
@@ -433,13 +469,23 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                       }}
                       className={`rounded-lg p-2 transition-colors ${
                         theme === "dark"
-                          ? "hover:bg-gray-600 text-gray-400 hover:text-gray-200"
-                          : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+                          ? "text-gray-400 hover:bg-gray-600 hover:text-gray-200"
+                          : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                       }`}
                       title="Download invoice"
                     >
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
                       </svg>
                     </button>
                     <button
@@ -449,13 +495,23 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                       }}
                       className={`rounded-lg p-2 transition-colors ${
                         theme === "dark"
-                          ? "hover:bg-red-900/30 text-gray-400 hover:text-red-400"
-                          : "hover:bg-red-50 text-gray-500 hover:text-red-600"
+                          ? "text-gray-400 hover:bg-red-900/30 hover:text-red-400"
+                          : "text-gray-500 hover:bg-red-50 hover:text-red-600"
                       }`}
                       title="Delete invoice"
                     >
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
                       </svg>
                     </button>
                   </div>
@@ -587,7 +643,7 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                   e.stopPropagation();
                   downloadInvoice(invoice);
                 }}
-                className={`w-full inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+                className={`inline-flex w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
                   theme === "dark"
                     ? "bg-blue-600 text-white hover:bg-blue-700"
                     : "bg-blue-600 text-white hover:bg-blue-700"

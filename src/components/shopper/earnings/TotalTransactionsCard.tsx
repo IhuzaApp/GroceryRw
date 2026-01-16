@@ -29,13 +29,15 @@ const TotalTransactionsCard: React.FC<TotalTransactionsCardProps> = ({
 
   return (
     <div
-      className={`rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg ${
+      className={`rounded-xl p-4 shadow-lg sm:rounded-2xl sm:p-6 ${
         theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
       }`}
     >
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-xs sm:text-sm font-medium opacity-70">Total Transactions</h3>
-        <button className="text-gray-400 hover:text-gray-600 hidden sm:block">
+        <h3 className="text-xs font-medium opacity-70 sm:text-sm">
+          Total Transactions
+        </h3>
+        <button className="hidden text-gray-400 hover:text-gray-600 sm:block">
           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
           </svg>
@@ -44,15 +46,17 @@ const TotalTransactionsCard: React.FC<TotalTransactionsCardProps> = ({
 
       {isLoading ? (
         <div className="flex items-center justify-center py-6 sm:py-8">
-          <div className="h-6 w-6 sm:h-8 sm:w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
+          <div className="h-6 w-6 animate-spin rounded-full border-4 border-green-500 border-t-transparent sm:h-8 sm:w-8"></div>
         </div>
       ) : (
         <>
           <div className="mb-3 sm:mb-4">
-            <p className="text-2xl sm:text-3xl font-bold">
-              {completedOrders !== undefined ? completedOrders : totalTransactions}
+            <p className="text-2xl font-bold sm:text-3xl">
+              {completedOrders !== undefined
+                ? completedOrders
+                : totalTransactions}
             </p>
-            <p className="mt-1 text-xs sm:text-sm opacity-60">
+            <p className="mt-1 text-xs opacity-60 sm:text-sm">
               Pending: {pendingTransactions} transactions
             </p>
           </div>
