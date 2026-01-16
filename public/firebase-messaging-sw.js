@@ -16,15 +16,9 @@ const messaging = firebase.messaging();
 
 // Handle background messages
 messaging.onBackgroundMessage((payload) => {
-  const notificationTitle =
-    payload.notification?.title || payload.data?.title || "New Message";
-  const notificationBody =
-    payload.notification?.body ||
-    payload.data?.body ||
-    payload.data?.message ||
-    "You have a new message";
+  const notificationTitle = payload.notification?.title || "New Message";
   const notificationOptions = {
-    body: notificationBody,
+    body: payload.notification?.body || "You have a new message",
     icon: "/assets/logos/PlasIcon.png",
     badge: "/assets/logos/PlasIcon.png",
     data: payload.data,
@@ -43,64 +37,10 @@ messaging.onBackgroundMessage((payload) => {
     ],
   };
 
-  // Persist a copy for in-app NotificationCenter via IndexedDB (SW can't access localStorage)
-  const persistPromise = (async () => {
-    try {
-      const dbOpen = indexedDB.open("fcm_notifications_db", 1);
-      const db = await new Promise((resolve, reject) => {
-        dbOpen.onerror = () => reject(dbOpen.error);
-        dbOpen.onupgradeneeded = () => {
-          const _db = dbOpen.result;
-          if (!_db.objectStoreNames.contains("notifications")) {
-            _db.createObjectStore("notifications", { keyPath: "timestamp" });
-          }
-        };
-        dbOpen.onsuccess = () => resolve(dbOpen.result);
-      });
-
-      const type = payload.data?.type || "unknown";
-      const entry = {
-        title: notificationTitle,
-        body: notificationBody,
-        timestamp: Date.now(),
-        type,
-        read: false,
-        ...(payload.data || {}),
-      };
-
-      await new Promise((resolve, reject) => {
-        const tx = db.transaction("notifications", "readwrite");
-        tx.oncomplete = () => resolve(true);
-        tx.onerror = () => reject(tx.error);
-        tx.objectStore("notifications").put(entry);
-      });
-      db.close();
-    } catch (e) {
-      // non-fatal
-    }
-  })();
-
-  const notifyPromise = self.registration.showNotification(
+  return self.registration.showNotification(
     notificationTitle,
     notificationOptions
   );
-
-  // Also try to push the payload to any open tabs for instant UI update
-  const broadcastPromise = (async () => {
-    try {
-      const clientList = await clients.matchAll({
-        type: "window",
-        includeUncontrolled: true,
-      });
-      for (const client of clientList) {
-        client.postMessage({ type: "FCM_BACKGROUND_MESSAGE", payload });
-      }
-    } catch (e) {
-      // non-fatal
-    }
-  })();
-
-  return Promise.all([persistPromise, broadcastPromise, notifyPromise]);
 });
 
 // Handle notification click
