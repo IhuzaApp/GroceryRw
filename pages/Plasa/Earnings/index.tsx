@@ -31,6 +31,7 @@ import EarningsComponentsCard from "@components/shopper/earnings/EarningsCompone
 import PerformanceMetricsCard from "@components/shopper/earnings/PerformanceMetricsCard";
 import BusiestTimesCard from "@components/shopper/earnings/BusiestTimesCard";
 import EarningsTabs from "@components/shopper/earnings/EarningsTabs";
+import TransactionCardsMobile from "@components/shopper/earnings/TransactionCardsMobile";
 import { logger } from "../../../src/utils/logger";
 import {
   formatCurrencySync,
@@ -511,12 +512,23 @@ const EarningsPage: React.FC = () => {
 
               {/* Payments Tab Content */}
               {activeTab === 'payments' && (
-                <div>
-                  <TransactionTable
-                    transactions={transactions}
-                    isLoading={walletLoading}
-                  />
-                </div>
+                <>
+                  {/* Desktop View - Table */}
+                  <div className="hidden md:block">
+                    <TransactionTable
+                      transactions={transactions}
+                      isLoading={walletLoading}
+                    />
+                  </div>
+
+                  {/* Mobile View - Cards */}
+                  <div className="md:hidden">
+                    <TransactionCardsMobile
+                      transactions={transactions}
+                      isLoading={walletLoading}
+                    />
+                  </div>
+                </>
               )}
 
               {/* Achievements Tab Content */}
