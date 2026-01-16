@@ -21,6 +21,10 @@ import ScheduleCard from "@components/shopper/earnings/ScheduleCard";
 import AchievementBadges from "@components/shopper/earnings/AchievementBadges";
 import AchievementBadgesMobile from "@components/shopper/earnings/AchievementBadgesMobile";
 import EarningsTipsMobile from "@components/shopper/earnings/EarningsTipsMobile";
+import PerformanceInsights from "@components/shopper/earnings/PerformanceInsights";
+import DeliveryStatsCard from "@components/shopper/earnings/DeliveryStatsCard";
+import EarningsGoalsProgress from "@components/shopper/earnings/EarningsGoalsProgress";
+import EarningsTipsCard from "@components/shopper/earnings/EarningsTipsCard";
 import { logger } from "../../../src/utils/logger";
 import {
   formatCurrencySync,
@@ -862,14 +866,54 @@ const EarningsPage: React.FC = () => {
 
               {/* Achievements Tab Content */}
               {activeTab === 'achievements' && (
-                <div
-                  className={`rounded-2xl p-6 shadow-lg ${
-                    theme === "dark"
-                      ? "bg-gray-800 text-white"
-                      : "bg-white text-gray-900"
-                  }`}
-                >
-                  <AchievementBadges />
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 items-start">
+                  {/* Left Column - Working Towards Achievements */}
+                  <div
+                    className={`rounded-2xl p-6 shadow-lg ${
+                      theme === "dark"
+                        ? "bg-gray-800 text-white"
+                        : "bg-white text-gray-900"
+                    }`}
+                  >
+                    <h3 className="mb-4 text-lg font-bold">Working Towards</h3>
+                    <AchievementBadges />
+                  </div>
+
+                  {/* Right Column - Insights & Tips */}
+                  <div className="space-y-6">
+                    {/* Performance Insights */}
+                    {earningsStats.performance && (
+                      <PerformanceInsights
+                        performance={earningsStats.performance}
+                        isLoading={loading}
+                      />
+                    )}
+
+                    {/* Delivery Stats */}
+                    <DeliveryStatsCard
+                      stats={{
+                        totalKilometers: 0,
+                        totalItems: 0,
+                        avgTimePerOrder: 0,
+                        storesVisited: earningsStats.storeBreakdown?.length || 0,
+                      }}
+                      isLoading={loading}
+                    />
+
+                    {/* Earnings Goals */}
+                    {earningsStats.goals && (
+                      <EarningsGoalsProgress
+                        goals={earningsStats.goals}
+                        isLoading={loading}
+                      />
+                    )}
+
+                    {/* Tips to Boost Earnings */}
+                    <EarningsTipsCard
+                      performance={earningsStats.performance}
+                      completedOrders={earningsStats.completedOrders}
+                    />
+                  </div>
                 </div>
               )}
             </div>
