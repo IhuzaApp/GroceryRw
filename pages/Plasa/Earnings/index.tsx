@@ -30,6 +30,7 @@ import TopStoresCard from "@components/shopper/earnings/TopStoresCard";
 import EarningsComponentsCard from "@components/shopper/earnings/EarningsComponentsCard";
 import PerformanceMetricsCard from "@components/shopper/earnings/PerformanceMetricsCard";
 import BusiestTimesCard from "@components/shopper/earnings/BusiestTimesCard";
+import EarningsTabs from "@components/shopper/earnings/EarningsTabs";
 import { logger } from "../../../src/utils/logger";
 import {
   formatCurrencySync,
@@ -371,57 +372,11 @@ const EarningsPage: React.FC = () => {
         {/* New Dashboard Layout */}
         {isInitialized && (
           <div className="container mx-auto max-w-7xl">
-              {/* Custom Tailwind Tabs - Mobile Responsive */}
-              <div className="mb-4 sm:mb-6">
-                <div className="border-b border-gray-200 dark:border-gray-700">
-                  {/* Mobile: Horizontal Scroll, Desktop: Normal */}
-                  <nav className="-mb-px flex overflow-x-auto scrollbar-hide space-x-2 sm:space-x-4 md:space-x-8">
-                    {[
-                      { id: 'overview', label: 'Overview', icon: (
-                        <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                        </svg>
-                      )},
-                      { id: 'breakdown', label: 'Breakdown', mobileLabel: 'Breakdown', icon: (
-                        <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                      )},
-                      { id: 'recent-orders', label: 'Orders', mobileLabel: 'Orders', icon: (
-                        <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                        </svg>
-                      )},
-                      { id: 'payments', label: 'Payments', mobileLabel: 'Payments', icon: (
-                        <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                      )},
-                      { id: 'achievements', label: 'Badges', mobileLabel: 'Badges', icon: (
-                        <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                        </svg>
-                      )},
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center justify-center gap-1.5 sm:gap-2 border-b-2 px-4 sm:px-3 md:px-1 py-3 sm:py-4 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap min-w-[45%] sm:min-w-0 flex-shrink-0 ${
-                          activeTab === tab.id
-                            ? 'border-green-500 text-green-600 dark:text-green-400'
-                            : theme === 'dark'
-                            ? 'border-transparent text-gray-400 hover:border-gray-600 hover:text-gray-300'
-                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                        }`}
-                      >
-                        {tab.icon}
-                        <span className="hidden sm:inline">{tab.label}</span>
-                        <span className="sm:hidden">{tab.mobileLabel || tab.label}</span>
-                      </button>
-                    ))}
-                  </nav>
-                </div>
-              </div>
+            {/* Tabs Navigation */}
+            <EarningsTabs
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
 
               {/* Tab Content */}
               {activeTab === 'overview' && (
