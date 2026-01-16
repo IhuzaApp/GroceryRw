@@ -423,7 +423,7 @@ const EarningsPage: React.FC = () => {
               {activeTab === 'overview' && (
                 <>
               {/* Top Grid - Stats Cards */}
-              <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 items-start">
                 <TotalBalanceCard
                   wallet={wallet}
                   isLoading={walletLoading}
