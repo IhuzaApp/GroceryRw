@@ -24,12 +24,12 @@ const BusiestTimesCard: React.FC<BusiestTimesCardProps> = ({
 
   return (
     <div
-      className={`rounded-2xl p-6 shadow-lg ${
+      className={`rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg ${
         theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
       }`}
     >
-      <div className="mb-6 flex items-center justify-between">
-        <h3 className="text-lg font-bold">Busiest Times</h3>
+      <div className="mb-4 sm:mb-6 flex items-center justify-between">
+        <h3 className="text-base sm:text-lg font-bold">Busiest Times</h3>
         <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
@@ -38,23 +38,23 @@ const BusiestTimesCard: React.FC<BusiestTimesCardProps> = ({
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-8">
+        <div className="flex items-center justify-center py-6 sm:py-8">
           <Loader size="sm" content="Loading activity data..." />
         </div>
       ) : activitySummary ? (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {/* Busiest Day */}
           <div
-            className={`rounded-lg p-4 ${
+            className={`rounded-lg p-3 sm:p-4 ${
               theme === "dark" ? "bg-gray-700/50" : "bg-green-50"
             }`}
           >
             <div className="mb-2 flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-green-500" />
-              <div className="text-sm font-medium opacity-70">Busiest Day</div>
+              <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
+              <div className="text-xs sm:text-sm font-medium opacity-70">Busiest Day</div>
             </div>
-            <div className="ml-7">
-              <div className="text-xl font-bold text-green-600 dark:text-green-400">
+            <div className="ml-6 sm:ml-7">
+              <div className="text-lg sm:text-xl font-bold text-green-600 dark:text-green-400">
                 {activitySummary.busiestDay}
               </div>
               <div className="text-sm opacity-60">
@@ -70,16 +70,16 @@ const BusiestTimesCard: React.FC<BusiestTimesCardProps> = ({
 
           {/* Busiest Hour */}
           <div
-            className={`rounded-lg p-4 ${
+            className={`rounded-lg p-3 sm:p-4 ${
               theme === "dark" ? "bg-gray-700/50" : "bg-green-50"
             }`}
           >
             <div className="mb-2 flex items-center gap-2">
-              <Clock className="h-5 w-5 text-green-500" />
-              <div className="text-sm font-medium opacity-70">Busiest Hour</div>
+              <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
+              <div className="text-xs sm:text-sm font-medium opacity-70">Busiest Hour</div>
             </div>
-            <div className="ml-7">
-              <div className="text-xl font-bold text-green-600 dark:text-green-400">
+            <div className="ml-6 sm:ml-7">
+              <div className="text-lg sm:text-xl font-bold text-green-600 dark:text-green-400">
                 {activitySummary.busiestHour}
               </div>
               <div className="text-sm opacity-60">

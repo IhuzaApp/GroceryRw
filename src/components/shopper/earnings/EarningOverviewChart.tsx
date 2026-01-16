@@ -36,12 +36,12 @@ const EarningOverviewChart: React.FC<EarningOverviewChartProps> = ({
 
   return (
     <div
-      className={`lg:col-span-2 rounded-2xl p-6 shadow-lg ${
+      className={`lg:col-span-2 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg ${
         theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
       }`}
     >
-      <div className="mb-6 flex items-center justify-between">
-        <h3 className="text-lg font-bold">Earning Overview</h3>
+      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+        <h3 className="text-base sm:text-lg font-bold">Earning Overview</h3>
         <SelectPicker
           data={periodOptions}
           value={period}
@@ -53,18 +53,18 @@ const EarningOverviewChart: React.FC<EarningOverviewChartProps> = ({
       </div>
 
       {/* Chart Stats */}
-      <div className="mb-4">
-        <p className="text-sm opacity-60">Total Earning</p>
+      <div className="mb-3 sm:mb-4">
+        <p className="text-xs sm:text-sm opacity-60">Total Earning</p>
         <div className="flex items-baseline gap-2">
-          <p className="text-2xl font-bold">
+          <p className="text-xl sm:text-2xl font-bold">
             {formatCurrencySync(totalEarnings)}
           </p>
-          <span className="text-sm font-medium text-green-500">+67%</span>
+          <span className="text-xs sm:text-sm font-medium text-green-500">+67%</span>
         </div>
       </div>
 
       {/* Real Daily Earnings Chart */}
-      <div className="h-64">
+      <div className="h-48 sm:h-56 md:h-64">
         <DailyEarningsChart
           data={dailyEarnings}
           isLoading={isLoading}

@@ -215,11 +215,11 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* Header with Filters */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-between gap-3 sm:gap-4">
         {/* Filter Tabs */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
           {(() => {
             const earningsCount = transactions.filter(t => getTransactionCategory(t.type) === 'earning').length;
             const payoutsCount = transactions.filter(t => getTransactionCategory(t.type) === 'payout').length;
@@ -260,7 +260,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
             <button
               key={tab.id}
               onClick={() => setFilter(tab.id)}
-              className={`group relative flex items-center gap-3 rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 ${
+              className={`group relative flex items-center gap-2 sm:gap-3 rounded-lg sm:rounded-xl px-3 sm:px-5 py-2 sm:py-3 text-xs sm:text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
                 filter === tab.id
                   ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/30"
                   : theme === "dark"
@@ -271,9 +271,10 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
               <span className={`transition-transform ${filter === tab.id ? 'scale-110' : 'group-hover:scale-110'}`}>
                 {tab.icon}
               </span>
-              <div className="flex items-center gap-2">
-                <span>{tab.label}</span>
-                <span className={`flex h-6 min-w-[24px] items-center justify-center rounded-full px-2 text-xs font-bold ${
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
+                <span className={`flex h-5 sm:h-6 min-w-[20px] sm:min-w-[24px] items-center justify-center rounded-full px-1.5 sm:px-2 text-[10px] sm:text-xs font-bold ${
                   filter === tab.id
                     ? "bg-white/20 text-white"
                     : theme === "dark"
@@ -284,42 +285,42 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                 </span>
               </div>
               {filter === tab.id && (
-                <div className="absolute -bottom-1 left-1/2 h-1 w-12 -translate-x-1/2 rounded-full bg-white"></div>
+                <div className="hidden sm:block absolute -bottom-1 left-1/2 h-1 w-12 -translate-x-1/2 rounded-full bg-white"></div>
               )}
             </button>
           ))}
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            className={`hidden md:flex items-center gap-2 rounded-lg px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors ${
               theme === "dark"
                 ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
                 : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
             }`}
           >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
             </svg>
-            Filter
+            <span className="hidden sm:inline">Filter</span>
           </button>
           <button
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            className={`hidden md:flex items-center gap-2 rounded-lg px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors ${
               theme === "dark"
                 ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
                 : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
             }`}
           >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
             </svg>
-            Sort
+            <span className="hidden sm:inline">Sort</span>
           </button>
           <button
             onClick={handleExportToExcel}
             disabled={filteredTransactions.length === 0}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+            className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-all flex-1 sm:flex-none ${
               filteredTransactions.length === 0
                 ? "cursor-not-allowed opacity-50"
                 : theme === "dark"
@@ -328,16 +329,17 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
             }`}
             title={filteredTransactions.length === 0 ? "No transactions to export" : "Export to Excel"}
           >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
-            Export to Excel
+            <span className="hidden sm:inline">Export to Excel</span>
+            <span className="sm:hidden">Export</span>
           </button>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+      {/* Desktop Table View - Hidden on Mobile */}
+      <div className="hidden md:block overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -479,30 +481,123 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
         </div>
       </div>
 
+      {/* Mobile Card View - Visible on Mobile Only */}
+      <div className="md:hidden space-y-3">
+        {filteredTransactions.length === 0 ? (
+          <div className={`rounded-lg border p-8 text-center ${
+            theme === "dark"
+              ? "border-gray-700 bg-gray-800"
+              : "border-gray-200 bg-white"
+          }`}>
+            <div className="flex flex-col items-center gap-2">
+              <svg className="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+              </svg>
+              <p className="text-sm text-gray-500 dark:text-gray-400">No transactions found</p>
+            </div>
+          </div>
+        ) : (
+          filteredTransactions.map((transaction) => (
+            <div
+              key={transaction.id}
+              className={`rounded-lg border p-4 shadow-sm transition-all hover:shadow-md ${
+                theme === "dark"
+                  ? "border-gray-700 bg-gray-800"
+                  : "border-gray-200 bg-white"
+              }`}
+            >
+              {/* Top Row - Description and Amount */}
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="flex items-start gap-2.5 flex-1 min-w-0">
+                  <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold ${getAvatarColor(transaction.type)}`}>
+                    {getInitials(transaction.description)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                      {transaction.description}
+                    </div>
+                    <div className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                      {formatDate(transaction.date)}
+                      {transaction.time && <span className="ml-2">{transaction.time}</span>}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex-shrink-0">
+                  <span className={`text-base font-bold ${
+                    getTransactionCategory(transaction.type) === 'earning'
+                      ? "text-green-600"
+                      : getTransactionCategory(transaction.type) === 'payout'
+                      ? "text-red-600"
+                      : "text-gray-900 dark:text-gray-100"
+                  }`}>
+                    {getTransactionCategory(transaction.type) === 'payout' ? '-' : '+'}{formatCurrencySync(transaction.amount)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Middle Row - Type and Status */}
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <span className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-medium ${getAccountBadgeColor(transaction.type)}`}>
+                  {transaction.type}
+                </span>
+                <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-medium ${
+                  transaction.status.toLowerCase() === 'completed'
+                    ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                    : transaction.status.toLowerCase() === 'pending'
+                    ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                    : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                }`}>
+                  {transaction.status}
+                </span>
+              </div>
+
+              {/* Bottom Row - Additional Info */}
+              <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                <span className="inline-flex items-center gap-1 text-[10px] text-gray-500 dark:text-gray-400">
+                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                  ID: #{transaction.id.slice(-6)}
+                </span>
+                {transaction.orderId && (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-gray-500 dark:text-gray-400">
+                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    Order #{transaction.orderNumber}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
       {/* Pagination */}
       {filteredTransactions.length > 0 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+          <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 text-center sm:text-left">
             Showing <span className="font-medium">{filteredTransactions.length}</span> of{" "}
             <span className="font-medium">{transactions.length}</span> transactions
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              className={`rounded-lg px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-colors ${
                 theme === "dark"
                   ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
                   : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
               }`}
             >
-              Previous
+              <span className="hidden sm:inline">Previous</span>
+              <span className="sm:hidden">Prev</span>
             </button>
             <button
-              className="rounded-lg bg-green-500 px-4 py-2 text-sm font-medium text-white hover:bg-green-600"
+              className="rounded-lg bg-green-500 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-white hover:bg-green-600"
             >
               1
             </button>
             <button
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              className={`hidden sm:block rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                 theme === "dark"
                   ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
                   : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
@@ -511,7 +606,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
               2
             </button>
             <button
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              className={`rounded-lg px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-colors ${
                 theme === "dark"
                   ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
                   : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"

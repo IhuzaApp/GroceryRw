@@ -46,12 +46,12 @@ const TopStoresCard: React.FC<TopStoresCardProps> = ({
 
   return (
     <div
-      className={`rounded-2xl p-6 shadow-lg ${
+      className={`rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg ${
         theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
       }`}
     >
-      <div className="mb-6 flex items-center justify-between">
-        <h3 className="text-lg font-bold">Top Stores</h3>
+      <div className="mb-4 sm:mb-6 flex items-center justify-between">
+        <h3 className="text-base sm:text-lg font-bold">Top Stores</h3>
         <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -65,11 +65,11 @@ const TopStoresCard: React.FC<TopStoresCardProps> = ({
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-8">
+        <div className="flex items-center justify-center py-6 sm:py-8">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {stores.map((item, index) => {
             const storeName = item.store || item.name || `Store ${index + 1}`;
             const amount = item.amount;
