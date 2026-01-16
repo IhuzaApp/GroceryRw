@@ -1,13 +1,6 @@
 import React from "react";
 import { useTheme } from "../../../context/ThemeContext";
-import {
-  Lightbulb,
-  TrendingUp,
-  Clock,
-  Star,
-  Zap,
-  MapPin,
-} from "lucide-react";
+import { Lightbulb, TrendingUp, Clock, Star, Zap, MapPin } from "lucide-react";
 
 interface PerformanceMetrics {
   customerRating: number;
@@ -54,7 +47,8 @@ const EarningsTipsCard: React.FC<EarningsTipsCardProps> = ({
         tips.push({
           icon: Star,
           title: "Improve Customer Rating",
-          description: "Be friendly, communicate updates, and handle items carefully",
+          description:
+            "Be friendly, communicate updates, and handle items carefully",
           color: "text-purple-500",
           bgColor: "bg-purple-50 dark:bg-purple-900/20",
         });

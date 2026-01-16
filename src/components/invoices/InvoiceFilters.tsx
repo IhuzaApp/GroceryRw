@@ -52,14 +52,14 @@ const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
             <button
               key={tab.value}
               onClick={() => setTypeFilter(tab.value)}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                 typeFilter === tab.value
                   ? theme === "dark"
                     ? "bg-gray-700 text-white"
                     : "bg-gray-100 text-gray-900"
                   : theme === "dark"
-                  ? "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
-                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                  ? "text-gray-400 hover:bg-gray-700/50 hover:text-gray-200"
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               }`}
             >
               {tab.label}
@@ -79,14 +79,24 @@ const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
                   : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
               }`}
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                />
               </svg>
               <span>Filter</span>
             </button>
             {showFilterMenu && (
               <div
-                className={`absolute right-0 mt-2 w-48 rounded-lg border shadow-lg z-10 ${
+                className={`absolute right-0 z-10 mt-2 w-48 rounded-lg border shadow-lg ${
                   theme === "dark"
                     ? "border-gray-700 bg-gray-800"
                     : "border-gray-200 bg-white"
@@ -100,7 +110,7 @@ const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
                         setStatusFilter(option.value);
                         setShowFilterMenu(false);
                       }}
-                      className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+                      className={`w-full rounded px-3 py-2 text-left text-sm transition-colors ${
                         statusFilter === option.value
                           ? theme === "dark"
                             ? "bg-blue-600 text-white"
@@ -127,8 +137,18 @@ const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
                 : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
             }`}
           >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"
+              />
             </svg>
             <span>Sort</span>
           </button>
@@ -141,8 +161,18 @@ const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
                 : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
             }`}
           >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
             </svg>
             <span>Export</span>
           </button>

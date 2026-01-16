@@ -111,7 +111,12 @@ const TransactionCardsMobile: React.FC<TransactionCardsMobileProps> = ({
     if (s === "pending" || s === "processing") {
       return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300";
     }
-    if (s === "failed" || s === "error" || s === "cancelled" || s === "canceled") {
+    if (
+      s === "failed" ||
+      s === "error" ||
+      s === "cancelled" ||
+      s === "canceled"
+    ) {
       return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300";
     }
     return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
@@ -178,7 +183,7 @@ const TransactionCardsMobile: React.FC<TransactionCardsMobileProps> = ({
     return (
       <div className="w-full space-y-3 pb-4">
         {/* Filter Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1 -mx-1">
+        <div className="scrollbar-hide -mx-1 flex items-center gap-2 overflow-x-auto pb-1">
           {filters.map((filter) => (
             <button
               key={filter.id}
@@ -239,12 +244,14 @@ const TransactionCardsMobile: React.FC<TransactionCardsMobileProps> = ({
     return acc;
   }, {} as Record<string, { sortKey: number; items: Transaction[] }>);
 
-  const dateGroups = Object.entries(grouped).sort((a, b) => b[1].sortKey - a[1].sortKey);
+  const dateGroups = Object.entries(grouped).sort(
+    (a, b) => b[1].sortKey - a[1].sortKey
+  );
 
   return (
     <div className="w-full space-y-3 pb-4">
       {/* Filter Tabs - Clean horizontal scroll */}
-      <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1 -mx-1">
+      <div className="scrollbar-hide -mx-1 flex items-center gap-2 overflow-x-auto pb-1">
         {filters.map((filter) => (
           <button
             key={filter.id}

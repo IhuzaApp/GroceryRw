@@ -59,12 +59,12 @@ const PerformanceMetricsCard: React.FC<PerformanceMetricsCardProps> = ({
 
   return (
     <div
-      className={`rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg ${
+      className={`rounded-xl p-4 shadow-lg sm:rounded-2xl sm:p-6 ${
         theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
       }`}
     >
-      <div className="mb-4 sm:mb-6 flex items-center justify-between">
-        <h3 className="text-base sm:text-lg font-bold">Performance</h3>
+      <div className="mb-4 flex items-center justify-between sm:mb-6">
+        <h3 className="text-base font-bold sm:text-lg">Performance</h3>
         <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />

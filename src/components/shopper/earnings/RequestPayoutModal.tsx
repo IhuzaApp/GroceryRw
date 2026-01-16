@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { X, DollarSign, Wallet, AlertCircle, CheckCircle, TrendingUp } from "lucide-react";
+import {
+  X,
+  DollarSign,
+  Wallet,
+  AlertCircle,
+  CheckCircle,
+  TrendingUp,
+} from "lucide-react";
 import { formatCurrencySync } from "../../../utils/formatCurrency";
 import { useTheme } from "../../../context/ThemeContext";
 import toast from "react-hot-toast";
@@ -68,7 +75,7 @@ export function RequestPayoutModal({
       setIsProcessing(true);
       await onSubmit(amount);
       toast.success("Payout request submitted successfully!");
-      
+
       // Reset and close
       setTimeout(() => {
         setWithdrawAmount("");
@@ -149,7 +156,7 @@ export function RequestPayoutModal({
               </div>
             </div>
             <div
-              className={`h-0.5 flex-1 mx-4 ${
+              className={`mx-4 h-0.5 flex-1 ${
                 currentStep > 1
                   ? "bg-green-500"
                   : "bg-gray-200 dark:bg-gray-600"
@@ -187,7 +194,7 @@ export function RequestPayoutModal({
             <div className="space-y-6">
               {/* Available Balance Display */}
               <div className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-6 dark:border-green-800 dark:from-green-900/20 dark:to-emerald-900/20">
-                <div className="flex items-center gap-3 mb-2">
+                <div className="mb-2 flex items-center gap-3">
                   <Wallet className="h-5 w-5 text-green-600 dark:text-green-400" />
                   <h3 className="text-sm font-medium text-green-900 dark:text-green-200">
                     Available Balance
@@ -270,13 +277,17 @@ export function RequestPayoutModal({
                 <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-700/50">
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600 dark:text-gray-400">Withdrawal Amount:</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Withdrawal Amount:
+                      </span>
                       <span className="font-semibold text-gray-900 dark:text-white">
                         {formatCurrencySync(amount)}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600 dark:text-gray-400">Processing Fee:</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Processing Fee:
+                      </span>
                       <span className="font-semibold text-gray-900 dark:text-white">
                         {formatCurrencySync(0)}
                       </span>
@@ -308,19 +319,25 @@ export function RequestPayoutModal({
                 </h3>
                 <div className="space-y-4">
                   <div className="flex justify-between border-b border-gray-200 pb-3 dark:border-gray-600">
-                    <span className="text-gray-600 dark:text-gray-400">Withdrawal Amount</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Withdrawal Amount
+                    </span>
                     <span className="text-xl font-bold text-gray-900 dark:text-white">
                       {formatCurrencySync(amount)}
                     </span>
                   </div>
                   <div className="flex justify-between border-b border-gray-200 pb-3 dark:border-gray-600">
-                    <span className="text-gray-600 dark:text-gray-400">Processing Fee</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Processing Fee
+                    </span>
                     <span className="font-semibold text-gray-900 dark:text-white">
                       {formatCurrencySync(0)}
                     </span>
                   </div>
                   <div className="flex justify-between border-b border-gray-200 pb-3 dark:border-gray-600">
-                    <span className="text-gray-600 dark:text-gray-400">Current Balance</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Current Balance
+                    </span>
                     <span className="font-semibold text-gray-900 dark:text-white">
                       {formatCurrencySync(wallet?.availableBalance || 0)}
                     </span>
@@ -345,9 +362,15 @@ export function RequestPayoutModal({
                       Important Information
                     </h4>
                     <ul className="mt-2 space-y-1 text-sm text-blue-700 dark:text-blue-300">
-                      <li>• Payout requests are processed within 1-3 business days</li>
-                      <li>• Funds will be transferred to your registered account</li>
-                      <li>• You'll receive a confirmation email once processed</li>
+                      <li>
+                        • Payout requests are processed within 1-3 business days
+                      </li>
+                      <li>
+                        • Funds will be transferred to your registered account
+                      </li>
+                      <li>
+                        • You'll receive a confirmation email once processed
+                      </li>
                       <li>• Make sure your account details are up to date</li>
                     </ul>
                   </div>
@@ -386,7 +409,11 @@ export function RequestPayoutModal({
               <button
                 type="button"
                 onClick={handleNext}
-                disabled={!withdrawAmount || parseFloat(withdrawAmount) <= 0 || isProcessing}
+                disabled={
+                  !withdrawAmount ||
+                  parseFloat(withdrawAmount) <= 0 ||
+                  isProcessing
+                }
                 className="flex items-center gap-2 rounded-lg bg-green-500 px-6 py-2 font-medium text-white transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Continue

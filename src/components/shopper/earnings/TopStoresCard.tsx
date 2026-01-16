@@ -29,7 +29,8 @@ const TopStoresCard: React.FC<TopStoresCardProps> = ({
     { name: "Store 3", amount: 0, percentage: 0 },
   ];
 
-  const stores = storeBreakdown.length > 0 ? storeBreakdown.slice(0, 3) : defaultStores;
+  const stores =
+    storeBreakdown.length > 0 ? storeBreakdown.slice(0, 3) : defaultStores;
 
   const getColorClasses = (index: number) => {
     switch (index) {
@@ -46,14 +47,19 @@ const TopStoresCard: React.FC<TopStoresCardProps> = ({
 
   return (
     <div
-      className={`rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg ${
+      className={`rounded-xl p-4 shadow-lg sm:rounded-2xl sm:p-6 ${
         theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
       }`}
     >
-      <div className="mb-4 sm:mb-6 flex items-center justify-between">
-        <h3 className="text-base sm:text-lg font-bold">Top Stores</h3>
+      <div className="mb-4 flex items-center justify-between sm:mb-6">
+        <h3 className="text-base font-bold sm:text-lg">Top Stores</h3>
         <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -88,7 +94,9 @@ const TopStoresCard: React.FC<TopStoresCardProps> = ({
                   <div>
                     <p className="font-medium">{storeName}</p>
                     <p className="text-sm opacity-60">
-                      {amount ? formatCurrencySync(amount) : `${percentage} Points`}
+                      {amount
+                        ? formatCurrencySync(amount)
+                        : `${percentage} Points`}
                     </p>
                   </div>
                 </div>

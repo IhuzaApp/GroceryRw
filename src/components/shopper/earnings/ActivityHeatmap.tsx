@@ -17,7 +17,10 @@ interface ActivitySummary {
   ordersByHour: number[];
 }
 
-const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ data, hideSummary = false }) => {
+const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
+  data,
+  hideSummary = false,
+}) => {
   const { theme } = useTheme();
   const [activityData, setActivityData] = useState<number[][]>([]);
   const [summary, setSummary] = useState<ActivitySummary | null>(null);

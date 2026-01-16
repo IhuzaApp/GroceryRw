@@ -19,16 +19,10 @@ const GET_SHOPPER_WALLET = gql`
 
 // GraphQL mutation to update wallet balance
 const UPDATE_WALLET_BALANCE = gql`
-  mutation UpdateWalletBalance(
-    $wallet_id: uuid!
-    $available_balance: String!
-  ) {
+  mutation UpdateWalletBalance($wallet_id: uuid!, $available_balance: String!) {
     update_Wallets_by_pk(
       pk_columns: { id: $wallet_id }
-      _set: {
-        available_balance: $available_balance
-        last_updated: "now()"
-      }
+      _set: { available_balance: $available_balance, last_updated: "now()" }
     ) {
       id
       available_balance
@@ -173,11 +167,12 @@ export default async function handler(
     });
 
     // Validate and parse amount
-    const amount = typeof rawAmount === "string" ? parseFloat(rawAmount) : rawAmount;
-    
+    const amount =
+      typeof rawAmount === "string" ? parseFloat(rawAmount) : rawAmount;
+
     if (!amount || typeof amount !== "number" || isNaN(amount) || amount <= 0) {
-      logger.error("Invalid payout amount", "RequestPayoutAPI", { 
-        rawAmount, 
+      logger.error("Invalid payout amount", "RequestPayoutAPI", {
+        rawAmount,
         parsedAmount: amount,
       });
       return res.status(400).json({
@@ -218,7 +213,9 @@ export default async function handler(
       });
       return res.status(400).json({
         error: "Insufficient balance",
-        message: `Requested amount (${amount.toFixed(2)}) exceeds available balance (${currentAvailableBalance.toFixed(2)})`,
+        message: `Requested amount (${amount.toFixed(
+          2
+        )}) exceeds available balance (${currentAvailableBalance.toFixed(2)})`,
       });
     }
 
@@ -251,7 +248,10 @@ export default async function handler(
         amount: amount.toFixed(2),
         type: "withdrawal",
         status: "pending",
-        description: `Payout request #${payout.insert_payouts_one.id.substring(0, 8)} - Processing`,
+        description: `Payout request #${payout.insert_payouts_one.id.substring(
+          0,
+          8
+        )} - Processing`,
       }
     );
 
