@@ -3,7 +3,7 @@
 import React, { useState, SyntheticEvent, useEffect, useCallback } from "react";
 import Head from "next/head";
 import ShopperLayout from "@components/shopper/ShopperLayout";
-import { Panel, Button, SelectPicker, Nav, Tabs, Loader } from "rsuite";
+import { Button, SelectPicker, Loader } from "rsuite";
 import { useTheme } from "../../../src/context/ThemeContext";
 import EarningsSummaryCard from "@components/shopper/earnings/EarningsSummaryCard";
 import DailyEarningsChart from "@components/shopper/earnings/DailyEarningsChart";
@@ -13,6 +13,7 @@ import ActivityHeatmap from "@components/shopper/earnings/ActivityHeatmap";
 import PerformanceMetrics from "@components/shopper/earnings/PerformanceMetrics";
 import EarningsGoals from "@components/shopper/earnings/EarningsGoals";
 import PaymentHistory from "@components/shopper/earnings/PaymentHistory";
+import TransactionTable from "@components/shopper/earnings/TransactionTable";
 import AchievementBadges from "@components/shopper/earnings/AchievementBadges";
 import AchievementBadgesMobile from "@components/shopper/earnings/AchievementBadgesMobile";
 import EarningsTipsMobile from "@components/shopper/earnings/EarningsTipsMobile";
@@ -108,6 +109,7 @@ const EarningsPage: React.FC = () => {
   const [walletLoading, setWalletLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
   const [earningsStats, setEarningsStats] = useState<EarningsStats>({
     totalEarnings: 0,
     completedOrders: 0,
@@ -349,6 +351,59 @@ const EarningsPage: React.FC = () => {
           {/* New Dashboard Layout */}
           {isInitialized && (
             <div className="container mx-auto max-w-7xl">
+              {/* Custom Tailwind Tabs */}
+              <div className="mb-6">
+                <div className="border-b border-gray-200">
+                  <nav className="-mb-px flex space-x-8">
+                    {[
+                      { id: 'overview', label: 'Overview', icon: (
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                      )},
+                      { id: 'breakdown', label: 'Earnings Breakdown', icon: (
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                      )},
+                      { id: 'recent-orders', label: 'Recent Orders', icon: (
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                      )},
+                      { id: 'payments', label: 'Payment History', icon: (
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                      )},
+                      { id: 'achievements', label: 'Achievements', icon: (
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                        </svg>
+                      )},
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-medium transition-colors ${
+                          activeTab === tab.id
+                            ? 'border-green-500 text-green-600'
+                            : theme === 'dark'
+                            ? 'border-transparent text-gray-400 hover:border-gray-600 hover:text-gray-300'
+                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                        }`}
+                      >
+                        {tab.icon}
+                        <span>{tab.label}</span>
+                      </button>
+                    ))}
+                  </nav>
+                </div>
+              </div>
+
+              {/* Tab Content */}
+              {activeTab === 'overview' && (
+                <>
               {/* Top Grid - Stats Cards */}
               <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
                 {/* Total Balance Card */}
@@ -859,150 +914,90 @@ const EarningsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Analytics Tabs Section */}
-              <div className="mt-6">
-                <Tabs
-                  className={`${
+                </>
+              )}
+
+              {/* Breakdown Tab Content */}
+              {activeTab === 'breakdown' && (
+                <div
+                  className={`rounded-2xl p-6 shadow-lg ${
                     theme === "dark"
-                      ? "rs-tabs-dark !text-white [&_.rs-nav-item-active]:!text-green-500 [&_.rs-nav-item-content]:!text-white [&_.rs-nav-item]:!text-white"
-                      : "[&_.rs-nav-item-active]:!text-green-600"
+                      ? "bg-gray-800 text-white"
+                      : "bg-white text-gray-900"
                   }`}
-                  defaultActiveKey="breakdown"
-                  appearance="subtle"
                 >
-                  <Tabs.Tab
-                    eventKey="breakdown"
-                    title={
-                      <div className="flex items-center space-x-2">
-                        <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                          <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
-                        </svg>
-                        <span>Earnings Breakdown</span>
-                      </div>
-                    }
-                  >
-                    <div
-                      className={`mt-4 rounded-2xl p-6 shadow-lg ${
-                        theme === "dark"
-                          ? "bg-gray-800 text-white"
-                          : "bg-white text-gray-900"
-                      }`}
-                    >
-                      {loading ? (
-                        <div className="flex justify-center py-8">
-                          <Loader size="md" content="Loading earnings data..." />
-                        </div>
-                      ) : !earningsStats.storeBreakdown || !earningsStats.earningsComponents ? (
-                        <div className="py-8 text-center opacity-60">
-                          <p>No earnings breakdown data available.</p>
-                        </div>
-                      ) : (
-                        <>
-                          <EarningsBreakdown
-                            storeBreakdown={earningsStats.storeBreakdown.map((store) => ({
-                              ...store,
-                              amount: parseFloat(store.amount.toFixed(2)),
-                            }))}
-                            earningsComponents={earningsStats.earningsComponents.map((component) => ({
-                              ...component,
-                              amount: parseFloat(component.amount.toFixed(2)),
-                            }))}
-                            hideEarningsComponents={true}
-                          />
-                          <div className="mt-6">
-                            <ActivityHeatmap hideSummary={true} />
-                          </div>
-                        </>
-                      )}
+                  {loading ? (
+                    <div className="flex justify-center py-8">
+                      <Loader size="md" content="Loading earnings data..." />
                     </div>
-                  </Tabs.Tab>
-
-                  <Tabs.Tab
-                    eventKey="recent-orders"
-                    title={
-                      <div className="flex items-center space-x-2">
-                        <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                          <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 4h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h11c.55 0 1-.45 1-1s-.45-1-1-1H7l1.1-2h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.37-.66-.11-1.48-.87-1.48H5.21l-.67-1.43c-.16-.35-.52-.57-.9-.57H2c-.55 0-1 .45-1 1s.45 1 1 1zm16 14c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
-                        </svg>
-                        <span>Recent Orders</span>
-                      </div>
-                    }
-                  >
-                    <div
-                      className={`mt-4 rounded-2xl p-6 shadow-lg ${
-                        theme === "dark"
-                          ? "bg-gray-800 text-white"
-                          : "bg-white text-gray-900"
-                      }`}
-                    >
-                      <RecentOrdersList
-                        orders={[]}
-                        isLoading={false}
-                        pageSize={10}
-                        currentPage={1}
-                        totalOrders={0}
-                        onPageChange={() => {}}
-                        serverPagination={false}
+                  ) : !earningsStats.storeBreakdown || !earningsStats.earningsComponents ? (
+                    <div className="py-8 text-center opacity-60">
+                      <p>No earnings breakdown data available.</p>
+                    </div>
+                  ) : (
+                    <>
+                      <EarningsBreakdown
+                        storeBreakdown={earningsStats.storeBreakdown.map((store) => ({
+                          ...store,
+                          amount: parseFloat(store.amount.toFixed(2)),
+                        }))}
+                        earningsComponents={earningsStats.earningsComponents.map((component) => ({
+                          ...component,
+                          amount: parseFloat(component.amount.toFixed(2)),
+                        }))}
+                        hideEarningsComponents={true}
                       />
-                    </div>
-                  </Tabs.Tab>
-
-                  <Tabs.Tab
-                    eventKey="payments"
-                    title={
-                      <div className="flex items-center space-x-2">
-                        <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z" />
-                        </svg>
-                        <span>Payment History</span>
+                      <div className="mt-6">
+                        <ActivityHeatmap hideSummary={true} />
                       </div>
-                    }
-                  >
-                    <div
-                      className={`mt-4 rounded-2xl p-6 shadow-lg ${
-                        theme === "dark"
-                          ? "bg-gray-800 text-white"
-                          : "bg-white text-gray-900"
-                      }`}
-                    >
-                      {walletLoading ? (
-                        <div className="flex justify-center py-8">
-                          <Loader size="md" content="Loading wallet data..." />
-                        </div>
-                      ) : (
-                        <PaymentHistory
-                          wallet={wallet}
-                          transactions={transactions}
-                          onViewAllPayments={() => console.log("View all payments clicked")}
-                          isLoading={walletLoading}
-                        />
-                      )}
-                    </div>
-                  </Tabs.Tab>
+                    </>
+                  )}
+                </div>
+              )}
 
-                  <Tabs.Tab
-                    eventKey="achievements"
-                    title={
-                      <div className="flex items-center space-x-2">
-                        <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                        </svg>
-                        <span>Achievements</span>
-                      </div>
-                    }
-                  >
-                    <div
-                      className={`mt-4 rounded-2xl p-6 shadow-lg ${
-                        theme === "dark"
-                          ? "bg-gray-800 text-white"
-                          : "bg-white text-gray-900"
-                      }`}
-                    >
-                      <AchievementBadges />
-                    </div>
-                  </Tabs.Tab>
-                </Tabs>
-              </div>
+              {/* Recent Orders Tab Content */}
+              {activeTab === 'recent-orders' && (
+                <div
+                  className={`rounded-2xl p-6 shadow-lg ${
+                    theme === "dark"
+                      ? "bg-gray-800 text-white"
+                      : "bg-white text-gray-900"
+                  }`}
+                >
+                  <RecentOrdersList
+                    orders={[]}
+                    isLoading={false}
+                    pageSize={10}
+                    currentPage={1}
+                    totalOrders={0}
+                    onPageChange={() => {}}
+                    serverPagination={false}
+                  />
+                </div>
+              )}
+
+              {/* Payments Tab Content */}
+              {activeTab === 'payments' && (
+                <div>
+                  <TransactionTable
+                    transactions={transactions}
+                    isLoading={walletLoading}
+                  />
+                </div>
+              )}
+
+              {/* Achievements Tab Content */}
+              {activeTab === 'achievements' && (
+                <div
+                  className={`rounded-2xl p-6 shadow-lg ${
+                    theme === "dark"
+                      ? "bg-gray-800 text-white"
+                      : "bg-white text-gray-900"
+                  }`}
+                >
+                  <AchievementBadges />
+                </div>
+              )}
             </div>
           )}
         </div>
