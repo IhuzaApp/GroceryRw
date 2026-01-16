@@ -25,6 +25,11 @@ import PerformanceInsights from "@components/shopper/earnings/PerformanceInsight
 import DeliveryStatsCard from "@components/shopper/earnings/DeliveryStatsCard";
 import EarningsGoalsProgress from "@components/shopper/earnings/EarningsGoalsProgress";
 import EarningsTipsCard from "@components/shopper/earnings/EarningsTipsCard";
+import EarningOverviewChart from "@components/shopper/earnings/EarningOverviewChart";
+import TopStoresCard from "@components/shopper/earnings/TopStoresCard";
+import EarningsComponentsCard from "@components/shopper/earnings/EarningsComponentsCard";
+import PerformanceMetricsCard from "@components/shopper/earnings/PerformanceMetricsCard";
+import BusiestTimesCard from "@components/shopper/earnings/BusiestTimesCard";
 import { logger } from "../../../src/utils/logger";
 import {
   formatCurrencySync,
@@ -454,342 +459,42 @@ const EarningsPage: React.FC = () => {
               {/* Main Content Grid */}
               <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
                 {/* Earning Overview Chart - Takes 2 columns */}
-                <div
-                  className={`lg:col-span-2 rounded-2xl p-6 shadow-lg ${
-                    theme === "dark"
-                      ? "bg-gray-800 text-white"
-                      : "bg-white text-gray-900"
-                  }`}
-                >
-                  <div className="mb-6 flex items-center justify-between">
-                    <h3 className="text-lg font-bold">Earning Overview</h3>
-                    <SelectPicker
-                      data={[
-                        { label: "Today", value: "today" },
-                        { label: "This Week", value: "this-week" },
-                        { label: "Last Week", value: "last-week" },
-                        { label: "This Month", value: "this-month" },
-                        { label: "Last Month", value: "last-month" },
-                      ]}
-                      value={period}
-                      cleanable={false}
-                      onChange={handlePeriodChange}
-                      style={{ width: 150 }}
-                      size="sm"
-                    />
-                  </div>
-                  
-                  {/* Chart Stats */}
-                  <div className="mb-4">
-                    <p className="text-sm opacity-60">Total Earning</p>
-                    <div className="flex items-baseline gap-2">
-                      <p className="text-2xl font-bold">{formatCurrency(earningsStats.totalEarnings)}</p>
-                      <span className="text-sm font-medium text-green-500">+67%</span>
-                    </div>
-                  </div>
-
-                  {/* Real Daily Earnings Chart */}
-                  <div className="h-64">
-                    <DailyEarningsChart
-                      data={dailyEarnings}
-                      isLoading={dailyEarningsLoading}
-                      period={period}
-                    />
-                  </div>
-                </div>
+                <EarningOverviewChart
+                  totalEarnings={earningsStats.totalEarnings}
+                  period={period}
+                  onPeriodChange={handlePeriodChange}
+                  dailyEarnings={dailyEarnings}
+                  isLoading={dailyEarningsLoading}
+                />
 
                 {/* Top Stores by Earnings */}
-                <div
-                  className={`rounded-2xl p-6 shadow-lg ${
-                    theme === "dark"
-                      ? "bg-gray-800 text-white"
-                      : "bg-white text-gray-900"
-                  }`}
-                >
-                  <div className="mb-6 flex items-center justify-between">
-                    <h3 className="text-lg font-bold">Top Stores</h3>
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                      </svg>
-                    </button>
-                  </div>
-
-                  <div className="space-y-4">
-                    {(earningsStats.storeBreakdown?.slice(0, 3) || topIncome).map((item, index) => {
-                      const storeName = item.store || item.name;
-                      const amount = item.amount;
-                      const percentage = item.percentage || item.points;
-                      
-                      return (
-                        <div key={index} className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                                index === 0
-                                  ? "bg-green-100 text-green-600"
-                                  : index === 1
-                                  ? "bg-blue-100 text-blue-600"
-                                  : "bg-purple-100 text-purple-600"
-                              }`}
-                            >
-                              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
-                              </svg>
-                            </div>
-                            <div>
-                              <p className="font-medium">{storeName}</p>
-                              <p className="text-sm opacity-60">
-                                {amount ? formatCurrency(amount) : `${percentage} Points`}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm font-bold text-green-500">
-                              {percentage ? `${Math.round(percentage)}%` : ''}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  
-                  {earningsStats.storeBreakdown && earningsStats.storeBreakdown.length === 0 && (
-                    <div className="py-8 text-center text-sm opacity-60">
-                      <p>No store data available yet</p>
-                    </div>
-                  )}
-                </div>
+                <TopStoresCard
+                  storeBreakdown={earningsStats.storeBreakdown}
+                  isLoading={loading}
+                />
               </div>
 
               {/* Bottom Grid - Major Expenses, Asset Valuation, Promo */}
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 {/* Earnings Components */}
-                <div
-                  className={`rounded-2xl p-6 shadow-lg ${
-                    theme === "dark"
-                      ? "bg-gray-800 text-white"
-                      : "bg-white text-gray-900"
-                  }`}
-                >
-                  <div className="mb-6 flex items-center justify-between">
-                    <h3 className="text-lg font-bold">Earnings Components</h3>
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                      </svg>
-                    </button>
-                  </div>
-
-                  {/* Earnings Components Breakdown */}
-                  {earningsStats.earningsComponents && earningsStats.earningsComponents.length > 0 ? (
-                    <div className="space-y-4">
-                      {earningsStats.earningsComponents.map((component, index) => (
-                        <div key={index}>
-                          <div className="mb-2 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div
-                                className={`h-3 w-3 rounded-full ${
-                                  component.type === "Delivery Fee"
-                                    ? "bg-green-500"
-                                    : component.type === "Service Fee"
-                                    ? "bg-blue-500"
-                                    : component.type === "Tips"
-                                    ? "bg-purple-500"
-                                    : "bg-orange-500"
-                                }`}
-                              />
-                              <span className="text-sm font-medium">
-                                {component.type}
-                              </span>
-                            </div>
-                            <span className="text-sm font-bold">
-                              {formatCurrency(component.amount)}
-                            </span>
-                          </div>
-                          <div
-                            className={`h-2 w-full rounded-full ${
-                              theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                            }`}
-                          >
-                            <div
-                              className={`h-2 rounded-full ${
-                                component.type === "Delivery Fee"
-                                  ? "bg-green-500"
-                                  : component.type === "Service Fee"
-                                  ? "bg-blue-500"
-                                  : component.type === "Tips"
-                                  ? "bg-purple-500"
-                                  : "bg-orange-500"
-                              }`}
-                              style={{ width: `${component.percentage}%` }}
-                            />
-                          </div>
-                          <div className="mt-1 text-right text-xs opacity-60">
-                            {Math.round(component.percentage)}%
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="py-8 text-center text-sm opacity-60">
-                      <p>No earnings components data available</p>
-                    </div>
-                  )}
-
-                  {/* Total */}
-                  {earningsStats.earningsComponents && earningsStats.earningsComponents.length > 0 && (
-                    <div className="mt-6 border-t border-gray-200 pt-4">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold">Total Earnings</span>
-                        <span className="text-lg font-bold text-green-600">
-                          {formatCurrency(earningsStats.totalEarnings)}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <EarningsComponentsCard
+                  earningsComponents={earningsStats.earningsComponents}
+                  totalEarnings={earningsStats.totalEarnings}
+                  isLoading={loading}
+                />
 
                 {/* Performance Metrics */}
-                <div
-                  className={`rounded-2xl p-6 shadow-lg ${
-                    theme === "dark"
-                      ? "bg-gray-800 text-white"
-                      : "bg-white text-gray-900"
-                  }`}
-                >
-                  <div className="mb-6 flex items-center justify-between">
-                    <h3 className="text-lg font-bold">Performance</h3>
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                      </svg>
-                    </button>
-                  </div>
-
-                  {/* Performance Stats */}
-                  <div className="space-y-4">
-                    <div>
-                      <div className="mb-2 flex justify-between text-sm">
-                        <span className="opacity-60">Customer Rating</span>
-                        <span className="font-bold">{earningsStats.performance?.customerRating?.toFixed(1) || earningsStats.rating?.toFixed(1) || "4.8"}/5</span>
-                      </div>
-                      <div className="h-2 rounded-full bg-gray-200">
-                        <div 
-                          className="h-full rounded-full bg-green-500" 
-                          style={{ width: `${((earningsStats.performance?.customerRating || earningsStats.rating || 4.8) / 5) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="mb-2 flex justify-between text-sm">
-                        <span className="opacity-60">On-Time Delivery</span>
-                        <span className="font-bold">{earningsStats.performance?.onTimeDelivery || 95}%</span>
-                      </div>
-                      <div className="h-2 rounded-full bg-gray-200">
-                        <div 
-                          className="h-full rounded-full bg-green-500" 
-                          style={{ width: `${earningsStats.performance?.onTimeDelivery || 95}%` }}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="mb-2 flex justify-between text-sm">
-                        <span className="opacity-60">Order Accuracy</span>
-                        <span className="font-bold">{earningsStats.performance?.orderAccuracy || 98}%</span>
-                      </div>
-                      <div className="h-2 rounded-full bg-gray-200">
-                        <div 
-                          className="h-full rounded-full bg-green-500" 
-                          style={{ width: `${earningsStats.performance?.orderAccuracy || 98}%` }}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="mb-2 flex justify-between text-sm">
-                        <span className="opacity-60">Acceptance Rate</span>
-                        <span className="font-bold">{earningsStats.performance?.acceptanceRate || 92}%</span>
-                      </div>
-                      <div className="h-2 rounded-full bg-gray-200">
-                        <div 
-                          className="h-full rounded-full bg-green-500" 
-                          style={{ width: `${earningsStats.performance?.acceptanceRate || 92}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <PerformanceMetricsCard
+                  performance={earningsStats.performance}
+                  rating={earningsStats.rating}
+                  isLoading={loading}
+                />
 
                 {/* Busiest Times Card */}
-                <div
-                  className={`rounded-2xl p-6 shadow-lg ${
-                    theme === "dark"
-                      ? "bg-gray-800 text-white"
-                      : "bg-white text-gray-900"
-                  }`}
-                >
-                  <div className="mb-6 flex items-center justify-between">
-                    <h3 className="text-lg font-bold">Busiest Times</h3>
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                      </svg>
-                    </button>
-                  </div>
-
-                  {/* Busiest Times Stats */}
-                  {activitySummary ? (
-                    <div className="space-y-4">
-                      <div
-                        className={`rounded-lg p-4 ${
-                          theme === "dark" ? "bg-gray-700/50" : "bg-green-50"
-                        }`}
-                      >
-                        <div className="mb-2 flex items-center gap-2">
-                          <svg className="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                          </svg>
-                          <div className="text-sm font-medium opacity-70">Busiest Day</div>
-                        </div>
-                        <div className="ml-7">
-                          <div className="text-xl font-bold text-green-600">
-                            {activitySummary.busiestDay}
-                          </div>
-                          <div className="text-sm opacity-60">
-                            {activitySummary.busiestDayCount} orders (
-                            {Math.round((activitySummary.busiestDayCount / activitySummary.totalOrders) * 100)}% of total)
-                          </div>
-                        </div>
-                      </div>
-
-                      <div
-                        className={`rounded-lg p-4 ${
-                          theme === "dark" ? "bg-gray-700/50" : "bg-green-50"
-                        }`}
-                      >
-                        <div className="mb-2 flex items-center gap-2">
-                          <svg className="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                          </svg>
-                          <div className="text-sm font-medium opacity-70">Busiest Hour</div>
-                        </div>
-                        <div className="ml-7">
-                          <div className="text-xl font-bold text-green-600">
-                            {activitySummary.busiestHour}
-                          </div>
-                          <div className="text-sm opacity-60">
-                            {activitySummary.busiestHourCount} orders (
-                            {Math.round((activitySummary.busiestHourCount / activitySummary.totalOrders) * 100)}% of total)
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="py-8 text-center text-sm opacity-60">
-                      <Loader size="sm" content="Loading activity data..." />
-                    </div>
-                  )}
-                </div>
+                <BusiestTimesCard
+                  activitySummary={activitySummary}
+                  isLoading={loading}
+                />
               </div>
 
                 </>
