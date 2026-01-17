@@ -400,6 +400,42 @@ const CREATE_ORDER_OFFER = gql`
   }
 `;
 
+// Fetch all regular orders belonging to a combined order group
+const GET_ORDERS_BY_COMBINED_ORDER_ID = gql`
+  query GetOrdersByCombinedOrderId($combined_order_id: uuid!) {
+    Orders(where: { combined_order_id: { _eq: $combined_order_id } }) {
+      id
+      OrderID
+      service_fee
+      delivery_fee
+      Shop {
+        name
+      }
+      Order_Items_aggregate {
+        aggregate {
+          count
+          sum {
+            quantity
+          }
+        }
+      }
+    }
+  }
+`;
+
+// Get the latest offer round across multiple regular order IDs (for combined offers)
+const GET_CURRENT_ROUND_FOR_ORDER_IDS = gql`
+  query GetCurrentRoundForOrderIds($order_ids: [uuid!]!) {
+    order_offers(
+      where: { order_id: { _in: $order_ids } }
+      order_by: { round_number: desc }
+      limit: 1
+    ) {
+      round_number
+    }
+  }
+`;
+
 // Haversine formula to calculate distance in kilometers
 function calculateDistanceKm(
   lat1: number,
@@ -431,7 +467,7 @@ function calculateTravelTime(distanceKm: number): number {
 function formatOrderForResponse(
   order: any,
   shopperLocation: { lat: number; lng: number },
-  expiresInMs: number
+  expiresInMs: number | null
 ): any {
   const distance = calculateDistanceKm(
     shopperLocation.lat,
@@ -475,7 +511,7 @@ function formatOrderForResponse(
           parseFloat(order.delivery_fee || "0"),
     orderType: order.orderType,
     priority: order.priority,
-    expiresIn: expiresInMs,
+    expiresIn: expiresInMs ?? null,
     // Add coordinates for map route display
     shopLatitude: parseFloat(
       order.Shop?.latitude || order.Restaurant?.lat || "0"
@@ -842,6 +878,7 @@ export default async function handler(
           orderId: "N/A",
           shopperId: user_id,
           reason: "STALE_LOCATION",
+          timestamp: Date.now(),
           metadata: { locationAge },
         });
       }
@@ -931,6 +968,7 @@ export default async function handler(
           shopperId: user_id,
           reason: "DISTANCE_TOO_FAR",
           distance,
+          timestamp: Date.now(),
           metadata: {
             maxDistanceKm,
             orderAgeMinutes,
@@ -950,6 +988,7 @@ export default async function handler(
           shopperId: user_id,
           reason: "ETA_TOO_LONG",
           distance,
+          timestamp: Date.now(),
           metadata: {
             eta,
             maxEtaMinutes,
@@ -1001,6 +1040,7 @@ export default async function handler(
             shopperId: user_id,
             reason: "ALREADY_DECLINED",
             distance,
+            timestamp: Date.now(),
             metadata: {
               declinedRound: declinedCheck.order_offers[0].round_number,
             },
@@ -1089,12 +1129,37 @@ export default async function handler(
     // This row is the exclusive lock - only this shopper can see the order
     // ========================================================================
 
-    // Get current round number for this order
-    const roundData = (await hasuraClient.request(GET_CURRENT_ROUND, {
-      order_id: bestOrder.id,
-    })) as any;
+    // If this is a combined regular order, we'll create offers for ALL orders in the group
+    const isCombinedRegular =
+      bestOrder.orderType === "regular" && !!bestOrder.combined_order_id;
 
-    const currentRound = roundData.order_offers?.[0]?.round_number || 0;
+    let combinedOrders: any[] = [];
+    let combinedOrderIds: string[] = [];
+
+    if (isCombinedRegular) {
+      const combinedData = (await hasuraClient.request(
+        GET_ORDERS_BY_COMBINED_ORDER_ID,
+        { combined_order_id: bestOrder.combined_order_id }
+      )) as any;
+      combinedOrders = combinedData.Orders || [];
+      combinedOrderIds = combinedOrders.map((o: any) => o.id);
+    }
+
+    // Get current round number for this order (or max round across combined group)
+    let currentRound = 0;
+    if (isCombinedRegular && combinedOrderIds.length > 0) {
+      const roundData = (await hasuraClient.request(
+        GET_CURRENT_ROUND_FOR_ORDER_IDS,
+        { order_ids: combinedOrderIds }
+      )) as any;
+      currentRound = roundData.order_offers?.[0]?.round_number || 0;
+    } else {
+      const roundData = (await hasuraClient.request(GET_CURRENT_ROUND, {
+        order_id: bestOrder.id,
+      })) as any;
+      currentRound = roundData.order_offers?.[0]?.round_number || 0;
+    }
+
     const nextRound = currentRound + 1;
 
     const now = new Date();
@@ -1261,25 +1326,63 @@ export default async function handler(
           shopperId: user_id,
           round: nextRound,
           note: "No time limit - shopper must accept or decline",
+          isCombinedRegular,
+          combinedCount: combinedOrderIds.length,
         });
 
         try {
-          const offerResult = (await hasuraClient.request(
-            CREATE_ORDER_OFFER,
-            offerVariables
-          )) as any;
+          if (isCombinedRegular && combinedOrderIds.length > 0) {
+            // Create one offer per order in the combined group
+            const createdOfferIds: string[] = [];
 
-          if (!offerResult.insert_order_offers_one) {
-            throw new Error("Failed to create order offer");
+            for (const oid of combinedOrderIds) {
+              const perOrderVars = {
+                ...offerVariables,
+                order_id: oid,
+                reel_order_id: null,
+                restaurant_order_id: null,
+                business_order_id: null,
+              };
+
+              const offerResult = (await hasuraClient.request(
+                CREATE_ORDER_OFFER,
+                perOrderVars
+              )) as any;
+
+              if (!offerResult.insert_order_offers_one?.id) {
+                throw new Error("Failed to create offer for combined order");
+              }
+
+              createdOfferIds.push(offerResult.insert_order_offers_one.id);
+            }
+
+            offerId = createdOfferIds[0];
+            offerRound = nextRound;
+
+            console.log("✅ Combined offers created:", {
+              combined_order_id: bestOrder.combined_order_id,
+              offerCount: createdOfferIds.length,
+              offerId,
+              round: offerRound,
+            });
+          } else {
+            const offerResult = (await hasuraClient.request(
+              CREATE_ORDER_OFFER,
+              offerVariables
+            )) as any;
+
+            if (!offerResult.insert_order_offers_one) {
+              throw new Error("Failed to create order offer");
+            }
+
+            offerId = offerResult.insert_order_offers_one.id;
+            offerRound = nextRound;
+
+            console.log("✅ Exclusive offer created:", {
+              offerId,
+              round: offerRound,
+            });
           }
-
-          offerId = offerResult.insert_order_offers_one.id;
-          offerRound = nextRound;
-
-          console.log("✅ Exclusive offer created:", {
-            offerId,
-            round: offerRound,
-          });
         } catch (error: any) {
           // Handle potential unique constraint violation
           if (
@@ -1370,115 +1473,83 @@ export default async function handler(
       null // No time-based expiry
     );
 
+    // If this is a combined regular order, return it as ONE logical batch (same as notification)
+    let responseOrder: any = orderData;
+    if (
+      bestOrder.orderType === "regular" &&
+      bestOrder.combined_order_id &&
+      combinedOrders.length > 1
+    ) {
+      const totalEarnings = combinedOrders.reduce((sum: number, o: any) => {
+        return (
+          sum +
+          parseFloat(o.service_fee || "0") +
+          parseFloat(o.delivery_fee || "0")
+        );
+      }, 0);
+
+      const totalItems = combinedOrders.reduce((sum: number, o: any) => {
+        const unitsCount = o.Order_Items_aggregate?.aggregate?.sum?.quantity || 0;
+        const itemsTypeCount = o.Order_Items_aggregate?.aggregate?.count || 0;
+        const items = unitsCount || itemsTypeCount || 0;
+        return sum + items;
+      }, 0);
+
+      const storeNames = combinedOrders
+        .map((o: any) => o.Shop?.name)
+        .filter(Boolean)
+        .join(", ");
+
+      const firstOrderId = combinedOrders[0]?.OrderID;
+
+      responseOrder = {
+        ...orderData,
+        id: bestOrder.combined_order_id,
+        shopName: `${combinedOrders.length} Stores: ${storeNames}`,
+        estimatedEarnings: totalEarnings,
+        itemsCount: totalItems,
+        isCombinedOrder: true,
+        orderCount: combinedOrders.length,
+        storeNames,
+        combinedOrderId: bestOrder.combined_order_id,
+        orderIds: combinedOrderIds,
+        displayOrderId:
+          firstOrderId !== null && firstOrderId !== undefined
+            ? `Combined-${String(firstOrderId)}`
+            : "Combined",
+      };
+    }
+
     // Only send FCM notification for NEW offers, not when extending existing ones
     // This prevents duplicate notifications when polling refreshes the same offer
     if (!isExtendingOffer) {
       try {
-        // Check if this is a combined order
-        let notificationData: any = {
-          id: bestOrder.id,
-          shopName: orderData.shopName,
-          customerAddress: orderData.customerAddress,
-          distance: orderData.distance,
-          itemsCount: orderData.itemsCount,
-          travelTimeMinutes: orderData.travelTimeMinutes,
-          estimatedEarnings: orderData.estimatedEarnings,
-          orderType: orderData.orderType,
-          expiresInMs: null, // No expiry - shopper must accept or decline
-          displayOrderId:
-            orderData?.OrderID !== null && orderData?.OrderID !== undefined
-              ? String(orderData.OrderID)
-              : undefined,
-        };
-
-        // If it's a combined order (has combined_order_id), fetch all related orders
-        if (bestOrder.combined_order_id && bestOrder.orderType === "regular") {
-          try {
-            const GET_COMBINED_ORDER_INFO = gql`
-              query GetCombinedOrderInfo($combined_order_id: uuid!) {
-                Orders(where: { combined_order_id: { _eq: $combined_order_id } }) {
-                  id
-                  OrderID
-                  service_fee
-                  delivery_fee
-                  Shop {
-                    name
-                  }
-                  Order_Items_aggregate {
-                    aggregate {
-                      count
-                    }
-                  }
-                }
-              }
-            `;
-
-            const combinedOrderData = (await hasuraClient.request(
-              GET_COMBINED_ORDER_INFO,
-              { combined_order_id: bestOrder.combined_order_id }
-            )) as any;
-
-            const allOrders = combinedOrderData.Orders || [];
-            if (allOrders.length > 1) {
-              // Calculate combined totals
-              const totalEarnings = allOrders.reduce((sum: number, order: any) => {
-                return (
-                  sum +
-                  parseFloat(order.service_fee || "0") +
-                  parseFloat(order.delivery_fee || "0")
-                );
-              }, 0);
-
-              const totalItems = allOrders.reduce((sum: number, order: any) => {
-                return sum + (order.Order_Items_aggregate.aggregate?.count || 0);
-              }, 0);
-
-              const storeNames = allOrders
-                .map((order: any) => order.Shop?.name)
-                .filter(Boolean)
-                .join(", ");
-
-              // Update notification data for combined order
-              const firstOrderId = allOrders[0]?.OrderID;
-              notificationData = {
-                ...notificationData,
-                id: bestOrder.combined_order_id, // Use combined_order_id
-                estimatedEarnings: totalEarnings,
-                itemsCount: totalItems,
-                isCombinedOrder: true,
-                orderCount: allOrders.length,
-                storeNames: storeNames,
-                displayOrderId:
-                  firstOrderId !== null && firstOrderId !== undefined
-                    ? `Combined-${String(firstOrderId)}`
-                    : "Combined",
-              };
-
-              console.log("🛒 Combined order detected:", {
-                combined_order_id: bestOrder.combined_order_id,
-                storeCount: allOrders.length,
-                totalEarnings,
-                stores: storeNames,
-              });
-            }
-          } catch (combinedOrderError) {
-            console.error(
-              "Error fetching combined order info:",
-              combinedOrderError
-            );
-            // Continue with single order notification if combined fetch fails
-          }
-        }
-
-        await sendNewOrderNotification(user_id, notificationData);
+        // Send notification aligned with what the UI should display/accept
+        await sendNewOrderNotification(user_id, {
+          id: responseOrder.id,
+          shopName: responseOrder.shopName,
+          customerAddress: responseOrder.customerAddress,
+          distance: responseOrder.distance,
+          travelTimeMinutes: responseOrder.travelTimeMinutes,
+          estimatedEarnings: responseOrder.estimatedEarnings,
+          orderType: responseOrder.orderType,
+          // Action-based system: no expiry. Omit to use server default (or ignore).
+          expiresInMs: undefined,
+          displayOrderId: responseOrder.displayOrderId,
+          isCombinedOrder: responseOrder.isCombinedOrder,
+          orderCount: responseOrder.orderCount,
+          storeNames: responseOrder.storeNames,
+          combinedOrderId: responseOrder.combinedOrderId,
+          orderIds: responseOrder.orderIds,
+        });
 
         console.log(
           "✅ FCM notification sent to shopper:",
           user_id,
           "for order:",
           bestOrder.id,
-          notificationData.isCombinedOrder
-            ? `(Combined: ${notificationData.orderCount} stores)`
+          responseOrder.isCombinedOrder
+            ? `(Combined: ${responseOrder.orderCount} stores)`
             : "",
           "| No time limit - waiting for explicit action"
         );
@@ -1494,7 +1565,7 @@ export default async function handler(
 
     return res.status(200).json({
       success: true,
-      order: orderData,
+      order: responseOrder,
       message: isExtendingOffer
         ? "Offer refreshed - still waiting for shopper action"
         : "Exclusive offer created - shopper must accept or decline",

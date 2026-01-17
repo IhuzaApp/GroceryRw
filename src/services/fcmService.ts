@@ -322,6 +322,8 @@ export const sendNewOrderNotification = async (
     orderCount?: number; // Number of stores in combined order
     storeNames?: string; // Comma-separated store names
     displayOrderId?: string; // Human-readable order number (e.g. OrderID)
+    combinedOrderId?: string; // combined_order_id (UUID)
+    orderIds?: string[]; // order IDs in combined order group
   }
 ): Promise<void> => {
   try {
@@ -371,6 +373,8 @@ export const sendNewOrderNotification = async (
           isCombinedOrder: "true",
           orderCount: orderData.orderCount?.toString() || "1",
           storeNames: orderData.storeNames || orderData.shopName,
+          ...(orderData.combinedOrderId && { combinedOrderId: orderData.combinedOrderId }),
+          ...(orderData.orderIds && { orderIds: JSON.stringify(orderData.orderIds) }),
         }),
       },
     };

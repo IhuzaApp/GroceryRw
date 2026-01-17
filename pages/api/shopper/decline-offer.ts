@@ -65,6 +65,46 @@ const DECLINE_ORDER_OFFER = gql`
   }
 `;
 
+// Combined order support (regular Orders only)
+const GET_COMBINED_ORDER_IDS = gql`
+  query GetCombinedOrderIds($combined_order_id: uuid!) {
+    Orders(where: { combined_order_id: { _eq: $combined_order_id } }) {
+      id
+    }
+  }
+`;
+
+const VERIFY_COMBINED_OFFERS = gql`
+  query VerifyCombinedOffers($orderIds: [uuid!]!, $shopperId: uuid!) {
+    order_offers(
+      where: {
+        _and: [
+          { order_id: { _in: $orderIds } }
+          { shopper_id: { _eq: $shopperId } }
+          { status: { _eq: "OFFERED" } }
+        ]
+      }
+    ) {
+      id
+      order_id
+      status
+      offered_at
+      round_number
+    }
+  }
+`;
+
+const DECLINE_COMBINED_OFFERS = gql`
+  mutation DeclineCombinedOffers($offerIds: [uuid!]!) {
+    update_order_offers(
+      where: { id: { _in: $offerIds } }
+      _set: { status: "DECLINED", updated_at: "now()" }
+    ) {
+      affected_rows
+    }
+  }
+`;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -126,6 +166,38 @@ export default async function handler(
     const offer = offerResponse.order_offers?.[0];
 
     if (!offer) {
+      // If orderId is actually a combined_order_id, decline ALL offers in that group
+      const combinedResp = (await hasuraClient.request(GET_COMBINED_ORDER_IDS, {
+        combined_order_id: orderId,
+      })) as any;
+      const combinedOrders = combinedResp.Orders || [];
+      if (combinedOrders.length > 0) {
+        const combinedOrderIds = combinedOrders.map((o: any) => o.id);
+        const combinedOffersResp = (await hasuraClient.request(
+          VERIFY_COMBINED_OFFERS,
+          {
+            orderIds: combinedOrderIds,
+            shopperId: shopperId,
+          }
+        )) as any;
+
+        const combinedOffers = combinedOffersResp.order_offers || [];
+        if (combinedOffers.length === combinedOrderIds.length) {
+          await hasuraClient.request(DECLINE_COMBINED_OFFERS, {
+            offerIds: combinedOffers.map((o: any) => o.id),
+          });
+
+          return res.status(200).json({
+            success: true,
+            message: "Combined offer declined successfully",
+            combined_order_id: orderId,
+            orderIds: combinedOrderIds,
+            offerIds: combinedOffers.map((o: any) => o.id),
+            note: "Combined order will be rotated as a group to the next eligible shopper",
+          });
+        }
+      }
+
       // Check if there are any offers for this order/shopper combination (any status)
       const CHECK_ANY_OFFER = gql`
         query CheckAnyOffer($orderId: uuid!, $shopperId: uuid!) {
