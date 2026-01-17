@@ -94,12 +94,14 @@ export const useFCMNotifications = (): FCMNotificationHook => {
               senderName: data?.senderName,
               // Combined order specific fields
               isCombinedOrder: data?.isCombinedOrder === "true",
-              orderCount: data?.orderCount ? parseInt(data.orderCount) : undefined,
+              orderCount: data?.orderCount
+                ? parseInt(data.orderCount)
+                : undefined,
               totalEarnings: data?.totalEarnings
                 ? parseFloat(data.totalEarnings)
                 : data?.estimatedEarnings
-                  ? parseFloat(data.estimatedEarnings)
-                  : undefined,
+                ? parseFloat(data.estimatedEarnings)
+                : undefined,
               storeNames: data?.storeNames || data?.shopName,
               // Include any additional data
               ...(data || {}),

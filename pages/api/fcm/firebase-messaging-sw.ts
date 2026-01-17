@@ -17,14 +17,18 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   // Allow controlling the whole origin (scope "/")
   res.setHeader("Service-Worker-Allowed", "/");
   // Prevent caching during dev/debug; safe in prod too
-  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, proxy-revalidate"
+  );
 
   const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "",
     authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "",
     projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "",
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "",
-    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
+    messagingSenderId:
+      process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "",
   };
 
@@ -107,4 +111,3 @@ self.addEventListener("notificationclick", (event) => {
 
   res.status(200).send(sw);
 }
-

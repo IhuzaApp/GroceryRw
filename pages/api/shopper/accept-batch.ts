@@ -312,9 +312,12 @@ export default async function handler(
       const combinedOrderIds: string[] = combinedOrders.map((o: any) => o.id);
 
       // Verify shopper max active orders first (same rule)
-      const activeOrdersData = (await hasuraClient.request(CHECK_ACTIVE_ORDERS, {
-        shopper_id: userId,
-      })) as any;
+      const activeOrdersData = (await hasuraClient.request(
+        CHECK_ACTIVE_ORDERS,
+        {
+          shopper_id: userId,
+        }
+      )) as any;
       const activeOrders = activeOrdersData.Orders || [];
       const activeOrderCount = activeOrders.length;
       if (activeOrderCount >= 2) {

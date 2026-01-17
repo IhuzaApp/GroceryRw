@@ -55,7 +55,10 @@ export default function NotificationCenter() {
     // Refresh notifications every 5 seconds
     const interval = setInterval(loadNotifications, 5000);
     const onHistoryUpdated = () => loadNotifications();
-    window.addEventListener("fcm-history-updated", onHistoryUpdated as EventListener);
+    window.addEventListener(
+      "fcm-history-updated",
+      onHistoryUpdated as EventListener
+    );
     // Also refresh when another tab updates localStorage
     window.addEventListener("storage", onHistoryUpdated as EventListener);
 
@@ -78,7 +81,11 @@ export default function NotificationCenter() {
         if (!resp.ok) return;
         const data = await resp.json();
         const configCurrency = data?.config?.currency;
-        if (!cancelled && typeof configCurrency === "string" && configCurrency.trim()) {
+        if (
+          !cancelled &&
+          typeof configCurrency === "string" &&
+          configCurrency.trim()
+        ) {
           setCurrency(configCurrency.trim());
         }
       } catch {
@@ -138,7 +145,10 @@ export default function NotificationCenter() {
         sortedNotifications.filter((n: NotificationItem) => !n.read).length
       );
     } catch (error) {
-      console.error("❌ NotificationCenter: Error loading notification history:", error);
+      console.error(
+        "❌ NotificationCenter: Error loading notification history:",
+        error
+      );
     }
   };
 
@@ -313,7 +323,7 @@ export default function NotificationCenter() {
     if (isCombined) {
       return theme === "dark" ? "text-purple-400" : "text-purple-600";
     }
-    
+
     switch (type) {
       case "chat_message":
         return theme === "dark" ? "text-blue-400" : "text-blue-600";
@@ -601,7 +611,10 @@ export default function NotificationCenter() {
                           }`}
                         />
                         <div className="flex-shrink-0">
-                          {getNotificationIcon(notification.type, notification.isCombinedOrder)}
+                          {getNotificationIcon(
+                            notification.type,
+                            notification.isCombinedOrder
+                          )}
                         </div>
                       </div>
                       <div className="flex-1">
@@ -610,21 +623,22 @@ export default function NotificationCenter() {
                             <h4 className="text-sm font-medium">
                               {notification.title}
                             </h4>
-                            {(notification.type === "new_order" &&
+                            {notification.type === "new_order" &&
                               (notification.displayOrderId ||
-                                notification.OrderID)) && (
-                              <span
-                                className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                                  theme === "dark"
-                                    ? "bg-emerald-900/40 text-emerald-200"
-                                    : "bg-emerald-100 text-emerald-800"
-                                }`}
-                                title="Order ID"
-                              >
-                                #{notification.displayOrderId ??
-                                  notification.OrderID}
-                              </span>
-                            )}
+                                notification.OrderID) && (
+                                <span
+                                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                                    theme === "dark"
+                                      ? "bg-emerald-900/40 text-emerald-200"
+                                      : "bg-emerald-100 text-emerald-800"
+                                  }`}
+                                  title="Order ID"
+                                >
+                                  #
+                                  {notification.displayOrderId ??
+                                    notification.OrderID}
+                                </span>
+                              )}
                             {notification.isCombinedOrder && (
                               <span
                                 className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${
@@ -648,7 +662,7 @@ export default function NotificationCenter() {
                         >
                           {notification.body}
                         </p>
-                        
+
                         {/* Combined Order Details */}
                         {notification.isCombinedOrder && (
                           <div
@@ -707,7 +721,7 @@ export default function NotificationCenter() {
                             </div>
                           </div>
                         )}
-                        
+
                         {/* Regular earnings display for single orders */}
                         {!notification.isCombinedOrder &&
                           notification.totalEarnings !== undefined && (
@@ -733,7 +747,7 @@ export default function NotificationCenter() {
                               </span>
                             </div>
                           )}
-                        
+
                         {notification.type === "chat_message" &&
                           notification.senderName && (
                             <p className="mt-1 text-xs text-gray-500">
