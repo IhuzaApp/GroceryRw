@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useTheme } from "../../context/ThemeContext";
+import { useFCMNotifications } from "../../hooks/useFCMNotifications";
 
 // Check if mobile
 const useIsMobile = () => {
@@ -38,20 +39,54 @@ export default function NotificationCenter() {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const lastLoadedCountRef = React.useRef<number | null>(null);
+
+  // Ensure FCM is initialized anywhere the notification bell exists
+  // (singleton guarded in fcmClient to prevent duplicate listeners)
+  useFCMNotifications();
 
   useEffect(() => {
     loadNotifications();
 
     // Refresh notifications every 5 seconds
     const interval = setInterval(loadNotifications, 5000);
-    return () => clearInterval(interval);
+    const onHistoryUpdated = () => loadNotifications();
+    window.addEventListener("fcm-history-updated", onHistoryUpdated as EventListener);
+    // Also refresh when another tab updates localStorage
+    window.addEventListener("storage", onHistoryUpdated as EventListener);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener(
+        "fcm-history-updated",
+        onHistoryUpdated as EventListener
+      );
+      window.removeEventListener("storage", onHistoryUpdated as EventListener);
+    };
   }, []);
+
+  // When opening the dropdown, refresh immediately (latest history)
+  useEffect(() => {
+    if (isOpen) loadNotifications();
+  }, [isOpen]);
 
   const loadNotifications = () => {
     try {
       const history = JSON.parse(
         localStorage.getItem("fcm_notification_history") || "[]"
       );
+      if (process.env.NODE_ENV === "development") {
+        // Avoid spamming the console every refresh; only log when the count changes
+        if (lastLoadedCountRef.current !== history.length) {
+          console.log(
+            "📋 NotificationCenter: Loading notifications from localStorage",
+            {
+              count: history.length,
+            }
+          );
+          lastLoadedCountRef.current = history.length;
+        }
+      }
       // Show ALL FCM notifications (no filtering)
       // Sort by timestamp (newest first)
       const sortedNotifications = history.sort(
@@ -61,8 +96,11 @@ export default function NotificationCenter() {
       setUnreadCount(
         sortedNotifications.filter((n: NotificationItem) => !n.read).length
       );
+      if (process.env.NODE_ENV === "development") {
+        // Only log when count changes (handled above); keep this silent to reduce noise
+      }
     } catch (error) {
-      console.error("Error loading notification history:", error);
+      console.error("❌ NotificationCenter: Error loading notification history:", error);
     }
   };
 

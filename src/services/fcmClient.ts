@@ -68,6 +68,84 @@ if (typeof window !== "undefined" && app) {
   }
 }
 
+// ---- Global FCM singleton (prevents duplicate listeners across multiple hooks/components) ----
+type FCMMessageCallback = (payload: any) => void;
+const fcmMessageSubscribers = new Set<FCMMessageCallback>();
+let fcmStartedForUserId: string | null = null;
+let fcmStartPromise: Promise<boolean> | null = null;
+let fcmUnsubscribeCore: (() => void) | null = null;
+
+const dispatchToSubscribers = (payload: any) => {
+  // Copy into array to avoid mutation issues during iteration
+  const callbacks = Array.from(fcmMessageSubscribers);
+  for (const cb of callbacks) {
+    try {
+      cb(payload);
+    } catch (e) {
+      // Never let a consumer break global dispatch
+    }
+  }
+};
+
+const stopFCMCore = () => {
+  try {
+    fcmUnsubscribeCore?.();
+  } catch {
+    // ignore
+  }
+  fcmUnsubscribeCore = null;
+  fcmStartedForUserId = null;
+};
+
+const ensureFCMCoreStarted = async (userId: string): Promise<boolean> => {
+  // If already running for this user, we're good.
+  if (fcmUnsubscribeCore && fcmStartedForUserId === userId) return true;
+
+  // If running for a different user, stop and restart.
+  if (fcmUnsubscribeCore && fcmStartedForUserId && fcmStartedForUserId !== userId) {
+    stopFCMCore();
+  }
+
+  // If a start is already in-flight, await it.
+  if (fcmStartPromise) return fcmStartPromise;
+
+  fcmStartPromise = (async () => {
+    const token = await getFCMToken();
+    if (!token) return false;
+
+    await saveFCMTokenToServer(userId, token);
+
+    const unsubscribeListener = setupFCMListener(dispatchToSubscribers);
+    // Pull in any notifications received while the app was closed/backgrounded
+    await syncStoredNotificationsToLocalStorage();
+    // Bridge SW->page messages for instant in-app updates
+    const unsubscribeBridge = setupServiceWorkerFCMBridge(dispatchToSubscribers);
+
+    fcmUnsubscribeCore = () => {
+      try {
+        unsubscribeBridge();
+      } catch {
+        // ignore
+      }
+      unsubscribeListener();
+    };
+    fcmStartedForUserId = userId;
+    console.log("✅ FCM initialized successfully");
+    return true;
+  })()
+    .catch((error) => {
+      console.warn("⚠️ FCM initialization failed (non-critical):", error);
+      return false;
+    })
+    .finally(() => {
+      fcmStartPromise = null;
+    });
+
+  const ok = await fcmStartPromise;
+  if (!ok) stopFCMCore();
+  return ok;
+};
+
 export interface FCMTokenData {
   userId: string;
   token: string;
@@ -435,9 +513,12 @@ export const initializeFCM = async (
   onMessageReceived: (payload: any) => void
 ): Promise<(() => void) | null> => {
   try {
-    const token = await getFCMToken();
+    // Subscribe first so early messages during init still reach this consumer
+    fcmMessageSubscribers.add(onMessageReceived);
 
-    if (!token) {
+    const ok = await ensureFCMCoreStarted(userId);
+    if (!ok) {
+      fcmMessageSubscribers.delete(onMessageReceived);
       // Silent fail - FCM is optional, app works fine without it
       console.warn(
         "⚠️ FCM not available. This is normal if:",
@@ -450,21 +531,13 @@ export const initializeFCM = async (
       return null;
     }
 
-    await saveFCMTokenToServer(userId, token);
-    const unsubscribe = setupFCMListener(onMessageReceived);
-    // Pull in any notifications received while the app was closed/backgrounded
-    await syncStoredNotificationsToLocalStorage();
-    // Bridge SW->page messages for instant in-app updates
-    const unsubscribeBridge = setupServiceWorkerFCMBridge(onMessageReceived);
-
-    console.log("✅ FCM initialized successfully");
+    // Return an unsubscribe that only removes this subscriber.
     return () => {
-      try {
-        unsubscribeBridge();
-      } catch (e) {
-        // ignore
+      fcmMessageSubscribers.delete(onMessageReceived);
+      // If no one is listening anymore, stop the core listener.
+      if (fcmMessageSubscribers.size === 0) {
+        stopFCMCore();
       }
-      unsubscribe();
     };
   } catch (error) {
     // Silent fail - FCM is optional
