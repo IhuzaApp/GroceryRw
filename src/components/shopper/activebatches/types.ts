@@ -87,7 +87,7 @@ export interface OrderDetailsType {
       };
     };
   };
-  orderType?: "regular" | "reel" | "restaurant";
+  orderType?: "regular" | "reel" | "restaurant" | "combined";
   reel?: {
     id: string;
     title: string;
