@@ -26,6 +26,8 @@ const GET_ACTIVE_ORDERS = gql`
       delivery_fee
       total
       delivery_time
+      combined_order_id
+      pin
       Shop {
         name
         address
@@ -215,6 +217,8 @@ export default async function handler(
               delivery_fee: string | null;
               total: number | null;
               delivery_time: string | null;
+              combined_order_id: string | null;
+              pin: string | null;
               Shop: {
                 name: string;
                 address: string;
@@ -331,8 +335,69 @@ export default async function handler(
         regularOrders.length + reelOrders.length + restaurantOrders.length,
     });
 
-    // Transform regular orders
-    const transformedRegularOrders = regularOrders.map((o) => ({
+    // Group regular orders by combined_order_id
+    const combinedOrdersMap = new Map<string, typeof regularOrders>();
+    const standaloneOrders: typeof regularOrders = [];
+
+    regularOrders.forEach((order) => {
+      if (order.combined_order_id) {
+        const existing = combinedOrdersMap.get(order.combined_order_id) || [];
+        existing.push(order);
+        combinedOrdersMap.set(order.combined_order_id, existing);
+      } else {
+        standaloneOrders.push(order);
+      }
+    });
+
+    // Transform combined orders into single batches
+    const transformedCombinedOrders = Array.from(combinedOrdersMap.entries()).map(
+      ([combinedOrderId, orders]) => {
+        // Aggregate data from all orders in the combined order
+        const totalItems = orders.reduce(
+          (sum, o) => sum + (o.Order_Items_aggregate.aggregate?.count ?? 0),
+          0
+        );
+        const totalAmount = orders.reduce((sum, o) => sum + (o.total ?? 0), 0);
+        const totalEarnings = orders.reduce(
+          (sum, o) =>
+            sum +
+            parseFloat(o.service_fee || "0") +
+            parseFloat(o.delivery_fee || "0"),
+          0
+        );
+        const shopNames = orders.map((o) => o.Shop.name).join(", ");
+        
+        // Use the first order as the base for common data
+        const firstOrder = orders[0];
+
+        return {
+          id: combinedOrderId, // Use combined_order_id as the ID
+          OrderID: `Combined-${firstOrder.OrderID}`, // Prefix to indicate combined
+          status: firstOrder.status, // Use status from first order
+          createdAt: firstOrder.created_at,
+          deliveryTime: firstOrder.delivery_time || undefined,
+          shopName: `${orders.length} Stores: ${shopNames}`,
+          shopAddress: `Multiple stores (${orders.length} orders)`,
+          shopLat: parseFloat(firstOrder.Shop.latitude),
+          shopLng: parseFloat(firstOrder.Shop.longitude),
+          customerName: firstOrder.orderedBy.name,
+          customerAddress: `${firstOrder.Address.street}, ${firstOrder.Address.city}`,
+          customerLat: parseFloat(firstOrder.Address.latitude),
+          customerLng: parseFloat(firstOrder.Address.longitude),
+          items: totalItems,
+          total: totalAmount,
+          estimatedEarnings: totalEarnings.toFixed(2),
+          orderType: "combined" as const,
+          combinedOrderId: combinedOrderId,
+          pin: firstOrder.pin,
+          orderCount: orders.length,
+          orderIds: orders.map((o) => o.id), // Include all order IDs
+        };
+      }
+    );
+
+    // Transform standalone regular orders
+    const transformedStandaloneOrders = standaloneOrders.map((o) => ({
       id: o.id,
       OrderID: o.OrderID,
       status: o.status,
@@ -352,6 +417,7 @@ export default async function handler(
         parseFloat(o.service_fee || "0") + parseFloat(o.delivery_fee || "0")
       ).toFixed(2),
       orderType: "regular" as const,
+      pin: o.pin,
     }));
 
     // Transform reel orders
@@ -419,7 +485,8 @@ export default async function handler(
 
     // Combine all types of orders
     const allActiveOrders = [
-      ...transformedRegularOrders,
+      ...transformedCombinedOrders,
+      ...transformedStandaloneOrders,
       ...transformedReelOrders,
       ...transformedRestaurantOrders,
     ];

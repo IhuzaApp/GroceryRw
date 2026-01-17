@@ -69,6 +69,8 @@ const GET_ELIGIBLE_ORDERS = gql`
       shop_id
       service_fee
       delivery_fee
+      combined_order_id
+      pin
       Shop {
         name
         latitude
@@ -1370,7 +1372,8 @@ export default async function handler(
     // This prevents duplicate notifications when polling refreshes the same offer
     if (!isExtendingOffer) {
       try {
-        await sendNewOrderNotification(user_id, {
+        // Check if this is a combined order
+        let notificationData: any = {
           id: bestOrder.id,
           shopName: orderData.shopName,
           customerAddress: orderData.customerAddress,
@@ -1380,13 +1383,91 @@ export default async function handler(
           estimatedEarnings: orderData.estimatedEarnings,
           orderType: orderData.orderType,
           expiresInMs: null, // No expiry - shopper must accept or decline
-        });
+        };
+
+        // If it's a combined order (has combined_order_id), fetch all related orders
+        if (bestOrder.combined_order_id && bestOrder.orderType === "regular") {
+          try {
+            const GET_COMBINED_ORDER_INFO = gql`
+              query GetCombinedOrderInfo($combined_order_id: uuid!) {
+                Orders(where: { combined_order_id: { _eq: $combined_order_id } }) {
+                  id
+                  service_fee
+                  delivery_fee
+                  Shop {
+                    name
+                  }
+                  Order_Items_aggregate {
+                    aggregate {
+                      count
+                    }
+                  }
+                }
+              }
+            `;
+
+            const combinedOrderData = (await hasuraClient.request(
+              GET_COMBINED_ORDER_INFO,
+              { combined_order_id: bestOrder.combined_order_id }
+            )) as any;
+
+            const allOrders = combinedOrderData.Orders || [];
+            if (allOrders.length > 1) {
+              // Calculate combined totals
+              const totalEarnings = allOrders.reduce((sum: number, order: any) => {
+                return (
+                  sum +
+                  parseFloat(order.service_fee || "0") +
+                  parseFloat(order.delivery_fee || "0")
+                );
+              }, 0);
+
+              const totalItems = allOrders.reduce((sum: number, order: any) => {
+                return sum + (order.Order_Items_aggregate.aggregate?.count || 0);
+              }, 0);
+
+              const storeNames = allOrders
+                .map((order: any) => order.Shop?.name)
+                .filter(Boolean)
+                .join(", ");
+
+              // Update notification data for combined order
+              notificationData = {
+                ...notificationData,
+                id: bestOrder.combined_order_id, // Use combined_order_id
+                estimatedEarnings: totalEarnings,
+                itemsCount: totalItems,
+                isCombinedOrder: true,
+                orderCount: allOrders.length,
+                storeNames: storeNames,
+              };
+
+              console.log("🛒 Combined order detected:", {
+                combined_order_id: bestOrder.combined_order_id,
+                storeCount: allOrders.length,
+                totalEarnings,
+                stores: storeNames,
+              });
+            }
+          } catch (combinedOrderError) {
+            console.error(
+              "Error fetching combined order info:",
+              combinedOrderError
+            );
+            // Continue with single order notification if combined fetch fails
+          }
+        }
+
+        await sendNewOrderNotification(user_id, notificationData);
 
         console.log(
           "✅ FCM notification sent to shopper:",
           user_id,
           "for order:",
           bestOrder.id,
+          notificationData.isCombinedOrder
+            ? `(Combined: ${notificationData.orderCount} stores)`
+            : "",
           "| No time limit - waiting for explicit action"
         );
       } catch (fcmError) {
