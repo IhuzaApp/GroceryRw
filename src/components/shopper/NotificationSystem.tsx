@@ -1721,34 +1721,8 @@ export default function NotificationSystem({
                 </div>
                 {/* Directions Button */}
                 <button
-                  onPointerDown={(e) => {
-                    console.log("👆 DIRECTIONS POINTER DOWN", {
-                      orderId: selectedOrder.id,
-                      timestamp: new Date().toISOString(),
-                      pointerType: e.pointerType,
-                      x: e.clientX,
-                      y: e.clientY,
-                    });
-                  }}
-                  onPointerUp={(e) => {
-                    console.log("👆 DIRECTIONS POINTER UP", {
-                      orderId: selectedOrder.id,
-                      timestamp: new Date().toISOString(),
-                      pointerType: e.pointerType,
-                    });
-                  }}
                   onClick={() => {
                     directionsClickCount.current += 1;
-                    console.log("🗺️ DIRECTIONS BUTTON CLICKED", {
-                      orderId: selectedOrder.id,
-                      timestamp: new Date().toISOString(),
-                      clickCount: directionsClickCount.current,
-                      totalClicks: `This is click #${directionsClickCount.current}`,
-                      coordinates: {
-                        lat: selectedOrder.shopLatitude,
-                        lng: selectedOrder.shopLongitude,
-                      },
-                    });
 
                     // Open Google Maps with directions to SHOP location
                     const destLat = selectedOrder.shopLatitude;
@@ -2046,25 +2020,10 @@ export default function NotificationSystem({
 
                 {/* Accept Batch Button */}
                 <button
-                  onPointerDown={(e) => {
-                    console.log("👆 ACCEPT POINTER DOWN", {
-                      orderId: selectedOrder.id,
-                      timestamp: new Date().toISOString(),
-                      pointerType: e.pointerType,
-                      x: e.clientX,
-                      y: e.clientY,
-                    });
-                  }}
                   onClick={async () => {
                     acceptClickCount.current += 1;
 
                     const success = await handleAcceptOrder(selectedOrder.id);
-
-                    console.log("🟢 ACCEPT RESULT", {
-                      orderId: selectedOrder.id,
-                      success,
-                      timestamp: new Date().toISOString(),
-                    });
 
                     if (success) {
                       setShowMapModal(false);
