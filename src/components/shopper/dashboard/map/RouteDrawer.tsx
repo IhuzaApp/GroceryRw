@@ -141,11 +141,7 @@ export function useRouteDrawer({
 
         setRoutePolyline(polyline);
 
-        console.log("✅ ROUTE DRAWN SUCCESSFULLY", {
-          routePoints: routeCoords.length,
-          orderId: notifiedOrder.id,
-          timestamp: new Date().toISOString(),
-        });
+        // silent
 
         // Create end marker (customer delivery location) - Red pin
         const endMarkerIcon = createCustomDivIcon(

@@ -3221,11 +3221,7 @@ export default function MapSection({
 
         setRoutePolyline(polyline);
 
-        console.log("✅ ROUTE DRAWN SUCCESSFULLY", {
-          routePoints: routeCoords.length,
-          orderId: notifiedOrder.id,
-          timestamp: new Date().toISOString(),
-        });
+        // silent
 
         // No need to create start marker - permanent shopper marker already shows location
 
