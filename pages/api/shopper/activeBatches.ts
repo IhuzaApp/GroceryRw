@@ -379,6 +379,25 @@ export default async function handler(
             ? `${shopNamesArray[0]} and ${shopNamesArray[1]}`
             : shopNamesArray.join(", ");
         const orderIDs = orders.map((o) => o.OrderID);
+        const customerNames = Array.from(
+          new Set(orders.map((o) => o.orderedBy?.name).filter(Boolean))
+        ) as string[];
+        const customerAddresses = Array.from(
+          new Set(
+            orders
+              .map((o) => `${o.Address.street}, ${o.Address.city}`)
+              .filter(Boolean)
+          )
+        ) as string[];
+        const customerNameDisplay =
+          customerNames.length === 2
+            ? `${customerNames[0]} & ${customerNames[1]}`
+            : customerNames.join(", ") || firstOrder.orderedBy.name;
+        const customerAddressDisplay =
+          customerAddresses.length === 2
+            ? `${customerAddresses[0]} | ${customerAddresses[1]}`
+            : customerAddresses.join(" | ") ||
+              `${firstOrder.Address.street}, ${firstOrder.Address.city}`;
         
         // Use the first order as the base for common data
         const firstOrder = orders[0];
@@ -394,8 +413,10 @@ export default async function handler(
           shopAddress: `Multiple stores (${orders.length} orders)`,
           shopLat: parseFloat(firstOrder.Shop.latitude),
           shopLng: parseFloat(firstOrder.Shop.longitude),
-          customerName: firstOrder.orderedBy.name,
-          customerAddress: `${firstOrder.Address.street}, ${firstOrder.Address.city}`,
+          customerName: customerNameDisplay,
+          customerNames,
+          customerAddress: customerAddressDisplay,
+          customerAddresses,
           customerLat: parseFloat(firstOrder.Address.latitude),
           customerLng: parseFloat(firstOrder.Address.longitude),
           items: totalUnits,
@@ -425,7 +446,9 @@ export default async function handler(
       shopLat: parseFloat(o.Shop.latitude),
       shopLng: parseFloat(o.Shop.longitude),
       customerName: o.orderedBy.name,
+      customerNames: [o.orderedBy.name],
       customerAddress: `${o.Address.street}, ${o.Address.city}`,
+      customerAddresses: [`${o.Address.street}, ${o.Address.city}`],
       customerLat: parseFloat(o.Address.latitude),
       customerLng: parseFloat(o.Address.longitude),
       items: o.Order_Items_aggregate.aggregate?.sum?.quantity ?? 0,

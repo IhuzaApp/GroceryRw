@@ -19,7 +19,9 @@ interface Order {
   shopLat: number;
   shopLng: number;
   customerName: string;
+  customerNames?: string[];
   customerAddress: string;
+  customerAddresses?: string[];
   customerLat: number;
   customerLng: number;
   items: number;
@@ -46,6 +48,40 @@ const renderShopNames = (order: Order) => {
       {unique.map((name) => (
         <div key={name} className="leading-tight">
           {name}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const renderCustomerNames = (order: Order) => {
+  const names = order.customerNames?.length ? order.customerNames : [order.customerName];
+  const unique = Array.from(new Set(names.map((n) => n?.trim()).filter(Boolean))) as string[];
+  if (unique.length <= 1) return unique[0] || order.customerName;
+  return (
+    <div className="flex flex-col gap-0.5">
+      {unique.map((name) => (
+        <div key={name} className="leading-tight">
+          {name}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const renderCustomerAddresses = (order: Order) => {
+  const addresses = order.customerAddresses?.length
+    ? order.customerAddresses
+    : [order.customerAddress];
+  const unique = Array.from(
+    new Set(addresses.map((a) => a?.trim()).filter(Boolean))
+  ) as string[];
+  if (unique.length <= 1) return unique[0] || order.customerAddress;
+  return (
+    <div className="flex flex-col gap-0.5">
+      {unique.map((addr) => (
+        <div key={addr} className="leading-tight">
+          {addr}
         </div>
       ))}
     </div>
@@ -302,7 +338,9 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3 whitespace-nowrap">
                       <BatchAvatar name={order.customerName} size="sm" />
-                      <span className="font-medium">{order.customerName}</span>
+                      <span className="font-medium">
+                        {renderCustomerNames(order)}
+                      </span>
                     </div>
                   </td>
 
@@ -350,7 +388,7 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
                       className="max-w-[200px] truncate"
                       title={order.customerAddress}
                     >
-                      {order.customerAddress}
+                      {renderCustomerAddresses(order)}
                     </div>
                   </td>
 

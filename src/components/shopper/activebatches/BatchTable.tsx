@@ -15,7 +15,9 @@ interface Order {
   shopLat: number;
   shopLng: number;
   customerName: string;
+  customerNames?: string[];
   customerAddress: string;
+  customerAddresses?: string[];
   customerLat: number;
   customerLng: number;
   items: number;
@@ -45,6 +47,44 @@ const renderShopNames = (order: Order) => {
       {unique.map((name) => (
         <span key={name} className="leading-tight hover:underline">
           {name}
+        </span>
+      ))}
+    </div>
+  );
+};
+
+const renderCustomerNames = (order: Order) => {
+  const names = order.customerNames?.length ? order.customerNames : [order.customerName];
+  const unique = Array.from(new Set(names.map((n) => n?.trim()).filter(Boolean))) as string[];
+  if (unique.length <= 1) return <span>{unique[0] || order.customerName}</span>;
+  return (
+    <div className="flex flex-col gap-0.5">
+      {unique.map((name) => (
+        <span key={name} className="leading-tight">
+          {name}
+        </span>
+      ))}
+    </div>
+  );
+};
+
+const renderCustomerAddresses = (order: Order) => {
+  const addresses = order.customerAddresses?.length
+    ? order.customerAddresses
+    : [order.customerAddress];
+  const unique = Array.from(
+    new Set(addresses.map((a) => a?.trim()).filter(Boolean))
+  ) as string[];
+  if (unique.length <= 1) {
+    return (
+      <span className="truncate hover:underline">{unique[0] || order.customerAddress}</span>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-0.5">
+      {unique.map((addr) => (
+        <span key={addr} className="leading-tight">
+          {addr}
         </span>
       ))}
     </div>
@@ -366,7 +406,7 @@ export function BatchTable({ orders }: BatchTableProps) {
                           d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                         />
                       </svg>
-                      <span>{order.customerName}</span>
+                      {renderCustomerNames(order)}
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -423,7 +463,7 @@ export function BatchTable({ orders }: BatchTableProps) {
                       href={`https://www.google.com/maps/dir/?api=1&destination=${order.customerLat},${order.customerLng}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex max-w-[200px] cursor-pointer items-center gap-2 text-sm transition-colors hover:text-blue-600 dark:hover:text-blue-400"
+                      className="flex max-w-[200px] cursor-pointer items-start gap-2 text-sm transition-colors hover:text-blue-600 dark:hover:text-blue-400"
                       title="Get directions from your current location"
                     >
                       <svg
@@ -445,8 +485,8 @@ export function BatchTable({ orders }: BatchTableProps) {
                           d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                         />
                       </svg>
-                      <span className="truncate hover:underline">
-                        {order.customerAddress}
+                      <span className="min-w-0">
+                        {renderCustomerAddresses(order)}
                       </span>
                     </a>
                   </td>
