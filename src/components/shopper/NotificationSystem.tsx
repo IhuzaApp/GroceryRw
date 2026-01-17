@@ -1417,11 +1417,7 @@ export default function NotificationSystem({
     // Reset notification state
     lastNotificationTime.current = 0;
 
-    console.log("🟢 Starting smart notification system - shopper is online", {
-      componentId: componentId.current,
-      isDevelopment: process.env.NODE_ENV === "development",
-      hasStrictMode: "React StrictMode may cause duplicate logs in development",
-    });
+    // no console logs (keep UI quiet)
 
     // Initial check with slight delay to prevent race conditions and StrictMode double-calls
     setTimeout(() => {
