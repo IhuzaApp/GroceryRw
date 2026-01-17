@@ -31,14 +31,6 @@ interface Order {
   // Add other order properties as needed
 }
 
-// Calculate estimated travel time in minutes
-const calculateTravelTime = (distanceKm: number): number => {
-  // Assuming average speed of 20 km/h for city driving
-  // This can be adjusted based on your city's traffic conditions
-  const averageSpeedKmh = 20;
-  const travelTimeHours = distanceKm / averageSpeedKmh;
-  return Math.round(travelTimeHours * 60); // Convert to minutes
-};
 
 interface BatchAssignment {
   shopperId: string;
@@ -1744,37 +1736,12 @@ export default function NotificationSystem({
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Delivery Address
-                        </p>
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {selectedOrder.customerAddress}
-                        </p>
-                      </div>
-                      {/* Time Badge */}
-                      <div className="ml-2 flex items-center space-x-1 rounded-full bg-green-50 px-2 py-1 dark:bg-green-900/30">
-                        <svg
-                          className="h-3 w-3 text-green-600 dark:text-green-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        <span className="text-xs font-medium text-green-600 dark:text-green-400">
-                          {selectedOrder.travelTimeMinutes ||
-                            calculateTravelTime(selectedOrder.distance)}{" "}
-                          min
-                        </span>
-                      </div>
-                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Delivery Address
+                    </p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {selectedOrder.customerAddress}
+                    </p>
                   </div>
                 </div>
               </div>
