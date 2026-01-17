@@ -321,6 +321,7 @@ export const sendNewOrderNotification = async (
     isCombinedOrder?: boolean; // Flag for combined orders
     orderCount?: number; // Number of stores in combined order
     storeNames?: string; // Comma-separated store names
+    displayOrderId?: string; // Human-readable order number (e.g. OrderID)
   }
 ): Promise<void> => {
   try {
@@ -364,6 +365,7 @@ export const sendNewOrderNotification = async (
         customerAddress: orderData.customerAddress,
         expiresIn: expiresInMs.toString(),
         timestamp: Date.now().toString(),
+        ...(orderData.displayOrderId && { displayOrderId: orderData.displayOrderId }),
         // Combined order specific data
         ...(orderData.isCombinedOrder && {
           isCombinedOrder: "true",

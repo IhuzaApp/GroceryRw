@@ -12,6 +12,7 @@ const batchToast = toast;
 
 interface Order {
   id: string;
+  OrderID?: string | number | null;
   shopName: string;
   distance: number;
   travelTimeMinutes?: number;
@@ -350,6 +351,7 @@ export default function NotificationSystem({
       // Convert to Order format and show notification
       const orderForNotification: Order = {
         id: order.id,
+        OrderID: order.OrderID ?? order.displayOrderId ?? null,
         shopName: order.shopName,
         distance: order.distance,
         createdAt: order.createdAt,
@@ -664,6 +666,7 @@ export default function NotificationSystem({
     // Convert to Order format for compatibility
     const orderForNotification: Order = {
       id: order.id,
+      OrderID: order.OrderID,
       shopName: order.shopName,
       distance: order.distance,
       createdAt: order.createdAt,
@@ -1456,6 +1459,24 @@ export default function NotificationSystem({
           const offer = JSON.parse(storedActiveOffer);
           // Verify offer is still valid (not expired)
           if (offer.expiresAt && new Date(offer.expiresAt) > new Date()) {
+            // Older cached offers may not have OrderID saved yet — fetch once (best effort)
+            if (!offer?.order?.OrderID && offer?.order?.id) {
+              try {
+                const resp = await fetch(
+                  `/api/queries/orderDetails?id=${offer.order.id}`
+                );
+                if (resp.ok) {
+                  const details = await resp.json();
+                  if (details?.order?.OrderID) {
+                    offer.order.OrderID = details.order.OrderID;
+                    localStorage.setItem("active_offer", JSON.stringify(offer));
+                  }
+                }
+              } catch {
+                // ignore
+              }
+            }
+
             // Double check count again before showing restored offer
             if (activeOrderCount < 2) {
               showNewOrderNotification(offer.order, Date.now());
@@ -1604,19 +1625,14 @@ export default function NotificationSystem({
                 <div className="flex items-center space-x-3">
                   {/* Avatar */}
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-purple-500">
-                    <svg
-                      className="h-6 w-6 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
+                    <div className="flex flex-col items-center justify-center leading-none">
+                      <span className="text-[10px] font-semibold text-white/90">
+                        Order
+                      </span>
+                      <span className="text-sm font-extrabold text-white">
+                        {selectedOrder.OrderID ?? "--"}
+                      </span>
+                    </div>
                   </div>
                   {/* Shop Name */}
                   <div>
@@ -1654,19 +1670,19 @@ export default function NotificationSystem({
                       clickCount: directionsClickCount.current,
                       totalClicks: `This is click #${directionsClickCount.current}`,
                       coordinates: {
-                        lat: selectedOrder.customerLatitude,
-                        lng: selectedOrder.customerLongitude,
+                        lat: selectedOrder.shopLatitude,
+                        lng: selectedOrder.shopLongitude,
                       },
                     });
 
-                    // Open Google Maps with directions to delivery address
-                    const destLat = selectedOrder.customerLatitude;
-                    const destLng = selectedOrder.customerLongitude;
+                    // Open Google Maps with directions to SHOP location
+                    const destLat = selectedOrder.shopLatitude;
+                    const destLng = selectedOrder.shopLongitude;
                     const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`;
                     window.open(mapsUrl, "_blank");
                   }}
                   className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 shadow-md transition-colors hover:bg-blue-600"
-                  title="Open in Google Maps"
+                  title="Open shop location in Google Maps"
                 >
                   <svg
                     className="h-5 w-5 text-white"
@@ -1678,7 +1694,7 @@ export default function NotificationSystem({
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                      d="M19 21V7a2 2 0 00-2-2H7a2 2 0 00-2 2v14m14 0H5m14 0h2M5 21H3m6-14h6m-6 4h6m-6 4h6"
                     />
                   </svg>
                 </button>
