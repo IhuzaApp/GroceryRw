@@ -52,8 +52,7 @@ let registrationPromise: Promise<ServiceWorkerRegistration | null> | null =
 if (typeof window !== "undefined" && app) {
   try {
     messaging = getMessaging(app);
-  } catch (error) {
-  }
+  } catch (error) {}
 }
 
 // ---- Global FCM singleton (prevents duplicate listeners across multiple hooks/components) ----
@@ -90,7 +89,11 @@ const ensureFCMCoreStarted = async (userId: string): Promise<boolean> => {
   if (fcmUnsubscribeCore && fcmStartedForUserId === userId) return true;
 
   // If running for a different user, stop and restart.
-  if (fcmUnsubscribeCore && fcmStartedForUserId && fcmStartedForUserId !== userId) {
+  if (
+    fcmUnsubscribeCore &&
+    fcmStartedForUserId &&
+    fcmStartedForUserId !== userId
+  ) {
     stopFCMCore();
   }
 
@@ -107,7 +110,9 @@ const ensureFCMCoreStarted = async (userId: string): Promise<boolean> => {
     // Pull in any notifications received while the app was closed/backgrounded
     await syncStoredNotificationsToLocalStorage();
     // Bridge SW->page messages for instant in-app updates
-    const unsubscribeBridge = setupServiceWorkerFCMBridge(dispatchToSubscribers);
+    const unsubscribeBridge = setupServiceWorkerFCMBridge(
+      dispatchToSubscribers
+    );
 
     fcmUnsubscribeCore = () => {
       try {
@@ -385,8 +390,7 @@ export const setupFCMListener = (
                 notificationOptions
               );
             })
-            .catch((error) => {
-            });
+            .catch((error) => {});
         }
       }
 

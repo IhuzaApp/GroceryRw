@@ -38,9 +38,13 @@ const formatOrderIdsForDisplay = (order: Order): string => {
 
 const renderShopNames = (order: Order) => {
   const names = order.shopNames?.length ? order.shopNames : [order.shopName];
-  const unique = Array.from(new Set(names.map((n) => n?.trim()).filter(Boolean))) as string[];
+  const unique = Array.from(
+    new Set(names.map((n) => n?.trim()).filter(Boolean))
+  ) as string[];
   if (unique.length <= 1) {
-    return <span className="hover:underline">{unique[0] || order.shopName}</span>;
+    return (
+      <span className="hover:underline">{unique[0] || order.shopName}</span>
+    );
   }
   return (
     <div className="flex flex-col gap-0.5">
@@ -54,8 +58,12 @@ const renderShopNames = (order: Order) => {
 };
 
 const renderCustomerNames = (order: Order) => {
-  const names = order.customerNames?.length ? order.customerNames : [order.customerName];
-  const unique = Array.from(new Set(names.map((n) => n?.trim()).filter(Boolean))) as string[];
+  const names = order.customerNames?.length
+    ? order.customerNames
+    : [order.customerName];
+  const unique = Array.from(
+    new Set(names.map((n) => n?.trim()).filter(Boolean))
+  ) as string[];
   if (unique.length <= 1) return <span>{unique[0] || order.customerName}</span>;
   return (
     <div className="flex flex-col gap-0.5">
@@ -77,7 +85,9 @@ const renderCustomerAddresses = (order: Order) => {
   ) as string[];
   if (unique.length <= 1) {
     return (
-      <span className="truncate hover:underline">{unique[0] || order.customerAddress}</span>
+      <span className="truncate hover:underline">
+        {unique[0] || order.customerAddress}
+      </span>
     );
   }
   return (

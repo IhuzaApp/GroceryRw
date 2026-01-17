@@ -367,14 +367,20 @@ export const sendNewOrderNotification = async (
         customerAddress: orderData.customerAddress,
         expiresIn: expiresInMs.toString(),
         timestamp: Date.now().toString(),
-        ...(orderData.displayOrderId && { displayOrderId: orderData.displayOrderId }),
+        ...(orderData.displayOrderId && {
+          displayOrderId: orderData.displayOrderId,
+        }),
         // Combined order specific data
         ...(orderData.isCombinedOrder && {
           isCombinedOrder: "true",
           orderCount: orderData.orderCount?.toString() || "1",
           storeNames: orderData.storeNames || orderData.shopName,
-          ...(orderData.combinedOrderId && { combinedOrderId: orderData.combinedOrderId }),
-          ...(orderData.orderIds && { orderIds: JSON.stringify(orderData.orderIds) }),
+          ...(orderData.combinedOrderId && {
+            combinedOrderId: orderData.combinedOrderId,
+          }),
+          ...(orderData.orderIds && {
+            orderIds: JSON.stringify(orderData.orderIds),
+          }),
         }),
       },
     };

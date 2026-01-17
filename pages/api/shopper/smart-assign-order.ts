@@ -1489,7 +1489,8 @@ export default async function handler(
       }, 0);
 
       const totalItems = combinedOrders.reduce((sum: number, o: any) => {
-        const unitsCount = o.Order_Items_aggregate?.aggregate?.sum?.quantity || 0;
+        const unitsCount =
+          o.Order_Items_aggregate?.aggregate?.sum?.quantity || 0;
         const itemsTypeCount = o.Order_Items_aggregate?.aggregate?.count || 0;
         const items = unitsCount || itemsTypeCount || 0;
         return sum + items;

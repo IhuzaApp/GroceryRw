@@ -352,86 +352,86 @@ export default async function handler(
     });
 
     // Transform combined orders into single batches
-    const transformedCombinedOrders = Array.from(combinedOrdersMap.entries()).map(
-      ([combinedOrderId, orders]) => {
-        // Aggregate data from all orders in the combined order
-        const totalUnits = orders.reduce((sum, o) => {
-          const units = o.Order_Items_aggregate.aggregate?.sum?.quantity ?? 0;
-          return sum + units;
-        }, 0);
-        const totalItemLines = orders.reduce(
-          (sum, o) => sum + (o.Order_Items_aggregate.aggregate?.count ?? 0),
-          0
-        );
-        const totalAmount = orders.reduce((sum, o) => sum + (o.total ?? 0), 0);
-        const totalEarnings = orders.reduce(
-          (sum, o) =>
-            sum +
-            parseFloat(o.service_fee || "0") +
-            parseFloat(o.delivery_fee || "0"),
-          0
-        );
-        const shopNamesArray = Array.from(
-          new Set(orders.map((o) => o.Shop.name))
-        );
-        const shopNamesDisplay =
-          shopNamesArray.length === 2
-            ? `${shopNamesArray[0]} and ${shopNamesArray[1]}`
-            : shopNamesArray.join(", ");
-        const orderIDs = orders.map((o) => o.OrderID);
-        const customerNames = Array.from(
-          new Set(orders.map((o) => o.orderedBy?.name).filter(Boolean))
-        ) as string[];
-        const customerAddresses = Array.from(
-          new Set(
-            orders
-              .map((o) => `${o.Address.street}, ${o.Address.city}`)
-              .filter(Boolean)
-          )
-        ) as string[];
-        const customerNameDisplay =
-          customerNames.length === 2
-            ? `${customerNames[0]} & ${customerNames[1]}`
-            : customerNames.join(", ") || firstOrder.orderedBy.name;
-        const customerAddressDisplay =
-          customerAddresses.length === 2
-            ? `${customerAddresses[0]} | ${customerAddresses[1]}`
-            : customerAddresses.join(" | ") ||
-              `${firstOrder.Address.street}, ${firstOrder.Address.city}`;
-        
-        // Use the first order as the base for common data
-        const firstOrder = orders[0];
+    const transformedCombinedOrders = Array.from(
+      combinedOrdersMap.entries()
+    ).map(([combinedOrderId, orders]) => {
+      // Aggregate data from all orders in the combined order
+      const totalUnits = orders.reduce((sum, o) => {
+        const units = o.Order_Items_aggregate.aggregate?.sum?.quantity ?? 0;
+        return sum + units;
+      }, 0);
+      const totalItemLines = orders.reduce(
+        (sum, o) => sum + (o.Order_Items_aggregate.aggregate?.count ?? 0),
+        0
+      );
+      const totalAmount = orders.reduce((sum, o) => sum + (o.total ?? 0), 0);
+      const totalEarnings = orders.reduce(
+        (sum, o) =>
+          sum +
+          parseFloat(o.service_fee || "0") +
+          parseFloat(o.delivery_fee || "0"),
+        0
+      );
+      const shopNamesArray = Array.from(
+        new Set(orders.map((o) => o.Shop.name))
+      );
+      const shopNamesDisplay =
+        shopNamesArray.length === 2
+          ? `${shopNamesArray[0]} and ${shopNamesArray[1]}`
+          : shopNamesArray.join(", ");
+      const orderIDs = orders.map((o) => o.OrderID);
+      const customerNames = Array.from(
+        new Set(orders.map((o) => o.orderedBy?.name).filter(Boolean))
+      ) as string[];
+      const customerAddresses = Array.from(
+        new Set(
+          orders
+            .map((o) => `${o.Address.street}, ${o.Address.city}`)
+            .filter(Boolean)
+        )
+      ) as string[];
+      const customerNameDisplay =
+        customerNames.length === 2
+          ? `${customerNames[0]} & ${customerNames[1]}`
+          : customerNames.join(", ") || firstOrder.orderedBy.name;
+      const customerAddressDisplay =
+        customerAddresses.length === 2
+          ? `${customerAddresses[0]} | ${customerAddresses[1]}`
+          : customerAddresses.join(" | ") ||
+            `${firstOrder.Address.street}, ${firstOrder.Address.city}`;
 
-        return {
-          id: combinedOrderId, // Use combined_order_id as the ID
-          OrderID: `Combined-${firstOrder.OrderID}`, // Prefix to indicate combined
-          status: firstOrder.status, // Use status from first order
-          createdAt: firstOrder.created_at,
-          deliveryTime: firstOrder.delivery_time || undefined,
-          shopName: shopNamesDisplay,
-          shopNames: shopNamesArray,
-          shopAddress: `Multiple stores (${orders.length} orders)`,
-          shopLat: parseFloat(firstOrder.Shop.latitude),
-          shopLng: parseFloat(firstOrder.Shop.longitude),
-          customerName: customerNameDisplay,
-          customerNames,
-          customerAddress: customerAddressDisplay,
-          customerAddresses,
-          customerLat: parseFloat(firstOrder.Address.latitude),
-          customerLng: parseFloat(firstOrder.Address.longitude),
-          items: totalUnits,
-          itemsCount: totalItemLines,
-          total: totalAmount,
-          estimatedEarnings: totalEarnings.toFixed(2),
-          orderType: "combined" as const,
-          combinedOrderId: combinedOrderId,
-          pin: firstOrder.pin,
-          orderCount: orders.length,
-          orderIds: orders.map((o) => o.id), // Include all order IDs
-          orderIDs,
-        };
-      }
-    );
+      // Use the first order as the base for common data
+      const firstOrder = orders[0];
+
+      return {
+        id: combinedOrderId, // Use combined_order_id as the ID
+        OrderID: `Combined-${firstOrder.OrderID}`, // Prefix to indicate combined
+        status: firstOrder.status, // Use status from first order
+        createdAt: firstOrder.created_at,
+        deliveryTime: firstOrder.delivery_time || undefined,
+        shopName: shopNamesDisplay,
+        shopNames: shopNamesArray,
+        shopAddress: `Multiple stores (${orders.length} orders)`,
+        shopLat: parseFloat(firstOrder.Shop.latitude),
+        shopLng: parseFloat(firstOrder.Shop.longitude),
+        customerName: customerNameDisplay,
+        customerNames,
+        customerAddress: customerAddressDisplay,
+        customerAddresses,
+        customerLat: parseFloat(firstOrder.Address.latitude),
+        customerLng: parseFloat(firstOrder.Address.longitude),
+        items: totalUnits,
+        itemsCount: totalItemLines,
+        total: totalAmount,
+        estimatedEarnings: totalEarnings.toFixed(2),
+        orderType: "combined" as const,
+        combinedOrderId: combinedOrderId,
+        pin: firstOrder.pin,
+        orderCount: orders.length,
+        orderIds: orders.map((o) => o.id), // Include all order IDs
+        orderIDs,
+      };
+    });
 
     // Transform standalone regular orders
     const transformedStandaloneOrders = standaloneOrders.map((o) => ({
@@ -474,7 +474,9 @@ export default async function handler(
         createdAt: o.created_at,
         deliveryTime: o.delivery_time || undefined,
         shopName: isRestaurantUserReel ? "Restaurant/User Reel" : "Reel Order",
-        shopNames: [isRestaurantUserReel ? "Restaurant/User Reel" : "Reel Order"],
+        shopNames: [
+          isRestaurantUserReel ? "Restaurant/User Reel" : "Reel Order",
+        ],
         shopAddress: isRestaurantUserReel
           ? "From Restaurant/User"
           : "From Reel Creator",

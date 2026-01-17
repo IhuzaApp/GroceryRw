@@ -41,7 +41,9 @@ const formatOrderIdsForDisplay = (order: Order): string => {
 
 const renderShopNames = (order: Order) => {
   const names = order.shopNames?.length ? order.shopNames : [order.shopName];
-  const unique = Array.from(new Set(names.map((n) => n?.trim()).filter(Boolean))) as string[];
+  const unique = Array.from(
+    new Set(names.map((n) => n?.trim()).filter(Boolean))
+  ) as string[];
   if (unique.length <= 1) return unique[0] || order.shopName;
   return (
     <div className="flex flex-col gap-0.5">
@@ -55,8 +57,12 @@ const renderShopNames = (order: Order) => {
 };
 
 const renderCustomerNames = (order: Order) => {
-  const names = order.customerNames?.length ? order.customerNames : [order.customerName];
-  const unique = Array.from(new Set(names.map((n) => n?.trim()).filter(Boolean))) as string[];
+  const names = order.customerNames?.length
+    ? order.customerNames
+    : [order.customerName];
+  const unique = Array.from(
+    new Set(names.map((n) => n?.trim()).filter(Boolean))
+  ) as string[];
   if (unique.length <= 1) return unique[0] || order.customerName;
   return (
     <div className="flex flex-col gap-0.5">
