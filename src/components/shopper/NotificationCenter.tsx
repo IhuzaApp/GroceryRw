@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTheme } from "../../context/ThemeContext";
 import { useFCMNotifications } from "../../hooks/useFCMNotifications";
 
@@ -39,7 +39,10 @@ export default function NotificationCenter() {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const lastLoadedCountRef = React.useRef<number | null>(null);
+  const [currency, setCurrency] = useState<string>("UGX");
+  const lastLoadedCountRef = useRef<number | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
 
   // Ensure FCM is initialized anywhere the notification bell exists
   // (singleton guarded in fcmClient to prevent duplicate listeners)
@@ -64,6 +67,54 @@ export default function NotificationCenter() {
       window.removeEventListener("storage", onHistoryUpdated as EventListener);
     };
   }, []);
+
+  // Load currency from system configuration
+  useEffect(() => {
+    let cancelled = false;
+    const loadCurrency = async () => {
+      try {
+        const resp = await fetch("/api/queries/system-configuration");
+        if (!resp.ok) return;
+        const data = await resp.json();
+        const configCurrency = data?.config?.currency;
+        if (!cancelled && typeof configCurrency === "string" && configCurrency.trim()) {
+          setCurrency(configCurrency.trim());
+        }
+      } catch {
+        // ignore; keep default
+      }
+    };
+    loadCurrency();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Close when clicking outside (since we removed the overlay/backdrop)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const onPointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (panelRef.current?.contains(target)) return;
+      if (buttonRef.current?.contains(target)) return;
+      setIsOpen(false);
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("touchstart", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("touchstart", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isOpen]);
 
   // When opening the dropdown, refresh immediately (latest history)
   useEffect(() => {
@@ -313,6 +364,7 @@ export default function NotificationCenter() {
     <div className="relative">
       {/* Notification Bell Button */}
       <button
+        ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         className={`relative rounded-lg p-2 transition-colors ${
           theme === "dark"
@@ -346,59 +398,116 @@ export default function NotificationCenter() {
       {/* Notification Dropdown/Modal */}
       {isOpen && (
         <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-40 bg-black/50"
-            onClick={() => setIsOpen(false)}
-          />
-
           {/* Dropdown Panel - Full screen on mobile, dropdown on desktop */}
           <div
+            ref={panelRef}
             className={`${
               isMobile
-                ? "fixed inset-x-0 bottom-0 top-16 z-50 rounded-t-2xl"
-                : "absolute right-0 top-12 z-50 w-96 rounded-lg shadow-2xl"
+                ? "fixed inset-x-0 bottom-0 top-16 z-50 overflow-hidden rounded-t-3xl"
+                : "absolute right-0 top-12 z-50 w-[24rem] overflow-hidden rounded-2xl"
             } ${
               theme === "dark"
-                ? "border border-gray-700 bg-gray-800"
-                : "border border-gray-200 bg-white"
-            }`}
+                ? "border border-white/10 bg-gray-900/90 shadow-2xl shadow-black/40 ring-1 ring-white/10 backdrop-blur-xl"
+                : "border border-black/10 bg-white/90 shadow-2xl shadow-black/10 ring-1 ring-black/5 backdrop-blur-xl"
+            } transition-all`}
           >
             {/* Header */}
             <div
-              className={`flex items-center justify-between border-b p-4 ${
-                theme === "dark" ? "border-gray-700" : "border-gray-200"
-              }`}
+              className={`sticky top-0 z-10 flex items-center justify-between border-b px-4 py-3 ${
+                theme === "dark"
+                  ? "border-white/10 bg-gray-900/80"
+                  : "border-black/10 bg-white/80"
+              } backdrop-blur-xl`}
             >
               <div>
-                <h3 className="text-lg font-semibold">
+                <h3 className="text-base font-semibold">
                   Notifications {unreadCount > 0 && `(${unreadCount})`}
                 </h3>
                 <p
-                  className={`text-xs ${
+                  className={`text-[11px] ${
                     theme === "dark" ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
                   All FCM push notifications
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
                 {notifications.length > 0 && (
                   <>
                     <button
                       onClick={markAllAsRead}
-                      className="text-xs text-blue-500 hover:text-blue-600"
+                      className={`inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
+                        theme === "dark"
+                          ? "text-blue-300 hover:bg-white/10 hover:text-blue-200"
+                          : "text-blue-600 hover:bg-black/5 hover:text-blue-700"
+                      }`}
+                      aria-label="Mark all as read"
+                      title="Mark all as read"
                     >
-                      Mark all read
+                      <svg
+                        className="h-4 w-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M9 12l2 2 4-4" />
+                        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+                      </svg>
                     </button>
                     <button
                       onClick={clearAll}
-                      className="text-xs text-red-500 hover:text-red-600"
+                      className={`inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
+                        theme === "dark"
+                          ? "text-red-300 hover:bg-white/10 hover:text-red-200"
+                          : "text-red-600 hover:bg-black/5 hover:text-red-700"
+                      }`}
+                      aria-label="Clear all notifications"
+                      title="Clear all"
                     >
-                      Clear all
+                      <svg
+                        className="h-4 w-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M3 6h18" />
+                        <path d="M8 6V4h8v2" />
+                        <path d="M19 6l-1 14H6L5 6" />
+                        <path d="M10 11v6" />
+                        <path d="M14 11v6" />
+                      </svg>
                     </button>
                   </>
                 )}
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className={`ml-1 inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
+                    theme === "dark"
+                      ? "text-gray-300 hover:bg-white/10"
+                      : "text-gray-600 hover:bg-black/5"
+                  }`}
+                  aria-label="Close notifications"
+                  title="Close"
+                >
+                  <svg
+                    className="h-5 w-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M18 6L6 18" />
+                    <path d="M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
             </div>
 
@@ -423,11 +532,11 @@ export default function NotificationCenter() {
                       d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
                     />
                   </svg>
-                  <p className="mt-2">No notifications yet</p>
-                  <p className="text-xs">
+                  <p className="mt-2 text-sm">No notifications yet</p>
+                  <p className="text-[11px]">
                     FCM push notifications will appear here
                   </p>
-                  <div className="mt-3 text-xs">
+                  <div className="mt-3 text-[11px]">
                     <p
                       className={
                         theme === "dark" ? "text-gray-400" : "text-gray-600"
@@ -448,7 +557,7 @@ export default function NotificationCenter() {
                 notifications.map((notification, index) => (
                   <div
                     key={index}
-                    className={`cursor-pointer border-b p-4 transition-colors ${
+                    className={`cursor-pointer border-b px-4 py-3 transition-colors ${
                       theme === "dark"
                         ? "border-gray-700 hover:bg-gray-700"
                         : "border-gray-100 hover:bg-gray-50"
@@ -511,10 +620,12 @@ export default function NotificationCenter() {
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <h4 className="font-medium">{notification.title}</h4>
+                            <h4 className="text-sm font-medium">
+                              {notification.title}
+                            </h4>
                             {notification.isCombinedOrder && (
                               <span
-                                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                                className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                                   theme === "dark"
                                     ? "bg-purple-900/50 text-purple-300"
                                     : "bg-purple-100 text-purple-800"
@@ -524,12 +635,12 @@ export default function NotificationCenter() {
                               </span>
                             )}
                           </div>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-[11px] text-gray-500">
                             {formatTime(notification.timestamp)}
                           </span>
                         </div>
                         <p
-                          className={`mt-1 text-sm ${
+                          className={`mt-1 text-xs ${
                             theme === "dark" ? "text-gray-400" : "text-gray-600"
                           }`}
                         >
@@ -548,7 +659,7 @@ export default function NotificationCenter() {
                             <div className="flex items-center justify-between">
                               <div className="flex-1">
                                 <p
-                                  className={`text-xs font-medium ${
+                                  className={`text-[11px] font-medium ${
                                     theme === "dark"
                                       ? "text-purple-300"
                                       : "text-purple-900"
@@ -558,7 +669,7 @@ export default function NotificationCenter() {
                                 </p>
                                 {notification.storeNames && (
                                   <p
-                                    className={`mt-0.5 text-xs ${
+                                    className={`mt-0.5 text-[11px] ${
                                       theme === "dark"
                                         ? "text-purple-400"
                                         : "text-purple-700"
@@ -571,7 +682,7 @@ export default function NotificationCenter() {
                               {notification.totalEarnings !== undefined && (
                                 <div className="text-right">
                                   <p
-                                    className={`text-xs ${
+                                    className={`text-[11px] ${
                                       theme === "dark"
                                         ? "text-gray-400"
                                         : "text-gray-600"
@@ -580,13 +691,14 @@ export default function NotificationCenter() {
                                     Total Earnings
                                   </p>
                                   <p
-                                    className={`text-lg font-bold ${
+                                    className={`text-base font-bold ${
                                       theme === "dark"
                                         ? "text-green-400"
                                         : "text-green-600"
                                     }`}
                                   >
-                                    UGX {notification.totalEarnings.toLocaleString()}
+                                    {currency}{" "}
+                                    {notification.totalEarnings.toLocaleString()}
                                   </p>
                                 </div>
                               )}
@@ -599,7 +711,7 @@ export default function NotificationCenter() {
                           notification.totalEarnings !== undefined && (
                             <div className="mt-2 flex items-center gap-2">
                               <span
-                                className={`text-xs ${
+                                className={`text-[11px] ${
                                   theme === "dark"
                                     ? "text-gray-400"
                                     : "text-gray-600"
@@ -608,13 +720,14 @@ export default function NotificationCenter() {
                                 Earnings:
                               </span>
                               <span
-                                className={`text-sm font-semibold ${
+                                className={`text-xs font-semibold ${
                                   theme === "dark"
                                     ? "text-green-400"
                                     : "text-green-600"
                                 }`}
                               >
-                                UGX {notification.totalEarnings.toLocaleString()}
+                                {currency}{" "}
+                                {notification.totalEarnings.toLocaleString()}
                               </span>
                             </div>
                           )}
