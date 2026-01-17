@@ -8,11 +8,13 @@ import { formatCurrencySync } from "../../../utils/formatCurrency";
 
 interface Order {
   id: string;
-  OrderID: string;
+  OrderID: string | number;
+  orderIDs?: Array<string | number>;
   status: string;
   createdAt: string;
   deliveryTime?: string;
   shopName: string;
+  shopNames?: string[];
   shopAddress: string;
   shopLat: number;
   shopLng: number;
@@ -23,8 +25,32 @@ interface Order {
   items: number;
   total: number;
   estimatedEarnings: string;
-  orderType?: "regular" | "reel" | "restaurant";
+  orderType?: "regular" | "reel" | "restaurant" | "combined";
 }
+
+const formatOrderIdsForDisplay = (order: Order): string => {
+  if (order.orderType === "combined" && order.orderIDs?.length) {
+    const ids = order.orderIDs.map((x) => String(x));
+    if (ids.length === 2) return `#${ids[0]} & #${ids[1]}`;
+    return ids.map((x) => `#${x}`).join(", ");
+  }
+  return `#${String(order.OrderID)}`;
+};
+
+const renderShopNames = (order: Order) => {
+  const names = order.shopNames?.length ? order.shopNames : [order.shopName];
+  const unique = Array.from(new Set(names.map((n) => n?.trim()).filter(Boolean))) as string[];
+  if (unique.length <= 1) return unique[0] || order.shopName;
+  return (
+    <div className="flex flex-col gap-0.5">
+      {unique.map((name) => (
+        <div key={name} className="leading-tight">
+          {name}
+        </div>
+      ))}
+    </div>
+  );
+};
 
 interface BatchTableDesktopProps {
   orders: Order[];

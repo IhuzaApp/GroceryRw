@@ -6,11 +6,13 @@ import { formatCurrencySync } from "../../../utils/formatCurrency";
 
 interface Order {
   id: string;
-  OrderID: string;
+  OrderID: string | number;
+  orderIDs?: Array<string | number>;
   status: string;
   createdAt: string;
   deliveryTime?: string;
   shopName: string;
+  shopNames?: string[];
   shopAddress: string;
   customerName: string;
   customerAddress: string;
@@ -19,7 +21,7 @@ interface Order {
   items: number;
   total: number;
   estimatedEarnings: string;
-  orderType?: "regular" | "reel" | "restaurant";
+  orderType?: "regular" | "reel" | "restaurant" | "combined";
   reel?: {
     id: string;
     title: string;

@@ -47,6 +47,9 @@ const GET_ACTIVE_ORDERS = gql`
       Order_Items_aggregate {
         aggregate {
           count
+          sum {
+            quantity
+          }
         }
       }
     }
@@ -193,18 +196,14 @@ export default async function handler(
   }
 
   try {
-    console.log("Checking hasuraClient...");
     if (!hasuraClient) {
-      console.error("Hasura client is not initialized!");
       throw new Error("Hasura client is not initialized");
     }
-    console.log("hasuraClient is initialized");
 
     // Fetch regular, reel, and restaurant orders in parallel
     let regularOrdersData, reelOrdersData, restaurantOrdersData;
 
     try {
-      console.log("Fetching orders from Hasura...");
       [regularOrdersData, reelOrdersData, restaurantOrdersData] =
         await Promise.all([
           hasuraClient.request<{
@@ -235,6 +234,9 @@ export default async function handler(
               Order_Items_aggregate: {
                 aggregate: {
                   count: number | null;
+                  sum: {
+                    quantity: number | null;
+                  } | null;
                 } | null;
               };
             }>;
@@ -353,7 +355,11 @@ export default async function handler(
     const transformedCombinedOrders = Array.from(combinedOrdersMap.entries()).map(
       ([combinedOrderId, orders]) => {
         // Aggregate data from all orders in the combined order
-        const totalItems = orders.reduce(
+        const totalUnits = orders.reduce((sum, o) => {
+          const units = o.Order_Items_aggregate.aggregate?.sum?.quantity ?? 0;
+          return sum + units;
+        }, 0);
+        const totalItemLines = orders.reduce(
           (sum, o) => sum + (o.Order_Items_aggregate.aggregate?.count ?? 0),
           0
         );
@@ -365,7 +371,14 @@ export default async function handler(
             parseFloat(o.delivery_fee || "0"),
           0
         );
-        const shopNames = orders.map((o) => o.Shop.name).join(", ");
+        const shopNamesArray = Array.from(
+          new Set(orders.map((o) => o.Shop.name))
+        );
+        const shopNamesDisplay =
+          shopNamesArray.length === 2
+            ? `${shopNamesArray[0]} and ${shopNamesArray[1]}`
+            : shopNamesArray.join(", ");
+        const orderIDs = orders.map((o) => o.OrderID);
         
         // Use the first order as the base for common data
         const firstOrder = orders[0];
@@ -376,7 +389,8 @@ export default async function handler(
           status: firstOrder.status, // Use status from first order
           createdAt: firstOrder.created_at,
           deliveryTime: firstOrder.delivery_time || undefined,
-          shopName: `${orders.length} Stores: ${shopNames}`,
+          shopName: shopNamesDisplay,
+          shopNames: shopNamesArray,
           shopAddress: `Multiple stores (${orders.length} orders)`,
           shopLat: parseFloat(firstOrder.Shop.latitude),
           shopLng: parseFloat(firstOrder.Shop.longitude),
@@ -384,7 +398,8 @@ export default async function handler(
           customerAddress: `${firstOrder.Address.street}, ${firstOrder.Address.city}`,
           customerLat: parseFloat(firstOrder.Address.latitude),
           customerLng: parseFloat(firstOrder.Address.longitude),
-          items: totalItems,
+          items: totalUnits,
+          itemsCount: totalItemLines,
           total: totalAmount,
           estimatedEarnings: totalEarnings.toFixed(2),
           orderType: "combined" as const,
@@ -392,6 +407,7 @@ export default async function handler(
           pin: firstOrder.pin,
           orderCount: orders.length,
           orderIds: orders.map((o) => o.id), // Include all order IDs
+          orderIDs,
         };
       }
     );
@@ -404,6 +420,7 @@ export default async function handler(
       createdAt: o.created_at,
       deliveryTime: o.delivery_time || undefined,
       shopName: o.Shop.name,
+      shopNames: [o.Shop.name],
       shopAddress: o.Shop.address,
       shopLat: parseFloat(o.Shop.latitude),
       shopLng: parseFloat(o.Shop.longitude),
@@ -411,7 +428,8 @@ export default async function handler(
       customerAddress: `${o.Address.street}, ${o.Address.city}`,
       customerLat: parseFloat(o.Address.latitude),
       customerLng: parseFloat(o.Address.longitude),
-      items: o.Order_Items_aggregate.aggregate?.count ?? 0,
+      items: o.Order_Items_aggregate.aggregate?.sum?.quantity ?? 0,
+      itemsCount: o.Order_Items_aggregate.aggregate?.count ?? 0,
       total: o.total ?? 0,
       estimatedEarnings: (
         parseFloat(o.service_fee || "0") + parseFloat(o.delivery_fee || "0")
@@ -433,6 +451,7 @@ export default async function handler(
         createdAt: o.created_at,
         deliveryTime: o.delivery_time || undefined,
         shopName: isRestaurantUserReel ? "Restaurant/User Reel" : "Reel Order",
+        shopNames: [isRestaurantUserReel ? "Restaurant/User Reel" : "Reel Order"],
         shopAddress: isRestaurantUserReel
           ? "From Restaurant/User"
           : "From Reel Creator",
@@ -442,7 +461,7 @@ export default async function handler(
         customerAddress: `${o.Address.street}, ${o.Address.city}`,
         customerLat: parseFloat(o.Address.latitude),
         customerLng: parseFloat(o.Address.longitude),
-        items: 1, // Reel orders have 1 item
+        items: parseInt(o.quantity) || 1,
         total: parseFloat(o.total || "0"),
         estimatedEarnings: (
           parseFloat(o.service_fee || "0") + parseFloat(o.delivery_fee || "0")
@@ -468,6 +487,7 @@ export default async function handler(
       createdAt: o.created_at,
       deliveryTime: o.delivery_time || undefined,
       shopName: o.Restaurant.name,
+      shopNames: [o.Restaurant.name],
       shopAddress: o.Restaurant.location,
       shopLat: parseFloat(o.Restaurant.lat),
       shopLng: parseFloat(o.Restaurant.long),
@@ -475,7 +495,10 @@ export default async function handler(
       customerAddress: `${o.Address.street}, ${o.Address.city}`,
       customerLat: parseFloat(o.Address.latitude),
       customerLng: parseFloat(o.Address.longitude),
-      items: o.restaurant_order_items.length, // Count of dish orders
+      items: o.restaurant_order_items.reduce(
+        (sum, item) => sum + (parseInt(item.quantity) || 0),
+        0
+      ),
       total: parseFloat(o.total || "0"),
       estimatedEarnings: parseFloat(o.delivery_fee || "0").toFixed(2),
       orderType: "restaurant" as const,

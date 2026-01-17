@@ -4,11 +4,13 @@ import { useTheme } from "../../../context/ThemeContext";
 
 interface Order {
   id: string;
-  OrderID: string;
+  OrderID: string | number;
+  orderIDs?: Array<string | number>;
   status: string;
   createdAt: string;
   deliveryTime?: string;
   shopName: string;
+  shopNames?: string[];
   shopAddress: string;
   shopLat: number;
   shopLng: number;
@@ -19,9 +21,35 @@ interface Order {
   items: number;
   total: number;
   estimatedEarnings: string;
-  orderType?: "regular" | "reel" | "restaurant";
+  orderType?: "regular" | "reel" | "restaurant" | "combined";
   invoiceUrl?: string;
 }
+
+const formatOrderIdsForDisplay = (order: Order): string => {
+  if (order.orderType === "combined" && order.orderIDs?.length) {
+    const ids = order.orderIDs.map((x) => String(x));
+    if (ids.length === 2) return `#${ids[0]} & #${ids[1]}`;
+    return ids.map((x) => `#${x}`).join(", ");
+  }
+  return `#${String(order.OrderID)}`;
+};
+
+const renderShopNames = (order: Order) => {
+  const names = order.shopNames?.length ? order.shopNames : [order.shopName];
+  const unique = Array.from(new Set(names.map((n) => n?.trim()).filter(Boolean))) as string[];
+  if (unique.length <= 1) {
+    return <span className="hover:underline">{unique[0] || order.shopName}</span>;
+  }
+  return (
+    <div className="flex flex-col gap-0.5">
+      {unique.map((name) => (
+        <span key={name} className="leading-tight hover:underline">
+          {name}
+        </span>
+      ))}
+    </div>
+  );
+};
 
 interface BatchTableProps {
   orders: Order[];
@@ -302,7 +330,7 @@ export function BatchTable({ orders }: BatchTableProps) {
                       href={`/Plasa/active-batches/batch/${order.id}`}
                       className="text-blue-600 hover:underline dark:text-blue-400"
                     >
-                      #{order.OrderID}
+                      {formatOrderIdsForDisplay(order)}
                     </Link>
                   </td>
                   <td className="px-6 py-4">
@@ -384,7 +412,7 @@ export function BatchTable({ orders }: BatchTableProps) {
                           d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                         />
                       </svg>
-                      <span className="hover:underline">{order.shopName}</span>
+                      {renderShopNames(order)}
                     </a>
                   </td>
                   <td className="px-6 py-4">
@@ -513,7 +541,9 @@ export function BatchTable({ orders }: BatchTableProps) {
                               onClick={() => {
                                 // TODO: Open support modal or contact form
                                 alert(
-                                  `Contact support about order #${order.OrderID}`
+                                  `Contact support about order ${formatOrderIdsForDisplay(
+                                    order
+                                  )}`
                                 );
                                 setOpenDropdownId(null);
                               }}
@@ -565,7 +595,9 @@ export function BatchTable({ orders }: BatchTableProps) {
                                 onClick={() => {
                                   // TODO: Update status to shopping
                                   alert(
-                                    `Start shopping for order #${order.OrderID}`
+                                    `Start shopping for order ${formatOrderIdsForDisplay(
+                                      order
+                                    )}`
                                   );
                                   setOpenDropdownId(null);
                                 }}
@@ -602,7 +634,9 @@ export function BatchTable({ orders }: BatchTableProps) {
                                     onClick={() => {
                                       // TODO: API call to confirm delivery
                                       alert(
-                                        `Confirm delivery for order #${order.OrderID}`
+                                        `Confirm delivery for order ${formatOrderIdsForDisplay(
+                                          order
+                                        )}`
                                       );
                                       setOpenDropdownId(null);
                                     }}
