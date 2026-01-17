@@ -65,6 +65,7 @@ const GET_ELIGIBLE_ORDERS = gql`
       limit: 50
     ) {
       id
+      OrderID
       created_at
       shop_id
       service_fee
@@ -454,6 +455,7 @@ function formatOrderForResponse(
 
   return {
     id: order.id,
+    OrderID: order.OrderID ?? null,
     shopName:
       order.Shop?.name ||
       order.Reel?.title ||
@@ -1383,6 +1385,10 @@ export default async function handler(
           estimatedEarnings: orderData.estimatedEarnings,
           orderType: orderData.orderType,
           expiresInMs: null, // No expiry - shopper must accept or decline
+          displayOrderId:
+            orderData?.OrderID !== null && orderData?.OrderID !== undefined
+              ? String(orderData.OrderID)
+              : undefined,
         };
 
         // If it's a combined order (has combined_order_id), fetch all related orders
@@ -1392,6 +1398,7 @@ export default async function handler(
               query GetCombinedOrderInfo($combined_order_id: uuid!) {
                 Orders(where: { combined_order_id: { _eq: $combined_order_id } }) {
                   id
+                  OrderID
                   service_fee
                   delivery_fee
                   Shop {
@@ -1432,6 +1439,7 @@ export default async function handler(
                 .join(", ");
 
               // Update notification data for combined order
+              const firstOrderId = allOrders[0]?.OrderID;
               notificationData = {
                 ...notificationData,
                 id: bestOrder.combined_order_id, // Use combined_order_id
@@ -1440,6 +1448,10 @@ export default async function handler(
                 isCombinedOrder: true,
                 orderCount: allOrders.length,
                 storeNames: storeNames,
+                displayOrderId:
+                  firstOrderId !== null && firstOrderId !== undefined
+                    ? `Combined-${String(firstOrderId)}`
+                    : "Combined",
               };
 
               console.log("🛒 Combined order detected:", {

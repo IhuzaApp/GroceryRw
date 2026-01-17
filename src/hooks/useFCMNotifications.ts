@@ -133,6 +133,7 @@ export const useFCMNotifications = (): FCMNotificationHook => {
                     detail: {
                       order: {
                         id: data.orderId,
+                        OrderID: data.displayOrderId || data.OrderID,
                         shopName: data.shopName,
                         distance: parseFloat(data.distance),
                         travelTimeMinutes: parseInt(data.travelTimeMinutes),
