@@ -137,6 +137,39 @@ export default function NotificationSystem({
   // FCM integration
   const { isInitialized, hasPermission } = useFCMNotifications();
 
+  const saveNotificationToHistory = (entry: {
+    title: string;
+    body: string;
+    type: string;
+    orderId?: string;
+    senderName?: string;
+    conversationId?: string;
+    isCombinedOrder?: boolean;
+    orderCount?: number;
+    totalEarnings?: number;
+    storeNames?: string;
+  }) => {
+    if (typeof window === "undefined") return;
+    try {
+      const history = JSON.parse(
+        localStorage.getItem("fcm_notification_history") || "[]"
+      );
+      const notificationEntry = {
+        ...entry,
+        timestamp: Date.now(),
+        read: false,
+      };
+      history.unshift(notificationEntry);
+      if (history.length > 50) history.pop();
+      localStorage.setItem("fcm_notification_history", JSON.stringify(history));
+      window.dispatchEvent(
+        new CustomEvent("fcm-history-updated", { detail: { notification: notificationEntry } })
+      );
+    } catch {
+      // ignore
+    }
+  };
+
   // Log component mount for debugging duplicate instances
   useEffect(() => {
     // Track active instances globally to detect duplicates
@@ -675,6 +708,26 @@ export default function NotificationSystem({
       // Include offerId if available
       offerId: order.offerId,
     };
+
+    // Fallback logging: even if web push isn't working, store the shown offer in NotificationCenter history
+    saveNotificationToHistory({
+      type: "new_order",
+      title: order?.isCombinedOrder
+        ? `🛒 New Combined Order - ${order?.orderCount || ""} Stores`.trim()
+        : "New batch available!",
+      body:
+        order?.isCombinedOrder && order?.storeNames
+          ? `${order.storeNames} • ${formatCurrencySync(orderForNotification.estimatedEarnings || 0)}`
+          : `${orderForNotification.shopName} • ${formatCurrencySync(orderForNotification.estimatedEarnings || 0)}`,
+      orderId: orderForNotification.id,
+      isCombinedOrder: Boolean(order?.isCombinedOrder),
+      orderCount: order?.orderCount ? Number(order.orderCount) : undefined,
+      totalEarnings:
+        typeof orderForNotification.estimatedEarnings === "number"
+          ? orderForNotification.estimatedEarnings
+          : undefined,
+      storeNames: order?.storeNames,
+    });
 
     // Store active offer in localStorage for persistence across page refreshes
     try {

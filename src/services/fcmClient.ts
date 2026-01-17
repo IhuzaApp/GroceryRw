@@ -215,8 +215,10 @@ const getServiceWorkerRegistration =
       isRegisteringServiceWorker = true;
       registrationPromise = (async () => {
         try {
+          // Use dynamic SW so it can embed Firebase config from env vars.
+          // (public/firebase-messaging-sw.js cannot read env and was configured as {}.)
           const registration = await navigator.serviceWorker.register(
-            "/firebase-messaging-sw.js",
+            "/api/fcm/firebase-messaging-sw",
             {
               scope: "/",
             }

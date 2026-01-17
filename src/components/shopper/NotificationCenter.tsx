@@ -43,7 +43,7 @@ export default function NotificationCenter() {
 
   // Ensure FCM is initialized anywhere the notification bell exists
   // (singleton guarded in fcmClient to prevent duplicate listeners)
-  useFCMNotifications();
+  const { isInitialized, hasPermission } = useFCMNotifications();
 
   useEffect(() => {
     loadNotifications();
@@ -427,6 +427,22 @@ export default function NotificationCenter() {
                   <p className="text-xs">
                     FCM push notifications will appear here
                   </p>
+                  <div className="mt-3 text-xs">
+                    <p
+                      className={
+                        theme === "dark" ? "text-gray-400" : "text-gray-600"
+                      }
+                    >
+                      FCM status:{" "}
+                      <span className="font-semibold">
+                        {hasPermission
+                          ? isInitialized
+                            ? "Connected"
+                            : "Connecting…"
+                          : "No permission / unsupported"}
+                      </span>
+                    </p>
+                  </div>
                 </div>
               ) : (
                 notifications.map((notification, index) => (
