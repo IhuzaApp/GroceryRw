@@ -318,6 +318,9 @@ export const sendNewOrderNotification = async (
     orderType: string;
     customerAddress: string;
     expiresInMs?: number; // Optional: if not provided, defaults to 60000ms
+    isCombinedOrder?: boolean; // Flag for combined orders
+    orderCount?: number; // Number of stores in combined order
+    storeNames?: string; // Comma-separated store names
   }
 ): Promise<void> => {
   try {
@@ -331,11 +334,25 @@ export const sendNewOrderNotification = async (
     // Use provided expiresInMs or default to 60 seconds
     const expiresInMs = orderData.expiresInMs || 60000;
 
-    const payload: NotificationPayload = {
-      title: `New ${orderData.orderType} batch available!`,
-      body: `From ${orderData.shopName} - ${formatCurrency(
+    // Create title and body based on whether it's a combined order
+    let title: string;
+    let body: string;
+
+    if (orderData.isCombinedOrder && orderData.orderCount) {
+      title = `🛒 New Combined Order - ${orderData.orderCount} Stores!`;
+      body = `${orderData.storeNames || orderData.shopName} - ${formatCurrency(
         orderData.estimatedEarnings
-      )} • ${orderData.distance.toFixed(1)}km away`,
+      )} total earnings • ${orderData.distance.toFixed(1)}km away`;
+    } else {
+      title = `New ${orderData.orderType} batch available!`;
+      body = `From ${orderData.shopName} - ${formatCurrency(
+        orderData.estimatedEarnings
+      )} • ${orderData.distance.toFixed(1)}km away`;
+    }
+
+    const payload: NotificationPayload = {
+      title,
+      body,
       data: {
         type: "new_order",
         orderId: orderData.id,
@@ -345,8 +362,14 @@ export const sendNewOrderNotification = async (
         travelTimeMinutes: orderData.travelTimeMinutes.toString(),
         estimatedEarnings: orderData.estimatedEarnings.toString(),
         customerAddress: orderData.customerAddress,
-        expiresIn: expiresInMs.toString(), // Now derived from database offer
+        expiresIn: expiresInMs.toString(),
         timestamp: Date.now().toString(),
+        // Combined order specific data
+        ...(orderData.isCombinedOrder && {
+          isCombinedOrder: "true",
+          orderCount: orderData.orderCount?.toString() || "1",
+          storeNames: orderData.storeNames || orderData.shopName,
+        }),
       },
     };
 

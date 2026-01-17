@@ -12,6 +12,8 @@ interface Order {
   delivery_fee: string | null;
   status: string;
   delivery_notes: string | null;
+  combined_order_id: string | null;
+  pin: string | null;
   shop: {
     name: string;
     address: string;
@@ -76,6 +78,8 @@ const GET_ASSIGNED_BATCHES = gql`
       delivery_fee
       status
       delivery_notes
+      combined_order_id
+      pin
       shop: Shop {
         name
         address
@@ -152,8 +156,80 @@ export default async function handler(
       }
     );
 
-    // Process regular orders
-    const regularOrders = data.Orders.map((order) => {
+    // Group orders by combined_order_id
+    const combinedOrdersMap = new Map<string, Order[]>();
+    const standaloneOrders: Order[] = [];
+
+    data.Orders.forEach((order) => {
+      if (order.combined_order_id) {
+        const existing = combinedOrdersMap.get(order.combined_order_id) || [];
+        existing.push(order);
+        combinedOrdersMap.set(order.combined_order_id, existing);
+      } else {
+        standaloneOrders.push(order);
+      }
+    });
+
+    // Process combined orders as single batches
+    const combinedOrderBatches = Array.from(combinedOrdersMap.entries()).map(
+      ([combinedOrderId, orders]) => {
+        // Aggregate data from all orders
+        const totalServiceFee = orders.reduce(
+          (sum, o) => sum + parseFloat(o.service_fee || "0"),
+          0
+        );
+        const totalDeliveryFee = orders.reduce(
+          (sum, o) => sum + parseFloat(o.delivery_fee || "0"),
+          0
+        );
+        const totalEarnings = totalServiceFee + totalDeliveryFee;
+        const totalItems = orders.reduce(
+          (sum, o) => sum + (o.Order_Items_aggregate.aggregate?.count || 0),
+          0
+        );
+        const shopNames = orders
+          .map((o) => o.shop?.name || "Unknown Shop")
+          .join(", ");
+
+        const firstOrder = orders[0];
+        const deliveryTime = firstOrder.delivery_time
+          ? new Date(firstOrder.delivery_time)
+          : null;
+        const timeRemaining = deliveryTime
+          ? Math.max(0, deliveryTime.getTime() - Date.now())
+          : null;
+        const minutesRemaining = timeRemaining
+          ? Math.floor(timeRemaining / (1000 * 60))
+          : null;
+
+        return {
+          id: combinedOrderId,
+          orderId: `Combined-${firstOrder.OrderID}`,
+          type: "combined",
+          status: firstOrder.status,
+          shopName: `🛒 ${orders.length} Stores: ${shopNames}`,
+          shopAddress: `Combined order from ${orders.length} stores`,
+          customerAddress: `${firstOrder.address?.street || "No street"}, ${
+            firstOrder.address?.city || "No city"
+          }`,
+          earnings: totalEarnings,
+          serviceFee: totalServiceFee,
+          deliveryFee: totalDeliveryFee,
+          itemsCount: totalItems,
+          deliveryTime: firstOrder.delivery_time,
+          minutesRemaining,
+          deliveryNotes: firstOrder.delivery_notes,
+          createdAt: firstOrder.created_at,
+          combinedOrderId: combinedOrderId,
+          pin: firstOrder.pin,
+          orderCount: orders.length,
+          orderIds: orders.map((o) => o.id),
+        };
+      }
+    );
+
+    // Process standalone regular orders
+    const regularOrders = standaloneOrders.map((order) => {
       const serviceFee = parseFloat(order.service_fee || "0");
       const deliveryFee = parseFloat(order.delivery_fee || "0");
       const totalEarnings = serviceFee + deliveryFee;
@@ -186,6 +262,7 @@ export default async function handler(
         minutesRemaining,
         deliveryNotes: order.delivery_notes,
         createdAt: order.created_at,
+        pin: order.pin,
       };
     });
 
@@ -230,7 +307,11 @@ export default async function handler(
     });
 
     // Combine and sort all orders by creation time (newest first)
-    const allOrders = [...regularOrders, ...reelOrders].sort(
+    const allOrders = [
+      ...combinedOrderBatches,
+      ...regularOrders,
+      ...reelOrders,
+    ].sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
@@ -240,6 +321,7 @@ export default async function handler(
       data: {
         orders: allOrders,
         totalCount: allOrders.length,
+        combinedCount: combinedOrderBatches.length,
         regularCount: regularOrders.length,
         reelCount: reelOrders.length,
       },

@@ -98,6 +98,11 @@ export const useFCMNotifications = (): FCMNotificationHook => {
               orderId: data?.orderId,
               conversationId: data?.conversationId,
               senderName: data?.senderName,
+              // Combined order specific fields
+              isCombinedOrder: data?.isCombinedOrder === "true",
+              orderCount: data?.orderCount ? parseInt(data.orderCount) : undefined,
+              totalEarnings: data?.estimatedEarnings ? parseFloat(data.estimatedEarnings) : undefined,
+              storeNames: data?.storeNames,
               // Include any additional data
               ...(data || {}),
             };

@@ -26,6 +26,10 @@ interface NotificationItem {
   orderId?: string;
   conversationId?: string;
   senderName?: string;
+  isCombinedOrder?: boolean;
+  orderCount?: number;
+  totalEarnings?: number;
+  storeNames?: string;
 }
 
 export default function NotificationCenter() {
@@ -82,8 +86,28 @@ export default function NotificationCenter() {
     setUnreadCount(0);
   };
 
-  const getNotificationIcon = (type: string) => {
-    const iconClass = `h-5 w-5 ${getNotificationColor(type)}`;
+  const getNotificationIcon = (type: string, isCombined?: boolean) => {
+    const iconClass = `h-5 w-5 ${getNotificationColor(type, isCombined)}`;
+
+    // Special icon for combined orders
+    if (isCombined) {
+      return (
+        <svg
+          className={iconClass}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+          />
+        </svg>
+      );
+    }
 
     switch (type) {
       case "chat_message":
@@ -208,7 +232,12 @@ export default function NotificationCenter() {
     }
   };
 
-  const getNotificationColor = (type: string) => {
+  const getNotificationColor = (type: string, isCombined?: boolean) => {
+    // Combined orders get special purple color
+    if (isCombined) {
+      return theme === "dark" ? "text-purple-400" : "text-purple-600";
+    }
+    
     switch (type) {
       case "chat_message":
         return theme === "dark" ? "text-blue-400" : "text-blue-600";
@@ -422,12 +451,25 @@ export default function NotificationCenter() {
                           }`}
                         />
                         <div className="flex-shrink-0">
-                          {getNotificationIcon(notification.type)}
+                          {getNotificationIcon(notification.type, notification.isCombinedOrder)}
                         </div>
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          <h4 className="font-medium">{notification.title}</h4>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-medium">{notification.title}</h4>
+                            {notification.isCombinedOrder && (
+                              <span
+                                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                                  theme === "dark"
+                                    ? "bg-purple-900/50 text-purple-300"
+                                    : "bg-purple-100 text-purple-800"
+                                }`}
+                              >
+                                🛒 {notification.orderCount} Stores
+                              </span>
+                            )}
+                          </div>
                           <span className="text-xs text-gray-500">
                             {formatTime(notification.timestamp)}
                           </span>
@@ -439,6 +481,90 @@ export default function NotificationCenter() {
                         >
                           {notification.body}
                         </p>
+                        
+                        {/* Combined Order Details */}
+                        {notification.isCombinedOrder && (
+                          <div
+                            className={`mt-2 rounded-lg border p-2 ${
+                              theme === "dark"
+                                ? "border-purple-800 bg-purple-900/20"
+                                : "border-purple-200 bg-purple-50"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <p
+                                  className={`text-xs font-medium ${
+                                    theme === "dark"
+                                      ? "text-purple-300"
+                                      : "text-purple-900"
+                                  }`}
+                                >
+                                  Combined Order
+                                </p>
+                                {notification.storeNames && (
+                                  <p
+                                    className={`mt-0.5 text-xs ${
+                                      theme === "dark"
+                                        ? "text-purple-400"
+                                        : "text-purple-700"
+                                    }`}
+                                  >
+                                    {notification.storeNames}
+                                  </p>
+                                )}
+                              </div>
+                              {notification.totalEarnings !== undefined && (
+                                <div className="text-right">
+                                  <p
+                                    className={`text-xs ${
+                                      theme === "dark"
+                                        ? "text-gray-400"
+                                        : "text-gray-600"
+                                    }`}
+                                  >
+                                    Total Earnings
+                                  </p>
+                                  <p
+                                    className={`text-lg font-bold ${
+                                      theme === "dark"
+                                        ? "text-green-400"
+                                        : "text-green-600"
+                                    }`}
+                                  >
+                                    UGX {notification.totalEarnings.toLocaleString()}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Regular earnings display for single orders */}
+                        {!notification.isCombinedOrder &&
+                          notification.totalEarnings !== undefined && (
+                            <div className="mt-2 flex items-center gap-2">
+                              <span
+                                className={`text-xs ${
+                                  theme === "dark"
+                                    ? "text-gray-400"
+                                    : "text-gray-600"
+                                }`}
+                              >
+                                Earnings:
+                              </span>
+                              <span
+                                className={`text-sm font-semibold ${
+                                  theme === "dark"
+                                    ? "text-green-400"
+                                    : "text-green-600"
+                                }`}
+                              >
+                                UGX {notification.totalEarnings.toLocaleString()}
+                              </span>
+                            </div>
+                          )}
+                        
                         {notification.type === "chat_message" &&
                           notification.senderName && (
                             <p className="mt-1 text-xs text-gray-500">
