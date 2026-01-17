@@ -101,8 +101,12 @@ export const useFCMNotifications = (): FCMNotificationHook => {
               // Combined order specific fields
               isCombinedOrder: data?.isCombinedOrder === "true",
               orderCount: data?.orderCount ? parseInt(data.orderCount) : undefined,
-              totalEarnings: data?.estimatedEarnings ? parseFloat(data.estimatedEarnings) : undefined,
-              storeNames: data?.storeNames,
+              totalEarnings: data?.totalEarnings
+                ? parseFloat(data.totalEarnings)
+                : data?.estimatedEarnings
+                  ? parseFloat(data.estimatedEarnings)
+                  : undefined,
+              storeNames: data?.storeNames || data?.shopName,
               // Include any additional data
               ...(data || {}),
             };
@@ -114,6 +118,13 @@ export const useFCMNotifications = (): FCMNotificationHook => {
             localStorage.setItem(
               "fcm_notification_history",
               JSON.stringify(notificationHistory)
+            );
+
+            // Let UI components (NotificationCenter badge/list) refresh immediately
+            window.dispatchEvent(
+              new CustomEvent("fcm-history-updated", {
+                detail: { notification: notificationEntry },
+              })
             );
           }
 
