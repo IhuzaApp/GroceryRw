@@ -25,6 +25,8 @@ interface NotificationItem {
   type: string;
   read: boolean;
   orderId?: string;
+  displayOrderId?: string | number;
+  OrderID?: string | number;
   conversationId?: string;
   senderName?: string;
   isCombinedOrder?: boolean;
@@ -623,6 +625,21 @@ export default function NotificationCenter() {
                             <h4 className="text-sm font-medium">
                               {notification.title}
                             </h4>
+                            {(notification.type === "new_order" &&
+                              (notification.displayOrderId ||
+                                notification.OrderID)) && (
+                              <span
+                                className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                                  theme === "dark"
+                                    ? "bg-emerald-900/40 text-emerald-200"
+                                    : "bg-emerald-100 text-emerald-800"
+                                }`}
+                                title="Order ID"
+                              >
+                                #{notification.displayOrderId ??
+                                  notification.OrderID}
+                              </span>
+                            )}
                             {notification.isCombinedOrder && (
                               <span
                                 className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${

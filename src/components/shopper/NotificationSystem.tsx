@@ -142,6 +142,7 @@ export default function NotificationSystem({
     body: string;
     type: string;
     orderId?: string;
+    displayOrderId?: string | number;
     senderName?: string;
     conversationId?: string;
     isCombinedOrder?: boolean;
@@ -720,6 +721,7 @@ export default function NotificationSystem({
           ? `${order.storeNames} • ${formatCurrencySync(orderForNotification.estimatedEarnings || 0)}`
           : `${orderForNotification.shopName} • ${formatCurrencySync(orderForNotification.estimatedEarnings || 0)}`,
       orderId: orderForNotification.id,
+      displayOrderId: orderForNotification.OrderID ?? undefined,
       isCombinedOrder: Boolean(order?.isCombinedOrder),
       orderCount: order?.orderCount ? Number(order.orderCount) : undefined,
       totalEarnings:
