@@ -1624,7 +1624,13 @@ export default function NotificationSystem({
               <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   {/* Avatar */}
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-purple-500">
+                  <div
+                    className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br ${
+                      theme === "dark"
+                        ? "from-green-500 to-emerald-600"
+                        : "from-blue-400 to-purple-500"
+                    }`}
+                  >
                     <div className="flex flex-col items-center justify-center leading-none">
                       <span className="text-[10px] font-semibold text-white/90">
                         Order
