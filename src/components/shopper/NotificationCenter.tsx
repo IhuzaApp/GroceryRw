@@ -42,7 +42,6 @@ export default function NotificationCenter() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [currency, setCurrency] = useState<string>("UGX");
-  const lastLoadedCountRef = useRef<number | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -128,18 +127,7 @@ export default function NotificationCenter() {
       const history = JSON.parse(
         localStorage.getItem("fcm_notification_history") || "[]"
       );
-      if (process.env.NODE_ENV === "development") {
-        // Avoid spamming the console every refresh; only log when the count changes
-        if (lastLoadedCountRef.current !== history.length) {
-          console.log(
-            "📋 NotificationCenter: Loading notifications from localStorage",
-            {
-              count: history.length,
-            }
-          );
-          lastLoadedCountRef.current = history.length;
-        }
-      }
+      // Intentionally no console logs here (keep UI quiet)
       // Show ALL FCM notifications (no filtering)
       // Sort by timestamp (newest first)
       const sortedNotifications = history.sort(
@@ -149,9 +137,6 @@ export default function NotificationCenter() {
       setUnreadCount(
         sortedNotifications.filter((n: NotificationItem) => !n.read).length
       );
-      if (process.env.NODE_ENV === "development") {
-        // Only log when count changes (handled above); keep this silent to reduce noise
-      }
     } catch (error) {
       console.error("❌ NotificationCenter: Error loading notification history:", error);
     }

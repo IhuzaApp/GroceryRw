@@ -58,7 +58,6 @@ export const useFCMNotifications = (): FCMNotificationHook => {
     // Only initialize FCM when shopper is online
     if (!session?.user?.id || !isOnline) {
       if (!isOnline && isInitialized) {
-        console.log("🔴 Shopper went offline - FCM paused");
         setIsInitialized(false);
         setHasPermission(false);
       }
@@ -69,11 +68,6 @@ export const useFCMNotifications = (): FCMNotificationHook => {
 
     const init = async () => {
       try {
-        console.log(
-          "🟢 Shopper is online - Initializing FCM for user:",
-          session.user.id
-        );
-
         // Initialize FCM and set up message listener
         unsubscribe = await initializeFCM(session.user.id, (payload) => {
           const { notification, data } = payload;
@@ -232,13 +226,9 @@ export const useFCMNotifications = (): FCMNotificationHook => {
         });
 
         if (unsubscribe && typeof unsubscribe === "function") {
-          console.log(
-            "✅ FCM Hook: Successfully initialized with push notifications"
-          );
           setIsInitialized(true);
           setHasPermission(true);
         } else {
-          console.log("FCM not available, using API polling instead");
           // Not an error - app will use API polling instead
           setIsInitialized(false);
           setHasPermission(false);
@@ -254,7 +244,6 @@ export const useFCMNotifications = (): FCMNotificationHook => {
 
     return () => {
       if (unsubscribe) {
-        console.log("🧹 Cleaning up FCM subscription");
         unsubscribe();
       }
     };
