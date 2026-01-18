@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/router";
 import {
   Button,
@@ -155,6 +155,16 @@ export default function BatchDetails({
   const [systemConfig, setSystemConfig] = useState<any>(null);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const [activeShopId, setActiveShopId] = useState<string | null>(null);
+  const [paymentTargetOrderId, setPaymentTargetOrderId] = useState<string | null>(null);
+
+  const isMultiShop = useMemo(() => {
+    const shops = new Set();
+    if (order?.shop?.id) shops.add(order.shop.id);
+    order?.combinedOrders?.forEach((o: any) => {
+      if (o.shop?.id) shops.add(o.shop.id);
+    });
+    return shops.size > 1;
+  }, [order?.shop?.id, order?.combinedOrders]);
 
   const [currentStep, setCurrentStep] = useState(() => {
     if (!orderData) return 0;
@@ -842,19 +852,33 @@ export default function BatchDetails({
         setGeneratedOtp("");
 
         // Update order status to on_the_way immediately after payment
-        await onUpdateStatus(order.id, "on_the_way");
+        const targetId = paymentTargetOrderId || order.id;
+
+        const ordersToUpdate = !isMultiShop
+          ? [order.id, ...(order.combinedOrders || []).map(o => o.id)]
+          : [targetId];
+
+        await Promise.all(ordersToUpdate.map(id => onUpdateStatus(id, "on_the_way")));
 
         // Update local state
-        setOrder({
-          ...order,
-          status: "on_the_way",
-          combinedOrders: order.combinedOrders?.map((subOrder) => ({
-            ...subOrder,
-            status: "on_the_way",
-          })),
-        });
-
-        // Update step
+        if (order) {
+          if (!isMultiShop) {
+            setOrder({
+              ...order,
+              status: "on_the_way",
+              combinedOrders: order.combinedOrders?.map(o => ({ ...o, status: "on_the_way" }))
+            });
+          } else {
+            if (targetId === order.id) {
+              setOrder({ ...order, status: "on_the_way" });
+            } else {
+              const updatedCombined = order.combinedOrders?.map(o =>
+                o.id === targetId ? { ...o, status: "on_the_way" } : o
+              );
+              setOrder({ ...order, combinedOrders: updatedCombined });
+            }
+          }
+        }
         setCurrentStep(2);
 
         // Show invoice proof modal for proof upload
@@ -1121,15 +1145,18 @@ export default function BatchDetails({
     }
   };
 
-  const handleUpdateStatus = async (newStatus: string) => {
-    if (!order?.id || loading) return; // Prevent multiple calls while loading
+  const handleUpdateStatus = async (newStatus: string, targetOrderId?: string) => {
+    const idToUpdate = targetOrderId || order?.id;
+    if (!idToUpdate || loading) return;
 
     // For the "on_the_way" status, we'll show the payment modal instead of immediately updating
-    // BUT skip payment modal for restaurant orders and restaurant/user reels since they don't require payment processing
-    // Skip shopping if EITHER restaurant_id OR user_id is not null
-    const isRestaurantUserReel =
-      order?.reel?.restaurant_id || order?.reel?.user_id;
-    const isRestaurantOrder = order?.orderType === "restaurant";
+    // BUT skip payment modal for restaurant orders and restaurant/user reels
+    const targetOrder = targetOrderId && order?.combinedOrders
+      ? order.combinedOrders.find(o => o.id === targetOrderId) || order
+      : order;
+
+    const isRestaurantUserReel = targetOrder?.reel?.restaurant_id || targetOrder?.reel?.user_id;
+    const isRestaurantOrder = targetOrder?.orderType === "restaurant";
 
     if (
       newStatus === "on_the_way" &&
@@ -1137,69 +1164,79 @@ export default function BatchDetails({
       !isRestaurantOrder &&
       !isRestaurantUserReel
     ) {
+      setPaymentTargetOrderId(idToUpdate);
       handleShowPaymentModal();
       return;
     }
 
     try {
       setLoading(true);
-      await onUpdateStatus(order.id, newStatus);
+
+      // Determine which orders to update
+      const ordersToUpdate = [];
+      if (!isMultiShop) {
+        // Single shop batch: Update everything together
+        ordersToUpdate.push(order.id);
+        (order.combinedOrders || []).forEach(o => ordersToUpdate.push(o.id));
+      } else {
+        // Multi-shop batch: Update specific order
+        ordersToUpdate.push(idToUpdate);
+      }
+
+      // Execute status updates
+      await Promise.all(ordersToUpdate.map(id => onUpdateStatus(id, newStatus)));
 
       // Update local state
       if (order) {
-        setOrder({
-          ...order,
-          status: newStatus,
-          combinedOrders: order.combinedOrders?.map((subOrder) => ({
-            ...subOrder,
+        if (!isMultiShop) {
+          // Update all as a unit
+          setOrder({
+            ...order,
             status: newStatus,
-          })),
-        });
-      }
+            combinedOrders: order.combinedOrders?.map(o => ({ ...o, status: newStatus }))
+          });
 
-      // Update step
-      const isRestaurantOrder = order?.orderType === "restaurant";
-      // Skip shopping if EITHER restaurant_id OR user_id is not null
-      const isRestaurantUserReel =
-        order?.reel?.restaurant_id || order?.reel?.user_id;
-      switch (newStatus) {
-        case "accepted":
-          if (isRestaurantUserReel) {
-            setCurrentStep(1); // Restaurant/user reels skip shopping
+          // Update global step
+          switch (newStatus) {
+            case "accepted": setCurrentStep(0); break;
+            case "shopping": setCurrentStep(1); break;
+            case "on_the_way":
+            case "at_customer": setCurrentStep(2); break;
+            case "delivered": setCurrentStep(3); break;
+          }
+        } else {
+          // Targeted update for multi-shop
+          if (idToUpdate === order.id) {
+            setOrder({ ...order, status: newStatus });
+            // Sync main step if main order moves
+            switch (newStatus) {
+              case "accepted": setCurrentStep(0); break;
+              case "shopping": setCurrentStep(1); break;
+              case "on_the_way":
+              case "at_customer": setCurrentStep(2); break;
+              case "delivered": setCurrentStep(3); break;
+            }
           } else {
-            setCurrentStep(isRestaurantOrder ? 1 : 0);
+            const updatedCombined = order.combinedOrders?.map(o =>
+              o.id === idToUpdate ? { ...o, status: newStatus } : o
+            );
+            setOrder({ ...order, combinedOrders: updatedCombined });
           }
-          break;
-        case "shopping":
-          setCurrentStep(1);
-          break;
-        case "on_the_way":
-        case "at_customer":
-          setCurrentStep(2);
-          break;
-        case "delivered":
-          setCurrentStep(3);
-          // Close chat drawer if open when order is delivered
-          if (isDrawerOpen && currentChatId === order.id) {
-            closeChat();
-          }
+        }
 
-          // NOTE: Invoice generation and modal display is now handled by handleDeliveryConfirmationClick
-          // This case is only reached when the modal confirms delivery (updating the status from the modal)
-          // So we don't need to generate invoice or show modal here anymore
-
-          // Show success notification when order is delivered
-          toaster.push(
-            <Notification type="success" header="Order Delivered" closable>
-              Order has been successfully marked as delivered!
-            </Notification>,
-            { placement: "topEnd" }
-          );
-          break;
+        // Close chat drawer if open when main order is delivered
+        if (isDrawerOpen && currentChatId === order.id && newStatus === "delivered") {
+          closeChat();
+        }
       }
+      toaster.push(
+        <Notification type="success" header="Status Updated" closable>
+          Order status updated to {newStatus}
+        </Notification>,
+        { placement: "topEnd" }
+      );
     } catch (err) {
-      // Error updating order status
-      // Display toast notification for error
+      console.error("Error updating order status:", err);
       toaster.push(
         <Notification type="error" header="Update Failed" closable>
           {err instanceof Error
@@ -1207,13 +1244,6 @@ export default function BatchDetails({
             : "Failed to update order status. Please try again."}
         </Notification>,
         { placement: "topEnd" }
-      );
-
-      // Also set the error state for display in the UI
-      setErrorState(
-        err instanceof Error
-          ? `Failed to update status: ${err.message}`
-          : "Failed to update order status. Please try again."
       );
     } finally {
       setLoading(false);
@@ -1284,18 +1314,42 @@ export default function BatchDetails({
   };
 
   // Calculate found items total
-  const calculateFoundTotal = () => {
+  const calculateFoundTotal = (targetOrderId?: string) => {
     if (!order) return 0;
 
-    // For reel orders, return the total since there's only one item
-    if (order.orderType === "reel") {
-      return order.total;
+    const useAll = !isMultiShop || !targetOrderId;
+
+    // Sum for reels
+    let reelTotal = 0;
+    if (order.orderType === "reel" && (useAll || targetOrderId === order.id)) {
+      reelTotal += parseFloat(order.total?.toString() || "0");
     }
+    order.combinedOrders?.forEach((sub: any) => {
+      if (sub.orderType === "reel" && (useAll || targetOrderId === sub.id)) {
+        reelTotal += parseFloat(sub.total?.toString() || "0");
+      }
+    });
+
+    if (reelTotal > 0) return reelTotal;
 
     // For regular orders, calculate based on found items
     if (!order.Order_Items) return 0;
 
-    const total = order.Order_Items.filter((item) => item.found).reduce(
+    // Filter items by targetOrderId if provided and we are in multi-shop mode
+    let itemsToSum = order.Order_Items;
+    if (!useAll && targetOrderId) {
+      if (targetOrderId === order.id) {
+        itemsToSum = order.Order_Items.filter(item => !(item as any).shopId || (item as any).shopId === order.shop?.id);
+      } else {
+        const targetSub = order.combinedOrders?.find(o => o.id === targetOrderId);
+        const targetShopId = targetSub?.shop?.id;
+        if (targetShopId) {
+          itemsToSum = order.Order_Items.filter(item => (item as any).shopId === targetShopId);
+        }
+      }
+    }
+
+    const total = itemsToSum.filter((item) => item.found).reduce(
       (total, item) => {
         // Use foundQuantity if available, otherwise use full quantity
         const quantity =
@@ -1323,20 +1377,56 @@ export default function BatchDetails({
   const calculateOriginalSubtotal = () => {
     if (!order) return 0;
 
-    // For reel orders, calculate based on reel price and quantity
-    if (order.orderType === "reel") {
-      const basePrice = parseFloat(order.reel?.Price || "0");
-      const quantity = order.quantity || 1;
-      return basePrice * quantity;
+    const useAll = !isMultiShop;
+
+    // Sum for reels
+    let reelSubtotal = 0;
+    if (order.orderType === "reel" && useAll) {
+      reelSubtotal += parseFloat(order.reel?.Price || "0") * (order.quantity || 1);
     }
+    order.combinedOrders?.forEach((sub: any) => {
+      if (sub.orderType === "reel" && useAll) {
+        reelSubtotal += parseFloat(sub.reel?.Price || "0") * (sub.quantity || 1);
+      }
+    });
+
+    if (reelSubtotal > 0) return reelSubtotal;
 
     // For regular orders, calculate based on order items
     if (!order.Order_Items) return 0;
 
-    return order.Order_Items.reduce(
+    let itemsToSum = order.Order_Items;
+    if (!useAll) {
+      // If we ever need targeted subtotal in multi-shop summary, we'd filter here.
+      // But summary usually shows active shop total.
+      itemsToSum = order.Order_Items.filter((item: any) =>
+        (item as any).shopId === (activeShopId || order.shop?.id)
+      );
+    }
+
+    return itemsToSum.reduce(
       (total, item) => total + item.price * item.quantity,
       0
     );
+  };
+
+  // Helper to get fees (summed for single shop, targeted for multi-shop)
+  const getBatchFee = (type: 'serviceFee' | 'deliveryFee'): number => {
+    if (!order) return 0;
+    const targetId = paymentTargetOrderId || order.id;
+
+    if (isMultiShop && paymentTargetOrderId) {
+      if (targetId === order.id) return parseFloat(order[type]?.toString() || "0");
+      const sub = order.combinedOrders?.find(o => o.id === targetId);
+      return parseFloat(sub?.[type]?.toString() || "0");
+    }
+
+    // Sum for single shop or global
+    let total = parseFloat(order[type]?.toString() || "0");
+    order.combinedOrders?.forEach(sub => {
+      total += parseFloat(sub[type]?.toString() || "0");
+    });
+    return total;
   };
 
   // Calculate tax amount (tax is included in the total, not added on top)
@@ -1356,13 +1446,19 @@ export default function BatchDetails({
 
   // Calculate the true total based on found items (for shopping mode)
   const calculateFoundItemsTotal = () => {
-    // For reel orders, return the total since there's only one item
-    if (order?.orderType === "reel") {
-      return order.total;
+    // Priority: 1. Payment target, 2. Active shop tab, 3. Main order
+    const targetId = paymentTargetOrderId ||
+      (activeShopId === order?.shop?.id ? order?.id : order?.combinedOrders?.find(o => o.shop?.id === activeShopId)?.id) ||
+      order?.id;
+
+    // For reel orders
+    const targetOrder = targetId === order?.id ? order : order?.combinedOrders?.find(o => o.id === targetId);
+    if (targetOrder?.orderType === "reel") {
+      return targetOrder.total;
     }
 
-    // For regular orders, return the found items total
-    const foundTotal = calculateFoundTotal();
+    // For regular orders, return the found items total for the target order
+    const foundTotal = calculateFoundTotal(targetId || undefined);
     return foundTotal;
   };
 
@@ -1370,24 +1466,24 @@ export default function BatchDetails({
   const shouldShowOrderDetails = () => {
     if (!order) return false;
 
-    // Hide order items when on the way, at customer, or delivered
-    const hideStatuses = ["on_the_way", "at_customer", "delivered"];
-    if (hideStatuses.includes(order.status)) return false;
+    // In a combined batch, we should show details if ANY order is still being shopped or accepted
+    const allOrders = [order, ...(order.combinedOrders || [])];
+    const showStatuses = ["accepted", "shopping", "paid"];
 
-    // Show for all other statuses (accepted, shopping, paid)
-    return true;
+    return allOrders.some(o => showStatuses.includes(o.status));
   };
 
   // Function to get the right action button based on current status
-  const getActionButton = () => {
-    if (!order) return null;
+  const getActionButton = (targetOrderOverride?: any) => {
+    const activeOrder = targetOrderOverride || order;
+    if (!activeOrder) return null;
 
-    const isRestaurantOrder = order.orderType === "restaurant";
+    const isRestaurantOrder = activeOrder.orderType === "restaurant";
     // Skip shopping if EITHER restaurant_id OR user_id is not null
     const isRestaurantUserReel =
-      order.reel?.restaurant_id || order.reel?.user_id;
+      activeOrder.reel?.restaurant_id || activeOrder.reel?.user_id;
 
-    switch (order.status) {
+    switch (activeOrder.status) {
       case "accepted":
         return (
           <Button
@@ -1396,19 +1492,20 @@ export default function BatchDetails({
             size="lg"
             block
             onClick={() => {
-              if (order.orderType === "reel" && isRestaurantUserReel) {
+              if (activeOrder.orderType === "reel" && isRestaurantUserReel) {
                 // Skip shopping and go straight to delivery for restaurant/user reels
-                handleUpdateStatus("on_the_way");
+                handleUpdateStatus("on_the_way", activeOrder.id);
               } else {
                 handleUpdateStatus(
-                  isRestaurantOrder ? "on_the_way" : "shopping"
+                  isRestaurantOrder ? "on_the_way" : "shopping",
+                  activeOrder.id
                 );
               }
             }}
             loading={loading}
             className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
           >
-            {order.orderType === "reel" && isRestaurantUserReel
+            {activeOrder.orderType === "reel" && isRestaurantUserReel
               ? "Start Delivery"
               : isRestaurantOrder
                 ? "Start Delivery"
@@ -1418,7 +1515,7 @@ export default function BatchDetails({
       case "shopping":
         // For restaurant/user reel orders, they shouldn't be in shopping status
         // For regular reel orders, no need to check found items since there's only one item
-        if (order.orderType === "reel") {
+        if (activeOrder.orderType === "reel") {
           if (isRestaurantUserReel) {
             // This shouldn't happen, but handle gracefully
             return (
@@ -1427,7 +1524,7 @@ export default function BatchDetails({
                 color="green"
                 size="lg"
                 block
-                onClick={() => handleUpdateStatus("on_the_way")}
+                onClick={() => handleUpdateStatus("on_the_way", activeOrder.id)}
                 loading={loading}
                 className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
               >
@@ -1441,7 +1538,7 @@ export default function BatchDetails({
                 color="green"
                 size="lg"
                 block
-                onClick={() => handleUpdateStatus("on_the_way")}
+                onClick={() => handleUpdateStatus("on_the_way", activeOrder.id)}
                 loading={loading}
                 className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
               >
@@ -1452,8 +1549,12 @@ export default function BatchDetails({
         }
 
         // For regular orders, check if any items are marked as found
-        const hasFoundItems =
-          order.Order_Items?.some((item) => item.found) || false;
+        // If items are in the root Order_Items list, filter them by shopId if it's a sub-order
+        const relevantItems = activeOrder.Order_Items || (order?.Order_Items?.filter(item =>
+          !(item as any).shopId || (item as any).shopId === activeOrder.shop?.id
+        ) || []);
+
+        const hasFoundItems = relevantItems?.some((item: any) => item.found) || false;
 
         return (
           <Button
@@ -1461,7 +1562,7 @@ export default function BatchDetails({
             color="green"
             size="lg"
             block
-            onClick={() => handleUpdateStatus("on_the_way")}
+            onClick={() => handleUpdateStatus("on_the_way", activeOrder.id)}
             loading={loading}
             disabled={!hasFoundItems}
             className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
@@ -1475,7 +1576,7 @@ export default function BatchDetails({
         if (!invoiceProofUploaded) {
           return (
             <div
-              className={`rounded-xl border-2 p-6 text-center ${theme === "dark"
+              className={`flex flex-col items-center justify-center rounded-xl border-2 p-6 text-center ${theme === "dark"
                 ? "border-yellow-600 bg-yellow-900/20"
                 : "border-yellow-400 bg-yellow-50"
                 }`}
@@ -1491,30 +1592,28 @@ export default function BatchDetails({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
                 />
               </svg>
               <p
-                className={`text-lg font-semibold ${theme === "dark" ? "text-yellow-300" : "text-yellow-800"
+                className={`mb-4 font-semibold ${theme === "dark" ? "text-yellow-300" : "text-yellow-800"
                   }`}
               >
-                Invoice Proof Required
-              </p>
-              <p
-                className={`mt-2 text-sm ${theme === "dark" ? "text-yellow-400" : "text-yellow-700"
-                  }`}
-              >
-                Please add invoice/receipt proof before you can confirm delivery
+                Invoice proof required before delivery
               </p>
               <Button
                 appearance="primary"
-                color="orange"
-                size="lg"
-                block
+                color="yellow"
                 onClick={() => setShowInvoiceProofModal(true)}
-                className="mt-4 rounded-lg py-3 text-lg font-semibold"
+                className="rounded-lg px-6 py-2 font-bold shadow-md hover:scale-105"
               >
-                Add Invoice Proof
+                Upload Invoice Photo
               </Button>
             </div>
           );
@@ -1805,6 +1904,9 @@ export default function BatchDetails({
             // Transformed order
 
             setOrder(transformedOrder);
+            if (!activeShopId && data.order.shop?.id) {
+              setActiveShopId(data.order.shop.id);
+            }
           } else {
             // No order data in response
           }
@@ -2011,10 +2113,10 @@ export default function BatchDetails({
           setMomoCode={setMomoCode}
           privateKey={privateKey}
           orderAmount={calculateFoundItemsTotal()}
-          serviceFee={parseFloat(order?.serviceFee || "0")}
-          deliveryFee={parseFloat(order?.deliveryFee || "0")}
+          serviceFee={getBatchFee('serviceFee')}
+          deliveryFee={getBatchFee('deliveryFee')}
           paymentLoading={paymentLoading}
-          externalId={order?.id}
+          externalId={paymentTargetOrderId || order?.id}
           otp={otp}
           setOtp={setOtp}
           otpLoading={otpVerifyLoading}
@@ -2732,7 +2834,7 @@ export default function BatchDetails({
                       const itemsByShop = new Map<string, any[]>();
 
                       order.Order_Items?.forEach((item) => {
-                        const shopId = item.shopId || order.shop?.id || 'unknown';
+                        const shopId = (item as any).shopId || order.shop?.id || 'unknown';
                         if (!itemsByShop.has(shopId)) {
                           itemsByShop.set(shopId, []);
                         }
@@ -2777,10 +2879,21 @@ export default function BatchDetails({
                             </div>
 
                             {/* Active Shop Items */}
-                            <div className="space-y-2 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/30 sm:space-y-3 sm:p-6">
-                              <h3 className="mb-4 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                                {getShopName(effectiveActiveShopId || "")} • {itemsByShop.get(effectiveActiveShopId || "")?.length || 0} Items
-                              </h3>
+                            <div className="space-y-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/30 sm:p-6">
+                              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                  {getShopName(effectiveActiveShopId || "")} • {itemsByShop.get(effectiveActiveShopId || "")?.length || 0} Items
+                                </h3>
+                                {/* Sub-order Action Button */}
+                                <div className="sm:w-64">
+                                  {(() => {
+                                    const subOrder = groups.find(g => g[0] === effectiveActiveShopId)?.[0] === order.shop?.id
+                                      ? order
+                                      : order.combinedOrders?.find(o => o.shop?.id === effectiveActiveShopId);
+                                    return getActionButton(subOrder);
+                                  })()}
+                                </div>
+                              </div>
                               <div className="space-y-2 sm:space-y-3">
                                 {itemsByShop.get(effectiveActiveShopId || "")?.map(renderItemCard)}
                               </div>
@@ -3113,9 +3226,12 @@ export default function BatchDetails({
                 </div>
               )}
 
-              {/* Action Button - Hidden on Mobile (shown in fixed bar) */}
               <div className="hidden pt-2 sm:block sm:pt-4">
-                {getActionButton()}
+                {getActionButton(
+                  activeShopId === order?.shop?.id
+                    ? order
+                    : order?.combinedOrders?.find(o => o.shop?.id === activeShopId)
+                )}
               </div>
             </div>
           </div>
@@ -3123,7 +3239,11 @@ export default function BatchDetails({
 
         {/* Fixed Bottom Action Button - Mobile Only */}
         < div className="fixed bottom-0 left-0 right-0 z-[9999] border-t border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-900 sm:hidden" >
-          {getActionButton()}
+          {getActionButton(
+            activeShopId === order?.shop?.id
+              ? order
+              : order?.combinedOrders?.find(o => o.shop?.id === activeShopId)
+          )}
         </div >
       </div >
     </>
