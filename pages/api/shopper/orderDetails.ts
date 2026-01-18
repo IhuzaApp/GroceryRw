@@ -472,6 +472,7 @@ const GET_RELATED_REEL_ORDERS = gql`
         Price
         Product
         Restaurant {
+          id
           name
           location
           lat
@@ -951,6 +952,7 @@ export default async function handler(
               name: item.Product?.ProductName?.name || "Unknown Product",
               quantity: item.quantity,
               price: parseFloat(item.price) || 0,
+              measurement_unit: item.Product?.measurement_unit || null,
               productImage: item.Product?.ProductName?.image || item.Product?.image || null,
             })) || [];
 
@@ -963,6 +965,7 @@ export default async function handler(
               status: order.status,
               shopName: order.shop?.name || "Unknown Shop",
               shopAddress: order.shop?.address,
+              shop: order.shop, // Full shop object
               customerName: order.orderedBy?.name,
               total: parseFloat(order.total || subTotal.toString()), // Use total if available or calc
               items: items,
@@ -982,12 +985,21 @@ export default async function handler(
               status: order.status,
               shopName: order.Reel?.Restaurant?.name || "Reel Order",
               shopAddress: order.Reel?.Restaurant?.location,
+              shop: order.Reel?.Restaurant ? {
+                id: order.Reel.Restaurant.id,
+                name: order.Reel.Restaurant.name,
+                address: order.Reel.Restaurant.location,
+                phone: order.Reel.Restaurant.phone,
+                image: null // Add image field if available
+              } : null,
               customerName: order.user?.name,
               total: parseFloat(order.total || "0"),
               items: [{
+                id: order.id,
                 name: order.Reel?.Product || "Reel Product",
                 quantity: order.quantity,
-                price: parseFloat(order.Reel?.Price || "0")
+                price: parseFloat(order.Reel?.Price || "0"),
+                productImage: null // Reel doesn't have a direct product image easily accessible here
               }],
               combinedOrderId: order.combined_order_id
             };
@@ -1003,6 +1015,7 @@ export default async function handler(
               name: item.restaurant_dishes?.name || "Dish",
               quantity: item.quantity,
               price: parseFloat(item.price) || 0,
+              productImage: item.restaurant_dishes?.image || null,
             })) || [];
 
             return {
@@ -1012,6 +1025,13 @@ export default async function handler(
               status: order.status,
               shopName: order.Restaurant?.name || "Restaurant",
               shopAddress: order.Restaurant?.location,
+              shop: order.Restaurant ? {
+                id: order.Restaurant.id,
+                name: order.Restaurant.name,
+                address: order.Restaurant.location,
+                phone: order.Restaurant.phone,
+                image: (order.Restaurant as any).logo
+              } : null,
               customerName: order.orderedBy?.name,
               total: parseFloat(order.total || "0"),
               items: items,
