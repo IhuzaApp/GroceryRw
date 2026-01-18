@@ -457,6 +457,7 @@ export default async function handler(
         parseFloat(o.service_fee || "0") + parseFloat(o.delivery_fee || "0")
       ).toFixed(2),
       orderType: "regular" as const,
+      combinedOrderId: o.combined_order_id,
       pin: o.pin,
     }));
 

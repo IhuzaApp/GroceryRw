@@ -76,6 +76,7 @@ interface OrderDetailsResponse {
     total: string;
     user_id: string;
     voucher_code: string | null;
+    combined_order_id: string | null;
   } | null;
 }
 
@@ -172,6 +173,7 @@ const GET_ORDER_DETAILS = gql`
       total
       user_id
       voucher_code
+      combined_order_id
     }
   }
 `;
@@ -622,6 +624,7 @@ export default async function handler(
         assignedTo: orderData.Shoppers, // Include assignedTo data (shopper)
         customerId: orderData.orderedBy?.id, // Customer is ALWAYS from orderedBy
         shop: orderData.shop, // Include shop data
+        combinedOrderId: orderData.combined_order_id,
       };
     } else if (orderType === "reel") {
       // Handle reel orders
@@ -685,6 +688,7 @@ export default async function handler(
         customerId: orderData.user?.id, // Add customerId for compatibility
         discount: orderData.discount || 0, // Add discount field
         deliveryPhotoUrl: orderData.delivery_photo_url, // Add delivery photo URL
+        combinedOrderId: orderData.combined_order_id,
       };
     } else if (orderType === "restaurant") {
       // Handle restaurant orders
@@ -757,6 +761,7 @@ export default async function handler(
         discount: orderData.discount || 0,
         deliveryPhotoUrl: orderData.delivery_photo_url,
         deliveryTime: orderData.delivery_time,
+        combinedOrderId: orderData.combined_order_id,
       };
     }
 
