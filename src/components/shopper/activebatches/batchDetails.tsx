@@ -158,6 +158,16 @@ export default function BatchDetails({
   const [currentStep, setCurrentStep] = useState(() => {
     if (!orderData) return 0;
 
+    // Log the main order data
+    console.log("📑 [BatchDetails] Main Order Data:", {
+      id: orderData.id,
+      OrderID: (orderData as any).OrderID,
+      status: orderData.status,
+      orderType: orderData.orderType,
+      shopName: (orderData as any).shopName || (orderData as any).shop?.name,
+      combinedOrderId: (orderData as any).combinedOrderId || (orderData as any).combined_order_id
+    });
+
     // For restaurant orders, skip the shopping step
     const isRestaurantOrder = orderData.orderType === "restaurant";
     // Skip shopping if EITHER restaurant_id OR user_id is not null
@@ -241,7 +251,7 @@ export default function BatchDetails({
     fetchSystemConfig();
   }, []);
 
-  // Fetch and log combined order details using the queries API
+  // Fetch combined order details using the queries API
   useEffect(() => {
     const fetchCombinedDetails = async () => {
       // Check for combinedOrderId in various potential locations
@@ -249,24 +259,85 @@ export default function BatchDetails({
         (order as any)?.combinedOrderId ||
         (order as any)?.combined_order_id;
 
-      if (combinedId) {
-        try {
-          const response = await fetch(`/api/queries/combined-orders?combined_order_id=${combinedId}`);
-          if (response.ok) {
-            const data = await response.json();
-          } else {
-            console.warn("⚠️ [BatchDetails] Failed to fetch combined details:", response.statusText);
+      // Skip if no combined ID or if we already have detailed combined orders
+      if (!combinedId) return;
+
+      const hasDetailedCombined = order?.combinedOrders &&
+        order.combinedOrders.length > 0 &&
+        order.combinedOrders[0].shop &&
+        order.combinedOrders[0].items;
+
+      if (hasDetailedCombined) return;
+
+      try {
+        const response = await fetch(`/api/queries/combined-orders?combined_order_id=${combinedId}`);
+        if (response.ok) {
+          const data = await response.json();
+
+          // Update order state with combined details if needed
+          if (data.orders && data.orders.length > 0) {
+            setOrder(prev => {
+              if (!prev) return prev;
+
+              // double check inside to be safe
+              const currentCombined = prev.combinedOrders || [];
+              const alreadyDetailed = currentCombined.length > 0 && currentCombined[0].shop && currentCombined[0].items;
+
+              if (alreadyDetailed && currentCombined.length === data.orders.length) {
+                return prev;
+              }
+
+              // Transform and merge
+              const transformedCombined = data.orders
+                .filter((o: any) => o.id !== prev.id)
+                .map((o: any) => ({
+                  ...o,
+                  shopName: o.shop?.name || "Unknown Shop",
+                  shopAddress: o.shop?.address,
+                  items: o.Order_Items?.map((item: any) => ({
+                    id: item.id,
+                    name: item.ProductName?.name || "Unknown Product",
+                    quantity: item.quantity,
+                    price: parseFloat(item.price) || 0,
+                    productImage: item.ProductName?.image || item.product?.image || null,
+                  }))
+                }));
+
+              // Also update Order_Items if they are missing their shopId
+              let updatedOrderItems = [...(prev.Order_Items || [])];
+              transformedCombined.forEach((sub: any) => {
+                sub.items?.forEach((si: any) => {
+                  if (!updatedOrderItems.some(ui => ui.id === si.id)) {
+                    // Add missing item from combined order
+                    updatedOrderItems.push({
+                      ...si,
+                      shopId: sub.shop?.id,
+                      product: {
+                        ...si,
+                        ProductName: { name: si.name, image: si.productImage }
+                      }
+                    });
+                  }
+                });
+              });
+
+              return {
+                ...prev,
+                combinedOrders: transformedCombined,
+                Order_Items: updatedOrderItems
+              };
+            });
           }
-        } catch (error) {
-          console.error("❌ [BatchDetails] Error fetching combined details:", error);
         }
+      } catch (error) {
+        console.error("❌ [BatchDetails] Error fetching combined details:", error);
       }
     };
 
-    if (order) {
+    if (order?.id) {
       fetchCombinedDetails();
     }
-  }, [order]);
+  }, [order?.id, (order as any)?.combinedOrderId, (order as any)?.combined_order_id]);
 
 
 
@@ -2016,7 +2087,9 @@ export default function BatchDetails({
                     {order.orderType === "reel"
                       ? "Reel Batch"
                       : "Regular Batch"}{" "}
-                    #{order.OrderID || order.id.slice(0, 8)}
+                    #{((order as any).orderIDs && (order as any).orderIDs.length > 1)
+                      ? (order as any).orderIDs.join(" & ")
+                      : (order.OrderID || order.id.slice(0, 8))}
                   </h1>
                 </div>
                 <div className="flex flex-shrink-0 items-center gap-2 sm:gap-3">
