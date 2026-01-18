@@ -318,8 +318,7 @@ export default async function handler(
         JSON.stringify(fetchError, null, 2)
       );
       throw new Error(
-        `Failed to fetch orders: ${
-          fetchError instanceof Error ? fetchError.message : String(fetchError)
+        `Failed to fetch orders: ${fetchError instanceof Error ? fetchError.message : String(fetchError)
         }`
       );
     }
@@ -398,14 +397,14 @@ export default async function handler(
         customerAddresses.length === 2
           ? `${customerAddresses[0]} | ${customerAddresses[1]}`
           : customerAddresses.join(" | ") ||
-            `${firstOrder.Address.street}, ${firstOrder.Address.city}`;
+          `${firstOrder.Address.street}, ${firstOrder.Address.city}`;
 
       // Use the first order as the base for common data
       const firstOrder = orders[0];
 
       return {
-        id: combinedOrderId, // Use combined_order_id as the ID
-        OrderID: `Combined-${firstOrder.OrderID}`, // Prefix to indicate combined
+        id: firstOrder.id, // Use first order's ID instead of combined_order_id
+        OrderID: `${firstOrder.OrderID}`, // Prefix to indicate combined
         status: firstOrder.status, // Use status from first order
         createdAt: firstOrder.created_at,
         deliveryTime: firstOrder.delivery_time || undefined,

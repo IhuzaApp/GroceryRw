@@ -264,11 +264,10 @@ export default function BatchDetails({
         }
       } else {
         // For desktop, use web version
-        return `https://www.google.com/maps/dir/?api=1&origin=${
-          currentLocation.lat
-        },${currentLocation.lng}&destination=${encodeURIComponent(
-          destinationAddress
-        )}`;
+        return `https://www.google.com/maps/dir/?api=1&origin=${currentLocation.lat
+          },${currentLocation.lng}&destination=${encodeURIComponent(
+            destinationAddress
+          )}`;
       }
     }
     // Fallback to just the destination if no current location
@@ -315,9 +314,9 @@ export default function BatchDetails({
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c; // Distance in kilometers
     return Math.round(distance * 10) / 10; // Round to 1 decimal place
@@ -813,9 +812,8 @@ export default function BatchDetails({
       deliveryPostalCode: order.address?.postal_code || "",
       deliveryPlaceDetails: order.address?.placeDetails || null,
       deliveryAddress: order.address
-        ? `${order.address.street || ""}, ${order.address.city || ""}${
-            order.address.postal_code ? `, ${order.address.postal_code}` : ""
-          }`
+        ? `${order.address.street || ""}, ${order.address.city || ""}${order.address.postal_code ? `, ${order.address.postal_code}` : ""
+        }`
         : "",
       dateCreated: new Date().toLocaleString(),
       dateCompleted: new Date().toLocaleString(),
@@ -861,9 +859,8 @@ export default function BatchDetails({
       deliveryPostalCode: order.address?.postal_code || "",
       deliveryPlaceDetails: order.address?.placeDetails || null,
       deliveryAddress: order.address
-        ? `${order.address.street || ""}, ${order.address.city || ""}${
-            order.address.postal_code ? `, ${order.address.postal_code}` : ""
-          }`
+        ? `${order.address.street || ""}, ${order.address.city || ""}${order.address.postal_code ? `, ${order.address.postal_code}` : ""
+        }`
         : "",
       dateCreated: new Date().toLocaleString(),
       dateCompleted: new Date().toLocaleString(),
@@ -926,9 +923,8 @@ export default function BatchDetails({
       deliveryPostalCode: order.address?.postal_code || "",
       deliveryPlaceDetails: order.address?.placeDetails || null,
       deliveryAddress: order.address
-        ? `${order.address.street || ""}, ${order.address.city || ""}${
-            order.address.postal_code ? `, ${order.address.postal_code}` : ""
-          }`
+        ? `${order.address.street || ""}, ${order.address.city || ""}${order.address.postal_code ? `, ${order.address.postal_code}` : ""
+        }`
         : "",
       dateCreated: new Date().toLocaleString(),
       dateCompleted: new Date().toLocaleString(),
@@ -1119,8 +1115,8 @@ export default function BatchDetails({
   const showProductImage = (item: OrderItem) => {
     setSelectedImage(
       item.product.ProductName?.image ||
-        item.product.image ||
-        "/images/groceryPlaceholder.png"
+      item.product.image ||
+      "/images/groceryPlaceholder.png"
     );
     setSelectedProductName(item.product.ProductName?.name || "Unknown Product");
     setCurrentOrderItem(item);
@@ -1153,10 +1149,10 @@ export default function BatchDetails({
     const updatedItems = order.Order_Items?.map((item) =>
       item.id === itemId
         ? {
-            ...item,
-            found,
-            foundQuantity: found ? foundQty : 0,
-          }
+          ...item,
+          found,
+          foundQuantity: found ? foundQty : 0,
+        }
         : item
     );
 
@@ -1308,8 +1304,8 @@ export default function BatchDetails({
             {order.orderType === "reel" && isRestaurantUserReel
               ? "Start Delivery"
               : isRestaurantOrder
-              ? "Start Delivery"
-              : "Start Shopping"}
+                ? "Start Delivery"
+                : "Start Shopping"}
           </Button>
         );
       case "shopping":
@@ -1372,16 +1368,14 @@ export default function BatchDetails({
         if (!invoiceProofUploaded) {
           return (
             <div
-              className={`rounded-xl border-2 p-6 text-center ${
-                theme === "dark"
+              className={`rounded-xl border-2 p-6 text-center ${theme === "dark"
                   ? "border-yellow-600 bg-yellow-900/20"
                   : "border-yellow-400 bg-yellow-50"
-              }`}
+                }`}
             >
               <svg
-                className={`mx-auto mb-3 h-12 w-12 ${
-                  theme === "dark" ? "text-yellow-400" : "text-yellow-600"
-                }`}
+                className={`mx-auto mb-3 h-12 w-12 ${theme === "dark" ? "text-yellow-400" : "text-yellow-600"
+                  }`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -1394,16 +1388,14 @@ export default function BatchDetails({
                 />
               </svg>
               <p
-                className={`text-lg font-semibold ${
-                  theme === "dark" ? "text-yellow-300" : "text-yellow-800"
-                }`}
+                className={`text-lg font-semibold ${theme === "dark" ? "text-yellow-300" : "text-yellow-800"
+                  }`}
               >
                 Invoice Proof Required
               </p>
               <p
-                className={`mt-2 text-sm ${
-                  theme === "dark" ? "text-yellow-400" : "text-yellow-700"
-                }`}
+                className={`mt-2 text-sm ${theme === "dark" ? "text-yellow-400" : "text-yellow-700"
+                  }`}
               >
                 Please add invoice/receipt proof before you can confirm delivery
               </p>
@@ -1473,7 +1465,7 @@ export default function BatchDetails({
       customerId, // We already validated this exists above
       orderWithNewFields.orderedBy?.name || order.user?.name || "Customer",
       orderWithNewFields.orderedBy?.profile_picture ||
-        order.user?.profile_picture
+      order.user?.profile_picture
     );
 
     // If on mobile, navigate to chat page
@@ -1738,11 +1730,10 @@ export default function BatchDetails({
       `}</style>
 
       <div
-        className={`min-h-screen ${
-          theme === "dark"
+        className={`min-h-screen ${theme === "dark"
             ? "bg-gray-900 text-gray-100"
             : "bg-gray-50 text-gray-900"
-        }`}
+          }`}
         style={{
           paddingBottom: "env(safe-area-inset-bottom)",
         }}
@@ -1913,12 +1904,12 @@ export default function BatchDetails({
                       order?.reel?.user_id ||
                       order?.orderType === "restaurant"
                     ) && (
-                      <Steps.Item
-                        title="Shopping"
-                        description="Collecting items from the store"
-                        status={currentStep >= 1 ? "finish" : "wait"}
-                      />
-                    )}
+                        <Steps.Item
+                          title="Shopping"
+                          description="Collecting items from the store"
+                          status={currentStep >= 1 ? "finish" : "wait"}
+                        />
+                      )}
                     <Steps.Item
                       title="On The Way"
                       description="Delivering to customer"
@@ -1937,21 +1928,19 @@ export default function BatchDetails({
               <div className="border-b border-slate-200 dark:border-slate-700 sm:hidden">
                 <div className="flex">
                   <button
-                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                      activeTab === "items"
+                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === "items"
                         ? "border-b-2 border-green-600 text-green-600 dark:border-green-500 dark:text-green-500"
                         : "text-slate-500 dark:text-slate-400"
-                    }`}
+                      }`}
                     onClick={() => setActiveTab("items")}
                   >
                     Items
                   </button>
                   <button
-                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                      activeTab === "details"
+                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === "details"
                         ? "border-b-2 border-green-600 text-green-600 dark:border-green-500 dark:text-green-500"
                         : "text-slate-500 dark:text-slate-400"
-                    }`}
+                      }`}
                     onClick={() => setActiveTab("details")}
                   >
                     Other Details
@@ -1962,19 +1951,17 @@ export default function BatchDetails({
               {/* Main Info Grid - Hidden during shopping status on desktop, always visible in "Other Details" tab on mobile */}
               {(order.status !== "shopping" || activeTab === "details") && (
                 <div
-                  className={`grid grid-cols-1 gap-3 sm:gap-8 lg:grid-cols-2 ${
-                    activeTab === "details" ? "block" : "hidden sm:grid"
-                  }`}
+                  className={`grid grid-cols-1 gap-3 sm:gap-8 lg:grid-cols-2 ${activeTab === "details" ? "block" : "hidden sm:grid"
+                    }`}
                 >
                   {/* Shop/Reel Info */}
                   <div className="rounded-none border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
                     <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
                       <span
-                        className={`inline-block rounded-full p-1.5 sm:p-2 ${
-                          order.orderType === "reel"
+                        className={`inline-block rounded-full p-1.5 sm:p-2 ${order.orderType === "reel"
                             ? "bg-indigo-100"
                             : "bg-emerald-100"
-                        }`}
+                          }`}
                       >
                         {order.orderType === "reel" ? (
                           <svg
@@ -2226,11 +2213,10 @@ export default function BatchDetails({
                                     order.shop?.address || ""
                                   )
                                 }
-                                className={`flex w-full items-center justify-center rounded-lg px-6 py-3 text-sm font-semibold text-white transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
-                                  theme === "dark"
+                                className={`flex w-full items-center justify-center rounded-lg px-6 py-3 text-sm font-semibold text-white transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${theme === "dark"
                                     ? "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
                                     : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-                                }`}
+                                  }`}
                               >
                                 <svg
                                   viewBox="0 0 24 24"
@@ -2305,20 +2291,20 @@ export default function BatchDetails({
                           </h3>
                           {((order as any).orderedBy?.phone ||
                             order.user?.phone) && (
-                            <p className="mt-1 flex items-center text-xs text-slate-600 dark:text-slate-400 sm:text-sm">
-                              <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                className="mr-1.5 h-3.5 w-3.5"
-                              >
-                                <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                              </svg>
-                              {(order as any).orderedBy?.phone ||
-                                order.user?.phone}
-                            </p>
-                          )}
+                              <p className="mt-1 flex items-center text-xs text-slate-600 dark:text-slate-400 sm:text-sm">
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  className="mr-1.5 h-3.5 w-3.5"
+                                >
+                                  <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                </svg>
+                                {(order as any).orderedBy?.phone ||
+                                  order.user?.phone}
+                              </p>
+                            )}
                         </div>
                       </div>
 
@@ -2356,21 +2342,18 @@ export default function BatchDetails({
                         <button
                           onClick={() =>
                             handleDirectionsClick(
-                              `${order.address?.street || "No street"}, ${
-                                order.address?.city || "No city"
-                              }${
-                                order.address?.postal_code
-                                  ? `, ${order.address.postal_code}`
-                                  : ""
+                              `${order.address?.street || "No street"}, ${order.address?.city || "No city"
+                              }${order.address?.postal_code
+                                ? `, ${order.address.postal_code}`
+                                : ""
                               }`
                             )
                           }
                           title="Directions to Customer"
-                          className={`flex h-12 w-12 items-center justify-center rounded-full text-white shadow-md transition-all hover:scale-110 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
-                            theme === "dark"
+                          className={`flex h-12 w-12 items-center justify-center rounded-full text-white shadow-md transition-all hover:scale-110 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${theme === "dark"
                               ? "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
                               : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-                          }`}
+                            }`}
                         >
                           <svg
                             viewBox="0 0 24 24"
@@ -2387,42 +2370,39 @@ export default function BatchDetails({
                         {/* Call Button */}
                         {((order as any).orderedBy?.phone ||
                           order.user?.phone) && (
-                          <button
-                            onClick={() =>
-                              (window.location.href = `tel:${
-                                (order as any).orderedBy?.phone ||
+                            <button
+                              onClick={() =>
+                              (window.location.href = `tel:${(order as any).orderedBy?.phone ||
                                 order.user?.phone
-                              }`)
-                            }
-                            title="Call Customer"
-                            className={`flex h-12 w-12 items-center justify-center rounded-full text-white shadow-md transition-all hover:scale-110 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                              theme === "dark"
-                                ? "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-                                : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-                            }`}
-                          >
-                            <svg
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              className="h-5 w-5"
+                                }`)
+                              }
+                              title="Call Customer"
+                              className={`flex h-12 w-12 items-center justify-center rounded-full text-white shadow-md transition-all hover:scale-110 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${theme === "dark"
+                                  ? "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                                  : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+                                }`}
                             >
-                              <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                            </svg>
-                          </button>
-                        )}
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                className="h-5 w-5"
+                              >
+                                <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                              </svg>
+                            </button>
+                          )}
 
                         {/* Message Button */}
                         {order.status !== "delivered" ? (
                           <button
                             onClick={handleChatClick}
                             title="Message Customer"
-                            className={`flex h-12 w-12 items-center justify-center rounded-full text-white shadow-md transition-all hover:scale-110 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
-                              theme === "dark"
+                            className={`flex h-12 w-12 items-center justify-center rounded-full text-white shadow-md transition-all hover:scale-110 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${theme === "dark"
                                 ? "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
                                 : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
-                            }`}
+                              }`}
                           >
                             <svg
                               viewBox="0 0 24 24"
@@ -2455,49 +2435,48 @@ export default function BatchDetails({
                         {/* Notify Button - Only show when delivering */}
                         {(order.status === "on_the_way" ||
                           order.status === "at_customer") && (
-                          <button
-                            onClick={handleShopperArrived}
-                            disabled={loading}
-                            title={loading ? "Notifying..." : "Notify Customer"}
-                            className={`flex h-12 w-12 items-center justify-center rounded-full text-white shadow-md transition-all hover:scale-110 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 ${
-                              theme === "dark"
-                                ? "bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800"
-                                : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
-                            }`}
-                          >
-                            {loading ? (
-                              <svg
-                                className="h-5 w-5 animate-spin"
-                                viewBox="0 0 24 24"
-                              >
-                                <circle
-                                  className="opacity-25"
-                                  cx="12"
-                                  cy="12"
-                                  r="10"
-                                  stroke="currentColor"
-                                  strokeWidth="4"
+                            <button
+                              onClick={handleShopperArrived}
+                              disabled={loading}
+                              title={loading ? "Notifying..." : "Notify Customer"}
+                              className={`flex h-12 w-12 items-center justify-center rounded-full text-white shadow-md transition-all hover:scale-110 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 ${theme === "dark"
+                                  ? "bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800"
+                                  : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+                                }`}
+                            >
+                              {loading ? (
+                                <svg
+                                  className="h-5 w-5 animate-spin"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                    fill="none"
+                                  />
+                                  <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                  />
+                                </svg>
+                              ) : (
+                                <svg
+                                  viewBox="0 0 24 24"
                                   fill="none"
-                                />
-                                <path
-                                  className="opacity-75"
-                                  fill="currentColor"
-                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                />
-                              </svg>
-                            ) : (
-                              <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                className="h-5 w-5"
-                              >
-                                <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                              </svg>
-                            )}
-                          </button>
-                        )}
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  className="h-5 w-5"
+                                >
+                                  <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
+                              )}
+                            </button>
+                          )}
                       </div>
                     </div>
                   </div>
@@ -2507,9 +2486,8 @@ export default function BatchDetails({
               {/* Order Items */}
               {shouldShowOrderDetails() && (
                 <div
-                  className={`${
-                    activeTab === "items" ? "block" : "hidden sm:block"
-                  }`}
+                  className={`${activeTab === "items" ? "block" : "hidden sm:block"
+                    }`}
                 >
                   <div className="mb-3 flex items-center gap-2 px-3 sm:mb-4 sm:gap-3 sm:px-0">
                     <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
@@ -2586,11 +2564,10 @@ export default function BatchDetails({
                                 onClick={() =>
                                   toggleItemFound(item, !item.found)
                                 }
-                                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold shadow-md transition-all duration-200 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm ${
-                                  item.found
+                                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold shadow-md transition-all duration-200 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm ${item.found
                                     ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-green-200 hover:from-green-600 hover:to-emerald-600 hover:shadow-lg dark:from-green-600 dark:to-emerald-600 dark:shadow-green-900/50"
                                     : "border border-gray-300 bg-white text-gray-700 shadow-gray-200 hover:border-green-500 hover:bg-green-50 hover:text-green-700 hover:shadow-lg dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:shadow-gray-900/50 dark:hover:border-green-600 dark:hover:bg-green-900/20 dark:hover:text-green-400"
-                                }`}
+                                  }`}
                               >
                                 <svg
                                   viewBox="0 0 24 24"
@@ -2629,19 +2606,17 @@ export default function BatchDetails({
               {/* Order Summary */}
               {shouldShowOrderDetails() && (
                 <div
-                  className={`overflow-hidden border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl ${
-                    order.status === "shopping"
+                  className={`overflow-hidden border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl ${order.status === "shopping"
                       ? "fixed bottom-[4.5rem] left-0 right-0 z-[9998] rounded-t-3xl border-x-0 border-b-0 shadow-[0_-4px_20px_rgba(0,0,0,0.15)] sm:relative sm:bottom-auto sm:z-auto sm:rounded-2xl sm:border sm:shadow-lg"
                       : "rounded-t-2xl border-x-0 border-t-0 shadow-lg sm:rounded-2xl sm:border"
-                  }`}
+                    }`}
                 >
                   {/* Header with Gradient */}
                   <div
-                    className={`bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-4 dark:from-green-900/20 dark:to-emerald-900/20 ${
-                      order.status === "shopping"
+                    className={`bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-4 dark:from-green-900/20 dark:to-emerald-900/20 ${order.status === "shopping"
                         ? "cursor-pointer sm:cursor-default"
                         : ""
-                    }`}
+                      }`}
                     onClick={() => {
                       if (
                         order.status === "shopping" &&
@@ -2689,9 +2664,8 @@ export default function BatchDetails({
                           }}
                         >
                           <svg
-                            className={`h-6 w-6 text-gray-600 transition-transform dark:text-gray-400 ${
-                              isSummaryExpanded ? "rotate-180" : ""
-                            }`}
+                            className={`h-6 w-6 text-gray-600 transition-transform dark:text-gray-400 ${isSummaryExpanded ? "rotate-180" : ""
+                              }`}
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -2710,11 +2684,10 @@ export default function BatchDetails({
 
                   {/* Content */}
                   <div
-                    className={`overflow-y-auto px-4 py-4 transition-all duration-300 ${
-                      order.status === "shopping" && !isSummaryExpanded
+                    className={`overflow-y-auto px-4 py-4 transition-all duration-300 ${order.status === "shopping" && !isSummaryExpanded
                         ? "hidden sm:block"
                         : ""
-                    }`}
+                      }`}
                     style={{
                       maxHeight:
                         order.status === "shopping" && isSummaryExpanded
@@ -2744,7 +2717,7 @@ export default function BatchDetails({
                             <span className="font-medium">
                               {formatCurrency(
                                 parseFloat(order.reel?.Price || "0") *
-                                  (order.quantity || 1)
+                                (order.quantity || 1)
                               )}
                             </span>
                           </div>
@@ -2790,7 +2763,7 @@ export default function BatchDetails({
                             <span className="text-lg font-bold text-green-600 dark:text-green-400">
                               {formatCurrency(
                                 parseFloat(order.reel?.Price || "0") *
-                                  (order.quantity || 1)
+                                (order.quantity || 1)
                               )}
                             </span>
                           </div>
@@ -2866,7 +2839,7 @@ export default function BatchDetails({
                                   -
                                   {formatCurrency(
                                     calculateOriginalSubtotal() -
-                                      calculateFoundItemsTotal()
+                                    calculateFoundItemsTotal()
                                   )}
                                 </span>
                               </div>
@@ -2964,9 +2937,8 @@ export default function BatchDetails({
               {/* Delivery Notes */}
               {(order.deliveryNotes || order.deliveryNote) && (
                 <div
-                  className={`${
-                    activeTab === "details" ? "block" : "hidden sm:block"
-                  } mt-3`}
+                  className={`${activeTab === "details" ? "block" : "hidden sm:block"
+                    } mt-3`}
                 >
                   <div className="mb-3 flex items-center gap-2 px-3 sm:mb-4 sm:gap-3 sm:px-0">
                     <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
