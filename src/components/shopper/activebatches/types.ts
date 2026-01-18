@@ -114,6 +114,10 @@ export interface OrderDetailsType {
       phone?: string;
     };
   };
+  combinedOrders?: OrderDetailsType[];
+  orderIds?: string[];
+  orderIDs?: string[];
+  shopNames?: string[];
   quantity?: number;
   deliveryNote?: string;
 }
