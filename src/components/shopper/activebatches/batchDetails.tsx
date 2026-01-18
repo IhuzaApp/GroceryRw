@@ -154,6 +154,7 @@ export default function BatchDetails({
   const [isSending, setIsSending] = useState(false);
   const [systemConfig, setSystemConfig] = useState<any>(null);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
+  const [activeShopId, setActiveShopId] = useState<string | null>(null);
 
   const [currentStep, setCurrentStep] = useState(() => {
     if (!orderData) return 0;
@@ -1956,6 +1957,13 @@ export default function BatchDetails({
             display: none !important;
           }
         }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
       `}</style>
 
       <div
@@ -2734,6 +2742,9 @@ export default function BatchDetails({
                       const groups = Array.from(itemsByShop.entries());
                       const isSplit = groups.length > 1;
 
+                      // Use current activeShopId or default to the first group's ID
+                      const effectiveActiveShopId = activeShopId || (groups.length > 0 ? groups[0][0] : null);
+
                       // Helper to get shop name
                       const getShopName = (sid: string) => {
                         if (sid === order.shop?.id) return order.shop?.name;
@@ -2744,20 +2755,36 @@ export default function BatchDetails({
 
                       if (isSplit) {
                         return (
-                          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                            {groups.map(([shopId, items], idx) => (
-                              <div key={shopId} className="space-y-2 rounded-xl bg-slate-50 p-3 dark:bg-slate-800/50 sm:p-4">
-                                <h3 className="flex items-center gap-2 px-1 text-base font-semibold text-slate-700 dark:text-slate-300">
-                                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-xs text-green-700 dark:bg-green-900 dark:text-green-300">
+                          <div className="space-y-4">
+                            {/* Shop Tabs Navigation */}
+                            <div className="flex flex-nowrap gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                              {groups.map(([shopId], idx) => (
+                                <button
+                                  key={shopId}
+                                  onClick={() => setActiveShopId(shopId)}
+                                  className={`flex-shrink-0 flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200 border-2 ${effectiveActiveShopId === shopId
+                                    ? "bg-green-600 border-green-600 text-white shadow-lg shadow-green-200 dark:shadow-green-900/30"
+                                    : "bg-white border-slate-200 text-slate-600 hover:border-green-400 hover:text-green-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400"
+                                    }`}
+                                >
+                                  <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${effectiveActiveShopId === shopId ? "bg-white/20" : "bg-slate-100 dark:bg-slate-700"
+                                    }`}>
                                     {idx + 1}
                                   </span>
                                   {getShopName(shopId)}
-                                </h3>
-                                <div className="space-y-2 sm:space-y-3">
-                                  {items.map(renderItemCard)}
-                                </div>
+                                </button>
+                              ))}
+                            </div>
+
+                            {/* Active Shop Items */}
+                            <div className="space-y-2 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/30 sm:space-y-3 sm:p-6">
+                              <h3 className="mb-4 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                {getShopName(effectiveActiveShopId || "")} • {itemsByShop.get(effectiveActiveShopId || "")?.length || 0} Items
+                              </h3>
+                              <div className="space-y-2 sm:space-y-3">
+                                {itemsByShop.get(effectiveActiveShopId || "")?.map(renderItemCard)}
                               </div>
-                            ))}
+                            </div>
                           </div>
                         );
                       } else {
