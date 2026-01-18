@@ -5,56 +5,60 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { processWalletOperation } from "../../../src/lib/walletOperations";
 
-// GraphQL mutation to update regular order status
-const UPDATE_ORDER_STATUS = gql`
-  mutation UpdateOrderStatus(
-    $id: uuid!
+// GraphQL mutations for bulk updates by combined_order_id
+const UPDATE_BULK_ORDERS = gql`
+  mutation UpdateBulkOrders(
+    $combinedId: uuid!
     $status: String!
     $updated_at: timestamptz!
   ) {
-    update_Orders_by_pk(
-      pk_columns: { id: $id }
+    update_Orders(
+      where: { combined_order_id: { _eq: $combinedId } }
       _set: { status: $status, updated_at: $updated_at }
     ) {
-      id
-      status
-      updated_at
+      affected_rows
+      returning {
+        id
+        status
+      }
     }
   }
 `;
 
-// GraphQL mutation to update reel order status
-const UPDATE_REEL_ORDER_STATUS = gql`
-  mutation UpdateReelOrderStatus(
-    $id: uuid!
+const UPDATE_BULK_REEL_ORDERS = gql`
+  mutation UpdateBulkReelOrders(
+    $combinedId: uuid!
     $status: String!
     $updated_at: timestamptz!
   ) {
-    update_reel_orders_by_pk(
-      pk_columns: { id: $id }
+    update_reel_orders(
+      where: { combined_order_id: { _eq: $combinedId } }
       _set: { status: $status, updated_at: $updated_at }
     ) {
-      id
-      status
-      updated_at
+      affected_rows
+      returning {
+        id
+        status
+      }
     }
   }
 `;
 
-// GraphQL mutation to update restaurant order status
-const UPDATE_RESTAURANT_ORDER_STATUS = gql`
-  mutation UpdateRestaurantOrderStatus(
-    $id: uuid!
+const UPDATE_BULK_RESTAURANT_ORDERS = gql`
+  mutation UpdateBulkRestaurantOrders(
+    $combinedId: uuid!
     $status: String!
     $updated_at: timestamptz!
   ) {
-    update_restaurant_orders_by_pk(
-      pk_columns: { id: $id }
+    update_restaurant_orders(
+      where: { combined_order_id: { _eq: $combinedId } }
       _set: { status: $status, updated_at: $updated_at }
     ) {
-      id
-      status
-      updated_at
+      affected_rows
+      returning {
+        id
+        status
+      }
     }
   }
 `;
@@ -108,6 +112,7 @@ export default async function handler(
         ) {
           id
           status
+          combined_order_id
         }
       }
     `;
@@ -119,6 +124,7 @@ export default async function handler(
         ) {
           id
           status
+          combined_order_id
         }
       }
     `;
@@ -130,6 +136,7 @@ export default async function handler(
         ) {
           id
           status
+          combined_order_id
         }
       }
     `;
@@ -138,24 +145,26 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
+    let combinedId: string | null = null;
+    let isReelOrder = false;
+    let isRestaurantOrder = false;
+    let orderType = "regular";
+
     // Check regular orders first
     const regularOrderCheck = await hasuraClient.request<{
-      Orders: Array<{ id: string; status: string }>;
+      Orders: Array<{ id: string; status: string; combined_order_id: string | null }>;
     }>(CHECK_REGULAR_ORDER, {
       orderId,
       shopperId: userId,
     });
 
-    let isReelOrder = false;
-    let isRestaurantOrder = false;
-    let orderType = "regular";
-
     if (regularOrderCheck.Orders && regularOrderCheck.Orders.length > 0) {
       // Found regular order assignment
+      combinedId = regularOrderCheck.Orders[0].combined_order_id;
     } else {
       // Check reel orders
       const reelOrderCheck = await hasuraClient.request<{
-        reel_orders: Array<{ id: string; status: string }>;
+        reel_orders: Array<{ id: string; status: string; combined_order_id: string | null }>;
       }>(CHECK_REEL_ORDER, {
         orderId,
         shopperId: userId,
@@ -165,10 +174,11 @@ export default async function handler(
         // Found reel order assignment
         isReelOrder = true;
         orderType = "reel";
+        combinedId = reelOrderCheck.reel_orders[0].combined_order_id;
       } else {
         // Check restaurant orders
         const restaurantOrderCheck = await hasuraClient.request<{
-          restaurant_orders: Array<{ id: string; status: string }>;
+          restaurant_orders: Array<{ id: string; status: string; combined_order_id: string | null }>;
         }>(CHECK_RESTAURANT_ORDER, {
           orderId,
           shopperId: userId,
@@ -181,6 +191,7 @@ export default async function handler(
           // Found restaurant order assignment
           isRestaurantOrder = true;
           orderType = "restaurant";
+          combinedId = restaurantOrderCheck.restaurant_orders[0].combined_order_id;
         } else {
           console.error(
             "Authorization failed: Shopper not assigned to this order"
@@ -231,50 +242,76 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    let updateResult: any;
-    if (isReelOrder) {
-      updateResult = await hasuraClient.request<{
-        update_reel_orders_by_pk: {
-          id: string;
-          status: string;
-          updated_at: string;
-        };
-      }>(UPDATE_REEL_ORDER_STATUS, {
-        id: orderId,
-        status,
-        updated_at: currentTimestamp,
-      });
-    } else if (isRestaurantOrder) {
-      updateResult = await hasuraClient.request<{
-        update_restaurant_orders_by_pk: {
-          id: string;
-          status: string;
-          updated_at: string;
-        };
-      }>(UPDATE_RESTAURANT_ORDER_STATUS, {
-        id: orderId,
-        status,
-        updated_at: currentTimestamp,
-      });
-    } else {
-      updateResult = await hasuraClient.request<{
-        update_Orders_by_pk: {
-          id: string;
-          status: string;
-          updated_at: string;
-        };
-      }>(UPDATE_ORDER_STATUS, {
-        id: orderId,
-        status,
-        updated_at: currentTimestamp,
-      });
-    }
+    let updatedOrder: any;
 
-    const updatedOrder = isReelOrder
-      ? updateResult.update_reel_orders_by_pk
-      : isRestaurantOrder
-      ? updateResult.update_restaurant_orders_by_pk
-      : updateResult.update_Orders_by_pk;
+    if (combinedId) {
+      // Bulk update for combined orders
+      const variables = {
+        combinedId,
+        status,
+        updated_at: currentTimestamp,
+      };
+
+      // Update all three tables as a combined batch could contain mixed types (though unlikely)
+      const [regularUpdate, reelUpdate, restaurantUpdate] = await Promise.all([
+        hasuraClient.request(UPDATE_BULK_ORDERS, variables),
+        hasuraClient.request(UPDATE_BULK_REEL_ORDERS, variables),
+        hasuraClient.request(UPDATE_BULK_RESTAURANT_ORDERS, variables),
+      ]);
+
+      // Return the specific order that was requested, but with updated status
+      updatedOrder = {
+        id: orderId,
+        status: status,
+        updated_at: currentTimestamp,
+      };
+    } else {
+      // Single order update (legacy logic for non-combined orders)
+      const UPDATE_ORDER_STATUS = gql`
+        mutation UpdateOrderStatus($id: uuid!, $status: String!, $updated_at: timestamptz!) {
+          update_Orders_by_pk(pk_columns: { id: $id }, _set: { status: $status, updated_at: $updated_at }) {
+            id status updated_at
+          }
+        }
+      `;
+      const UPDATE_REEL_ORDER_STATUS = gql`
+        mutation UpdateReelOrderStatus($id: uuid!, $status: String!, $updated_at: timestamptz!) {
+          update_reel_orders_by_pk(pk_columns: { id: $id }, _set: { status: $status, updated_at: $updated_at }) {
+            id status updated_at
+          }
+        }
+      `;
+      const UPDATE_RESTAURANT_ORDER_STATUS = gql`
+        mutation UpdateRestaurantOrderStatus($id: uuid!, $status: String!, $updated_at: timestamptz!) {
+          update_restaurant_orders_by_pk(pk_columns: { id: $id }, _set: { status: $status, updated_at: $updated_at }) {
+            id status updated_at
+          }
+        }
+      `;
+
+      if (isReelOrder) {
+        const result = await hasuraClient.request<any>(UPDATE_REEL_ORDER_STATUS, {
+          id: orderId,
+          status,
+          updated_at: currentTimestamp,
+        });
+        updatedOrder = result.update_reel_orders_by_pk;
+      } else if (isRestaurantOrder) {
+        const result = await hasuraClient.request<any>(UPDATE_RESTAURANT_ORDER_STATUS, {
+          id: orderId,
+          status,
+          updated_at: currentTimestamp,
+        });
+        updatedOrder = result.update_restaurant_orders_by_pk;
+      } else {
+        const result = await hasuraClient.request<any>(UPDATE_ORDER_STATUS, {
+          id: orderId,
+          status,
+          updated_at: currentTimestamp,
+        });
+        updatedOrder = result.update_Orders_by_pk;
+      }
+    }
 
     // Handle cancelled status - process wallet operations directly
     if (status === "cancelled") {

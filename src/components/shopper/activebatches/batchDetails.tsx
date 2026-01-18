@@ -776,6 +776,10 @@ export default function BatchDetails({
         setOrder({
           ...order,
           status: "on_the_way",
+          combinedOrders: order.combinedOrders?.map((subOrder) => ({
+            ...subOrder,
+            status: "on_the_way",
+          })),
         });
 
         // Update step
@@ -1074,6 +1078,10 @@ export default function BatchDetails({
         setOrder({
           ...order,
           status: newStatus,
+          combinedOrders: order.combinedOrders?.map((subOrder) => ({
+            ...subOrder,
+            status: newStatus,
+          })),
         });
       }
 
