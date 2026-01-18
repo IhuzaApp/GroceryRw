@@ -234,7 +234,25 @@ const CHECK_ACTIVE_ORDERS = gql`
     Orders(
       where: {
         shopper_id: { _eq: $shopper_id }
-        status: { _in: ["accepted", "in_progress", "picked_up"] }
+        status: { _neq: "delivered" }
+      }
+    ) {
+      id
+      status
+    }
+    reel_orders(
+      where: {
+        shopper_id: { _eq: $shopper_id }
+        status: { _neq: "delivered" }
+      }
+    ) {
+      id
+      status
+    }
+    restaurant_orders(
+      where: {
+        shopper_id: { _eq: $shopper_id }
+        status: { _neq: "delivered" }
       }
     ) {
       id
@@ -318,7 +336,11 @@ export default async function handler(
           shopper_id: userId,
         }
       )) as any;
-      const activeOrders = activeOrdersData.Orders || [];
+      const activeOrders = [
+        ...(activeOrdersData.Orders || []),
+        ...(activeOrdersData.reel_orders || []),
+        ...(activeOrdersData.restaurant_orders || []),
+      ];
       const activeOrderCount = activeOrders.length;
       if (activeOrderCount >= 2) {
         return res.status(403).json({
@@ -382,9 +404,9 @@ export default async function handler(
           const a =
             Math.sin(dLat / 2) * Math.sin(dLat / 2) +
             Math.cos(lat1 * (Math.PI / 180)) *
-              Math.cos(lat2 * (Math.PI / 180)) *
-              Math.sin(dLon / 2) *
-              Math.sin(dLon / 2);
+            Math.cos(lat2 * (Math.PI / 180)) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
           const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
           return R * c;
         };
@@ -477,7 +499,11 @@ export default async function handler(
       shopper_id: userId,
     })) as any;
 
-    const activeOrders = activeOrdersData.Orders || [];
+    const activeOrders = [
+      ...(activeOrdersData.Orders || []),
+      ...(activeOrdersData.reel_orders || []),
+      ...(activeOrdersData.restaurant_orders || []),
+    ];
     const activeOrderCount = activeOrders.length;
 
     if (activeOrderCount >= 2) {
@@ -571,9 +597,9 @@ export default async function handler(
         const a =
           Math.sin(dLat / 2) * Math.sin(dLat / 2) +
           Math.cos(lat1 * (Math.PI / 180)) *
-            Math.cos(lat2 * (Math.PI / 180)) *
-            Math.sin(dLon / 2) *
-            Math.sin(dLon / 2);
+          Math.cos(lat2 * (Math.PI / 180)) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return R * c;
       };
@@ -685,8 +711,8 @@ export default async function handler(
         orderType: isRestaurantOrder
           ? "restaurant"
           : isReelOrder
-          ? "reel"
-          : "regular",
+            ? "reel"
+            : "regular",
       });
     } else {
       console.error("❌ Failed to assign order after accepting offer");

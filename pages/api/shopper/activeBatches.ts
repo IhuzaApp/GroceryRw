@@ -11,10 +11,7 @@ const GET_ACTIVE_ORDERS = gql`
     Orders(
       where: {
         shopper_id: { _eq: $shopperId }
-        _and: [
-          { status: { _nin: ["null", "PENDING", "delivered"] } }
-          { status: { _is_null: false } }
-        ]
+        status: { _neq: "delivered" }
       }
       order_by: { created_at: desc }
     ) {
@@ -62,10 +59,7 @@ const GET_ACTIVE_REEL_ORDERS = gql`
     reel_orders(
       where: {
         shopper_id: { _eq: $shopperId }
-        _and: [
-          { status: { _nin: ["null", "PENDING", "delivered"] } }
-          { status: { _is_null: false } }
-        ]
+        status: { _neq: "delivered" }
       }
       order_by: { created_at: desc }
     ) {
@@ -110,10 +104,7 @@ const GET_ACTIVE_RESTAURANT_ORDERS = gql`
     restaurant_orders(
       where: {
         shopper_id: { _eq: $shopperId }
-        _and: [
-          { status: { _nin: ["null", "PENDING", "delivered"] } }
-          { status: { _is_null: false } }
-        ]
+        status: { _neq: "delivered" }
       }
       order_by: { created_at: desc }
     ) {
