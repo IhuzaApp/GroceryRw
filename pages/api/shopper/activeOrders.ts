@@ -10,6 +10,14 @@ interface OrdersResponse {
     id: string;
     status: string;
   }>;
+  reel_orders: Array<{
+    id: string;
+    status: string;
+  }>;
+  restaurant_orders: Array<{
+    id: string;
+    status: string;
+  }>;
 }
 
 export default async function handler(
@@ -29,10 +37,25 @@ export default async function handler(
         Orders(
           where: {
             shopper_id: { _eq: $shopperId }
-            _and: [
-              { status: { _nin: ["PENDING", "delivered", "null"] } }
-              { status: { _is_null: false } }
-            ]
+            status: { _neq: "delivered" }
+          }
+        ) {
+          id
+          status
+        }
+        reel_orders(
+          where: {
+            shopper_id: { _eq: $shopperId }
+            status: { _neq: "delivered" }
+          }
+        ) {
+          id
+          status
+        }
+        restaurant_orders(
+          where: {
+            shopper_id: { _eq: $shopperId }
+            status: { _neq: "delivered" }
           }
         ) {
           id
@@ -49,13 +72,19 @@ export default async function handler(
       shopperId: userId,
     });
 
+    const allOrders = [
+      ...(data.Orders || []),
+      ...(data.reel_orders || []),
+      ...(data.restaurant_orders || []),
+    ];
+
     logger.info("Active orders query result:", "ActiveOrdersAPI", {
       userId,
-      orderCount: data.Orders.length,
+      orderCount: allOrders.length,
     });
 
     return res.status(200).json({
-      orders: data.Orders,
+      orders: allOrders,
     });
   } catch (error) {
     logger.error("Error fetching active orders:", "ActiveOrdersAPI", error);
