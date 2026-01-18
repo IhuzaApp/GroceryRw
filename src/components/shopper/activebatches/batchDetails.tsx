@@ -2880,20 +2880,9 @@ export default function BatchDetails({
 
                             {/* Active Shop Items */}
                             <div className="space-y-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/30 sm:p-6">
-                              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                                  {getShopName(effectiveActiveShopId || "")} • {itemsByShop.get(effectiveActiveShopId || "")?.length || 0} Items
-                                </h3>
-                                {/* Sub-order Action Button */}
-                                <div className="sm:w-64">
-                                  {(() => {
-                                    const subOrder = groups.find(g => g[0] === effectiveActiveShopId)?.[0] === order.shop?.id
-                                      ? order
-                                      : order.combinedOrders?.find(o => o.shop?.id === effectiveActiveShopId);
-                                    return getActionButton(subOrder);
-                                  })()}
-                                </div>
-                              </div>
+                              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                {getShopName(effectiveActiveShopId || "")} • {itemsByShop.get(effectiveActiveShopId || "")?.length || 0} Items
+                              </h3>
                               <div className="space-y-2 sm:space-y-3">
                                 {itemsByShop.get(effectiveActiveShopId || "")?.map(renderItemCard)}
                               </div>
