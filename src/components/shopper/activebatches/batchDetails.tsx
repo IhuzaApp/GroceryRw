@@ -1161,12 +1161,6 @@ export default function BatchDetails({
       const targetId = (paymentTargetOrderId || matchingOrder.id) as string;
       const targetOrder = allInBatch.find(o => o?.id === targetId) || order;
 
-      console.log("🔍 [Invoice Proof] Generating invoice with proof for order:", {
-        targetId,
-        orderType: targetOrder?.orderType,
-        activeShopId,
-        paymentTargetOrderId
-      });
 
       // Generate invoice with proof photo for the specific order
       const invoiceResponse = await fetch("/api/invoices/generate", {

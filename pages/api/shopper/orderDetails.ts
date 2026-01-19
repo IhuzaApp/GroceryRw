@@ -632,15 +632,6 @@ export default async function handler(
     // Get orderId from query params
     const { id } = req.query;
 
-    console.log("🔍 [OrderDetails API] Incoming request:", {
-      orderId: id,
-      method: req.method,
-      query: req.query,
-      headers: {
-        userAgent: req.headers['user-agent'],
-        authorization: req.headers.authorization ? 'Present' : 'Missing'
-      }
-    });
 
     if (!id || typeof id !== "string") {
       console.error("❌ [OrderDetails API] Invalid order ID:", { id, type: typeof id });
@@ -795,7 +786,6 @@ export default async function handler(
     }
 
     if (!orderData) {
-      console.log("❌ [API] No order data found for ID:", { orderId: id });
       res.status(404).json({ error: "Order not found" });
       return;
     }
@@ -1025,7 +1015,6 @@ export default async function handler(
         deliveryTime: orderData.delivery_time,
         combinedOrderId: orderData.combined_order_id,
       };
-      console.log("🔍 [OrderDetails API] Formatted restaurant order:", JSON.stringify(formattedOrder, null, 2));
     }
 
     // Fetch related orders if this is part of a combined order
@@ -1199,175 +1188,11 @@ export default async function handler(
           formattedOrder.shopName = `${formattedOrder.shopNames.length} Stores: ${formattedOrder.shopNames.join(", ")}`;
         }
 
-        // Console log raw database data for all orders
-        console.log("🔍 [OrderDetails API] Raw database data for main order:", {
-          id: orderData.id,
-          OrderID: orderData.OrderID,
-          status: orderData.status,
-          total: orderData.total,
-          combined_order_id: orderData.combined_order_id,
-          user_id: orderData.user_id,
-          shop_id: orderData.shop_id,
-          address: orderData.address,
-          orderedBy: orderData.orderedBy ? {
-            id: orderData.orderedBy.id,
-            name: orderData.orderedBy.name,
-            phone: orderData.orderedBy.phone,
-            addressesCount: orderData.orderedBy.Addresses?.length || 0,
-            addresses: orderData.orderedBy.Addresses?.map((addr: any) => ({
-              id: addr.id,
-              street: addr.street,
-              city: addr.city,
-              postal_code: addr.postal_code,
-              is_default: addr.is_default,
-              latitude: addr.latitude,
-              longitude: addr.longitude
-            }))
-          } : null,
-          Order_Items: orderData.Order_Items?.map((item: any) => ({
-            id: item.id,
-            quantity: item.quantity,
-            price: item.price,
-            found: item.found,
-            foundQuantity: item.foundQuantity,
-            Product: item.Product ? {
-              id: item.Product.id,
-              name: item.Product.ProductName?.name,
-              sku: item.Product.ProductName?.sku,
-              barcode: item.Product.ProductName?.barcode,
-              image: item.Product.image,
-              final_price: item.Product.final_price,
-              measurement_unit: item.Product.measurement_unit
-            } : null
-          })),
-          Invoice: orderData.Invoice,
-          shop: orderData.shop ? {
-            id: orderData.shop.id,
-            name: orderData.shop.name,
-            address: orderData.shop.address,
-            phone: orderData.shop.phone
-          } : null
-        });
 
-        // Console log related orders data
-        console.log("🔍 [OrderDetails API] Related combined orders data:", relatedOrders.map((co: any, index: number) => ({
-          index: index + 1,
-          id: co.id,
-          OrderID: co.OrderID,
-          status: co.status,
-          total: co.total,
-          combined_order_id: co.combined_order_id,
-          user_id: co.user_id,
-          shop_id: co.shop_id,
-          address: co.address,
-          orderedBy: co.orderedBy ? {
-            id: co.orderedBy.id,
-            name: co.orderedBy.name,
-            phone: co.orderedBy.phone,
-            addressesCount: co.orderedBy.Addresses?.length || 0,
-            addresses: co.orderedBy.Addresses?.map((addr: any) => ({
-              id: addr.id,
-              street: addr.street,
-              city: addr.city,
-              postal_code: addr.postal_code,
-              is_default: addr.is_default
-            }))
-          } : null,
-          Order_Items: co.Order_Items?.map((item: any) => ({
-            id: item.id,
-            quantity: item.quantity,
-            price: item.price,
-            found: item.found,
-            foundQuantity: item.foundQuantity,
-            Product: item.Product ? {
-              name: item.Product.ProductName?.name,
-              sku: item.Product.ProductName?.sku,
-              barcode: item.Product.ProductName?.barcode
-            } : null
-          })),
-          Invoice: co.Invoice,
-          shop: co.shop ? {
-            id: co.shop.id,
-            name: co.shop.name,
-            address: co.shop.address
-          } : null
-        })));
 
-        // Console log the aggregated combined order information
-        console.log("🔍 [OrderDetails API] Aggregated combined order data:", {
-          mainOrderId: formattedOrder.id,
-          mainOrderID: formattedOrder.OrderID,
-          combinedOrderId: orderData.combined_order_id,
-          totalOrdersInBatch: allOrders.length,
-          orderIds: formattedOrder.orderIds,
-          orderIDs: formattedOrder.orderIDs,
-          shopNames: formattedOrder.shopNames,
-          combinedOrdersDetails: relatedOrders.map((co: any) => ({
-            id: co.id,
-            OrderID: co.OrderID,
-            status: co.status,
-            shopName: co.shopName,
-            shopAddress: co.shopAddress,
-            itemsCount: co.items?.length || 0,
-            total: co.total,
-            hasInvoice: !!(co.Invoice?.length > 0 || co.Invoice),
-            invoiceData: co.Invoice
-          })),
-          customerInfo: {
-            fromMainOrder: orderData.orderedBy ? {
-              id: orderData.orderedBy.id,
-              name: orderData.orderedBy.name,
-              phone: orderData.orderedBy.phone
-            } : null,
-            addresses: orderData.orderedBy?.Addresses || []
-          }
-        });
       }
     }
 
-    // Console log for regular orders (no combined orders)
-    if (formattedOrder && !orderData.combined_order_id) {
-      console.log("🔍 [OrderDetails API] Regular order data:", {
-        id: formattedOrder.id,
-        OrderID: formattedOrder.OrderID,
-        status: formattedOrder.status,
-        total: formattedOrder.total,
-        user_id: formattedOrder.user_id,
-        shop_id: formattedOrder.shop_id,
-        shopName: formattedOrder.shopName,
-        address: formattedOrder.address,
-        orderedBy: formattedOrder.orderedBy ? {
-          id: formattedOrder.orderedBy.id,
-          name: formattedOrder.orderedBy.name,
-          phone: formattedOrder.orderedBy.phone,
-          addressesCount: formattedOrder.orderedBy.Addresses?.length || 0,
-          addresses: formattedOrder.orderedBy.Addresses?.map((addr: any) => ({
-            id: addr.id,
-            street: addr.street,
-            city: addr.city,
-            postal_code: addr.postal_code,
-            is_default: addr.is_default
-          }))
-        } : null,
-        Order_Items: formattedOrder.Order_Items?.map((item: any) => ({
-          id: item.id,
-          quantity: item.quantity,
-          price: item.price,
-          found: item.found,
-          foundQuantity: item.foundQuantity,
-          Product: item.Product ? {
-            name: item.Product.ProductName?.name,
-            sku: item.Product.ProductName?.sku,
-            barcode: item.Product.ProductName?.barcode,
-            final_price: item.Product.final_price,
-            measurement_unit: item.Product.measurement_unit
-          } : null
-        })),
-        Invoice: formattedOrder.Invoice,
-        hasCombinedOrders: !!(formattedOrder.combinedOrders?.length > 0),
-        combinedOrdersCount: formattedOrder.combinedOrders?.length || 0
-      });
-    }
 
     res.status(200).json({
       success: true,

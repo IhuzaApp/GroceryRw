@@ -95,11 +95,6 @@ export default async function handler(
 
   const { orderId, status } = req.body;
 
-  console.log("🔍 [UpdateOrderStatus API] Request received:", {
-    orderId,
-    status,
-    userId
-  });
 
   if (!orderId || !status) {
     return res
