@@ -157,17 +157,20 @@ export default function QuantityConfirmationModal({
       let isValid = false;
       let validationMessage = "";
 
-      // Priority: Check barcode first, then SKU if barcode is null
-      if (itemBarcode) {
-        isValid = scannedBarcode === itemBarcode;
-        validationMessage = isValid
-          ? "Barcode matches!"
-          : "Scanned code does not match the product's barcode.";
-      } else if (itemSku) {
-        isValid = scannedBarcode === itemSku;
-        validationMessage = isValid
-          ? "SKU matches!"
-          : "Scanned code does not match the product's SKU.";
+      // Check if scanned code matches barcode first
+      if (itemBarcode && scannedBarcode === itemBarcode) {
+        isValid = true;
+        validationMessage = "Barcode matches!";
+      }
+      // If barcode didn't match, check SKU
+      else if (itemSku && scannedBarcode === itemSku) {
+        isValid = true;
+        validationMessage = "SKU matches!";
+      }
+      // If neither matched, show simple error
+      else {
+        isValid = false;
+        validationMessage = "Scanned code does not match the product.";
       }
 
       if (isValid) {
@@ -186,6 +189,13 @@ export default function QuantityConfirmationModal({
       }
       return;
     }
+
+    console.log("🔍 [QuantityConfirmationModal] No barcode/SKU found for validation:", {
+      itemBarcode,
+      itemSku,
+      hasBarcode: !!itemBarcode,
+      hasSku: !!itemSku
+    });
 
     // If the item has NO barcode or SKU in the database, it cannot be validated.
     setBarcodeValidation({
