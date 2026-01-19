@@ -242,11 +242,7 @@ export default function QuantityConfirmationModal({
         >
           {/* Header */}
           <div
-            className={`flex items-center justify-between px-6 py-6 sm:px-8 ${
-              theme === "dark"
-                ? "border-b border-gray-700"
-                : "border-b border-gray-200"
-            }`}
+            className={`flex items-center justify-between px-6 py-6 sm:px-8`}
           >
             <div className="flex items-center gap-3">
               <div
@@ -322,22 +318,16 @@ export default function QuantityConfirmationModal({
 
               {/* Barcode Scanning Section - Only for non-weight-based items */}
               {!isWeightBased && (
-                <div
-                  className={`rounded-2xl border p-4 ${
-                    theme === "dark"
-                      ? "border-gray-700 bg-gray-800/50"
-                      : "border-gray-200 bg-gray-50"
-                  }`}
-                >
-                  <div className="mb-3 flex items-center gap-3">
+                <div className="space-y-6">
+                  <div className="text-center">
                     <div
-                      className={`rounded-full p-2 ${
-                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                      className={`mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full ${
+                        theme === "dark" ? "bg-blue-600/20" : "bg-blue-100"
                       }`}
                     >
                       <svg
-                        className={`h-5 w-5 ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-600"
+                        className={`h-6 w-6 ${
+                          theme === "dark" ? "text-blue-400" : "text-blue-600"
                         }`}
                         fill="none"
                         stroke="currentColor"
@@ -351,38 +341,36 @@ export default function QuantityConfirmationModal({
                         />
                       </svg>
                     </div>
-                    <div>
-                      <h3
-                        className={`text-lg font-bold ${
-                          theme === "dark" ? "text-gray-100" : "text-gray-800"
-                        }`}
-                      >
-                        {currentItem?.product.barcode ||
-                        currentItem?.product.ProductName?.barcode
-                          ? "Scan Barcode"
-                          : currentItem?.product.sku ||
-                            currentItem?.product.ProductName?.sku
-                          ? "Enter SKU"
-                          : "Scan Barcode or Enter SKU"}
-                      </h3>
-                      <p
-                        className={`text-sm ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-600"
-                        }`}
-                      >
-                        {currentItem?.product.ProductName?.barcode ||
-                        currentItem?.product.barcode
-                          ? "Scan the barcode from the physical product"
-                          : currentItem?.product.ProductName?.sku ||
-                            currentItem?.product.sku
-                          ? "Enter the product SKU from the physical product"
-                          : "This product has no barcode/SKU in our system"}
-                      </p>
-                    </div>
+                    <h3
+                      className={`text-lg font-semibold ${
+                        theme === "dark" ? "text-gray-100" : "text-gray-800"
+                      }`}
+                    >
+                      {currentItem?.product.barcode ||
+                      currentItem?.product.ProductName?.barcode
+                        ? "Scan Barcode"
+                        : currentItem?.product.sku ||
+                          currentItem?.product.ProductName?.sku
+                        ? "Enter SKU"
+                        : "Scan Barcode or Enter SKU"}
+                    </h3>
+                    <p
+                      className={`mt-1 text-sm ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
+                      {currentItem?.product.ProductName?.barcode ||
+                      currentItem?.product.barcode
+                        ? "Scan the barcode from the physical product"
+                        : currentItem?.product.ProductName?.sku ||
+                          currentItem?.product.sku
+                        ? "Enter the product SKU from the physical product"
+                        : "This product has no barcode/SKU in our system"}
+                    </p>
                   </div>
 
                   {/* Card-based selection */}
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     {/* Open Camera Scanner Card */}
                     <div
                       onClick={() => {
@@ -396,32 +384,30 @@ export default function QuantityConfirmationModal({
                           setShowBarcodeScanner(true);
                         }
                       }}
-                      className={`rounded-xl border-2 p-4 transition-all duration-200 ${
+                      className={`group relative overflow-hidden rounded-2xl p-5 transition-all duration-300 ${
                         (() => {
                           const hasBarcode = !!(currentItem?.product.ProductName?.barcode || currentItem?.product.barcode);
                           const hasSku = !!(currentItem?.product.ProductName?.sku || currentItem?.product.sku);
                           const shouldDisable = !hasBarcode && !hasSku;
 
-                          console.log("🔍 [Camera Scanner] hasBarcode:", hasBarcode, "hasSku:", hasSku, "shouldDisable:", shouldDisable);
-
-                          return shouldDisable;
+                          return shouldDisable
+                            ? "cursor-not-allowed bg-gray-100 dark:bg-gray-800/50"
+                            : showBarcodeScanner
+                            ? "cursor-pointer bg-gradient-to-br from-purple-500 to-purple-600 shadow-xl ring-2 ring-purple-500/50"
+                            : "cursor-pointer bg-gradient-to-br from-gray-50 to-gray-100 hover:from-purple-50 hover:to-purple-100 dark:from-gray-800 dark:to-gray-700 dark:hover:from-purple-900/20 dark:hover:to-purple-800/20 hover:shadow-lg"
                         })()
-                          ? "cursor-not-allowed border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
-                          : showBarcodeScanner
-                          ? "cursor-pointer border-purple-500 bg-purple-100 shadow-lg dark:bg-purple-900/30"
-                          : "cursor-pointer border-gray-300 hover:border-purple-400 hover:shadow-md dark:border-gray-600 dark:hover:border-purple-500"
                       }`}
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="relative z-10 flex flex-col items-center text-center">
                         <div
-                          className={`rounded-full p-2 ${
+                          className={`mb-3 rounded-full p-3 ${
                             showBarcodeScanner
-                              ? "bg-purple-500"
-                              : "bg-purple-100 dark:bg-purple-800"
+                              ? "bg-white/20"
+                              : "bg-purple-100 dark:bg-purple-800/50"
                           }`}
                         >
                           <svg
-                            className={`h-5 w-5 ${
+                            className={`h-6 w-6 ${
                               showBarcodeScanner
                                 ? "text-white"
                                 : "text-purple-600 dark:text-purple-300"
@@ -446,7 +432,9 @@ export default function QuantityConfirmationModal({
                         <div>
                           <p
                             className={`font-semibold ${
-                              theme === "dark"
+                              showBarcodeScanner
+                                ? "text-white"
+                                : theme === "dark"
                                 ? "text-gray-100"
                                 : "text-gray-800"
                             }`}
@@ -454,8 +442,10 @@ export default function QuantityConfirmationModal({
                             Scan with Camera
                           </p>
                           <p
-                            className={`text-xs ${
-                              theme === "dark"
+                            className={`mt-1 text-sm ${
+                              showBarcodeScanner
+                                ? "text-white/80"
+                                : theme === "dark"
                                 ? "text-gray-400"
                                 : "text-gray-500"
                             }`}
@@ -479,43 +469,35 @@ export default function QuantityConfirmationModal({
                           setShowManualInput(true);
                         }
                       }}
-                      className={`rounded-xl border-2 p-4 transition-all duration-200 ${
+                      className={`group relative overflow-hidden rounded-2xl p-5 transition-all duration-300 ${
                         (() => {
                           const productNameBarcode = currentItem?.product?.ProductName?.barcode;
                           const productBarcode = currentItem?.product?.barcode;
                           const productNameSku = currentItem?.product?.ProductName?.sku;
-                          const productSku = currentItem?.product?.sku;
-
-                          console.log("🔍 [Manual Input] Checking paths:");
-                          console.log("  - product.ProductName.barcode:", productNameBarcode);
-                          console.log("  - product.barcode:", productBarcode);
-                          console.log("  - product.ProductName.sku:", productNameSku);
-                          console.log("  - product.sku:", productSku);
+                          const productSku = currentItem?.product?.product?.sku;
 
                           const hasBarcode = !!(productNameBarcode || productBarcode);
                           const hasSku = !!(productNameSku || productSku);
                           const shouldDisable = !hasBarcode && !hasSku;
 
-                          console.log("🔍 [Manual Input] Final result - hasBarcode:", hasBarcode, "hasSku:", hasSku, "shouldDisable:", shouldDisable);
-
-                          return shouldDisable;
+                          return shouldDisable
+                            ? "cursor-not-allowed bg-gray-100 dark:bg-gray-800/50"
+                            : showManualInput
+                            ? "cursor-pointer bg-gradient-to-br from-green-500 to-green-600 shadow-xl ring-2 ring-green-500/50"
+                            : "cursor-pointer bg-gradient-to-br from-gray-50 to-gray-100 hover:from-green-50 hover:to-green-100 dark:from-gray-800 dark:to-gray-700 dark:hover:from-green-900/20 dark:hover:to-green-800/20 hover:shadow-lg"
                         })()
-                          ? "cursor-not-allowed border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
-                          : showManualInput
-                          ? "cursor-pointer border-green-500 bg-green-100 shadow-lg dark:bg-green-900/30"
-                          : "cursor-pointer border-gray-300 hover:border-green-400 hover:shadow-md dark:border-gray-600 dark:hover:border-green-500"
                       }`}
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="relative z-10 flex flex-col items-center text-center">
                         <div
-                          className={`rounded-full p-2 ${
+                          className={`mb-3 rounded-full p-3 ${
                             showManualInput
-                              ? "bg-green-500"
-                              : "bg-green-100 dark:bg-green-800"
+                              ? "bg-white/20"
+                              : "bg-green-100 dark:bg-green-800/50"
                           }`}
                         >
                           <svg
-                            className={`h-5 w-5 ${
+                            className={`h-6 w-6 ${
                               showManualInput
                                 ? "text-white"
                                 : "text-green-600 dark:text-green-300"
@@ -531,7 +513,9 @@ export default function QuantityConfirmationModal({
                         <div>
                           <p
                             className={`font-semibold ${
-                              theme === "dark"
+                              showManualInput
+                                ? "text-white"
+                                : theme === "dark"
                                 ? "text-gray-100"
                                 : "text-gray-800"
                             }`}
@@ -539,8 +523,10 @@ export default function QuantityConfirmationModal({
                             Enter Manually
                           </p>
                           <p
-                            className={`text-xs ${
-                              theme === "dark"
+                            className={`mt-1 text-sm ${
+                              showManualInput
+                                ? "text-white/80"
+                                : theme === "dark"
                                 ? "text-gray-400"
                                 : "text-gray-500"
                             }`}
@@ -554,11 +540,7 @@ export default function QuantityConfirmationModal({
 
                   {/* Manual SKU Input Form */}
                   {showManualInput && (
-                    <div
-                      className={`mt-4 rounded-xl p-3 ${
-                        theme === "dark" ? "bg-gray-700" : "bg-gray-50"
-                      }`}
-                    >
+                    <div className="mt-6">
                       <form
                         onSubmit={(e) => {
                           e.preventDefault();
@@ -566,56 +548,67 @@ export default function QuantityConfirmationModal({
                             handleBarcodeScanned(manualSku.trim());
                           }
                         }}
+                        className="space-y-4"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="relative flex-1">
-                            <div
-                              className={`pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3`}
-                            >
-                              <svg
-                                className={`h-5 w-5 ${
-                                  theme === "dark"
-                                    ? "text-gray-400"
-                                    : "text-gray-500"
-                                }`}
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M4 6h16M4 10h16M4 14h16M4 18h16"
-                                />
-                              </svg>
-                            </div>
-                            <input
-                              type="text"
-                              value={manualSku}
-                              onChange={(e) => setManualSku(e.target.value)}
-                              placeholder={
-                                currentItem?.product.barcode ||
-                                currentItem?.product.ProductName?.barcode
-                                  ? "Enter the barcode from the product"
-                                  : currentItem?.product.sku ||
-                                    currentItem?.product.ProductName?.sku
-                                  ? "Enter the SKU from the product"
-                                  : "Enter SKU or barcode"
-                              }
-                              className={`w-full rounded-xl border-2 py-3 pl-10 pr-4 transition-all focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                                theme === "dark"
-                                  ? "border-gray-600 bg-gray-800 text-gray-100 placeholder-gray-400 focus:border-green-500"
-                                  : "border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-green-500"
-                              }`}
-                            />
-                          </div>
-                          <button
-                            type="submit"
-                            className="flex items-center gap-2 rounded-xl bg-green-600 px-6 py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:bg-green-700 hover:shadow-green-500/25"
+                        <div className="text-center">
+                          <h4 className={`text-base font-medium ${theme === "dark" ? "text-gray-100" : "text-gray-800"}`}>
+                            Enter Product Details
+                          </h4>
+                          <p className={`mt-1 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                            Type the barcode or SKU from the physical product
+                          </p>
+                        </div>
+
+                        <div className="relative">
+                          <div
+                            className={`pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4`}
                           >
                             <svg
-                              className="h-4 w-4"
+                              className={`h-5 w-5 ${
+                                theme === "dark"
+                                  ? "text-gray-400"
+                                  : "text-gray-500"
+                              }`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 6h16M4 10h16M4 14h16M4 18h16"
+                              />
+                            </svg>
+                          </div>
+                          <input
+                            type="text"
+                            value={manualSku}
+                            onChange={(e) => setManualSku(e.target.value)}
+                            placeholder={
+                              currentItem?.product.barcode ||
+                              currentItem?.product.ProductName?.barcode
+                                ? "Enter the barcode from the product"
+                                : currentItem?.product.sku ||
+                                  currentItem?.product.ProductName?.sku
+                                ? "Enter the SKU from the product"
+                                : "Enter SKU or barcode"
+                            }
+                            className={`w-full rounded-xl border-2 py-4 pl-12 pr-4 text-center text-lg font-medium transition-all focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                              theme === "dark"
+                                ? "border-gray-600 bg-gray-800 text-gray-100 placeholder-gray-400 focus:border-green-500"
+                                : "border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-green-500"
+                            }`}
+                          />
+                        </div>
+
+                        <button
+                          type="submit"
+                          className="w-full rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-6 py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:from-green-600 hover:to-green-700 hover:shadow-green-500/25"
+                        >
+                          <div className="flex items-center justify-center gap-2">
+                            <svg
+                              className="h-5 w-5"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -627,64 +620,72 @@ export default function QuantityConfirmationModal({
                                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                               />
                             </svg>
-                            Validate
-                          </button>
-                        </div>
+                            Validate Code
+                          </div>
+                        </button>
                       </form>
                     </div>
                   )}
 
                   {/* Validation Status */}
                   {barcodeValidation.message && (
-                    <div
-                      className={`mt-4 rounded-xl border-l-4 p-3 ${
-                        theme === "dark"
-                          ? "border-gray-700 bg-gray-800/50 text-gray-300"
-                          : "border-gray-300 bg-gray-50 text-gray-700"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`rounded-full p-1 ${
-                            theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                          }`}
-                        >
-                          <svg
-                            className={`h-4 w-4 ${
-                              theme === "dark"
-                                ? "text-gray-300"
-                                : "text-gray-600"
+                    <div className="mt-6">
+                      <div
+                        className={`rounded-2xl p-4 ${
+                          barcodeValidation.isValid
+                            ? "bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20"
+                            : "bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20"
+                        }`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div
+                            className={`rounded-full p-2 ${
+                              barcodeValidation.isValid
+                                ? "bg-green-500"
+                                : "bg-red-500"
                             }`}
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
                           >
-                            {barcodeValidation.isValid ? (
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M5 13l4 4L19 7"
-                              />
-                            ) : (
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M6 18L18 6M6 6l12 12"
-                              />
-                            )}
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="mb-1 font-semibold">
-                            {barcodeValidation.isValid
-                              ? "Validation Successful"
-                              : "Validation Failed"}
-                          </p>
-                          <p className="text-sm opacity-90">
-                            {barcodeValidation.message}
-                          </p>
+                            <svg
+                              className="h-5 w-5 text-white"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              {barcodeValidation.isValid ? (
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              ) : (
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              )}
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <p className={`font-semibold ${
+                              barcodeValidation.isValid
+                                ? "text-green-800 dark:text-green-200"
+                                : "text-red-800 dark:text-red-200"
+                            }`}>
+                              {barcodeValidation.isValid
+                                ? "Validation Successful"
+                                : "Validation Failed"}
+                            </p>
+                            <p className={`mt-1 text-sm ${
+                              barcodeValidation.isValid
+                                ? "text-green-700 dark:text-green-300"
+                                : "text-red-700 dark:text-red-300"
+                            }`}>
+                              {barcodeValidation.message}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -695,10 +696,10 @@ export default function QuantityConfirmationModal({
               {/* Quantity Input Section - Only show if barcode is valid or item is weight-based */}
               {(barcodeValidation.isValid || isWeightBased) && (
                 <div
-                  className={`rounded-2xl border p-4 ${
+                  className={`rounded-2xl p-4 ${
                     theme === "dark"
-                      ? "border-gray-700 bg-gray-800/50"
-                      : "border-gray-200 bg-gray-50"
+                      ? "bg-gray-800/50"
+                      : "bg-gray-50"
                   }`}
                 >
                   <div className="mb-3 flex items-center gap-3">
@@ -811,10 +812,10 @@ export default function QuantityConfirmationModal({
               {/* Status Indicator */}
               {(barcodeValidation.isValid || isWeightBased) && (
                 <div
-                  className={`rounded-2xl border-l-4 p-4 ${
+                  className={`rounded-2xl p-4 ${
                     theme === "dark"
-                      ? "border-gray-700 bg-gray-800/50 text-gray-300"
-                      : "border-gray-300 bg-gray-50 text-gray-700"
+                      ? "bg-gray-800/50 text-gray-300"
+                      : "bg-gray-50 text-gray-700"
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -929,11 +930,7 @@ export default function QuantityConfirmationModal({
 
           {/* Footer */}
           <div
-            className={`flex w-full flex-col-reverse gap-3 px-6 py-5 sm:flex-row sm:justify-end sm:px-8 ${
-              theme === "dark"
-                ? "border-t border-gray-700"
-                : "border-t border-gray-200"
-            }`}
+            className={`flex w-full flex-col-reverse gap-3 px-6 py-5 sm:flex-row sm:justify-end sm:px-8`}
           >
             <button
               onClick={onClose}
