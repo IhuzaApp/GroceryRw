@@ -272,14 +272,40 @@ export default function QuantityConfirmationModal({
                     theme === "dark" ? "text-gray-100" : "text-gray-800"
                   }`}
                 >
-                  Confirm Found Quantity
+                  {(() => {
+                    // Show scanning instructions when barcode scanning section is visible
+                    if (!isWeightBased && !barcodeValidation.isValid) {
+                      return currentItem?.product.barcode ||
+                      currentItem?.product.ProductName?.barcode
+                        ? "Scan Barcode"
+                        : currentItem?.product.sku ||
+                          currentItem?.product.ProductName?.sku
+                        ? "Enter SKU"
+                        : "Scan Barcode or Enter SKU";
+                    }
+                    // Show quantity confirmation when entering quantity
+                    return "Confirm Found Quantity";
+                  })()}
                 </h2>
                 <p
                   className={`text-sm ${
                     theme === "dark" ? "text-gray-300" : "text-gray-600"
                   }`}
                 >
-                  {currentItem.product.ProductName?.name || "Unknown Product"}
+                  {(() => {
+                    // Show scanning instructions when barcode scanning section is visible
+                    if (!isWeightBased && !barcodeValidation.isValid) {
+                      return currentItem?.product.ProductName?.barcode ||
+                      currentItem?.product.barcode
+                        ? "Scan the barcode from the physical product"
+                        : currentItem?.product.ProductName?.sku ||
+                          currentItem?.product.sku
+                        ? "Enter the product SKU from the physical product"
+                        : "This product has no barcode/SKU in our system";
+                    }
+                    // Show product name when entering quantity
+                    return currentItem.product.ProductName?.name || "Unknown Product";
+                  })()}
                 </p>
               </div>
             </div>
@@ -309,68 +335,20 @@ export default function QuantityConfirmationModal({
 
           {/* Body */}
           <div
-            className={`max-h-[70vh] overflow-y-auto px-6 py-8 sm:px-8 ${
+            className={`max-h-[70vh] overflow-y-auto px-6 py-4 sm:px-8 ${
               theme === "dark" ? "bg-gray-800" : "bg-white"
             }`}
           >
             <div className="space-y-4">
               {/* Debug info removed */}
 
-              {/* Barcode Scanning Section - Only for non-weight-based items */}
-              {!isWeightBased && (
+              {/* Barcode Scanning Section - Only for non-weight-based items that haven't been validated yet */}
+              {!isWeightBased && !barcodeValidation.isValid && (
                 <div className="space-y-6">
-                  <div className="text-center">
-                    <div
-                      className={`mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full ${
-                        theme === "dark" ? "bg-blue-600/20" : "bg-blue-100"
-                      }`}
-                    >
-                      <svg
-                        className={`h-6 w-6 ${
-                          theme === "dark" ? "text-blue-400" : "text-blue-600"
-                        }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 6h16M4 10h16M4 14h16M4 18h16"
-                        />
-                      </svg>
-                    </div>
-                    <h3
-                      className={`text-lg font-semibold ${
-                        theme === "dark" ? "text-gray-100" : "text-gray-800"
-                      }`}
-                    >
-                      {currentItem?.product.barcode ||
-                      currentItem?.product.ProductName?.barcode
-                        ? "Scan Barcode"
-                        : currentItem?.product.sku ||
-                          currentItem?.product.ProductName?.sku
-                        ? "Enter SKU"
-                        : "Scan Barcode or Enter SKU"}
-                    </h3>
-                    <p
-                      className={`mt-1 text-sm ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-600"
-                      }`}
-                    >
-                      {currentItem?.product.ProductName?.barcode ||
-                      currentItem?.product.barcode
-                        ? "Scan the barcode from the physical product"
-                        : currentItem?.product.ProductName?.sku ||
-                          currentItem?.product.sku
-                        ? "Enter the product SKU from the physical product"
-                        : "This product has no barcode/SKU in our system"}
-                    </p>
-                  </div>
 
-                  {/* Card-based selection */}
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {/* Card-based selection - Only show when neither option is selected */}
+                  {!showBarcodeScanner && !showManualInput && (
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     {/* Open Camera Scanner Card */}
                     <div
                       onClick={() => {
@@ -537,10 +515,42 @@ export default function QuantityConfirmationModal({
                       </div>
                     </div>
                   </div>
+                  )}
 
                   {/* Manual SKU Input Form */}
                   {showManualInput && (
-                    <div className="mt-6">
+                    <div className="space-y-4">
+                      {/* Back Button */}
+                      <div className="flex items-center justify-start">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowManualInput(false);
+                            setManualSku("");
+                          }}
+                          className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                            theme === "dark"
+                              ? "text-gray-400 hover:bg-gray-700 hover:text-gray-200"
+                              : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                          }`}
+                        >
+                          <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 19l-7-7 7-7"
+                            />
+                          </svg>
+                          Back to Options
+                        </button>
+                      </div>
+
                       <form
                         onSubmit={(e) => {
                           e.preventDefault();
@@ -695,68 +705,26 @@ export default function QuantityConfirmationModal({
 
               {/* Quantity Input Section - Only show if barcode is valid or item is weight-based */}
               {(barcodeValidation.isValid || isWeightBased) && (
-                <div
-                  className={`rounded-2xl p-4 ${
-                    theme === "dark"
-                      ? "bg-gray-800/50"
-                      : "bg-gray-50"
-                  }`}
-                >
-                  <div className="mb-3 flex items-center gap-3">
-                    <div
-                      className={`rounded-full p-2 ${
-                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <p
+                      className={`text-sm ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-600"
                       }`}
                     >
-                      <svg
-                        className={`h-5 w-5 ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-600"
-                        }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3
-                        className={`text-lg font-bold ${
-                          theme === "dark" ? "text-gray-100" : "text-gray-800"
-                        }`}
-                      >
-                        {isWeightBased
-                          ? `How much ${measurementUnit} did you find?`
-                          : "How many units did you find?"}
-                      </h3>
-                      <p
-                        className={`text-sm ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-600"
-                        }`}
-                      >
-                        {isWeightBased
-                          ? `Enter the weight you found (0 to ${currentItem.quantity} ${measurementUnit})`
-                          : `Enter the quantity you found (0 to ${currentItem.quantity})`}
-                      </p>
-                    </div>
+                      {isWeightBased
+                        ? `Enter the weight you found (0 to ${currentItem.quantity} ${measurementUnit})`
+                        : `Enter the quantity you found (0 to ${currentItem.quantity})`}
+                    </p>
                   </div>
 
-                  <div
-                    className={`flex items-center gap-3 rounded-xl p-3 ${
-                      theme === "dark" ? "bg-gray-800" : "bg-white"
-                    }`}
-                  >
-                    <div className="relative flex-1">
+                  <div className="space-y-3">
+                    <div className="relative">
                       <div
-                        className={`pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3`}
+                        className={`pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4`}
                       >
                         <svg
-                          className={`h-5 w-5 ${
+                          className={`h-6 w-6 ${
                             theme === "dark" ? "text-gray-400" : "text-gray-500"
                           }`}
                           fill="none"
@@ -786,9 +754,9 @@ export default function QuantityConfirmationModal({
                         min={0}
                         max={currentItem.quantity}
                         step={isWeightBased ? "0.01" : "1"}
-                        className={`w-full rounded-xl border-2 py-4 pl-10 pr-4 text-center text-xl font-bold transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        className={`w-full rounded-2xl border-2 py-5 pl-14 pr-4 text-center text-2xl font-bold transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                           theme === "dark"
-                            ? "border-gray-600 bg-gray-700 text-gray-100 placeholder-gray-400 focus:border-blue-500"
+                            ? "border-gray-600 bg-gray-800 text-gray-100 placeholder-gray-400 focus:border-blue-500"
                             : "border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-blue-500"
                         }`}
                         placeholder={
@@ -796,14 +764,18 @@ export default function QuantityConfirmationModal({
                         }
                       />
                     </div>
-                    <div
-                      className={`text-sm font-medium ${
-                        theme === "dark" ? "text-gray-300" : "text-gray-600"
-                      }`}
-                    >
-                      {isWeightBased
-                        ? `of ${currentItem.quantity} ${measurementUnit}`
-                        : `of ${currentItem.quantity}`}
+                    <div className="text-center">
+                      <span
+                        className={`inline-block rounded-full px-4 py-2 text-sm font-medium ${
+                          theme === "dark"
+                            ? "bg-gray-700 text-gray-300"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {isWeightBased
+                          ? `of ${currentItem.quantity} ${measurementUnit}`
+                          : `of ${currentItem.quantity} units`}
+                      </span>
                     </div>
                   </div>
                 </div>
