@@ -528,13 +528,18 @@ export default async function handler(
     const invoiceNumber = `INV-${order.OrderID || order.id.slice(-8)
       }-${new Date().getTime().toString().slice(-6)}`;
 
+    // Calculate tax (VAT) - same as order summary calculation (18% of final total)
+    const finalTotalBeforeTax = itemsTotal + serviceFee + deliveryFee;
+    const taxAmount = finalTotalBeforeTax * (18 / 118);
+    const subtotalAfterTax = finalTotalBeforeTax - taxAmount;
+
     // Format values for database storage
-    const subtotalStr = itemsTotal.toFixed(2);
+    const subtotalStr = subtotalAfterTax.toFixed(2);
     const serviceFeeStr = serviceFee.toFixed(2);
     const deliveryFeeStr = deliveryFee.toFixed(2);
     const discountStr = "0.00"; // Assuming no discount for now
-    const taxStr = "0.00"; // Assuming no tax for now
-    const totalAmount = (itemsTotal + serviceFee + deliveryFee).toFixed(2);
+    const taxStr = taxAmount.toFixed(2);
+    const totalAmount = finalTotalBeforeTax.toFixed(2);
 
     const invoicePayload = {
       customer_id: isReelOrder
