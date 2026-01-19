@@ -958,9 +958,6 @@ export default function BatchDetails({
           });
         }
 
-        // Clear payment target since payment is complete
-        setPaymentTargetOrderId(null);
-
         // Show invoice proof modal for proof upload
         setShowInvoiceProofModal(true);
 
@@ -1196,6 +1193,9 @@ export default function BatchDetails({
 
       // Mark invoice proof as uploaded for this specific order
       setUploadedProofs(prev => ({ ...prev, [targetId as string]: true }));
+
+      // Clear payment target now that invoice is generated
+      setPaymentTargetOrderId(null);
 
       // Close invoice proof modal
       setShowInvoiceProofModal(false);
