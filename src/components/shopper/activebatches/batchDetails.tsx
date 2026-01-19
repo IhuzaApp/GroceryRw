@@ -1407,6 +1407,7 @@ export default function BatchDetails({
   ) => {
     if (!order) return;
 
+    // Update items in main order
     const updatedItems = order.Order_Items?.map((item) =>
       item.id === itemId
         ? {
@@ -1417,9 +1418,24 @@ export default function BatchDetails({
         : item
     );
 
+    // Update items in combined orders
+    const updatedCombinedOrders = order.combinedOrders?.map((combinedOrder: any) => ({
+      ...combinedOrder,
+      Order_Items: combinedOrder.Order_Items?.map((item: any) =>
+        item.id === itemId
+          ? {
+              ...item,
+              found,
+              foundQuantity: found ? foundQty : 0,
+            }
+          : item
+      ),
+    }));
+
     setOrder({
       ...order,
       Order_Items: updatedItems,
+      combinedOrders: updatedCombinedOrders,
     });
   };
 
@@ -1431,8 +1447,13 @@ export default function BatchDetails({
     const validQuantity = Math.min(foundQuantity, currentItem.quantity);
 
     updateItemFoundStatus(currentItem.id, true, validQuantity);
-    setShowQuantityModal(false);
-    setCurrentItem(null);
+
+    // Close modal and reset state after a brief delay to ensure state updates propagate
+    setTimeout(() => {
+      setShowQuantityModal(false);
+      setCurrentItem(null);
+      setFoundQuantity(0);
+    }, 100);
   };
 
   // Calculate found items total
@@ -1455,21 +1476,29 @@ export default function BatchDetails({
     if (reelTotal > 0) return reelTotal;
 
     // For regular orders, calculate based on found items
-    if (!order.Order_Items) return 0;
+    let itemsToSum: any[] = [];
 
-    // Filter items by targetOrderId if provided and we are in multi-shop mode
-    let itemsToSum = order.Order_Items;
     if (!useAll && targetOrderId) {
+      // If targeting a specific order, get items only from that order
       if (targetOrderId === order.id) {
-        itemsToSum = order.Order_Items.filter(item => !(item as any).shopId || (item as any).shopId === order.shop?.id);
+        itemsToSum = order.Order_Items || [];
       } else {
         const targetSub = order.combinedOrders?.find(o => o.id === targetOrderId);
-        const targetShopId = targetSub?.shop?.id;
-        if (targetShopId) {
-          itemsToSum = order.Order_Items.filter(item => (item as any).shopId === targetShopId);
-        }
+        itemsToSum = targetSub?.Order_Items || [];
       }
+    } else {
+      // If no specific target or useAll is true, get all items from main order and combined orders
+      if (order.Order_Items) {
+        itemsToSum = [...order.Order_Items];
+      }
+      order.combinedOrders?.forEach((combinedOrder: any) => {
+        if (combinedOrder.Order_Items) {
+          itemsToSum = [...itemsToSum, ...combinedOrder.Order_Items];
+        }
+      });
     }
+
+    if (itemsToSum.length === 0) return 0;
 
     const total = itemsToSum.filter((item) => item.found).reduce(
       (total, item) => {
@@ -1691,7 +1720,15 @@ export default function BatchDetails({
           !(item as any).shopId || (item as any).shopId === activeOrder.shop?.id
         ) || []);
 
-        const hasFoundItems = relevantItems?.some((item: any) => item.found) || false;
+        // For combined orders, also check items in combined orders
+        const combinedOrderItems = order?.combinedOrders?.flatMap((combinedOrder: any) =>
+          combinedOrder.Order_Items?.filter((item: any) =>
+            !(item as any).shopId || (item as any).shopId === activeOrder.shop?.id
+          ) || []
+        ) || [];
+
+        const allRelevantItems = [...relevantItems, ...combinedOrderItems];
+        const hasFoundItems = allRelevantItems?.some((item: any) => item.found) || false;
 
         // Shopping status calculated
 

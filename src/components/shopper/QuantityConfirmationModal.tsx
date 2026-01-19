@@ -782,7 +782,7 @@ export default function QuantityConfirmationModal({
               )}
 
               {/* Status Indicator */}
-              {(barcodeValidation.isValid || isWeightBased) && (
+              {(exceedsBudget || (foundQuantity === currentItem.quantity && !barcodeValidation.isValid)) && (
                 <div
                   className={`rounded-2xl p-4 ${
                     theme === "dark"
@@ -798,72 +798,50 @@ export default function QuantityConfirmationModal({
                     >
                       <svg
                         className={`h-5 w-5 ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-600"
+                          exceedsBudget
+                            ? "text-red-500"
+                            : "text-green-500"
                         }`}
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
                       >
-                        {foundQuantity === 0 ? (
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        ) : exceedsBudget ? (
+                        {exceedsBudget ? (
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
                             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                          />
-                        ) : foundQuantity === currentItem.quantity ? (
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
                           />
                         ) : (
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                            d="M5 13l4 4L19 7"
                           />
                         )}
                       </svg>
                     </div>
                     <div className="flex-1">
                       <p className="mb-1 font-semibold">
-                        {foundQuantity === 0
-                          ? isWeightBased
-                            ? `No ${measurementUnit} Found`
-                            : "No Units Found"
-                          : exceedsBudget
+                        {exceedsBudget
                           ? "Budget Exceeded"
-                          : foundQuantity === currentItem.quantity
+                          : foundQuantity === currentItem.quantity && !barcodeValidation.isValid
                           ? isWeightBased
                             ? `All ${measurementUnit} Found`
                             : "All Units Found"
-                          : isWeightBased
-                          ? `Partial ${measurementUnit} Found`
-                          : "Partial Quantity Found"}
+                          : ""}
                       </p>
                       <p className="text-sm opacity-90">
-                        {foundQuantity === 0
-                          ? "Item not found in store"
-                          : exceedsBudget
+                        {exceedsBudget
                           ? `Weight exceeds budget by $${(
                               foundWeight * pricePerUnit -
                               customerBudget
                             ).toFixed(2)}`
-                          : foundQuantity === currentItem.quantity
+                          : foundQuantity === currentItem.quantity && !barcodeValidation.isValid
                           ? "Perfect match! All items found"
-                          : isWeightBased
-                          ? "Refund will be processed for missing amount"
-                          : "Some items were not found"}
+                          : ""}
                       </p>
                       {isWeightBased && foundQuantity > 0 && (
                         <div className="mt-1 space-y-1 text-xs">
