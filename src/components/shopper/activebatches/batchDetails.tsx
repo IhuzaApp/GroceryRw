@@ -1845,13 +1845,66 @@ export default function BatchDetails({
     if (!order) return null;
     const allOrders = [order, ...(order.combinedOrders || [])];
 
-    // Group sub-orders by customer
+    console.log("🔍 [Delivery Route] All orders data:", allOrders.map(o => ({
+      id: o.id,
+      OrderID: o.OrderID,
+      status: o.status,
+      customerId: o.customerId,
+      customerPhone: o.customerPhone,
+      orderedBy: o.orderedBy ? {
+        id: o.orderedBy.id,
+        name: o.orderedBy.name,
+        phone: o.orderedBy.phone,
+        addressesCount: o.orderedBy.Addresses?.length || 0,
+        addresses: o.orderedBy.Addresses?.map(addr => ({
+          id: addr.id,
+          street: addr.street,
+          city: addr.city,
+          is_default: addr.is_default
+        }))
+      } : null,
+      address: o.address ? {
+        street: o.address.street,
+        city: o.address.city,
+        postal_code: o.address.postal_code
+      } : null,
+      shop: o.shop ? {
+        id: o.shop.id,
+        name: o.shop.name
+      } : null,
+      invoice: (o as any).Invoice ? {
+        id: (o as any).Invoice.id,
+        status: (o as any).Invoice.status,
+        hasProof: !!(o as any).Invoice.Proof
+      } : null
+    })));
+
+    // Group orders by customer (use customer phone/ID as the key since combined orders going to same customer should be grouped)
     const ordersByCustomer = new Map<string, any[]>();
     allOrders.forEach(o => {
+      // Use customer phone as the primary grouping key
+      const customerPhone = (o as any).orderedBy?.phone || o.customerPhone || 'unknown';
       const customerId = (o as any).orderedBy?.id || o.customerId || 'unknown';
-      if (!ordersByCustomer.has(customerId)) ordersByCustomer.set(customerId, []);
-      ordersByCustomer.get(customerId)?.push(o);
+      const customerKey = `${customerId}_${customerPhone}`;
+
+      console.log(`🔍 [Delivery Route] Order ${o.OrderID} grouping:`, {
+        customerId,
+        customerPhone,
+        customerKey,
+        hasOrderedBy: !!(o as any).orderedBy,
+        orderedByPhone: (o as any).orderedBy?.phone,
+        customerPhoneField: o.customerPhone
+      });
+
+      if (!ordersByCustomer.has(customerKey)) ordersByCustomer.set(customerKey, []);
+      ordersByCustomer.get(customerKey)?.push(o);
     });
+
+    console.log("🔍 [Delivery Route] Grouped orders:", Array.from(ordersByCustomer.entries()).map(([key, orders]) => ({
+      groupKey: key,
+      orderCount: orders.length,
+      orders: orders.map(o => ({ id: o.id, OrderID: o.OrderID, status: o.status }))
+    })));;
 
     return (
       <div className="space-y-6 px-3 sm:px-0">
@@ -1870,7 +1923,34 @@ export default function BatchDetails({
             const firstOrder = orders[0];
             const customer = (firstOrder as any).orderedBy || (firstOrder as any).user ||
               { name: firstOrder.customerName || 'Customer' };
-            const address = firstOrder.address;
+
+            // Get address from multiple possible sources (order.address, orderedBy.Addresses, customerAddress, etc.)
+            const address = firstOrder.address ||
+              (firstOrder.orderedBy?.Addresses?.find((addr: any) => addr.is_default) ||
+               firstOrder.orderedBy?.Addresses?.[0]) ||
+              firstOrder.customerAddress ||
+              // For combined orders, try to find address from other orders in the group
+              (orders.find(o => o.address)?.address) ||
+              (orders.find(o => o.orderedBy?.Addresses?.[0])?.orderedBy?.Addresses?.[0]);
+
+            console.log(`🔍 [Delivery Route] Card ${index + 1} details:`, {
+              customerId,
+              customerName: customer.name,
+              customerPhone: customer.phone,
+              orderCount: orders.length,
+              orders: orders.map(o => ({ id: o.id, OrderID: o.OrderID, status: o.status })),
+              addressSources: {
+                directAddress: firstOrder.address,
+                orderedByDefaultAddress: firstOrder.orderedBy?.Addresses?.find((addr: any) => addr.is_default),
+                orderedByFirstAddress: firstOrder.orderedBy?.Addresses?.[0],
+                customerAddress: firstOrder.customerAddress,
+                groupAddressFallback: orders.find(o => o.address)?.address,
+                groupOrderedByFallback: orders.find(o => o.orderedBy?.Addresses?.[0])?.orderedBy?.Addresses?.[0]
+              },
+              finalAddress: address,
+              isDelivered: orders.every(o => o.status === 'delivered')
+            });
+
             const isDelivered = orders.every(o => o.status === 'delivered');
 
             return (
@@ -1918,15 +1998,45 @@ export default function BatchDetails({
                     </div>
 
                     <div className="space-y-3 pt-2">
-                      {orders.map(o => (
-                        <div key={o.id} className="rounded-lg border border-slate-100 bg-slate-50/50 p-3 dark:border-slate-700 dark:bg-slate-800/50">
-                          <div className="mb-3 flex items-center justify-between">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">#{o.OrderID || o.id.slice(-8)}</span>
-                            <span className="text-[10px] font-bold text-slate-500">{(o as any).shop?.name || o.shopName}</span>
+                      {orders.map(o => {
+                        const hasInvoice = (o as any).Invoice?.length > 0 || (o as any).invoice;
+
+                        console.log(`🔍 [Delivery Route] Order card ${o.OrderID}:`, {
+                          orderId: o.id,
+                          OrderID: o.OrderID,
+                          status: o.status,
+                          shopName: (o as any).shop?.name || o.shopName,
+                          invoiceData: (o as any).Invoice,
+                          hasInvoice,
+                          total: o.total,
+                          address: o.address,
+                          orderedBy: o.orderedBy ? {
+                            id: o.orderedBy.id,
+                            name: o.orderedBy.name,
+                            phone: o.orderedBy.phone
+                          } : null
+                        });
+
+                        return (
+                          <div key={o.id} className="rounded-lg border border-slate-100 bg-slate-50/50 p-3 dark:border-slate-700 dark:bg-slate-800/50">
+                            <div className="mb-3 flex items-center justify-between">
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">#{o.OrderID || o.id.slice(-8)}</span>
+                              <div className="flex items-center gap-2">
+                                {hasInvoice && (
+                                  <span className="flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-[9px] font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Invoice
+                                  </span>
+                                )}
+                                <span className="text-[10px] font-bold text-slate-500">{(o as any).shop?.name || o.shopName}</span>
+                              </div>
+                            </div>
+                            {getActionButton(o)}
                           </div>
-                          {getActionButton(o)}
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
