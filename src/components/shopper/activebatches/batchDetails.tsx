@@ -332,19 +332,6 @@ export default function BatchDetails({
           const data = await response.json();
 
           // Console log the combined-orders API response
-          console.log("🔍 [BatchDetails] Combined-orders API response:", {
-            combinedOrderId: combinedId,
-            ordersFromCombinedAPI: data.orders,
-            ordersCount: data.orders?.length || 0,
-            ordersDetails: data.orders?.map((o: any) => ({
-              id: o.id,
-              OrderID: o.OrderID,
-              status: o.status,
-              shop: o.shop,
-              itemsCount: o.Order_Items?.length || 0,
-              total: o.total
-            })) || []
-          });
 
           // Update order state with combined details if needed
           if (data.orders && data.orders.length > 0) {
@@ -387,25 +374,6 @@ export default function BatchDetails({
                 }));
 
               // Console log the transformed combined orders
-              console.log("🔍 [BatchDetails] Transformed combined orders:", {
-                transformedCombinedCount: transformedCombined.length,
-                transformedCombinedDetails: transformedCombined.map((o: any) => ({
-                  id: o.id,
-                  OrderID: o.OrderID,
-                  status: o.status,
-                  shopName: o.shopName,
-                  shop: o.shop,
-                  itemsCount: o.items?.length || 0,
-                  items: o.items?.map((item: any) => ({
-                    id: item.id,
-                    name: item.name,
-                    quantity: item.quantity,
-                    price: item.price,
-                    barcode: item.barcode,
-                    sku: item.sku
-                  })) || []
-                }))
-              });
 
               // Also update Order_Items if they are missing their shopId
               let updatedOrderItems = [...(prev.Order_Items || [])];
@@ -447,28 +415,6 @@ export default function BatchDetails({
               };
 
               // Console log the final order with all combined order data
-              console.log("🔍 [BatchDetails] Final order with combined orders:", {
-                orderId: finalOrder.id,
-                OrderID: finalOrder.OrderID,
-                combinedOrdersCount: finalOrder.combinedOrders?.length || 0,
-                totalOrderItems: finalOrder.Order_Items?.length || 0,
-                combinedOrderDetails: finalOrder.combinedOrders?.map((co: any) => ({
-                  id: co.id,
-                  OrderID: co.OrderID,
-                  status: co.status,
-                  shopName: co.shopName,
-                  shop: {
-                    id: co.shop?.id,
-                    name: co.shop?.name,
-                    address: co.shop?.address
-                  },
-                  itemsCount: co.items?.length || 0,
-                  total: co.total
-                })) || [],
-                combinedOrderIds: finalOrder.orderIds || [],
-                combinedOrderIDs: finalOrder.orderIDs || [],
-                shopNames: finalOrder.shopNames || []
-              });
 
               return finalOrder;
             });
@@ -993,18 +939,7 @@ export default function BatchDetails({
         const targetId = paymentTargetOrderId || order.id;
         const ordersToUpdate = [targetId];
 
-        console.log("🔍 [Payment Debug] Updating Status:", {
-          paymentTargetOrderId,
-          targetId,
-          ordersToUpdate
-        });
 
-        console.log("🔍 [BatchDetails Component] Payment completed - updating orders to 'on_the_way':", {
-          ordersToUpdate,
-          paymentTargetOrderId,
-          orderId: order?.id,
-          combinedOrdersCount: order?.combinedOrders?.length || 0
-        });
 
         await Promise.all(ordersToUpdate.map(id => onUpdateStatus(id, "on_the_way")));
 
@@ -1061,10 +996,6 @@ export default function BatchDetails({
   const handleRestaurantDeliveryConfirmation = () => {
     if (!order) return;
 
-    console.log("🔍 [Restaurant Delivery] Order address data:", {
-      fullAddress: order.address,
-      placeDetails: order.address?.placeDetails,
-    });
 
     // For restaurant orders, create minimal invoice data for delivery confirmation modal
     const restaurantOrder = order as any; // Type assertion for restaurant order fields
@@ -1109,10 +1040,6 @@ export default function BatchDetails({
   const handleReelDeliveryConfirmation = () => {
     if (!order) return;
 
-    console.log("🔍 [Reel Delivery] Order address data:", {
-      fullAddress: order.address,
-      placeDetails: order.address?.placeDetails,
-    });
 
     // For restaurant/user reel orders, create minimal invoice data for delivery confirmation modal
     const mockInvoiceData = {
@@ -1175,12 +1102,6 @@ export default function BatchDetails({
 
     // For regular orders, invoice has already been generated during payment
     // Create invoice data for the modal display
-    console.log("🔍 [Delivery Confirmation] Order address data:", {
-      fullAddress: order.address,
-      placeDetails: order.address?.placeDetails,
-      street: order.address?.street,
-      city: order.address?.city,
-    });
 
     const mockInvoiceData = {
       id: `order_${order.id}_${Date.now()}`,
@@ -1233,16 +1154,24 @@ export default function BatchDetails({
   // Handle invoice proof captured - generates invoice and updates status to on_the_way
   const handleInvoiceProofCaptured = async (imageDataUrl: string) => {
     if (!order) return;
-    // Determine the specific order we are processing
-    const allInBatch = [order, ...(order.combinedOrders || [])];
-    const matchingOrder = allInBatch.find(o => o && (o.shop?.id || o.shop_id) === activeShopId) || order;
-    const targetId = (paymentTargetOrderId || matchingOrder.id) as string;
-    const targetOrder = allInBatch.find(o => o?.id === targetId) || order;
 
     try {
       setLoading(true);
 
-      // Generate invoice with proof photo
+      // Generate invoice with proof for the specific order being processed
+      const allInBatch = [order, ...(order.combinedOrders || [])];
+      const matchingOrder = allInBatch.find(o => o && (o.shop?.id || o.shop_id) === activeShopId) || order;
+      const targetId = (paymentTargetOrderId || matchingOrder.id) as string;
+      const targetOrder = allInBatch.find(o => o?.id === targetId) || order;
+
+      console.log("🔍 [Invoice Proof] Generating invoice with proof for order:", {
+        targetId,
+        orderType: targetOrder?.orderType,
+        activeShopId,
+        paymentTargetOrderId
+      });
+
+      // Generate invoice with proof photo for the specific order
       const invoiceResponse = await fetch("/api/invoices/generate", {
         method: "POST",
         headers: {
@@ -1328,13 +1257,6 @@ export default function BatchDetails({
       !isRestaurantOrder &&
       !isRestaurantUserReel
     ) {
-      console.log("🔍 [BatchDetails Component] Setting payment target for combined order:", {
-        targetOrderId: idToUpdate,
-        newStatus,
-        isCombinedOrder: !!order?.combinedOrders?.length,
-        orderId: order?.id,
-        combinedOrdersCount: order?.combinedOrders?.length || 0
-      });
 
       setPaymentTargetOrderId(idToUpdate);
       handleShowPaymentModal();
@@ -1409,13 +1331,6 @@ export default function BatchDetails({
 
     if (found && item.quantity > 1) {
       // Open quantity modal for multi-quantity items
-      console.log("🔍 [BatchDetails] Opening quantity modal for item:", item);
-      console.log("🔍 [BatchDetails] Item product:", item.product);
-      console.log("🔍 [BatchDetails] Item ProductName:", item.product?.ProductName);
-      console.log("🔍 [BatchDetails] Barcode/SKU:", {
-        barcode: item.product?.ProductName?.barcode || item.product?.barcode,
-        sku: item.product?.ProductName?.sku || item.product?.sku
-      });
 
       setCurrentItem(item);
       setFoundQuantity(item.quantity); // Default to the full requested quantity
@@ -1845,39 +1760,6 @@ export default function BatchDetails({
     if (!order) return null;
     const allOrders = [order, ...(order.combinedOrders || [])];
 
-    console.log("🔍 [Delivery Route] All orders data:", allOrders.map(o => ({
-      id: o.id,
-      OrderID: o.OrderID,
-      status: o.status,
-      customerId: o.customerId,
-      customerPhone: o.customerPhone,
-      orderedBy: o.orderedBy ? {
-        id: o.orderedBy.id,
-        name: o.orderedBy.name,
-        phone: o.orderedBy.phone,
-        addressesCount: o.orderedBy.Addresses?.length || 0,
-        addresses: o.orderedBy.Addresses?.map(addr => ({
-          id: addr.id,
-          street: addr.street,
-          city: addr.city,
-          is_default: addr.is_default
-        }))
-      } : null,
-      address: o.address ? {
-        street: o.address.street,
-        city: o.address.city,
-        postal_code: o.address.postal_code
-      } : null,
-      shop: o.shop ? {
-        id: o.shop.id,
-        name: o.shop.name
-      } : null,
-      invoice: (o as any).Invoice ? {
-        id: (o as any).Invoice.id,
-        status: (o as any).Invoice.status,
-        hasProof: !!(o as any).Invoice.Proof
-      } : null
-    })));
 
     // Group orders by customer (use customer phone/ID as the key since combined orders going to same customer should be grouped)
     const ordersByCustomer = new Map<string, any[]>();
@@ -1887,24 +1769,12 @@ export default function BatchDetails({
       const customerId = (o as any).orderedBy?.id || o.customerId || 'unknown';
       const customerKey = `${customerId}_${customerPhone}`;
 
-      console.log(`🔍 [Delivery Route] Order ${o.OrderID} grouping:`, {
-        customerId,
-        customerPhone,
-        customerKey,
-        hasOrderedBy: !!(o as any).orderedBy,
-        orderedByPhone: (o as any).orderedBy?.phone,
-        customerPhoneField: o.customerPhone
-      });
 
       if (!ordersByCustomer.has(customerKey)) ordersByCustomer.set(customerKey, []);
       ordersByCustomer.get(customerKey)?.push(o);
     });
 
-    console.log("🔍 [Delivery Route] Grouped orders:", Array.from(ordersByCustomer.entries()).map(([key, orders]) => ({
-      groupKey: key,
-      orderCount: orders.length,
-      orders: orders.map(o => ({ id: o.id, OrderID: o.OrderID, status: o.status }))
-    })));;
+;
 
     return (
       <div className="space-y-6 px-3 sm:px-0">
@@ -1933,23 +1803,6 @@ export default function BatchDetails({
               (orders.find(o => o.address)?.address) ||
               (orders.find(o => o.orderedBy?.Addresses?.[0])?.orderedBy?.Addresses?.[0]);
 
-            console.log(`🔍 [Delivery Route] Card ${index + 1} details:`, {
-              customerId,
-              customerName: customer.name,
-              customerPhone: customer.phone,
-              orderCount: orders.length,
-              orders: orders.map(o => ({ id: o.id, OrderID: o.OrderID, status: o.status })),
-              addressSources: {
-                directAddress: firstOrder.address,
-                orderedByDefaultAddress: firstOrder.orderedBy?.Addresses?.find((addr: any) => addr.is_default),
-                orderedByFirstAddress: firstOrder.orderedBy?.Addresses?.[0],
-                customerAddress: firstOrder.customerAddress,
-                groupAddressFallback: orders.find(o => o.address)?.address,
-                groupOrderedByFallback: orders.find(o => o.orderedBy?.Addresses?.[0])?.orderedBy?.Addresses?.[0]
-              },
-              finalAddress: address,
-              isDelivered: orders.every(o => o.status === 'delivered')
-            });
 
             const isDelivered = orders.every(o => o.status === 'delivered');
 
@@ -2001,21 +1854,6 @@ export default function BatchDetails({
                       {orders.map(o => {
                         const hasInvoice = (o as any).Invoice?.length > 0 || (o as any).invoice;
 
-                        console.log(`🔍 [Delivery Route] Order card ${o.OrderID}:`, {
-                          orderId: o.id,
-                          OrderID: o.OrderID,
-                          status: o.status,
-                          shopName: (o as any).shop?.name || o.shopName,
-                          invoiceData: (o as any).Invoice,
-                          hasInvoice,
-                          total: o.total,
-                          address: o.address,
-                          orderedBy: o.orderedBy ? {
-                            id: o.orderedBy.id,
-                            name: o.orderedBy.name,
-                            phone: o.orderedBy.phone
-                          } : null
-                        });
 
                         return (
                           <div key={o.id} className="rounded-lg border border-slate-100 bg-slate-50/50 p-3 dark:border-slate-700 dark:bg-slate-800/50">
@@ -2260,12 +2098,6 @@ export default function BatchDetails({
           // API response data
 
           // Console log the initial orderDetails API response
-          console.log("🔍 [BatchDetails] Initial orderDetails API response:", {
-            order: data.order,
-            combinedOrders: data.order?.combinedOrders,
-            combinedOrdersCount: data.order?.combinedOrders?.length || 0,
-            combinedOrderIds: data.order?.combinedOrders?.map((co: any) => ({ id: co.id, OrderID: co.OrderID })) || []
-          });
 
           if (data.order) {
             // Transform the API response to match BatchDetails expected structure
@@ -2363,27 +2195,6 @@ export default function BatchDetails({
             };
 
             // Console log the final transformed order with all combined data
-            console.log("🔍 [BatchDetails] Final transformed order from orderDetails API:", {
-              orderId: transformedOrder.id,
-              OrderID: transformedOrder.OrderID,
-              status: transformedOrder.status,
-              combinedOrderId: transformedOrder.combinedOrderId,
-              combinedOrdersCount: transformedOrder.combinedOrders?.length || 0,
-              shopName: transformedOrder.shopName,
-              shopNames: transformedOrder.shopNames,
-              orderIds: transformedOrder.orderIds,
-              orderIDs: transformedOrder.orderIDs,
-              combinedOrdersDetails: transformedOrder.combinedOrders?.map((co: any) => ({
-                id: co.id,
-                OrderID: co.OrderID,
-                status: co.status,
-                shopName: co.shopName,
-                itemsCount: co.items?.length || 0,
-                total: co.total,
-                ProductName: co.product?.ProductName
-              })) || [],
-              totalOrderItems: allItems.length
-            });
 
             setOrder(transformedOrder);
             if (!activeShopId && data.order.shop?.id) {
@@ -2618,6 +2429,8 @@ export default function BatchDetails({
           onProofCaptured={handleInvoiceProofCaptured}
           orderId={paymentTargetOrderId || (order && [order, ...(order.combinedOrders || [])].find(o => (o.shop?.id || o.shop_id) === activeShopId)?.id) || order?.id || ""}
           orderNumber={(order && [order, ...(order.combinedOrders || [])].find(o => o.id === (paymentTargetOrderId || (order && [order, ...(order.combinedOrders || [])].find(o => (o.shop?.id || o.shop_id) === activeShopId)?.id) || order?.id))?.OrderID) || order?.OrderID || order?.id.slice(-8) || ""}
+          combinedOrderIds={[]}
+          combinedOrderNumbers={[]}
         />
 
         {/* Delivery Confirmation Modal */}
@@ -2779,7 +2592,19 @@ export default function BatchDetails({
               )}
 
               {/* Main Info Grid - Hidden during shopping status on desktop, always visible in "Other Details" tab on mobile */}
-              {shouldShowOrderDetails() && (order.status !== "shopping" || activeTab === "details") && (
+              {(() => {
+                // For combined orders, hide the section if we have combined orders and any are still being processed
+                const hasCombinedOrders = !!(order?.combinedOrders?.length > 0);
+                const hasUnprocessedCombinedOrders = hasCombinedOrders && order?.combinedOrders?.some(co => co.status === "shopping" || co.status === "accepted" || co.status === "paid");
+
+                const shouldShow = shouldShowOrderDetails() &&
+                  (order.status !== "shopping" || activeTab === "details") &&
+                  !showPaymentModal &&
+                  !paymentTargetOrderId &&
+                  !hasUnprocessedCombinedOrders;
+
+                return shouldShow;
+              })() && (
                 <div
                   className={`grid grid-cols-1 gap-3 sm:gap-8 lg:grid-cols-2 ${activeTab === "details" ? "block" : "hidden sm:grid"
                     }`}
@@ -3343,7 +3168,6 @@ export default function BatchDetails({
 
                       // Auto-set activeShopId to the only visible shop if there's only one
                       if (groups.length === 1 && activeShopId !== groups[0][0]) {
-                        console.log("🔍 [BatchDetails UI] Auto-setting activeShopId to only visible shop:", groups[0][0]);
                         setActiveShopId(groups[0][0]);
                       }
 
