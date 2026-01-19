@@ -449,9 +449,9 @@ function calculateDistanceKm(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(lat1 * (Math.PI / 180)) *
-    Math.cos(lat2 * (Math.PI / 180)) *
-    Math.sin(dLon / 2) *
-    Math.sin(dLon / 2);
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -500,14 +500,15 @@ function formatOrderForResponse(
     distance: distance,
     travelTimeMinutes: calculateTravelTime(distance),
     createdAt: order.created_at,
-    customerAddress: `${order.Address?.street || order.address?.street}, ${order.Address?.city || order.address?.city
-      }`,
+    customerAddress: `${order.Address?.street || order.address?.street}, ${
+      order.Address?.city || order.address?.city
+    }`,
     itemsCount: itemsCount,
     estimatedEarnings:
       order.orderType === "restaurant"
         ? parseFloat(order.delivery_fee || "0")
         : parseFloat(order.service_fee || "0") +
-        parseFloat(order.delivery_fee || "0"),
+          parseFloat(order.delivery_fee || "0"),
     orderType: order.orderType,
     priority: order.priority,
     expiresIn: expiresInMs ?? null,
@@ -969,7 +970,8 @@ export default async function handler(
         maxEtaMinutes = roundConfig.maxEtaMinutes;
 
         console.log(
-          `📍 Order ${order.id
+          `📍 Order ${
+            order.id
           } round ${nextRound}: max ${maxDistanceKm}km, distance ${distance.toFixed(
             2
           )}km`

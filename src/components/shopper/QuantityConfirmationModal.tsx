@@ -50,11 +50,23 @@ export default function QuantityConfirmationModal({
 
   // Check if item is weight-based
   useEffect(() => {
-    console.log("🔍 [QuantityConfirmationModal] useEffect triggered, currentItem exists:", !!currentItem);
+    console.log(
+      "🔍 [QuantityConfirmationModal] useEffect triggered, currentItem exists:",
+      !!currentItem
+    );
     if (currentItem) {
-      console.log("🔍 [QuantityConfirmationModal] FULL currentItem:", JSON.stringify(currentItem, null, 2));
-      console.log("🔍 [QuantityConfirmationModal] currentItem.product:", currentItem.product);
-      console.log("🔍 [QuantityConfirmationModal] currentItem.product.ProductName:", currentItem.product?.ProductName);
+      console.log(
+        "🔍 [QuantityConfirmationModal] FULL currentItem:",
+        JSON.stringify(currentItem, null, 2)
+      );
+      console.log(
+        "🔍 [QuantityConfirmationModal] currentItem.product:",
+        currentItem.product
+      );
+      console.log(
+        "🔍 [QuantityConfirmationModal] currentItem.product.ProductName:",
+        currentItem.product?.ProductName
+      );
 
       // Access measurement_unit from the correct path based on GraphQL schema
       let unit = "";
@@ -82,9 +94,15 @@ export default function QuantityConfirmationModal({
 
       console.log("🔍 [QuantityConfirmationModal] Barcode/SKU check:");
       console.log("  - product.barcode:", currentItem.product?.barcode);
-      console.log("  - product.ProductName.barcode:", currentItem.product?.ProductName?.barcode);
+      console.log(
+        "  - product.ProductName.barcode:",
+        currentItem.product?.ProductName?.barcode
+      );
       console.log("  - product.sku:", currentItem.product?.sku);
-      console.log("  - product.ProductName.sku:", currentItem.product?.ProductName?.sku);
+      console.log(
+        "  - product.ProductName.sku:",
+        currentItem.product?.ProductName?.sku
+      );
 
       // Calculate price per unit weight
       if (isWeight && currentItem.product.final_price) {
@@ -190,12 +208,15 @@ export default function QuantityConfirmationModal({
       return;
     }
 
-    console.log("🔍 [QuantityConfirmationModal] No barcode/SKU found for validation:", {
-      itemBarcode,
-      itemSku,
-      hasBarcode: !!itemBarcode,
-      hasSku: !!itemSku
-    });
+    console.log(
+      "🔍 [QuantityConfirmationModal] No barcode/SKU found for validation:",
+      {
+        itemBarcode,
+        itemSku,
+        hasBarcode: !!itemBarcode,
+        hasSku: !!itemSku,
+      }
+    );
 
     // If the item has NO barcode or SKU in the database, it cannot be validated.
     setBarcodeValidation({
@@ -276,7 +297,7 @@ export default function QuantityConfirmationModal({
                     // Show scanning instructions when barcode scanning section is visible
                     if (!isWeightBased && !barcodeValidation.isValid) {
                       return currentItem?.product.barcode ||
-                      currentItem?.product.ProductName?.barcode
+                        currentItem?.product.ProductName?.barcode
                         ? "Scan Barcode"
                         : currentItem?.product.sku ||
                           currentItem?.product.ProductName?.sku
@@ -296,7 +317,7 @@ export default function QuantityConfirmationModal({
                     // Show scanning instructions when barcode scanning section is visible
                     if (!isWeightBased && !barcodeValidation.isValid) {
                       return currentItem?.product.ProductName?.barcode ||
-                      currentItem?.product.barcode
+                        currentItem?.product.barcode
                         ? "Scan the barcode from the physical product"
                         : currentItem?.product.ProductName?.sku ||
                           currentItem?.product.sku
@@ -304,7 +325,9 @@ export default function QuantityConfirmationModal({
                         : "This product has no barcode/SKU in our system";
                     }
                     // Show product name when entering quantity
-                    return currentItem.product.ProductName?.name || "Unknown Product";
+                    return (
+                      currentItem.product.ProductName?.name || "Unknown Product"
+                    );
                   })()}
                 </p>
               </div>
@@ -345,116 +368,122 @@ export default function QuantityConfirmationModal({
               {/* Barcode Scanning Section - Only for non-weight-based items that haven't been validated yet */}
               {!isWeightBased && !barcodeValidation.isValid && (
                 <div className="space-y-6">
-
                   {/* Card-based selection - Only show when neither option is selected */}
                   {!showBarcodeScanner && !showManualInput && (
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    {/* Open Camera Scanner Card */}
-                    <div
-                      onClick={() => {
-                        if (
-                          currentItem?.product.barcode ||
-                          currentItem?.product.ProductName?.barcode ||
-                          currentItem?.product.sku ||
-                          currentItem?.product.ProductName?.sku
-                        ) {
-                          setShowManualInput(false);
-                          setShowBarcodeScanner(true);
-                        }
-                      }}
-                      className={`group relative overflow-hidden rounded-2xl p-5 transition-all duration-300 ${
-                        (() => {
-                          const hasBarcode = !!(currentItem?.product.ProductName?.barcode || currentItem?.product.barcode);
-                          const hasSku = !!(currentItem?.product.ProductName?.sku || currentItem?.product.sku);
+                      {/* Open Camera Scanner Card */}
+                      <div
+                        onClick={() => {
+                          if (
+                            currentItem?.product.barcode ||
+                            currentItem?.product.ProductName?.barcode ||
+                            currentItem?.product.sku ||
+                            currentItem?.product.ProductName?.sku
+                          ) {
+                            setShowManualInput(false);
+                            setShowBarcodeScanner(true);
+                          }
+                        }}
+                        className={`group relative overflow-hidden rounded-2xl p-5 transition-all duration-300 ${(() => {
+                          const hasBarcode = !!(
+                            currentItem?.product.ProductName?.barcode ||
+                            currentItem?.product.barcode
+                          );
+                          const hasSku = !!(
+                            currentItem?.product.ProductName?.sku ||
+                            currentItem?.product.sku
+                          );
                           const shouldDisable = !hasBarcode && !hasSku;
 
                           return shouldDisable
                             ? "cursor-not-allowed bg-gray-100 dark:bg-gray-800/50"
                             : showBarcodeScanner
                             ? "cursor-pointer bg-gradient-to-br from-purple-500 to-purple-600 shadow-xl ring-2 ring-purple-500/50"
-                            : "cursor-pointer bg-gradient-to-br from-gray-50 to-gray-100 hover:from-purple-50 hover:to-purple-100 dark:from-gray-800 dark:to-gray-700 dark:hover:from-purple-900/20 dark:hover:to-purple-800/20 hover:shadow-lg"
-                        })()
-                      }`}
-                    >
-                      <div className="relative z-10 flex flex-col items-center text-center">
-                        <div
-                          className={`mb-3 rounded-full p-3 ${
-                            showBarcodeScanner
-                              ? "bg-white/20"
-                              : "bg-purple-100 dark:bg-purple-800/50"
-                          }`}
-                        >
-                          <svg
-                            className={`h-6 w-6 ${
+                            : "cursor-pointer bg-gradient-to-br from-gray-50 to-gray-100 hover:from-purple-50 hover:to-purple-100 hover:shadow-lg dark:from-gray-800 dark:to-gray-700 dark:hover:from-purple-900/20 dark:hover:to-purple-800/20";
+                        })()}`}
+                      >
+                        <div className="relative z-10 flex flex-col items-center text-center">
+                          <div
+                            className={`mb-3 rounded-full p-3 ${
                               showBarcodeScanner
-                                ? "text-white"
-                                : "text-purple-600 dark:text-purple-300"
-                            }`}
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                          </svg>
-                        </div>
-                        <div>
-                          <p
-                            className={`font-semibold ${
-                              showBarcodeScanner
-                                ? "text-white"
-                                : theme === "dark"
-                                ? "text-gray-100"
-                                : "text-gray-800"
+                                ? "bg-white/20"
+                                : "bg-purple-100 dark:bg-purple-800/50"
                             }`}
                           >
-                            Scan with Camera
-                          </p>
-                          <p
-                            className={`mt-1 text-sm ${
-                              showBarcodeScanner
-                                ? "text-white/80"
-                                : theme === "dark"
-                                ? "text-gray-400"
-                                : "text-gray-500"
-                            }`}
-                          >
-                            Use your device's camera
-                          </p>
+                            <svg
+                              className={`h-6 w-6 ${
+                                showBarcodeScanner
+                                  ? "text-white"
+                                  : "text-purple-600 dark:text-purple-300"
+                              }`}
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                            </svg>
+                          </div>
+                          <div>
+                            <p
+                              className={`font-semibold ${
+                                showBarcodeScanner
+                                  ? "text-white"
+                                  : theme === "dark"
+                                  ? "text-gray-100"
+                                  : "text-gray-800"
+                              }`}
+                            >
+                              Scan with Camera
+                            </p>
+                            <p
+                              className={`mt-1 text-sm ${
+                                showBarcodeScanner
+                                  ? "text-white/80"
+                                  : theme === "dark"
+                                  ? "text-gray-400"
+                                  : "text-gray-500"
+                              }`}
+                            >
+                              Use your device's camera
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Manual Entry Card */}
-                    <div
-                      onClick={() => {
-                        if (
-                          currentItem?.product.ProductName?.barcode ||
-                          currentItem?.product.barcode ||
-                          currentItem?.product.ProductName?.sku ||
-                          currentItem?.product.sku
-                        ) {
-                          setShowBarcodeScanner(false);
-                          setShowManualInput(true);
-                        }
-                      }}
-                      className={`group relative overflow-hidden rounded-2xl p-5 transition-all duration-300 ${
-                        (() => {
-                          const productNameBarcode = currentItem?.product?.ProductName?.barcode;
+                      {/* Manual Entry Card */}
+                      <div
+                        onClick={() => {
+                          if (
+                            currentItem?.product.ProductName?.barcode ||
+                            currentItem?.product.barcode ||
+                            currentItem?.product.ProductName?.sku ||
+                            currentItem?.product.sku
+                          ) {
+                            setShowBarcodeScanner(false);
+                            setShowManualInput(true);
+                          }
+                        }}
+                        className={`group relative overflow-hidden rounded-2xl p-5 transition-all duration-300 ${(() => {
+                          const productNameBarcode =
+                            currentItem?.product?.ProductName?.barcode;
                           const productBarcode = currentItem?.product?.barcode;
-                          const productNameSku = currentItem?.product?.ProductName?.sku;
+                          const productNameSku =
+                            currentItem?.product?.ProductName?.sku;
                           const productSku = currentItem?.product?.product?.sku;
 
-                          const hasBarcode = !!(productNameBarcode || productBarcode);
+                          const hasBarcode = !!(
+                            productNameBarcode || productBarcode
+                          );
                           const hasSku = !!(productNameSku || productSku);
                           const shouldDisable = !hasBarcode && !hasSku;
 
@@ -462,59 +491,58 @@ export default function QuantityConfirmationModal({
                             ? "cursor-not-allowed bg-gray-100 dark:bg-gray-800/50"
                             : showManualInput
                             ? "cursor-pointer bg-gradient-to-br from-green-500 to-green-600 shadow-xl ring-2 ring-green-500/50"
-                            : "cursor-pointer bg-gradient-to-br from-gray-50 to-gray-100 hover:from-green-50 hover:to-green-100 dark:from-gray-800 dark:to-gray-700 dark:hover:from-green-900/20 dark:hover:to-green-800/20 hover:shadow-lg"
-                        })()
-                      }`}
-                    >
-                      <div className="relative z-10 flex flex-col items-center text-center">
-                        <div
-                          className={`mb-3 rounded-full p-3 ${
-                            showManualInput
-                              ? "bg-white/20"
-                              : "bg-green-100 dark:bg-green-800/50"
-                          }`}
-                        >
-                          <svg
-                            className={`h-6 w-6 ${
+                            : "cursor-pointer bg-gradient-to-br from-gray-50 to-gray-100 hover:from-green-50 hover:to-green-100 hover:shadow-lg dark:from-gray-800 dark:to-gray-700 dark:hover:from-green-900/20 dark:hover:to-green-800/20";
+                        })()}`}
+                      >
+                        <div className="relative z-10 flex flex-col items-center text-center">
+                          <div
+                            className={`mb-3 rounded-full p-3 ${
                               showManualInput
-                                ? "text-white"
-                                : "text-green-600 dark:text-green-300"
-                            }`}
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </div>
-                        <div>
-                          <p
-                            className={`font-semibold ${
-                              showManualInput
-                                ? "text-white"
-                                : theme === "dark"
-                                ? "text-gray-100"
-                                : "text-gray-800"
+                                ? "bg-white/20"
+                                : "bg-green-100 dark:bg-green-800/50"
                             }`}
                           >
-                            Enter Manually
-                          </p>
-                          <p
-                            className={`mt-1 text-sm ${
-                              showManualInput
-                                ? "text-white/80"
-                                : theme === "dark"
-                                ? "text-gray-400"
-                                : "text-gray-500"
-                            }`}
-                          >
-                            Type in the SKU or barcode
-                          </p>
+                            <svg
+                              className={`h-6 w-6 ${
+                                showManualInput
+                                  ? "text-white"
+                                  : "text-green-600 dark:text-green-300"
+                              }`}
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p
+                              className={`font-semibold ${
+                                showManualInput
+                                  ? "text-white"
+                                  : theme === "dark"
+                                  ? "text-gray-100"
+                                  : "text-gray-800"
+                              }`}
+                            >
+                              Enter Manually
+                            </p>
+                            <p
+                              className={`mt-1 text-sm ${
+                                showManualInput
+                                  ? "text-white/80"
+                                  : theme === "dark"
+                                  ? "text-gray-400"
+                                  : "text-gray-500"
+                              }`}
+                            >
+                              Type in the SKU or barcode
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
                   )}
 
                   {/* Manual SKU Input Form */}
@@ -561,10 +589,22 @@ export default function QuantityConfirmationModal({
                         className="space-y-4"
                       >
                         <div className="text-center">
-                          <h4 className={`text-base font-medium ${theme === "dark" ? "text-gray-100" : "text-gray-800"}`}>
+                          <h4
+                            className={`text-base font-medium ${
+                              theme === "dark"
+                                ? "text-gray-100"
+                                : "text-gray-800"
+                            }`}
+                          >
                             Enter Product Details
                           </h4>
-                          <p className={`mt-1 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                          <p
+                            className={`mt-1 text-sm ${
+                              theme === "dark"
+                                ? "text-gray-400"
+                                : "text-gray-600"
+                            }`}
+                          >
                             Type the barcode or SKU from the physical product
                           </p>
                         </div>
@@ -679,20 +719,24 @@ export default function QuantityConfirmationModal({
                             </svg>
                           </div>
                           <div className="flex-1">
-                            <p className={`font-semibold ${
-                              barcodeValidation.isValid
-                                ? "text-green-800 dark:text-green-200"
-                                : "text-red-800 dark:text-red-200"
-                            }`}>
+                            <p
+                              className={`font-semibold ${
+                                barcodeValidation.isValid
+                                  ? "text-green-800 dark:text-green-200"
+                                  : "text-red-800 dark:text-red-200"
+                              }`}
+                            >
                               {barcodeValidation.isValid
                                 ? "Validation Successful"
                                 : "Validation Failed"}
                             </p>
-                            <p className={`mt-1 text-sm ${
-                              barcodeValidation.isValid
-                                ? "text-green-700 dark:text-green-300"
-                                : "text-red-700 dark:text-red-300"
-                            }`}>
+                            <p
+                              className={`mt-1 text-sm ${
+                                barcodeValidation.isValid
+                                  ? "text-green-700 dark:text-green-300"
+                                  : "text-red-700 dark:text-red-300"
+                              }`}
+                            >
                               {barcodeValidation.message}
                             </p>
                           </div>
@@ -782,7 +826,9 @@ export default function QuantityConfirmationModal({
               )}
 
               {/* Status Indicator */}
-              {(exceedsBudget || (foundQuantity === currentItem.quantity && !barcodeValidation.isValid)) && (
+              {(exceedsBudget ||
+                (foundQuantity === currentItem.quantity &&
+                  !barcodeValidation.isValid)) && (
                 <div
                   className={`rounded-2xl p-4 ${
                     theme === "dark"
@@ -798,9 +844,7 @@ export default function QuantityConfirmationModal({
                     >
                       <svg
                         className={`h-5 w-5 ${
-                          exceedsBudget
-                            ? "text-red-500"
-                            : "text-green-500"
+                          exceedsBudget ? "text-red-500" : "text-green-500"
                         }`}
                         fill="none"
                         viewBox="0 0 24 24"
@@ -827,7 +871,8 @@ export default function QuantityConfirmationModal({
                       <p className="mb-1 font-semibold">
                         {exceedsBudget
                           ? "Budget Exceeded"
-                          : foundQuantity === currentItem.quantity && !barcodeValidation.isValid
+                          : foundQuantity === currentItem.quantity &&
+                            !barcodeValidation.isValid
                           ? isWeightBased
                             ? `All ${measurementUnit} Found`
                             : "All Units Found"
@@ -839,7 +884,8 @@ export default function QuantityConfirmationModal({
                               foundWeight * pricePerUnit -
                               customerBudget
                             ).toFixed(2)}`
-                          : foundQuantity === currentItem.quantity && !barcodeValidation.isValid
+                          : foundQuantity === currentItem.quantity &&
+                            !barcodeValidation.isValid
                           ? "Perfect match! All items found"
                           : ""}
                       </p>
@@ -897,9 +943,12 @@ export default function QuantityConfirmationModal({
               disabled={
                 foundQuantity === 0 ||
                 exceedsBudget ||
-                (!isWeightBased && !barcodeValidation.isValid &&
-                 (currentItem?.product.ProductName?.barcode || currentItem?.product.barcode ||
-                  currentItem?.product.ProductName?.sku || currentItem?.product.sku))
+                (!isWeightBased &&
+                  !barcodeValidation.isValid &&
+                  (currentItem?.product.ProductName?.barcode ||
+                    currentItem?.product.barcode ||
+                    currentItem?.product.ProductName?.sku ||
+                    currentItem?.product.sku))
               }
               className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white transition-all duration-200 sm:flex-initial ${
                 foundQuantity === 0 ||

@@ -232,28 +232,19 @@ const ACCEPT_ORDER_OFFER = gql`
 const CHECK_ACTIVE_ORDERS = gql`
   query CheckActiveOrders($shopper_id: uuid!) {
     Orders(
-      where: {
-        shopper_id: { _eq: $shopper_id }
-        status: { _neq: "delivered" }
-      }
+      where: { shopper_id: { _eq: $shopper_id }, status: { _neq: "delivered" } }
     ) {
       id
       status
     }
     reel_orders(
-      where: {
-        shopper_id: { _eq: $shopper_id }
-        status: { _neq: "delivered" }
-      }
+      where: { shopper_id: { _eq: $shopper_id }, status: { _neq: "delivered" } }
     ) {
       id
       status
     }
     restaurant_orders(
-      where: {
-        shopper_id: { _eq: $shopper_id }
-        status: { _neq: "delivered" }
-      }
+      where: { shopper_id: { _eq: $shopper_id }, status: { _neq: "delivered" } }
     ) {
       id
       status
@@ -404,9 +395,9 @@ export default async function handler(
           const a =
             Math.sin(dLat / 2) * Math.sin(dLat / 2) +
             Math.cos(lat1 * (Math.PI / 180)) *
-            Math.cos(lat2 * (Math.PI / 180)) *
-            Math.sin(dLon / 2) *
-            Math.sin(dLon / 2);
+              Math.cos(lat2 * (Math.PI / 180)) *
+              Math.sin(dLon / 2) *
+              Math.sin(dLon / 2);
           const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
           return R * c;
         };
@@ -597,9 +588,9 @@ export default async function handler(
         const a =
           Math.sin(dLat / 2) * Math.sin(dLat / 2) +
           Math.cos(lat1 * (Math.PI / 180)) *
-          Math.cos(lat2 * (Math.PI / 180)) *
-          Math.sin(dLon / 2) *
-          Math.sin(dLon / 2);
+            Math.cos(lat2 * (Math.PI / 180)) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return R * c;
       };
@@ -711,8 +702,8 @@ export default async function handler(
         orderType: isRestaurantOrder
           ? "restaurant"
           : isReelOrder
-            ? "reel"
-            : "regular",
+          ? "reel"
+          : "regular",
       });
     } else {
       console.error("❌ Failed to assign order after accepting offer");

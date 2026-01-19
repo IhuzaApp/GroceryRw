@@ -9,10 +9,7 @@ import { logger } from "../../../src/utils/logger";
 const GET_ACTIVE_ORDERS = gql`
   query GetActiveOrders($shopperId: uuid!) {
     Orders(
-      where: {
-        shopper_id: { _eq: $shopperId }
-        status: { _neq: "delivered" }
-      }
+      where: { shopper_id: { _eq: $shopperId }, status: { _neq: "delivered" } }
       order_by: { created_at: desc }
     ) {
       id
@@ -57,10 +54,7 @@ const GET_ACTIVE_ORDERS = gql`
 const GET_ACTIVE_REEL_ORDERS = gql`
   query GetActiveReelOrders($shopperId: uuid!) {
     reel_orders(
-      where: {
-        shopper_id: { _eq: $shopperId }
-        status: { _neq: "delivered" }
-      }
+      where: { shopper_id: { _eq: $shopperId }, status: { _neq: "delivered" } }
       order_by: { created_at: desc }
     ) {
       id
@@ -102,10 +96,7 @@ const GET_ACTIVE_REEL_ORDERS = gql`
 const GET_ACTIVE_RESTAURANT_ORDERS = gql`
   query GetActiveRestaurantOrders($shopperId: uuid!) {
     restaurant_orders(
-      where: {
-        shopper_id: { _eq: $shopperId }
-        status: { _neq: "delivered" }
-      }
+      where: { shopper_id: { _eq: $shopperId }, status: { _neq: "delivered" } }
       order_by: { created_at: desc }
     ) {
       id
@@ -309,7 +300,8 @@ export default async function handler(
         JSON.stringify(fetchError, null, 2)
       );
       throw new Error(
-        `Failed to fetch orders: ${fetchError instanceof Error ? fetchError.message : String(fetchError)
+        `Failed to fetch orders: ${
+          fetchError instanceof Error ? fetchError.message : String(fetchError)
         }`
       );
     }
@@ -333,8 +325,10 @@ export default async function handler(
 
     console.log("🔍 [ActiveBatches API] Processing orders:", {
       totalRegularOrders: regularOrders.length,
-      ordersWithCombinedId: regularOrders.filter(o => o.combined_order_id).length,
-      standaloneOrders: regularOrders.filter(o => !o.combined_order_id).length
+      ordersWithCombinedId: regularOrders.filter((o) => o.combined_order_id)
+        .length,
+      standaloneOrders: regularOrders.filter((o) => !o.combined_order_id)
+        .length,
     });
 
     regularOrders.forEach((order) => {
@@ -349,29 +343,34 @@ export default async function handler(
 
     console.log("🔍 [ActiveBatches API] Combined orders grouped:", {
       combinedOrderGroups: combinedOrdersMap.size,
-      combinedOrderDetails: Array.from(combinedOrdersMap.entries()).map(([id, orders]) => ({
-        combinedOrderId: id,
-        orderCount: orders.length,
-        orders: orders.map(o => ({
-          id: o.id,
-          OrderID: o.OrderID,
-          status: o.status,
-          shopId: o.shop_id,
-          shopName: o.Shop.name
-        }))
-      }))
+      combinedOrderDetails: Array.from(combinedOrdersMap.entries()).map(
+        ([id, orders]) => ({
+          combinedOrderId: id,
+          orderCount: orders.length,
+          orders: orders.map((o) => ({
+            id: o.id,
+            OrderID: o.OrderID,
+            status: o.status,
+            shopId: o.shop_id,
+            shopName: o.Shop.name,
+          })),
+        })
+      ),
     });
 
     // Transform combined orders into single batches
     const transformedCombinedOrders = Array.from(
       combinedOrdersMap.entries()
     ).map(([combinedOrderId, orders]) => {
-      console.log(`🔍 [ActiveBatches API] Transforming combined order ${combinedOrderId}:`, {
-        ordersInGroup: orders.length,
-        shopIds: orders.map(o => o.shop_id),
-        shopNames: orders.map(o => o.Shop.name),
-        statuses: orders.map(o => o.status)
-      });
+      console.log(
+        `🔍 [ActiveBatches API] Transforming combined order ${combinedOrderId}:`,
+        {
+          ordersInGroup: orders.length,
+          shopIds: orders.map((o) => o.shop_id),
+          shopNames: orders.map((o) => o.Shop.name),
+          statuses: orders.map((o) => o.status),
+        }
+      );
       // Aggregate data from all orders in the combined order
       const totalUnits = orders.reduce((sum, o) => {
         const units = o.Order_Items_aggregate.aggregate?.sum?.quantity ?? 0;
@@ -415,7 +414,7 @@ export default async function handler(
         customerAddresses.length === 2
           ? `${customerAddresses[0]} | ${customerAddresses[1]}`
           : customerAddresses.join(" | ") ||
-          `${firstOrder.Address.street}, ${firstOrder.Address.city}`;
+            `${firstOrder.Address.street}, ${firstOrder.Address.city}`;
 
       // Use the first order as the base for common data
       const firstOrder = orders[0];
