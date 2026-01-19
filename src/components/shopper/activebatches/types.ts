@@ -118,6 +118,7 @@ export interface OrderDetailsType {
   orderIds?: string[];
   orderIDs?: string[];
   shopNames?: string[];
+  shop_id?: string;
   quantity?: number;
   deliveryNote?: string;
 }

@@ -331,6 +331,12 @@ export default async function handler(
     const combinedOrdersMap = new Map<string, typeof regularOrders>();
     const standaloneOrders: typeof regularOrders = [];
 
+    console.log("🔍 [ActiveBatches API] Processing orders:", {
+      totalRegularOrders: regularOrders.length,
+      ordersWithCombinedId: regularOrders.filter(o => o.combined_order_id).length,
+      standaloneOrders: regularOrders.filter(o => !o.combined_order_id).length
+    });
+
     regularOrders.forEach((order) => {
       if (order.combined_order_id) {
         const existing = combinedOrdersMap.get(order.combined_order_id) || [];
@@ -341,10 +347,31 @@ export default async function handler(
       }
     });
 
+    console.log("🔍 [ActiveBatches API] Combined orders grouped:", {
+      combinedOrderGroups: combinedOrdersMap.size,
+      combinedOrderDetails: Array.from(combinedOrdersMap.entries()).map(([id, orders]) => ({
+        combinedOrderId: id,
+        orderCount: orders.length,
+        orders: orders.map(o => ({
+          id: o.id,
+          OrderID: o.OrderID,
+          status: o.status,
+          shopId: o.shop_id,
+          shopName: o.Shop.name
+        }))
+      }))
+    });
+
     // Transform combined orders into single batches
     const transformedCombinedOrders = Array.from(
       combinedOrdersMap.entries()
     ).map(([combinedOrderId, orders]) => {
+      console.log(`🔍 [ActiveBatches API] Transforming combined order ${combinedOrderId}:`, {
+        ordersInGroup: orders.length,
+        shopIds: orders.map(o => o.shop_id),
+        shopNames: orders.map(o => o.Shop.name),
+        statuses: orders.map(o => o.status)
+      });
       // Aggregate data from all orders in the combined order
       const totalUnits = orders.reduce((sum, o) => {
         const units = o.Order_Items_aggregate.aggregate?.sum?.quantity ?? 0;
