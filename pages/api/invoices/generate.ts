@@ -338,7 +338,6 @@ export default async function handler(
     }
 
     const { orderId, orderType = "regular", invoiceProofPhoto } = req.body;
-    console.log("Invoice Generation Request:", { orderId, orderType, hasPhoto: !!invoiceProofPhoto });
 
     // Validate required fields
     if (!orderId) {
@@ -396,7 +395,6 @@ export default async function handler(
             order_id: orderId,
           }
         );
-        console.log("Reel Order Data:", orderDetails?.reel_orders_by_pk ? "Found" : "Not Found");
       } else if (isRestaurantOrder) {
         orderDetails = await hasuraClient.request<RestaurantOrderDetails>(
           GET_RESTAURANT_ORDER_DETAILS_FOR_INVOICE,
@@ -404,7 +402,6 @@ export default async function handler(
             order_id: orderId,
           }
         );
-        console.log("Restaurant Order Data:", orderDetails?.restaurant_orders_by_pk ? "Found" : "Not Found");
       } else {
         orderDetails = await hasuraClient.request<OrderDetails>(
           GET_ORDER_DETAILS_FOR_INVOICE,
@@ -412,7 +409,6 @@ export default async function handler(
             order_id: orderId,
           }
         );
-        console.log("Regular Order Data:", orderDetails?.Orders_by_pk ? "Found" : "Not Found");
       }
     } catch (error) {
       console.error("Error fetching order details for invoice:", error);
@@ -438,7 +434,6 @@ export default async function handler(
         ? order.User.id === session.user.id
         : order.orderedBy.id === session.user.id;
 
-    console.log("Invoice Auth Check:", { orderId, isShopper, isCustomer, shopperId: order.shopper_id, userId: session.user.id });
 
     if (!isShopper && !isCustomer) {
       console.warn("Unauthorized invoice request:", { orderId, userId: session.user.id });
@@ -522,7 +517,6 @@ export default async function handler(
       : parseFloat(order.service_fee || "0");
     const deliveryFee = parseFloat(order.delivery_fee || "0");
 
-    console.log("Invoice Totals Calculated:", { orderId, itemsTotal, serviceFee, deliveryFee });
 
     // Create a unique invoice number
     const invoiceNumber = `INV-${order.OrderID || order.id.slice(-8)
@@ -561,13 +555,11 @@ export default async function handler(
       Proof: invoiceProofUrl,
     };
 
-    console.log("Inserting Invoice to DB:", invoicePayload);
 
     // Save invoice data to the database
     let saveResult;
     try {
       saveResult = await hasuraClient.request<AddInvoiceResult>(ADD_INVOICE, invoicePayload);
-      console.log("Invoice Save Result:", saveResult);
     } catch (error) {
       console.error("Failed to save invoice to database:", error);
       return res
