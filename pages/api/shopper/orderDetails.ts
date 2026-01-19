@@ -160,6 +160,21 @@ const GET_ORDER_DETAILS = gql`
         profile_picture
         updated_at
         role
+        Addresses {
+          city
+          created_at
+          id
+          is_default
+          latitude
+          longitude
+          placeDetails
+          postal_code
+          street
+          type
+          updated_at
+          user_id
+        }
+        is_guest
       }
       Shoppers {
         id
@@ -174,6 +189,24 @@ const GET_ORDER_DETAILS = gql`
       user_id
       voucher_code
       combined_order_id
+      Invoice {
+        Proof
+        created_at
+        customer_id
+        delivery_fee
+        discount
+        id
+        invoice_items
+        invoice_number
+        order_id
+        reel_order_id
+        restarurant_order_id
+        service_fee
+        status
+        subtotal
+        tax
+        total_amount
+      }
     }
   }
 `;
@@ -404,7 +437,6 @@ const GET_RELATED_REGULAR_ORDERS = gql`
         phone
         latitude
         longitude
-        operating_hours
       }
       address: Address {
         id
@@ -414,10 +446,6 @@ const GET_RELATED_REGULAR_ORDERS = gql`
         city
         postal_code
         placeDetails
-        created_at
-        updated_at
-        user_id
-        is_default
       }
       Order_Items {
         id
@@ -429,13 +457,11 @@ const GET_RELATED_REGULAR_ORDERS = gql`
           final_price
           measurement_unit
           ProductName {
-            id
             name
-            description
-            barcode
-            sku
             image
-            create_at
+            sku
+            barcode
+            id
           }
         }
       }
@@ -449,6 +475,25 @@ const GET_RELATED_REGULAR_ORDERS = gql`
         name
         phone
         profile_picture
+        email
+        gender
+        is_active
+        is_guest
+        created_at
+        Addresses {
+          city
+          created_at
+          id
+          is_default
+          latitude
+          longitude
+          placeDetails
+          postal_code
+          street
+          type
+          updated_at
+          user_id
+        }
       }
       Shoppers {
         id
@@ -459,6 +504,27 @@ const GET_RELATED_REGULAR_ORDERS = gql`
       shop_id
       total
       user_id
+      pin
+      delivery_notes
+      assigned_at
+      Invoice {
+        Proof
+        created_at
+        customer_id
+        delivery_fee
+        discount
+        id
+        invoice_items
+        invoice_number
+        order_id
+        reel_order_id
+        restarurant_order_id
+        service_fee
+        status
+        subtotal
+        tax
+        total_amount
+      }
     }
   }
 `;
@@ -566,7 +632,18 @@ export default async function handler(
     // Get orderId from query params
     const { id } = req.query;
 
+    console.log("🔍 [OrderDetails API] Incoming request:", {
+      orderId: id,
+      method: req.method,
+      query: req.query,
+      headers: {
+        userAgent: req.headers['user-agent'],
+        authorization: req.headers.authorization ? 'Present' : 'Missing'
+      }
+    });
+
     if (!id || typeof id !== "string") {
+      console.error("❌ [OrderDetails API] Invalid order ID:", { id, type: typeof id });
       res.status(400).json({ error: "Missing or invalid order ID" });
       return;
     }
@@ -1013,10 +1090,15 @@ export default async function handler(
               shopName: order.shop?.name || "Unknown Shop",
               shopAddress: order.shop?.address,
               shop: order.shop, // Full shop object
+              customerId: order.orderedBy?.id,
+              customerPhone: order.orderedBy?.phone,
               customerName: order.orderedBy?.name,
+              address: order.address,
+              orderedBy: order.orderedBy,
               total: parseFloat(order.total || subTotal.toString()), // Use total if available or calc
               items: items,
-              combinedOrderId: order.combined_order_id
+              combinedOrderId: order.combined_order_id,
+              Invoice: order.Invoice
             };
           });
           relatedOrders = [...relatedOrders, ...processedRegular];
@@ -1039,6 +1121,8 @@ export default async function handler(
                 phone: order.Reel.Restaurant.phone,
                 image: null // Add image field if available
               } : null,
+              customerId: order.user?.id,
+              customerPhone: order.user?.phone,
               customerName: order.user?.name,
               total: parseFloat(order.total || "0"),
               items: [{
@@ -1079,6 +1163,8 @@ export default async function handler(
                 phone: order.Restaurant.phone,
                 image: (order.Restaurant as any).logo
               } : null,
+              customerId: order.orderedBy?.id,
+              customerPhone: order.orderedBy?.phone,
               customerName: order.orderedBy?.name,
               total: parseFloat(order.total || "0"),
               items: items,
@@ -1113,6 +1199,100 @@ export default async function handler(
           formattedOrder.shopName = `${formattedOrder.shopNames.length} Stores: ${formattedOrder.shopNames.join(", ")}`;
         }
 
+        // Console log raw database data for all orders
+        console.log("🔍 [OrderDetails API] Raw database data for main order:", {
+          id: orderData.id,
+          OrderID: orderData.OrderID,
+          status: orderData.status,
+          total: orderData.total,
+          combined_order_id: orderData.combined_order_id,
+          user_id: orderData.user_id,
+          shop_id: orderData.shop_id,
+          address: orderData.address,
+          orderedBy: orderData.orderedBy ? {
+            id: orderData.orderedBy.id,
+            name: orderData.orderedBy.name,
+            phone: orderData.orderedBy.phone,
+            addressesCount: orderData.orderedBy.Addresses?.length || 0,
+            addresses: orderData.orderedBy.Addresses?.map((addr: any) => ({
+              id: addr.id,
+              street: addr.street,
+              city: addr.city,
+              postal_code: addr.postal_code,
+              is_default: addr.is_default,
+              latitude: addr.latitude,
+              longitude: addr.longitude
+            }))
+          } : null,
+          Order_Items: orderData.Order_Items?.map((item: any) => ({
+            id: item.id,
+            quantity: item.quantity,
+            price: item.price,
+            found: item.found,
+            foundQuantity: item.foundQuantity,
+            Product: item.Product ? {
+              id: item.Product.id,
+              name: item.Product.ProductName?.name,
+              sku: item.Product.ProductName?.sku,
+              barcode: item.Product.ProductName?.barcode,
+              image: item.Product.image,
+              final_price: item.Product.final_price,
+              measurement_unit: item.Product.measurement_unit
+            } : null
+          })),
+          Invoice: orderData.Invoice,
+          shop: orderData.shop ? {
+            id: orderData.shop.id,
+            name: orderData.shop.name,
+            address: orderData.shop.address,
+            phone: orderData.shop.phone
+          } : null
+        });
+
+        // Console log related orders data
+        console.log("🔍 [OrderDetails API] Related combined orders data:", relatedOrders.map((co: any, index: number) => ({
+          index: index + 1,
+          id: co.id,
+          OrderID: co.OrderID,
+          status: co.status,
+          total: co.total,
+          combined_order_id: co.combined_order_id,
+          user_id: co.user_id,
+          shop_id: co.shop_id,
+          address: co.address,
+          orderedBy: co.orderedBy ? {
+            id: co.orderedBy.id,
+            name: co.orderedBy.name,
+            phone: co.orderedBy.phone,
+            addressesCount: co.orderedBy.Addresses?.length || 0,
+            addresses: co.orderedBy.Addresses?.map((addr: any) => ({
+              id: addr.id,
+              street: addr.street,
+              city: addr.city,
+              postal_code: addr.postal_code,
+              is_default: addr.is_default
+            }))
+          } : null,
+          Order_Items: co.Order_Items?.map((item: any) => ({
+            id: item.id,
+            quantity: item.quantity,
+            price: item.price,
+            found: item.found,
+            foundQuantity: item.foundQuantity,
+            Product: item.Product ? {
+              name: item.Product.ProductName?.name,
+              sku: item.Product.ProductName?.sku,
+              barcode: item.Product.ProductName?.barcode
+            } : null
+          })),
+          Invoice: co.Invoice,
+          shop: co.shop ? {
+            id: co.shop.id,
+            name: co.shop.name,
+            address: co.shop.address
+          } : null
+        })));
+
         // Console log the aggregated combined order information
         console.log("🔍 [OrderDetails API] Aggregated combined order data:", {
           mainOrderId: formattedOrder.id,
@@ -1129,10 +1309,64 @@ export default async function handler(
             shopName: co.shopName,
             shopAddress: co.shopAddress,
             itemsCount: co.items?.length || 0,
-            total: co.total
-          }))
+            total: co.total,
+            hasInvoice: !!(co.Invoice?.length > 0 || co.Invoice),
+            invoiceData: co.Invoice
+          })),
+          customerInfo: {
+            fromMainOrder: orderData.orderedBy ? {
+              id: orderData.orderedBy.id,
+              name: orderData.orderedBy.name,
+              phone: orderData.orderedBy.phone
+            } : null,
+            addresses: orderData.orderedBy?.Addresses || []
+          }
         });
       }
+    }
+
+    // Console log for regular orders (no combined orders)
+    if (formattedOrder && !orderData.combined_order_id) {
+      console.log("🔍 [OrderDetails API] Regular order data:", {
+        id: formattedOrder.id,
+        OrderID: formattedOrder.OrderID,
+        status: formattedOrder.status,
+        total: formattedOrder.total,
+        user_id: formattedOrder.user_id,
+        shop_id: formattedOrder.shop_id,
+        shopName: formattedOrder.shopName,
+        address: formattedOrder.address,
+        orderedBy: formattedOrder.orderedBy ? {
+          id: formattedOrder.orderedBy.id,
+          name: formattedOrder.orderedBy.name,
+          phone: formattedOrder.orderedBy.phone,
+          addressesCount: formattedOrder.orderedBy.Addresses?.length || 0,
+          addresses: formattedOrder.orderedBy.Addresses?.map((addr: any) => ({
+            id: addr.id,
+            street: addr.street,
+            city: addr.city,
+            postal_code: addr.postal_code,
+            is_default: addr.is_default
+          }))
+        } : null,
+        Order_Items: formattedOrder.Order_Items?.map((item: any) => ({
+          id: item.id,
+          quantity: item.quantity,
+          price: item.price,
+          found: item.found,
+          foundQuantity: item.foundQuantity,
+          Product: item.Product ? {
+            name: item.Product.ProductName?.name,
+            sku: item.Product.ProductName?.sku,
+            barcode: item.Product.ProductName?.barcode,
+            final_price: item.Product.final_price,
+            measurement_unit: item.Product.measurement_unit
+          } : null
+        })),
+        Invoice: formattedOrder.Invoice,
+        hasCombinedOrders: !!(formattedOrder.combinedOrders?.length > 0),
+        combinedOrdersCount: formattedOrder.combinedOrders?.length || 0
+      });
     }
 
     res.status(200).json({
