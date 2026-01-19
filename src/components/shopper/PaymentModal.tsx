@@ -153,30 +153,26 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   const modalContent = (
     <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/70 px-0 backdrop-blur-md md:px-4">
       <div
-        className={`flex h-full w-full flex-col overflow-hidden shadow-2xl md:h-auto md:max-h-[90vh] md:max-w-2xl md:rounded-2xl ${
-          theme === "dark"
+        className={`flex h-full w-full flex-col overflow-hidden shadow-2xl md:h-auto md:max-h-[90vh] md:max-w-2xl md:rounded-2xl ${theme === "dark"
             ? "border-gray-700 bg-gray-800"
             : "border-gray-200 bg-white"
-        } md:border`}
+          } md:border`}
       >
         {/* Header */}
         <div
-          className={`flex flex-shrink-0 items-center justify-between border-b p-4 md:p-5 ${
-            theme === "dark"
+          className={`flex flex-shrink-0 items-center justify-between border-b p-4 md:p-5 ${theme === "dark"
               ? "border-gray-700 bg-gray-800"
               : "border-gray-200 bg-gradient-to-r from-green-50 to-blue-50"
-          }`}
+            }`}
         >
           <div className="flex items-center gap-3">
             <div
-              className={`rounded-full p-2 ${
-                theme === "dark" ? "bg-green-600" : "bg-green-100"
-              }`}
+              className={`rounded-full p-2 ${theme === "dark" ? "bg-green-600" : "bg-green-100"
+                }`}
             >
               <svg
-                className={`h-6 w-6 ${
-                  theme === "dark" ? "text-white" : "text-green-600"
-                }`}
+                className={`h-6 w-6 ${theme === "dark" ? "text-white" : "text-green-600"
+                  }`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -190,23 +186,21 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               </svg>
             </div>
             <h2
-              className={`text-xl font-bold ${
-                theme === "dark" ? "text-gray-100" : "text-gray-800"
-              }`}
+              className={`text-xl font-bold ${theme === "dark" ? "text-gray-100" : "text-gray-800"
+                }`}
             >
               {currentStep === "momo"
                 ? "Process Payment"
                 : currentStep === "otp"
-                ? "Verify OTP"
-                : "Order Complete!"}
+                  ? "Verify OTP"
+                  : "Order Complete!"}
             </h2>
             <button
               onClick={onClose}
-              className={`rounded-xl p-2 transition-colors ${
-                theme === "dark"
+              className={`rounded-xl p-2 transition-colors ${theme === "dark"
                   ? "text-gray-400 hover:bg-gray-700"
                   : "text-gray-500 hover:bg-gray-100"
-              }`}
+                }`}
               disabled={paymentStatus === "processing" || otpLoading}
             >
               <svg
@@ -228,30 +222,26 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
         {/* Body */}
         <div
-          className={`flex-1 overflow-y-auto p-4 md:p-6 ${
-            theme === "dark" ? "bg-gray-800 text-gray-100" : "bg-white"
-          }`}
+          className={`flex-1 overflow-y-auto p-4 md:p-6 ${theme === "dark" ? "bg-gray-800 text-gray-100" : "bg-white"
+            }`}
         >
           {currentStep === "momo" ? (
             <>
               {/* MoMo Step Content */}
               <div
-                className={`mb-4 rounded-xl border-l-4 p-3 ${
-                  theme === "dark"
+                className={`mb-4 rounded-xl border-l-4 p-3 ${theme === "dark"
                     ? "border-blue-500 bg-blue-900/20 text-blue-300"
                     : "border-blue-500 bg-blue-50 text-blue-800"
-                }`}
+                  }`}
               >
                 <div className="flex items-start gap-3">
                   <div
-                    className={`rounded-full p-1 ${
-                      theme === "dark" ? "bg-blue-600" : "bg-blue-100"
-                    }`}
+                    className={`rounded-full p-1 ${theme === "dark" ? "bg-blue-600" : "bg-blue-100"
+                      }`}
                   >
                     <svg
-                      className={`h-4 w-4 ${
-                        theme === "dark" ? "text-white" : "text-blue-600"
-                      }`}
+                      className={`h-4 w-4 ${theme === "dark" ? "text-white" : "text-blue-600"
+                        }`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -281,9 +271,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 {/* MoMo Code Input */}
                 <div className="space-y-2">
                   <label
-                    className={`block text-sm font-semibold ${
-                      theme === "dark" ? "text-gray-300" : "text-gray-700"
-                    }`}
+                    className={`block text-sm font-semibold ${theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}
                   >
                     MoMo Code
                   </label>
@@ -292,9 +281,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       className={`pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3`}
                     >
                       <svg
-                        className={`h-5 w-5 ${
-                          theme === "dark" ? "text-gray-400" : "text-gray-500"
-                        }`}
+                        className={`h-5 w-5 ${theme === "dark" ? "text-gray-400" : "text-gray-500"
+                          }`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -312,11 +300,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       value={momoCode}
                       onChange={(e) => setMomoCode(e.target.value)}
                       placeholder="Enter your MoMo code"
-                      className={`w-full rounded-xl border-2 py-3 pl-10 pr-4 transition-all focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                        theme === "dark"
+                      className={`w-full rounded-xl border-2 py-3 pl-10 pr-4 transition-all focus:outline-none focus:ring-2 focus:ring-green-500 ${theme === "dark"
                           ? "border-gray-600 bg-gray-700 text-gray-100 placeholder-gray-400 focus:border-green-500"
                           : "border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-green-500"
-                      }`}
+                        }`}
                     />
                   </div>
                 </div>
@@ -324,9 +311,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 {/* Private Key Input */}
                 <div className="space-y-2">
                   <label
-                    className={`block text-sm font-semibold ${
-                      theme === "dark" ? "text-gray-300" : "text-gray-700"
-                    }`}
+                    className={`block text-sm font-semibold ${theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}
                   >
                     Private Key (Auto-generated)
                   </label>
@@ -335,9 +321,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       className={`pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3`}
                     >
                       <svg
-                        className={`h-5 w-5 ${
-                          theme === "dark" ? "text-gray-400" : "text-gray-500"
-                        }`}
+                        className={`h-5 w-5 ${theme === "dark" ? "text-gray-400" : "text-gray-500"
+                          }`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -346,7 +331,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1721 9z"
+                          d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1 1 21 9z"
                         />
                       </svg>
                     </div>
@@ -354,17 +339,15 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       type="text"
                       value={privateKey}
                       disabled
-                      className={`w-full rounded-xl border-2 py-3 pl-10 pr-4 transition-all ${
-                        theme === "dark"
+                      className={`w-full rounded-xl border-2 py-3 pl-10 pr-4 transition-all ${theme === "dark"
                           ? "cursor-not-allowed border-gray-600 bg-gray-700 text-gray-400"
                           : "cursor-not-allowed border-gray-300 bg-gray-50 text-gray-500"
-                      }`}
+                        }`}
                     />
                   </div>
                   <p
-                    className={`text-xs ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-500"
-                    }`}
+                    className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
                   >
                     This is a one-time key for this transaction. Keep it for
                     your records.
@@ -374,22 +357,19 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
               {/* Payment Summary */}
               <div
-                className={`mt-6 rounded-2xl border-2 p-4 ${
-                  theme === "dark"
+                className={`mt-6 rounded-2xl border-2 p-4 ${theme === "dark"
                     ? "border-green-600 bg-green-900/20"
                     : "border-green-200 bg-green-50"
-                }`}
+                  }`}
               >
                 <div className="mb-4 flex items-center gap-3">
                   <div
-                    className={`rounded-full p-2 ${
-                      theme === "dark" ? "bg-green-600" : "bg-green-100"
-                    }`}
+                    className={`rounded-full p-2 ${theme === "dark" ? "bg-green-600" : "bg-green-100"
+                      }`}
                   >
                     <svg
-                      className={`h-5 w-5 ${
-                        theme === "dark" ? "text-white" : "text-green-600"
-                      }`}
+                      className={`h-5 w-5 ${theme === "dark" ? "text-white" : "text-green-600"
+                        }`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -403,39 +383,34 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     </svg>
                   </div>
                   <h4
-                    className={`text-lg font-bold ${
-                      theme === "dark" ? "text-gray-100" : "text-gray-800"
-                    }`}
+                    className={`text-lg font-bold ${theme === "dark" ? "text-gray-100" : "text-gray-800"
+                      }`}
                   >
                     Payment Summary
                   </h4>
                 </div>
 
                 <div
-                  className={`flex items-center justify-between rounded-xl p-4 ${
-                    theme === "dark" ? "bg-gray-800" : "bg-white"
-                  }`}
+                  className={`flex items-center justify-between rounded-xl p-4 ${theme === "dark" ? "bg-gray-800" : "bg-white"
+                    }`}
                 >
                   <div>
                     <p
-                      className={`text-sm font-medium ${
-                        theme === "dark" ? "text-gray-300" : "text-gray-600"
-                      }`}
+                      className={`text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-600"
+                        }`}
                     >
                       Total Amount to be Paid
                     </p>
                     <p
-                      className={`text-xs ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-500"
-                      }`}
+                      className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
                     >
                       For found items only
                     </p>
                   </div>
                   <div
-                    className={`text-2xl font-bold ${
-                      theme === "dark" ? "text-green-400" : "text-green-600"
-                    }`}
+                    className={`text-2xl font-bold ${theme === "dark" ? "text-green-400" : "text-green-600"
+                      }`}
                   >
                     {formattedCurrency(orderAmount)}
                   </div>
@@ -445,33 +420,30 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               {/* Payment Status Display */}
               {paymentStatus !== "idle" && paymentStatus !== "success" && (
                 <div
-                  className={`mt-6 rounded-xl border-l-4 p-4 ${
-                    paymentStatus === "failed"
+                  className={`mt-6 rounded-xl border-l-4 p-4 ${paymentStatus === "failed"
                       ? theme === "dark"
                         ? "border-red-500 bg-red-900/20 text-red-300"
                         : "border-red-500 bg-red-50 text-red-800"
                       : theme === "dark"
-                      ? "border-blue-500 bg-blue-900/20 text-blue-300"
-                      : "border-blue-500 bg-blue-50 text-blue-800"
-                  }`}
+                        ? "border-blue-500 bg-blue-900/20 text-blue-300"
+                        : "border-blue-500 bg-blue-50 text-blue-800"
+                    }`}
                 >
                   <div className="flex items-start gap-3">
                     <div
-                      className={`rounded-full p-1 ${
-                        paymentStatus === "failed"
+                      className={`rounded-full p-1 ${paymentStatus === "failed"
                           ? theme === "dark"
                             ? "bg-red-600"
                             : "bg-red-100"
                           : theme === "dark"
-                          ? "bg-blue-600"
-                          : "bg-blue-100"
-                      }`}
+                            ? "bg-blue-600"
+                            : "bg-blue-100"
+                        }`}
                     >
                       {paymentStatus === "failed" ? (
                         <svg
-                          className={`h-4 w-4 ${
-                            theme === "dark" ? "text-white" : "text-red-600"
-                          }`}
+                          className={`h-4 w-4 ${theme === "dark" ? "text-white" : "text-red-600"
+                            }`}
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -485,9 +457,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                         </svg>
                       ) : (
                         <svg
-                          className={`h-4 w-4 animate-spin ${
-                            theme === "dark" ? "text-white" : "text-blue-600"
-                          }`}
+                          className={`h-4 w-4 animate-spin ${theme === "dark" ? "text-white" : "text-blue-600"
+                            }`}
                           fill="none"
                           viewBox="0 0 24 24"
                         >
@@ -521,22 +492,19 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
               {/* Warning Message */}
               <div
-                className={`mt-6 rounded-xl border-l-4 p-4 ${
-                  theme === "dark"
+                className={`mt-6 rounded-xl border-l-4 p-4 ${theme === "dark"
                     ? "border-yellow-500 bg-yellow-900/20 text-yellow-300"
                     : "border-yellow-500 bg-yellow-50 text-yellow-800"
-                }`}
+                  }`}
               >
                 <div className="flex items-start gap-3">
                   <div
-                    className={`rounded-full p-1 ${
-                      theme === "dark" ? "bg-yellow-600" : "bg-yellow-100"
-                    }`}
+                    className={`rounded-full p-1 ${theme === "dark" ? "bg-yellow-600" : "bg-yellow-100"
+                      }`}
                   >
                     <svg
-                      className={`h-4 w-4 ${
-                        theme === "dark" ? "text-white" : "text-yellow-600"
-                      }`}
+                      className={`h-4 w-4 ${theme === "dark" ? "text-white" : "text-yellow-600"
+                        }`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -564,22 +532,19 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             <>
               {/* OTP Step Content */}
               <div
-                className={`mb-4 rounded-xl border-l-4 p-3 ${
-                  theme === "dark"
+                className={`mb-4 rounded-xl border-l-4 p-3 ${theme === "dark"
                     ? "border-purple-500 bg-purple-900/20 text-purple-300"
                     : "border-purple-500 bg-purple-50 text-purple-800"
-                }`}
+                  }`}
               >
                 <div className="flex items-start gap-3">
                   <div
-                    className={`rounded-full p-1 ${
-                      theme === "dark" ? "bg-purple-600" : "bg-purple-100"
-                    }`}
+                    className={`rounded-full p-1 ${theme === "dark" ? "bg-purple-600" : "bg-purple-100"
+                      }`}
                   >
                     <svg
-                      className={`h-4 w-4 ${
-                        theme === "dark" ? "text-white" : "text-purple-600"
-                      }`}
+                      className={`h-4 w-4 ${theme === "dark" ? "text-white" : "text-purple-600"
+                        }`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -607,9 +572,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               {/* OTP Input with Square Boxes */}
               <div className="space-y-4">
                 <label
-                  className={`block text-sm font-semibold ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-700"
-                  }`}
+                  className={`block text-sm font-semibold ${theme === "dark" ? "text-gray-300" : "text-gray-700"
+                    }`}
                 >
                   Enter OTP Code
                 </label>
@@ -680,20 +644,18 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                         }
                       }}
                       id={`otp-${index}`}
-                      className={`h-16 w-16 rounded-xl border-2 text-center text-2xl font-bold transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                        theme === "dark"
+                      className={`h-16 w-16 rounded-xl border-2 text-center text-2xl font-bold transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 ${theme === "dark"
                           ? "border-gray-600 bg-gray-700 text-gray-100 focus:border-purple-500"
                           : "border-gray-300 bg-white text-gray-900 focus:border-purple-500"
-                      }`}
+                        }`}
                       placeholder=""
                     />
                   ))}
                 </div>
 
                 <p
-                  className={`text-center text-sm ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-500"
-                  }`}
+                  className={`text-center text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
                 >
                   Enter the 5-digit code from the alert popup
                 </p>
@@ -702,33 +664,30 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               {/* OTP Status Display */}
               {paymentStatus !== "idle" && paymentStatus !== "success" && (
                 <div
-                  className={`mt-4 rounded-xl border-l-4 p-3 ${
-                    paymentStatus === "failed"
+                  className={`mt-4 rounded-xl border-l-4 p-3 ${paymentStatus === "failed"
                       ? theme === "dark"
                         ? "border-red-500 bg-red-900/20 text-red-300"
                         : "border-red-500 bg-red-50 text-red-800"
                       : theme === "dark"
-                      ? "border-purple-500 bg-purple-900/20 text-purple-300"
-                      : "border-purple-500 bg-purple-50 text-purple-800"
-                  }`}
+                        ? "border-purple-500 bg-purple-900/20 text-purple-300"
+                        : "border-purple-500 bg-purple-50 text-purple-800"
+                    }`}
                 >
                   <div className="flex items-start gap-3">
                     <div
-                      className={`rounded-full p-1 ${
-                        paymentStatus === "failed"
+                      className={`rounded-full p-1 ${paymentStatus === "failed"
                           ? theme === "dark"
                             ? "bg-red-600"
                             : "bg-red-100"
                           : theme === "dark"
-                          ? "bg-purple-600"
-                          : "bg-purple-100"
-                      }`}
+                            ? "bg-purple-600"
+                            : "bg-purple-100"
+                        }`}
                     >
                       {paymentStatus === "failed" ? (
                         <svg
-                          className={`h-4 w-4 ${
-                            theme === "dark" ? "text-white" : "text-red-600"
-                          }`}
+                          className={`h-4 w-4 ${theme === "dark" ? "text-white" : "text-red-600"
+                            }`}
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -742,9 +701,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                         </svg>
                       ) : (
                         <svg
-                          className={`h-4 w-4 animate-spin ${
-                            theme === "dark" ? "text-white" : "text-purple-600"
-                          }`}
+                          className={`h-4 w-4 animate-spin ${theme === "dark" ? "text-white" : "text-purple-600"
+                            }`}
                           fill="none"
                           viewBox="0 0 24 24"
                         >
@@ -778,22 +736,19 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
               {/* OTP Instructions */}
               <div
-                className={`mt-4 rounded-xl border-l-4 p-3 ${
-                  theme === "dark"
+                className={`mt-4 rounded-xl border-l-4 p-3 ${theme === "dark"
                     ? "border-blue-500 bg-blue-900/20 text-blue-300"
                     : "border-blue-500 bg-blue-50 text-blue-800"
-                }`}
+                  }`}
               >
                 <div className="flex items-start gap-3">
                   <div
-                    className={`rounded-full p-1 ${
-                      theme === "dark" ? "bg-blue-600" : "bg-blue-100"
-                    }`}
+                    className={`rounded-full p-1 ${theme === "dark" ? "bg-blue-600" : "bg-blue-100"
+                      }`}
                   >
                     <svg
-                      className={`h-4 w-4 ${
-                        theme === "dark" ? "text-white" : "text-blue-600"
-                      }`}
+                      className={`h-4 w-4 ${theme === "dark" ? "text-white" : "text-blue-600"
+                        }`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -822,22 +777,19 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             <>
               {/* Success Step Content - Show Order PIN */}
               <div
-                className={`mb-6 rounded-xl border-2 p-6 text-center ${
-                  theme === "dark"
+                className={`mb-6 rounded-xl border-2 p-6 text-center ${theme === "dark"
                     ? "border-green-600 bg-green-900/20"
                     : "border-green-200 bg-green-50"
-                }`}
+                  }`}
               >
                 <div className="mb-4 flex justify-center">
                   <div
-                    className={`rounded-full p-4 ${
-                      theme === "dark" ? "bg-green-600" : "bg-green-100"
-                    }`}
+                    className={`rounded-full p-4 ${theme === "dark" ? "bg-green-600" : "bg-green-100"
+                      }`}
                   >
                     <svg
-                      className={`h-12 w-12 ${
-                        theme === "dark" ? "text-white" : "text-green-600"
-                      }`}
+                      className={`h-12 w-12 ${theme === "dark" ? "text-white" : "text-green-600"
+                        }`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -852,52 +804,45 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   </div>
                 </div>
                 <h3
-                  className={`mb-2 text-2xl font-bold ${
-                    theme === "dark" ? "text-green-300" : "text-green-700"
-                  }`}
+                  className={`mb-2 text-2xl font-bold ${theme === "dark" ? "text-green-300" : "text-green-700"
+                    }`}
                 >
                   Payment Successful!
                 </h3>
                 <p
-                  className={`mb-6 text-sm ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }`}
+                  className={`mb-6 text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
                 >
                   Your order has been placed successfully
                 </p>
 
                 {/* Order PIN Display */}
                 <div
-                  className={`mx-auto mb-4 max-w-sm rounded-2xl border-2 p-6 ${
-                    theme === "dark"
+                  className={`mx-auto mb-4 max-w-sm rounded-2xl border-2 p-6 ${theme === "dark"
                       ? "border-gray-600 bg-gray-800"
                       : "border-gray-300 bg-white"
-                  }`}
+                    }`}
                 >
                   <p
-                    className={`mb-3 text-sm font-semibold ${
-                      theme === "dark" ? "text-gray-300" : "text-gray-700"
-                    }`}
+                    className={`mb-3 text-sm font-semibold ${theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}
                   >
                     Your Order PIN
                   </p>
                   <div
-                    className={`mb-3 rounded-xl p-4 ${
-                      theme === "dark" ? "bg-gray-700" : "bg-gray-100"
-                    }`}
+                    className={`mb-3 rounded-xl p-4 ${theme === "dark" ? "bg-gray-700" : "bg-gray-100"
+                      }`}
                   >
                     <p
-                      className={`font-mono text-5xl font-bold tracking-widest ${
-                        theme === "dark" ? "text-green-400" : "text-green-600"
-                      }`}
+                      className={`font-mono text-5xl font-bold tracking-widest ${theme === "dark" ? "text-green-400" : "text-green-600"
+                        }`}
                     >
                       {orderPin || "00"}
                     </p>
                   </div>
                   <p
-                    className={`text-xs ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-500"
-                    }`}
+                    className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
                   >
                     Please share this PIN with the delivery person to confirm
                     your order delivery
@@ -906,17 +851,15 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
                 {/* Information Box */}
                 <div
-                  className={`rounded-xl border-l-4 p-4 text-left ${
-                    theme === "dark"
+                  className={`rounded-xl border-l-4 p-4 text-left ${theme === "dark"
                       ? "border-blue-500 bg-blue-900/20 text-blue-300"
                       : "border-blue-500 bg-blue-50 text-blue-800"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-start gap-3">
                     <svg
-                      className={`mt-0.5 h-5 w-5 flex-shrink-0 ${
-                        theme === "dark" ? "text-blue-400" : "text-blue-600"
-                      }`}
+                      className={`mt-0.5 h-5 w-5 flex-shrink-0 ${theme === "dark" ? "text-blue-400" : "text-blue-600"
+                        }`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -944,11 +887,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
         {/* Footer */}
         <div
-          className={`flex flex-shrink-0 items-center justify-end gap-3 border-t p-4 md:p-5 ${
-            theme === "dark"
+          className={`flex flex-shrink-0 items-center justify-end gap-3 border-t p-4 md:p-5 ${theme === "dark"
               ? "border-gray-700 bg-gray-800"
               : "border-gray-200 bg-white"
-          }`}
+            }`}
         >
           <div className="flex w-full gap-3">
             {currentStep === "momo" ? (
@@ -960,15 +902,14 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     paymentStatus === "processing" ||
                     paymentLoading
                   }
-                  className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white transition-all duration-200 ${
-                    !momoCode.trim() ||
-                    paymentStatus === "processing" ||
-                    paymentLoading
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white transition-all duration-200 ${!momoCode.trim() ||
+                      paymentStatus === "processing" ||
+                      paymentLoading
                       ? "cursor-not-allowed bg-gray-400"
                       : theme === "dark"
-                      ? "bg-green-600 shadow-lg hover:bg-green-700 hover:shadow-green-500/25"
-                      : "bg-green-600 shadow-lg hover:bg-green-700 hover:shadow-green-500/25"
-                  }`}
+                        ? "bg-green-600 shadow-lg hover:bg-green-700 hover:shadow-green-500/25"
+                        : "bg-green-600 shadow-lg hover:bg-green-700 hover:shadow-green-500/25"
+                    }`}
                 >
                   {paymentStatus === "processing" || paymentLoading ? (
                     <>
@@ -1015,13 +956,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 <button
                   onClick={onClose}
                   disabled={paymentStatus === "processing"}
-                  className={`rounded-xl px-6 py-3 font-semibold transition-all duration-200 ${
-                    paymentStatus === "processing"
+                  className={`rounded-xl px-6 py-3 font-semibold transition-all duration-200 ${paymentStatus === "processing"
                       ? "cursor-not-allowed border border-gray-400 text-gray-400"
                       : theme === "dark"
-                      ? "border border-gray-600 text-gray-300 hover:bg-gray-700"
-                      : "border border-gray-300 text-gray-700 hover:bg-gray-100"
-                  }`}
+                        ? "border border-gray-600 text-gray-300 hover:bg-gray-700"
+                        : "border border-gray-300 text-gray-700 hover:bg-gray-100"
+                    }`}
                 >
                   Cancel
                 </button>
@@ -1031,13 +971,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 <button
                   onClick={handleOtpVerification}
                   disabled={!otp.trim() || otp.length !== 5 || otpLoading}
-                  className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white transition-all duration-200 ${
-                    !otp.trim() || otp.length !== 5 || otpLoading
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white transition-all duration-200 ${!otp.trim() || otp.length !== 5 || otpLoading
                       ? "cursor-not-allowed bg-gray-400"
                       : theme === "dark"
-                      ? "bg-purple-600 shadow-lg hover:bg-purple-700 hover:shadow-purple-500/25"
-                      : "bg-purple-600 shadow-lg hover:bg-purple-700 hover:shadow-purple-500/25"
-                  }`}
+                        ? "bg-purple-600 shadow-lg hover:bg-purple-700 hover:shadow-purple-500/25"
+                        : "bg-purple-600 shadow-lg hover:bg-purple-700 hover:shadow-purple-500/25"
+                    }`}
                 >
                   {otpLoading ? (
                     <>
@@ -1084,13 +1023,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 <button
                   onClick={handleBackToMomo}
                   disabled={otpLoading}
-                  className={`rounded-xl px-6 py-3 font-semibold transition-all duration-200 ${
-                    otpLoading
+                  className={`rounded-xl px-6 py-3 font-semibold transition-all duration-200 ${otpLoading
                       ? "cursor-not-allowed border border-gray-400 text-gray-400"
                       : theme === "dark"
-                      ? "border border-gray-600 text-gray-300 hover:bg-gray-700"
-                      : "border border-gray-300 text-gray-700 hover:bg-gray-100"
-                  }`}
+                        ? "border border-gray-600 text-gray-300 hover:bg-gray-700"
+                        : "border border-gray-300 text-gray-700 hover:bg-gray-100"
+                    }`}
                 >
                   Back
                 </button>

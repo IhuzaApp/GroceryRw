@@ -123,6 +123,13 @@ export default function BatchDetails({
   const [order, setOrder] = useState<OrderDetailsType | null>(orderData);
   const [errorState, setErrorState] = useState<string | null>(error);
 
+  // Debug logging for combined orders
+  useEffect(() => {
+    if (order) {
+      // Order loaded successfully
+    }
+  }, [order]);
+
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedProductName, setSelectedProductName] = useState<string | null>(
@@ -146,7 +153,7 @@ export default function BatchDetails({
   const [invoiceData, setInvoiceData] = useState<any>(null);
   const [invoiceLoading, setInvoiceLoading] = useState(false);
   const [showInvoiceProofModal, setShowInvoiceProofModal] = useState(false);
-  const [invoiceProofUploaded, setInvoiceProofUploaded] = useState(false);
+  const [uploadedProofs, setUploadedProofs] = useState<Record<string, boolean>>({});
   const [activeTab, setActiveTab] = useState<"items" | "details">("items");
   const [walletData, setWalletData] = useState<any>(null);
   const [walletLoading, setWalletLoading] = useState(false);
@@ -159,49 +166,61 @@ export default function BatchDetails({
 
   const isMultiShop = useMemo(() => {
     const shops = new Set();
-    if (order?.shop?.id) shops.add(order.shop.id);
+    const mainShopId = order?.shop?.id || order?.shop_id;
+    if (mainShopId) shops.add(mainShopId);
     order?.combinedOrders?.forEach((o: any) => {
-      if (o.shop?.id) shops.add(o.shop.id);
+      const sId = o.shop?.id || o.shop_id;
+      if (sId) shops.add(sId);
     });
     return shops.size > 1;
-  }, [order?.shop?.id, order?.combinedOrders]);
+  }, [order?.shop?.id, order?.shop_id, order?.combinedOrders]);
 
-  const [currentStep, setCurrentStep] = useState(() => {
-    if (!orderData) return 0;
+  // Get items for the currently active shop tab
+  const getActiveShopItems = useMemo(() => {
+    if (!order?.Order_Items) return [];
 
-    // Log the main order data
-    console.log("📑 [BatchDetails] Main Order Data:", {
-      id: orderData.id,
-      OrderID: (orderData as any).OrderID,
-      status: orderData.status,
-      orderType: orderData.orderType,
-      shopName: (orderData as any).shopName || (orderData as any).shop?.name,
-      combinedOrderId: (orderData as any).combinedOrderId || (orderData as any).combined_order_id
+    if (!isMultiShop || !activeShopId) {
+      // Single shop or no active shop selected - return all items
+      return order.Order_Items;
+    }
+
+    // Multi-shop: filter items by active shop
+    const filteredItems = order.Order_Items.filter((item: any) => {
+      const itemShopId = item.shopId;
+      return itemShopId === activeShopId;
     });
 
-    // For restaurant orders, skip the shopping step
-    const isRestaurantOrder = orderData.orderType === "restaurant";
-    // Skip shopping if EITHER restaurant_id OR user_id is not null
-    const isRestaurantUserReel =
-      orderData.reel?.restaurant_id || orderData.reel?.user_id;
+    // Filtered items calculated successfully
 
-    switch (orderData.status) {
-      case "accepted":
-        if (isRestaurantUserReel) {
-          return 1; // Restaurant/user reels skip shopping and start at delivery step
-        }
-        return isRestaurantOrder ? 1 : 0; // Restaurant orders start at step 1 (delivery)
-      case "shopping":
-        return 1;
-      case "on_the_way":
-      case "at_customer":
-        return isRestaurantOrder || isRestaurantUserReel ? 2 : 2; // Both types go to step 2
-      case "delivered":
-        return isRestaurantOrder || isRestaurantUserReel ? 3 : 3; // Both types end at step 3
-      default:
-        return 0;
+    return filteredItems;
+  }, [order?.Order_Items, isMultiShop, activeShopId]);
+
+  const currentStep = useMemo(() => {
+    if (!order) return 0;
+    const allOrders = [order, ...(order.combinedOrders || [])];
+
+    // Check if everything is delivered
+    if (allOrders.every(o => o.status === "delivered")) return 3;
+
+    // Check if everything is at least on_the_way (Transition to Delivery Phase)
+    if (allOrders.every(o =>
+      o.status === "on_the_way" ||
+      o.status === "at_customer" ||
+      o.status === "delivered"
+    )) {
+      return 2;
     }
-  });
+
+    // Check if any is shopping or paid
+    if (allOrders.some(o => o.status === "shopping" || o.status === "paid")) return 1;
+
+    // Default based on type if still at start
+    const isRestaurantOrder = allOrders.some(o => o.orderType === "restaurant");
+    const isRestaurantUserReel = allOrders.some(o => o.reel?.restaurant_id || o.reel?.user_id);
+    if (isRestaurantOrder || isRestaurantUserReel) return 1;
+
+    return 0;
+  }, [order]);
 
   // Add useEffect to get current location when component mounts
   useEffect(() => {
@@ -305,13 +324,24 @@ export default function BatchDetails({
                   ...o,
                   shopName: o.shop?.name || "Unknown Shop",
                   shopAddress: o.shop?.address,
-                  items: o.Order_Items?.map((item: any) => ({
-                    id: item.id,
-                    name: item.ProductName?.name || "Unknown Product",
-                    quantity: item.quantity,
-                    price: parseFloat(item.price) || 0,
-                    productImage: item.ProductName?.image || item.product?.image || null,
-                  }))
+                  items: o.Order_Items?.map((item: any) => {
+                    const barcode = item.product?.ProductName?.barcode || item.product?.barcode || item.ProductName?.barcode || "";
+                    const sku = item.product?.ProductName?.sku || item.product?.sku || item.ProductName?.sku || "";
+
+                    return {
+                      id: item.id,
+                      name: item.product?.ProductName?.name || item.ProductName?.name || "Unknown Product",
+                      quantity: item.quantity,
+                      price: parseFloat(item.price) || 0,
+                      productImage: item.product?.ProductName?.image || item.product?.image || item.ProductName?.image || null,
+                      barcode: barcode,
+                      sku: sku,
+                      measurement_unit: item.product?.measurement_unit || "",
+                      // Preserve original IDs from API
+                      productId: item.product?.id,
+                      productNameId: item.product?.ProductName?.id,
+                    };
+                  })
                 }));
 
               // Also update Order_Items if they are missing their shopId
@@ -323,9 +353,24 @@ export default function BatchDetails({
                     updatedOrderItems.push({
                       ...si,
                       shopId: sub.shop?.id,
+                      orderId: sub.id, // Maintain order context for combined orders
                       product: {
-                        ...si,
-                        ProductName: { name: si.name, image: si.productImage }
+                        id: si.productId || si.id, // Use preserved Product.id or fallback to item.id
+                        name: si.name,
+                        image: si.productImage,
+                        final_price: si.price?.toString() || "0",
+                        measurement_unit: si.measurement_unit || "item",
+                        barcode: si.barcode,
+                        sku: si.sku,
+                        ProductName: {
+                          id: si.productNameId || si.id, // Use preserved ProductName.id or fallback to item.id
+                          name: si.name,
+                          description: "",
+                          barcode: si.barcode,
+                          sku: si.sku,
+                          image: si.productImage,
+                          create_at: new Date().toISOString(),
+                        }
                       }
                     });
                   }
@@ -612,6 +657,7 @@ export default function BatchDetails({
     if (!order?.id) return;
 
     setPaymentLoading(true);
+    // Payment debug info calculated
     try {
       // First check if there's enough balance in the wallet
       const wallet = await fetchWalletBalance();
@@ -659,6 +705,9 @@ export default function BatchDetails({
 
   // Function to show payment modal
   const handleShowPaymentModal = () => {
+    const paymentAmount = calculateFoundItemsTotal();
+    // Payment modal info calculated
+
     // Generate a new private key when opening the modal
     generatePrivateKey();
     setShowPaymentModal(true);
@@ -678,7 +727,7 @@ export default function BatchDetails({
       // Get the actual order amount being processed
       const orderAmount = calculateFoundItemsTotal();
       // Get the original order total for refund calculation
-      const originalOrderTotal = calculateOriginalSubtotal();
+      const originalOrderTotal = calculateOriginalSubtotal(paymentTargetOrderId || undefined);
 
       // Initiate MoMo payment after OTP verification
       let momoPaymentSuccess = false;
@@ -851,35 +900,42 @@ export default function BatchDetails({
         setOtp("");
         setGeneratedOtp("");
 
-        // Update order status to on_the_way immediately after payment
+        // Update order status to on_the_way for only the specific order being paid for
         const targetId = paymentTargetOrderId || order.id;
+        const ordersToUpdate = [targetId];
 
-        const ordersToUpdate = !isMultiShop
-          ? [order.id, ...(order.combinedOrders || []).map(o => o.id)]
-          : [targetId];
+        console.log("🔍 [Payment Debug] Updating Status:", {
+          paymentTargetOrderId,
+          targetId,
+          ordersToUpdate
+        });
+
+        console.log("🔍 [BatchDetails Component] Payment completed - updating orders to 'on_the_way':", {
+          ordersToUpdate,
+          paymentTargetOrderId,
+          orderId: order?.id,
+          combinedOrdersCount: order?.combinedOrders?.length || 0
+        });
 
         await Promise.all(ordersToUpdate.map(id => onUpdateStatus(id, "on_the_way")));
 
         // Update local state
         if (order) {
-          if (!isMultiShop) {
-            setOrder({
-              ...order,
-              status: "on_the_way",
-              combinedOrders: order.combinedOrders?.map(o => ({ ...o, status: "on_the_way" }))
-            });
-          } else {
-            if (targetId === order.id) {
-              setOrder({ ...order, status: "on_the_way" });
-            } else {
-              const updatedCombined = order.combinedOrders?.map(o =>
-                o.id === targetId ? { ...o, status: "on_the_way" } : o
-              );
-              setOrder({ ...order, combinedOrders: updatedCombined });
-            }
-          }
+          const updatedMain = ordersToUpdate.includes(order.id)
+            ? { ...order, status: "on_the_way" as string }
+            : order;
+          const updatedCombined = (order.combinedOrders || []).map(o =>
+            ordersToUpdate.includes(o.id) ? { ...o, status: "on_the_way" as string } : o
+          );
+
+          setOrder({
+            ...updatedMain,
+            combinedOrders: updatedCombined
+          });
         }
-        setCurrentStep(2);
+
+        // Clear payment target since payment is complete
+        setPaymentTargetOrderId(null);
 
         // Show invoice proof modal for proof upload
         setShowInvoiceProofModal(true);
@@ -1087,7 +1143,12 @@ export default function BatchDetails({
 
   // Handle invoice proof captured - generates invoice and updates status to on_the_way
   const handleInvoiceProofCaptured = async (imageDataUrl: string) => {
-    if (!order?.id) return;
+    if (!order) return;
+    // Determine the specific order we are processing
+    const allInBatch = [order, ...(order.combinedOrders || [])];
+    const matchingOrder = allInBatch.find(o => o && (o.shop?.id || o.shop_id) === activeShopId) || order;
+    const targetId = (paymentTargetOrderId || matchingOrder.id) as string;
+    const targetOrder = allInBatch.find(o => o?.id === targetId) || order;
 
     try {
       setLoading(true);
@@ -1099,8 +1160,8 @@ export default function BatchDetails({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          orderId: order.id,
-          orderType: order?.orderType || "regular",
+          orderId: targetId,
+          orderType: targetOrder?.orderType || "regular",
           invoiceProofPhoto: imageDataUrl, // Send the invoice proof photo
         }),
       });
@@ -1115,17 +1176,31 @@ export default function BatchDetails({
         throw new Error("Invalid invoice data returned from API");
       }
 
-      // Mark invoice proof as uploaded
-      setInvoiceProofUploaded(true);
+      // Mark invoice proof as uploaded for this specific order
+      setUploadedProofs(prev => ({ ...prev, [targetId as string]: true }));
 
       // Close invoice proof modal
       setShowInvoiceProofModal(false);
+
+      // Auto-switch to next shop if in multi-shop mode
+      const currentOrder = order as OrderDetailsType;
+      if (isMultiShop && currentOrder.combinedOrders) {
+        const nextTarget = currentOrder.combinedOrders.find(o =>
+          o?.status === "accepted" || o?.status === "shopping"
+        );
+
+        if (nextTarget?.shop?.id) {
+          setActiveShopId(nextTarget.shop.id);
+        } else if (currentOrder.status === "accepted" || currentOrder.status === "shopping") {
+          setActiveShopId(currentOrder.shop?.id || "");
+        }
+      }
 
       // Show success notification
       toaster.push(
         <Notification type="success" header="Invoice Proof Uploaded" closable>
           ✅ Invoice proof uploaded successfully
-          <br />✅ You can now confirm delivery
+          <br />✅ {isMultiShop ? "Please check next shop or proceed" : "You can now confirm delivery"}
         </Notification>,
         { placement: "topEnd", duration: 5000 }
       );
@@ -1164,6 +1239,14 @@ export default function BatchDetails({
       !isRestaurantOrder &&
       !isRestaurantUserReel
     ) {
+      console.log("🔍 [BatchDetails Component] Setting payment target for combined order:", {
+        targetOrderId: idToUpdate,
+        newStatus,
+        isCombinedOrder: !!order?.combinedOrders?.length,
+        orderId: order?.id,
+        combinedOrdersCount: order?.combinedOrders?.length || 0
+      });
+
       setPaymentTargetOrderId(idToUpdate);
       handleShowPaymentModal();
       return;
@@ -1171,58 +1254,27 @@ export default function BatchDetails({
 
     try {
       setLoading(true);
+      if (!order) return;
 
-      // Determine which orders to update
-      const ordersToUpdate = [];
-      if (!isMultiShop) {
-        // Single shop batch: Update everything together
-        ordersToUpdate.push(order.id);
-        (order.combinedOrders || []).forEach(o => ordersToUpdate.push(o.id));
-      } else {
-        // Multi-shop batch: Update specific order
-        ordersToUpdate.push(idToUpdate);
-      }
+      // Determine which orders to update - only the specific target order
+      const ordersToUpdate = [idToUpdate];
 
       // Execute status updates
       await Promise.all(ordersToUpdate.map(id => onUpdateStatus(id, newStatus)));
 
       // Update local state
       if (order) {
-        if (!isMultiShop) {
-          // Update all as a unit
-          setOrder({
-            ...order,
-            status: newStatus,
-            combinedOrders: order.combinedOrders?.map(o => ({ ...o, status: newStatus }))
-          });
+        const updatedMain = ordersToUpdate.includes(order.id)
+          ? { ...order, status: newStatus }
+          : order;
+        const updatedCombined = (order.combinedOrders || []).map(o =>
+          ordersToUpdate.includes(o.id) ? { ...o, status: newStatus } : o
+        );
 
-          // Update global step
-          switch (newStatus) {
-            case "accepted": setCurrentStep(0); break;
-            case "shopping": setCurrentStep(1); break;
-            case "on_the_way":
-            case "at_customer": setCurrentStep(2); break;
-            case "delivered": setCurrentStep(3); break;
-          }
-        } else {
-          // Targeted update for multi-shop
-          if (idToUpdate === order.id) {
-            setOrder({ ...order, status: newStatus });
-            // Sync main step if main order moves
-            switch (newStatus) {
-              case "accepted": setCurrentStep(0); break;
-              case "shopping": setCurrentStep(1); break;
-              case "on_the_way":
-              case "at_customer": setCurrentStep(2); break;
-              case "delivered": setCurrentStep(3); break;
-            }
-          } else {
-            const updatedCombined = order.combinedOrders?.map(o =>
-              o.id === idToUpdate ? { ...o, status: newStatus } : o
-            );
-            setOrder({ ...order, combinedOrders: updatedCombined });
-          }
-        }
+        setOrder({
+          ...updatedMain,
+          combinedOrders: updatedCombined
+        });
 
         // Close chat drawer if open when main order is delivered
         if (isDrawerOpen && currentChatId === order.id && newStatus === "delivered") {
@@ -1268,6 +1320,14 @@ export default function BatchDetails({
 
     if (found && item.quantity > 1) {
       // Open quantity modal for multi-quantity items
+      console.log("🔍 [BatchDetails] Opening quantity modal for item:", item);
+      console.log("🔍 [BatchDetails] Item product:", item.product);
+      console.log("🔍 [BatchDetails] Item ProductName:", item.product?.ProductName);
+      console.log("🔍 [BatchDetails] Barcode/SKU:", {
+        barcode: item.product?.ProductName?.barcode || item.product?.barcode,
+        sku: item.product?.ProductName?.sku || item.product?.sku
+      });
+
       setCurrentItem(item);
       setFoundQuantity(item.quantity); // Default to the full requested quantity
       setShowQuantityModal(true);
@@ -1374,18 +1434,23 @@ export default function BatchDetails({
   };
 
   // Calculate original subtotal (items only, no fees)
-  const calculateOriginalSubtotal = () => {
+  const calculateOriginalSubtotal = (targetOrderId?: string) => {
     if (!order) return 0;
 
-    const useAll = !isMultiShop;
+    // If no targetOrderId provided but we have an activeShopId in multi-shop mode, use active shop
+    const effectiveTargetId = targetOrderId || (isMultiShop && activeShopId ?
+      (activeShopId === order?.shop?.id ? order?.id : order?.combinedOrders?.find(o => o.shop?.id === activeShopId)?.id) :
+      undefined);
+
+    const useAll = !isMultiShop || !effectiveTargetId;
 
     // Sum for reels
     let reelSubtotal = 0;
-    if (order.orderType === "reel" && useAll) {
+    if (order.orderType === "reel" && (useAll || effectiveTargetId === order.id)) {
       reelSubtotal += parseFloat(order.reel?.Price || "0") * (order.quantity || 1);
     }
     order.combinedOrders?.forEach((sub: any) => {
-      if (sub.orderType === "reel" && useAll) {
+      if (sub.orderType === "reel" && (useAll || effectiveTargetId === sub.id)) {
         reelSubtotal += parseFloat(sub.reel?.Price || "0") * (sub.quantity || 1);
       }
     });
@@ -1396,7 +1461,17 @@ export default function BatchDetails({
     if (!order.Order_Items) return 0;
 
     let itemsToSum = order.Order_Items;
-    if (!useAll) {
+    if (!useAll && targetOrderId) {
+      if (targetOrderId === order.id) {
+        itemsToSum = order.Order_Items.filter(item => !(item as any).shopId || (item as any).shopId === order.shop?.id);
+      } else {
+        const targetSub = order.combinedOrders?.find(o => o.id === targetOrderId);
+        const targetShopId = targetSub?.shop?.id;
+        if (targetShopId) {
+          itemsToSum = order.Order_Items.filter(item => (item as any).shopId === targetShopId);
+        }
+      }
+    } else if (!useAll) {
       // If we ever need targeted subtotal in multi-shop summary, we'd filter here.
       // But summary usually shows active shop total.
       itemsToSum = order.Order_Items.filter((item: any) =>
@@ -1556,6 +1631,8 @@ export default function BatchDetails({
 
         const hasFoundItems = relevantItems?.some((item: any) => item.found) || false;
 
+        // Shopping status calculated
+
         return (
           <Button
             appearance="primary"
@@ -1572,8 +1649,8 @@ export default function BatchDetails({
         );
       case "on_the_way":
       case "at_customer":
-        // Only show Confirm Delivery button if invoice proof has been uploaded
-        if (!invoiceProofUploaded) {
+        // Only show Confirm Delivery button if invoice proof has been uploaded for this specific order
+        if (!uploadedProofs[activeOrder.id]) {
           return (
             <div
               className={`flex flex-col items-center justify-center rounded-xl border-2 p-6 text-center ${theme === "dark"
@@ -1636,6 +1713,103 @@ export default function BatchDetails({
       default:
         return null;
     }
+  };
+
+  const renderDeliveryPhase = () => {
+    if (!order) return null;
+    const allOrders = [order, ...(order.combinedOrders || [])];
+
+    // Group sub-orders by customer
+    const ordersByCustomer = new Map<string, any[]>();
+    allOrders.forEach(o => {
+      const customerId = (o as any).orderedBy?.id || o.customerId || 'unknown';
+      if (!ordersByCustomer.has(customerId)) ordersByCustomer.set(customerId, []);
+      ordersByCustomer.get(customerId)?.push(o);
+    });
+
+    return (
+      <div className="space-y-6 px-3 sm:px-0">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
+            <svg className="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Delivery Route</h2>
+        </div>
+
+        <div className="space-y-4">
+          {Array.from(ordersByCustomer.entries()).map(([customerId, orders], index) => {
+            const firstOrder = orders[0];
+            const customer = (firstOrder as any).orderedBy || (firstOrder as any).user ||
+              { name: firstOrder.customerName || 'Customer' };
+            const address = firstOrder.address;
+            const isDelivered = orders.every(o => o.status === 'delivered');
+
+            return (
+              <div key={customerId} className={`relative rounded-2xl border bg-white p-4 shadow-sm transition-all dark:bg-gray-800 ${isDelivered ? 'opacity-60 grayscale' : 'border-blue-200 shadow-md dark:border-blue-900'}`}>
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 font-bold text-white shadow-sm">
+                      {index + 1}
+                    </span>
+                    <div>
+                      <h3 className="font-bold text-gray-900 dark:text-white">
+                        {customer.name}
+                        {customer.phone && <span className="ml-2 text-xs font-normal text-slate-500">• {customer.phone}</span>}
+                      </h3>
+                      <p className="text-xs text-gray-500">{orders.length} Order{orders.length > 1 ? 's' : ''} to deliver</p>
+                    </div>
+                  </div>
+                  {isDelivered && (
+                    <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                      Completed
+                    </span>
+                  )}
+                </div>
+
+                <div className="mb-4 space-y-2 rounded-xl bg-slate-50 p-3 dark:bg-slate-700/50">
+                  <div className="flex items-start gap-2">
+                    <svg className="mt-1 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    </svg>
+                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      {address?.street || firstOrder.customerAddress || 'No Address'}, {address?.city || ''}
+                    </p>
+                  </div>
+                </div>
+
+                {!isDelivered && (
+                  <div className="flex flex-col gap-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button appearance="primary" color="blue" block onClick={() => handleDirectionsClick(`${address?.street || firstOrder.customerAddress}, ${address?.city || ''}`)}>
+                        Directions
+                      </Button>
+                      <Button appearance="ghost" color="violet" block onClick={() => handleChatClick(customerId, customer.name)}>
+                        Chat
+                      </Button>
+                    </div>
+
+                    <div className="space-y-3 pt-2">
+                      {orders.map(o => (
+                        <div key={o.id} className="rounded-lg border border-slate-100 bg-slate-50/50 p-3 dark:border-slate-700 dark:bg-slate-800/50">
+                          <div className="mb-3 flex items-center justify-between">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">#{o.OrderID || o.id.slice(-8)}</span>
+                            <span className="text-[10px] font-bold text-slate-500">{(o as any).shop?.name || o.shopName}</span>
+                          </div>
+                          {getActionButton(o)}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   // Function to handle chat button click
@@ -1801,45 +1975,38 @@ export default function BatchDetails({
   // Check if invoice proof exists when order loads or status changes
   useEffect(() => {
     const checkInvoiceProof = async () => {
-      if (
-        order?.id &&
-        (order?.status === "on_the_way" || order?.status === "at_customer")
-      ) {
-        try {
-          // Check if invoice with proof exists for this order
-          const response = await fetch(
-            `/api/invoices/check-proof?orderId=${order.id}`
-          );
-          if (response.ok) {
-            const data = await response.json();
-            console.log("🔍 [Invoice Proof Check]", {
-              orderId: order.id,
-              status: order.status,
-              hasProof: data.hasProof,
-            });
-            setInvoiceProofUploaded(data.hasProof || false);
-          } else {
-            // If API fails, default to false to show the upload button
-            console.warn(
-              "⚠️ [Invoice Proof Check] API failed, defaulting to false"
-            );
-            setInvoiceProofUploaded(false);
+      if (!order?.id) return;
+
+      const ordersToCheck = [order, ...(order.combinedOrders || [])];
+      const proofResults: Record<string, boolean> = { ...uploadedProofs };
+
+      await Promise.all(
+        ordersToCheck.map(async (o: any) => {
+          if (o.status === "on_the_way" || o.status === "at_customer") {
+            try {
+              const response = await fetch(
+                `/api/invoices/check-proof?orderId=${o.id}`
+              );
+              if (response.ok) {
+                const data = await response.json();
+                proofResults[o.id] = data.hasProof || false;
+              }
+            } catch (error) {
+              console.error(`❌ [Invoice Proof Check] Error for ${o.id}:`, error);
+            }
+          } else if (o.status === "delivered") {
+            proofResults[o.id] = true;
+          } else if (o.status === "paid") {
+            proofResults[o.id] = false;
           }
-        } catch (error) {
-          console.error("❌ [Invoice Proof Check] Error:", error);
-          setInvoiceProofUploaded(false);
-        }
-      } else if (order?.status === "paid") {
-        // Reset invoice proof uploaded status when in paid status
-        setInvoiceProofUploaded(false);
-      } else if (order?.status === "delivered") {
-        // If delivered, proof must have been uploaded
-        setInvoiceProofUploaded(true);
-      }
+        })
+      );
+
+      setUploadedProofs(proofResults);
     };
 
     checkInvoiceProof();
-  }, [order?.id, order?.status]);
+  }, [order?.id, order?.status, order?.combinedOrders?.length]);
 
   // Fetch complete order data when component mounts
   useEffect(() => {
@@ -1858,37 +2025,87 @@ export default function BatchDetails({
 
           if (data.order) {
             // Transform the API response to match BatchDetails expected structure
-            const transformOrderItems = (items: any[], shopId?: string) =>
-              items?.map((item: any) => ({
-                id: item.id,
-                quantity: item.quantity,
-                price: item.price,
-                shopId: shopId, // Attach shopId for split view grouping
-                product: {
-                  id: item.id, // Use item id as product id
-                  name: item.name,
-                  image: item.productImage || "/images/groceryPlaceholder.png",
-                  final_price: item.price.toString(),
-                  measurement_unit: item.measurement_unit, // Add measurement_unit from API
-                  ProductName: {
-                    id: item.id,
+            const transformOrderItems = (items: any[], shopId?: string, orderId?: string) => {
+              return items?.map((item: any) => {
+
+                // Handle both data formats: flattened (from orderDetails API) and nested (from combined orders API)
+                const isNestedFormat = item.product && item.product.ProductName;
+
+                let productId, productName, productImage, finalPrice, measurementUnit, productNameData;
+
+                if (isNestedFormat) {
+                  // Nested format from combined orders API
+                  productId = item.product?.id || item.id;
+                  productName = item.product?.ProductName?.name || "Unknown Product";
+                  productImage = item.product?.ProductName?.image || item.product?.image || "/images/groceryPlaceholder.png";
+                  finalPrice = item.product?.final_price || item.price?.toString() || "0";
+                  measurementUnit = item.product?.measurement_unit || "item";
+                  productNameData = {
+                    id: item.product?.ProductName?.id || item.id,
+                    name: item.product?.ProductName?.name || "Unknown Product",
+                    description: item.product?.ProductName?.description || "",
+                    barcode: item.product?.ProductName?.barcode || "",
+                    sku: item.product?.ProductName?.sku || "",
+                    image: item.product?.ProductName?.image || item.product?.image || "/images/groceryPlaceholder.png",
+                    create_at: item.product?.ProductName?.create_at || new Date().toISOString(),
+                  };
+                } else {
+                  // Flattened format from orderDetails API - use existing product data
+                  productId = item.product?.id || item.id;
+                  productName = item.product?.name || item.name;
+                  productImage = item.product?.image || item.productImage || "/images/groceryPlaceholder.png";
+                  finalPrice = item.product?.final_price || item.price?.toString() || "0";
+                  measurementUnit = item.product?.measurement_unit || item.measurement_unit || "item";
+
+                  // Use existing ProductName data from the flattened format
+                  productNameData = item.product?.ProductName ? {
+                    id: item.product.ProductName.id,
+                    name: item.product.ProductName.name,
+                    description: item.product.ProductName.description || "",
+                    barcode: item.product.ProductName.barcode || "",
+                    sku: item.product.ProductName.sku || "",
+                    image: item.product.ProductName.image || item.productImage || "/images/groceryPlaceholder.png",
+                    create_at: item.product.ProductName.create_at || new Date().toISOString(),
+                  } : {
+                    id: item.id, // Fallback to item.id if no ProductName data
                     name: item.name,
                     description: "",
                     barcode: item.barcode || "",
                     sku: item.sku || "",
                     image: item.productImage || "/images/groceryPlaceholder.png",
                     create_at: new Date().toISOString(),
-                  },
-                },
-              })) || [];
+                  };
+                }
 
-            let allItems = transformOrderItems(data.order.items || [], data.order.shop?.id);
+                const transformedItem = {
+                  id: item.id,
+                  quantity: item.quantity,
+                  price: item.price,
+                  shopId: shopId, // Attach shopId for split view grouping
+                  orderId: orderId, // Attach orderId to maintain correct order context
+                  product: {
+                    id: productId,
+                    name: productName,
+                    image: productImage,
+                    final_price: finalPrice,
+                    measurement_unit: measurementUnit,
+                    barcode: productNameData.barcode,
+                    sku: productNameData.sku,
+                    ProductName: productNameData,
+                  },
+                };
+
+                return transformedItem;
+              }) || [];
+            };
+
+            let allItems = transformOrderItems(data.order.items || [], data.order.shop?.id, data.order.id);
 
             // If combined orders exist, aggregate their items too
             if (data.order.combinedOrders && data.order.combinedOrders.length > 0) {
               data.order.combinedOrders.forEach((subOrder: any) => {
                 if (subOrder.items && subOrder.id !== data.order.id) {
-                  const subItems = transformOrderItems(subOrder.items, subOrder.shop?.id);
+                  const subItems = transformOrderItems(subOrder.items, subOrder.shop?.id, subOrder.id);
                   subOrder.Order_Items = subItems; // Attach for split view
                   allItems = [...allItems, ...subItems];
                 }
@@ -2006,7 +2223,12 @@ export default function BatchDetails({
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3">
-        {order.status === "shopping" && (
+        {(() => {
+          // In combined orders, show Mark Found button if ANY order in the batch is shopping
+          const allOrders = [order, ...(order.combinedOrders || [])];
+          const isBatchShopping = allOrders.some(o => o.status === "shopping");
+          return isBatchShopping;
+        })() && (
           <button
             onClick={() =>
               toggleItemFound(item, !item.found)
@@ -2129,8 +2351,8 @@ export default function BatchDetails({
           open={showInvoiceProofModal}
           onClose={() => setShowInvoiceProofModal(false)}
           onProofCaptured={handleInvoiceProofCaptured}
-          orderId={order?.id || ""}
-          orderNumber={order?.OrderID || order?.id.slice(-8) || ""}
+          orderId={paymentTargetOrderId || (order && [order, ...(order.combinedOrders || [])].find(o => (o.shop?.id || o.shop_id) === activeShopId)?.id) || order?.id || ""}
+          orderNumber={(order && [order, ...(order.combinedOrders || [])].find(o => o.id === (paymentTargetOrderId || (order && [order, ...(order.combinedOrders || [])].find(o => (o.shop?.id || o.shop_id) === activeShopId)?.id) || order?.id))?.OrderID) || order?.OrderID || order?.id.slice(-8) || ""}
         />
 
         {/* Delivery Confirmation Modal */}
@@ -2266,31 +2488,33 @@ export default function BatchDetails({
               </div>
 
               {/* Mobile Tabs - Only visible on mobile */}
-              <div className="border-b border-slate-200 dark:border-slate-700 sm:hidden">
-                <div className="flex">
-                  <button
-                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === "items"
-                      ? "border-b-2 border-green-600 text-green-600 dark:border-green-500 dark:text-green-500"
-                      : "text-slate-500 dark:text-slate-400"
-                      }`}
-                    onClick={() => setActiveTab("items")}
-                  >
-                    Items
-                  </button>
-                  <button
-                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === "details"
-                      ? "border-b-2 border-green-600 text-green-600 dark:border-green-500 dark:text-green-500"
-                      : "text-slate-500 dark:text-slate-400"
-                      }`}
-                    onClick={() => setActiveTab("details")}
-                  >
-                    Other Details
-                  </button>
+              {shouldShowOrderDetails() && (
+                <div className="border-b border-slate-200 dark:border-slate-700 sm:hidden">
+                  <div className="flex">
+                    <button
+                      className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === "items"
+                        ? "border-b-2 border-green-600 text-green-600 dark:border-green-500 dark:text-green-500"
+                        : "text-slate-500 dark:text-slate-400"
+                        }`}
+                      onClick={() => setActiveTab("items")}
+                    >
+                      Items
+                    </button>
+                    <button
+                      className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === "details"
+                        ? "border-b-2 border-green-600 text-green-600 dark:border-green-500 dark:text-green-500"
+                        : "text-slate-500 dark:text-slate-400"
+                        }`}
+                      onClick={() => setActiveTab("details")}
+                    >
+                      Other Details
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Main Info Grid - Hidden during shopping status on desktop, always visible in "Other Details" tab on mobile */}
-              {(order.status !== "shopping" || activeTab === "details") && (
+              {shouldShowOrderDetails() && (order.status !== "shopping" || activeTab === "details") && (
                 <div
                   className={`grid grid-cols-1 gap-3 sm:gap-8 lg:grid-cols-2 ${activeTab === "details" ? "block" : "hidden sm:grid"
                     }`}
@@ -2805,6 +3029,9 @@ export default function BatchDetails({
                 </div>
               )}
 
+              {/* Delivery Phase View */}
+              {!shouldShowOrderDetails() && renderDeliveryPhase()}
+
               {/* Order Items */}
               {shouldShowOrderDetails() && (
                 <div
@@ -2841,11 +3068,28 @@ export default function BatchDetails({
                         itemsByShop.get(shopId)?.push(item);
                       });
 
-                      const groups = Array.from(itemsByShop.entries());
+                      const allGroups = Array.from(itemsByShop.entries());
+                      const groups = allGroups.filter(([shopId]) => {
+                        const shopOrders = [order, ...(order.combinedOrders || [])]
+                          .filter(o => (o.shop?.id || o.shop_id) === shopId);
+                        // Hide shop tab if all its orders are on_the_way or finished
+                        return shopOrders.some(o => o.status === "accepted" || o.status === "shopping");
+                      });
+
+                      // Auto-set activeShopId to the only visible shop if there's only one
+                      if (groups.length === 1 && activeShopId !== groups[0][0]) {
+                        console.log("🔍 [BatchDetails UI] Auto-setting activeShopId to only visible shop:", groups[0][0]);
+                        setActiveShopId(groups[0][0]);
+                      }
+
+                      // Combined order shops rendering logic
+
                       const isSplit = groups.length > 1;
 
-                      // Use current activeShopId or default to the first group's ID
-                      const effectiveActiveShopId = activeShopId || (groups.length > 0 ? groups[0][0] : null);
+
+                      // Use current activeShopId if it's still in the visible groups, otherwise default to first available
+                      const isCurrentlyActiveVisible = groups.some(([sid]) => sid === activeShopId);
+                      const effectiveActiveShopId = isCurrentlyActiveVisible ? activeShopId : (groups.length > 0 ? groups[0][0] : null);
 
                       // Helper to get shop name
                       const getShopName = (sid: string) => {
@@ -2890,9 +3134,16 @@ export default function BatchDetails({
                           </div>
                         );
                       } else {
+                        // Even in non-split mode, show only the active shop's items
+                        const activeShopItems = itemsByShop.get(effectiveActiveShopId || "") || [];
                         return (
-                          <div className="space-y-2 sm:space-y-3">
-                            {order.Order_Items?.map(renderItemCard)}
+                          <div className="space-y-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/30 sm:p-6">
+                            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                              {getShopName(effectiveActiveShopId || "")} • {activeShopItems.length} Items
+                            </h3>
+                            <div className="space-y-2 sm:space-y-3">
+                              {activeShopItems.map(renderItemCard)}
+                            </div>
                           </div>
                         );
                       }
@@ -3042,16 +3293,16 @@ export default function BatchDetails({
                             <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                               <span>Items Found</span>
                               <span className="font-medium">
-                                {order.Order_Items?.filter(
+                                {getActiveShopItems.filter(
                                   (item) => item.found
                                 ).length || 0}{" "}
-                                / {order.Order_Items?.length || 0}
+                                / {getActiveShopItems.length || 0}
                               </span>
                             </div>
                             <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                               <span>Units Found</span>
                               <span className="font-medium">
-                                {order.Order_Items?.reduce((total, item) => {
+                                {getActiveShopItems.reduce((total, item) => {
                                   if (item.found) {
                                     return (
                                       total +
@@ -3061,7 +3312,7 @@ export default function BatchDetails({
                                   return total;
                                 }, 0) || 0}{" "}
                                 /{" "}
-                                {order.Order_Items?.reduce(
+                                {getActiveShopItems.reduce(
                                   (total, item) => total + item.quantity,
                                   0
                                 ) || 0}
@@ -3070,7 +3321,7 @@ export default function BatchDetails({
                             <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                               <span>Units Not Found</span>
                               <span className="font-medium">
-                                {order.Order_Items?.reduce((total, item) => {
+                                {getActiveShopItems.reduce((total, item) => {
                                   if (!item.found) {
                                     return total + item.quantity;
                                   } else if (
@@ -3107,6 +3358,8 @@ export default function BatchDetails({
                           const finalTotal = itemsTotal - discount;
                           const vat = finalTotal * (18 / 118);
                           const subtotal = finalTotal - vat;
+
+                          // Order summary calculations completed
 
                           return (
                             <>
@@ -3216,11 +3469,15 @@ export default function BatchDetails({
               )}
 
               <div className="hidden pt-2 sm:block sm:pt-4">
-                {getActionButton(
-                  activeShopId === order?.shop?.id
+                {(() => {
+                  const actionOrder = activeShopId === order?.shop?.id
                     ? order
-                    : order?.combinedOrders?.find(o => o.shop?.id === activeShopId)
-                )}
+                    : order?.combinedOrders?.find(o => o.shop?.id === activeShopId);
+
+                  // Action button info calculated
+
+                  return getActionButton(actionOrder);
+                })()}
               </div>
             </div>
           </div>
@@ -3228,11 +3485,13 @@ export default function BatchDetails({
 
         {/* Fixed Bottom Action Button - Mobile Only */}
         < div className="fixed bottom-0 left-0 right-0 z-[9999] border-t border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-900 sm:hidden" >
-          {getActionButton(
-            activeShopId === order?.shop?.id
+          {(() => {
+            const actionOrder = activeShopId === order?.shop?.id
               ? order
-              : order?.combinedOrders?.find(o => o.shop?.id === activeShopId)
-          )}
+              : order?.combinedOrders?.find(o => o.shop?.id === activeShopId);
+
+            return getActionButton(actionOrder);
+          })()}
         </div >
       </div >
     </>

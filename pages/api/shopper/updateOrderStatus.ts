@@ -5,15 +5,20 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { processWalletOperation } from "../../../src/lib/walletOperations";
 
-// GraphQL mutations for bulk updates by combined_order_id
-const UPDATE_BULK_ORDERS = gql`
-  mutation UpdateBulkOrders(
+// Combined order update mutations - update orders with same combined_order_id AND same shop_id
+const UPDATE_COMBINED_ORDERS = gql`
+  mutation UpdateCombinedOrders(
     $combinedId: uuid!
+    $shopId: uuid!
     $status: String!
     $updated_at: timestamptz!
   ) {
     update_Orders(
-      where: { combined_order_id: { _eq: $combinedId } }
+      where: {
+        combined_order_id: { _eq: $combinedId }
+        shop_id: { _eq: $shopId }
+        shopper_id: { _is_null: false }
+      }
       _set: { status: $status, updated_at: $updated_at }
     ) {
       affected_rows
@@ -25,14 +30,18 @@ const UPDATE_BULK_ORDERS = gql`
   }
 `;
 
-const UPDATE_BULK_REEL_ORDERS = gql`
-  mutation UpdateBulkReelOrders(
+const UPDATE_COMBINED_REEL_ORDERS = gql`
+  mutation UpdateCombinedReelOrders(
     $combinedId: uuid!
+    $shopId: uuid!
     $status: String!
     $updated_at: timestamptz!
   ) {
     update_reel_orders(
-      where: { combined_order_id: { _eq: $combinedId } }
+      where: {
+        combined_order_id: { _eq: $combinedId }
+        shop_id: { _eq: $shopId }
+      }
       _set: { status: $status, updated_at: $updated_at }
     ) {
       affected_rows
@@ -44,14 +53,18 @@ const UPDATE_BULK_REEL_ORDERS = gql`
   }
 `;
 
-const UPDATE_BULK_RESTAURANT_ORDERS = gql`
-  mutation UpdateBulkRestaurantOrders(
+const UPDATE_COMBINED_RESTAURANT_ORDERS = gql`
+  mutation UpdateCombinedRestaurantOrders(
     $combinedId: uuid!
+    $restaurantId: uuid!
     $status: String!
     $updated_at: timestamptz!
   ) {
     update_restaurant_orders(
-      where: { combined_order_id: { _eq: $combinedId } }
+      where: {
+        combined_order_id: { _eq: $combinedId }
+        restaurant_id: { _eq: $restaurantId }
+      }
       _set: { status: $status, updated_at: $updated_at }
     ) {
       affected_rows
@@ -81,6 +94,12 @@ export default async function handler(
   }
 
   const { orderId, status } = req.body;
+
+  console.log("🔍 [UpdateOrderStatus API] Request received:", {
+    orderId,
+    status,
+    userId
+  });
 
   if (!orderId || !status) {
     return res
@@ -145,7 +164,6 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    let combinedId: string | null = null;
     let isReelOrder = false;
     let isRestaurantOrder = false;
     let orderType = "regular";
@@ -160,7 +178,7 @@ export default async function handler(
 
     if (regularOrderCheck.Orders && regularOrderCheck.Orders.length > 0) {
       // Found regular order assignment
-      combinedId = regularOrderCheck.Orders[0].combined_order_id;
+      orderType = "regular";
     } else {
       // Check reel orders
       const reelOrderCheck = await hasuraClient.request<{
@@ -174,7 +192,6 @@ export default async function handler(
         // Found reel order assignment
         isReelOrder = true;
         orderType = "reel";
-        combinedId = reelOrderCheck.reel_orders[0].combined_order_id;
       } else {
         // Check restaurant orders
         const restaurantOrderCheck = await hasuraClient.request<{
@@ -191,7 +208,6 @@ export default async function handler(
           // Found restaurant order assignment
           isRestaurantOrder = true;
           orderType = "restaurant";
-          combinedId = restaurantOrderCheck.restaurant_orders[0].combined_order_id;
         } else {
           console.error(
             "Authorization failed: Shopper not assigned to this order"
@@ -242,31 +258,110 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    let updatedOrder: any;
+    // Get order details to check for combined orders
+    let orderDetails: any = null;
+    let combinedId: string | null = null;
+    let shopId: string | null = null;
+    let restaurantId: string | null = null;
+
+    if (isReelOrder) {
+      const reelDetails = await hasuraClient.request<any>(`
+        query GetReelOrderDetails($orderId: uuid!) {
+          reel_orders_by_pk(id: $orderId) {
+            id
+            combined_order_id
+            shop_id
+            status
+          }
+        }
+      `, { orderId });
+      orderDetails = reelDetails.reel_orders_by_pk;
+      combinedId = orderDetails?.combined_order_id;
+      shopId = orderDetails?.shop_id;
+    } else if (isRestaurantOrder) {
+      const restaurantDetails = await hasuraClient.request<any>(`
+        query GetRestaurantOrderDetails($orderId: uuid!) {
+          restaurant_orders_by_pk(id: $orderId) {
+            id
+            combined_order_id
+            restaurant_id
+            status
+          }
+        }
+      `, { orderId });
+      orderDetails = restaurantDetails.restaurant_orders_by_pk;
+      combinedId = orderDetails?.combined_order_id;
+      restaurantId = orderDetails?.restaurant_id;
+    } else {
+      const regularDetails = await hasuraClient.request<any>(`
+        query GetRegularOrderDetails($orderId: uuid!) {
+          Orders_by_pk(id: $orderId) {
+            id
+            combined_order_id
+            shop_id
+            status
+          }
+        }
+      `, { orderId });
+      orderDetails = regularDetails.Orders_by_pk;
+      combinedId = orderDetails?.combined_order_id;
+      shopId = orderDetails?.shop_id;
+    }
+
+    let updatedOrders: any[] = [];
+
+    // If this order is part of a combined order, update all orders with same combined_order_id AND same shop_id
+    console.log("🔍 [UpdateOrderStatus API] Combined order logic:", {
+      orderId,
+      combinedId,
+      shopId,
+      restaurantId,
+      isReelOrder,
+      isRestaurantOrder,
+      orderType,
+      willUseCombinedLogic: !!combinedId
+    });
 
     if (combinedId) {
-      // Bulk update for combined orders
+      console.log("🔍 [UpdateOrderStatus API] Using combined order logic - will update all orders with same combined_order_id AND shop_id");
+
       const variables = {
         combinedId,
         status,
         updated_at: currentTimestamp,
       };
 
-      // Update all three tables as a combined batch could contain mixed types (though unlikely)
-      const [regularUpdate, reelUpdate, restaurantUpdate] = await Promise.all([
-        hasuraClient.request(UPDATE_BULK_ORDERS, variables),
-        hasuraClient.request(UPDATE_BULK_REEL_ORDERS, variables),
-        hasuraClient.request(UPDATE_BULK_RESTAURANT_ORDERS, variables),
-      ]);
+      // Update all orders with same combined_order_id AND same shop/restaurant_id
+      const updatePromises = [];
 
-      // Return the specific order that was requested, but with updated status
-      updatedOrder = {
-        id: orderId,
-        status: status,
-        updated_at: currentTimestamp,
-      };
+      if (!isRestaurantOrder) {
+        updatePromises.push(hasuraClient.request(UPDATE_COMBINED_ORDERS, { ...variables, shopId }));
+      }
+      if (isReelOrder) {
+        updatePromises.push(hasuraClient.request(UPDATE_COMBINED_REEL_ORDERS, { ...variables, shopId }));
+      }
+      if (isRestaurantOrder) {
+        updatePromises.push(hasuraClient.request(UPDATE_COMBINED_RESTAURANT_ORDERS, { ...variables, restaurantId }));
+      }
+
+      const results = await Promise.all(updatePromises);
+
+      // Collect all updated orders
+      results.forEach((result: any) => {
+        if (result?.update_Orders?.returning) {
+          updatedOrders.push(...result.update_Orders.returning);
+        }
+        if (result?.update_reel_orders?.returning) {
+          updatedOrders.push(...result.update_reel_orders.returning);
+        }
+        if (result?.update_restaurant_orders?.returning) {
+          updatedOrders.push(...result.update_restaurant_orders.returning);
+        }
+      });
     } else {
-      // Single order update (legacy logic for non-combined orders)
+      console.log("🔍 [UpdateOrderStatus API] Using single order logic - no combined orders");
+
+      // Single order update (no combined orders)
       const UPDATE_ORDER_STATUS = gql`
         mutation UpdateOrderStatus($id: uuid!, $status: String!, $updated_at: timestamptz!) {
           update_Orders_by_pk(pk_columns: { id: $id }, _set: { status: $status, updated_at: $updated_at }) {
@@ -295,21 +390,21 @@ export default async function handler(
           status,
           updated_at: currentTimestamp,
         });
-        updatedOrder = result.update_reel_orders_by_pk;
+        updatedOrders = [result.update_reel_orders_by_pk];
       } else if (isRestaurantOrder) {
         const result = await hasuraClient.request<any>(UPDATE_RESTAURANT_ORDER_STATUS, {
           id: orderId,
           status,
           updated_at: currentTimestamp,
         });
-        updatedOrder = result.update_restaurant_orders_by_pk;
+        updatedOrders = [result.update_restaurant_orders_by_pk];
       } else {
         const result = await hasuraClient.request<any>(UPDATE_ORDER_STATUS, {
           id: orderId,
           status,
           updated_at: currentTimestamp,
         });
-        updatedOrder = result.update_Orders_by_pk;
+        updatedOrders = [result.update_Orders_by_pk];
       }
     }
 
@@ -338,9 +433,16 @@ export default async function handler(
     // Note: Wallet operations for "delivered" status are handled separately
     // in the DeliveryConfirmationModal before calling this API
 
+    console.log("🔍 [UpdateOrderStatus API] Response:", {
+      success: true,
+      ordersCount: updatedOrders.length,
+      orderType,
+      orders: updatedOrders.map(o => ({ id: o.id, status: o.status }))
+    });
+
     return res.status(200).json({
       success: true,
-      order: updatedOrder,
+      orders: updatedOrders,
       orderType,
     });
   } catch (error) {

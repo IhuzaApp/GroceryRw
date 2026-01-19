@@ -50,7 +50,12 @@ export default function QuantityConfirmationModal({
 
   // Check if item is weight-based
   useEffect(() => {
+    console.log("🔍 [QuantityConfirmationModal] useEffect triggered, currentItem exists:", !!currentItem);
     if (currentItem) {
+      console.log("🔍 [QuantityConfirmationModal] FULL currentItem:", JSON.stringify(currentItem, null, 2));
+      console.log("🔍 [QuantityConfirmationModal] currentItem.product:", currentItem.product);
+      console.log("🔍 [QuantityConfirmationModal] currentItem.product.ProductName:", currentItem.product?.ProductName);
+
       // Access measurement_unit from the correct path based on GraphQL schema
       let unit = "";
 
@@ -74,6 +79,12 @@ export default function QuantityConfirmationModal({
 
       setIsWeightBased(isWeight);
       setMeasurementUnit(unit);
+
+      console.log("🔍 [QuantityConfirmationModal] Barcode/SKU check:");
+      console.log("  - product.barcode:", currentItem.product?.barcode);
+      console.log("  - product.ProductName.barcode:", currentItem.product?.ProductName?.barcode);
+      console.log("  - product.sku:", currentItem.product?.sku);
+      console.log("  - product.ProductName.sku:", currentItem.product?.ProductName?.sku);
 
       // Calculate price per unit weight
       if (isWeight && currentItem.product.final_price) {
@@ -137,9 +148,9 @@ export default function QuantityConfirmationModal({
     }
 
     const itemBarcode =
-      currentItem.product.barcode || currentItem.product.ProductName?.barcode;
+      currentItem.product.ProductName?.barcode || currentItem.product.barcode;
     const itemSku =
-      currentItem.product.sku || currentItem.product.ProductName?.sku;
+      currentItem.product.ProductName?.sku || currentItem.product.sku;
 
     // Check if the item has a barcode or SKU in the database
     if (itemBarcode || itemSku) {
@@ -349,11 +360,11 @@ export default function QuantityConfirmationModal({
                           theme === "dark" ? "text-gray-300" : "text-gray-600"
                         }`}
                       >
-                        {currentItem?.product.barcode ||
-                        currentItem?.product.ProductName?.barcode
+                        {currentItem?.product.ProductName?.barcode ||
+                        currentItem?.product.barcode
                           ? "Scan the barcode from the physical product"
-                          : currentItem?.product.sku ||
-                            currentItem?.product.ProductName?.sku
+                          : currentItem?.product.ProductName?.sku ||
+                            currentItem?.product.sku
                           ? "Enter the product SKU from the physical product"
                           : "This product has no barcode/SKU in our system"}
                       </p>
@@ -376,14 +387,15 @@ export default function QuantityConfirmationModal({
                         }
                       }}
                       className={`rounded-xl border-2 p-4 transition-all duration-200 ${
-                        !(
-                          currentItem?.product.barcode ||
-                          currentItem?.product.ProductName?.barcode
-                        ) &&
-                        !(
-                          currentItem?.product.sku ||
-                          currentItem?.product.ProductName?.sku
-                        )
+                        (() => {
+                          const hasBarcode = !!(currentItem?.product.ProductName?.barcode || currentItem?.product.barcode);
+                          const hasSku = !!(currentItem?.product.ProductName?.sku || currentItem?.product.sku);
+                          const shouldDisable = !hasBarcode && !hasSku;
+
+                          console.log("🔍 [Camera Scanner] hasBarcode:", hasBarcode, "hasSku:", hasSku, "shouldDisable:", shouldDisable);
+
+                          return shouldDisable;
+                        })()
                           ? "cursor-not-allowed border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
                           : showBarcodeScanner
                           ? "cursor-pointer border-purple-500 bg-purple-100 shadow-lg dark:bg-purple-900/30"
@@ -448,24 +460,36 @@ export default function QuantityConfirmationModal({
                     <div
                       onClick={() => {
                         if (
-                          currentItem?.product.barcode ||
                           currentItem?.product.ProductName?.barcode ||
-                          currentItem?.product.sku ||
-                          currentItem?.product.ProductName?.sku
+                          currentItem?.product.barcode ||
+                          currentItem?.product.ProductName?.sku ||
+                          currentItem?.product.sku
                         ) {
                           setShowBarcodeScanner(false);
                           setShowManualInput(true);
                         }
                       }}
                       className={`rounded-xl border-2 p-4 transition-all duration-200 ${
-                        !(
-                          currentItem?.product.barcode ||
-                          currentItem?.product.ProductName?.barcode
-                        ) &&
-                        !(
-                          currentItem?.product.sku ||
-                          currentItem?.product.ProductName?.sku
-                        )
+                        (() => {
+                          const productNameBarcode = currentItem?.product?.ProductName?.barcode;
+                          const productBarcode = currentItem?.product?.barcode;
+                          const productNameSku = currentItem?.product?.ProductName?.sku;
+                          const productSku = currentItem?.product?.sku;
+
+                          console.log("🔍 [Manual Input] Checking paths:");
+                          console.log("  - product.ProductName.barcode:", productNameBarcode);
+                          console.log("  - product.barcode:", productBarcode);
+                          console.log("  - product.ProductName.sku:", productNameSku);
+                          console.log("  - product.sku:", productSku);
+
+                          const hasBarcode = !!(productNameBarcode || productBarcode);
+                          const hasSku = !!(productNameSku || productSku);
+                          const shouldDisable = !hasBarcode && !hasSku;
+
+                          console.log("🔍 [Manual Input] Final result - hasBarcode:", hasBarcode, "hasSku:", hasSku, "shouldDisable:", shouldDisable);
+
+                          return shouldDisable;
+                        })()
                           ? "cursor-not-allowed border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
                           : showManualInput
                           ? "cursor-pointer border-green-500 bg-green-100 shadow-lg dark:bg-green-900/30"
@@ -916,7 +940,9 @@ export default function QuantityConfirmationModal({
               disabled={
                 foundQuantity === 0 ||
                 exceedsBudget ||
-                (!isWeightBased && !barcodeValidation.isValid)
+                (!isWeightBased && !barcodeValidation.isValid &&
+                 (currentItem?.product.ProductName?.barcode || currentItem?.product.barcode ||
+                  currentItem?.product.ProductName?.sku || currentItem?.product.sku))
               }
               className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white transition-all duration-200 sm:flex-initial ${
                 foundQuantity === 0 ||

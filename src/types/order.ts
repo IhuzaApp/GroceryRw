@@ -2,6 +2,7 @@ export interface OrderItem {
   id: string;
   quantity: number;
   price: number;
+  orderId?: string; // Order ID this item belongs to (important for combined orders)
   product: {
     id: string;
     name: string;

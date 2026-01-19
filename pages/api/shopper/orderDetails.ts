@@ -730,6 +730,24 @@ export default async function handler(
           sku: item.Product?.ProductName?.sku || null,
           productImage:
             item.Product?.ProductName?.image || item.Product?.image || null,
+          product: {
+            id: item.Product?.id || item.id, // Use Product.id from Products table, fallback to item.id
+            name: item.Product?.ProductName?.name || "Unknown Product",
+            image: item.Product?.ProductName?.image || item.Product?.image || null,
+            final_price: item.Product?.final_price || item.price.toString(),
+            measurement_unit: item.Product?.measurement_unit || null,
+            barcode: item.Product?.ProductName?.barcode || null,
+            sku: item.Product?.ProductName?.sku || null,
+            ProductName: item.Product?.ProductName ? {
+              id: item.Product?.ProductName.id,
+              name: item.Product?.ProductName.name,
+              description: item.Product?.ProductName.description || "",
+              barcode: item.Product?.ProductName.barcode || "",
+              sku: item.Product?.ProductName.sku || "",
+              image: item.Product?.ProductName.image || null,
+              create_at: item.Product?.ProductName.create_at || "",
+            } : null,
+          },
         };
 
         return formattedItem;
@@ -954,6 +972,24 @@ export default async function handler(
               price: parseFloat(item.price) || 0,
               measurement_unit: item.Product?.measurement_unit || null,
               productImage: item.Product?.ProductName?.image || item.Product?.image || null,
+              product: {
+                id: item.Product?.id || item.id, // Use Product.id from Products table
+                name: item.Product?.ProductName?.name || "Unknown Product",
+                image: item.Product?.ProductName?.image || item.Product?.image || null,
+                final_price: item.Product?.final_price || item.price.toString(),
+                measurement_unit: item.Product?.measurement_unit || null,
+                barcode: item.Product?.ProductName?.barcode || null,
+                sku: item.Product?.ProductName?.sku || null,
+                ProductName: item.Product?.ProductName ? {
+                  id: item.Product?.ProductName.id,
+                  name: item.Product?.ProductName.name,
+                  description: item.Product?.ProductName.description || "",
+                  barcode: item.Product?.ProductName.barcode || "",
+                  sku: item.Product?.ProductName.sku || "",
+                  image: item.Product?.ProductName.image || null,
+                  create_at: item.Product?.ProductName.create_at || "",
+                } : null,
+              },
             })) || [];
 
             const subTotal = items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
