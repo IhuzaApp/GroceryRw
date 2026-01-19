@@ -419,8 +419,16 @@ const GET_RESTAURANT_ORDER_DETAILS = gql`
 
 // Queries to fetch related orders by combined_order_id
 const GET_RELATED_REGULAR_ORDERS = gql`
-  query GetRelatedRegularOrders($combinedOrderId: uuid!, $currentOrderId: uuid!) {
-    Orders(where: { combined_order_id: { _eq: $combinedOrderId }, id: { _neq: $currentOrderId } }) {
+  query GetRelatedRegularOrders(
+    $combinedOrderId: uuid!
+    $currentOrderId: uuid!
+  ) {
+    Orders(
+      where: {
+        combined_order_id: { _eq: $combinedOrderId }
+        id: { _neq: $currentOrderId }
+      }
+    ) {
       id
       OrderID
       created_at
@@ -531,7 +539,12 @@ const GET_RELATED_REGULAR_ORDERS = gql`
 
 const GET_RELATED_REEL_ORDERS = gql`
   query GetRelatedReelOrders($combinedOrderId: uuid!, $currentOrderId: uuid!) {
-    reel_orders(where: { combined_order_id: { _eq: $combinedOrderId }, id: { _neq: $currentOrderId } }) {
+    reel_orders(
+      where: {
+        combined_order_id: { _eq: $combinedOrderId }
+        id: { _neq: $currentOrderId }
+      }
+    ) {
       id
       OrderID
       created_at
@@ -573,8 +586,16 @@ const GET_RELATED_REEL_ORDERS = gql`
 `;
 
 const GET_RELATED_RESTAURANT_ORDERS = gql`
-  query GetRelatedRestaurantOrders($combinedOrderId: uuid!, $currentOrderId: uuid!) {
-    restaurant_orders(where: { combined_order_id: { _eq: $combinedOrderId }, id: { _neq: $currentOrderId } }) {
+  query GetRelatedRestaurantOrders(
+    $combinedOrderId: uuid!
+    $currentOrderId: uuid!
+  ) {
+    restaurant_orders(
+      where: {
+        combined_order_id: { _eq: $combinedOrderId }
+        id: { _neq: $currentOrderId }
+      }
+    ) {
       id
       OrderID
       created_at
@@ -632,9 +653,11 @@ export default async function handler(
     // Get orderId from query params
     const { id } = req.query;
 
-
     if (!id || typeof id !== "string") {
-      console.error("❌ [OrderDetails API] Invalid order ID:", { id, type: typeof id });
+      console.error("❌ [OrderDetails API] Invalid order ID:", {
+        id,
+        type: typeof id,
+      });
       res.status(400).json({ error: "Missing or invalid order ID" });
       return;
     }
@@ -810,20 +833,23 @@ export default async function handler(
           product: {
             id: item.Product?.id || item.id, // Use Product.id from Products table, fallback to item.id
             name: item.Product?.ProductName?.name || "Unknown Product",
-            image: item.Product?.ProductName?.image || item.Product?.image || null,
+            image:
+              item.Product?.ProductName?.image || item.Product?.image || null,
             final_price: item.Product?.final_price || item.price.toString(),
             measurement_unit: item.Product?.measurement_unit || null,
             barcode: item.Product?.ProductName?.barcode || null,
             sku: item.Product?.ProductName?.sku || null,
-            ProductName: item.Product?.ProductName ? {
-              id: item.Product?.ProductName.id,
-              name: item.Product?.ProductName.name,
-              description: item.Product?.ProductName.description || "",
-              barcode: item.Product?.ProductName.barcode || "",
-              sku: item.Product?.ProductName.sku || "",
-              image: item.Product?.ProductName.image || null,
-              create_at: item.Product?.ProductName.create_at || "",
-            } : null,
+            ProductName: item.Product?.ProductName
+              ? {
+                  id: item.Product?.ProductName.id,
+                  name: item.Product?.ProductName.name,
+                  description: item.Product?.ProductName.description || "",
+                  barcode: item.Product?.ProductName.barcode || "",
+                  sku: item.Product?.ProductName.sku || "",
+                  image: item.Product?.ProductName.image || null,
+                  create_at: item.Product?.ProductName.create_at || "",
+                }
+              : null,
           },
         };
 
@@ -1024,52 +1050,67 @@ export default async function handler(
         const combinedOrderId = orderData.combined_order_id;
 
         // Run all queries in parallel
-        const [relatedRegular, relatedReel, relatedRestaurant] = await Promise.all([
-          hasuraClient.request<any>(GET_RELATED_REGULAR_ORDERS, {
-            combinedOrderId,
-            currentOrderId: id
-          }),
-          hasuraClient.request<any>(GET_RELATED_REEL_ORDERS, {
-            combinedOrderId,
-            currentOrderId: id
-          }),
-          hasuraClient.request<any>(GET_RELATED_RESTAURANT_ORDERS, {
-            combinedOrderId,
-            currentOrderId: id
-          })
-        ]);
+        const [relatedRegular, relatedReel, relatedRestaurant] =
+          await Promise.all([
+            hasuraClient.request<any>(GET_RELATED_REGULAR_ORDERS, {
+              combinedOrderId,
+              currentOrderId: id,
+            }),
+            hasuraClient.request<any>(GET_RELATED_REEL_ORDERS, {
+              combinedOrderId,
+              currentOrderId: id,
+            }),
+            hasuraClient.request<any>(GET_RELATED_RESTAURANT_ORDERS, {
+              combinedOrderId,
+              currentOrderId: id,
+            }),
+          ]);
 
         // Process Regular Orders
         if (relatedRegular?.Orders) {
           const processedRegular = relatedRegular.Orders.map((order: any) => {
-            const items = order.Order_Items?.map((item: any) => ({
-              id: item.id,
-              name: item.Product?.ProductName?.name || "Unknown Product",
-              quantity: item.quantity,
-              price: parseFloat(item.price) || 0,
-              measurement_unit: item.Product?.measurement_unit || null,
-              productImage: item.Product?.ProductName?.image || item.Product?.image || null,
-              product: {
-                id: item.Product?.id || item.id, // Use Product.id from Products table
+            const items =
+              order.Order_Items?.map((item: any) => ({
+                id: item.id,
                 name: item.Product?.ProductName?.name || "Unknown Product",
-                image: item.Product?.ProductName?.image || item.Product?.image || null,
-                final_price: item.Product?.final_price || item.price.toString(),
+                quantity: item.quantity,
+                price: parseFloat(item.price) || 0,
                 measurement_unit: item.Product?.measurement_unit || null,
-                barcode: item.Product?.ProductName?.barcode || null,
-                sku: item.Product?.ProductName?.sku || null,
-                ProductName: item.Product?.ProductName ? {
-                  id: item.Product?.ProductName.id,
-                  name: item.Product?.ProductName.name,
-                  description: item.Product?.ProductName.description || "",
-                  barcode: item.Product?.ProductName.barcode || "",
-                  sku: item.Product?.ProductName.sku || "",
-                  image: item.Product?.ProductName.image || null,
-                  create_at: item.Product?.ProductName.create_at || "",
-                } : null,
-              },
-            })) || [];
+                productImage:
+                  item.Product?.ProductName?.image ||
+                  item.Product?.image ||
+                  null,
+                product: {
+                  id: item.Product?.id || item.id, // Use Product.id from Products table
+                  name: item.Product?.ProductName?.name || "Unknown Product",
+                  image:
+                    item.Product?.ProductName?.image ||
+                    item.Product?.image ||
+                    null,
+                  final_price:
+                    item.Product?.final_price || item.price.toString(),
+                  measurement_unit: item.Product?.measurement_unit || null,
+                  barcode: item.Product?.ProductName?.barcode || null,
+                  sku: item.Product?.ProductName?.sku || null,
+                  ProductName: item.Product?.ProductName
+                    ? {
+                        id: item.Product?.ProductName.id,
+                        name: item.Product?.ProductName.name,
+                        description:
+                          item.Product?.ProductName.description || "",
+                        barcode: item.Product?.ProductName.barcode || "",
+                        sku: item.Product?.ProductName.sku || "",
+                        image: item.Product?.ProductName.image || null,
+                        create_at: item.Product?.ProductName.create_at || "",
+                      }
+                    : null,
+                },
+              })) || [];
 
-            const subTotal = items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
+            const subTotal = items.reduce(
+              (sum: number, item: any) => sum + item.price * item.quantity,
+              0
+            );
 
             return {
               id: order.id,
@@ -1087,7 +1128,7 @@ export default async function handler(
               total: parseFloat(order.total || subTotal.toString()), // Use total if available or calc
               items: items,
               combinedOrderId: order.combined_order_id,
-              Invoice: order.Invoice
+              Invoice: order.Invoice,
             };
           });
           relatedOrders = [...relatedOrders, ...processedRegular];
@@ -1103,25 +1144,29 @@ export default async function handler(
               status: order.status,
               shopName: order.Reel?.Restaurant?.name || "Reel Order",
               shopAddress: order.Reel?.Restaurant?.location,
-              shop: order.Reel?.Restaurant ? {
-                id: order.Reel.Restaurant.id,
-                name: order.Reel.Restaurant.name,
-                address: order.Reel.Restaurant.location,
-                phone: order.Reel.Restaurant.phone,
-                image: null // Add image field if available
-              } : null,
+              shop: order.Reel?.Restaurant
+                ? {
+                    id: order.Reel.Restaurant.id,
+                    name: order.Reel.Restaurant.name,
+                    address: order.Reel.Restaurant.location,
+                    phone: order.Reel.Restaurant.phone,
+                    image: null, // Add image field if available
+                  }
+                : null,
               customerId: order.user?.id,
               customerPhone: order.user?.phone,
               customerName: order.user?.name,
               total: parseFloat(order.total || "0"),
-              items: [{
-                id: order.id,
-                name: order.Reel?.Product || "Reel Product",
-                quantity: order.quantity,
-                price: parseFloat(order.Reel?.Price || "0"),
-                productImage: null // Reel doesn't have a direct product image easily accessible here
-              }],
-              combinedOrderId: order.combined_order_id
+              items: [
+                {
+                  id: order.id,
+                  name: order.Reel?.Product || "Reel Product",
+                  quantity: order.quantity,
+                  price: parseFloat(order.Reel?.Price || "0"),
+                  productImage: null, // Reel doesn't have a direct product image easily accessible here
+                },
+              ],
+              combinedOrderId: order.combined_order_id,
             };
           });
           relatedOrders = [...relatedOrders, ...processedReel];
@@ -1129,40 +1174,44 @@ export default async function handler(
 
         // Process Restaurant Orders
         if (relatedRestaurant?.restaurant_orders) {
-          const processedRestaurant = relatedRestaurant.restaurant_orders.map((order: any) => {
-            const items = order.restaurant_order_items?.map((item: any) => ({
-              id: item.id,
-              name: item.restaurant_dishes?.name || "Dish",
-              quantity: item.quantity,
-              price: parseFloat(item.price) || 0,
-              productImage: item.restaurant_dishes?.image || null,
-            })) || [];
+          const processedRestaurant = relatedRestaurant.restaurant_orders.map(
+            (order: any) => {
+              const items =
+                order.restaurant_order_items?.map((item: any) => ({
+                  id: item.id,
+                  name: item.restaurant_dishes?.name || "Dish",
+                  quantity: item.quantity,
+                  price: parseFloat(item.price) || 0,
+                  productImage: item.restaurant_dishes?.image || null,
+                })) || [];
 
-            return {
-              id: order.id,
-              OrderID: order.OrderID || order.id,
-              orderType: "restaurant",
-              status: order.status,
-              shopName: order.Restaurant?.name || "Restaurant",
-              shopAddress: order.Restaurant?.location,
-              shop: order.Restaurant ? {
-                id: order.Restaurant.id,
-                name: order.Restaurant.name,
-                address: order.Restaurant.location,
-                phone: order.Restaurant.phone,
-                image: (order.Restaurant as any).logo
-              } : null,
-              customerId: order.orderedBy?.id,
-              customerPhone: order.orderedBy?.phone,
-              customerName: order.orderedBy?.name,
-              total: parseFloat(order.total || "0"),
-              items: items,
-              combinedOrderId: order.combined_order_id
-            };
-          });
+              return {
+                id: order.id,
+                OrderID: order.OrderID || order.id,
+                orderType: "restaurant",
+                status: order.status,
+                shopName: order.Restaurant?.name || "Restaurant",
+                shopAddress: order.Restaurant?.location,
+                shop: order.Restaurant
+                  ? {
+                      id: order.Restaurant.id,
+                      name: order.Restaurant.name,
+                      address: order.Restaurant.location,
+                      phone: order.Restaurant.phone,
+                      image: (order.Restaurant as any).logo,
+                    }
+                  : null,
+                customerId: order.orderedBy?.id,
+                customerPhone: order.orderedBy?.phone,
+                customerName: order.orderedBy?.name,
+                total: parseFloat(order.total || "0"),
+                items: items,
+                combinedOrderId: order.combined_order_id,
+              };
+            }
+          );
           relatedOrders = [...relatedOrders, ...processedRestaurant];
         }
-
       } catch (err) {
         console.error("❌ [API] Error fetching related orders:", err);
         // Don't fail the whole request if related orders fail
@@ -1179,20 +1228,22 @@ export default async function handler(
         const allOrders = [formattedOrder, ...relatedOrders];
 
         // Extract IDs and Names
-        formattedOrder.orderIds = allOrders.map(o => o.id).filter(Boolean);
-        formattedOrder.orderIDs = allOrders.map(o => o.OrderID).filter(Boolean);
-        formattedOrder.shopNames = Array.from(new Set(allOrders.map(o => o.shopName).filter(Boolean)));
+        formattedOrder.orderIds = allOrders.map((o) => o.id).filter(Boolean);
+        formattedOrder.orderIDs = allOrders
+          .map((o) => o.OrderID)
+          .filter(Boolean);
+        formattedOrder.shopNames = Array.from(
+          new Set(allOrders.map((o) => o.shopName).filter(Boolean))
+        );
 
         // Update shop name to indicate multiple stores if applicable
         if (formattedOrder.shopNames.length > 1) {
-          formattedOrder.shopName = `${formattedOrder.shopNames.length} Stores: ${formattedOrder.shopNames.join(", ")}`;
+          formattedOrder.shopName = `${
+            formattedOrder.shopNames.length
+          } Stores: ${formattedOrder.shopNames.join(", ")}`;
         }
-
-
-
       }
     }
-
 
     res.status(200).json({
       success: true,

@@ -95,7 +95,6 @@ export default async function handler(
 
   const { orderId, status } = req.body;
 
-
   if (!orderId || !status) {
     return res
       .status(400)
@@ -165,7 +164,11 @@ export default async function handler(
 
     // Check regular orders first
     const regularOrderCheck = await hasuraClient.request<{
-      Orders: Array<{ id: string; status: string; combined_order_id: string | null }>;
+      Orders: Array<{
+        id: string;
+        status: string;
+        combined_order_id: string | null;
+      }>;
     }>(CHECK_REGULAR_ORDER, {
       orderId,
       shopperId: userId,
@@ -177,7 +180,11 @@ export default async function handler(
     } else {
       // Check reel orders
       const reelOrderCheck = await hasuraClient.request<{
-        reel_orders: Array<{ id: string; status: string; combined_order_id: string | null }>;
+        reel_orders: Array<{
+          id: string;
+          status: string;
+          combined_order_id: string | null;
+        }>;
       }>(CHECK_REEL_ORDER, {
         orderId,
         shopperId: userId,
@@ -190,7 +197,11 @@ export default async function handler(
       } else {
         // Check restaurant orders
         const restaurantOrderCheck = await hasuraClient.request<{
-          restaurant_orders: Array<{ id: string; status: string; combined_order_id: string | null }>;
+          restaurant_orders: Array<{
+            id: string;
+            status: string;
+            combined_order_id: string | null;
+          }>;
         }>(CHECK_RESTAURANT_ORDER, {
           orderId,
           shopperId: userId,
@@ -260,7 +271,8 @@ export default async function handler(
     let restaurantId: string | null = null;
 
     if (isReelOrder) {
-      const reelDetails = await hasuraClient.request<any>(`
+      const reelDetails = await hasuraClient.request<any>(
+        `
         query GetReelOrderDetails($orderId: uuid!) {
           reel_orders_by_pk(id: $orderId) {
             id
@@ -269,12 +281,15 @@ export default async function handler(
             status
           }
         }
-      `, { orderId });
+      `,
+        { orderId }
+      );
       orderDetails = reelDetails.reel_orders_by_pk;
       combinedId = orderDetails?.combined_order_id;
       shopId = orderDetails?.shop_id;
     } else if (isRestaurantOrder) {
-      const restaurantDetails = await hasuraClient.request<any>(`
+      const restaurantDetails = await hasuraClient.request<any>(
+        `
         query GetRestaurantOrderDetails($orderId: uuid!) {
           restaurant_orders_by_pk(id: $orderId) {
             id
@@ -283,12 +298,15 @@ export default async function handler(
             status
           }
         }
-      `, { orderId });
+      `,
+        { orderId }
+      );
       orderDetails = restaurantDetails.restaurant_orders_by_pk;
       combinedId = orderDetails?.combined_order_id;
       restaurantId = orderDetails?.restaurant_id;
     } else {
-      const regularDetails = await hasuraClient.request<any>(`
+      const regularDetails = await hasuraClient.request<any>(
+        `
         query GetRegularOrderDetails($orderId: uuid!) {
           Orders_by_pk(id: $orderId) {
             id
@@ -297,7 +315,9 @@ export default async function handler(
             status
           }
         }
-      `, { orderId });
+      `,
+        { orderId }
+      );
       orderDetails = regularDetails.Orders_by_pk;
       combinedId = orderDetails?.combined_order_id;
       shopId = orderDetails?.shop_id;
@@ -314,11 +334,13 @@ export default async function handler(
       isReelOrder,
       isRestaurantOrder,
       orderType,
-      willUseCombinedLogic: !!combinedId
+      willUseCombinedLogic: !!combinedId,
     });
 
     if (combinedId) {
-      console.log("🔍 [UpdateOrderStatus API] Using combined order logic - will update all orders with same combined_order_id AND shop_id");
+      console.log(
+        "🔍 [UpdateOrderStatus API] Using combined order logic - will update all orders with same combined_order_id AND shop_id"
+      );
 
       const variables = {
         combinedId,
@@ -330,13 +352,25 @@ export default async function handler(
       const updatePromises = [];
 
       if (!isRestaurantOrder) {
-        updatePromises.push(hasuraClient.request(UPDATE_COMBINED_ORDERS, { ...variables, shopId }));
+        updatePromises.push(
+          hasuraClient.request(UPDATE_COMBINED_ORDERS, { ...variables, shopId })
+        );
       }
       if (isReelOrder) {
-        updatePromises.push(hasuraClient.request(UPDATE_COMBINED_REEL_ORDERS, { ...variables, shopId }));
+        updatePromises.push(
+          hasuraClient.request(UPDATE_COMBINED_REEL_ORDERS, {
+            ...variables,
+            shopId,
+          })
+        );
       }
       if (isRestaurantOrder) {
-        updatePromises.push(hasuraClient.request(UPDATE_COMBINED_RESTAURANT_ORDERS, { ...variables, restaurantId }));
+        updatePromises.push(
+          hasuraClient.request(UPDATE_COMBINED_RESTAURANT_ORDERS, {
+            ...variables,
+            restaurantId,
+          })
+        );
       }
 
       const results = await Promise.all(updatePromises);
@@ -354,44 +388,79 @@ export default async function handler(
         }
       });
     } else {
-      console.log("🔍 [UpdateOrderStatus API] Using single order logic - no combined orders");
+      console.log(
+        "🔍 [UpdateOrderStatus API] Using single order logic - no combined orders"
+      );
 
       // Single order update (no combined orders)
       const UPDATE_ORDER_STATUS = gql`
-        mutation UpdateOrderStatus($id: uuid!, $status: String!, $updated_at: timestamptz!) {
-          update_Orders_by_pk(pk_columns: { id: $id }, _set: { status: $status, updated_at: $updated_at }) {
-            id status updated_at
+        mutation UpdateOrderStatus(
+          $id: uuid!
+          $status: String!
+          $updated_at: timestamptz!
+        ) {
+          update_Orders_by_pk(
+            pk_columns: { id: $id }
+            _set: { status: $status, updated_at: $updated_at }
+          ) {
+            id
+            status
+            updated_at
           }
         }
       `;
       const UPDATE_REEL_ORDER_STATUS = gql`
-        mutation UpdateReelOrderStatus($id: uuid!, $status: String!, $updated_at: timestamptz!) {
-          update_reel_orders_by_pk(pk_columns: { id: $id }, _set: { status: $status, updated_at: $updated_at }) {
-            id status updated_at
+        mutation UpdateReelOrderStatus(
+          $id: uuid!
+          $status: String!
+          $updated_at: timestamptz!
+        ) {
+          update_reel_orders_by_pk(
+            pk_columns: { id: $id }
+            _set: { status: $status, updated_at: $updated_at }
+          ) {
+            id
+            status
+            updated_at
           }
         }
       `;
       const UPDATE_RESTAURANT_ORDER_STATUS = gql`
-        mutation UpdateRestaurantOrderStatus($id: uuid!, $status: String!, $updated_at: timestamptz!) {
-          update_restaurant_orders_by_pk(pk_columns: { id: $id }, _set: { status: $status, updated_at: $updated_at }) {
-            id status updated_at
+        mutation UpdateRestaurantOrderStatus(
+          $id: uuid!
+          $status: String!
+          $updated_at: timestamptz!
+        ) {
+          update_restaurant_orders_by_pk(
+            pk_columns: { id: $id }
+            _set: { status: $status, updated_at: $updated_at }
+          ) {
+            id
+            status
+            updated_at
           }
         }
       `;
 
       if (isReelOrder) {
-        const result = await hasuraClient.request<any>(UPDATE_REEL_ORDER_STATUS, {
-          id: orderId,
-          status,
-          updated_at: currentTimestamp,
-        });
+        const result = await hasuraClient.request<any>(
+          UPDATE_REEL_ORDER_STATUS,
+          {
+            id: orderId,
+            status,
+            updated_at: currentTimestamp,
+          }
+        );
         updatedOrders = [result.update_reel_orders_by_pk];
       } else if (isRestaurantOrder) {
-        const result = await hasuraClient.request<any>(UPDATE_RESTAURANT_ORDER_STATUS, {
-          id: orderId,
-          status,
-          updated_at: currentTimestamp,
-        });
+        const result = await hasuraClient.request<any>(
+          UPDATE_RESTAURANT_ORDER_STATUS,
+          {
+            id: orderId,
+            status,
+            updated_at: currentTimestamp,
+          }
+        );
         updatedOrders = [result.update_restaurant_orders_by_pk];
       } else {
         const result = await hasuraClient.request<any>(UPDATE_ORDER_STATUS, {
@@ -432,7 +501,7 @@ export default async function handler(
       success: true,
       ordersCount: updatedOrders.length,
       orderType,
-      orders: updatedOrders.map(o => ({ id: o.id, status: o.status }))
+      orders: updatedOrders.map((o) => ({ id: o.id, status: o.status })),
     });
 
     return res.status(200).json({

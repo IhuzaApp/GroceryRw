@@ -319,33 +319,38 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       return (
         <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/70 backdrop-blur-md">
           <div
-            className={`w-full max-w-md rounded-2xl shadow-2xl ${theme === "dark" ? "bg-gray-800" : "bg-white"
-              }`}
+            className={`w-full max-w-md rounded-2xl shadow-2xl ${
+              theme === "dark" ? "bg-gray-800" : "bg-white"
+            }`}
           >
             <div
-              className={`rounded-t-2xl border-b px-6 py-4 ${theme === "dark"
+              className={`rounded-t-2xl border-b px-6 py-4 ${
+                theme === "dark"
                   ? "border-gray-700 bg-gray-800"
                   : "border-gray-200 bg-gradient-to-r from-green-50 to-blue-50"
-                }`}
+              }`}
             >
               <h3
-                className={`text-xl font-bold ${theme === "dark" ? "text-gray-100" : "text-gray-800"
-                  }`}
+                className={`text-xl font-bold ${
+                  theme === "dark" ? "text-gray-100" : "text-gray-800"
+                }`}
               >
                 Delivery Confirmation
               </h3>
             </div>
             <div
-              className={`px-6 py-8 ${theme === "dark" ? "bg-gray-800" : "bg-white"
-                }`}
+              className={`px-6 py-8 ${
+                theme === "dark" ? "bg-gray-800" : "bg-white"
+              }`}
             >
               <div className="flex flex-col items-center justify-center">
                 <div className="relative h-16 w-16">
                   <div className="absolute inset-0 animate-spin rounded-full border-4 border-green-200 border-t-green-600"></div>
                 </div>
                 <p
-                  className={`mt-4 text-lg font-medium ${theme === "dark" ? "text-gray-200" : "text-gray-700"
-                    }`}
+                  className={`mt-4 text-lg font-medium ${
+                    theme === "dark" ? "text-gray-200" : "text-gray-700"
+                  }`}
                 >
                   Processing...
                 </p>
@@ -362,23 +367,27 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
         return (
           <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/70 px-4 backdrop-blur-md">
             <div
-              className={`w-full max-w-md rounded-2xl shadow-2xl ${theme === "dark" ? "bg-gray-800" : "bg-white"
-                }`}
+              className={`w-full max-w-md rounded-2xl shadow-2xl ${
+                theme === "dark" ? "bg-gray-800" : "bg-white"
+              }`}
             >
               <div
-                className={`rounded-t-2xl border-b px-6 py-4 ${theme === "dark"
+                className={`rounded-t-2xl border-b px-6 py-4 ${
+                  theme === "dark"
                     ? "border-gray-700 bg-gray-800"
                     : "border-gray-200 bg-gradient-to-r from-red-50 to-pink-50"
-                  }`}
+                }`}
               >
                 <div className="flex items-center gap-3">
                   <div
-                    className={`rounded-full p-2 ${theme === "dark" ? "bg-red-600" : "bg-red-100"
-                      }`}
+                    className={`rounded-full p-2 ${
+                      theme === "dark" ? "bg-red-600" : "bg-red-100"
+                    }`}
                   >
                     <svg
-                      className={`h-6 w-6 ${theme === "dark" ? "text-white" : "text-red-600"
-                        }`}
+                      className={`h-6 w-6 ${
+                        theme === "dark" ? "text-white" : "text-red-600"
+                      }`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -392,30 +401,34 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                     </svg>
                   </div>
                   <h3
-                    className={`text-xl font-bold ${theme === "dark" ? "text-gray-100" : "text-gray-800"
-                      }`}
+                    className={`text-xl font-bold ${
+                      theme === "dark" ? "text-gray-100" : "text-gray-800"
+                    }`}
                   >
                     Loading Timeout
                   </h3>
                 </div>
               </div>
               <div
-                className={`px-6 py-6 ${theme === "dark" ? "bg-gray-800" : "bg-white"
-                  }`}
+                className={`px-6 py-6 ${
+                  theme === "dark" ? "bg-gray-800" : "bg-white"
+                }`}
               >
                 <div
-                  className={`py-4 text-center ${theme === "dark" ? "text-red-400" : "text-red-600"
-                    }`}
+                  className={`py-4 text-center ${
+                    theme === "dark" ? "text-red-400" : "text-red-600"
+                  }`}
                 >
                   Could not load delivery confirmation data. Please try
                   refreshing the page or contact support if the issue persists.
                 </div>
               </div>
               <div
-                className={`rounded-b-2xl border-t px-6 py-4 ${theme === "dark"
+                className={`rounded-b-2xl border-t px-6 py-4 ${
+                  theme === "dark"
                     ? "border-gray-700 bg-gray-800"
                     : "border-gray-200 bg-gray-50"
-                  }`}
+                }`}
               >
                 <button
                   onClick={onClose}
@@ -433,39 +446,45 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       return (
         <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/70 backdrop-blur-md">
           <div
-            className={`w-full max-w-md rounded-2xl shadow-2xl ${theme === "dark" ? "bg-gray-800" : "bg-white"
-              }`}
+            className={`w-full max-w-md rounded-2xl shadow-2xl ${
+              theme === "dark" ? "bg-gray-800" : "bg-white"
+            }`}
           >
             <div
-              className={`rounded-t-2xl border-b px-6 py-4 ${theme === "dark"
+              className={`rounded-t-2xl border-b px-6 py-4 ${
+                theme === "dark"
                   ? "border-gray-700 bg-gray-800"
                   : "border-gray-200 bg-gradient-to-r from-green-50 to-blue-50"
-                }`}
+              }`}
             >
               <h3
-                className={`text-xl font-bold ${theme === "dark" ? "text-gray-100" : "text-gray-800"
-                  }`}
+                className={`text-xl font-bold ${
+                  theme === "dark" ? "text-gray-100" : "text-gray-800"
+                }`}
               >
                 Preparing Delivery Confirmation
               </h3>
             </div>
             <div
-              className={`px-6 py-8 ${theme === "dark" ? "bg-gray-800" : "bg-white"
-                }`}
+              className={`px-6 py-8 ${
+                theme === "dark" ? "bg-gray-800" : "bg-white"
+              }`}
             >
               <div className="flex flex-col items-center justify-center">
                 <div className="relative h-16 w-16">
                   <div className="absolute inset-0 animate-spin rounded-full border-4 border-green-200 border-t-green-600"></div>
                 </div>
                 <p
-                  className={`mt-4 text-lg font-medium ${theme === "dark" ? "text-gray-200" : "text-gray-700"
-                    }`}
+                  className={`mt-4 text-lg font-medium ${
+                    theme === "dark" ? "text-gray-200" : "text-gray-700"
+                  }`}
                 >
                   Please wait...
                 </p>
                 <p
-                  className={`mt-2 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"
-                    }`}
+                  className={`mt-2 text-sm ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
                 >
                   Preparing your delivery confirmation
                 </p>
@@ -489,27 +508,31 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
         />
 
         <div
-          className={`relative z-10 flex w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border-0 shadow-2xl sm:max-h-[90vh] sm:rounded-2xl sm:border ${theme === "dark"
+          className={`relative z-10 flex w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border-0 shadow-2xl sm:max-h-[90vh] sm:rounded-2xl sm:border ${
+            theme === "dark"
               ? "bg-gray-800 sm:border-gray-700"
               : "bg-white sm:border-gray-200"
-            }`}
+          }`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div
-            className={`flex flex-shrink-0 items-center justify-between px-6 py-6 sm:px-8 ${theme === "dark"
+            className={`flex flex-shrink-0 items-center justify-between px-6 py-6 sm:px-8 ${
+              theme === "dark"
                 ? "border-b border-gray-700"
                 : "border-b border-gray-200"
-              }`}
+            }`}
           >
             <div className="flex items-center gap-3">
               <div
-                className={`rounded-full p-2 ${theme === "dark" ? "bg-green-600" : "bg-green-100"
-                  }`}
+                className={`rounded-full p-2 ${
+                  theme === "dark" ? "bg-green-600" : "bg-green-100"
+                }`}
               >
                 <svg
-                  className={`h-6 w-6 ${theme === "dark" ? "text-white" : "text-green-600"
-                    }`}
+                  className={`h-6 w-6 ${
+                    theme === "dark" ? "text-white" : "text-green-600"
+                  }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -524,20 +547,22 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
               </div>
               <div>
                 <h3
-                  className={`text-lg font-bold md:text-xl ${theme === "dark" ? "text-gray-100" : "text-gray-800"
-                    }`}
+                  className={`text-lg font-bold md:text-xl ${
+                    theme === "dark" ? "text-gray-100" : "text-gray-800"
+                  }`}
                 >
                   {photoUploading
                     ? "Uploading Delivery Photo..."
                     : confirmingDelivery
-                      ? "Confirming Delivery..."
-                      : deliveryConfirmed
-                        ? "Delivery Confirmed!"
-                        : "Delivery Confirmation"}
+                    ? "Confirming Delivery..."
+                    : deliveryConfirmed
+                    ? "Delivery Confirmed!"
+                    : "Delivery Confirmation"}
                 </h3>
                 <p
-                  className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
-                    }`}
+                  className={`text-sm ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
                 >
                   Order #{invoiceData.orderNumber}
                 </p>
@@ -546,10 +571,11 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
             {!photoUploading && !confirmingDelivery && (
               <button
                 onClick={handleClose}
-                className={`rounded-lg p-2 transition-colors ${theme === "dark"
+                className={`rounded-lg p-2 transition-colors ${
+                  theme === "dark"
                     ? "text-gray-400 hover:bg-gray-700/50 hover:text-gray-200"
                     : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                  }`}
+                }`}
               >
                 <svg
                   className="h-5 w-5"
@@ -570,25 +596,29 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
           {/* Body */}
           <div
-            className={`max-h-[70vh] flex-1 overflow-y-auto px-6 py-8 sm:px-8 ${theme === "dark" ? "bg-gray-800 text-gray-100" : "bg-white"
-              }`}
+            className={`max-h-[70vh] flex-1 overflow-y-auto px-6 py-8 sm:px-8 ${
+              theme === "dark" ? "bg-gray-800 text-gray-100" : "bg-white"
+            }`}
           >
             <div className="space-y-4">
               {/* Delivery Address Section */}
               <div
-                className={`rounded-xl border p-4 ${theme === "dark"
+                className={`rounded-xl border p-4 ${
+                  theme === "dark"
                     ? "border-gray-700 bg-gray-900/50"
                     : "border-gray-200 bg-gray-50"
-                  }`}
+                }`}
               >
                 <div className="mb-3 flex items-start gap-3">
                   <div
-                    className={`rounded-full p-2 ${theme === "dark" ? "bg-blue-600" : "bg-blue-100"
-                      }`}
+                    className={`rounded-full p-2 ${
+                      theme === "dark" ? "bg-blue-600" : "bg-blue-100"
+                    }`}
                   >
                     <svg
-                      className={`h-5 w-5 ${theme === "dark" ? "text-white" : "text-blue-600"
-                        }`}
+                      className={`h-5 w-5 ${
+                        theme === "dark" ? "text-white" : "text-blue-600"
+                      }`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -609,14 +639,16 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                   </div>
                   <div className="flex-1">
                     <h3
-                      className={`text-base font-bold ${theme === "dark" ? "text-gray-100" : "text-gray-800"
-                        }`}
+                      className={`text-base font-bold ${
+                        theme === "dark" ? "text-gray-100" : "text-gray-800"
+                      }`}
                     >
                       Delivery Address
                     </h3>
                     <div
-                      className={`mt-2 space-y-1 text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
-                        }`}
+                      className={`mt-2 space-y-1 text-sm ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-600"
+                      }`}
                     >
                       <p className="font-medium">{invoiceData.customer}</p>
                       {invoiceData.customerPhone && (
@@ -639,17 +671,19 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                       )}
                       {invoiceData.deliveryPlaceDetails && (
                         <div
-                          className={`mt-2 rounded-lg border-l-4 p-3 ${theme === "dark"
+                          className={`mt-2 rounded-lg border-l-4 p-3 ${
+                            theme === "dark"
                               ? "border-blue-500 bg-blue-900/20"
                               : "border-blue-400 bg-blue-50"
-                            }`}
+                          }`}
                         >
                           <div className="flex items-start gap-2">
                             <svg
-                              className={`mt-0.5 h-4 w-4 flex-shrink-0 ${theme === "dark"
+                              className={`mt-0.5 h-4 w-4 flex-shrink-0 ${
+                                theme === "dark"
                                   ? "text-blue-400"
                                   : "text-blue-600"
-                                }`}
+                              }`}
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -663,47 +697,49 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                             </svg>
                             <div className="flex-1">
                               <p
-                                className={`mb-1 text-xs font-semibold uppercase tracking-wide ${theme === "dark"
+                                className={`mb-1 text-xs font-semibold uppercase tracking-wide ${
+                                  theme === "dark"
                                     ? "text-blue-300"
                                     : "text-blue-700"
-                                  }`}
+                                }`}
                               >
                                 Additional Location Details
                               </p>
                               <div
-                                className={`space-y-1 text-sm ${theme === "dark"
+                                className={`space-y-1 text-sm ${
+                                  theme === "dark"
                                     ? "text-blue-200"
                                     : "text-blue-900"
-                                  }`}
+                                }`}
                               >
                                 {typeof invoiceData.deliveryPlaceDetails ===
-                                  "string" ? (
+                                "string" ? (
                                   <p>{invoiceData.deliveryPlaceDetails}</p>
                                 ) : (
                                   <>
                                     {invoiceData.deliveryPlaceDetails
                                       .gateNumber && (
-                                        <p>
-                                          <span className="font-semibold">
-                                            Gate:
-                                          </span>{" "}
-                                          {
-                                            invoiceData.deliveryPlaceDetails
-                                              .gateNumber
-                                          }
-                                          {invoiceData.deliveryPlaceDetails
-                                            .gateColor && (
-                                              <span className="ml-2">
-                                                (
-                                                {
-                                                  invoiceData.deliveryPlaceDetails
-                                                    .gateColor
-                                                }{" "}
-                                                gate)
-                                              </span>
-                                            )}
-                                        </p>
-                                      )}
+                                      <p>
+                                        <span className="font-semibold">
+                                          Gate:
+                                        </span>{" "}
+                                        {
+                                          invoiceData.deliveryPlaceDetails
+                                            .gateNumber
+                                        }
+                                        {invoiceData.deliveryPlaceDetails
+                                          .gateColor && (
+                                          <span className="ml-2">
+                                            (
+                                            {
+                                              invoiceData.deliveryPlaceDetails
+                                                .gateColor
+                                            }{" "}
+                                            gate)
+                                          </span>
+                                        )}
+                                      </p>
+                                    )}
                                     {invoiceData.deliveryPlaceDetails.floor && (
                                       <p>
                                         <span className="font-semibold">
@@ -714,64 +750,64 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                                     )}
                                     {invoiceData.deliveryPlaceDetails
                                       .doorNumber && (
-                                        <p>
-                                          <span className="font-semibold">
-                                            Door:
-                                          </span>{" "}
-                                          {
-                                            invoiceData.deliveryPlaceDetails
-                                              .doorNumber
-                                          }
-                                        </p>
-                                      )}
+                                      <p>
+                                        <span className="font-semibold">
+                                          Door:
+                                        </span>{" "}
+                                        {
+                                          invoiceData.deliveryPlaceDetails
+                                            .doorNumber
+                                        }
+                                      </p>
+                                    )}
                                     {invoiceData.deliveryPlaceDetails
                                       .buildingName && (
-                                        <p>
-                                          <span className="font-semibold">
-                                            Building:
-                                          </span>{" "}
-                                          {
-                                            invoiceData.deliveryPlaceDetails
-                                              .buildingName
-                                          }
-                                        </p>
-                                      )}
+                                      <p>
+                                        <span className="font-semibold">
+                                          Building:
+                                        </span>{" "}
+                                        {
+                                          invoiceData.deliveryPlaceDetails
+                                            .buildingName
+                                        }
+                                      </p>
+                                    )}
                                     {invoiceData.deliveryPlaceDetails
                                       .apartmentNumber && (
-                                        <p>
-                                          <span className="font-semibold">
-                                            Apartment:
-                                          </span>{" "}
-                                          {
-                                            invoiceData.deliveryPlaceDetails
-                                              .apartmentNumber
-                                          }
-                                        </p>
-                                      )}
+                                      <p>
+                                        <span className="font-semibold">
+                                          Apartment:
+                                        </span>{" "}
+                                        {
+                                          invoiceData.deliveryPlaceDetails
+                                            .apartmentNumber
+                                        }
+                                      </p>
+                                    )}
                                     {invoiceData.deliveryPlaceDetails
                                       .landmark && (
-                                        <p>
-                                          <span className="font-semibold">
-                                            Landmark:
-                                          </span>{" "}
-                                          {
-                                            invoiceData.deliveryPlaceDetails
-                                              .landmark
-                                          }
-                                        </p>
-                                      )}
+                                      <p>
+                                        <span className="font-semibold">
+                                          Landmark:
+                                        </span>{" "}
+                                        {
+                                          invoiceData.deliveryPlaceDetails
+                                            .landmark
+                                        }
+                                      </p>
+                                    )}
                                     {invoiceData.deliveryPlaceDetails
                                       .instructions && (
-                                        <p>
-                                          <span className="font-semibold">
-                                            Instructions:
-                                          </span>{" "}
-                                          {
-                                            invoiceData.deliveryPlaceDetails
-                                              .instructions
-                                          }
-                                        </p>
-                                      )}
+                                      <p>
+                                        <span className="font-semibold">
+                                          Instructions:
+                                        </span>{" "}
+                                        {
+                                          invoiceData.deliveryPlaceDetails
+                                            .instructions
+                                        }
+                                      </p>
+                                    )}
                                   </>
                                 )}
                               </div>
@@ -796,19 +832,22 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
               {/* PIN Verification Section */}
               {currentVerificationStep === "pin" && !photoUploaded && (
                 <div
-                  className={`rounded-xl border-2 p-4 ${theme === "dark"
+                  className={`rounded-xl border-2 p-4 ${
+                    theme === "dark"
                       ? "border-green-600 bg-green-900/20"
                       : "border-green-200 bg-green-50"
-                    }`}
+                  }`}
                 >
                   <div className="mb-3 flex items-center gap-3">
                     <div
-                      className={`rounded-full p-2 ${theme === "dark" ? "bg-green-600" : "bg-green-100"
-                        }`}
+                      className={`rounded-full p-2 ${
+                        theme === "dark" ? "bg-green-600" : "bg-green-100"
+                      }`}
                     >
                       <svg
-                        className={`h-5 w-5 ${theme === "dark" ? "text-white" : "text-green-600"
-                          }`}
+                        className={`h-5 w-5 ${
+                          theme === "dark" ? "text-white" : "text-green-600"
+                        }`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -826,16 +865,18 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                         Verify Delivery PIN
                       </h3>
                       <p
-                        className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
-                          }`}
+                        className={`text-sm ${
+                          theme === "dark" ? "text-gray-300" : "text-gray-600"
+                        }`}
                       >
                         Ask customer for their order PIN
                       </p>
                     </div>
                   </div>
                   <p
-                    className={`mb-3 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"
-                      }`}
+                    className={`mb-3 text-sm ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-600"
+                    }`}
                   >
                     Please ask the customer for their 2-digit order PIN to
                     confirm delivery.
@@ -857,20 +898,23 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                         placeholder="Enter 2-digit PIN"
                         maxLength={2}
                         disabled={verifyingPin}
-                        className={`w-full rounded-xl border-2 px-4 py-4 text-center text-2xl font-bold tracking-widest transition-all focus:outline-none focus:ring-2 focus:ring-green-500 ${theme === "dark"
+                        className={`w-full rounded-xl border-2 px-4 py-4 text-center text-2xl font-bold tracking-widest transition-all focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                          theme === "dark"
                             ? "border-gray-600 bg-gray-700 text-gray-100 placeholder-gray-400 focus:border-green-500"
                             : "border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-green-500"
-                          } ${pinError ? "border-red-500 focus:ring-red-500" : ""
-                          }`}
+                        } ${
+                          pinError ? "border-red-500 focus:ring-red-500" : ""
+                        }`}
                       />
                     </div>
 
                     {pinError && (
                       <div
-                        className={`rounded-lg border-l-4 p-3 text-sm ${theme === "dark"
+                        className={`rounded-lg border-l-4 p-3 text-sm ${
+                          theme === "dark"
                             ? "border-red-500 bg-red-900/20 text-red-300"
                             : "border-red-500 bg-red-50 text-red-600"
-                          }`}
+                        }`}
                       >
                         {pinError}
                       </div>
@@ -878,10 +922,11 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
                     {pinAttempts > 0 && pinAttempts < 2 && (
                       <div
-                        className={`rounded-lg border-l-4 p-3 text-sm ${theme === "dark"
+                        className={`rounded-lg border-l-4 p-3 text-sm ${
+                          theme === "dark"
                             ? "border-yellow-500 bg-yellow-900/20 text-yellow-300"
                             : "border-yellow-500 bg-yellow-50 text-yellow-700"
-                          }`}
+                        }`}
                       >
                         Attempt {pinAttempts} of 2. {2 - pinAttempts} attempt(s)
                         remaining.
@@ -924,19 +969,22 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
               {/* Photo Proof Section */}
               {currentVerificationStep === "photo" && !photoUploaded && (
                 <div
-                  className={`rounded-xl border-2 p-4 ${theme === "dark"
+                  className={`rounded-xl border-2 p-4 ${
+                    theme === "dark"
                       ? "border-blue-600 bg-blue-900/20"
                       : "border-blue-200 bg-blue-50"
-                    }`}
+                  }`}
                 >
                   <div className="mb-3 flex items-center gap-3">
                     <div
-                      className={`rounded-full p-2 ${theme === "dark" ? "bg-blue-600" : "bg-blue-100"
-                        }`}
+                      className={`rounded-full p-2 ${
+                        theme === "dark" ? "bg-blue-600" : "bg-blue-100"
+                      }`}
                     >
                       <svg
-                        className={`h-5 w-5 ${theme === "dark" ? "text-white" : "text-blue-600"
-                          }`}
+                        className={`h-5 w-5 ${
+                          theme === "dark" ? "text-white" : "text-blue-600"
+                        }`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -960,8 +1008,9 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                         Delivery Photo Required
                       </h3>
                       <p
-                        className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
-                          }`}
+                        className={`text-sm ${
+                          theme === "dark" ? "text-gray-300" : "text-gray-600"
+                        }`}
                       >
                         PIN verification failed - photo proof needed
                       </p>
@@ -969,8 +1018,9 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                   </div>
 
                   <p
-                    className={`mb-3 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"
-                      }`}
+                    className={`mb-3 text-sm ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-600"
+                    }`}
                   >
                     {photoUploading
                       ? "Please wait while we upload your photo..."
@@ -984,8 +1034,9 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                           <div className="absolute inset-0 animate-spin rounded-full border-4 border-green-200 border-t-green-600"></div>
                         </div>
                         <p
-                          className={`mt-3 text-base font-medium ${theme === "dark" ? "text-gray-200" : "text-gray-700"
-                            }`}
+                          className={`mt-3 text-base font-medium ${
+                            theme === "dark" ? "text-gray-200" : "text-gray-700"
+                          }`}
                         >
                           Uploading photo...
                         </p>
@@ -1030,10 +1081,11 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                   {capturedImage && !photoUploading && (
                     <div className="mt-4 text-center">
                       <div
-                        className={`rounded-lg border p-4 ${theme === "dark"
+                        className={`rounded-lg border p-4 ${
+                          theme === "dark"
                             ? "border-gray-700 bg-gray-700"
                             : "bg-gray-50"
-                          }`}
+                        }`}
                       >
                         <p className="mb-2 flex items-center justify-center gap-2 font-medium text-green-600 dark:text-green-400">
                           <svg
@@ -1065,8 +1117,9 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
                   {uploadError && (
                     <p
-                      className={`mt-2 text-center text-sm ${theme === "dark" ? "text-red-400" : "text-red-600"
-                        }`}
+                      className={`mt-2 text-center text-sm ${
+                        theme === "dark" ? "text-red-400" : "text-red-600"
+                      }`}
                     >
                       {uploadError}
                     </p>
@@ -1077,19 +1130,22 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
               {/* Success state for PIN verification */}
               {proofType === "pin" && photoUploaded && (
                 <div
-                  className={`rounded-xl border-2 p-4 ${theme === "dark"
+                  className={`rounded-xl border-2 p-4 ${
+                    theme === "dark"
                       ? "border-green-600 bg-green-900/20"
                       : "border-green-200 bg-green-50"
-                    }`}
+                  }`}
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`rounded-full p-2 ${theme === "dark" ? "bg-green-600" : "bg-green-100"
-                        }`}
+                      className={`rounded-full p-2 ${
+                        theme === "dark" ? "bg-green-600" : "bg-green-100"
+                      }`}
                     >
                       <svg
-                        className={`h-6 w-6 ${theme === "dark" ? "text-white" : "text-green-600"
-                          }`}
+                        className={`h-6 w-6 ${
+                          theme === "dark" ? "text-white" : "text-green-600"
+                        }`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1107,8 +1163,9 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                         PIN Verified Successfully!
                       </h3>
                       <p
-                        className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"
-                          }`}
+                        className={`text-sm ${
+                          theme === "dark" ? "text-gray-300" : "text-gray-600"
+                        }`}
                       >
                         Customer confirmed delivery with PIN
                       </p>
@@ -1164,8 +1221,9 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                       <div className="absolute inset-0 animate-spin rounded-full border-4 border-green-200 border-t-green-600"></div>
                     </div>
                     <p
-                      className={`mt-3 text-base font-medium ${theme === "dark" ? "text-gray-200" : "text-gray-700"
-                        }`}
+                      className={`mt-3 text-base font-medium ${
+                        theme === "dark" ? "text-gray-200" : "text-gray-700"
+                      }`}
                     >
                       Updating order status...
                     </p>
@@ -1180,10 +1238,11 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
               {deliveryConfirmed && (
                 <div className="mt-4 text-center">
                   <div
-                    className={`rounded-lg border p-4 ${theme === "dark"
+                    className={`rounded-lg border p-4 ${
+                      theme === "dark"
                         ? "border-green-700 bg-green-900/20"
                         : "border-green-200 bg-green-50"
-                      }`}
+                    }`}
                   >
                     <p className="font-medium text-green-600 dark:text-green-400">
                       Delivery confirmed successfully!

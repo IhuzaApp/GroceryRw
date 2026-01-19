@@ -315,8 +315,9 @@ export function BatchTable({ orders }: BatchTableProps) {
     <div className="space-y-4">
       {/* Table Container */}
       <div
-        className={`rounded-lg border ${theme === "dark" ? "border-gray-700" : "border-gray-200"
-          }`}
+        className={`rounded-lg border ${
+          theme === "dark" ? "border-gray-700" : "border-gray-200"
+        }`}
       >
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
@@ -324,8 +325,9 @@ export function BatchTable({ orders }: BatchTableProps) {
               className={`${theme === "dark" ? "bg-gray-800" : "bg-gray-50"}`}
             >
               <tr
-                className={`border-b ${theme === "dark" ? "border-gray-700" : "border-gray-200"
-                  }`}
+                className={`border-b ${
+                  theme === "dark" ? "border-gray-700" : "border-gray-200"
+                }`}
               >
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                   <input type="checkbox" className="rounded" />
@@ -364,10 +366,11 @@ export function BatchTable({ orders }: BatchTableProps) {
               {currentOrders.map((order) => (
                 <tr
                   key={order.id}
-                  className={`border-b ${theme === "dark"
+                  className={`border-b ${
+                    theme === "dark"
                       ? "border-gray-800 hover:bg-gray-800"
                       : "border-gray-100 hover:bg-gray-50"
-                    } transition-colors`}
+                  } transition-colors`}
                 >
                   <td className="px-6 py-4">
                     <input type="checkbox" className="rounded" />
@@ -539,19 +542,21 @@ export function BatchTable({ orders }: BatchTableProps) {
                             top: `${dropdownPosition.top}px`,
                             right: `${dropdownPosition.right}px`,
                           }}
-                          className={`z-[9999] w-56 rounded-lg shadow-lg ${theme === "dark"
+                          className={`z-[9999] w-56 rounded-lg shadow-lg ${
+                            theme === "dark"
                               ? "border border-gray-700 bg-gray-800"
                               : "border border-gray-200 bg-white"
-                            }`}
+                          }`}
                         >
                           <div className="py-1">
                             {/* View Batch */}
                             <Link
                               href={`/Plasa/active-batches/batch/${order.id}`}
-                              className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${theme === "dark"
+                              className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
+                                theme === "dark"
                                   ? "text-gray-200 hover:bg-gray-700"
                                   : "text-gray-700 hover:bg-gray-50"
-                                }`}
+                              }`}
                               onClick={() => setOpenDropdownId(null)}
                             >
                               <svg
@@ -578,10 +583,11 @@ export function BatchTable({ orders }: BatchTableProps) {
 
                             {/* Contact Support */}
                             <button
-                              className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors ${theme === "dark"
+                              className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors ${
+                                theme === "dark"
                                   ? "text-gray-200 hover:bg-gray-700"
                                   : "text-gray-700 hover:bg-gray-50"
-                                }`}
+                              }`}
                               onClick={() => {
                                 // TODO: Open support modal or contact form
                                 alert(
@@ -610,18 +616,20 @@ export function BatchTable({ orders }: BatchTableProps) {
 
                             {/* Divider */}
                             <div
-                              className={`my-1 border-t ${theme === "dark"
+                              className={`my-1 border-t ${
+                                theme === "dark"
                                   ? "border-gray-700"
                                   : "border-gray-200"
-                                }`}
+                              }`}
                             ></div>
 
                             {/* Update Status Label */}
                             <div
-                              className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider ${theme === "dark"
+                              className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider ${
+                                theme === "dark"
                                   ? "text-gray-400"
                                   : "text-gray-500"
-                                }`}
+                              }`}
                             >
                               Update Status
                             </div>
@@ -629,10 +637,11 @@ export function BatchTable({ orders }: BatchTableProps) {
                             {/* Start Shopping */}
                             {order.status === "accepted" && (
                               <button
-                                className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors ${theme === "dark"
+                                className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors ${
+                                  theme === "dark"
                                     ? "text-gray-200 hover:bg-gray-700"
                                     : "text-gray-700 hover:bg-gray-50"
-                                  }`}
+                                }`}
                                 onClick={() => {
                                   // TODO: Update status to shopping
                                   alert(
@@ -664,69 +673,71 @@ export function BatchTable({ orders }: BatchTableProps) {
                             {(order.status === "shopping" ||
                               order.status === "on_the_way" ||
                               order.status === "at_customer") && (
-                                <>
-                                  {order.invoiceUrl ? (
-                                    <button
-                                      className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors ${theme === "dark"
-                                          ? "text-gray-200 hover:bg-gray-700"
-                                          : "text-gray-700 hover:bg-gray-50"
-                                        }`}
-                                      onClick={() => {
-                                        // TODO: API call to confirm delivery
-                                        alert(
-                                          `Confirm delivery for order ${formatOrderIdsForDisplay(
-                                            order
-                                          )}`
-                                        );
-                                        setOpenDropdownId(null);
-                                      }}
+                              <>
+                                {order.invoiceUrl ? (
+                                  <button
+                                    className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors ${
+                                      theme === "dark"
+                                        ? "text-gray-200 hover:bg-gray-700"
+                                        : "text-gray-700 hover:bg-gray-50"
+                                    }`}
+                                    onClick={() => {
+                                      // TODO: API call to confirm delivery
+                                      alert(
+                                        `Confirm delivery for order ${formatOrderIdsForDisplay(
+                                          order
+                                        )}`
+                                      );
+                                      setOpenDropdownId(null);
+                                    }}
+                                  >
+                                    <svg
+                                      className="h-5 w-5 text-purple-500"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
                                     >
-                                      <svg
-                                        className="h-5 w-5 text-purple-500"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={2}
-                                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                                        />
-                                      </svg>
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                      />
+                                    </svg>
+                                    <span>Confirm Delivery</span>
+                                  </button>
+                                ) : (
+                                  <div
+                                    className={`flex cursor-not-allowed items-start gap-3 px-4 py-3 text-sm opacity-60 ${
+                                      theme === "dark"
+                                        ? "text-gray-400"
+                                        : "text-gray-500"
+                                    }`}
+                                    title="Please upload invoice first"
+                                  >
+                                    <svg
+                                      className="mt-0.5 h-5 w-5 flex-shrink-0 text-gray-400"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                                      />
+                                    </svg>
+                                    <div className="flex flex-col">
                                       <span>Confirm Delivery</span>
-                                    </button>
-                                  ) : (
-                                    <div
-                                      className={`flex cursor-not-allowed items-start gap-3 px-4 py-3 text-sm opacity-60 ${theme === "dark"
-                                          ? "text-gray-400"
-                                          : "text-gray-500"
-                                        }`}
-                                      title="Please upload invoice first"
-                                    >
-                                      <svg
-                                        className="mt-0.5 h-5 w-5 flex-shrink-0 text-gray-400"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={2}
-                                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                                        />
-                                      </svg>
-                                      <div className="flex flex-col">
-                                        <span>Confirm Delivery</span>
-                                        <span className="mt-0.5 text-xs text-red-500 dark:text-red-400">
-                                          Invoice required
-                                        </span>
-                                      </div>
+                                      <span className="mt-0.5 text-xs text-red-500 dark:text-red-400">
+                                        Invoice required
+                                      </span>
                                     </div>
-                                  )}
-                                </>
-                              )}
+                                  </div>
+                                )}
+                              </>
+                            )}
                           </div>
                         </div>
                       )}
@@ -742,10 +753,11 @@ export function BatchTable({ orders }: BatchTableProps) {
       {/* Pagination */}
       {totalPages > 1 && (
         <div
-          className={`flex items-center justify-between rounded-lg border ${theme === "dark"
+          className={`flex items-center justify-between rounded-lg border ${
+            theme === "dark"
               ? "border-gray-700 bg-gray-800"
               : "border-gray-200 bg-white"
-            } px-4 py-3`}
+          } px-4 py-3`}
         >
           <div className="text-sm">
             Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
@@ -758,10 +770,11 @@ export function BatchTable({ orders }: BatchTableProps) {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className={`rounded px-3 py-1 text-sm ${currentPage === 1
+              className={`rounded px-3 py-1 text-sm ${
+                currentPage === 1
                   ? "cursor-not-allowed opacity-50"
                   : "hover:bg-gray-100 dark:hover:bg-gray-700"
-                }`}
+              }`}
             >
               Previous
             </button>
@@ -771,10 +784,11 @@ export function BatchTable({ orders }: BatchTableProps) {
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className={`rounded px-3 py-1 text-sm ${currentPage === totalPages
+              className={`rounded px-3 py-1 text-sm ${
+                currentPage === totalPages
                   ? "cursor-not-allowed opacity-50"
                   : "hover:bg-gray-100 dark:hover:bg-gray-700"
-                }`}
+              }`}
             >
               Next
             </button>

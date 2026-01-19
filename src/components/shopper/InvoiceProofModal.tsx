@@ -151,9 +151,14 @@ const InvoiceProofModal: React.FC<InvoiceProofModalProps> = ({
                   }`}
                 >
                   {combinedOrderNumbers.length > 0
-                    ? `${combinedOrderNumbers.length + 1} Orders: #${orderNumber}${combinedOrderNumbers.length > 0 ? ', ' + combinedOrderNumbers.join(', ') : ''}`
-                    : `Order #${orderNumber}`
-                  }
+                    ? `${
+                        combinedOrderNumbers.length + 1
+                      } Orders: #${orderNumber}${
+                        combinedOrderNumbers.length > 0
+                          ? ", " + combinedOrderNumbers.join(", ")
+                          : ""
+                      }`
+                    : `Order #${orderNumber}`}
                 </p>
               </div>
             </div>

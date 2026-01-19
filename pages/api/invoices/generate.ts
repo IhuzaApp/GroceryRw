@@ -177,17 +177,17 @@ const ADD_INVOICE = gql`
         Proof: $Proof
       }
       on_conflict: {
-        constraint: Invoices_order_id_key,
+        constraint: Invoices_order_id_key
         update_columns: [
-          delivery_fee,
-          discount,
-          invoice_items,
-          invoice_number,
-          service_fee,
-          status,
-          subtotal,
-          tax,
-          total_amount,
+          delivery_fee
+          discount
+          invoice_items
+          invoice_number
+          service_fee
+          status
+          subtotal
+          tax
+          total_amount
           Proof
         ]
       }
@@ -366,7 +366,10 @@ export default async function handler(
 
         if (!cloudinaryResponse.ok) {
           const errorText = await cloudinaryResponse.text();
-          console.error("Failed to upload invoice proof to Cloudinary:", errorText);
+          console.error(
+            "Failed to upload invoice proof to Cloudinary:",
+            errorText
+          );
         } else {
           const cloudinaryData = await cloudinaryResponse.json();
           invoiceProofUrl = cloudinaryData.secure_url;
@@ -412,17 +415,25 @@ export default async function handler(
       }
     } catch (error) {
       console.error("Error fetching order details for invoice:", error);
-      return res.status(500).json({ error: "Failed to fetch order details", details: error instanceof Error ? error.message : String(error) });
+      return res
+        .status(500)
+        .json({
+          error: "Failed to fetch order details",
+          details: error instanceof Error ? error.message : String(error),
+        });
     }
 
     const order = isReelOrder
       ? orderDetails.reel_orders_by_pk
       : isRestaurantOrder
-        ? orderDetails.restaurant_orders_by_pk
-        : orderDetails.Orders_by_pk;
+      ? orderDetails.restaurant_orders_by_pk
+      : orderDetails.Orders_by_pk;
 
     if (!order) {
-      console.warn("Order not found for invoice generation:", { orderId, orderType });
+      console.warn("Order not found for invoice generation:", {
+        orderId,
+        orderType,
+      });
       return res.status(404).json({ error: "Order not found" });
     }
 
@@ -431,12 +442,14 @@ export default async function handler(
     const isCustomer = isReelOrder
       ? order.User.id === session.user.id
       : isRestaurantOrder
-        ? order.User.id === session.user.id
-        : order.orderedBy.id === session.user.id;
-
+      ? order.User.id === session.user.id
+      : order.orderedBy.id === session.user.id;
 
     if (!isShopper && !isCustomer) {
-      console.warn("Unauthorized invoice request:", { orderId, userId: session.user.id });
+      console.warn("Unauthorized invoice request:", {
+        orderId,
+        userId: session.user.id,
+      });
       return res
         .status(403)
         .json({ error: "Not authorized to access this order" });
@@ -517,10 +530,10 @@ export default async function handler(
       : parseFloat(order.service_fee || "0");
     const deliveryFee = parseFloat(order.delivery_fee || "0");
 
-
     // Create a unique invoice number
-    const invoiceNumber = `INV-${order.OrderID || order.id.slice(-8)
-      }-${new Date().getTime().toString().slice(-6)}`;
+    const invoiceNumber = `INV-${
+      order.OrderID || order.id.slice(-8)
+    }-${new Date().getTime().toString().slice(-6)}`;
 
     // Calculate tax (VAT) - same as order summary calculation (18% of final total)
     const finalTotalBeforeTax = itemsTotal + serviceFee + deliveryFee;
@@ -539,8 +552,8 @@ export default async function handler(
       customer_id: isReelOrder
         ? order.User.id
         : isRestaurantOrder
-          ? order.User.id
-          : order.orderedBy.id,
+        ? order.User.id
+        : order.orderedBy.id,
       delivery_fee: deliveryFeeStr,
       discount: discountStr,
       invoice_items: invoiceItems,
@@ -555,16 +568,21 @@ export default async function handler(
       Proof: invoiceProofUrl,
     };
 
-
     // Save invoice data to the database
     let saveResult;
     try {
-      saveResult = await hasuraClient.request<AddInvoiceResult>(ADD_INVOICE, invoicePayload);
+      saveResult = await hasuraClient.request<AddInvoiceResult>(
+        ADD_INVOICE,
+        invoicePayload
+      );
     } catch (error) {
       console.error("Failed to save invoice to database:", error);
       return res
         .status(500)
-        .json({ error: "Failed to save invoice to database", details: error instanceof Error ? error.message : String(error) });
+        .json({
+          error: "Failed to save invoice to database",
+          details: error instanceof Error ? error.message : String(error),
+        });
     }
 
     // Generate invoice data for the response
@@ -576,18 +594,18 @@ export default async function handler(
       customer: isReelOrder
         ? order.User.name
         : isRestaurantOrder
-          ? order.User.name
-          : order.orderedBy.name,
+        ? order.User.name
+        : order.orderedBy.name,
       customerEmail: isReelOrder
         ? order.User.email
         : isRestaurantOrder
-          ? order.User.email
-          : order.orderedBy.email,
+        ? order.User.email
+        : order.orderedBy.email,
       customerPhone: isReelOrder
         ? order.User?.phone || ""
         : isRestaurantOrder
-          ? order.User?.phone || ""
-          : order.orderedBy?.phone || "",
+        ? order.User?.phone || ""
+        : order.orderedBy?.phone || "",
       shop: shopName,
       shopAddress: shopAddress,
       deliveryStreet: order.Address?.street || "",
@@ -595,8 +613,9 @@ export default async function handler(
       deliveryPostalCode: order.Address?.postal_code || "",
       deliveryPlaceDetails: order.Address?.placeDetails || null,
       deliveryAddress: order.Address
-        ? `${order.Address.street || ""}, ${order.Address.city || ""}${order.Address.postal_code ? `, ${order.Address.postal_code}` : ""
-        }`
+        ? `${order.Address.street || ""}, ${order.Address.city || ""}${
+            order.Address.postal_code ? `, ${order.Address.postal_code}` : ""
+          }`
         : "",
       dateCreated: new Date(order.created_at).toLocaleString(),
       dateCompleted: new Date(order.updated_at).toLocaleString(),
@@ -614,8 +633,8 @@ export default async function handler(
       orderType: isReelOrder
         ? "reel"
         : isRestaurantOrder
-          ? "restaurant"
-          : "regular",
+        ? "restaurant"
+        : "regular",
       isReelOrder,
       isRestaurantOrder,
     };
