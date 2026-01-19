@@ -195,6 +195,33 @@ export default function BatchDetails({
     return filteredItems;
   }, [order?.Order_Items, isMultiShop, activeShopId]);
 
+  // Get items for the currently active order (main or combined)
+  const getActiveOrderItems = useMemo(() => {
+    if (!isMultiShop || !activeShopId) {
+      // Single shop or main order - return main order items
+      return order?.Order_Items || [];
+    }
+
+    // Find the active combined order
+    const activeCombinedOrder = order?.combinedOrders?.find(co => co.shop?.id === activeShopId);
+    if (activeCombinedOrder) {
+      return activeCombinedOrder.Order_Items || [];
+    }
+
+    // Fallback to main order items filtered by shop
+    return order?.Order_Items?.filter((item: any) => item.shopId === activeShopId) || [];
+  }, [order?.Order_Items, order?.combinedOrders, isMultiShop, activeShopId]);
+
+  // Get the currently active order object (main or combined)
+  const getActiveOrder = useMemo(() => {
+    if (!isMultiShop || !activeShopId) {
+      return order;
+    }
+
+    const activeCombinedOrder = order?.combinedOrders?.find(co => co.shop?.id === activeShopId);
+    return activeCombinedOrder || order;
+  }, [order, order?.combinedOrders, isMultiShop, activeShopId]);
+
   const currentStep = useMemo(() => {
     if (!order) return 0;
     const allOrders = [order, ...(order.combinedOrders || [])];
@@ -3416,21 +3443,21 @@ export default function BatchDetails({
                       })()
                     ) : (
                       <>
-                        {order.status === "shopping" && (
+                        {getActiveOrder?.status === "shopping" && (
                           <>
                             <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                               <span>Items Found</span>
                               <span className="font-medium">
-                                {getActiveShopItems.filter(
+                                {getActiveOrderItems.filter(
                                   (item) => item.found
                                 ).length || 0}{" "}
-                                / {getActiveShopItems.length || 0}
+                                / {getActiveOrderItems.length || 0}
                               </span>
                             </div>
                             <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                               <span>Units Found</span>
                               <span className="font-medium">
-                                {getActiveShopItems.reduce((total, item) => {
+                                {getActiveOrderItems.reduce((total, item) => {
                                   if (item.found) {
                                     return (
                                       total +
@@ -3440,7 +3467,7 @@ export default function BatchDetails({
                                   return total;
                                 }, 0) || 0}{" "}
                                 /{" "}
-                                {getActiveShopItems.reduce(
+                                {getActiveOrderItems.reduce(
                                   (total, item) => total + item.quantity,
                                   0
                                 ) || 0}
@@ -3449,7 +3476,7 @@ export default function BatchDetails({
                             <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                               <span>Units Not Found</span>
                               <span className="font-medium">
-                                {getActiveShopItems.reduce((total, item) => {
+                                {getActiveOrderItems.reduce((total, item) => {
                                   if (!item.found) {
                                     return total + item.quantity;
                                   } else if (
@@ -3471,18 +3498,26 @@ export default function BatchDetails({
                               <span className="font-medium">
                                 -
                                 {formatCurrency(
-                                  calculateOriginalSubtotal() -
-                                  calculateFoundItemsTotal()
+                                  getActiveOrderItems.reduce((total, item) => {
+                                    return total + (item.price * item.quantity);
+                                  }, 0) -
+                                  getActiveOrderItems.reduce((total, item) => {
+                                    if (item.found) {
+                                      return total + (item.price * (item.foundQuantity || item.quantity));
+                                    }
+                                    return total;
+                                  }, 0)
                                 )}
                               </span>
                             </div>
                           </>
                         )}
                         {(() => {
-                          const itemsTotal = order.status === "shopping"
+                          const activeOrder = getActiveOrder;
+                          const itemsTotal = activeOrder?.status === "shopping"
                             ? calculateFoundItemsTotal()
                             : calculateOriginalSubtotal();
-                          const discount = order.discount || 0;
+                          const discount = activeOrder?.discount || 0;
                           const finalTotal = itemsTotal - discount;
                           const vat = finalTotal * (18 / 118);
                           const subtotal = finalTotal - vat;
