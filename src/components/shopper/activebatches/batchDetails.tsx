@@ -304,6 +304,21 @@ export default function BatchDetails({
         if (response.ok) {
           const data = await response.json();
 
+          // Console log the combined-orders API response
+          console.log("🔍 [BatchDetails] Combined-orders API response:", {
+            combinedOrderId: combinedId,
+            ordersFromCombinedAPI: data.orders,
+            ordersCount: data.orders?.length || 0,
+            ordersDetails: data.orders?.map((o: any) => ({
+              id: o.id,
+              OrderID: o.OrderID,
+              status: o.status,
+              shop: o.shop,
+              itemsCount: o.Order_Items?.length || 0,
+              total: o.total
+            })) || []
+          });
+
           // Update order state with combined details if needed
           if (data.orders && data.orders.length > 0) {
             setOrder(prev => {
@@ -344,6 +359,27 @@ export default function BatchDetails({
                   })
                 }));
 
+              // Console log the transformed combined orders
+              console.log("🔍 [BatchDetails] Transformed combined orders:", {
+                transformedCombinedCount: transformedCombined.length,
+                transformedCombinedDetails: transformedCombined.map((o: any) => ({
+                  id: o.id,
+                  OrderID: o.OrderID,
+                  status: o.status,
+                  shopName: o.shopName,
+                  shop: o.shop,
+                  itemsCount: o.items?.length || 0,
+                  items: o.items?.map((item: any) => ({
+                    id: item.id,
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: item.price,
+                    barcode: item.barcode,
+                    sku: item.sku
+                  })) || []
+                }))
+              });
+
               // Also update Order_Items if they are missing their shopId
               let updatedOrderItems = [...(prev.Order_Items || [])];
               transformedCombined.forEach((sub: any) => {
@@ -377,11 +413,37 @@ export default function BatchDetails({
                 });
               });
 
-              return {
+              const finalOrder = {
                 ...prev,
                 combinedOrders: transformedCombined,
                 Order_Items: updatedOrderItems
               };
+
+              // Console log the final order with all combined order data
+              console.log("🔍 [BatchDetails] Final order with combined orders:", {
+                orderId: finalOrder.id,
+                OrderID: finalOrder.OrderID,
+                combinedOrdersCount: finalOrder.combinedOrders?.length || 0,
+                totalOrderItems: finalOrder.Order_Items?.length || 0,
+                combinedOrderDetails: finalOrder.combinedOrders?.map((co: any) => ({
+                  id: co.id,
+                  OrderID: co.OrderID,
+                  status: co.status,
+                  shopName: co.shopName,
+                  shop: {
+                    id: co.shop?.id,
+                    name: co.shop?.name,
+                    address: co.shop?.address
+                  },
+                  itemsCount: co.items?.length || 0,
+                  total: co.total
+                })) || [],
+                combinedOrderIds: finalOrder.orderIds || [],
+                combinedOrderIDs: finalOrder.orderIDs || [],
+                shopNames: finalOrder.shopNames || []
+              });
+
+              return finalOrder;
             });
           }
         }
@@ -2023,6 +2085,14 @@ export default function BatchDetails({
         .then((data) => {
           // API response data
 
+          // Console log the initial orderDetails API response
+          console.log("🔍 [BatchDetails] Initial orderDetails API response:", {
+            order: data.order,
+            combinedOrders: data.order?.combinedOrders,
+            combinedOrdersCount: data.order?.combinedOrders?.length || 0,
+            combinedOrderIds: data.order?.combinedOrders?.map((co: any) => ({ id: co.id, OrderID: co.OrderID })) || []
+          });
+
           if (data.order) {
             // Transform the API response to match BatchDetails expected structure
             const transformOrderItems = (items: any[], shopId?: string, orderId?: string) => {
@@ -2118,7 +2188,28 @@ export default function BatchDetails({
               combinedOrders: data.order.combinedOrders // Ensure this is passed through
             };
 
-            // Transformed order
+            // Console log the final transformed order with all combined data
+            console.log("🔍 [BatchDetails] Final transformed order from orderDetails API:", {
+              orderId: transformedOrder.id,
+              OrderID: transformedOrder.OrderID,
+              status: transformedOrder.status,
+              combinedOrderId: transformedOrder.combinedOrderId,
+              combinedOrdersCount: transformedOrder.combinedOrders?.length || 0,
+              shopName: transformedOrder.shopName,
+              shopNames: transformedOrder.shopNames,
+              orderIds: transformedOrder.orderIds,
+              orderIDs: transformedOrder.orderIDs,
+              combinedOrdersDetails: transformedOrder.combinedOrders?.map((co: any) => ({
+                id: co.id,
+                OrderID: co.OrderID,
+                status: co.status,
+                shopName: co.shopName,
+                itemsCount: co.items?.length || 0,
+                total: co.total,
+                ProductName: co.product?.ProductName
+              })) || [],
+              totalOrderItems: allItems.length
+            });
 
             setOrder(transformedOrder);
             if (!activeShopId && data.order.shop?.id) {

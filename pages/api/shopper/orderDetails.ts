@@ -404,6 +404,7 @@ const GET_RELATED_REGULAR_ORDERS = gql`
         phone
         latitude
         longitude
+        operating_hours
       }
       address: Address {
         id
@@ -413,6 +414,10 @@ const GET_RELATED_REGULAR_ORDERS = gql`
         city
         postal_code
         placeDetails
+        created_at
+        updated_at
+        user_id
+        is_default
       }
       Order_Items {
         id
@@ -424,8 +429,13 @@ const GET_RELATED_REGULAR_ORDERS = gql`
           final_price
           measurement_unit
           ProductName {
+            id
             name
+            description
+            barcode
+            sku
             image
+            create_at
           }
         }
       }
@@ -938,6 +948,7 @@ export default async function handler(
         deliveryTime: orderData.delivery_time,
         combinedOrderId: orderData.combined_order_id,
       };
+      console.log("🔍 [OrderDetails API] Formatted restaurant order:", JSON.stringify(formattedOrder, null, 2));
     }
 
     // Fetch related orders if this is part of a combined order
@@ -1101,6 +1112,26 @@ export default async function handler(
         if (formattedOrder.shopNames.length > 1) {
           formattedOrder.shopName = `${formattedOrder.shopNames.length} Stores: ${formattedOrder.shopNames.join(", ")}`;
         }
+
+        // Console log the aggregated combined order information
+        console.log("🔍 [OrderDetails API] Aggregated combined order data:", {
+          mainOrderId: formattedOrder.id,
+          mainOrderID: formattedOrder.OrderID,
+          combinedOrderId: orderData.combined_order_id,
+          totalOrdersInBatch: allOrders.length,
+          orderIds: formattedOrder.orderIds,
+          orderIDs: formattedOrder.orderIDs,
+          shopNames: formattedOrder.shopNames,
+          combinedOrdersDetails: relatedOrders.map((co: any) => ({
+            id: co.id,
+            OrderID: co.OrderID,
+            status: co.status,
+            shopName: co.shopName,
+            shopAddress: co.shopAddress,
+            itemsCount: co.items?.length || 0,
+            total: co.total
+          }))
+        });
       }
     }
 
