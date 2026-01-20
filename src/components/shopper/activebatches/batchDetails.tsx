@@ -2087,35 +2087,6 @@ export default function BatchDetails({
                                   key={o.id}
                                   className="rounded-lg border border-slate-100 bg-slate-50/50 p-3 dark:border-slate-700 dark:bg-slate-800/50"
                                 >
-                                  {/* Hidden: Order ID, Invoice status, and Shop name section */}
-                                  {/* <div className="mb-3 flex items-center justify-between">
-                                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                                      #{o.OrderID || o.id.slice(-8)}
-                                    </span>
-                                    <div className="flex items-center gap-2">
-                                      {hasInvoice && (
-                                        <span className="flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-[9px] font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                                          <svg
-                                            className="h-3 w-3"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                          >
-                                            <path
-                                              strokeLinecap="round"
-                                              strokeLinejoin="round"
-                                              strokeWidth={2}
-                                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                                            />
-                                          </svg>
-                                          Invoice
-                                        </span>
-                                      )}
-                                      <span className="text-[10px] font-bold text-slate-500">
-                                        {(o as any).shop?.name || o.shopName}
-                                      </span>
-                                    </div>
-                                  </div> */}
                                   {/* No individual button - bottom button handles unified delivery */}
                                   <div className="text-center text-xs text-slate-500">
                                     Ready for delivery
