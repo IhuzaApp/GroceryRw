@@ -12424,6 +12424,168 @@ src/
 - `react-hot-toast`: User notifications
 - `lucide-react`: UI icons
 
+## Combined Order Logic with Smart Assignment
+
+### Overview
+
+The combined order system integrates intelligent smart assignment algorithms with multi-store order creation, allowing customers to place orders from multiple stores simultaneously while ensuring optimal delivery assignment through age-based prioritization and shopper performance tracking.
+
+### Smart Assignment Integration
+
+The smart assignment system works continuously in the background to optimize order delivery, with special logic for handling combined orders as unified batches:
+
+#### Core Assignment Algorithm
+
+1. **Age-Based Priority System**: Orders automatically gain priority as they age, with orders older than 30 minutes receiving the highest priority boost, ensuring timely delivery of all orders.
+
+2. **Shopper Performance Tracking**: The system evaluates shopper performance through completion rates, response times, and customer ratings, preferring high-performing shoppers for order assignments.
+
+3. **Distance Optimization**: Orders are matched to shoppers based on geographical proximity, reducing delivery times and transportation costs.
+
+4. **Real-Time Assignment**: The system operates continuously, sending personalized order recommendations to shoppers based on their current location and performance metrics.
+
+#### Combined Order Assignment Logic
+
+When a combined order enters the assignment pool, the smart assignment system treats it as a unified batch with special handling:
+
+1. **Combined Order Detection**: The system identifies combined orders by checking if a regular order has a `combined_order_id` field populated.
+
+2. **Group Fetching**: For combined orders, the system fetches all orders within the same `combined_order_id` group using a single query that retrieves all related orders.
+
+3. **Unified Priority Calculation**: The system calculates priority scores for the entire combined order group, considering the collective distance, age, and store distribution rather than individual orders.
+
+4. **Batch Offer Creation**: When assigning a combined order, the system creates exclusive offers for ALL orders in the group simultaneously, ensuring no partial assignments occur.
+
+5. **Single Notification**: Shoppers receive one unified notification for the entire combined order batch, showing aggregated information like total stores, total earnings, and combined item count.
+
+6. **Coordinated Acceptance**: If a shopper accepts a combined order offer, they accept the entire batch - all orders in the group are assigned to them together.
+
+7. **Round-Based Expansion**: Combined orders follow the same round-based distance expansion as individual orders, but the round number is tracked across the entire group to ensure consistent expansion timing.
+
+#### Combined Order Assignment Benefits
+
+- **Atomic Operations**: Combined orders are either assigned entirely to one shopper or not at all, preventing partial assignments that could complicate delivery.
+- **Efficiency Optimization**: Shoppers can deliver multiple orders to the same customer location in one trip, maximizing delivery efficiency.
+- **Load Balancing**: The system prevents any single shopper from receiving disproportionate numbers of combined orders, maintaining fair distribution.
+- **Customer Experience**: Ensures all orders from a customer's multi-store purchase are handled by the same shopper, maintaining consistency.
+
+### Customer Multi-Store Order Creation
+
+Customers can seamlessly create orders from multiple stores in a single checkout process, enabling efficient shopping across different businesses:
+
+#### Order Creation Flow
+
+1. **Multi-Store Shopping**: Customers browse and add items from different stores, with each store maintaining its own separate cart containing items, prices, and calculations.
+
+2. **Cart Management**: The system allows customers to maintain multiple active carts simultaneously, one for each store they're shopping from.
+
+3. **Combined Checkout Initiation**: When ready to purchase, customers navigate to a unified checkout page that displays all their active store carts.
+
+4. **Store Selection**: Customers can choose which store carts to include in their combined order by checking/unchecking cart selections, allowing flexible order composition.
+
+5. **Unified Payment**: All selected orders are processed as a single transaction, with one payment covering all stores and their associated fees.
+
+#### Combined Order Structure
+
+When customers create multi-store orders, the system generates a structured combined order with these key elements:
+
+1. **Shared Combined Order ID**: A unique UUID that links all orders in the transaction, enabling unified tracking and management.
+
+2. **Unified PIN Generation**: All orders share a single two-digit PIN (00-99) for delivery verification, eliminating the need for customers to remember multiple PINs.
+
+3. **Individual Order Records**: Each store's order is created as a separate database record but tagged with the shared Combined Order ID.
+
+4. **Independent Processing**: While logically grouped, each store processes its order independently, allowing for different preparation and delivery times.
+
+#### Fee Calculation Logic
+
+The combined order system handles fees comprehensively:
+
+1. **Per-Store Service Fees**: Each store calculates its own 5% service fee based on the cart subtotal.
+
+2. **Individual Delivery Fees**: Each store has its own delivery fee based on distance from store to customer location.
+
+3. **Grand Total Aggregation**: The combined order total is the sum of all individual store totals (subtotal + service fee + delivery fee).
+
+4. **Single Payment Processing**: Despite multiple fees, the customer makes one payment covering the entire combined order.
+
+#### Delivery Coordination
+
+The system ensures efficient multi-order delivery:
+
+1. **Shopper Assignment**: Combined orders enter the smart assignment pool where they're assigned to shoppers as unified batches.
+
+2. **Shared Delivery Information**: All orders in a combined order go to the same delivery address with the same customer details.
+
+3. **PIN-Based Verification**: Shoppers use the single shared PIN to verify delivery for each order in the combined batch.
+
+4. **Independent Completion**: Each order can be marked as delivered independently while maintaining the logical grouping.
+
+### Order Flow Integration
+
+The combined order logic follows this integrated flow:
+
+1. **Customer Shopping Phase**: Customer browses multiple stores, adding items to individual store carts while the smart assignment system runs in the background for available shoppers.
+
+2. **Checkout Consolidation**: Customer proceeds to combined checkout, selecting stores and providing delivery information once for all orders.
+
+3. **Order Creation**: System generates a shared Combined Order ID and PIN, creates individual orders for each selected store, and clears the respective carts.
+
+4. **Smart Assignment Activation**: Once orders are created and marked as pending, they enter the smart assignment pool where they compete for shopper assignment based on age, distance, and priority.
+
+5. **Delivery Coordination**: Multiple shoppers can be assigned to different orders within the same combined order, each using the shared PIN for delivery verification.
+
+### Combined Order Logic and Benefits
+
+#### Core Logic Behind Combined Orders
+
+The combined order system implements sophisticated logic to handle multi-store purchases efficiently:
+
+1. **Atomic Creation**: When customers place combined orders, the system creates all individual orders simultaneously or fails the entire transaction, ensuring data consistency.
+
+2. **Shared Identity**: All orders in a combined transaction share the same Combined Order ID and PIN, creating a logical grouping while maintaining individual order integrity.
+
+3. **Independent Fulfillment**: Each store processes its order independently, allowing for different preparation times while the combined order provides unified tracking.
+
+4. **Smart Assignment Integration**: Combined orders are treated as unified batches in the assignment algorithm, ensuring they're assigned to shoppers who can efficiently handle multiple deliveries.
+
+5. **Delivery Optimization**: The system enables shoppers to deliver multiple orders to the same location in one trip, maximizing efficiency.
+
+#### Multi-Store Order Benefits
+
+**For Customers:**
+- **Unified Shopping Experience**: Shop from multiple stores without multiple checkout processes
+- **Single Payment**: One transaction covering all orders eliminates payment complexity
+- **Simplified Delivery**: One PIN for all orders reduces customer confusion
+- **Comprehensive Tracking**: View all orders from different stores in one place
+- **Time Efficiency**: Complete entire shopping trips faster with streamlined checkout
+- **Cost Transparency**: Clear breakdown of fees per store with total visibility
+
+**For the Platform:**
+- **Revenue Optimization**: Higher transaction values through multi-store purchases
+- **Operational Efficiency**: Grouped order management reduces administrative overhead
+- **Customer Retention**: Enhanced shopping experience increases repeat purchases
+- **Market Expansion**: Encourages customers to discover and shop from more stores
+- **Data Insights**: Better analytics on shopping patterns across multiple businesses
+
+**For Shoppers:**
+- **Efficient Routing**: Combined orders enable multiple deliveries to the same location
+- **Increased Earnings**: Higher total earnings from batched deliveries
+- **Simplified Logistics**: One trip for multiple orders to the same customer
+- **Fair Assignment**: Smart algorithm ensures balanced workload distribution
+- **Streamlined Verification**: Single PIN verification for entire combined orders
+
+### Technical Implementation
+
+The system maintains separation between order creation (customer-facing) and assignment (shopper-facing):
+
+- Combined orders are created through `/api/mutations/create-combined-orders`
+- Smart assignment runs via `/api/shopper/smart-assign-order`
+- Order retrieval uses `/api/queries/combined-orders`
+- Real-time coordination happens through WebSocket connections
+
+This architecture ensures that the customer experience of creating multi-store orders remains independent of the complex shopper assignment algorithms running in the background, creating a seamless and efficient delivery ecosystem.
+
 ## Conclusion
 
 The Combined Order System provides a seamless multi-store shopping experience that benefits customers, the platform, and shoppers. By grouping orders with a shared Combined Order ID and PIN, the system maintains simplicity while enabling powerful cross-store functionality. The architecture is designed for scalability and can be enhanced with additional features like transaction safety, parallel processing, and intelligent order optimization.
