@@ -31,7 +31,9 @@ export default async function handler(
         }
       `;
 
-      const orderData = await hasuraClient.request<any>(orderQuery, { orderId });
+      const orderData = await hasuraClient.request<any>(orderQuery, {
+        orderId,
+      });
       const order = orderData.Orders_by_pk;
 
       if (!order) {
@@ -52,7 +54,7 @@ export default async function handler(
         `;
 
         const combinedData = await hasuraClient.request<any>(combinedQuery, {
-          combined_order_id: order.combined_order_id
+          combined_order_id: order.combined_order_id,
         });
 
         const combinedOrders = combinedData.Orders;
@@ -60,7 +62,7 @@ export default async function handler(
         if (!combinedOrders || combinedOrders.length === 0) {
           return res.status(404).json({
             error: "No combined orders found",
-            verified: false
+            verified: false,
           });
         }
 
@@ -71,14 +73,14 @@ export default async function handler(
         if (uniquePins.length === 0) {
           return res.status(400).json({
             error: "No PINs found for combined orders",
-            verified: false
+            verified: false,
           });
         }
 
         if (uniquePins.length > 1) {
           return res.status(400).json({
             error: "Combined orders have inconsistent PINs",
-            verified: false
+            verified: false,
           });
         }
 
@@ -87,7 +89,9 @@ export default async function handler(
 
         return res.status(200).json({
           verified,
-          message: verified ? "Combined order PIN verified successfully" : "Invalid PIN for combined order",
+          message: verified
+            ? "Combined order PIN verified successfully"
+            : "Invalid PIN for combined order",
         });
       } else {
         // This is a combined order type but no combined_order_id - treat as regular order
