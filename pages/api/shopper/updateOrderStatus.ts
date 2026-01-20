@@ -328,7 +328,6 @@ export default async function handler(
     // If this order is part of a combined order, update all orders with same combined_order_id AND same shop_id
 
     if (combinedId) {
-
       const variables = {
         combinedId,
         status,
@@ -375,7 +374,6 @@ export default async function handler(
         }
       });
     } else {
-
       // Single order update (no combined orders)
       const UPDATE_ORDER_STATUS = gql`
         mutation UpdateOrderStatus(
@@ -480,7 +478,6 @@ export default async function handler(
 
     // Note: Wallet operations for "delivered" status are handled separately
     // in the DeliveryConfirmationModal before calling this API
-
 
     return res.status(200).json({
       success: true,

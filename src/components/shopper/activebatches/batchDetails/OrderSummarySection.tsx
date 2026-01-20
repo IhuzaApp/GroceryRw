@@ -34,15 +34,10 @@ export default function OrderSummarySection({
       {/* Header with Gradient */}
       <div
         className={`bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-4 dark:from-green-900/20 dark:to-emerald-900/20 ${
-          order.status === "shopping"
-            ? "cursor-pointer sm:cursor-default"
-            : ""
+          order.status === "shopping" ? "cursor-pointer sm:cursor-default" : ""
         }`}
         onClick={() => {
-          if (
-            order.status === "shopping" &&
-            window.innerWidth < 640
-          ) {
+          if (order.status === "shopping" && window.innerWidth < 640) {
             onToggleSummary();
           }
         }}
@@ -112,9 +107,7 @@ export default function OrderSummarySection({
         }`}
         style={{
           maxHeight:
-            order.status === "shopping" && isSummaryExpanded
-              ? "50vh"
-              : "auto",
+            order.status === "shopping" && isSummaryExpanded ? "50vh" : "auto",
         }}
       >
         {order.orderType === "reel" ? (
@@ -130,7 +123,9 @@ export default function OrderSummarySection({
               <>
                 <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                   <span>Subtotal</span>
-                  <span className="font-medium">{formatCurrency(subtotal)}</span>
+                  <span className="font-medium">
+                    {formatCurrency(subtotal)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                   <span>VAT (18%)</span>
@@ -163,20 +158,20 @@ export default function OrderSummarySection({
                 <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                   <span>Items Found</span>
                   <span className="font-medium">
-                    {getActiveOrderItems().filter((item) => item.found).length || 0}{" "}
+                    {getActiveOrderItems().filter((item) => item.found)
+                      .length || 0}{" "}
                     / {getActiveOrderItems().length || 0}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                   <span>Units Found</span>
                   <span className="font-medium">
-                    {getActiveOrderItems()
-                      .reduce((total, item) => {
-                        if (item.found) {
-                          return total + (item.foundQuantity || item.quantity);
-                        }
-                        return total;
-                      }, 0) || 0}{" "}
+                    {getActiveOrderItems().reduce((total, item) => {
+                      if (item.found) {
+                        return total + (item.foundQuantity || item.quantity);
+                      }
+                      return total;
+                    }, 0) || 0}{" "}
                     /{" "}
                     {getActiveOrderItems().reduce(
                       (total, item) => total + item.quantity,
@@ -238,7 +233,9 @@ export default function OrderSummarySection({
                 <>
                   <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                     <span>Subtotal</span>
-                    <span className="font-medium">{formatCurrency(subtotal)}</span>
+                    <span className="font-medium">
+                      {formatCurrency(subtotal)}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                     <span>VAT (18%)</span>
@@ -286,9 +283,9 @@ export default function OrderSummarySection({
                     found items. Service fee (
                     {formatCurrency(parseFloat(order.serviceFee || "0"))}) and
                     delivery fee (
-                    {formatCurrency(parseFloat(order.deliveryFee || "0"))})
-                    were already added to your wallet as earnings when you
-                    started shopping.
+                    {formatCurrency(parseFloat(order.deliveryFee || "0"))}) were
+                    already added to your wallet as earnings when you started
+                    shopping.
                   </p>
                 </div>
               </div>

@@ -322,13 +322,6 @@ export default async function handler(
     const combinedOrdersMap = new Map<string, typeof regularOrders>();
     const standaloneOrders: typeof regularOrders = [];
 
-      totalRegularOrders: regularOrders.length,
-      ordersWithCombinedId: regularOrders.filter((o) => o.combined_order_id)
-        .length,
-      standaloneOrders: regularOrders.filter((o) => !o.combined_order_id)
-        .length,
-    });
-
     regularOrders.forEach((order) => {
       if (order.combined_order_id) {
         const existing = combinedOrdersMap.get(order.combined_order_id) || [];
@@ -339,6 +332,7 @@ export default async function handler(
       }
     });
 
+    return {
       combinedOrderGroups: combinedOrdersMap.size,
       combinedOrderDetails: Array.from(combinedOrdersMap.entries()).map(
         ([id, orders]) => ({
@@ -353,12 +347,13 @@ export default async function handler(
           })),
         })
       ),
-    });
+    };
 
     // Transform combined orders into single batches
     const transformedCombinedOrders = Array.from(
       combinedOrdersMap.entries()
     ).map(([combinedOrderId, orders]) => {
+      console.log(
         `🔍 [ActiveBatches API] Transforming combined order ${combinedOrderId}:`,
         {
           ordersInGroup: orders.length,

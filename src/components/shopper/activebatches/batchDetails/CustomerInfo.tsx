@@ -12,7 +12,12 @@ interface CustomerInfoProps {
   onDirectionsClick: (address: string) => void;
 }
 
-export default function CustomerInfo({ order, currentLocation, theme, onDirectionsClick }: CustomerInfoProps) {
+export default function CustomerInfo({
+  order,
+  currentLocation,
+  theme,
+  onDirectionsClick,
+}: CustomerInfoProps) {
   const getDirectionsUrl = (
     destinationAddress: string,
     isMobile: boolean = false
@@ -101,8 +106,7 @@ export default function CustomerInfo({ order, currentLocation, theme, onDirectio
 
         const getCustomer = (o: any) => {
           // Logic to extract customer object
-          if (o.orderedBy)
-            return { ...o.orderedBy, address: o.address };
+          if (o.orderedBy) return { ...o.orderedBy, address: o.address };
           if (o.user) return { ...o.user, address: o.address };
           return null;
         };
@@ -133,10 +137,7 @@ export default function CustomerInfo({ order, currentLocation, theme, onDirectio
               {/* Customer Avatar */}
               <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-full bg-slate-200 sm:h-20 sm:w-20">
                 <Image
-                  src={
-                    customer.profile_picture ||
-                    "/images/userProfile.png"
-                  }
+                  src={customer.profile_picture || "/images/userProfile.png"}
                   alt={customer.name || "Customer"}
                   width={80}
                   height={80}
@@ -205,9 +206,9 @@ export default function CustomerInfo({ order, currentLocation, theme, onDirectio
               <button
                 onClick={() =>
                   onDirectionsClick(
-                    `${
-                      customer.address?.street || "No street"
-                    }, ${customer.address?.city || "No city"}${
+                    `${customer.address?.street || "No street"}, ${
+                      customer.address?.city || "No city"
+                    }${
                       customer.address?.postal_code
                         ? `, ${customer.address.postal_code}`
                         : ""

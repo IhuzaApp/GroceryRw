@@ -70,7 +70,10 @@ export const greenStepsStyles = `
   }
 `;
 
-export default function OrderProgressSteps({ order, currentStep }: OrderProgressStepsProps) {
+export default function OrderProgressSteps({
+  order,
+  currentStep,
+}: OrderProgressStepsProps) {
   return (
     <div className="hidden rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800 sm:block sm:p-6">
       <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">

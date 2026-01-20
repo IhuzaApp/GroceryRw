@@ -17,7 +17,7 @@ export default function CustomerInfoCard({
   uniqueCustomers,
   onDirectionsClick,
   onChatClick,
-  theme
+  theme,
 }: CustomerInfoCardProps) {
   return (
     <div className="rounded-none border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
@@ -51,10 +51,7 @@ export default function CustomerInfoCard({
             {/* Customer Avatar */}
             <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-full bg-slate-200 sm:h-20 sm:w-20">
               <Image
-                src={
-                  customer.profile_picture ||
-                  "/images/userProfile.png"
-                }
+                src={customer.profile_picture || "/images/userProfile.png"}
                 alt={customer.name || "Customer"}
                 width={80}
                 height={80}
@@ -123,9 +120,9 @@ export default function CustomerInfoCard({
             <button
               onClick={() =>
                 onDirectionsClick(
-                  `${
-                    customer.address?.street || "No street"
-                  }, ${customer.address?.city || "No city"}${
+                  `${customer.address?.street || "No street"}, ${
+                    customer.address?.city || "No city"
+                  }${
                     customer.address?.postal_code
                       ? `, ${customer.address.postal_code}`
                       : ""
@@ -154,9 +151,7 @@ export default function CustomerInfoCard({
             {/* Call Button */}
             {customer.phone && (
               <button
-                onClick={() =>
-                  (window.location.href = `tel:${customer.phone}`)
-                }
+                onClick={() => (window.location.href = `tel:${customer.phone}`)}
                 title="Call Customer"
                 className={`flex h-12 w-12 items-center justify-center rounded-full text-white shadow-md transition-all hover:scale-110 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                   theme === "dark"

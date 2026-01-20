@@ -12,7 +12,6 @@ export default async function handler(
   const { amount, currency, payerNumber, externalId, payerMessage, payeeNote } =
     req.body;
 
-
   // Validate required fields
   if (!amount || !currency || !payerNumber) {
     console.error("❌ [MoMo Transfer API] Validation Error:", {
@@ -39,15 +38,19 @@ export default async function handler(
 
   try {
     // Check if we have valid MoMo credentials
+    console.log(
       "💰 [MoMo Transfer API] Sandbox URL:",
       process.env.MOMO_SANDBOX_URL
     );
+    console.log(
       "💰 [MoMo Transfer API] Subscription Key configured:",
       !!process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX
     );
+    console.log(
       "💰 [MoMo Transfer API] API User configured:",
       !!process.env.MOMO_API_USER_SANDBOX
     );
+    console.log(
       "💰 [MoMo Transfer API] API Key configured:",
       !!process.env.MOMO_API_KEY_SANDBOX
     );
@@ -57,8 +60,11 @@ export default async function handler(
       !process.env.MOMO_API_USER_SANDBOX ||
       !process.env.MOMO_API_KEY_SANDBOX
     ) {
+      console.log(
         "🧪 [MoMo Transfer API] Credentials not configured, simulating payment for testing"
       );
+
+      const simulatedResponse = {
         referenceId,
         amount,
         currency,
@@ -68,7 +74,7 @@ export default async function handler(
         payeeNote,
         status: "SUCCESSFUL",
         timestamp: new Date().toISOString(),
-      });
+      };
       // Simulate successful payment for testing
       return res.status(200).json({
         referenceId,
@@ -87,6 +93,7 @@ export default async function handler(
       ).toString("base64")}`,
     };
 
+    console.log({
       "Ocp-Apim-Subscription-Key": "***HIDDEN***",
       Authorization: "***HIDDEN***",
     });
@@ -96,9 +103,11 @@ export default async function handler(
       headers: tokenHeaders,
     });
 
+    console.log(
       "🔑 [MoMo Transfer API] Token Response Status:",
       tokenRes.status
     );
+    console.log(
       "🔑 [MoMo Transfer API] Token Response Headers:",
       Object.fromEntries(tokenRes.headers.entries())
     );
@@ -113,8 +122,10 @@ export default async function handler(
 
       // If it's a credentials issue, simulate successful payment
       if (tokenRes.status === 401 || tokenRes.status === 403) {
+        console.log(
           "🧪 [MoMo Transfer API] Credentials invalid, simulating payment for testing"
         );
+        console.log(
           "🧪 [MoMo Transfer API] Simulated Payment Details (Invalid Credentials):",
           {
             referenceId,
@@ -142,6 +153,7 @@ export default async function handler(
 
     const tokenData = await tokenRes.json();
     const { access_token } = tokenData;
+    console.log({
       access_token: access_token ? "***TOKEN_RECEIVED***" : "NO_TOKEN",
       token_type: tokenData.token_type,
       expires_in: tokenData.expires_in,
@@ -162,6 +174,7 @@ export default async function handler(
       payeeNote: payeeNote || "Shopper payment confirmation",
     };
 
+    console.log({
       amount: transferPayload.amount,
       currency: transferPayload.currency,
       externalId: transferPayload.externalId,
@@ -178,6 +191,7 @@ export default async function handler(
       "X-Target-Environment": "sandbox",
     };
 
+    console.log({
       "Content-Type": transferHeaders["Content-Type"],
       "Ocp-Apim-Subscription-Key": "***HIDDEN***",
       Authorization: "***HIDDEN***",
@@ -191,14 +205,17 @@ export default async function handler(
       body: JSON.stringify(transferPayload),
     });
 
+    console.log(
       "💰 [MoMo Transfer API] Transfer Response Status:",
       transferRes.status
     );
+    console.log(
       "💰 [MoMo Transfer API] Transfer Response Headers:",
       Object.fromEntries(transferRes.headers.entries())
     );
 
     if (transferRes.status === 202) {
+      console.log({
         referenceId,
         status: "PENDING",
         amount: transferPayload.amount,

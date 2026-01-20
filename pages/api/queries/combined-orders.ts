@@ -1,4 +1,4 @@
-pimport { NextApiRequest, NextApiResponse } from "next";
+import { NextApiRequest, NextApiResponse } from "next";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 

@@ -5,7 +5,10 @@ interface DeliveryNotesSectionProps {
   activeTab: string;
 }
 
-export default function DeliveryNotesSection({ order, activeTab }: DeliveryNotesSectionProps) {
+export default function DeliveryNotesSection({
+  order,
+  activeTab,
+}: DeliveryNotesSectionProps) {
   if (!(order.deliveryNotes || order.deliveryNote)) {
     return null;
   }

@@ -194,6 +194,7 @@ export default async function handler(
   }
 
   try {
+    console.log({
       method: req.method,
       query: req.query,
     });
@@ -205,6 +206,7 @@ export default async function handler(
       authOptions as any
     )) as any;
 
+    console.log({
       hasSession: !!session,
       userId: session?.user?.id,
       userRole: session?.user?.role,
@@ -220,6 +222,7 @@ export default async function handler(
     const limit = 10; // Items per page
     const offset = (page - 1) * limit;
 
+    console.log({
       shopperId,
       page,
       limit,
@@ -319,6 +322,7 @@ export default async function handler(
       offset,
     });
 
+    console.log({
       invoiceCount: data.Invoices?.length,
       totalCount: data.Invoices_aggregate?.aggregate?.count,
     });
@@ -410,6 +414,7 @@ export default async function handler(
       }
     });
 
+    console.log({
       transformedCount: transformedInvoices.length,
     });
 

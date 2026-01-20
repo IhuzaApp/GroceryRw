@@ -61,11 +61,13 @@ export default function OrderItemCard({
         <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
           {formatCurrency(item.price * item.quantity)}
         </p>
-        {item.found && item.foundQuantity && item.foundQuantity < item.quantity && (
-          <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
-            Found: {item.foundQuantity} of {item.quantity}
-          </p>
-        )}
+        {item.found &&
+          item.foundQuantity &&
+          item.foundQuantity < item.quantity && (
+            <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+              Found: {item.foundQuantity} of {item.quantity}
+            </p>
+          )}
       </div>
 
       {/* Action Button */}
