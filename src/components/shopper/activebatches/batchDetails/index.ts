@@ -1,7 +1,10 @@
-export { default as BatchDetailsHeader } from './BatchDetailsHeader';
-export { default as OrderProgressSteps, greenStepsStyles } from './OrderProgressSteps';
-export { default as MobileTabs } from './MobileTabs';
-export { default as ShopInfo } from './ShopInfo';
-export { default as CustomerInfo } from './CustomerInfo';
-export { default as OrderSummary } from './OrderSummary';
-export { default as ActionButtons } from './ActionButtons';
+// Export all batch details components
+export { default as HeaderSection } from './HeaderSection';
+export { default as ProgressStepsSection } from './ProgressStepsSection';
+export { default as MobileTabsSection } from './MobileTabsSection';
+export { default as ShopInfoCard } from './ShopInfoCard';
+export { default as CustomerInfoCard } from './CustomerInfoCard';
+export { default as OrderItemsSection } from './OrderItemsSection';
+export { default as OrderSummarySection } from './OrderSummarySection';
+export { default as DeliveryNotesSection } from './DeliveryNotesSection';
+export { default as BottomActionButton } from './BottomActionButton';
