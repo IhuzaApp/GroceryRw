@@ -1706,50 +1706,6 @@ export default function BatchDetails({
         );
       case "on_the_way":
       case "at_customer":
-        // For combined orders, don't show individual Confirm Delivery buttons - use the main combined order button instead
-        const isPartOfCombinedOrder = order?.combinedOrders?.some((co: any) => co.id === activeOrder.id);
-        if (isPartOfCombinedOrder) {
-          return (
-            <div
-              className={`flex flex-col items-center justify-center rounded-xl border-2 p-4 text-center ${
-                theme === "dark"
-                  ? "border-blue-600 bg-blue-900/20"
-                  : "border-blue-400 bg-blue-50"
-              }`}
-            >
-              <svg
-                className={`mx-auto mb-2 h-8 w-8 ${
-                  theme === "dark" ? "text-blue-400" : "text-blue-600"
-                }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <p
-                className={`text-sm font-medium ${
-                  theme === "dark" ? "text-blue-300" : "text-blue-800"
-                }`}
-              >
-                Part of combined order
-              </p>
-              <p
-                className={`text-xs ${
-                  theme === "dark" ? "text-blue-400" : "text-blue-600"
-                }`}
-              >
-                Use main delivery confirmation
-              </p>
-            </div>
-          );
-        }
-
         // Only show Confirm Delivery button if invoice proof has been uploaded for this specific order
         if (!uploadedProofs[activeOrder.id]) {
           return (
