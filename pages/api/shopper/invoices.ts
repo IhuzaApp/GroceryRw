@@ -194,7 +194,6 @@ export default async function handler(
   }
 
   try {
-    console.log("Invoices API: Request received", {
       method: req.method,
       query: req.query,
     });
@@ -206,7 +205,6 @@ export default async function handler(
       authOptions as any
     )) as any;
 
-    console.log("Invoices API: Session status", {
       hasSession: !!session,
       userId: session?.user?.id,
       userRole: session?.user?.role,
@@ -222,7 +220,6 @@ export default async function handler(
     const limit = 10; // Items per page
     const offset = (page - 1) * limit;
 
-    console.log("Invoices API: Fetching for shopper", {
       shopperId,
       page,
       limit,
@@ -235,7 +232,6 @@ export default async function handler(
     }
 
     // Fetch invoices from database
-    console.log("Invoices API: Executing Hasura request...");
     const data = await hasuraClient.request<{
       Invoices: Array<{
         id: string;
@@ -323,13 +319,11 @@ export default async function handler(
       offset,
     });
 
-    console.log("Invoices API: Data fetched successfully", {
       invoiceCount: data.Invoices?.length,
       totalCount: data.Invoices_aggregate?.aggregate?.count,
     });
 
     // Transform all invoices (both regular and reel orders)
-    console.log("Invoices API: Transforming invoices...");
 
     const transformedInvoices = data.Invoices.map((invoice, index) => {
       const isReelOrder = !!invoice.reel_order_id;
@@ -416,7 +410,6 @@ export default async function handler(
       }
     });
 
-    console.log("Invoices API: Transformation complete", {
       transformedCount: transformedInvoices.length,
     });
 

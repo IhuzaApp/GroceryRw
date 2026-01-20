@@ -292,7 +292,6 @@ export default async function handler(
             }>;
           }>(GET_ACTIVE_RESTAURANT_ORDERS, { shopperId: userId }),
         ]);
-      console.log("Orders fetched successfully");
     } catch (fetchError) {
       console.error("Error fetching orders from Hasura:", fetchError);
       console.error(
@@ -323,7 +322,6 @@ export default async function handler(
     const combinedOrdersMap = new Map<string, typeof regularOrders>();
     const standaloneOrders: typeof regularOrders = [];
 
-    console.log("🔍 [ActiveBatches API] Processing orders:", {
       totalRegularOrders: regularOrders.length,
       ordersWithCombinedId: regularOrders.filter((o) => o.combined_order_id)
         .length,
@@ -341,7 +339,6 @@ export default async function handler(
       }
     });
 
-    console.log("🔍 [ActiveBatches API] Combined orders grouped:", {
       combinedOrderGroups: combinedOrdersMap.size,
       combinedOrderDetails: Array.from(combinedOrdersMap.entries()).map(
         ([id, orders]) => ({
@@ -362,7 +359,6 @@ export default async function handler(
     const transformedCombinedOrders = Array.from(
       combinedOrdersMap.entries()
     ).map(([combinedOrderId, orders]) => {
-      console.log(
         `🔍 [ActiveBatches API] Transforming combined order ${combinedOrderId}:`,
         {
           ordersInGroup: orders.length,

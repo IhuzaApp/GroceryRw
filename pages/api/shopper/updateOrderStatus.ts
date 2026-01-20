@@ -326,21 +326,8 @@ export default async function handler(
     let updatedOrders: any[] = [];
 
     // If this order is part of a combined order, update all orders with same combined_order_id AND same shop_id
-    console.log("🔍 [UpdateOrderStatus API] Combined order logic:", {
-      orderId,
-      combinedId,
-      shopId,
-      restaurantId,
-      isReelOrder,
-      isRestaurantOrder,
-      orderType,
-      willUseCombinedLogic: !!combinedId,
-    });
 
     if (combinedId) {
-      console.log(
-        "🔍 [UpdateOrderStatus API] Using combined order logic - will update all orders with same combined_order_id AND shop_id"
-      );
 
       const variables = {
         combinedId,
@@ -388,9 +375,6 @@ export default async function handler(
         }
       });
     } else {
-      console.log(
-        "🔍 [UpdateOrderStatus API] Using single order logic - no combined orders"
-      );
 
       // Single order update (no combined orders)
       const UPDATE_ORDER_STATUS = gql`
@@ -497,12 +481,6 @@ export default async function handler(
     // Note: Wallet operations for "delivered" status are handled separately
     // in the DeliveryConfirmationModal before calling this API
 
-    console.log("🔍 [UpdateOrderStatus API] Response:", {
-      success: true,
-      ordersCount: updatedOrders.length,
-      orderType,
-      orders: updatedOrders.map((o) => ({ id: o.id, status: o.status })),
-    });
 
     return res.status(200).json({
       success: true,
