@@ -8,3 +8,4 @@ export { default as OrderItemsSection } from './OrderItemsSection';
 export { default as OrderSummarySection } from './OrderSummarySection';
 export { default as DeliveryNotesSection } from './DeliveryNotesSection';
 export { default as BottomActionButton } from './BottomActionButton';
+export { default as DeliveryRouteSection } from './DeliveryRouteSection';
