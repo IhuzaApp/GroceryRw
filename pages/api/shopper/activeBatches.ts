@@ -422,7 +422,7 @@ export default async function handler(
         combinedOrderId: combinedOrderId,
         pin: firstOrder.pin,
         orderCount: orders.length,
-        orderIds: orders.map((o) => o.id), // Include all order IDs
+        orderIds: Array.from(new Set([firstOrder.id, ...orders.map((o) => o.id)])), // Include all order IDs, ensuring first order is included
         orderIDs,
       };
     });

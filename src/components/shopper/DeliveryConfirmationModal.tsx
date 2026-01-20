@@ -254,8 +254,16 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
         ? invoiceData.combinedOrderIds
         : [invoiceData.orderId];
 
+      console.log("🔍 [Delivery Confirmation] Order IDs to update:", orderIdsToUpdate);
+      console.log("🔍 [Delivery Confirmation] Invoice data:", {
+        orderType: invoiceData.orderType,
+        orderId: invoiceData.orderId,
+        combinedOrderIds: invoiceData.combinedOrderIds,
+      });
+
       // Process wallet operations for all orders
       for (const orderId of orderIdsToUpdate) {
+        console.log(`🔄 [Delivery Confirmation] Processing wallet operations for order: ${orderId}`);
         const walletResponse = await fetch("/api/shopper/walletOperations", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -269,14 +277,17 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
         if (!walletResponse.ok) {
           const walletErrorData = await walletResponse.json();
+          console.error(`❌ [Delivery Confirmation] Wallet operations failed for order ${orderId}:`, walletErrorData);
           throw new Error(
             walletErrorData.error || "Failed to process wallet operations"
           );
         }
+        console.log(`✅ [Delivery Confirmation] Wallet operations completed for order: ${orderId}`);
       }
 
       // Update order status to delivered for all orders
       for (const orderId of orderIdsToUpdate) {
+        console.log(`🔄 [Delivery Confirmation] Updating status to delivered for order: ${orderId}`);
         const response = await fetch("/api/shopper/updateOrderStatus", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -288,8 +299,10 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
         if (!response.ok) {
           const errorData = await response.json();
+          console.error(`❌ [Delivery Confirmation] Status update failed for order ${orderId}:`, errorData);
           throw new Error(errorData.message || "Failed to confirm delivery");
         }
+        console.log(`✅ [Delivery Confirmation] Status updated to delivered for order: ${orderId}`);
       }
 
       setDeliveryConfirmed(true);

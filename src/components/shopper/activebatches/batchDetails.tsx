@@ -1016,7 +1016,7 @@ export default function BatchDetails({
     const isRestaurantUserReel =
       order?.orderType === "reel" &&
       (order?.reel?.restaurant_id || order?.reel?.user_id);
-    const isCombinedOrder = order?.combinedOrders && order.combinedOrders.length > 0;
+    const isCombinedOrder = order?.orderType === "combined" || (order?.combinedOrders && order.combinedOrders.length > 0);
 
     // For restaurant orders, show modal directly without generating invoice
     if (isRestaurantOrder) {
@@ -1032,6 +1032,24 @@ export default function BatchDetails({
 
     // For combined orders, show delivery confirmation modal with PIN verification
     if (isCombinedOrder) {
+      // For combined orders from API, use orderIds array if available, otherwise fall back to combinedOrders
+      const allOrderIds = order.orderIds || [order.id, ...(order.combinedOrders?.map((o: any) => o.id) || [])];
+      const allOrderNumbers = order.orderIDs || [order.OrderID || order.id.slice(-8), ...(order.combinedOrders?.map((o: any) => o.OrderID || o.id.slice(-8)) || [])];
+
+      console.log("🔍 [Combined Order Confirmation] Order data:", {
+        orderId: order.id,
+        orderType: order.orderType,
+        hasOrderIds: !!order.orderIds,
+        orderIds: order.orderIds,
+        hasOrderIDs: !!order.orderIDs,
+        orderIDs: order.orderIDs,
+        hasCombinedOrders: !!order.combinedOrders,
+        combinedOrdersLength: order.combinedOrders?.length,
+        combinedOrderId: order.combinedOrderId,
+        allOrderIds,
+        allOrderNumbers,
+      });
+
       const combinedInvoiceData = {
         id: `combined_${order.id}_${Date.now()}`,
         invoiceNumber: order.OrderID || order.id.slice(-8),
@@ -1062,9 +1080,11 @@ export default function BatchDetails({
         orderType: "combined",
         isReelOrder: false,
         isRestaurantOrder: false,
-        combinedOrderIds: order.combinedOrders?.map((o: any) => o.id) || [],
-        combinedOrderNumbers: order.combinedOrders?.map((o: any) => o.OrderID || o.id.slice(-8)) || [],
+        combinedOrderIds: allOrderIds,
+        combinedOrderNumbers: allOrderNumbers,
       };
+
+      console.log("🔍 [Combined Order Confirmation] Invoice data created:", combinedInvoiceData);
 
       setInvoiceData(combinedInvoiceData);
       setShowInvoiceModal(true);
