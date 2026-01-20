@@ -37,6 +37,18 @@ import {
 import { useSession } from "next-auth/react";
 import { useTheme } from "../../../context/ThemeContext";
 import { OrderItem, OrderDetailsType, BatchDetailsProps } from "./types";
+import {
+  BatchDetailsSkeleton,
+  OrderDetailsLoadingSkeleton,
+  ProgressStepsSkeleton,
+  ShopInfoCardSkeleton,
+  CustomerInfoCardSkeleton,
+  OrderItemsSkeleton,
+  OrderSummarySkeleton,
+  HeaderSkeleton,
+  MobileTabsSkeleton,
+  DeliveryNotesSkeleton,
+} from "./SkeletonLoaders";
 
 // Custom CSS for green steps
 const greenStepsStyles = `
@@ -120,13 +132,25 @@ export default function BatchDetails({
   } | null>(null);
 
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(!orderData);
+  const [orderDetailsLoading, setOrderDetailsLoading] = useState(false);
+  const [itemsLoading, setItemsLoading] = useState(false);
   const [order, setOrder] = useState<OrderDetailsType | null>(orderData);
   const [errorState, setErrorState] = useState<string | null>(error);
+
+  // Set initial loading state based on whether orderData is provided
+  useEffect(() => {
+    if (!orderData) {
+      setInitialLoading(true);
+    }
+  }, [orderData]);
 
   // Debug logging for combined orders
   useEffect(() => {
     if (order) {
-      // Order loaded successfully
+      setInitialLoading(false);
+      setOrderDetailsLoading(false);
+      setItemsLoading(false);
     }
   }, [order]);
 
@@ -2349,6 +2373,7 @@ export default function BatchDetails({
   useEffect(() => {
     if (order?.id) {
       // Initial order data from SSR
+      setOrderDetailsLoading(true);
 
       // Fetching order details for ID
 
@@ -2520,19 +2545,19 @@ export default function BatchDetails({
           } else {
             // No order data in response
           }
+          setOrderDetailsLoading(false);
+          setItemsLoading(false);
         })
         .catch((err) => {
           // Error fetching order details
+          setOrderDetailsLoading(false);
+          setItemsLoading(false);
         });
     }
   }, [order?.id, session?.user?.id]);
 
-  if (loading && !order) {
-    return (
-      <div className="flex h-[calc(100vh-200px)] items-center justify-center">
-        <Loader size="lg" content="Processing..." />
-      </div>
-    );
+  if (initialLoading || (loading && !order) || orderDetailsLoading) {
+    return <BatchDetailsSkeleton />;
   }
 
   if (errorState) {
@@ -3510,13 +3535,17 @@ export default function BatchDetails({
                     activeTab === "items" ? "block" : "hidden sm:block"
                   }`}
                 >
-                  <div className="mb-3 flex items-center gap-2 px-3 sm:mb-4 sm:gap-3 sm:px-0">
-                    <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
-                      {order.orderType === "reel"
-                        ? "Reel Details"
-                        : "Order Items"}
-                    </h2>
-                  </div>
+                  {itemsLoading ? (
+                    <OrderItemsSkeleton itemCount={4} />
+                  ) : (
+                    <>
+                      <div className="mb-3 flex items-center gap-2 px-3 sm:mb-4 sm:gap-3 sm:px-0">
+                        <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
+                          {order.orderType === "reel"
+                            ? "Reel Details"
+                            : "Order Items"}
+                        </h2>
+                      </div>
 
                   {order.orderType === "reel" ? (
                     <div className="rounded-md border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-800 sm:p-4">
@@ -3656,6 +3685,8 @@ export default function BatchDetails({
                         );
                       }
                     })()
+                  )}
+                    </>
                   )}
                 </div>
               )}
