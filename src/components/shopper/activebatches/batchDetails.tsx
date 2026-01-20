@@ -134,8 +134,6 @@ export default function BatchDetails({
     isDrawerOpen,
     closeChat,
     currentChatId,
-    getMessages,
-    sendMessage,
   } = useChat();
   const { theme } = useTheme();
   const [currentLocation, setCurrentLocation] = useState<{
@@ -216,24 +214,6 @@ export default function BatchDetails({
   }, [order?.shop?.id, order?.shop_id, order?.combinedOrders]);
 
   // Get items for the currently active shop tab
-  const getActiveShopItems = useMemo(() => {
-    if (!order?.Order_Items) return [];
-
-    if (!isMultiShop || !activeShopId) {
-      // Single shop or no active shop selected - return all items
-      return order.Order_Items;
-    }
-
-    // Multi-shop: filter items by active shop
-    const filteredItems = order.Order_Items.filter((item: any) => {
-      const itemShopId = item.shopId;
-      return itemShopId === activeShopId;
-    });
-
-    // Filtered items calculated successfully
-
-    return filteredItems;
-  }, [order?.Order_Items, isMultiShop, activeShopId]);
 
   // Get items for the currently active order (main or combined)
   const getActiveOrderItems = useMemo(() => {
@@ -314,7 +294,7 @@ export default function BatchDetails({
             lng: position.coords.longitude,
           });
         },
-        (error) => {
+        () => {
           // Fallback: Use a default location (Kigali, Rwanda)
           setCurrentLocation({
             lat: -1.9441,
@@ -577,48 +557,8 @@ export default function BatchDetails({
   };
 
   // Function to calculate distance between two points
-  const calculateDistance = (
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number
-  ): number => {
-    const R = 6371; // Radius of the Earth in kilometers
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLon = ((lon2 - lon1) * Math.PI) / 180;
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c; // Distance in kilometers
-    return Math.round(distance * 10) / 10; // Round to 1 decimal place
-  };
 
   // Function to get shop distance
-  const getShopDistance = (): string | null => {
-    if (!currentLocation || !order?.shop?.latitude || !order?.shop?.longitude) {
-      return null;
-    }
-
-    const shopLat = parseFloat(order.shop.latitude);
-    const shopLng = parseFloat(order.shop.longitude);
-
-    if (isNaN(shopLat) || isNaN(shopLng)) {
-      return null;
-    }
-
-    const distance = calculateDistance(
-      currentLocation.lat,
-      currentLocation.lng,
-      shopLat,
-      shopLng
-    );
-
-    return `${distance} km`;
-  };
 
   // Generate a 5-digit OTP
   const generateOtp = () => {
@@ -680,96 +620,8 @@ export default function BatchDetails({
   };
 
   // Function to generate and display invoice
-  const generateAndShowInvoice = async (orderId: string): Promise<boolean> => {
-    if (!orderId) return false;
-
-    try {
-      setInvoiceLoading(true);
-      const invoice = await generateInvoice(orderId);
-
-      if (!invoice) {
-        throw new Error("No invoice data returned");
-      }
-
-      setInvoiceData(invoice);
-      setShowInvoiceModal(true);
-      return true;
-    } catch (invoiceError) {
-      // Error generating invoice
-      toaster.push(
-        <Notification type="warning" header="Invoice Warning" closable>
-          {invoiceError instanceof Error
-            ? invoiceError.message
-            : "There was an issue generating the invoice."}
-        </Notification>,
-        { placement: "topEnd" }
-      );
-      return false;
-    } finally {
-      setInvoiceLoading(false);
-    }
-  };
 
   // Function to generate invoice and save to database
-  const generateInvoiceAndRedirect = async (orderId: string) => {
-    try {
-      setInvoiceLoading(true);
-
-      const requestData = {
-        orderId,
-        orderType: orderData?.orderType || "regular", // Pass order type to API
-      };
-
-      // Generating invoice with data
-
-      // Make API request to generate invoice and save to database
-      const invoiceResponse = await fetch("/api/invoices/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestData),
-      });
-
-      // Invoice response status
-
-      if (!invoiceResponse.ok) {
-        const errorText = await invoiceResponse.text();
-        // Invoice generation failed
-        throw new Error(
-          `Failed to generate invoice: ${invoiceResponse.statusText}`
-        );
-      }
-
-      const invoiceResult = await invoiceResponse.json();
-
-      if (invoiceResult.success && invoiceResult.invoice) {
-        setInvoiceData(invoiceResult.invoice);
-
-        // Show the invoice modal
-        setShowInvoiceModal(true);
-
-        // User will navigate to the invoice page by clicking the "Check Invoice Details" button in the modal
-
-        return true;
-      } else {
-        throw new Error("Invalid invoice data returned from API");
-      }
-    } catch (invoiceError) {
-      // Error generating invoice
-      toaster.push(
-        <Notification type="warning" header="Invoice Warning" closable>
-          {invoiceError instanceof Error
-            ? invoiceError.message
-            : "There was an issue generating the invoice."}
-        </Notification>,
-        { placement: "topEnd" }
-      );
-      return false;
-    } finally {
-      setInvoiceLoading(false);
-    }
-  };
 
   // Handle payment submission
   const handlePaymentSubmit = async () => {
@@ -824,7 +676,6 @@ export default function BatchDetails({
 
   // Function to show payment modal
   const handleShowPaymentModal = () => {
-    const paymentAmount = calculateFoundItemsTotal();
     // Payment modal info calculated
 
     // Generate a new private key when opening the modal
@@ -881,8 +732,6 @@ export default function BatchDetails({
         if (momoResponse.ok) {
           // Start polling for MoMo payment status
           const maxAttempts = 30; // Poll for up to 5 minutes (30 * 10 seconds)
-          let attempts = 0;
-          let paymentCompleted = false;
 
           // Poll for MoMo payment status
           for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -1662,19 +1511,8 @@ export default function BatchDetails({
   };
 
   // Calculate tax amount (tax is included in the total, not added on top)
-  const calculateTax = (totalAmount: number) => {
-    if (!systemConfig?.tax) return 0;
-    const taxRate = parseFloat(systemConfig.tax) / 100; // Convert percentage to decimal
-    // If tax is included, we calculate: totalAmount * (taxRate / (1 + taxRate))
-    return totalAmount * (taxRate / (1 + taxRate));
-  };
 
   // Calculate the true total (subtotal - discount)
-  const calculateTrueTotal = () => {
-    const itemsSum = calculateOriginalSubtotal();
-    const discount = order?.discount || 0;
-    return itemsSum - discount;
-  };
 
   // Calculate the true total based on found items (for shopping mode)
   const calculateFoundItemsTotal = () => {
@@ -1989,66 +1827,8 @@ export default function BatchDetails({
   };
 
   // Function to handle sending a message
-  const handleSendMessage = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!newMessage.trim() || !order?.id) return;
-
-    try {
-      setIsSending(true);
-      await sendMessage(order.id, newMessage.trim());
-      setNewMessage("");
-    } catch (error) {
-      // Error sending message
-    } finally {
-      setIsSending(false);
-    }
-  };
 
   // Function to handle shopper arrived notification
-  const handleShopperArrived = async () => {
-    if (!order?.id || loading) return;
-
-    try {
-      setLoading(true);
-
-      // Send notification to customer
-      const response = await fetch("/api/fcm/send-notification", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          recipientId: order.orderedBy?.id || order.customerId,
-          senderName: session?.user?.name || "Your Shopper",
-          message: "Plasa has arrived",
-          orderId: order.id,
-          conversationId: order.id, // Using order ID as conversation ID
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to send notification");
-      }
-
-      // Show success notification
-      toaster.push(
-        <Notification type="success" header="Customer Notified" closable>
-          Customer has been notified that you have arrived!
-        </Notification>,
-        { placement: "topEnd" }
-      );
-    } catch (error) {
-      // Error sending shopper arrived notification
-      toaster.push(
-        <Notification type="error" header="Notification Failed" closable>
-          Failed to notify customer. Please try again.
-        </Notification>,
-        { placement: "topEnd" }
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Helper function to get status tag with appropriate color
   const getStatusTag = (status: string) => {
@@ -2307,7 +2087,7 @@ export default function BatchDetails({
           setOrderDetailsLoading(false);
           setItemsLoading(false);
         })
-        .catch((err) => {
+        .catch(() => {
           // Error fetching order details
           setOrderDetailsLoading(false);
           setItemsLoading(false);
