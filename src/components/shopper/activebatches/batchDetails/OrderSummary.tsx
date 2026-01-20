@@ -36,15 +36,10 @@ export default function OrderSummary({
       {/* Header with Gradient */}
       <div
         className={`bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-4 dark:from-green-900/20 dark:to-emerald-900/20 ${
-          order.status === "shopping"
-            ? "cursor-pointer sm:cursor-default"
-            : ""
+          order.status === "shopping" ? "cursor-pointer sm:cursor-default" : ""
         }`}
         onClick={() => {
-          if (
-            order.status === "shopping" &&
-            window.innerWidth < 640
-          ) {
+          if (order.status === "shopping" && window.innerWidth < 640) {
             setIsSummaryExpanded(!isSummaryExpanded);
           }
         }}
@@ -70,12 +65,11 @@ export default function OrderSummary({
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">
                 Order Summary
               </h2>
-              {order.status === "shopping" &&
-                !isSummaryExpanded && (
-                  <span className="text-sm font-semibold text-green-600 dark:text-green-400 sm:hidden">
-                    {formatCurrency(calculateFoundItemsTotal())}
-                  </span>
-                )}
+              {order.status === "shopping" && !isSummaryExpanded && (
+                <span className="text-sm font-semibold text-green-600 dark:text-green-400 sm:hidden">
+                  {formatCurrency(calculateFoundItemsTotal())}
+                </span>
+              )}
             </div>
           </div>
           {order.status === "shopping" && (
@@ -115,16 +109,13 @@ export default function OrderSummary({
         }`}
         style={{
           maxHeight:
-            order.status === "shopping" && isSummaryExpanded
-              ? "50vh"
-              : "auto",
+            order.status === "shopping" && isSummaryExpanded ? "50vh" : "auto",
         }}
       >
         {order.orderType === "reel" ? (
           (() => {
             const itemsTotal =
-              parseFloat(order.reel?.Price || "0") *
-              (order.quantity || 1);
+              parseFloat(order.reel?.Price || "0") * (order.quantity || 1);
             const discount = order.discount || 0;
             const finalTotal = itemsTotal - discount;
             const vat = finalTotal * (18 / 118);
@@ -140,9 +131,7 @@ export default function OrderSummary({
                 </div>
                 <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                   <span>VAT (18%)</span>
-                  <span className="font-medium">
-                    {formatCurrency(vat)}
-                  </span>
+                  <span className="font-medium">{formatCurrency(vat)}</span>
                 </div>
                 {discount > 0 && (
                   <div className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
@@ -171,9 +160,8 @@ export default function OrderSummary({
                 <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                   <span>Items Found</span>
                   <span className="font-medium">
-                    {getActiveOrderItems.filter(
-                      (item) => item.found
-                    ).length || 0}{" "}
+                    {getActiveOrderItems.filter((item) => item.found).length ||
+                      0}{" "}
                     / {getActiveOrderItems.length || 0}
                   </span>
                 </div>
@@ -182,10 +170,7 @@ export default function OrderSummary({
                   <span className="font-medium">
                     {getActiveOrderItems.reduce((total, item) => {
                       if (item.found) {
-                        return (
-                          total +
-                          (item.foundQuantity || item.quantity)
-                        );
+                        return total + (item.foundQuantity || item.quantity);
                       }
                       return total;
                     }, 0) || 0}{" "}
@@ -207,10 +192,7 @@ export default function OrderSummary({
                         item.foundQuantity &&
                         item.foundQuantity < item.quantity
                       ) {
-                        return (
-                          total +
-                          (item.quantity - item.foundQuantity)
-                        );
+                        return total + (item.quantity - item.foundQuantity);
                       }
                       return total;
                     }, 0) || 0}
@@ -222,10 +204,7 @@ export default function OrderSummary({
                     {formatCurrency(
                       getActiveOrderItems.reduce((total, item) => {
                         if (!item.found) {
-                          return (
-                            total +
-                            item.price * item.quantity
-                          );
+                          return total + item.price * item.quantity;
                         } else if (
                           item.found &&
                           item.foundQuantity &&
@@ -233,8 +212,7 @@ export default function OrderSummary({
                         ) {
                           return (
                             total +
-                            item.price *
-                              (item.quantity - item.foundQuantity)
+                            item.price * (item.quantity - item.foundQuantity)
                           );
                         }
                         return total;

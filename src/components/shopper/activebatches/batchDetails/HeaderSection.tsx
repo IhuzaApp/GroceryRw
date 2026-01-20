@@ -10,11 +10,13 @@ interface HeaderSectionProps {
   onBack: () => void;
 }
 
-export default function HeaderSection({ order, getStatusTag, onBack }: HeaderSectionProps) {
+export default function HeaderSection({
+  order,
+  getStatusTag,
+  onBack,
+}: HeaderSectionProps) {
   return (
-    <div
-      className={`px-0 py-2 text-gray-900 dark:text-gray-100 sm:p-6`}
-    >
+    <div className={`px-0 py-2 text-gray-900 dark:text-gray-100 sm:p-6`}>
       <div className="flex flex-row items-center justify-between gap-2 px-3 sm:gap-4 sm:px-0">
         <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
           <Button
@@ -36,16 +38,10 @@ export default function HeaderSection({ order, getStatusTag, onBack }: HeaderSec
           <div className="h-5 w-px flex-shrink-0 bg-gray-300 dark:bg-gray-600 sm:h-6"></div>
           <h1 className="min-w-0 truncate text-base font-bold text-gray-900 dark:text-gray-100 sm:text-2xl">
             <span className="hidden sm:inline">
-              {order.orderType === "reel"
-                ? "Reel Batch"
-                : "Regular Batch"}{" "}
+              {order.orderType === "reel" ? "Reel Batch" : "Regular Batch"}{" "}
             </span>
-            {order.orderType === "reel"
-              ? "Reel Batch"
-              : "Regular Batch"}{" "}
-            #
-            {(order as any).orderIDs &&
-            (order as any).orderIDs.length > 1
+            {order.orderType === "reel" ? "Reel Batch" : "Regular Batch"} #
+            {(order as any).orderIDs && (order as any).orderIDs.length > 1
               ? (order as any).orderIDs.join(" & ")
               : order.OrderID || order.id.slice(0, 8)}
           </h1>

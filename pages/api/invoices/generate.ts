@@ -415,12 +415,10 @@ export default async function handler(
       }
     } catch (error) {
       console.error("Error fetching order details for invoice:", error);
-      return res
-        .status(500)
-        .json({
-          error: "Failed to fetch order details",
-          details: error instanceof Error ? error.message : String(error),
-        });
+      return res.status(500).json({
+        error: "Failed to fetch order details",
+        details: error instanceof Error ? error.message : String(error),
+      });
     }
 
     const order = isReelOrder
@@ -577,12 +575,10 @@ export default async function handler(
       );
     } catch (error) {
       console.error("Failed to save invoice to database:", error);
-      return res
-        .status(500)
-        .json({
-          error: "Failed to save invoice to database",
-          details: error instanceof Error ? error.message : String(error),
-        });
+      return res.status(500).json({
+        error: "Failed to save invoice to database",
+        details: error instanceof Error ? error.message : String(error),
+      });
     }
 
     // Generate invoice data for the response

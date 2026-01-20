@@ -26,22 +26,31 @@ export default function BottomActionButton({
         const allOrders = [order, ...(order?.combinedOrders || [])];
         const ordersByCustomer = new Map<string, any[]>();
         allOrders.forEach((o) => {
-          const customerPhone = (o as any).orderedBy?.phone || o.customerPhone || "unknown";
-          const customerId = (o as any).orderedBy?.id || o.customerId || "unknown";
+          const customerPhone =
+            (o as any).orderedBy?.phone || o.customerPhone || "unknown";
+          const customerId =
+            (o as any).orderedBy?.id || o.customerId || "unknown";
           const customerKey = `${customerId}_${customerPhone}`;
 
-          if (!ordersByCustomer.has(customerKey)) ordersByCustomer.set(customerKey, []);
+          if (!ordersByCustomer.has(customerKey))
+            ordersByCustomer.set(customerKey, []);
           ordersByCustomer.get(customerKey)!.push(o);
         });
 
         // Check if any customer group has all orders ready for delivery
-        const readyCustomerGroup = Array.from(ordersByCustomer.entries()).find(([customerKey, orders]) => {
-          return orders.every((o) => {
-            const hasInvoice = (o as any).Invoice?.length > 0 || (o as any).invoice || uploadedProofs[o.id];
-            const isInDeliveryStatus = o.status === "on_the_way" || o.status === "at_customer";
-            return hasInvoice && isInDeliveryStatus;
-          });
-        });
+        const readyCustomerGroup = Array.from(ordersByCustomer.entries()).find(
+          ([customerKey, orders]) => {
+            return orders.every((o) => {
+              const hasInvoice =
+                (o as any).Invoice?.length > 0 ||
+                (o as any).invoice ||
+                uploadedProofs[o.id];
+              const isInDeliveryStatus =
+                o.status === "on_the_way" || o.status === "at_customer";
+              return hasInvoice && isInDeliveryStatus;
+            });
+          }
+        );
 
         if (readyCustomerGroup) {
           // Show unified delivery confirmation button for all orders in this customer group

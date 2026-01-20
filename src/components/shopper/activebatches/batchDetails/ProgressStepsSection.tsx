@@ -9,7 +9,10 @@ interface ProgressStepsSectionProps {
   currentStep: number;
 }
 
-export default function ProgressStepsSection({ order, currentStep }: ProgressStepsSectionProps) {
+export default function ProgressStepsSection({
+  order,
+  currentStep,
+}: ProgressStepsSectionProps) {
   return (
     <div className="hidden rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800 sm:block sm:p-6">
       <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">

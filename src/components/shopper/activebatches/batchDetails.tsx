@@ -129,12 +129,7 @@ export default function BatchDetails({
 }: BatchDetailsProps) {
   const router = useRouter();
   const { data: session } = useSession();
-  const {
-    openChat,
-    isDrawerOpen,
-    closeChat,
-    currentChatId,
-  } = useChat();
+  const { openChat, isDrawerOpen, closeChat, currentChatId } = useChat();
   const { theme } = useTheme();
   const [currentLocation, setCurrentLocation] = useState<{
     lat: number;
@@ -2127,7 +2122,6 @@ export default function BatchDetails({
       </div>
     );
   }
-
 
   return (
     <>

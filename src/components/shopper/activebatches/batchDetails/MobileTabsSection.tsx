@@ -5,7 +5,10 @@ interface MobileTabsSectionProps {
   onTabChange: (tab: string) => void;
 }
 
-export default function MobileTabsSection({ activeTab, onTabChange }: MobileTabsSectionProps) {
+export default function MobileTabsSection({
+  activeTab,
+  onTabChange,
+}: MobileTabsSectionProps) {
   return (
     <div className="border-b border-slate-200 dark:border-slate-700 sm:hidden">
       <div className="flex">

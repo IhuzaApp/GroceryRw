@@ -10,7 +10,6 @@ export default async function handler(
 
   const { referenceId } = req.query;
 
-
   if (!referenceId || typeof referenceId !== "string") {
     console.error("❌ [MoMo Status API] Validation Error:", {
       referenceId,
@@ -20,18 +19,21 @@ export default async function handler(
     return res.status(400).json({ error: "Reference ID is required" });
   }
 
-
   try {
     // Check if we have valid MoMo credentials
+    console.log(
       "📊 [MoMo Status API] Sandbox URL:",
       process.env.MOMO_SANDBOX_URL
     );
+    console.log(
       "📊 [MoMo Status API] Subscription Key configured:",
       !!process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX
     );
+    console.log(
       "📊 [MoMo Status API] API User configured:",
       !!process.env.MOMO_API_USER_SANDBOX
     );
+    console.log(
       "📊 [MoMo Status API] API Key configured:",
       !!process.env.MOMO_API_KEY_SANDBOX
     );
@@ -41,6 +43,7 @@ export default async function handler(
       !process.env.MOMO_API_USER_SANDBOX ||
       !process.env.MOMO_API_KEY_SANDBOX
     ) {
+      console.log(
         "🧪 [MoMo Status API] Credentials not configured, simulating status check for testing"
       );
       const simulatedResponse = {
@@ -56,10 +59,8 @@ export default async function handler(
         payerMessage: "Payment simulated successfully (testing mode)",
         payeeNote: "Shopper payment confirmation (testing mode)",
         reason: "Payment simulated for development",
-      };
-        ...simulatedResponse,
         timestamp: new Date().toISOString(),
-      });
+      };
       // Simulate successful payment status for testing
       return res.status(200).json(simulatedResponse);
     }
@@ -74,6 +75,7 @@ export default async function handler(
       ).toString("base64")}`,
     };
 
+    console.log({
       "Ocp-Apim-Subscription-Key": "***HIDDEN***",
       Authorization: "***HIDDEN***",
     });
@@ -83,6 +85,7 @@ export default async function handler(
       headers: tokenHeaders,
     });
 
+    console.log(
       "🔑 [MoMo Status API] Token Response Headers:",
       Object.fromEntries(tokenRes.headers.entries())
     );
@@ -98,6 +101,7 @@ export default async function handler(
 
       // If it's a credentials issue, simulate successful status
       if (tokenRes.status === 401 || tokenRes.status === 403) {
+        console.log(
           "🧪 [MoMo Status API] Credentials invalid, simulating status check for testing"
         );
         const simulatedResponse = {
@@ -115,6 +119,7 @@ export default async function handler(
           payeeNote: "Shopper payment confirmation (testing mode)",
           reason: "Payment simulated for development",
         };
+        console.log(
           "🧪 [MoMo Status API] Simulated Status Response (Invalid Credentials):",
           {
             ...simulatedResponse,
@@ -129,6 +134,7 @@ export default async function handler(
 
     const tokenData = await tokenRes.json();
     const { access_token } = tokenData;
+    console.log({
       access_token: access_token ? "***TOKEN_RECEIVED***" : "NO_TOKEN",
       token_type: tokenData.token_type,
       expires_in: tokenData.expires_in,
@@ -143,6 +149,7 @@ export default async function handler(
       "X-Target-Environment": "sandbox",
     };
 
+    console.log({
       "Ocp-Apim-Subscription-Key": "***HIDDEN***",
       Authorization: "***HIDDEN***",
       "X-Target-Environment": statusHeaders["X-Target-Environment"],
@@ -153,9 +160,11 @@ export default async function handler(
       headers: statusHeaders,
     });
 
+    console.log(
       "📊 [MoMo Status API] Status Response Status:",
       statusRes.status
     );
+    console.log(
       "📊 [MoMo Status API] Status Response Headers:",
       Object.fromEntries(statusRes.headers.entries())
     );
@@ -171,6 +180,7 @@ export default async function handler(
 
       // If it's a credentials issue, simulate successful status
       if (statusRes.status === 401 || statusRes.status === 403) {
+        console.log(
           "🧪 [MoMo Status API] Credentials invalid, simulating status check for testing"
         );
         const simulatedResponse = {
@@ -188,6 +198,7 @@ export default async function handler(
           payeeNote: "Shopper payment confirmation (testing mode)",
           reason: "Payment simulated for development",
         };
+        console.log(
           "🧪 [MoMo Status API] Simulated Status Response (Invalid Credentials):",
           {
             ...simulatedResponse,
@@ -201,6 +212,7 @@ export default async function handler(
     }
 
     const statusData = await statusRes.json();
+    console.log({
       ...statusData,
       referenceId,
       timestamp: new Date().toISOString(),
@@ -215,6 +227,7 @@ export default async function handler(
     });
 
     // On any error, simulate successful status for testing
+    console.log(
       "🧪 [MoMo Status API] Status check failed, simulating successful status for testing"
     );
     const simulatedResponse = {
@@ -232,6 +245,7 @@ export default async function handler(
       payeeNote: "Shopper payment confirmation (testing mode)",
       reason: "Payment simulated for development",
     };
+    console.log(
       "🧪 [MoMo Status API] Simulated Status Response (Error Fallback):",
       {
         ...simulatedResponse,

@@ -12554,6 +12554,7 @@ The combined order system implements sophisticated logic to handle multi-store p
 #### Multi-Store Order Benefits
 
 **For Customers:**
+
 - **Unified Shopping Experience**: Shop from multiple stores without multiple checkout processes
 - **Single Payment**: One transaction covering all orders eliminates payment complexity
 - **Simplified Delivery**: One PIN for all orders reduces customer confusion
@@ -12562,6 +12563,7 @@ The combined order system implements sophisticated logic to handle multi-store p
 - **Cost Transparency**: Clear breakdown of fees per store with total visibility
 
 **For the Platform:**
+
 - **Revenue Optimization**: Higher transaction values through multi-store purchases
 - **Operational Efficiency**: Grouped order management reduces administrative overhead
 - **Customer Retention**: Enhanced shopping experience increases repeat purchases
@@ -12569,6 +12571,7 @@ The combined order system implements sophisticated logic to handle multi-store p
 - **Data Insights**: Better analytics on shopping patterns across multiple businesses
 
 **For Shoppers:**
+
 - **Efficient Routing**: Combined orders enable multiple deliveries to the same location
 - **Increased Earnings**: Higher total earnings from batched deliveries
 - **Simplified Logistics**: One trip for multiple orders to the same customer

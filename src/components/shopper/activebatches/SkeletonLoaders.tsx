@@ -68,10 +68,10 @@ export const MobileTabsSkeleton = () => (
   <div className="border-b border-slate-200 dark:border-slate-700 sm:hidden">
     <div className="flex">
       <button className="flex-1 px-4 py-3 text-sm font-medium">
-        <Skeleton className="h-5 w-12 mx-auto" />
+        <Skeleton className="mx-auto h-5 w-12" />
       </button>
       <button className="flex-1 px-4 py-3 text-sm font-medium">
-        <Skeleton className="h-5 w-20 mx-auto" />
+        <Skeleton className="mx-auto h-5 w-20" />
       </button>
     </div>
   </div>
@@ -160,7 +160,11 @@ export const CustomerInfoCardSkeleton = () => (
 );
 
 // Order items section skeleton
-export const OrderItemsSkeleton = ({ itemCount = 4 }: { itemCount?: number }) => (
+export const OrderItemsSkeleton = ({
+  itemCount = 4,
+}: {
+  itemCount?: number;
+}) => (
   <div>
     <div className="mb-3 flex items-center gap-2 px-3 sm:mb-4 sm:gap-3 sm:px-0">
       <Skeleton className="h-5 w-24 sm:h-6 sm:w-28" />
@@ -169,7 +173,10 @@ export const OrderItemsSkeleton = ({ itemCount = 4 }: { itemCount?: number }) =>
     {/* Shop tabs for split orders */}
     <div className="mb-4 flex flex-nowrap gap-2 overflow-x-auto pb-2">
       {[...Array(2)].map((_, i) => (
-        <Skeleton key={i} className="flex flex-shrink-0 items-center gap-2 rounded-xl border-2 px-4 py-2">
+        <Skeleton
+          key={i}
+          className="flex flex-shrink-0 items-center gap-2 rounded-xl border-2 px-4 py-2"
+        >
           <Skeleton className="h-5 w-5 rounded-full" />
           <Skeleton className="h-4 w-16" />
         </Skeleton>

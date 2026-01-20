@@ -9,7 +9,11 @@ interface MobileTabsProps {
   onTabChange: (tab: "items" | "details") => void;
 }
 
-export default function MobileTabs({ order, activeTab, onTabChange }: MobileTabsProps) {
+export default function MobileTabs({
+  order,
+  activeTab,
+  onTabChange,
+}: MobileTabsProps) {
   const shouldShowOrderDetails = () => {
     if (!order) return false;
 

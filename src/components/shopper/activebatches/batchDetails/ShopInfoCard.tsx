@@ -11,15 +11,17 @@ interface ShopInfoCardProps {
   onDirectionsClick: (address: string) => void;
 }
 
-export default function ShopInfoCard({ order, uniqueShops, onDirectionsClick }: ShopInfoCardProps) {
+export default function ShopInfoCard({
+  order,
+  uniqueShops,
+  onDirectionsClick,
+}: ShopInfoCardProps) {
   return (
     <div className="rounded-none border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
       <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
         <span
           className={`inline-block rounded-full p-1.5 sm:p-2 ${
-            order.orderType === "reel"
-              ? "bg-indigo-100"
-              : "bg-emerald-100"
+            order.orderType === "reel" ? "bg-indigo-100" : "bg-emerald-100"
           }`}
         >
           {order.orderType === "reel" ? (
@@ -53,9 +55,7 @@ export default function ShopInfoCard({ order, uniqueShops, onDirectionsClick }: 
           )}
         </span>
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
-          {order.orderType === "reel"
-            ? "Reel Details"
-            : "Shop Details"}
+          {order.orderType === "reel" ? "Reel Details" : "Shop Details"}
         </h2>
       </div>
 
@@ -92,16 +92,10 @@ export default function ShopInfoCard({ order, uniqueShops, onDirectionsClick }: 
                 {order.reel?.description}
               </p>
               <div className="flex flex-wrap justify-center gap-2 text-sm sm:justify-start sm:gap-4 sm:text-base">
-                <span className="text-slate-500">
-                  Type: {order.reel?.type}
-                </span>
-                <span className="text-slate-500">
-                  Qty: {order.quantity}
-                </span>
+                <span className="text-slate-500">Type: {order.reel?.type}</span>
+                <span className="text-slate-500">Qty: {order.quantity}</span>
                 <span className="font-semibold text-indigo-600">
-                  {formatCurrency(
-                    parseFloat(order.reel?.Price || "0")
-                  )}
+                  {formatCurrency(parseFloat(order.reel?.Price || "0"))}
                 </span>
               </div>
             </div>
@@ -170,13 +164,7 @@ export default function ShopInfoCard({ order, uniqueShops, onDirectionsClick }: 
                         strokeWidth="2"
                         className="h-6 w-6 sm:h-8 sm:w-8"
                       >
-                        <rect
-                          x="3"
-                          y="3"
-                          width="18"
-                          height="18"
-                          rx="2"
-                        />
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
                         <path d="M16 8h.01M8 16h.01M16 16h.01" />
                       </svg>
                     </div>
@@ -248,19 +236,14 @@ export default function ShopInfoCard({ order, uniqueShops, onDirectionsClick }: 
                     <span className="font-medium text-slate-900 dark:text-slate-100">
                       {(() => {
                         const hoursObj = shop.operating_hours;
-                        if (
-                          hoursObj &&
-                          typeof hoursObj === "object"
-                        ) {
+                        if (hoursObj && typeof hoursObj === "object") {
                           const now = new Date();
                           const dayKey = now
                             .toLocaleDateString("en-US", {
                               weekday: "long",
                             })
                             .toLowerCase();
-                          const todaysHours = (hoursObj as any)[
-                            dayKey
-                          ];
+                          const todaysHours = (hoursObj as any)[dayKey];
                           if (todaysHours) {
                             return todaysHours;
                           }
@@ -276,9 +259,7 @@ export default function ShopInfoCard({ order, uniqueShops, onDirectionsClick }: 
               {shop.address && (
                 <div className="border-t border-slate-200 pt-3 dark:border-slate-600">
                   <button
-                    onClick={() =>
-                      onDirectionsClick(shop.address || "")
-                    }
+                    onClick={() => onDirectionsClick(shop.address || "")}
                     className="flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-green-500 to-green-600 px-6 py-3 text-sm font-semibold text-white transition-all hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                   >
                     <svg

@@ -92,7 +92,9 @@ export default function DeliveryRouteSection({
             const isDelivered = orders.every((o) => o.status === "delivered");
 
             // Find delivery notes from any order in the group
-            const deliveryNotes = orders.find((o) => o.delivery_notes)?.delivery_notes;
+            const deliveryNotes = orders.find(
+              (o) => o.delivery_notes
+            )?.delivery_notes;
 
             // Find customer comments from any order in the group
             const customerComment = orders.find((o) => o.comment)?.comment;
@@ -169,10 +171,21 @@ export default function DeliveryRouteSection({
                       <div className="flex flex-wrap items-center gap-3 text-sm">
                         {address?.type && (
                           <span className="inline-flex items-center gap-2 rounded-full bg-slate-200 px-3 py-1 text-slate-700 dark:bg-slate-600 dark:text-slate-300">
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            <svg
+                              className="h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                              />
                             </svg>
-                            {address.type.charAt(0).toUpperCase() + address.type.slice(1)}
+                            {address.type.charAt(0).toUpperCase() +
+                              address.type.slice(1)}
                           </span>
                         )}
 
@@ -181,8 +194,18 @@ export default function DeliveryRouteSection({
                           <div className="flex flex-wrap gap-2">
                             {address.placeDetails.gateNumber && (
                               <span className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                <svg
+                                  className="h-4 w-4"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                                  />
                                 </svg>
                                 Gate {address.placeDetails.gateNumber}
                               </span>
@@ -190,8 +213,18 @@ export default function DeliveryRouteSection({
 
                             {address.placeDetails.gateColor && (
                               <span className="inline-flex items-center gap-2 rounded-full bg-green-100 px-3 py-1 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z" />
+                                <svg
+                                  className="h-4 w-4"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"
+                                  />
                                 </svg>
                                 {address.placeDetails.gateColor}
                               </span>
@@ -199,8 +232,18 @@ export default function DeliveryRouteSection({
 
                             {address.placeDetails.floor && (
                               <span className="inline-flex items-center gap-2 rounded-full bg-purple-100 px-3 py-1 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
-                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                <svg
+                                  className="h-4 w-4"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                                  />
                                 </svg>
                                 Floor {address.placeDetails.floor}
                               </span>
@@ -208,8 +251,18 @@ export default function DeliveryRouteSection({
 
                             {address.placeDetails.doorNumber && (
                               <span className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
-                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                <svg
+                                  className="h-4 w-4"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                                  />
                                 </svg>
                                 Door {address.placeDetails.doorNumber}
                               </span>
@@ -223,7 +276,7 @@ export default function DeliveryRouteSection({
 
                 {/* Delivery Notes */}
                 {deliveryNotes && (
-                  <div className="mb-4 space-y-2 rounded-xl bg-amber-50 p-3 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700">
+                  <div className="mb-4 space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-700 dark:bg-amber-900/20">
                     <div className="flex items-start gap-2">
                       <svg
                         className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600 dark:text-amber-400"
@@ -239,7 +292,7 @@ export default function DeliveryRouteSection({
                         />
                       </svg>
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-amber-900 dark:text-amber-100 mb-1">
+                        <p className="mb-1 text-sm font-medium text-amber-900 dark:text-amber-100">
                           Delivery Notes
                         </p>
                         <p className="text-sm text-amber-800 dark:text-amber-200">
@@ -252,7 +305,7 @@ export default function DeliveryRouteSection({
 
                 {/* Customer Comments */}
                 {customerComment && (
-                  <div className="mb-4 space-y-2 rounded-xl bg-blue-50 p-3 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700">
+                  <div className="mb-4 space-y-2 rounded-xl border border-blue-200 bg-blue-50 p-3 dark:border-blue-700 dark:bg-blue-900/20">
                     <div className="flex items-start gap-2">
                       <svg
                         className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600 dark:text-blue-400"
@@ -268,7 +321,7 @@ export default function DeliveryRouteSection({
                         />
                       </svg>
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
+                        <p className="mb-1 text-sm font-medium text-blue-900 dark:text-blue-100">
                           Customer Comment
                         </p>
                         <p className="text-sm text-blue-800 dark:text-blue-200">
@@ -348,7 +401,8 @@ export default function DeliveryRouteSection({
                             (o as any).invoice ||
                             uploadedProofs[o.id];
                           const isInDeliveryStatus =
-                            o.status === "on_the_way" || o.status === "at_customer";
+                            o.status === "on_the_way" ||
+                            o.status === "at_customer";
                           return hasInvoice && isInDeliveryStatus;
                         });
 
