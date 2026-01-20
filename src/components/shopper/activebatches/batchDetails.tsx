@@ -1036,20 +1036,6 @@ export default function BatchDetails({
       const allOrderIds = order.orderIds || [order.id, ...(order.combinedOrders?.map((o: any) => o.id) || [])];
       const allOrderNumbers = order.orderIDs || [order.OrderID || order.id.slice(-8), ...(order.combinedOrders?.map((o: any) => o.OrderID || o.id.slice(-8)) || [])];
 
-      console.log("🔍 [Combined Order Confirmation] Order data:", {
-        orderId: order.id,
-        orderType: order.orderType,
-        hasOrderIds: !!order.orderIds,
-        orderIds: order.orderIds,
-        hasOrderIDs: !!order.orderIDs,
-        orderIDs: order.orderIDs,
-        hasCombinedOrders: !!order.combinedOrders,
-        combinedOrdersLength: order.combinedOrders?.length,
-        combinedOrderId: order.combinedOrderId,
-        allOrderIds,
-        allOrderNumbers,
-      });
-
       const combinedInvoiceData = {
         id: `combined_${order.id}_${Date.now()}`,
         invoiceNumber: order.OrderID || order.id.slice(-8),
@@ -1083,8 +1069,6 @@ export default function BatchDetails({
         combinedOrderIds: allOrderIds,
         combinedOrderNumbers: allOrderNumbers,
       };
-
-      console.log("🔍 [Combined Order Confirmation] Invoice data created:", combinedInvoiceData);
 
       setInvoiceData(combinedInvoiceData);
       setShowInvoiceModal(true);
