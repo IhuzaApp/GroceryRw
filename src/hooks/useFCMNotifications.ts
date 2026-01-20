@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { initializeFCM, setupFCMListener } from "../services/fcmClient";
+import { initializeFCM } from "../services/fcmClient";
 
 interface FCMNotificationHook {
   isInitialized: boolean;
@@ -30,14 +30,9 @@ export const useFCMNotifications = (): FCMNotificationHook => {
   useEffect(() => {
     const updateOnlineStatus = () => {
       const online = checkOnlineStatus();
-      // Only update and log if status actually changed
+      // Only update if status actually changed
       if (online !== isOnline) {
         setIsOnline(online);
-        console.log("👤 FCM: Shopper online status changed:", {
-          wasOnline: isOnline,
-          isNowOnline: online,
-          timestamp: new Date().toISOString(),
-        });
       }
     };
 
@@ -63,7 +58,6 @@ export const useFCMNotifications = (): FCMNotificationHook => {
     // Only initialize FCM when shopper is online
     if (!session?.user?.id || !isOnline) {
       if (!isOnline && isInitialized) {
-        console.log("🔴 Shopper went offline - FCM paused");
         setIsInitialized(false);
         setHasPermission(false);
       }
@@ -74,58 +68,71 @@ export const useFCMNotifications = (): FCMNotificationHook => {
 
     const init = async () => {
       try {
-        console.log(
-          "🟢 Shopper is online - Initializing FCM for user:",
-          session.user.id
-        );
-
         // Initialize FCM and set up message listener
         unsubscribe = await initializeFCM(session.user.id, (payload) => {
           const { notification, data } = payload;
 
-          // CRITICAL: Check page visibility before dispatching events
-          // This prevents notifications from showing when user is on another page/tab
-          if (document.hidden) {
-            console.log("🚫 FCM Hook: Page hidden, not dispatching event", {
-              type: data?.type,
-              timestamp: new Date().toISOString(),
-            });
-            return;
-          }
-
           // Dispatch custom events based on notification type
           const type = data?.type;
 
-          console.log("📲 FCM Hook: Dispatching event", {
-            type,
-            pageVisible: !document.hidden,
-            timestamp: new Date().toISOString(),
-          });
+          // Save ALL FCM notifications to history (regardless of type or page visibility)
+          // This ensures users can see notifications when they return to the app
+          if (typeof window !== "undefined") {
+            const notificationHistory = JSON.parse(
+              localStorage.getItem("fcm_notification_history") || "[]"
+            );
+
+            // Create notification entry from notification object or data
+            const notificationEntry = {
+              title: notification?.title || data?.title || "New Notification",
+              body: notification?.body || data?.body || data?.message || "",
+              timestamp: Date.now(),
+              type: type || "unknown",
+              read: false,
+              orderId: data?.orderId,
+              conversationId: data?.conversationId,
+              senderName: data?.senderName,
+              // Combined order specific fields
+              isCombinedOrder: data?.isCombinedOrder === "true",
+              orderCount: data?.orderCount
+                ? parseInt(data.orderCount)
+                : undefined,
+              totalEarnings: data?.totalEarnings
+                ? parseFloat(data.totalEarnings)
+                : data?.estimatedEarnings
+                ? parseFloat(data.estimatedEarnings)
+                : undefined,
+              storeNames: data?.storeNames || data?.shopName,
+              // Include any additional data
+              ...(data || {}),
+            };
+
+            notificationHistory.unshift(notificationEntry);
+            if (notificationHistory.length > 50) {
+              notificationHistory.pop();
+            }
+            localStorage.setItem(
+              "fcm_notification_history",
+              JSON.stringify(notificationHistory)
+            );
+
+            // Let UI components (NotificationCenter badge/list) refresh immediately
+            window.dispatchEvent(
+              new CustomEvent("fcm-history-updated", {
+                detail: { notification: notificationEntry },
+              })
+            );
+          }
+
+          // CRITICAL: Check page visibility before dispatching events
+          // This prevents notifications from showing when user is on another page/tab
+          // But we still save them to localStorage above so they appear in notification center
+          if (document.hidden) {
+            return;
+          }
 
           switch (type) {
             case "new_order":
-              // Save to notification history
-              if (notification && typeof window !== "undefined") {
-                const notificationHistory = JSON.parse(
-                  localStorage.getItem("fcm_notification_history") || "[]"
-                );
-                notificationHistory.unshift({
-                  title: notification.title,
-                  body: notification.body,
-                  timestamp: Date.now(),
-                  type: "new_order",
-                  read: false,
-                  orderId: data.orderId,
-                });
-                if (notificationHistory.length > 50) {
-                  notificationHistory.pop();
-                }
-                localStorage.setItem(
-                  "fcm_notification_history",
-                  JSON.stringify(notificationHistory)
-                );
-              }
-
               // Double-check page visibility before dispatching
               if (!document.hidden) {
                 window.dispatchEvent(
@@ -133,6 +140,7 @@ export const useFCMNotifications = (): FCMNotificationHook => {
                     detail: {
                       order: {
                         id: data.orderId,
+                        OrderID: data.displayOrderId || data.OrderID,
                         shopName: data.shopName,
                         distance: parseFloat(data.distance),
                         travelTimeMinutes: parseInt(data.travelTimeMinutes),
@@ -164,27 +172,6 @@ export const useFCMNotifications = (): FCMNotificationHook => {
 
             case "batch_orders":
               const orders = JSON.parse(data.orders || "[]");
-
-              // Save to notification history
-              if (notification && typeof window !== "undefined") {
-                const notificationHistory = JSON.parse(
-                  localStorage.getItem("fcm_notification_history") || "[]"
-                );
-                notificationHistory.unshift({
-                  title: notification.title,
-                  body: notification.body,
-                  timestamp: Date.now(),
-                  type: "batch_orders",
-                  read: false,
-                });
-                if (notificationHistory.length > 50) {
-                  notificationHistory.pop();
-                }
-                localStorage.setItem(
-                  "fcm_notification_history",
-                  JSON.stringify(notificationHistory)
-                );
-              }
 
               window.dispatchEvent(
                 new CustomEvent("fcm-batch-orders", {
@@ -222,30 +209,6 @@ export const useFCMNotifications = (): FCMNotificationHook => {
               break;
 
             case "chat_message":
-              // Save chat message to notification history
-              if (notification && typeof window !== "undefined") {
-                const notificationHistory = JSON.parse(
-                  localStorage.getItem("fcm_notification_history") || "[]"
-                );
-                notificationHistory.unshift({
-                  title: notification.title,
-                  body: notification.body,
-                  timestamp: Date.now(),
-                  type: "chat_message",
-                  read: false,
-                  orderId: data.orderId,
-                  conversationId: data.conversationId,
-                  senderName: data.senderName,
-                });
-                if (notificationHistory.length > 50) {
-                  notificationHistory.pop();
-                }
-                localStorage.setItem(
-                  "fcm_notification_history",
-                  JSON.stringify(notificationHistory)
-                );
-              }
-
               // Chat messages can be dispatched even if page is hidden (user might come back)
               window.dispatchEvent(
                 new CustomEvent("fcm-chat-message", {
@@ -265,24 +228,14 @@ export const useFCMNotifications = (): FCMNotificationHook => {
         });
 
         if (unsubscribe && typeof unsubscribe === "function") {
-          console.log(
-            "✅ FCM Hook: Successfully initialized with push notifications"
-          );
           setIsInitialized(true);
           setHasPermission(true);
         } else {
-          console.log(
-            "ℹ️ FCM Hook: FCM not available, using API polling instead (this is normal)"
-          );
           // Not an error - app will use API polling instead
           setIsInitialized(false);
           setHasPermission(false);
         }
       } catch (error) {
-        console.warn(
-          "⚠️ FCM Hook: Initialization failed (non-critical), using API polling:",
-          error
-        );
         // Not an error - app will use API polling instead
         setIsInitialized(false);
         setHasPermission(false);
@@ -293,7 +246,6 @@ export const useFCMNotifications = (): FCMNotificationHook => {
 
     return () => {
       if (unsubscribe) {
-        console.log("🧹 Cleaning up FCM subscription");
         unsubscribe();
       }
     };

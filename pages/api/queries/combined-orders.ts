@@ -8,19 +8,12 @@ const GET_COMBINED_ORDERS = gql`
     Orders(where: { combined_order_id: { _eq: $combined_order_id } }) {
       id
       OrderID
-      placedAt: created_at
-      estimatedDelivery: delivery_time
-      deliveryNotes: delivery_notes
-      total
-      serviceFee: service_fee
-      deliveryFee: delivery_fee
+      created_at
+      updated_at
       status
-      deliveryPhotoUrl: delivery_photo_url
-      discount
-      combinedOrderId: combined_order_id
-      voucherCode: voucher_code
-      shop_id
-      pin
+      service_fee
+      delivery_fee
+      combined_order_id
       shop: Shop {
         id
         name
@@ -29,55 +22,119 @@ const GET_COMBINED_ORDERS = gql`
         phone
         latitude
         longitude
-        operating_hours
-      }
-      Order_Items {
-        id
-        product_id
-        quantity
-        price
-        product: Product {
-          id
-          price
-          final_price
-          measurement_unit
-          category
-          quantity
-          sku
-          image
-          productName_id
-          ProductName {
-            barcode
-            create_at
-            description
-            id
-            image
-            name
-            sku
-          }
-          created_at
-          is_active
-          reorder_point
-          shop_id
-          supplier
-          updated_at
-        }
-        order_id
       }
       address: Address {
         id
+        latitude
+        longitude
         street
         city
         postal_code
-        latitude
-        longitude
-        is_default
+        placeDetails
       }
-      delivery_address_id
-      shopper_id
-      updated_at
+      Order_Items {
+        id
+        quantity
+        price
+        Product {
+          id
+          image
+          final_price
+          measurement_unit
+          ProductName {
+            name
+            image
+            sku
+            barcode
+            id
+          }
+        }
+      }
+      Order_Items_aggregate {
+        aggregate {
+          count
+        }
+      }
+      orderedBy {
+        id
+        name
+        phone
+        profile_picture
+        email
+        gender
+        is_active
+        is_guest
+        created_at
+        Addresses {
+          city
+          created_at
+          id
+          is_default
+          latitude
+          longitude
+          placeDetails
+          postal_code
+          street
+          type
+          updated_at
+          user_id
+        }
+      }
+      Shoppers {
+        id
+        name
+        phone
+        profile_picture
+      }
+      shop_id
+      total
       user_id
+      pin
+      delivery_notes
       assigned_at
+      orderedBy {
+        id
+        name
+        phone
+        profile_picture
+        email
+        gender
+        is_active
+        is_guest
+        created_at
+        Addresses {
+          city
+          created_at
+          id
+          is_default
+          latitude
+          longitude
+          placeDetails
+          postal_code
+          street
+          type
+          updated_at
+          user_id
+        }
+      }
+      Invoice {
+        Proof
+        created_at
+        customer_id
+        delivery_fee
+        discount
+        id
+        invoice_items
+        invoice_number
+        order_id
+        reel_order_id
+        restarurant_order_id
+        service_fee
+        status
+        subtotal
+        tax
+        total_amount
+      }
     }
   }
 `;

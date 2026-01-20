@@ -1,6 +1,12 @@
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 import { initializeApp, getApps } from "firebase/app";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
+import {
+  idbAddNotification,
+  idbClearNotifications,
+  idbGetAllNotifications,
+  type StoredNotification,
+} from "./fcmNotificationStore";
 
 // Firebase config - using environment variables
 const firebaseConfig = {
@@ -27,19 +33,11 @@ const hasValidFirebaseConfig = () => {
 let app;
 try {
   if (!hasValidFirebaseConfig()) {
-    console.debug(
-      "📱 FCM: Firebase config incomplete (FCM features will be disabled). This is normal if you haven't set up Firebase yet."
-    );
     app = null;
   } else {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-    console.debug("📱 FCM: Firebase app initialized");
   }
 } catch (error) {
-  console.debug(
-    "📱 FCM: Firebase initialization failed (non-critical):",
-    error
-  );
   app = null;
 }
 const db = app ? getFirestore(app) : null;
@@ -54,13 +52,90 @@ let registrationPromise: Promise<ServiceWorkerRegistration | null> | null =
 if (typeof window !== "undefined" && app) {
   try {
     messaging = getMessaging(app);
-    console.debug("📱 FCM: Messaging initialized");
-  } catch (error) {
-    console.debug(
-      "📱 FCM: Messaging not supported in this browser (this is normal for Safari, incognito mode, etc.)"
-    );
-  }
+  } catch (error) {}
 }
+
+// ---- Global FCM singleton (prevents duplicate listeners across multiple hooks/components) ----
+type FCMMessageCallback = (payload: any) => void;
+const fcmMessageSubscribers = new Set<FCMMessageCallback>();
+let fcmStartedForUserId: string | null = null;
+let fcmStartPromise: Promise<boolean> | null = null;
+let fcmUnsubscribeCore: (() => void) | null = null;
+
+const dispatchToSubscribers = (payload: any) => {
+  // Copy into array to avoid mutation issues during iteration
+  const callbacks = Array.from(fcmMessageSubscribers);
+  for (const cb of callbacks) {
+    try {
+      cb(payload);
+    } catch (e) {
+      // Never let a consumer break global dispatch
+    }
+  }
+};
+
+const stopFCMCore = () => {
+  try {
+    fcmUnsubscribeCore?.();
+  } catch {
+    // ignore
+  }
+  fcmUnsubscribeCore = null;
+  fcmStartedForUserId = null;
+};
+
+const ensureFCMCoreStarted = async (userId: string): Promise<boolean> => {
+  // If already running for this user, we're good.
+  if (fcmUnsubscribeCore && fcmStartedForUserId === userId) return true;
+
+  // If running for a different user, stop and restart.
+  if (
+    fcmUnsubscribeCore &&
+    fcmStartedForUserId &&
+    fcmStartedForUserId !== userId
+  ) {
+    stopFCMCore();
+  }
+
+  // If a start is already in-flight, await it.
+  if (fcmStartPromise) return fcmStartPromise;
+
+  fcmStartPromise = (async () => {
+    const token = await getFCMToken();
+    if (!token) return false;
+
+    await saveFCMTokenToServer(userId, token);
+
+    const unsubscribeListener = setupFCMListener(dispatchToSubscribers);
+    // Pull in any notifications received while the app was closed/backgrounded
+    await syncStoredNotificationsToLocalStorage();
+    // Bridge SW->page messages for instant in-app updates
+    const unsubscribeBridge = setupServiceWorkerFCMBridge(
+      dispatchToSubscribers
+    );
+
+    fcmUnsubscribeCore = () => {
+      try {
+        unsubscribeBridge();
+      } catch {
+        // ignore
+      }
+      unsubscribeListener();
+    };
+    fcmStartedForUserId = userId;
+    return true;
+  })()
+    .catch((error) => {
+      return false;
+    })
+    .finally(() => {
+      fcmStartPromise = null;
+    });
+
+  const ok = await fcmStartPromise;
+  if (!ok) stopFCMCore();
+  return ok;
+};
 
 export interface FCMTokenData {
   userId: string;
@@ -131,8 +206,10 @@ const getServiceWorkerRegistration =
       isRegisteringServiceWorker = true;
       registrationPromise = (async () => {
         try {
+          // Use dynamic SW so it can embed Firebase config from env vars.
+          // (public/firebase-messaging-sw.js cannot read env and was configured as {}.)
           const registration = await navigator.serviceWorker.register(
-            "/firebase-messaging-sw.js",
+            "/api/fcm/firebase-messaging-sw",
             {
               scope: "/",
             }
@@ -160,22 +237,17 @@ const getServiceWorkerRegistration =
 export const getFCMToken = async (): Promise<string | null> => {
   try {
     if (!messaging) {
-      console.debug("📱 FCM: Messaging not initialized");
       return null;
     }
 
     const hasPermission = await requestNotificationPermission();
     if (!hasPermission) {
-      console.debug(
-        "📱 FCM: No notification permission (this is normal if user declined or browser doesn't support)"
-      );
       return null;
     }
 
     // Use singleton service worker registration
     const swRegistration = await getServiceWorkerRegistration();
     if (!swRegistration) {
-      console.debug("📱 FCM: Service worker not available");
       return null;
     }
 
@@ -185,15 +257,12 @@ export const getFCMToken = async (): Promise<string | null> => {
     });
 
     if (!token) {
-      console.debug("📱 FCM: Failed to get token from Firebase");
       return null;
     }
 
-    console.log("✅ FCM: Token obtained successfully");
     return token;
   } catch (error) {
     // Silent fail with debug info
-    console.debug("📱 FCM: Error getting token (non-critical):", error);
     return null;
   }
 };
@@ -258,7 +327,6 @@ export const setupFCMListener = (
 ): (() => void) => {
   try {
     if (!messaging) {
-      console.error("Messaging not initialized");
       return () => {};
     }
 
@@ -322,9 +390,7 @@ export const setupFCMListener = (
                 notificationOptions
               );
             })
-            .catch((error) => {
-              console.error("Failed to show notification:", error);
-            });
+            .catch((error) => {});
         }
       }
 
@@ -333,10 +399,92 @@ export const setupFCMListener = (
 
     return unsubscribe;
   } catch (error) {
-    console.error("Error setting up FCM listener:", error);
     return () => {};
   }
 };
+
+/**
+ * Sync any SW-stored notifications (IndexedDB) into localStorage
+ * so the existing NotificationCenter (localStorage-based) can display them.
+ */
+export async function syncStoredNotificationsToLocalStorage(): Promise<void> {
+  if (typeof window === "undefined") return;
+  if (!("indexedDB" in window)) return;
+  try {
+    const idbItems = await idbGetAllNotifications();
+    if (!idbItems.length) return;
+
+    const existing = JSON.parse(
+      localStorage.getItem("fcm_notification_history") || "[]"
+    ) as StoredNotification[];
+
+    // Merge by timestamp (keyPath), keep newest first, cap at 50
+    const mergedMap = new Map<number, StoredNotification>();
+    for (const n of existing) {
+      if (typeof n?.timestamp === "number") mergedMap.set(n.timestamp, n);
+    }
+    for (const n of idbItems) {
+      if (typeof n?.timestamp === "number") mergedMap.set(n.timestamp, n);
+    }
+
+    const merged = Array.from(mergedMap.values()).sort(
+      (a, b) => (b.timestamp || 0) - (a.timestamp || 0)
+    );
+    localStorage.setItem(
+      "fcm_notification_history",
+      JSON.stringify(merged.slice(0, 50))
+    );
+
+    // Clear IDB once synced so we don't re-merge forever
+    await idbClearNotifications();
+  } catch (e) {
+    // non-fatal
+  }
+}
+
+/**
+ * Listen for SW-posted background messages to update in-app history instantly.
+ */
+export function setupServiceWorkerFCMBridge(
+  onMessageReceived: (payload: any) => void
+): () => void {
+  if (typeof window === "undefined") return () => {};
+  if (!("serviceWorker" in navigator)) return () => {};
+
+  const handler = async (event: MessageEvent) => {
+    if (!event?.data || event.data.type !== "FCM_BACKGROUND_MESSAGE") return;
+    const payload = event.data.payload;
+    try {
+      // Also persist to IDB in the page context as a fallback
+      const type = payload?.data?.type || "unknown";
+      const entry: StoredNotification = {
+        title:
+          payload?.notification?.title ||
+          payload?.data?.title ||
+          "New Notification",
+        body:
+          payload?.notification?.body ||
+          payload?.data?.body ||
+          payload?.data?.message ||
+          "",
+        timestamp: Date.now(),
+        type,
+        read: false,
+        ...(payload?.data || {}),
+      };
+      await idbAddNotification(entry);
+      // Keep localStorage in sync so NotificationCenter badge updates quickly
+      await syncStoredNotificationsToLocalStorage();
+    } catch (e) {
+      // ignore
+    }
+
+    onMessageReceived(payload);
+  };
+
+  navigator.serviceWorker.addEventListener("message", handler);
+  return () => navigator.serviceWorker.removeEventListener("message", handler);
+}
 
 /**
  * Initialize FCM for a user
@@ -346,29 +494,26 @@ export const initializeFCM = async (
   onMessageReceived: (payload: any) => void
 ): Promise<(() => void) | null> => {
   try {
-    const token = await getFCMToken();
+    // Subscribe first so early messages during init still reach this consumer
+    fcmMessageSubscribers.add(onMessageReceived);
 
-    if (!token) {
+    const ok = await ensureFCMCoreStarted(userId);
+    if (!ok) {
+      fcmMessageSubscribers.delete(onMessageReceived);
       // Silent fail - FCM is optional, app works fine without it
-      console.warn(
-        "⚠️ FCM not available. This is normal if:",
-        "\n- Browser doesn't support push notifications (Safari on iOS, incognito mode)",
-        "\n- Notification permission was denied",
-        "\n- Service worker failed to register",
-        "\n- Firebase credentials are missing",
-        "\n\nThe app will continue to work with API polling for notifications."
-      );
       return null;
     }
 
-    await saveFCMTokenToServer(userId, token);
-    const unsubscribe = setupFCMListener(onMessageReceived);
-
-    console.log("✅ FCM initialized successfully");
-    return unsubscribe;
+    // Return an unsubscribe that only removes this subscriber.
+    return () => {
+      fcmMessageSubscribers.delete(onMessageReceived);
+      // If no one is listening anymore, stop the core listener.
+      if (fcmMessageSubscribers.size === 0) {
+        stopFCMCore();
+      }
+    };
   } catch (error) {
     // Silent fail - FCM is optional
-    console.warn("⚠️ FCM initialization failed (non-critical):", error);
     return null;
   }
 };

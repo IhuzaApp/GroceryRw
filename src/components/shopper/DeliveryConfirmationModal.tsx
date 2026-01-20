@@ -38,6 +38,9 @@ interface InvoiceData {
   total: number;
   isReelOrder?: boolean;
   isRestaurantOrder?: boolean;
+  orderType?: string;
+  combinedOrderIds?: string[];
+  combinedOrderNumbers?: string[];
 }
 
 interface DeliveryConfirmationModalProps {
@@ -45,7 +48,7 @@ interface DeliveryConfirmationModalProps {
   onClose: () => void;
   invoiceData: InvoiceData | null;
   loading: boolean;
-  orderType?: "regular" | "reel" | "restaurant";
+  orderType?: "regular" | "reel" | "restaurant" | "combined";
 }
 
 const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
@@ -104,14 +107,6 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
   // Reset modal state when it opens
   useEffect(() => {
     if (open && invoiceData?.orderId) {
-      console.log("🔍 [Delivery Modal] Invoice data received:", {
-        deliveryPlaceDetails: invoiceData.deliveryPlaceDetails,
-        deliveryStreet: invoiceData.deliveryStreet,
-        deliveryCity: invoiceData.deliveryCity,
-        customer: invoiceData.customer,
-        orderNumber: invoiceData.orderNumber,
-      });
-
       localStorage.removeItem(`delivery_upload_${invoiceData.orderId}`);
       setCurrentVerificationStep("pin");
       setPinInput("");
@@ -246,38 +241,50 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       setConfirmingDelivery(true);
       setForceOpen(true);
 
-      // Process wallet operations
-      const walletResponse = await fetch("/api/shopper/walletOperations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderId: invoiceData.orderId,
-          operation: "delivered",
-          isReelOrder: invoiceData.isReelOrder || false,
-          isRestaurantOrder: invoiceData.isRestaurantOrder || false,
-        }),
-      });
+      // For combined orders, update all orders in the group
+      const orderIdsToUpdate =
+        invoiceData.orderType === "combined" &&
+        invoiceData.combinedOrderIds &&
+        invoiceData.combinedOrderIds.length > 0
+          ? invoiceData.combinedOrderIds
+          : [invoiceData.orderId];
 
-      if (!walletResponse.ok) {
-        const walletErrorData = await walletResponse.json();
-        throw new Error(
-          walletErrorData.error || "Failed to process wallet operations"
-        );
+      // Process wallet operations for all orders
+      for (const orderId of orderIdsToUpdate) {
+        const walletResponse = await fetch("/api/shopper/walletOperations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId,
+            operation: "delivered",
+            isReelOrder: invoiceData.isReelOrder || false,
+            isRestaurantOrder: invoiceData.isRestaurantOrder || false,
+          }),
+        });
+
+        if (!walletResponse.ok) {
+          const walletErrorData = await walletResponse.json();
+          throw new Error(
+            walletErrorData.error || "Failed to process wallet operations"
+          );
+        }
       }
 
-      // Update order status to delivered
-      const response = await fetch("/api/shopper/updateOrderStatus", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderId: invoiceData.orderId,
-          status: "delivered",
-        }),
-      });
+      // Update order status to delivered for all orders
+      for (const orderId of orderIdsToUpdate) {
+        const response = await fetch("/api/shopper/updateOrderStatus", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId,
+            status: "delivered",
+          }),
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to confirm delivery");
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to confirm delivery");
+        }
       }
 
       setDeliveryConfirmed(true);

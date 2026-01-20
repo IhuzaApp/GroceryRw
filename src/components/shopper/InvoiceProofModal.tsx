@@ -10,6 +10,8 @@ interface InvoiceProofModalProps {
   onProofCaptured: (imageDataUrl: string) => Promise<void>;
   orderId: string;
   orderNumber: string;
+  combinedOrderIds?: string[];
+  combinedOrderNumbers?: string[];
 }
 
 const InvoiceProofModal: React.FC<InvoiceProofModalProps> = ({
@@ -18,6 +20,8 @@ const InvoiceProofModal: React.FC<InvoiceProofModalProps> = ({
   onProofCaptured,
   orderId,
   orderNumber,
+  combinedOrderIds = [],
+  combinedOrderNumbers = [],
 }) => {
   const { theme } = useTheme();
 
@@ -146,7 +150,15 @@ const InvoiceProofModal: React.FC<InvoiceProofModalProps> = ({
                     theme === "dark" ? "text-gray-300" : "text-gray-600"
                   }`}
                 >
-                  Order #{orderNumber}
+                  {combinedOrderNumbers.length > 0
+                    ? `${
+                        combinedOrderNumbers.length + 1
+                      } Orders: #${orderNumber}${
+                        combinedOrderNumbers.length > 0
+                          ? ", " + combinedOrderNumbers.join(", ")
+                          : ""
+                      }`
+                    : `Order #${orderNumber}`}
                 </p>
               </div>
             </div>

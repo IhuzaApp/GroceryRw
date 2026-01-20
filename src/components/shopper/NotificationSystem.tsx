@@ -12,6 +12,7 @@ const batchToast = toast;
 
 interface Order {
   id: string;
+  OrderID?: string | number | null;
   shopName: string;
   distance: number;
   travelTimeMinutes?: number;
@@ -25,16 +26,35 @@ interface Order {
   shopLongitude?: number;
   customerLatitude?: number;
   customerLongitude?: number;
+  // Offer ID for declining offers
+  offerId?: string;
   // Add other order properties as needed
 }
 
-// Calculate estimated travel time in minutes
-const calculateTravelTime = (distanceKm: number): number => {
-  // Assuming average speed of 20 km/h for city driving
-  // This can be adjusted based on your city's traffic conditions
-  const averageSpeedKmh = 20;
-  const travelTimeHours = distanceKm / averageSpeedKmh;
-  return Math.round(travelTimeHours * 60); // Convert to minutes
+const formatStoreList = (raw: string): string => {
+  if (!raw) return raw;
+
+  // Convert "2 Stores: Store A, Store B" => "Store A and Store B"
+  // Also handles prefixes like "🛒 2 Stores: ..."
+  const stripped = raw.replace(/^[^\w]*\d+\s+Stores:\s*/i, "").trim();
+  const base = stripped || raw;
+
+  const parts = base
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  // De-dupe while preserving order
+  const seen = new Set<string>();
+  const unique = parts.filter((s) => {
+    if (seen.has(s)) return false;
+    seen.add(s);
+    return true;
+  });
+
+  if (unique.length <= 1) return unique[0] || raw;
+  if (unique.length === 2) return `${unique[0]} and ${unique[1]}`;
+  return `${unique.slice(0, -1).join(", ")} and ${unique[unique.length - 1]}`;
 };
 
 interface BatchAssignment {
@@ -76,11 +96,51 @@ export default function NotificationSystem({
   const [notificationPermission, setNotificationPermission] =
     useState<NotificationPermission>("default");
   const [audioLoaded, setAudioLoaded] = useState(false);
+  const [isShopperOnline, setIsShopperOnline] = useState(false); // Track if shopper is online (has location cookies)
+  const [activeOrderCount, setActiveOrderCount] = useState<number>(0);
+  const [showMapModal, setShowMapModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [acceptingOrders, setAcceptingOrders] = useState<Set<string>>(
     new Set()
   ); // Track orders being accepted
-  const [showMapModal, setShowMapModal] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [decliningOrders, setDecliningOrders] = useState<Set<string>>(
+    new Set()
+  ); // Track orders being declined
+
+  // Helper to fetch active order count
+  const fetchActiveOrderCount = async () => {
+    if (!session?.user?.id) return 0;
+    try {
+      const response = await fetch("/api/shopper/activeOrders");
+      if (!response.ok) return activeOrderCount;
+      const data = await response.json();
+      const count = data.orders?.length || 0;
+      setActiveOrderCount(count);
+
+      // If shopper has 2 or more orders, clear any pending notifications
+      if (count >= 2 && selectedOrder) {
+        console.log(
+          "🧹 Clearing notifications: Shopper reached 2 active orders"
+        );
+        setShowMapModal(false);
+        setSelectedOrder(null);
+        onNotificationShow?.(null);
+      }
+
+      return count;
+    } catch (error) {
+      return activeOrderCount;
+    }
+  };
+
+  // Poll for active order count every 30 seconds
+  useEffect(() => {
+    if (session?.user?.id && isShopperOnline) {
+      fetchActiveOrderCount();
+      const interval = setInterval(fetchActiveOrderCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [session?.user?.id, isShopperOnline]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const checkInterval = useRef<NodeJS.Timeout | null>(null);
   const lastNotificationTime = useRef<number>(0);
@@ -97,11 +157,46 @@ export default function NotificationSystem({
   const pageLoadTimestamp = useRef<number>(Date.now()); // Track when page was loaded
   const isPageVisible = useRef<boolean>(true); // Track if page is visible
   const lastUserActivityTime = useRef<number>(Date.now()); // Track last user activity
-  const [isShopperOnline, setIsShopperOnline] = useState(false); // Track if shopper is online (has location cookies)
   const componentId = useRef<string>(Math.random().toString(36).substring(7)); // Unique component ID for debugging
 
   // FCM integration
   const { isInitialized, hasPermission } = useFCMNotifications();
+
+  const saveNotificationToHistory = (entry: {
+    title: string;
+    body: string;
+    type: string;
+    orderId?: string;
+    displayOrderId?: string | number;
+    senderName?: string;
+    conversationId?: string;
+    isCombinedOrder?: boolean;
+    orderCount?: number;
+    totalEarnings?: number;
+    storeNames?: string;
+  }) => {
+    if (typeof window === "undefined") return;
+    try {
+      const history = JSON.parse(
+        localStorage.getItem("fcm_notification_history") || "[]"
+      );
+      const notificationEntry = {
+        ...entry,
+        timestamp: Date.now(),
+        read: false,
+      };
+      history.unshift(notificationEntry);
+      if (history.length > 50) history.pop();
+      localStorage.setItem("fcm_notification_history", JSON.stringify(history));
+      window.dispatchEvent(
+        new CustomEvent("fcm-history-updated", {
+          detail: { notification: notificationEntry },
+        })
+      );
+    } catch {
+      // ignore
+    }
+  };
 
   // Log component mount for debugging duplicate instances
   useEffect(() => {
@@ -122,25 +217,10 @@ export default function NotificationSystem({
           "Multiple NotificationSystem components are running! This will cause duplicate API calls.",
       });
     } else if (process.env.NODE_ENV === "development") {
-      // Only log in development, and only when truly new (not StrictMode remount)
-      if (hadInstancesBefore === 0) {
-        console.log("🔧 NotificationSystem mounted", {
-          componentId: componentId.current,
-          note: "StrictMode may cause this to appear twice in development",
-        });
-      }
     }
 
     return () => {
       instances.delete(componentId.current);
-
-      // Only log unmount if it's the last instance or if in production
-      if (instances.size === 0 || process.env.NODE_ENV === "production") {
-        console.log("🔧 NotificationSystem unmounted", {
-          componentId: componentId.current,
-          remainingInstances: instances.size,
-        });
-      }
     };
   }, []);
 
@@ -162,15 +242,8 @@ export default function NotificationSystem({
     const updateShopperOnlineStatus = () => {
       const online = checkOnlineStatus();
 
-      // Only update and log if status actually changed
+      // Only update if status actually changed
       if (online !== isShopperOnline) {
-        console.log("👤 NotificationSystem: Shopper online status changed:", {
-          wasOnline: isShopperOnline,
-          isNowOnline: online,
-          timestamp: new Date().toISOString(),
-          componentId: componentId.current,
-        });
-
         setIsShopperOnline(online);
 
         // Clear notifications when going offline (only if we were actually running)
@@ -218,10 +291,6 @@ export default function NotificationSystem({
           if ((expiresAt as number) > now) {
             declinedOrders.current.set(orderId, expiresAt as number);
           }
-        });
-        console.log("📦 Restored declined orders from localStorage", {
-          count: declinedOrders.current.size,
-          orders: Array.from(declinedOrders.current.keys()),
         });
       }
     } catch (error) {
@@ -307,6 +376,15 @@ export default function NotificationSystem({
         return;
       }
 
+      // Check if shopper already has 2 or more active orders - CRITICAL GUARD
+      if (activeOrderCount >= 2) {
+        console.log("🚫 FCM: Blocking - shopper already has 2 active orders", {
+          orderId: order.id,
+          activeOrderCount,
+        });
+        return;
+      }
+
       // Check if order was declined
       if (declinedOrders.current.has(order.id)) {
         console.log("🚫 FCM: Order was declined, ignoring", {
@@ -326,6 +404,7 @@ export default function NotificationSystem({
       // Convert to Order format and show notification
       const orderForNotification: Order = {
         id: order.id,
+        OrderID: order.OrderID ?? order.displayOrderId ?? null,
         shopName: order.shopName,
         distance: order.distance,
         createdAt: order.createdAt,
@@ -339,6 +418,8 @@ export default function NotificationSystem({
         shopLongitude: order.shopLongitude,
         customerLatitude: order.customerLatitude,
         customerLongitude: order.customerLongitude,
+        // Include offerId if available
+        offerId: order.offerId,
       };
 
       // Show notification
@@ -382,11 +463,20 @@ export default function NotificationSystem({
 
       // Show notifications for each order
       orders.forEach((order: any) => {
+        // Check if shopper already has 2 or more active orders - CRITICAL GUARD
+        if (activeOrderCount >= 2) {
+          console.log(
+            "🚫 FCM BATCH: Blocking - shopper already has 2 active orders",
+            {
+              orderId: order.id,
+              activeOrderCount,
+            }
+          );
+          return;
+        }
+
         // Check if order was declined
         if (declinedOrders.current.has(order.id)) {
-          console.log("🚫 FCM BATCH: Order was declined, ignoring", {
-            orderId: order.id,
-          });
           return;
         }
 
@@ -413,6 +503,8 @@ export default function NotificationSystem({
           shopLongitude: order.shopLongitude,
           customerLatitude: order.customerLatitude,
           customerLongitude: order.customerLongitude,
+          // Include offerId if available
+          offerId: order.offerId,
         };
 
         showToast(orderForNotification);
@@ -606,6 +698,14 @@ export default function NotificationSystem({
       return;
     }
 
+    if (!session?.user?.id) {
+      logger.warn(
+        "Cannot show notification - no session",
+        "NotificationSystem"
+      );
+      return;
+    }
+
     const newAssignment: BatchAssignment = {
       shopperId: session.user.id,
       orderId: order.id,
@@ -619,6 +719,7 @@ export default function NotificationSystem({
     // Convert to Order format for compatibility
     const orderForNotification: Order = {
       id: order.id,
+      OrderID: order.OrderID,
       shopName: order.shopName,
       distance: order.distance,
       createdAt: order.createdAt,
@@ -632,7 +733,52 @@ export default function NotificationSystem({
       shopLongitude: order.shopLongitude,
       customerLatitude: order.customerLatitude,
       customerLongitude: order.customerLongitude,
+      // Include offerId if available
+      offerId: order.offerId,
     };
+
+    // Fallback logging: even if web push isn't working, store the shown offer in NotificationCenter history
+    saveNotificationToHistory({
+      type: "new_order",
+      title: order?.isCombinedOrder
+        ? `🛒 New Combined Order - ${order?.orderCount || ""} Stores`.trim()
+        : "New batch available!",
+      body:
+        order?.isCombinedOrder && order?.storeNames
+          ? `${order.storeNames} • ${formatCurrencySync(
+              orderForNotification.estimatedEarnings || 0
+            )}`
+          : `${orderForNotification.shopName} • ${formatCurrencySync(
+              orderForNotification.estimatedEarnings || 0
+            )}`,
+      orderId: orderForNotification.id,
+      displayOrderId: orderForNotification.OrderID ?? undefined,
+      isCombinedOrder: Boolean(order?.isCombinedOrder),
+      orderCount: order?.orderCount ? Number(order.orderCount) : undefined,
+      totalEarnings:
+        typeof orderForNotification.estimatedEarnings === "number"
+          ? orderForNotification.estimatedEarnings
+          : undefined,
+      storeNames: order?.storeNames,
+    });
+
+    // Store active offer in localStorage for persistence across page refreshes
+    try {
+      localStorage.setItem(
+        "active_offer",
+        JSON.stringify({
+          order: orderForNotification,
+          expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(), // 4 hours
+          assignedAt: currentTime,
+        })
+      );
+    } catch (error) {
+      logger.warn(
+        "Failed to store active offer in localStorage",
+        "NotificationSystem",
+        error
+      );
+    }
 
     await playNotificationSound({ enabled: true, volume: 0.7 });
     showToast(orderForNotification);
@@ -678,8 +824,8 @@ export default function NotificationSystem({
         removeToastForOrder(orderId);
         toast.success("Order accepted successfully! 🎉");
 
-        // Call parent callback if provided
-        onAcceptBatch?.(orderId);
+        // Note: Removed onAcceptBatch callback to prevent redirect
+        // User stays on current page with success toast
 
         return true;
       }
@@ -754,33 +900,26 @@ export default function NotificationSystem({
   ) => {
     const now = Date.now();
 
-    console.log("📢 SHOW TOAST CALLED", {
-      orderId: order.id,
-      timestamp: new Date().toISOString(),
-      alreadyShowing: activeToasts.current.has(order.id),
-      isDeclined: declinedOrders.current.has(order.id),
-      lastShownAt: showToastLock.current.get(order.id),
-      callStack: new Error().stack?.split("\n").slice(2, 5).join(" <- "), // Show where this was called from
-    });
+    // Check if shopper already has 2 or more active orders - CRITICAL GUARD
+    if (activeOrderCount >= 2 && type === "info") {
+      console.log(
+        "🚫 showToast: Blocking - shopper already has 2 active orders",
+        {
+          orderId: order.id,
+          activeOrderCount,
+        }
+      );
+      return;
+    }
 
     // Check if order was declined - CRITICAL CHECK
     if (declinedOrders.current.has(order.id)) {
-      console.log("🚫 BLOCKED: Order was declined", {
-        orderId: order.id,
-        timestamp: new Date().toISOString(),
-      });
       return;
     }
 
     // DEDUPLICATION LOCK: Prevent showing same order within 2 seconds
     const lastShown = showToastLock.current.get(order.id);
     if (lastShown && now - lastShown < 2000) {
-      console.log("🚫 BLOCKED: Order shown too recently (deduplication)", {
-        orderId: order.id,
-        lastShownAt: new Date(lastShown).toISOString(),
-        timeSinceLastShow: `${now - lastShown}ms`,
-        timestamp: new Date().toISOString(),
-      });
       return;
     }
 
@@ -791,10 +930,6 @@ export default function NotificationSystem({
       showMapModal &&
       selectedOrder?.id === order.id
     ) {
-      console.log("🚫 BLOCKED: Notification already showing for this order", {
-        orderId: order.id,
-        timestamp: new Date().toISOString(),
-      });
       return;
     }
 
@@ -803,11 +938,6 @@ export default function NotificationSystem({
       batchToast.dismiss(existingToast);
       activeToasts.current.delete(order.id);
     }
-
-    console.log("✅ SHOWING NOTIFICATION", {
-      orderId: order.id,
-      timestamp: new Date().toISOString(),
-    });
 
     // Set deduplication lock
     showToastLock.current.set(order.id, now);
@@ -1079,10 +1209,7 @@ export default function NotificationSystem({
   const checkForNewOrders = async () => {
     // CRITICAL: Prevent concurrent API calls with early return
     if (isCheckingOrders.current) {
-      console.log("🔒 API POLLING: Already checking for orders, skipping", {
-        timestamp: new Date().toISOString(),
-      });
-      return;
+      return; // Silent skip - already checking
     }
 
     if (!session?.user?.id || !currentLocation) {
@@ -1091,8 +1218,7 @@ export default function NotificationSystem({
 
     // CRITICAL: Only check if shopper is online (has location cookies)
     if (!isShopperOnline) {
-      console.log("🚫 API POLLING: Skipping - shopper is offline");
-      return;
+      return; // Silent skip - shopper offline
     }
 
     const now = new Date();
@@ -1100,45 +1226,35 @@ export default function NotificationSystem({
 
     // Set flag IMMEDIATELY to prevent concurrent calls
     isCheckingOrders.current = true;
-    console.log("🔒 API POLLING: Lock acquired", {
-      timestamp: new Date().toISOString(),
-    });
 
     // CRITICAL: Don't check for new orders within 15 seconds of page load
     if (currentTime - pageLoadTimestamp.current < 15000) {
-      console.log("🚫 API POLLING: Skipping - page just loaded/refreshed", {
-        timeSincePageLoad: currentTime - pageLoadTimestamp.current,
-      });
       isCheckingOrders.current = false;
-      return;
+      return; // Silent skip - page just loaded
     }
 
     // CRITICAL: Only check if page is visible and user is active
     if (!isPageVisible.current) {
-      console.log("🚫 API POLLING: Skipping - page not visible");
       isCheckingOrders.current = false;
-      return;
+      return; // Silent skip - page not visible
     }
 
     // Check if user has been inactive for more than 5 minutes
     if (currentTime - lastUserActivityTime.current > 300000) {
-      console.log("🚫 API POLLING: Skipping - user inactive for too long", {
-        inactiveTime: currentTime - lastUserActivityTime.current,
-      });
       isCheckingOrders.current = false;
-      return;
+      return; // Silent skip - user inactive
     }
 
     // Check if user just declined an order (10-second cooldown)
     if (currentTime - lastDeclineTime.current < 10000) {
       isCheckingOrders.current = false;
-      return;
+      return; // Silent skip - decline cooldown
     }
 
     // Check if we should skip this check (25-second cooldown to prevent spam)
     if (currentTime - lastNotificationTime.current < 25000) {
       isCheckingOrders.current = false; // Reset flag when skipping
-      return;
+      return; // Silent skip - rate limiting
     }
 
     // Using smart order finder system to find best order
@@ -1170,6 +1286,7 @@ export default function NotificationSystem({
 
       if (data.success && data.order) {
         // Smart order finder found order
+        setActiveOrderCount(data.activeOrderCount || 0); // Update count if provided
 
         // Update lastNotificationTime to prevent rapid API calls
         // This is updated regardless of whether we show a notification
@@ -1197,11 +1314,13 @@ export default function NotificationSystem({
         );
 
         // Clean up expired declined orders
-        for (const [orderId, expiresAt] of declinedOrders.current.entries()) {
-          if (expiresAt <= currentTime) {
-            declinedOrders.current.delete(orderId);
+        Array.from(declinedOrders.current.entries()).forEach(
+          ([orderId, expiresAt]) => {
+            if (expiresAt <= currentTime) {
+              declinedOrders.current.delete(orderId);
+            }
           }
-        }
+        );
 
         // Check if user already has an active order review
         const currentUserAssignment = batchAssignments.current.find(
@@ -1209,7 +1328,10 @@ export default function NotificationSystem({
         );
 
         // Check if this order was declined
-        const order = data.order;
+        const order = {
+          ...data.order,
+          offerId: data.offerId, // Include offerId from API response
+        };
         const wasDeclined = declinedOrders.current.has(order.id);
 
         // Check if a better order is available (higher earnings)
@@ -1219,26 +1341,9 @@ export default function NotificationSystem({
         const newOrderEarnings = order.estimatedEarnings || 0;
         const isBetterOrder = newOrderEarnings > currentOrderEarnings;
 
-        console.log("🔍 API POLLING CHECK", {
-          orderId: order.id,
-          timestamp: new Date().toISOString(),
-          wasDeclined,
-          hasCurrentAssignment: !!currentUserAssignment,
-          currentOrderEarnings,
-          newOrderEarnings,
-          isBetterOrder,
-          alreadyShowing: activeToasts.current.has(order.id),
-          recentlyShown: showToastLock.current.has(order.id),
-          willShow:
-            (!currentUserAssignment || isBetterOrder) &&
-            !wasDeclined &&
-            !activeToasts.current.has(order.id),
-        });
-
         // Skip if order is already showing
         if (activeToasts.current.has(order.id)) {
-          console.log("🔍 API POLLING: Skipping - order already showing");
-          return;
+          return; // Silent skip - order already showing
         }
 
         // Show order if: no current assignment OR this is a better order (not declined)
@@ -1297,6 +1402,20 @@ export default function NotificationSystem({
         } else {
           // lastNotificationTime was already updated above to prevent rapid API calls
         }
+      } else if (data.reason === "MAX_ACTIVE_ORDERS_REACHED") {
+        console.log("🚫 Shopper reached max active orders limit", {
+          count: data.activeOrderCount,
+        });
+        setActiveOrderCount(data.activeOrderCount || 2);
+
+        // Clear any pending notifications since shopper can't accept more
+        if (selectedOrder) {
+          setShowMapModal(false);
+          setSelectedOrder(null);
+          onNotificationShow?.(null);
+        }
+
+        lastNotificationTime.current = currentTime;
       } else {
         // Update lastNotificationTime even when no orders found to prevent rapid polling
         lastNotificationTime.current = currentTime;
@@ -1310,9 +1429,6 @@ export default function NotificationSystem({
     } finally {
       // Always reset the flag when done
       isCheckingOrders.current = false;
-      console.log("🔓 API POLLING: Lock released", {
-        timestamp: new Date().toISOString(),
-      });
     }
   };
 
@@ -1321,30 +1437,18 @@ export default function NotificationSystem({
 
     // CRITICAL: Only start if shopper is online
     if (!isShopperOnline) {
-      console.log("🚫 Cannot start notification system - shopper is offline", {
-        componentId: componentId.current,
-      });
       return;
     }
 
     // If already running, don't restart
     if (checkInterval.current) {
-      console.log("⚠️ Notification system already running, skipping restart", {
-        componentId: componentId.current,
-        message:
-          "This is normal in development (React StrictMode causes double effects)",
-      });
       return;
     }
 
     // Reset notification state
     lastNotificationTime.current = 0;
 
-    console.log("🟢 Starting smart notification system - shopper is online", {
-      componentId: componentId.current,
-      isDevelopment: process.env.NODE_ENV === "development",
-      hasStrictMode: "React StrictMode may cause duplicate logs in development",
-    });
+    // no console logs (keep UI quiet)
 
     // Initial check with slight delay to prevent race conditions and StrictMode double-calls
     setTimeout(() => {
@@ -1352,7 +1456,8 @@ export default function NotificationSystem({
     }, 2000); // Increased to 2 seconds
 
     // Set up interval for checking (less frequent when FCM is active)
-    const intervalTime = isInitialized ? 120000 : 30000; // 2 minutes with FCM, 30 seconds without
+    // Polling is mainly a backup - FCM handles most notifications
+    const intervalTime = isInitialized ? 180000 : 60000; // 3 minutes with FCM, 1 minute without
     checkInterval.current = setInterval(() => {
       checkForNewOrders();
     }, intervalTime);
@@ -1363,11 +1468,6 @@ export default function NotificationSystem({
   const stopNotificationSystem = () => {
     // Only log if something was actually running
     if (checkInterval.current || isListening) {
-      console.log("🔴 Stopping notification system", {
-        componentId: componentId.current,
-        wasListening: isListening,
-        hadInterval: checkInterval.current !== null,
-      });
     }
 
     // Force release the lock
@@ -1405,43 +1505,135 @@ export default function NotificationSystem({
   }, []);
 
   // Track when notification card shows/hides
+  // Check for active offers on mount and restore notification
+  const checkForActiveOffer = async () => {
+    if (!session?.user?.id || !currentLocation || !isShopperOnline) {
+      return;
+    }
+
+    try {
+      // 1. Always check current workload first before showing ANY notification
+      // This prevents the card from flashing on page refresh/change if they have 2 orders
+      const currentCount = await fetchActiveOrderCount();
+      if (currentCount >= 2) {
+        console.log(
+          "🚫 Blocking active offer check: Shopper has 2+ active orders"
+        );
+        localStorage.removeItem("active_offer");
+        // Ensure any existing card is hidden
+        setShowMapModal(false);
+        setSelectedOrder(null);
+        return;
+      }
+
+      // 2. Check localStorage first for quick restore
+      const storedActiveOffer = localStorage.getItem("active_offer");
+      if (storedActiveOffer) {
+        try {
+          const offer = JSON.parse(storedActiveOffer);
+          // Verify offer is still valid (not expired)
+          if (offer.expiresAt && new Date(offer.expiresAt) > new Date()) {
+            // Older cached offers may not have OrderID saved yet — fetch once (best effort)
+            if (!offer?.order?.OrderID && offer?.order?.id) {
+              try {
+                const resp = await fetch(
+                  `/api/queries/orderDetails?id=${offer.order.id}`
+                );
+                if (resp.ok) {
+                  const details = await resp.json();
+                  if (details?.order?.OrderID) {
+                    offer.order.OrderID = details.order.OrderID;
+                    localStorage.setItem("active_offer", JSON.stringify(offer));
+                  }
+                }
+              } catch {
+                // ignore
+              }
+            }
+
+            // Double check count again before showing restored offer
+            if (activeOrderCount < 2) {
+              showNewOrderNotification(offer.order, Date.now());
+              return; // Exit early, offer restored from cache
+            }
+          } else {
+            // Offer expired, remove from localStorage
+            localStorage.removeItem("active_offer");
+          }
+        } catch (e) {
+          // Invalid stored data, remove it
+          localStorage.removeItem("active_offer");
+        }
+      }
+
+      // 3. Query backend to check for active offers if nothing in localStorage or it was invalid
+      const response = await fetch("/api/shopper/smart-assign-order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          current_location: currentLocation,
+          user_id: session.user.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.order) {
+        // Active offer found - show notification immediately
+        // showNewOrderNotification will store it in localStorage
+        const order = {
+          ...data.order,
+          offerId: data.offerId, // Include offerId from API response
+        };
+
+        // Final guard before showing
+        if (activeOrderCount < 2) {
+          await showNewOrderNotification(order, Date.now());
+        }
+      } else if (data.reason === "MAX_ACTIVE_ORDERS_REACHED") {
+        // Sync active order count and ensure storage is clean
+        setActiveOrderCount(data.activeOrderCount || 2);
+        localStorage.removeItem("active_offer");
+        setShowMapModal(false);
+        setSelectedOrder(null);
+      } else if (data.reason === "ACTIVE_OFFER_PENDING") {
+        // Shopper has an active offer but API didn't return order details
+        // This shouldn't happen, but if it does, we'll check again in the normal polling
+      }
+    } catch (error) {
+      logger.error(
+        "Error checking for active offer on mount",
+        "NotificationSystem",
+        error
+      );
+    }
+  };
+
   useEffect(() => {
     if (showMapModal && selectedOrder) {
       // Reset click counters for new notification
       declineClickCount.current = 0;
       acceptClickCount.current = 0;
       directionsClickCount.current = 0;
-
-      console.log("🔔 NOTIFICATION CARD DISPLAYED", {
-        orderId: selectedOrder.id,
-        shopName: selectedOrder.shopName,
-        timestamp: new Date().toISOString(),
-        zIndex: "z-50",
-        message: "Click counters reset - tracking clicks for this notification",
-      });
-    } else if (!showMapModal) {
-      console.log("🔕 NOTIFICATION CARD HIDDEN", {
-        timestamp: new Date().toISOString(),
-        finalClickCounts: {
-          decline: declineClickCount.current,
-          accept: acceptClickCount.current,
-          directions: directionsClickCount.current,
-        },
-      });
     }
   }, [showMapModal, selectedOrder]);
 
+  // Check for active offers immediately on mount
+  useEffect(() => {
+    if (session?.user?.id && currentLocation && isShopperOnline) {
+      // Check for active offers immediately (before normal polling starts)
+      checkForActiveOffer();
+    }
+  }, [session?.user?.id, currentLocation, isShopperOnline]);
+
   useEffect(() => {
     if (session && currentLocation && isShopperOnline) {
-      console.log("✅ All requirements met - starting notification system", {
-        hasSession: !!session,
-        hasLocation: !!currentLocation,
-        isShopperOnline,
-      });
       startNotificationSystem();
     } else {
       if (!isShopperOnline) {
-        console.log("🚫 Shopper is offline - notification system stopped");
+        // Shopper is offline - notification system stopped
       } else {
         logger.warn(
           "Missing requirements for notification system",
@@ -1491,46 +1683,14 @@ export default function NotificationSystem({
           className="fixed inset-x-0 bottom-0 z-50 flex md:justify-end md:px-8 md:pb-6"
           onClick={(e) => {
             // Only log if clicking on the background, not the card itself
-            if (e.target === e.currentTarget) {
-              console.log("📱 NOTIFICATION BACKGROUND CLICKED", {
-                orderId: selectedOrder.id,
-                timestamp: new Date().toISOString(),
-              });
-            }
+            // Background click handler
           }}
         >
           {/* Bottom Sheet Card */}
-          <div
-            ref={(el) => {
-              if (el) {
-                const styles = window.getComputedStyle(el);
-                const parentStyles = window.getComputedStyle(el.parentElement!);
-                console.log("🎨 NOTIFICATION CARD STYLES", {
-                  orderId: selectedOrder.id,
-                  cardZIndex: styles.zIndex,
-                  parentZIndex: parentStyles.zIndex,
-                  position: styles.position,
-                  pointerEvents: styles.pointerEvents,
-                  cardRect: el.getBoundingClientRect(),
-                  message: "Check if card is being overlapped by map elements",
-                });
-              }
-            }}
-            className="relative w-full rounded-t-3xl bg-white shadow-2xl md:max-w-md md:rounded-2xl"
-            onClick={(e) => {
-              console.log("📋 NOTIFICATION CARD CLICKED", {
-                orderId: selectedOrder.id,
-                timestamp: new Date().toISOString(),
-                target: e.target,
-                currentTarget: e.currentTarget,
-                clickX: (e as React.MouseEvent).clientX,
-                clickY: (e as React.MouseEvent).clientY,
-              });
-            }}
-          >
+          <div className="relative w-full rounded-t-3xl bg-white shadow-2xl dark:bg-gray-800 md:max-w-md md:rounded-2xl">
             {/* Drag Handle */}
             <div className="flex justify-center py-3">
-              <div className="h-1 w-12 rounded-full bg-gray-300"></div>
+              <div className="h-1 w-12 rounded-full bg-gray-300 dark:bg-gray-600"></div>
             </div>
 
             <div className="px-6 pb-6">
@@ -1538,81 +1698,56 @@ export default function NotificationSystem({
               <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   {/* Avatar */}
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-purple-500">
-                    <svg
-                      className="h-6 w-6 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
+                  <div
+                    className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br ${
+                      theme === "dark"
+                        ? "from-green-500 to-emerald-600"
+                        : "from-blue-400 to-purple-500"
+                    }`}
+                  >
+                    <div className="flex flex-col items-center justify-center leading-none">
+                      <span className="text-[10px] font-semibold text-white/90">
+                        Order
+                      </span>
+                      <span className="text-sm font-extrabold text-white">
+                        {selectedOrder.OrderID ?? "--"}
+                      </span>
+                    </div>
                   </div>
                   {/* Shop Name */}
                   <div>
-                    <p className="text-xs text-gray-500">Shop</p>
-                    <p className="text-lg font-bold text-gray-900">
-                      {selectedOrder.shopName}
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Shop
+                    </p>
+                    <p className="text-base font-bold text-gray-900 dark:text-gray-100">
+                      {formatStoreList(selectedOrder.shopName)}
                     </p>
                   </div>
                 </div>
                 {/* Directions Button */}
                 <button
-                  onPointerDown={(e) => {
-                    console.log("👆 DIRECTIONS POINTER DOWN", {
-                      orderId: selectedOrder.id,
-                      timestamp: new Date().toISOString(),
-                      pointerType: e.pointerType,
-                      x: e.clientX,
-                      y: e.clientY,
-                    });
-                  }}
-                  onPointerUp={(e) => {
-                    console.log("👆 DIRECTIONS POINTER UP", {
-                      orderId: selectedOrder.id,
-                      timestamp: new Date().toISOString(),
-                      pointerType: e.pointerType,
-                    });
-                  }}
                   onClick={() => {
                     directionsClickCount.current += 1;
-                    console.log("🗺️ DIRECTIONS BUTTON CLICKED", {
-                      orderId: selectedOrder.id,
-                      timestamp: new Date().toISOString(),
-                      clickCount: directionsClickCount.current,
-                      totalClicks: `This is click #${directionsClickCount.current}`,
-                      coordinates: {
-                        lat: selectedOrder.customerLatitude,
-                        lng: selectedOrder.customerLongitude,
-                      },
-                    });
 
-                    // Open Google Maps with directions to delivery address
-                    const destLat = selectedOrder.customerLatitude;
-                    const destLng = selectedOrder.customerLongitude;
+                    // Open Google Maps with directions to SHOP location
+                    const destLat = selectedOrder.shopLatitude;
+                    const destLng = selectedOrder.shopLongitude;
                     const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`;
                     window.open(mapsUrl, "_blank");
                   }}
-                  className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 shadow-md transition-colors hover:bg-blue-600"
-                  title="Open in Google Maps"
+                  className={`flex h-12 w-12 items-center justify-center rounded-full shadow-md transition-colors ${
+                    theme === "dark"
+                      ? "bg-green-600 hover:bg-green-700"
+                      : "bg-blue-500 hover:bg-blue-600"
+                  }`}
+                  title="Open shop location in Google Maps"
                 >
                   <svg
                     className="h-5 w-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                    viewBox="104 411 24 32"
+                    fill="currentColor"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-                    />
+                    <path d="M116,426 C114.343,426 113,424.657 113,423 C113,421.343 114.343,420 116,420 C117.657,420 119,421.343 119,423 C119,424.657 117.657,426 116,426 L116,426 Z M116,418 C113.239,418 111,420.238 111,423 C111,425.762 113.239,428 116,428 C118.761,428 121,425.762 121,423 C121,420.238 118.761,418 116,418 L116,418 Z M116,440 C114.337,440.009 106,427.181 106,423 C106,417.478 110.477,413 116,413 C121.523,413 126,417.478 126,423 C126,427.125 117.637,440.009 116,440 L116,440 Z M116,411 C109.373,411 104,416.373 104,423 C104,428.018 114.005,443.011 116,443 C117.964,443.011 128,427.95 128,423 C128,416.373 122.627,411 116,411 L116,411 Z" />
                   </svg>
                 </button>
               </div>
@@ -1629,8 +1764,10 @@ export default function NotificationSystem({
                     <div className="h-2 w-2 rounded-full bg-white"></div>
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs text-gray-500">You</p>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      You
+                    </p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       {currentLocation
                         ? `${currentLocation.lat.toFixed(
                             4
@@ -1653,37 +1790,12 @@ export default function NotificationSystem({
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <p className="text-xs text-gray-500">
-                          Delivery Address
-                        </p>
-                        <p className="text-sm font-medium text-gray-900">
-                          {selectedOrder.customerAddress}
-                        </p>
-                      </div>
-                      {/* Time Badge */}
-                      <div className="ml-2 flex items-center space-x-1 rounded-full bg-green-50 px-2 py-1">
-                        <svg
-                          className="h-3 w-3 text-green-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        <span className="text-xs font-medium text-green-600">
-                          {selectedOrder.travelTimeMinutes ||
-                            calculateTravelTime(selectedOrder.distance)}{" "}
-                          min
-                        </span>
-                      </div>
-                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Delivery Address
+                    </p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {selectedOrder.customerAddress}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -1691,10 +1803,10 @@ export default function NotificationSystem({
               {/* Order Details */}
               <div className="mb-5 space-y-3">
                 {/* Items and Earnings */}
-                <div className="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3">
+                <div className="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3 dark:bg-gray-700">
                   <div className="flex items-center space-x-2">
                     <svg
-                      className="h-5 w-5 text-gray-600"
+                      className="h-5 w-5 text-gray-600 dark:text-gray-300"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -1706,13 +1818,13 @@ export default function NotificationSystem({
                         d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
                       />
                     </svg>
-                    <span className="text-sm font-medium text-gray-900">
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       {selectedOrder.itemsCount || 0} Items
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <svg
-                      className="h-5 w-5 text-green-600"
+                      className="h-5 w-5 text-green-600 dark:text-green-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -1724,7 +1836,7 @@ export default function NotificationSystem({
                         d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    <span className="text-sm font-bold text-green-600">
+                    <span className="text-sm font-bold text-green-600 dark:text-green-400">
                       {formatCurrencySync(selectedOrder.estimatedEarnings || 0)}
                     </span>
                   </div>
@@ -1735,176 +1847,186 @@ export default function NotificationSystem({
               <div className="flex space-x-3">
                 {/* Decline Button */}
                 <button
-                  onPointerDown={(e) => {
-                    console.log("👆 DECLINE POINTER DOWN", {
-                      orderId: selectedOrder.id,
-                      timestamp: new Date().toISOString(),
-                      pointerType: e.pointerType,
-                      x: e.clientX,
-                      y: e.clientY,
-                    });
-                  }}
-                  onPointerUp={(e) => {
-                    console.log("👆 DECLINE POINTER UP", {
-                      orderId: selectedOrder.id,
-                      timestamp: new Date().toISOString(),
-                      pointerType: e.pointerType,
-                    });
-                  }}
-                  onClick={() => {
+                  onClick={async () => {
+                    if (!session?.user?.id) {
+                      toast.error("You must be logged in to decline orders");
+                      return;
+                    }
+
+                    // Prevent multiple decline attempts
+                    if (decliningOrders.has(selectedOrder.id)) {
+                      return;
+                    }
+
+                    setDecliningOrders((prev) =>
+                      new Set(prev).add(selectedOrder.id)
+                    );
+
                     declineClickCount.current += 1;
-                    console.log("🔴 DECLINE BUTTON CLICKED", {
-                      orderId: selectedOrder.id,
-                      timestamp: new Date().toISOString(),
-                      clickCount: declineClickCount.current,
-                      totalClicks: `This is click #${declineClickCount.current}`,
-                    });
 
                     // Save order ID before clearing state
                     const orderId = selectedOrder.id;
                     const expiresAt = Date.now() + 300000; // 5 minutes
 
-                    // Add to declined orders list (expires after 5 minutes)
-                    declinedOrders.current.set(orderId, expiresAt);
-
-                    // Persist to localStorage
                     try {
-                      const declinedObj: Record<string, number> = {};
-                      declinedOrders.current.forEach((value, key) => {
-                        declinedObj[key] = value;
-                      });
-                      localStorage.setItem(
-                        "declined_orders",
-                        JSON.stringify(declinedObj)
-                      );
-                      console.log("💾 Saved declined orders to localStorage", {
-                        count: declinedOrders.current.size,
-                      });
-                    } catch (error) {
-                      console.error(
-                        "Failed to save declined orders to localStorage:",
-                        error
-                      );
-                    }
-
-                    // Set decline cooldown (10 seconds before showing next notification)
-                    lastDeclineTime.current = Date.now();
-
-                    // Remove from tracking
-                    removeToastForOrder(orderId);
-
-                    // Remove from local state
-                    batchAssignments.current = batchAssignments.current.filter(
-                      (assignment) => assignment.orderId !== orderId
-                    );
-
-                    // Close the notification modal
-                    setShowMapModal(false);
-                    setSelectedOrder(null);
-
-                    // Notify parent that notification is hidden
-                    onNotificationShow?.(null);
-
-                    // Dispatch custom event
-                    window.dispatchEvent(
-                      new CustomEvent("notification-order-hidden", {
-                        detail: { orderId },
-                      })
-                    );
-
-                    console.log("🔴 DECLINE COMPLETED (Local)", {
-                      orderId,
-                      declinedOrdersCount: declinedOrders.current.size,
-                      declinedOrderIds: Array.from(
-                        declinedOrders.current.keys()
-                      ),
-                      lastDeclineTime: lastDeclineTime.current,
-                      nextCheckAllowedAt: lastDeclineTime.current + 10000,
-                    });
-
-                    // 🚀 CALL BACKEND API TO DECLINE OFFER AND ROTATE TO NEXT SHOPPER
-                    (async () => {
-                      try {
-                        console.log(
-                          "📡 Calling decline API to rotate to next shopper...",
-                          {
-                            orderId,
-                            shopperId: session?.user?.id,
-                          }
-                        );
-
-                        const declineResponse = await fetch(
-                          "/api/shopper/decline-offer",
-                          {
-                            method: "POST",
-                            headers: {
-                              "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify({
-                              orderId: orderId,
-                              shopperId: session?.user?.id,
-                            }),
-                          }
-                        );
-
-                        const declineData = await declineResponse.json();
-
-                        if (declineResponse.ok) {
-                          console.log(
-                            "✅ Decline API successful - order rotated to next shopper:",
-                            {
-                              orderId,
-                              nextShopperId: declineData.nextShopper?.id,
-                              message: declineData.message,
-                            }
-                          );
-                        } else {
-                          console.error("❌ Decline API failed:", declineData);
+                      // Call the decline-offer API to update the database
+                      const response = await fetch(
+                        "/api/shopper/decline-offer",
+                        {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                            orderId: orderId,
+                            shopperId: session.user.id,
+                          }),
                         }
-                      } catch (error) {
-                        console.error("❌ Error calling decline API:", error);
+                      );
+
+                      const data = await response.json();
+
+                      if (!response.ok) {
+                        throw new Error(
+                          data.error || "Failed to decline offer"
+                        );
                       }
-                    })();
+
+                      console.log("✅ Offer declined successfully", {
+                        orderId,
+                        offerId: data.offerId,
+                        roundNumber: data.roundNumber,
+                      });
+
+                      // Add to declined orders list (expires after 5 minutes)
+                      declinedOrders.current.set(orderId, expiresAt);
+
+                      // Persist to localStorage
+                      try {
+                        const declinedObj: Record<string, number> = {};
+                        declinedOrders.current.forEach((value, key) => {
+                          declinedObj[key] = value;
+                        });
+                        localStorage.setItem(
+                          "declined_orders",
+                          JSON.stringify(declinedObj)
+                        );
+                        console.log(
+                          "💾 Saved declined orders to localStorage",
+                          {
+                            count: declinedOrders.current.size,
+                          }
+                        );
+                      } catch (error) {
+                        console.error(
+                          "Failed to save declined orders to localStorage:",
+                          error
+                        );
+                      }
+
+                      // Clear active offer from localStorage since it's been declined
+                      try {
+                        localStorage.removeItem("active_offer");
+                      } catch (error) {
+                        logger.warn(
+                          "Failed to clear active offer from localStorage",
+                          "NotificationSystem",
+                          error
+                        );
+                      }
+
+                      // Set decline cooldown (10 seconds before showing next notification)
+                      lastDeclineTime.current = Date.now();
+
+                      // Remove from tracking
+                      removeToastForOrder(orderId);
+
+                      // Remove from local state
+                      batchAssignments.current =
+                        batchAssignments.current.filter(
+                          (assignment) => assignment.orderId !== orderId
+                        );
+
+                      // Close the notification modal
+                      setShowMapModal(false);
+                      setSelectedOrder(null);
+
+                      // Notify parent that notification is hidden
+                      onNotificationShow?.(null);
+
+                      // Dispatch custom event
+                      window.dispatchEvent(
+                        new CustomEvent("notification-order-hidden", {
+                          detail: { orderId },
+                        })
+                      );
+
+                      toast.success("Order declined");
+                    } catch (error) {
+                      const errorMessage =
+                        error instanceof Error
+                          ? error.message
+                          : "Failed to decline order";
+                      console.error("❌ Error declining offer:", error);
+                      toast.error(errorMessage);
+                      // Still close the modal even if API call failed
+                      setShowMapModal(false);
+                      setSelectedOrder(null);
+                      onNotificationShow?.(null);
+                    } finally {
+                      setDecliningOrders((prev) => {
+                        const newSet = new Set(prev);
+                        newSet.delete(selectedOrder.id);
+                        return newSet;
+                      });
+                    }
                   }}
-                  className="flex-1 rounded-xl bg-red-500 py-4 text-base font-bold text-white shadow-lg transition-all hover:bg-red-600 active:scale-95"
+                  disabled={
+                    decliningOrders.has(selectedOrder.id) ||
+                    acceptingOrders.has(selectedOrder.id)
+                  }
+                  className={`flex-1 rounded-xl py-4 text-base font-bold text-white shadow-lg transition-all active:scale-95 ${
+                    decliningOrders.has(selectedOrder.id) ||
+                    acceptingOrders.has(selectedOrder.id)
+                      ? "cursor-not-allowed bg-red-400"
+                      : "bg-red-500 hover:bg-red-600"
+                  }`}
                 >
-                  Decline
+                  <span className="flex items-center justify-center gap-2">
+                    {decliningOrders.has(selectedOrder.id) && (
+                      <svg
+                        className="h-5 w-5 animate-spin text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    )}
+                    {decliningOrders.has(selectedOrder.id)
+                      ? "Declining..."
+                      : "Decline"}
+                  </span>
                 </button>
 
                 {/* Accept Batch Button */}
                 <button
-                  onPointerDown={(e) => {
-                    console.log("👆 ACCEPT POINTER DOWN", {
-                      orderId: selectedOrder.id,
-                      timestamp: new Date().toISOString(),
-                      pointerType: e.pointerType,
-                      x: e.clientX,
-                      y: e.clientY,
-                    });
-                  }}
-                  onPointerUp={(e) => {
-                    console.log("👆 ACCEPT POINTER UP", {
-                      orderId: selectedOrder.id,
-                      timestamp: new Date().toISOString(),
-                      pointerType: e.pointerType,
-                    });
-                  }}
                   onClick={async () => {
                     acceptClickCount.current += 1;
-                    console.log("🟢 ACCEPT BUTTON CLICKED", {
-                      orderId: selectedOrder.id,
-                      timestamp: new Date().toISOString(),
-                      clickCount: acceptClickCount.current,
-                      totalClicks: `This is click #${acceptClickCount.current}`,
-                    });
 
                     const success = await handleAcceptOrder(selectedOrder.id);
-
-                    console.log("🟢 ACCEPT RESULT", {
-                      orderId: selectedOrder.id,
-                      success,
-                      timestamp: new Date().toISOString(),
-                    });
 
                     if (success) {
                       setShowMapModal(false);
@@ -1920,16 +2042,44 @@ export default function NotificationSystem({
                       );
                     }
                   }}
-                  disabled={acceptingOrders.has(selectedOrder.id)}
+                  disabled={
+                    acceptingOrders.has(selectedOrder.id) ||
+                    decliningOrders.has(selectedOrder.id)
+                  }
                   className={`flex-1 rounded-xl py-4 text-base font-bold text-white shadow-lg transition-all active:scale-95 ${
-                    acceptingOrders.has(selectedOrder.id)
-                      ? "cursor-not-allowed bg-gray-400"
+                    acceptingOrders.has(selectedOrder.id) ||
+                    decliningOrders.has(selectedOrder.id)
+                      ? "cursor-not-allowed bg-green-400"
                       : "bg-green-500 hover:bg-green-600"
                   }`}
                 >
-                  {acceptingOrders.has(selectedOrder.id)
-                    ? "Accepting..."
-                    : "Accept Batch"}
+                  <span className="flex items-center justify-center gap-2">
+                    {acceptingOrders.has(selectedOrder.id) && (
+                      <svg
+                        className="h-5 w-5 animate-spin text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    )}
+                    {acceptingOrders.has(selectedOrder.id)
+                      ? "Accepting..."
+                      : "Accept Batch"}
+                  </span>
                 </button>
               </div>
             </div>

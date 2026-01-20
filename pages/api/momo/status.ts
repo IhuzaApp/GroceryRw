@@ -10,12 +10,6 @@ export default async function handler(
 
   const { referenceId } = req.query;
 
-  console.log("📊 [MoMo Status API] Starting status check...");
-  console.log("📊 [MoMo Status API] Query Parameters:", { referenceId });
-  console.log("📊 [MoMo Status API] Request URL:", req.url);
-  console.log("📊 [MoMo Status API] Request Method:", req.method);
-  console.log("📊 [MoMo Status API] Request Headers:", req.headers);
-
   if (!referenceId || typeof referenceId !== "string") {
     console.error("❌ [MoMo Status API] Validation Error:", {
       referenceId,
@@ -25,12 +19,8 @@ export default async function handler(
     return res.status(400).json({ error: "Reference ID is required" });
   }
 
-  console.log("📊 [MoMo Status API] Valid Reference ID:", referenceId);
-
   try {
     // Check if we have valid MoMo credentials
-    console.log("📊 [MoMo Status API] Checking credentials...");
-    console.log("📊 [MoMo Status API] Environment:", process.env.NODE_ENV);
     console.log(
       "📊 [MoMo Status API] Sandbox URL:",
       process.env.MOMO_SANDBOX_URL
@@ -69,19 +59,14 @@ export default async function handler(
         payerMessage: "Payment simulated successfully (testing mode)",
         payeeNote: "Shopper payment confirmation (testing mode)",
         reason: "Payment simulated for development",
-      };
-      console.log("🧪 [MoMo Status API] Simulated Status Response:", {
-        ...simulatedResponse,
         timestamp: new Date().toISOString(),
-      });
+      };
       // Simulate successful payment status for testing
       return res.status(200).json(simulatedResponse);
     }
 
     // 1. Get Access Token
-    console.log("🔑 [MoMo Status API] Step 1: Getting access token...");
     const tokenUrl = `${process.env.MOMO_SANDBOX_URL}/collection/token/`;
-    console.log("🔑 [MoMo Status API] Token URL:", tokenUrl);
 
     const tokenHeaders = {
       "Ocp-Apim-Subscription-Key": process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX!,
@@ -90,7 +75,7 @@ export default async function handler(
       ).toString("base64")}`,
     };
 
-    console.log("🔑 [MoMo Status API] Token Request Headers:", {
+    console.log({
       "Ocp-Apim-Subscription-Key": "***HIDDEN***",
       Authorization: "***HIDDEN***",
     });
@@ -100,7 +85,6 @@ export default async function handler(
       headers: tokenHeaders,
     });
 
-    console.log("🔑 [MoMo Status API] Token Response Status:", tokenRes.status);
     console.log(
       "🔑 [MoMo Status API] Token Response Headers:",
       Object.fromEntries(tokenRes.headers.entries())
@@ -150,16 +134,14 @@ export default async function handler(
 
     const tokenData = await tokenRes.json();
     const { access_token } = tokenData;
-    console.log("✅ [MoMo Status API] Token received:", {
+    console.log({
       access_token: access_token ? "***TOKEN_RECEIVED***" : "NO_TOKEN",
       token_type: tokenData.token_type,
       expires_in: tokenData.expires_in,
     });
 
     // 2. Check Transfer Status
-    console.log("📊 [MoMo Status API] Step 2: Checking transfer status...");
     const statusUrl = `${process.env.MOMO_SANDBOX_URL}/disbursement/v1_0/transfer/${referenceId}`;
-    console.log("📊 [MoMo Status API] Status URL:", statusUrl);
 
     const statusHeaders = {
       "Ocp-Apim-Subscription-Key": process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX!,
@@ -167,7 +149,7 @@ export default async function handler(
       "X-Target-Environment": "sandbox",
     };
 
-    console.log("📊 [MoMo Status API] Status Request Headers:", {
+    console.log({
       "Ocp-Apim-Subscription-Key": "***HIDDEN***",
       Authorization: "***HIDDEN***",
       "X-Target-Environment": statusHeaders["X-Target-Environment"],
@@ -230,7 +212,7 @@ export default async function handler(
     }
 
     const statusData = await statusRes.json();
-    console.log("✅ [MoMo Status API] Status Response:", {
+    console.log({
       ...statusData,
       referenceId,
       timestamp: new Date().toISOString(),

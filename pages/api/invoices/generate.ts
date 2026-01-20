@@ -176,6 +176,21 @@ const ADD_INVOICE = gql`
         reel_order_id: $reel_order_id
         Proof: $Proof
       }
+      on_conflict: {
+        constraint: Invoices_order_id_key
+        update_columns: [
+          delivery_fee
+          discount
+          invoice_items
+          invoice_number
+          service_fee
+          status
+          subtotal
+          tax
+          total_amount
+          Proof
+        ]
+      }
     ) {
       returning {
         id
@@ -350,7 +365,11 @@ export default async function handler(
         );
 
         if (!cloudinaryResponse.ok) {
-          console.error("Failed to upload invoice proof to Cloudinary");
+          const errorText = await cloudinaryResponse.text();
+          console.error(
+            "Failed to upload invoice proof to Cloudinary:",
+            errorText
+          );
         } else {
           const cloudinaryData = await cloudinaryResponse.json();
           invoiceProofUrl = cloudinaryData.secure_url;
@@ -395,7 +414,11 @@ export default async function handler(
         );
       }
     } catch (error) {
-      return res.status(500).json({ error: "Failed to fetch order details" });
+      console.error("Error fetching order details for invoice:", error);
+      return res.status(500).json({
+        error: "Failed to fetch order details",
+        details: error instanceof Error ? error.message : String(error),
+      });
     }
 
     const order = isReelOrder
@@ -405,6 +428,10 @@ export default async function handler(
       : orderDetails.Orders_by_pk;
 
     if (!order) {
+      console.warn("Order not found for invoice generation:", {
+        orderId,
+        orderType,
+      });
       return res.status(404).json({ error: "Order not found" });
     }
 
@@ -417,6 +444,10 @@ export default async function handler(
       : order.orderedBy.id === session.user.id;
 
     if (!isShopper && !isCustomer) {
+      console.warn("Unauthorized invoice request:", {
+        orderId,
+        userId: session.user.id,
+      });
       return res
         .status(403)
         .json({ error: "Not authorized to access this order" });
@@ -495,47 +526,59 @@ export default async function handler(
     const serviceFee = isRestaurantOrder
       ? 0
       : parseFloat(order.service_fee || "0");
-    const deliveryFee = parseFloat(order.delivery_fee);
+    const deliveryFee = parseFloat(order.delivery_fee || "0");
 
     // Create a unique invoice number
     const invoiceNumber = `INV-${
       order.OrderID || order.id.slice(-8)
     }-${new Date().getTime().toString().slice(-6)}`;
 
+    // Calculate tax (VAT) - same as order summary calculation (18% of final total)
+    const finalTotalBeforeTax = itemsTotal + serviceFee + deliveryFee;
+    const taxAmount = finalTotalBeforeTax * (18 / 118);
+    const subtotalAfterTax = finalTotalBeforeTax - taxAmount;
+
     // Format values for database storage
-    const subtotalStr = itemsTotal.toFixed(2);
+    const subtotalStr = subtotalAfterTax.toFixed(2);
     const serviceFeeStr = serviceFee.toFixed(2);
     const deliveryFeeStr = deliveryFee.toFixed(2);
     const discountStr = "0.00"; // Assuming no discount for now
-    const taxStr = "0.00"; // Assuming no tax for now
-    const totalAmount = (itemsTotal + serviceFee + deliveryFee).toFixed(2);
+    const taxStr = taxAmount.toFixed(2);
+    const totalAmount = finalTotalBeforeTax.toFixed(2);
+
+    const invoicePayload = {
+      customer_id: isReelOrder
+        ? order.User.id
+        : isRestaurantOrder
+        ? order.User.id
+        : order.orderedBy.id,
+      delivery_fee: deliveryFeeStr,
+      discount: discountStr,
+      invoice_items: invoiceItems,
+      invoice_number: invoiceNumber,
+      order_id: isReelOrder || isRestaurantOrder ? null : order.id,
+      reel_order_id: isReelOrder ? order.id : null,
+      service_fee: serviceFeeStr,
+      status: "completed",
+      subtotal: subtotalStr,
+      tax: taxStr,
+      total_amount: totalAmount,
+      Proof: invoiceProofUrl,
+    };
 
     // Save invoice data to the database
     let saveResult;
     try {
-      saveResult = await hasuraClient.request<AddInvoiceResult>(ADD_INVOICE, {
-        customer_id: isReelOrder
-          ? order.User.id
-          : isRestaurantOrder
-          ? order.User.id
-          : order.orderedBy.id,
-        delivery_fee: deliveryFeeStr,
-        discount: discountStr,
-        invoice_items: invoiceItems,
-        invoice_number: invoiceNumber,
-        order_id: isReelOrder || isRestaurantOrder ? null : order.id,
-        reel_order_id: isReelOrder ? order.id : null,
-        service_fee: serviceFeeStr,
-        status: "completed",
-        subtotal: subtotalStr,
-        tax: taxStr,
-        total_amount: totalAmount,
-        Proof: invoiceProofUrl,
-      });
+      saveResult = await hasuraClient.request<AddInvoiceResult>(
+        ADD_INVOICE,
+        invoicePayload
+      );
     } catch (error) {
-      return res
-        .status(500)
-        .json({ error: "Failed to save invoice to database" });
+      console.error("Failed to save invoice to database:", error);
+      return res.status(500).json({
+        error: "Failed to save invoice to database",
+        details: error instanceof Error ? error.message : String(error),
+      });
     }
 
     // Generate invoice data for the response

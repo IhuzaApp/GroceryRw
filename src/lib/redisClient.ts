@@ -72,14 +72,22 @@ export const getRedisClient = (): Redis | null => {
       }
     });
 
+    redis.on("ready", () => {
+      hasLoggedError = false; // Reset flag when ready
+    });
+
     redis.on("close", () => {
       // Silent - don't spam logs
     });
 
-    // Connect immediately
+    // Connect immediately, but don't fail if connection fails
     redis.connect().catch((err) => {
-      console.error("❌ Failed to connect to Redis:", err.message);
-      redis = null;
+      // Don't set redis to null - keep the client instance for retry
+      // The error handler will log it
+      if (!hasLoggedError) {
+        console.warn("⚠️ Redis initial connection failed:", err.message);
+        console.warn("   Will retry on next operation");
+      }
     });
 
     return redis;
@@ -117,6 +125,22 @@ export const setShopperLocation = async (
       return false;
     }
 
+    // Check if client is connected and ready
+    if (client.status !== "ready") {
+      // Try to connect if not connected
+      if (client.status === "end" || client.status === "close") {
+        try {
+          await client.connect();
+        } catch (connectError) {
+          // Connection failed, return false gracefully
+          return false;
+        }
+      } else {
+        // Client is connecting, skip this operation
+        return false;
+      }
+    }
+
     const key = `${LOCATION_KEY_PREFIX}${shopperId}`;
     const value = JSON.stringify({
       ...location,
@@ -126,7 +150,15 @@ export const setShopperLocation = async (
     await client.setex(key, LOCATION_TTL, value);
     return true;
   } catch (error) {
-    console.error("❌ Error storing location in Redis:", error);
+    // Only log if it's not a connection-related error
+    if (
+      !(
+        error instanceof Error &&
+        error.message.includes("Stream isn't writeable")
+      )
+    ) {
+      console.error("❌ Error storing location in Redis:", error);
+    }
     return false;
   }
 };
@@ -143,6 +175,22 @@ export const getShopperLocation = async (
       return null;
     }
 
+    // Check if client is connected and ready
+    if (client.status !== "ready") {
+      // Try to connect if not connected
+      if (client.status === "end" || client.status === "close") {
+        try {
+          await client.connect();
+        } catch (connectError) {
+          // Connection failed, return null gracefully
+          return null;
+        }
+      } else {
+        // Client is connecting, wait a bit or return null
+        return null;
+      }
+    }
+
     const key = `${LOCATION_KEY_PREFIX}${shopperId}`;
     const value = await client.get(key);
 
@@ -152,7 +200,15 @@ export const getShopperLocation = async (
 
     return JSON.parse(value) as ShopperLocation;
   } catch (error) {
-    console.error("❌ Error getting location from Redis:", error);
+    // Only log if it's not a connection-related error
+    if (
+      !(
+        error instanceof Error &&
+        error.message.includes("Stream isn't writeable")
+      )
+    ) {
+      console.error("❌ Error getting location from Redis:", error);
+    }
     return null;
   }
 };
@@ -293,6 +349,13 @@ export const logOfferSkip = async (log: OfferSkipLog): Promise<void> => {
       return;
     }
 
+    // Check if client is connected and ready
+    if (client.status !== "ready") {
+      // Fallback to console if not ready
+      console.log("📝 OFFER_SKIP (Redis not ready):", JSON.stringify(log));
+      return;
+    }
+
     const key = `${SKIP_LOG_PREFIX}${log.orderId}:${
       log.shopperId
     }:${Date.now()}`;
@@ -303,7 +366,15 @@ export const logOfferSkip = async (log: OfferSkipLog): Promise<void> => {
 
     await client.setex(key, SKIP_LOG_TTL, value);
   } catch (error) {
-    console.error("❌ Error logging skip:", error);
+    // Only log if it's not a connection-related error
+    if (
+      !(
+        error instanceof Error &&
+        error.message.includes("Stream isn't writeable")
+      )
+    ) {
+      console.error("❌ Error logging skip:", error);
+    }
     // Fallback to console
     console.log("📝 OFFER_SKIP (fallback):", JSON.stringify(log));
   }

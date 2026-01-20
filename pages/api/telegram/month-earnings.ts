@@ -87,21 +87,62 @@ export default async function handler(
       ordersFound: data.Orders.length,
     });
 
-    // Calculate total earnings and get order details
-    let totalEarnings = 0;
-    const completedOrders = data.Orders.map((order) => {
+    // Calculate net earnings after commission and get order details
+    const calculateOrderNetEarnings = async (order: Order): Promise<number> => {
       const serviceFee = parseFloat(order.service_fee || "0");
       const deliveryFee = parseFloat(order.delivery_fee || "0");
-      const orderTotal = serviceFee + deliveryFee;
-      totalEarnings += orderTotal;
+      const totalEarnings = serviceFee + deliveryFee;
 
-      return {
-        id: order.id,
-        shopName: order.Shop?.name || "Unknown Shop",
-        earnings: orderTotal,
-        completed_at: order.updated_at,
-      };
-    });
+      // Get platform commission percentage
+      try {
+        const systemConfigResponse = await hasuraClient.request<{
+          System_configuratioins: Array<{
+            deliveryCommissionPercentage: string;
+          }>;
+        }>(gql`
+          query GetSystemConfiguration {
+            System_configuratioins {
+              deliveryCommissionPercentage
+            }
+          }
+        `);
+
+        const deliveryCommissionPercentage = parseFloat(
+          systemConfigResponse.System_configuratioins[0]
+            ?.deliveryCommissionPercentage || "20"
+        );
+
+        // Calculate platform fee and net earnings
+        const platformFee =
+          (totalEarnings * deliveryCommissionPercentage) / 100;
+        const netEarnings = totalEarnings - platformFee;
+
+        return netEarnings;
+      } catch (error) {
+        console.error(
+          "Error fetching commission percentage, using default 20%:",
+          error
+        );
+        // Fallback: deduct 20% commission
+        const platformFee = (totalEarnings * 20) / 100;
+        return totalEarnings - platformFee;
+      }
+    };
+
+    let totalEarnings = 0;
+    const completedOrders = await Promise.all(
+      data.Orders.map(async (order) => {
+        const netEarnings = await calculateOrderNetEarnings(order);
+        totalEarnings += netEarnings;
+
+        return {
+          id: order.id,
+          shopName: order.Shop?.name || "Unknown Shop",
+          earnings: netEarnings,
+          completed_at: order.updated_at,
+        };
+      })
+    );
 
     // Group orders by week
     const weeklyData: Record<string, { count: number; earnings: number }> = {};

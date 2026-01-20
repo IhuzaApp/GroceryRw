@@ -143,6 +143,7 @@ export default function ShopperDashboard() {
       // Cannot load orders: no location or user offline
       setAvailableOrders([]);
       setSortedOrders([]);
+      setIsLoading(false); // Ensure loading state is cleared when offline
       return;
     }
 
@@ -313,7 +314,9 @@ export default function ShopperDashboard() {
 
   // Effect to handle map loading simulation
   useEffect(() => {
-    const timer = setTimeout(() => setMapLoaded(true), 1500);
+    const timer = setTimeout(() => {
+      setMapLoaded(true);
+    }, 1500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -361,7 +364,17 @@ export default function ShopperDashboard() {
             lat: pos.coords.latitude,
             lng: pos.coords.longitude,
           }),
-        (err) => console.error("Error fetching location:", err),
+        (err) => {
+          // Silently handle geolocation errors (timeout, permission denied, etc.)
+          // This is expected when cookies aren't available and geolocation fails
+          // Only log in development for debugging
+          if (process.env.NODE_ENV === "development") {
+            console.log(
+              "Geolocation unavailable or timed out (this is normal if location cookies aren't set):",
+              err.message
+            );
+          }
+        },
         { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
       );
     }
@@ -437,228 +450,139 @@ export default function ShopperDashboard() {
     };
   }, []);
 
-  // WebSocket event listeners for seamless background updates
-  useEffect(() => {
-    const handleWebSocketNewOrder = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const { order } = customEvent.detail;
+  // Show skeleton loading when initializing or map not loaded
+  // Don't show skeleton based on isLoading when map is loaded and initialized - map should show even without orders
+  const showSkeleton = isInitializing || !mapLoaded;
 
-      // Add new order to the list seamlessly (no age filtering)
-      setAvailableOrders((prev) => {
-        const exists = prev.some(
-          (existingOrder) => existingOrder.id === order.id
-        );
-        if (!exists) {
-          const orderCreatedAt = new Date(order.createdAt);
-          const newOrder = {
-            id: order.id,
-            shopName: order.shopName || "Unknown Shop",
-            shopAddress: order.shopAddress || "No address available",
-            customerAddress: order.customerAddress || "No address available",
-            distance: `${order.distance} km`,
-            items: order.itemsCount || 0,
-            total: (order.earnings || 0).toString(),
-            estimatedEarnings: (order.earnings || 0).toString(),
-            createdAt: relativeTime(order.createdAt),
-            status: order.status || "PENDING",
-            rawDistance:
-              typeof order.distance === "number"
-                ? order.distance
-                : parseFloat(order.distance) || 0,
-            rawEarnings:
-              typeof order.earnings === "number"
-                ? order.earnings
-                : parseFloat(order.earnings) || 0,
-            rawCreatedAt: orderCreatedAt.getTime(),
-            minutesAgo: Math.floor(
-              (Date.now() - orderCreatedAt.getTime()) / 60000
-            ),
-            priorityLevel: order.priorityLevel || 1,
-            shopLatitude: order.shopLatitude,
-            shopLongitude: order.shopLongitude,
-            customerLatitude: order.customerLatitude,
-            customerLongitude: order.customerLongitude,
-            travelTimeMinutes: order.travelTimeMinutes,
-            orderType: order.orderType || "regular",
-            reel: order.reel,
-            quantity: order.quantity,
-            deliveryNote: order.deliveryNote,
-            customerName: order.customerName,
-            customerPhone: order.customerPhone,
-          };
-          return [newOrder, ...prev];
-        }
-        return prev;
-      });
-
-      // Update sorted orders
-      setSortedOrders((prev) => {
-        const exists = prev.some(
-          (existingOrder) => existingOrder.id === order.id
-        );
-        if (!exists) {
-          const orderCreatedAt = new Date(order.createdAt);
-          const newOrder = {
-            id: order.id,
-            shopName: order.shopName || "Unknown Shop",
-            shopAddress: order.shopAddress || "No address available",
-            customerAddress: order.customerAddress || "No address available",
-            distance: `${order.distance} km`,
-            items: order.itemsCount || 0,
-            total: (order.earnings || 0).toString(),
-            estimatedEarnings: (order.earnings || 0).toString(),
-            createdAt: relativeTime(order.createdAt),
-            status: order.status || "PENDING",
-            rawDistance:
-              typeof order.distance === "number"
-                ? order.distance
-                : parseFloat(order.distance) || 0,
-            rawEarnings:
-              typeof order.earnings === "number"
-                ? order.earnings
-                : parseFloat(order.earnings) || 0,
-            rawCreatedAt: orderCreatedAt.getTime(),
-            minutesAgo: Math.floor(
-              (Date.now() - orderCreatedAt.getTime()) / 60000
-            ),
-            priorityLevel: order.priorityLevel || 1,
-            shopLatitude: order.shopLatitude,
-            shopLongitude: order.shopLongitude,
-            customerLatitude: order.customerLatitude,
-            customerLongitude: order.customerLongitude,
-            travelTimeMinutes: order.travelTimeMinutes,
-            orderType: order.orderType || "regular",
-            reel: order.reel,
-            quantity: order.quantity,
-            deliveryNote: order.deliveryNote,
-            customerName: order.customerName,
-            customerPhone: order.customerPhone,
-          };
-          return sortOrders([newOrder, ...prev], sortBy);
-        }
-        return prev;
-      });
-    };
-
-    const handleWebSocketOrderExpired = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const { orderId } = customEvent.detail;
-
-      // Remove order from both lists seamlessly
-      setAvailableOrders((prev) =>
-        prev.filter((order) => order.id !== orderId)
-      );
-      setSortedOrders((prev) => prev.filter((order) => order.id !== orderId));
-    };
-
-    window.addEventListener("websocket-new-order", handleWebSocketNewOrder);
-    window.addEventListener(
-      "websocket-order-expired",
-      handleWebSocketOrderExpired
-    );
-
-    return () => {
-      window.removeEventListener(
-        "websocket-new-order",
-        handleWebSocketNewOrder
-      );
-      window.removeEventListener(
-        "websocket-order-expired",
-        handleWebSocketOrderExpired
-      );
-    };
-  }, [sortBy, sortOrders]);
-
-  // Initializing loading screen
-  if (isInitializing) {
-    return (
-      <ShopperLayout>
-        <div className="flex h-screen w-full flex-col bg-gray-50 pt-6">
-          {/* Skeleton Map */}
-          <div className="px-4">
-            <Placeholder.Graph
-              active
-              height={300}
-              className="w-full rounded-md"
-            />
-          </div>
-
-          {/* Skeleton Header */}
-          <div className="px-6 pt-6">
-            <Grid fluid>
-              <Row>
-                <Col xs={12}>
-                  <Placeholder.Paragraph rows={1} graph="circle" active />
-                </Col>
-                <Col xs={12}>
-                  <div className="flex justify-end">
-                    <Placeholder.Graph active width={150} height={32} />
-                  </div>
-                </Col>
-              </Row>
-            </Grid>
-          </div>
-
-          {/* Skeleton Sort Buttons */}
-          <div className="px-6 pb-4 pt-3">
-            <Grid fluid>
-              <Row>
-                <Col xs={24}>
-                  <div className="flex space-x-2">
-                    <Placeholder.Graph active width={80} height={28} />
-                    <Placeholder.Graph active width={80} height={28} />
-                    <Placeholder.Graph active width={80} height={28} />
-                    <Placeholder.Graph active width={80} height={28} />
-                  </div>
-                </Col>
-              </Row>
-            </Grid>
-          </div>
-
-          {/* Skeleton Orders */}
-          <div className="px-6 pt-2">
-            <Grid fluid>
-              <Row className="gap-4">
-                <Col xs={24} md={12} lg={8}>
-                  <Panel bordered className="h-[180px]">
-                    <Placeholder.Paragraph rows={3} active />
-                    <div className="mt-4 flex justify-between">
-                      <Placeholder.Graph active width={70} height={24} />
-                      <Placeholder.Graph active width={120} height={24} />
-                    </div>
-                  </Panel>
-                </Col>
-                <Col xs={24} md={12} lg={8}>
-                  <Panel bordered className="h-[180px]">
-                    <Placeholder.Paragraph rows={3} active />
-                    <div className="mt-4 flex justify-between">
-                      <Placeholder.Graph active width={70} height={24} />
-                      <Placeholder.Graph active width={120} height={24} />
-                    </div>
-                  </Panel>
-                </Col>
-                <Col xs={24} md={12} lg={8}>
-                  <Panel bordered className="h-[180px]">
-                    <Placeholder.Paragraph rows={3} active />
-                    <div className="mt-4 flex justify-between">
-                      <Placeholder.Graph active width={70} height={24} />
-                      <Placeholder.Graph active width={120} height={24} />
-                    </div>
-                  </Panel>
-                </Col>
-              </Row>
-            </Grid>
+  // Skeleton loading component
+  const SkeletonLoader = () => (
+    <ShopperLayout>
+      <div
+        className={`${
+          isMobile ? "relative h-screen overflow-hidden" : "min-h-screen"
+        } ${
+          theme === "dark"
+            ? "bg-gray-900 text-gray-100"
+            : "bg-gray-50 text-gray-900"
+        }`}
+      >
+        {/* Skeleton Map - Full screen on mobile */}
+        <div
+          className={isMobile ? "fixed z-0" : "w-full"}
+          style={
+            isMobile
+              ? {
+                  left: 0,
+                  right: 0,
+                  top: "3.5rem",
+                  width: "100vw",
+                  height: "calc(100vh - 3.5rem)",
+                }
+              : {}
+          }
+        >
+          <div
+            className={`h-full w-full overflow-hidden rounded-none md:h-[600px] md:rounded-lg ${
+              theme === "dark" ? "bg-gray-800" : "bg-gray-200"
+            }`}
+          >
+            {/* Map skeleton with animated shimmer */}
+            <div className="relative h-full w-full overflow-hidden">
+              {/* Animated background */}
+              <div
+                className={`absolute inset-0 ${
+                  theme === "dark" ? "bg-gray-800" : "bg-gray-200"
+                }`}
+              />
+              {/* Shimmer effect */}
+              <div
+                className={`absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/10 to-transparent ${
+                  theme === "dark" ? "via-white/5" : "via-gray-300/20"
+                }`}
+              />
+              {/* Map controls skeleton */}
+              <div className="absolute left-4 top-4 z-10 flex flex-col gap-2">
+                <div
+                  className={`h-8 w-8 rounded ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                  } animate-pulse`}
+                />
+                <div
+                  className={`h-8 w-8 rounded ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                  } animate-pulse`}
+                />
+              </div>
+              {/* Earnings badge skeleton */}
+              <div className="absolute left-1/2 top-4 z-10 -translate-x-1/2">
+                <div
+                  className={`h-12 w-32 rounded-full ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                  } animate-pulse`}
+                />
+              </div>
+              {/* Map style button skeleton */}
+              <div className="absolute right-4 top-4 z-10">
+                <div
+                  className={`h-10 w-10 rounded ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                  } animate-pulse`}
+                />
+              </div>
+            </div>
           </div>
         </div>
-      </ShopperLayout>
-    );
+
+        {/* Skeleton for Today's Completed Orders (mobile bottom sheet) */}
+        {isMobile && (
+          <div
+            className={`fixed bottom-0 left-0 right-0 z-10 rounded-t-lg border-t ${
+              theme === "dark"
+                ? "border-gray-700 bg-gray-800"
+                : "border-gray-200 bg-white"
+            }`}
+            style={{ height: "200px" }}
+          >
+            <div className="p-4">
+              <div
+                className={`mb-4 h-1 w-12 rounded-full ${
+                  theme === "dark" ? "bg-gray-600" : "bg-gray-300"
+                } mx-auto`}
+              />
+              <div className="space-y-3">
+                <div
+                  className={`h-4 w-24 rounded ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                  } animate-pulse`}
+                />
+                <div className="flex gap-2">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className={`h-20 flex-1 rounded-lg ${
+                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                      } animate-pulse`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </ShopperLayout>
+  );
+
+  // Show skeleton while loading
+  if (showSkeleton) {
+    return <SkeletonLoader />;
   }
 
   return (
     <ShopperLayout>
       <div
         className={`${
-          isMobile ? "relative h-full overflow-hidden" : "min-h-screen"
+          isMobile ? "relative h-screen overflow-hidden" : "min-h-screen"
         } ${
           theme === "dark"
             ? "bg-gray-900 text-gray-100"
@@ -666,7 +590,23 @@ export default function ShopperDashboard() {
         }`}
       >
         {/* Map Section */}
-        <div className="w-full">
+        <div
+          className={isMobile ? "fixed z-10" : "w-full"}
+          style={
+            isMobile
+              ? {
+                  left: 0,
+                  right: 0,
+                  top: "3.5rem",
+                  width: "100vw",
+                  height: "calc(100vh - 3.5rem)",
+                  pointerEvents: "auto",
+                }
+              : {
+                  pointerEvents: "auto",
+                }
+          }
+        >
           <MapSection
             mapLoaded={mapLoaded}
             availableOrders={availableOrders}

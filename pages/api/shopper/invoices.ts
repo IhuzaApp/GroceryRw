@@ -5,36 +5,78 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { logger } from "../../../src/utils/logger";
 
-// GraphQL query to fetch shopper invoices - EXACT match to Invoices.graphql
+// GraphQL query to fetch shopper invoices
 const GET_SHOPPER_INVOICES = gql`
-  query getInvoiceDetials($shopper_id: uuid!, $limit: Int!, $offset: Int!) {
+  query getInvoiceDetials($shopper_id: uuid!, $limit: Int!, $offset: Int) {
     Invoices(
-      where: {
-        _or: [
-          { Order: { shopper_id: { _eq: $shopper_id } } }
-          { customer_id: { _eq: $shopper_id } }
-        ]
-      }
+      where: { Order: { shopper_id: { _eq: $shopper_id } } }
       order_by: { created_at: desc }
       limit: $limit
       offset: $offset
     ) {
       created_at
+      Proof
       customer_id
       delivery_fee
       discount
       id
-      invoice_items
-      invoice_number
-      Proof
-      order_id
-      reel_order_id
-      service_fee
       status
+      service_fee
+      restarurant_order_id
+      reel_order_id
+      order_id
+      invoice_number
+      invoice_items
       subtotal
       tax
       total_amount
+      User {
+        created_at
+        email
+        gender
+        id
+        is_active
+        is_guest
+        name
+        password_hash
+        phone
+        profile_picture
+        role
+        updated_at
+        shopper {
+          Employment_id
+          Police_Clearance_Cert
+          active
+          address
+          background_check_completed
+          collection_comment
+          created_at
+          drivingLicense_Image
+          driving_license
+          full_name
+          guarantor
+          national_id
+          longitude
+          latitude
+          id
+          guarantorRelationship
+          guarantorPhone
+          mutual_StatusCertificate
+          mutual_status
+          phone
+          phone_number
+          profile_photo
+          proofOfResidency
+          updated_at
+          transport_mode
+          telegram_id
+          status
+          signature
+        }
+      }
       Order {
+        OrderID
+        assigned_at
         combined_order_id
         created_at
         delivery_address_id
@@ -43,7 +85,6 @@ const GET_SHOPPER_INVOICES = gql`
         delivery_photo_url
         delivery_time
         discount
-        found
         id
         service_fee
         shop_id
@@ -53,64 +94,33 @@ const GET_SHOPPER_INVOICES = gql`
         updated_at
         user_id
         voucher_code
-        Order_Items {
-          created_at
+        Shop {
           id
-          order_id
+          name
+          address
+        }
+        Address {
+          street
+          city
+          postal_code
+        }
+        Order_Items {
+          id
           price
           product_id
           quantity
           Product {
-            category
-            created_at
-            final_price
             id
+            final_price
             image
-            is_active
-            measurement_unit
-            price
-            quantity
-            reorder_point
-            shop_id
-            sku
-            supplier
-            updated_at
-            productName_id
             ProductName {
-              barcode
-              create_at
-              description
-              id
-              image
               name
-              sku
             }
           }
         }
-        OrderID
-      }
-      User {
-        created_at
-        email
-        gender
-        id
-        is_active
-        name
-        password_hash
-        phone
-        profile_picture
-        role
-        updated_at
       }
     }
-    Invoices_aggregate(
-      where: {
-        _or: [
-          { Order: { shopper_id: { _eq: $shopper_id } } }
-          { customer_id: { _eq: $shopper_id } }
-        ]
-      }
-    ) {
+    Invoices_aggregate(where: { User: { id: { _eq: $shopper_id } } }) {
       aggregate {
         count
       }
@@ -150,7 +160,6 @@ interface Invoice {
     status: string;
     delivery_time: string;
     delivery_notes?: string;
-    found: boolean;
     Shop: {
       id: string;
       name: string;
@@ -185,13 +194,26 @@ export default async function handler(
   }
 
   try {
+    console.log({
+      method: req.method,
+      query: req.query,
+    });
+
     // Authenticate user
     const session = (await getServerSession(
       req,
       res,
       authOptions as any
     )) as any;
+
+    console.log({
+      hasSession: !!session,
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+    });
+
     if (!session?.user?.id) {
+      console.error("Invoices API: Unauthorized - No session user ID");
       return res.status(401).json({ error: "Unauthorized" });
     }
 
@@ -200,109 +222,26 @@ export default async function handler(
     const limit = 10; // Items per page
     const offset = (page - 1) * limit;
 
+    console.log({
+      shopperId,
+      page,
+      limit,
+      offset,
+    });
+
     if (!hasuraClient) {
+      console.error("Invoices API: Hasura client not initialized");
       throw new Error("Hasura client is not initialized");
     }
 
     // Fetch invoices from database
-
-    // First, let's check what invoices exist in the database using EXACT Invoices.graphql structure
-    const allInvoicesCheck = await hasuraClient.request(`
-      query getInvoiceDetials {
-        Invoices(limit: 10) {
-          created_at
-          customer_id
-          delivery_fee
-          discount
-          id
-          invoice_items
-          invoice_number
-          Proof
-          order_id
-          reel_order_id
-          service_fee
-          status
-          subtotal
-          tax
-          total_amount
-          Order {
-            combined_order_id
-            created_at
-            delivery_address_id
-            delivery_fee
-            delivery_notes
-            delivery_photo_url
-            delivery_time
-            discount
-            found
-            id
-            service_fee
-            shop_id
-            shopper_id
-            status
-            total
-            updated_at
-            user_id
-            voucher_code
-            Order_Items {
-              created_at
-              id
-              order_id
-              price
-              product_id
-              quantity
-              Product {
-                category
-                created_at
-                final_price
-                id
-                image
-                is_active
-                measurement_unit
-                price
-                quantity
-                reorder_point
-                shop_id
-                sku
-                supplier
-                updated_at
-                productName_id
-                ProductName {
-                  barcode
-                  create_at
-                  description
-                  id
-                  image
-                  name
-                  sku
-                }
-              }
-            }
-            OrderID
-          }
-          User {
-            created_at
-            email
-            gender
-            id
-            is_active
-            name
-            password_hash
-            phone
-            profile_picture
-            role
-            updated_at
-          }
-        }
-      }
-    `);
-
     const data = await hasuraClient.request<{
       Invoices: Array<{
         id: string;
         invoice_number: string;
         order_id?: string;
         reel_order_id?: string;
+        restarurant_order_id?: string;
         total_amount: string;
         subtotal: string;
         delivery_fee: string;
@@ -325,7 +264,6 @@ export default async function handler(
           delivery_time: string;
           delivery_notes?: string;
           delivery_photo_url?: string;
-          found: boolean;
           shopper_id: string;
           Shop?: {
             id: string;
@@ -365,6 +303,12 @@ export default async function handler(
           name: string;
           email: string;
           phone: string;
+          shopper?: {
+            id: string;
+            phone: string;
+            status: string;
+            [key: string]: any;
+          };
         };
       }>;
       Invoices_aggregate: {
@@ -378,18 +322,31 @@ export default async function handler(
       offset,
     });
 
+    console.log({
+      invoiceCount: data.Invoices?.length,
+      totalCount: data.Invoices_aggregate?.aggregate?.count,
+    });
+
     // Transform all invoices (both regular and reel orders)
 
-    const transformedInvoices = data.Invoices.map((invoice) => {
+    const transformedInvoices = data.Invoices.map((invoice, index) => {
       const isReelOrder = !!invoice.reel_order_id;
+      const isRestaurantOrder = !!invoice.restarurant_order_id;
 
-      if (isReelOrder) {
-        // Handle reel order invoice
+      if (isReelOrder || isRestaurantOrder) {
+        // Handle reel or restaurant order invoice
+        const orderType = isReelOrder
+          ? ("reel" as const)
+          : ("restaurant" as const);
+        const orderId = isReelOrder
+          ? invoice.reel_order_id
+          : invoice.restarurant_order_id;
+
         return {
           id: invoice.id, // Use the actual invoice ID
           invoice_number: invoice.invoice_number,
-          order_id: invoice.reel_order_id,
-          order_type: "reel" as const,
+          order_id: orderId,
+          order_type: orderType,
           total_amount: parseFloat(invoice.total_amount),
           subtotal: parseFloat(invoice.subtotal),
           delivery_fee: parseFloat(invoice.delivery_fee),
@@ -401,21 +358,26 @@ export default async function handler(
           customer_name: invoice.User.name,
           customer_email: invoice.User.email,
           customer_phone: invoice.User.phone,
-          customer_address: "Address not available", // Reel orders might not have address in invoice
+          customer_address: "Address not available",
           items_count: invoice.invoice_items?.length || 1,
-          shop_name: "Reel Order", // Reel orders don't have shop
+          shop_name: isReelOrder ? "Reel Order" : "Restaurant Order",
           shop_address: "N/A",
           delivery_time: null,
           delivery_notes: null,
-          found: false,
           order_status: "completed",
           Proof: invoice.Proof,
-          delivery_photo_url: invoice.Order?.delivery_photo_url, // Add delivery photo URL for reel orders
-          reel_title: invoice.invoice_items?.[0]?.description || "Reel Order",
+          delivery_photo_url: invoice.Order?.delivery_photo_url,
+          reel_title:
+            invoice.invoice_items?.[0]?.description ||
+            (isReelOrder ? "Reel Order" : "Restaurant Order"),
           reel_details: {
-            title: invoice.invoice_items?.[0]?.description || "Reel Order",
+            title:
+              invoice.invoice_items?.[0]?.description ||
+              (isReelOrder ? "Reel Order" : "Restaurant Order"),
             description: invoice.invoice_items?.[0]?.description || "",
-            product: invoice.invoice_items?.[0]?.name || "Reel",
+            product:
+              invoice.invoice_items?.[0]?.name ||
+              (isReelOrder ? "Reel" : "Restaurant"),
             quantity: invoice.invoice_items?.[0]?.quantity || 1,
           },
         };
@@ -445,12 +407,15 @@ export default async function handler(
           shop_address: invoice.Order?.Shop?.address || "Address not available",
           delivery_time: invoice.Order?.delivery_time,
           delivery_notes: invoice.Order?.delivery_notes,
-          found: invoice.Order?.found || false,
           order_status: invoice.Order?.status || "unknown",
           Proof: invoice.Proof,
           delivery_photo_url: invoice.Order?.delivery_photo_url,
         };
       }
+    });
+
+    console.log({
+      transformedCount: transformedInvoices.length,
     });
 
     // Sort by creation date
@@ -478,6 +443,14 @@ export default async function handler(
       totalCount,
     });
   } catch (error) {
+    console.error("Invoices API: Error caught", error);
+    if (error && typeof error === "object" && "response" in error) {
+      console.error(
+        "Invoices API: Hasura Error Response",
+        JSON.stringify((error as any).response, null, 2)
+      );
+    }
+
     logger.error(
       "Error fetching shopper invoices",
       "ShopperInvoicesAPI",

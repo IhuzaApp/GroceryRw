@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import ShopperLayout from "../../../src/components/shopper/ShopperLayout";
 import { Loader, Button } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
@@ -8,7 +9,6 @@ import { useTheme } from "../../../src/context/ThemeContext";
 import { logger } from "../../../src/utils/logger";
 import {
   InvoiceFilters,
-  ProofUploadModal,
   InvoicePagination,
   InvoicesTable,
   Invoice,
@@ -21,6 +21,7 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
   initialInvoices = [],
   initialError = null,
 }) => {
+  const router = useRouter();
   const [invoices, setInvoices] = useState<Invoice[]>(initialInvoices);
   const [loading, setLoading] = useState(!initialInvoices.length);
   const [error, setError] = useState<string | null>(initialError);
@@ -29,8 +30,6 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [showProofModal, setShowProofModal] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const { theme } = useTheme();
 
   // Fetch invoices
@@ -62,44 +61,23 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
   }, []);
 
   // Event handlers
-  const handleUploadProof = (invoiceId: string, proofImage: string) => {
-    // Update the invoice in the list
-    setInvoices((prev) =>
-      prev.map((inv) =>
-        inv.id === invoiceId ? { ...inv, Proof: proofImage } : inv
-      )
-    );
-  };
-
-  const openProofModal = (invoice: Invoice) => {
-    setSelectedInvoice(invoice);
-    setShowProofModal(true);
-  };
-
-  const closeProofModal = () => {
-    setShowProofModal(false);
-    setSelectedInvoice(null);
-  };
-
   const handleViewDetails = (invoiceId: string, orderType: string) => {
     const isMobile =
       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
         navigator.userAgent
       );
-    const baseUrl =
-      process.env.NODE_ENV === "production"
-        ? process.env.NEXT_PUBLIC_APP_URL || "https://plas.rw"
-        : window.location.origin;
 
     if (isMobile) {
-      // For mobile, open PDF directly
-      const pdfUrl = `${baseUrl}/api/invoices/${invoiceId}?pdf=true`;
-      window.open(pdfUrl, "_blank");
+      // For mobile, navigate to PDF in same tab
+      const pdfUrl = `/api/invoices/${invoiceId}?pdf=true`;
+      router.push(pdfUrl);
     } else {
-      // For desktop, open invoice page with hash
-      const hash = orderType === "reel" ? "#reel" : "#regularOrder";
-      const invoiceUrl = `${baseUrl}/Plasa/invoices/${invoiceId}${hash}`;
-      window.open(invoiceUrl, "_blank");
+      // For desktop, navigate to invoice page with hash in same tab
+      const hash = orderType === "reel" ? "reel" : "regularOrder";
+      router.push({
+        pathname: `/Plasa/invoices/${invoiceId}`,
+        hash: hash,
+      });
     }
   };
 
@@ -193,7 +171,6 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
           <InvoicesTable
             invoices={filteredInvoices}
             onViewDetails={handleViewDetails}
-            onUploadProof={openProofModal}
             loading={loading}
           />
 
@@ -205,14 +182,6 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
           />
         </div>
       </div>
-
-      {/* Proof Upload Modal */}
-      <ProofUploadModal
-        open={showProofModal}
-        onClose={closeProofModal}
-        invoice={selectedInvoice}
-        onUploadSuccess={handleUploadProof}
-      />
     </ShopperLayout>
   );
 };

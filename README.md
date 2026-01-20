@@ -36,7 +36,7 @@ A comprehensive grocery delivery platform with advanced revenue tracking, wallet
 
 ## Overview
 
-Professional dispatch system following the DoorDash/Uber Eats model with exclusive offers, distance gating, and automatic rotation.
+Professional dispatch system following the DoorDash/Uber Eats model with exclusive offers, distance gating, and action-based rotation. The system uses an action-based approach where offers remain with shoppers until they explicitly accept or decline, ensuring shoppers have time to review orders without pressure from countdown timers.
 
 ## Architecture
 
@@ -67,11 +67,14 @@ Professional dispatch system following the DoorDash/Uber Eats model with exclusi
 ## Key Principles
 
 1. **Server is the source of truth** - Client never decides eligibility
-2. **One order = one shopper at a time** - Exclusive offers with expiration
-3. **Location is volatile** - Redis for GPS, database for offers
-4. **Distance gating** - Only offer to nearby shoppers
-5. **Round-based expansion** - Radius grows if no acceptance (3km → 5km → 8km)
-6. **Everything is auditable** - All skips logged for fairness
+2. **Action-based system** - Offers stay until shopper explicitly accepts or declines (no time-based expiry)
+3. **Up to 2 active orders** - Shoppers can work on up to 2 orders simultaneously, but cannot receive new offers if they have 2 active orders or a pending OFFERED offer
+4. **Location is volatile** - Redis for GPS, database for offers
+5. **Distance gating** - Only offer to nearby shoppers
+6. **Round-based expansion** - Radius grows if declined (3km → 5km → 8km)
+7. **Instant rotation on decline** - When shopper declines, order immediately goes to next shopper
+8. **Everything is auditable** - All skips logged for fairness
+9. **Duplicate prevention** - System checks for existing offers and extends them instead of creating duplicates
 
 ## Installation & Setup
 
@@ -172,9 +175,11 @@ orderOffers:
       table: order_offers
 ```
 
-### 5. Set up Cron Job
+### 5. Cron Job (Optional - Not Required for Action-Based System)
 
-The rotation API must run every 10-15 seconds to handle expired offers.
+**Note**: With the action-based system, offers don't expire on time - they only rotate when shoppers explicitly decline. The cron job is no longer required for normal operation.
+
+However, if you want to clean up very old offers (e.g., offers older than 7 days), you can optionally set up:
 
 **Option A: Vercel Cron (if on Vercel)**
 
@@ -185,7 +190,7 @@ Add to `vercel.json`:
   "crons": [
     {
       "path": "/api/shopper/rotate-expired-offers",
-      "schedule": "*/10 * * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
@@ -196,7 +201,7 @@ Add to `vercel.json`:
 - Use EasyCron, cron-job.org, or similar
 - URL: `https://yourapp.com/api/shopper/rotate-expired-offers`
 - Method: POST
-- Interval: Every 10-15 seconds
+- Interval: Once daily (for cleanup only)
 
 ## API Endpoints
 
@@ -239,7 +244,7 @@ Finds best order for shopper with distance gating.
 }
 ```
 
-**Response:**
+**Response (when shopper is available):**
 
 ```json
 {
@@ -248,12 +253,33 @@ Finds best order for shopper with distance gating.
     "id": "order-uuid",
     "shopName": "Shop Name",
     "distance": 2.5,
-    "estimatedEarnings": 150,
-    "expiresIn": 60000
+    "estimatedEarnings": 150
   },
-  "offerId": "offer-uuid"
+  "offerId": "offer-uuid",
+  "message": "Exclusive offer created - shopper must accept or decline",
+  "expiresIn": null,
+  "note": "Action-based system: offer stays until shopper accepts or declines"
 }
 ```
+
+**Response (when shopper has active order):**
+
+```json
+{
+  "success": false,
+  "message": "Complete your current order before accepting new ones",
+  "reason": "ACTIVE_ORDER_IN_PROGRESS",
+  "activeOrderId": "order-uuid",
+  "activeOrderStatus": "accepted"
+}
+```
+
+**Behavior:**
+
+- System checks if shopper has active orders (status: accepted, in_progress, picked_up)
+- If active order exists, shopper cannot receive new offers
+- If no active orders, creates exclusive offer with no time limit
+- If offer already exists for this shopper-order combination, extends it instead of creating duplicate
 
 ### 3. Accept Offer
 
@@ -272,37 +298,65 @@ Accepts an offer with distance re-validation.
 
 **Error Codes:**
 
-- `NO_VALID_OFFER` - Offer expired or doesn't exist
+- `NO_VALID_OFFER` - Offer doesn't exist or was already processed
 - `ALREADY_ASSIGNED` - Another shopper got it first
-- `TOO_FAR` - Distance re-validation failed
+- `TOO_FAR` - Distance re-validation failed (shopper moved too far)
+- `ACTIVE_ORDER_IN_PROGRESS` - Shopper already has an active order and cannot accept new ones
 
 ### 4. Decline Offer
 
 **Endpoint:** `POST /api/shopper/decline-offer`
 
-Explicitly skip an order (triggers immediate rotation).
+Explicitly skip an order (triggers immediate rotation to next shopper).
 
-### 5. Rotate Expired Offers
+**Request:**
 
-**Endpoint:** `POST /api/shopper/rotate-expired-offers`
+```json
+{
+  "orderId": "order-uuid",
+  "shopperId": "shopper-uuid"
+}
+```
 
-Cron job that rotates expired offers to next shoppers.
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Offer declined and rotated to next shopper",
+  "offerId": "offer-uuid",
+  "nextShopper": {
+    "id": "next-shopper-uuid",
+    "distance": 3.2
+  }
+}
+```
+
+**Behavior:**
+
+- Marks current offer as DECLINED in database
+- Immediately finds next eligible shopper
+- Creates new offer for next shopper
+- Sends FCM notification to next shopper
+- Total time from decline to next shopper seeing order: ~1 second
 
 ## Distance & Radius Configuration
 
 ### Round-Based Expansion
 
-Prevents order starvation by gradually expanding radius:
+Prevents order starvation by gradually expanding radius when orders are declined:
 
-| Round | Max Distance | Max ETA | Duration |
-| ----- | ------------ | ------- | -------- |
-| 1     | 3 km         | 15 min  | 60s      |
-| 2     | 5 km         | 25 min  | 60s      |
-| 3     | 8 km         | 40 min  | 90s      |
+| Round | Max Distance | Max ETA | Note                 |
+| ----- | ------------ | ------- | -------------------- |
+| 1     | 3 km         | 15 min  | Initial offer radius |
+| 2     | 5 km         | 25 min  | After first decline  |
+| 3     | 8 km         | 40 min  | After second decline |
+
+**Note**: With action-based system, there is no time duration. Offers stay until shopper accepts or declines. Round number increments each time an order is declined and rotated to the next shopper.
 
 ### Urgent Orders
 
-Orders older than 30 minutes immediately use 10km radius.
+Orders older than 30 minutes immediately use 10km radius to ensure they get assigned quickly.
 
 ## Shopper App Integration
 
@@ -336,20 +390,25 @@ useEffect(() => {
 
 ### 2. Handle New Offers
 
-FCM notifications now include `expiresIn` from database:
+With the action-based system, offers have no time limit. Shoppers must explicitly accept or decline:
 
 ```typescript
 // In FCM notification handler
 if (notification.data.type === "new_order") {
-  const expiresIn = parseInt(notification.data.expiresIn); // milliseconds
-
-  // Show countdown timer
+  // Show notification without countdown timer
   showOrderNotification({
     orderId: notification.data.orderId,
-    expiresAt: Date.now() + expiresIn,
+    // No expiresAt - offer stays until action taken
   });
 }
 ```
+
+**Key Points:**
+
+- No countdown timers in UI
+- Shopper can review order carefully
+- Must take explicit action (accept or decline)
+- If better order arrives, old notification fades out smoothly before new one appears
 
 ### 3. Accept with Error Handling
 
@@ -365,7 +424,7 @@ try {
 
     switch (error.code) {
       case "NO_VALID_OFFER":
-        toast.error("Offer expired. Refreshing orders...");
+        toast.error("Offer no longer available. Refreshing orders...");
         break;
       case "ALREADY_ASSIGNED":
         toast.error("Another shopper got this order");
@@ -375,12 +434,102 @@ try {
           `You are ${error.distance}km away (max: ${error.maxDistance}km)`
         );
         break;
+      case "ACTIVE_ORDER_IN_PROGRESS":
+        toast.error("Complete your current order before accepting new ones");
+        break;
     }
   }
 } catch (error) {
   toast.error("Failed to accept order");
 }
 ```
+
+## Action-Based System Flow
+
+### Complete Order Lifecycle
+
+**1. Order Creation and Assignment:**
+
+- New order is created with status PENDING
+- System finds best nearby shopper based on distance, order age, and shopper performance
+- System checks if shopper has any active orders (accepted, in_progress, picked_up)
+- If shopper is busy, order is skipped and next shopper is considered
+- If shopper is available, exclusive offer is created in order_offers table
+- FCM notification is sent to shopper's device
+- Notification appears on shopper's screen with order details
+
+**2. Shopper Review Period:**
+
+- Offer stays visible on shopper's device with no time limit
+- Shopper can review order details, distance, earnings, and route
+- No countdown timer or pressure to make quick decision
+- If better order becomes available, old notification smoothly fades out (400ms transition) before new one appears
+
+**3. Shopper Actions:**
+
+**If Shopper Accepts:**
+
+- Offer status changes to ACCEPTED in database
+- Order is assigned to shopper (shopper_id set, status becomes accepted)
+- Shopper immediately enters exclusive work mode
+- System prevents shopper from seeing any new offers until current order is delivered
+- Shopper works on order through shopping, picking up, and delivery stages
+- After delivery, order status becomes delivered
+- Shopper becomes available again and can receive new offers
+
+**If Shopper Declines:**
+
+- Shopper clicks decline button in notification
+- Frontend calls decline API endpoint
+- Offer status changes to DECLINED in database
+- System immediately finds next eligible shopper (within radius, online, no active orders)
+- New offer is created for next shopper
+- FCM notification is sent to next shopper
+- Next shopper sees order within approximately 1 second
+- Original shopper can see other available orders
+- Round number increments for tracking purposes
+
+**4. After Delivery:**
+
+- Order status changes to delivered
+- Shopper automatically becomes available for new offers
+- System can now show new orders to this shopper
+- Cycle repeats for next order
+
+### Key Behaviors
+
+**Active Orders and Offer Limits:**
+
+- Shoppers can work on up to 2 active orders simultaneously (accepted/in_progress/picked_up)
+- If shopper has 2 active orders, they cannot receive new offers until at least one is delivered
+- If shopper has 1 active order, they can still receive new offers (up to 2 total active orders)
+- Shoppers can only have ONE pending OFFERED offer at a time
+- If shopper has a pending OFFERED offer, they must accept or decline it before receiving a new offer
+- This ensures shoppers focus on completing deliveries while allowing flexibility for multiple orders
+- Prevents overwhelming shoppers with too many simultaneous orders
+
+**Duplicate Prevention:**
+
+- System checks if shopper already has an active offer for an order before creating new one
+- If offer exists, system extends the expiry time instead of creating duplicate
+- This prevents database from filling with redundant offer records
+- Ensures clean data and better performance
+
+**Smooth Notification Transitions:**
+
+- When better order arrives while shopper is viewing another order
+- Old notification card smoothly fades out over 400 milliseconds
+- Brief pause allows visual transition to complete
+- New notification card then fades in
+- Creates professional, polished user experience without jarring instant replacements
+
+**Instant Decline Rotation:**
+
+- When shopper declines, rotation happens immediately
+- No waiting period or delay
+- Next shopper is found and notified within 1 second
+- Ensures orders don't get stuck with declined shoppers
+- Maintains fair distribution across all available shoppers
 
 ## Monitoring & Debugging
 
@@ -1046,11 +1195,15 @@ The Smart Notification & Assignment System provides real-time order distribution
 
 ## Key Features
 
-- **Real-Time WebSocket Notifications**: Instant order updates instead of polling
+- **Action-Based System**: Offers stay with shoppers until they explicitly accept or decline (no time-based expiry)
+- **Up to 2 Active Orders**: Shoppers can work on up to 2 orders simultaneously, but cannot receive new offers if they have 2 active orders or a pending OFFERED offer
+- **Instant Decline Rotation**: When shopper declines, order immediately goes to next shopper (~1 second)
+- **Smooth Notification Transitions**: Old notifications fade out before new ones appear (400ms transition)
 - **Smart Assignment Algorithm**: Prioritizes orders based on age, shopper performance, and proximity
 - **Age-Based Priority System**: Heavily prioritizes older orders while tracking new ones to prevent lateness
 - **Personalized Notifications**: Each shopper receives recommendations tailored to their location and performance
 - **Assignment Locking**: Prevents multiple shoppers from being assigned the same order
+- **Duplicate Prevention**: System checks for existing offers and extends them instead of creating duplicates
 - **Optimized Batch Processing**: Groups orders by location for efficient distribution
 - **Dual Display System**: Dashboard shows all orders, map shows aged orders (30+ minutes) to reduce clutter
 - **Travel Time Display**: Shows estimated minutes away instead of raw distance
@@ -1079,9 +1232,9 @@ graph TB
     L --> M[Send Personalized FCM Notification]
     M --> N[Shopper Receives Toast]
     N --> O{Shopper Action}
-    O -->|Accept| P[Assign Order]
-    O -->|Skip| Q[Order Remains in Pool]
-    O -->|Timeout 90s| Q
+    O -->|Accept| P[Assign Order - Shopper Works Exclusively]
+    O -->|Decline| Q[Immediately Rotate to Next Shopper]
+    O -->|No Action| R[Offer Stays - No Time Limit]
 
     C --> R[Map Display Filters]
     R -->|Show only 30+ min| S[Aged Orders on Map]
@@ -1267,6 +1420,12 @@ Shopper 3 (Airport, 25km from order):
 
 **Key Features**:
 
+- **Action-Based Notifications**: No countdown timers - offers stay until shopper takes action
+- **Smooth Transitions**: When better order arrives, old notification fades out (400ms) before new one appears
+- **Decline API Integration**: When shopper declines, immediately calls backend API to rotate order to next shopper
+- **Active Orders Enforcement**: Prevents showing new notifications when shopper has 2 active orders or a pending OFFERED offer
+- **Duplicate Prevention**: Tracks declined orders locally and prevents re-showing within 5 minutes
+- **10-Second Cooldown**: After declining, waits 10 seconds before showing next notification
 - WebSocket integration for real-time updates
 - Toast notifications with SVG icons
 - Travel time calculation and display
@@ -1435,11 +1594,15 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[Shopper Receives Notification] --> B{Action}
-    B -->|Accept| C[Assign Order Atomically]
-    B -->|Skip| D[Find Next Best Shopper]
-    B -->|Timeout| E[Reassign to Others]
+    B -->|Accept| C[Assign Order Atomically - Shopper Works Exclusively]
+    B -->|Decline| D[Mark Offer as DECLINED - Rotate to Next Shopper Immediately]
+    B -->|No Action| E[Offer Stays - No Time Limit]
 
-    C --> F[Update Order Status]
+    C --> F[Update Order Status - Shopper Cannot See New Offers]
+    D --> G[Find Next Eligible Shopper]
+    G --> H[Create New Offer - Send FCM Notification]
+    H --> I[Next Shopper Sees Order Within 1 Second]
+    E --> J[Shopper Can Review Order Without Pressure]
     F --> G[Remove from Available Pool]
     G --> H[Send Confirmation]
 
@@ -12260,6 +12423,171 @@ src/
 - `js-cookie`: Cookie management
 - `react-hot-toast`: User notifications
 - `lucide-react`: UI icons
+
+## Combined Order Logic with Smart Assignment
+
+### Overview
+
+The combined order system integrates intelligent smart assignment algorithms with multi-store order creation, allowing customers to place orders from multiple stores simultaneously while ensuring optimal delivery assignment through age-based prioritization and shopper performance tracking.
+
+### Smart Assignment Integration
+
+The smart assignment system works continuously in the background to optimize order delivery, with special logic for handling combined orders as unified batches:
+
+#### Core Assignment Algorithm
+
+1. **Age-Based Priority System**: Orders automatically gain priority as they age, with orders older than 30 minutes receiving the highest priority boost, ensuring timely delivery of all orders.
+
+2. **Shopper Performance Tracking**: The system evaluates shopper performance through completion rates, response times, and customer ratings, preferring high-performing shoppers for order assignments.
+
+3. **Distance Optimization**: Orders are matched to shoppers based on geographical proximity, reducing delivery times and transportation costs.
+
+4. **Real-Time Assignment**: The system operates continuously, sending personalized order recommendations to shoppers based on their current location and performance metrics.
+
+#### Combined Order Assignment Logic
+
+When a combined order enters the assignment pool, the smart assignment system treats it as a unified batch with special handling:
+
+1. **Combined Order Detection**: The system identifies combined orders by checking if a regular order has a `combined_order_id` field populated.
+
+2. **Group Fetching**: For combined orders, the system fetches all orders within the same `combined_order_id` group using a single query that retrieves all related orders.
+
+3. **Unified Priority Calculation**: The system calculates priority scores for the entire combined order group, considering the collective distance, age, and store distribution rather than individual orders.
+
+4. **Batch Offer Creation**: When assigning a combined order, the system creates exclusive offers for ALL orders in the group simultaneously, ensuring no partial assignments occur.
+
+5. **Single Notification**: Shoppers receive one unified notification for the entire combined order batch, showing aggregated information like total stores, total earnings, and combined item count.
+
+6. **Coordinated Acceptance**: If a shopper accepts a combined order offer, they accept the entire batch - all orders in the group are assigned to them together.
+
+7. **Round-Based Expansion**: Combined orders follow the same round-based distance expansion as individual orders, but the round number is tracked across the entire group to ensure consistent expansion timing.
+
+#### Combined Order Assignment Benefits
+
+- **Atomic Operations**: Combined orders are either assigned entirely to one shopper or not at all, preventing partial assignments that could complicate delivery.
+- **Efficiency Optimization**: Shoppers can deliver multiple orders to the same customer location in one trip, maximizing delivery efficiency.
+- **Load Balancing**: The system prevents any single shopper from receiving disproportionate numbers of combined orders, maintaining fair distribution.
+- **Customer Experience**: Ensures all orders from a customer's multi-store purchase are handled by the same shopper, maintaining consistency.
+
+### Customer Multi-Store Order Creation
+
+Customers can seamlessly create orders from multiple stores in a single checkout process, enabling efficient shopping across different businesses:
+
+#### Order Creation Flow
+
+1. **Multi-Store Shopping**: Customers browse and add items from different stores, with each store maintaining its own separate cart containing items, prices, and calculations.
+
+2. **Cart Management**: The system allows customers to maintain multiple active carts simultaneously, one for each store they're shopping from.
+
+3. **Combined Checkout Initiation**: When ready to purchase, customers navigate to a unified checkout page that displays all their active store carts.
+
+4. **Store Selection**: Customers can choose which store carts to include in their combined order by checking/unchecking cart selections, allowing flexible order composition.
+
+5. **Unified Payment**: All selected orders are processed as a single transaction, with one payment covering all stores and their associated fees.
+
+#### Combined Order Structure
+
+When customers create multi-store orders, the system generates a structured combined order with these key elements:
+
+1. **Shared Combined Order ID**: A unique UUID that links all orders in the transaction, enabling unified tracking and management.
+
+2. **Unified PIN Generation**: All orders share a single two-digit PIN (00-99) for delivery verification, eliminating the need for customers to remember multiple PINs.
+
+3. **Individual Order Records**: Each store's order is created as a separate database record but tagged with the shared Combined Order ID.
+
+4. **Independent Processing**: While logically grouped, each store processes its order independently, allowing for different preparation and delivery times.
+
+#### Fee Calculation Logic
+
+The combined order system handles fees comprehensively:
+
+1. **Per-Store Service Fees**: Each store calculates its own 5% service fee based on the cart subtotal.
+
+2. **Individual Delivery Fees**: Each store has its own delivery fee based on distance from store to customer location.
+
+3. **Grand Total Aggregation**: The combined order total is the sum of all individual store totals (subtotal + service fee + delivery fee).
+
+4. **Single Payment Processing**: Despite multiple fees, the customer makes one payment covering the entire combined order.
+
+#### Delivery Coordination
+
+The system ensures efficient multi-order delivery:
+
+1. **Shopper Assignment**: Combined orders enter the smart assignment pool where they're assigned to shoppers as unified batches.
+
+2. **Shared Delivery Information**: All orders in a combined order go to the same delivery address with the same customer details.
+
+3. **PIN-Based Verification**: Shoppers use the single shared PIN to verify delivery for each order in the combined batch.
+
+4. **Independent Completion**: Each order can be marked as delivered independently while maintaining the logical grouping.
+
+### Order Flow Integration
+
+The combined order logic follows this integrated flow:
+
+1. **Customer Shopping Phase**: Customer browses multiple stores, adding items to individual store carts while the smart assignment system runs in the background for available shoppers.
+
+2. **Checkout Consolidation**: Customer proceeds to combined checkout, selecting stores and providing delivery information once for all orders.
+
+3. **Order Creation**: System generates a shared Combined Order ID and PIN, creates individual orders for each selected store, and clears the respective carts.
+
+4. **Smart Assignment Activation**: Once orders are created and marked as pending, they enter the smart assignment pool where they compete for shopper assignment based on age, distance, and priority.
+
+5. **Delivery Coordination**: Multiple shoppers can be assigned to different orders within the same combined order, each using the shared PIN for delivery verification.
+
+### Combined Order Logic and Benefits
+
+#### Core Logic Behind Combined Orders
+
+The combined order system implements sophisticated logic to handle multi-store purchases efficiently:
+
+1. **Atomic Creation**: When customers place combined orders, the system creates all individual orders simultaneously or fails the entire transaction, ensuring data consistency.
+
+2. **Shared Identity**: All orders in a combined transaction share the same Combined Order ID and PIN, creating a logical grouping while maintaining individual order integrity.
+
+3. **Independent Fulfillment**: Each store processes its order independently, allowing for different preparation times while the combined order provides unified tracking.
+
+4. **Smart Assignment Integration**: Combined orders are treated as unified batches in the assignment algorithm, ensuring they're assigned to shoppers who can efficiently handle multiple deliveries.
+
+5. **Delivery Optimization**: The system enables shoppers to deliver multiple orders to the same location in one trip, maximizing efficiency.
+
+#### Multi-Store Order Benefits
+
+**For Customers:**
+
+- **Unified Shopping Experience**: Shop from multiple stores without multiple checkout processes
+- **Single Payment**: One transaction covering all orders eliminates payment complexity
+- **Simplified Delivery**: One PIN for all orders reduces customer confusion
+- **Comprehensive Tracking**: View all orders from different stores in one place
+- **Time Efficiency**: Complete entire shopping trips faster with streamlined checkout
+- **Cost Transparency**: Clear breakdown of fees per store with total visibility
+
+**For the Platform:**
+
+- **Revenue Optimization**: Higher transaction values through multi-store purchases
+- **Operational Efficiency**: Grouped order management reduces administrative overhead
+- **Customer Retention**: Enhanced shopping experience increases repeat purchases
+- **Market Expansion**: Encourages customers to discover and shop from more stores
+- **Data Insights**: Better analytics on shopping patterns across multiple businesses
+
+**For Shoppers:**
+
+- **Efficient Routing**: Combined orders enable multiple deliveries to the same location
+- **Increased Earnings**: Higher total earnings from batched deliveries
+- **Simplified Logistics**: One trip for multiple orders to the same customer
+- **Fair Assignment**: Smart algorithm ensures balanced workload distribution
+- **Streamlined Verification**: Single PIN verification for entire combined orders
+
+### Technical Implementation
+
+The system maintains separation between order creation (customer-facing) and assignment (shopper-facing):
+
+- Combined orders are created through `/api/mutations/create-combined-orders`
+- Smart assignment runs via `/api/shopper/smart-assign-order`
+- Order retrieval uses `/api/queries/combined-orders`
+- Real-time coordination happens through WebSocket connections
+
+This architecture ensures that the customer experience of creating multi-store orders remains independent of the complex shopper assignment algorithms running in the background, creating a seamless and efficient delivery ecosystem.
 
 ## Conclusion
 

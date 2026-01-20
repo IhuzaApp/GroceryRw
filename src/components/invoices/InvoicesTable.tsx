@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { useRouter } from "next/router";
 import { useTheme } from "../../context/ThemeContext";
 import { Invoice } from "./types";
 import { formatCurrencySync } from "../../utils/formatCurrency";
@@ -6,17 +7,100 @@ import { formatCurrencySync } from "../../utils/formatCurrency";
 interface InvoicesTableProps {
   invoices: Invoice[];
   onViewDetails: (invoiceId: string, orderType: string) => void;
-  onUploadProof: (invoice: Invoice) => void;
   loading?: boolean;
 }
 
 const InvoicesTable: React.FC<InvoicesTableProps> = ({
   invoices,
   onViewDetails,
-  onUploadProof,
   loading = false,
 }) => {
+  const router = useRouter();
   const { theme } = useTheme();
+  const [selectedInvoices, setSelectedInvoices] = useState<Set<string>>(
+    new Set()
+  );
+  const [selectAll, setSelectAll] = useState(false);
+
+  // Toggle individual invoice selection
+  const toggleInvoiceSelection = (invoiceId: string) => {
+    const newSelected = new Set(selectedInvoices);
+    if (newSelected.has(invoiceId)) {
+      newSelected.delete(invoiceId);
+    } else {
+      newSelected.add(invoiceId);
+    }
+    setSelectedInvoices(newSelected);
+    setSelectAll(newSelected.size === invoices.length);
+  };
+
+  // Toggle select all
+  const toggleSelectAll = () => {
+    if (selectAll) {
+      setSelectedInvoices(new Set());
+    } else {
+      setSelectedInvoices(new Set(invoices.map((inv) => inv.id)));
+    }
+    setSelectAll(!selectAll);
+  };
+
+  // Generate avatar initials
+  const getInitials = (name: string) => {
+    const names = name.split(" ");
+    if (names.length >= 2) {
+      return `${names[0][0]}${names[1][0]}`.toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  // Get avatar color based on name
+  const getAvatarColor = (name: string) => {
+    const colors = [
+      "bg-blue-500 text-white",
+      "bg-purple-500 text-white",
+      "bg-green-500 text-white",
+      "bg-yellow-500 text-white",
+      "bg-red-500 text-white",
+      "bg-indigo-500 text-white",
+      "bg-pink-500 text-white",
+      "bg-teal-500 text-white",
+    ];
+    const index = name.charCodeAt(0) % colors.length;
+    return colors[index];
+  };
+
+  // Get category/account color
+  const getCategoryColor = (orderType: string, shopName?: string) => {
+    const categories: Record<string, string> = {
+      Marketing:
+        "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+      "IT Services":
+        "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+      "Sales Bonus":
+        "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+      Operations:
+        "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+      "HR / Payroll":
+        "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400",
+      Consulting:
+        "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400",
+    };
+
+    if (orderType === "reel") {
+      return "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400";
+    } else if (orderType === "restaurant") {
+      return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
+    }
+
+    // Try to match shop name to category
+    const matchedCategory = Object.keys(categories).find((cat) =>
+      shopName?.toLowerCase().includes(cat.toLowerCase())
+    );
+
+    return matchedCategory
+      ? categories[matchedCategory]
+      : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300";
+  };
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -72,33 +156,23 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
     });
   };
 
-  const hasProof = (invoice: Invoice): boolean => {
-    if (invoice.order_type === "reel") {
-      const proof = invoice.delivery_photo_url;
-      return proof !== null && proof !== undefined && proof.trim() !== "";
-    } else {
-      const proof = invoice.Proof;
-      return proof !== null && proof !== undefined && proof.trim() !== "";
-    }
-  };
-
   const downloadInvoice = (invoice: Invoice) => {
     const isMobile =
       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
         navigator.userAgent
       );
-    const baseUrl =
-      process.env.NODE_ENV === "production"
-        ? process.env.NEXT_PUBLIC_APP_URL || "https://plas.rw"
-        : window.location.origin;
 
     if (isMobile) {
-      const pdfUrl = `${baseUrl}/api/invoices/${invoice.id}?pdf=true`;
-      window.open(pdfUrl, "_blank");
+      // For mobile, navigate to PDF in same tab
+      const pdfUrl = `/api/invoices/${invoice.id}?pdf=true`;
+      router.push(pdfUrl);
     } else {
-      const hash = invoice.order_type === "reel" ? "#reel" : "#regularOrder";
-      const invoiceUrl = `${baseUrl}/Plasa/invoices/${invoice.id}${hash}`;
-      window.open(invoiceUrl, "_blank");
+      // For desktop, navigate to invoice page with hash in same tab
+      const hash = invoice.order_type === "reel" ? "reel" : "regularOrder";
+      router.push({
+        pathname: `/Plasa/invoices/${invoice.id}`,
+        hash: hash,
+      });
     }
   };
 
@@ -165,7 +239,7 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
 
   return (
     <div
-      className={`rounded-2xl border ${
+      className={`overflow-hidden rounded-xl border ${
         theme === "dark"
           ? "border-gray-700 bg-gray-800/50"
           : "border-gray-200 bg-white shadow-sm"
@@ -175,63 +249,68 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
       <div className="hidden overflow-x-auto lg:block">
         <table className="w-full">
           <thead
-            className={`${
-              theme === "dark" ? "bg-gray-700/50" : "bg-gray-50/80"
+            className={`border-b ${
+              theme === "dark"
+                ? "border-gray-700 bg-gray-800/30"
+                : "border-gray-100 bg-gray-50"
             }`}
           >
             <tr>
-              <th
-                className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
-                Invoice #
+              <th className="w-12 px-6 py-4">
+                <input
+                  type="checkbox"
+                  checked={selectAll}
+                  onChange={toggleSelectAll}
+                  className={`h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 ${
+                    theme === "dark" ? "border-gray-600 bg-gray-700" : ""
+                  }`}
+                />
               </th>
               <th
-                className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                className={`px-4 py-4 text-left text-xs font-medium ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
                 }`}
               >
-                Customer
+                ID
               </th>
               <th
-                className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                className={`px-4 py-4 text-left text-xs font-medium ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
                 }`}
               >
-                Shop/Order
+                To/From
               </th>
               <th
-                className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                className={`px-4 py-4 text-left text-xs font-medium ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                Amount
+              </th>
+              <th
+                className={`px-4 py-4 text-left text-xs font-medium ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                Account
+              </th>
+              <th
+                className={`px-4 py-4 text-left text-xs font-medium ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
                 }`}
               >
                 Date
               </th>
               <th
-                className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                className={`px-4 py-4 text-left text-xs font-medium ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
                 }`}
               >
-                Status
+                Method
               </th>
               <th
-                className={`px-6 py-4 text-right text-xs font-semibold uppercase tracking-wide ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
-                Total
-              </th>
-              <th
-                className={`px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
-                }`}
-              >
-                Proof
-              </th>
-              <th
-                className={`px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                className={`px-4 py-4 text-right text-xs font-medium ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
                 }`}
               >
                 Actions
@@ -240,137 +319,163 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
           </thead>
           <tbody
             className={`divide-y ${
-              theme === "dark" ? "divide-gray-700/50" : "divide-gray-200"
+              theme === "dark" ? "divide-gray-700/50" : "divide-gray-100"
             }`}
           >
-            {invoices.map((invoice, index) => (
+            {invoices.map((invoice) => (
               <tr
                 key={invoice.id}
                 className={`${
-                  theme === "dark"
-                    ? "bg-gray-800/30 hover:bg-gray-700/50"
-                    : "bg-white hover:bg-gray-50/80"
-                } transition-all duration-200 hover:shadow-sm`}
+                  theme === "dark" ? "hover:bg-gray-700/30" : "hover:bg-gray-50"
+                } cursor-pointer transition-colors`}
                 onClick={() => onViewDetails(invoice.id, invoice.order_type)}
               >
-                <td className="px-6 py-4">
-                  <div className="flex items-center">
-                    <span
-                      className={`text-sm font-semibold ${
-                        theme === "dark" ? "text-white" : "text-gray-900"
-                      }`}
-                    >
-                      #{invoice.invoice_number}
-                    </span>
-                  </div>
+                {/* Checkbox */}
+                <td className="w-12 px-6 py-4">
+                  <input
+                    type="checkbox"
+                    checked={selectedInvoices.has(invoice.id)}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      toggleInvoiceSelection(invoice.id);
+                    }}
+                    className={`h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 ${
+                      theme === "dark" ? "border-gray-600 bg-gray-700" : ""
+                    }`}
+                  />
                 </td>
-                <td className="px-6 py-4">
-                  <div>
-                    <p
+
+                {/* ID */}
+                <td className="px-4 py-4">
+                  <span
+                    className={`text-sm font-medium ${
+                      theme === "dark" ? "text-gray-200" : "text-gray-900"
+                    }`}
+                  >
+                    {invoice.invoice_number}
+                  </span>
+                </td>
+
+                {/* To/From with Avatar */}
+                <td className="px-4 py-4">
+                  <div className="flex items-center space-x-3">
+                    <div
+                      className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold ${getAvatarColor(
+                        invoice.customer_name
+                      )}`}
+                    >
+                      {getInitials(invoice.customer_name)}
+                    </div>
+                    <span
                       className={`text-sm font-medium ${
-                        theme === "dark" ? "text-gray-100" : "text-gray-900"
+                        theme === "dark" ? "text-gray-200" : "text-gray-900"
                       }`}
                     >
                       {invoice.customer_name}
-                    </p>
-                    <p
-                      className={`text-xs ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-500"
-                      }`}
-                    >
-                      {invoice.customer_email}
-                    </p>
+                    </span>
                   </div>
                 </td>
-                <td className="px-6 py-4">
-                  <div>
-                    <p
-                      className={`text-sm font-medium ${
-                        theme === "dark" ? "text-gray-100" : "text-gray-900"
-                      }`}
-                    >
-                      {invoice.order_type === "regular"
-                        ? invoice.shop_name || "Shop"
-                        : invoice.reel_title || "Reel Order"}
-                    </p>
-                    <p
-                      className={`text-xs ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-500"
-                      }`}
-                    >
-                      {invoice.items_count} items
-                    </p>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`text-sm ${
-                      theme === "dark" ? "text-gray-300" : "text-gray-600"
-                    }`}
-                  >
-                    {formatDate(invoice.created_at)}
-                  </span>
-                </td>
-                <td className="px-6 py-4">{getStatusBadge(invoice.status)}</td>
-                <td className="px-6 py-4 text-right">
+
+                {/* Amount */}
+                <td className="px-4 py-4">
                   <span
                     className={`text-sm font-semibold ${
-                      theme === "dark" ? "text-green-400" : "text-green-600"
+                      theme === "dark" ? "text-gray-200" : "text-gray-900"
                     }`}
                   >
                     {formatCurrencySync(invoice.total_amount)}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-center">
-                  {hasProof(invoice) ? (
-                    <div className="flex items-center justify-center">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-                        <svg
-                          className="h-3 w-3 text-green-600 dark:text-green-400"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
-                        <svg
-                          className="h-3 w-3 text-red-600 dark:text-red-400"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  )}
+
+                {/* Account/Category Tag */}
+                <td className="px-4 py-4">
+                  <span
+                    className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getCategoryColor(
+                      invoice.order_type,
+                      invoice.shop_name
+                    )}`}
+                  >
+                    {invoice.order_type === "regular"
+                      ? invoice.shop_name || "Shop"
+                      : invoice.order_type === "reel"
+                      ? "Reel Order"
+                      : "Restaurant"}
+                  </span>
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex justify-center space-x-2">
+
+                {/* Date */}
+                <td className="px-4 py-4">
+                  <span
+                    className={`text-sm ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
+                    {formatDate(invoice.created_at)}
+                  </span>
+                </td>
+
+                {/* Method/Status */}
+                <td className="px-4 py-4">
+                  <span
+                    className={`text-sm ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    {invoice.status === "paid"
+                      ? "Invoice Payment"
+                      : "Request Payment"}
+                  </span>
+                </td>
+
+                {/* Actions */}
+                <td className="px-4 py-4">
+                  <div className="flex items-center justify-end space-x-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onViewDetails(invoice.id, invoice.order_type);
+                      }}
+                      className={`rounded-lg p-2 transition-colors ${
+                        theme === "dark"
+                          ? "text-gray-400 hover:bg-gray-600 hover:text-gray-200"
+                          : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                      }`}
+                      title="View invoice"
+                    >
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                      </svg>
+                    </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         downloadInvoice(invoice);
                       }}
-                      className={`inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                      className={`rounded-lg p-2 transition-colors ${
                         theme === "dark"
-                          ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          ? "text-gray-400 hover:bg-gray-600 hover:text-gray-200"
+                          : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                       }`}
+                      title="Download invoice"
                     >
                       <svg
-                        className="mr-1 h-3 w-3"
+                        className="h-5 w-5"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -382,61 +487,32 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                           d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                         />
                       </svg>
-                      View
                     </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        onUploadProof(invoice);
+                        // Delete action - can be customized
                       }}
-                      disabled={hasProof(invoice)}
-                      className={`inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                        hasProof(invoice)
-                          ? "cursor-not-allowed bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                          : theme === "dark"
-                          ? "bg-blue-600 text-white hover:bg-blue-700"
-                          : "bg-blue-600 text-white hover:bg-blue-700"
+                      className={`rounded-lg p-2 transition-colors ${
+                        theme === "dark"
+                          ? "text-gray-400 hover:bg-red-900/30 hover:text-red-400"
+                          : "text-gray-500 hover:bg-red-50 hover:text-red-600"
                       }`}
+                      title="Delete invoice"
                     >
-                      {hasProof(invoice) ? (
-                        <>
-                          <svg
-                            className="mr-1 h-3 w-3"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                          Done
-                        </>
-                      ) : (
-                        <>
-                          <svg
-                            className="mr-1 h-3 w-3"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                          </svg>
-                          Upload
-                        </>
-                      )}
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
                     </button>
                   </div>
                 </td>
@@ -561,139 +637,33 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                 </span>
               </div>
 
-              {/* Proof Status */}
-              <div className="mb-4 flex items-center justify-between">
-                <span
-                  className={`text-sm font-medium ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Proof Status
-                </span>
-                {hasProof(invoice) ? (
-                  <div className="flex items-center">
-                    <div className="mr-2 flex h-5 w-5 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-                      <svg
-                        className="h-3 w-3 text-green-600 dark:text-green-400"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                    <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                      Uploaded
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex items-center">
-                    <div className="mr-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
-                      <svg
-                        className="h-3 w-3 text-red-600 dark:text-red-400"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                    <span className="text-sm font-medium text-red-600 dark:text-red-400">
-                      Pending
-                    </span>
-                  </div>
-                )}
-              </div>
-
               {/* Actions */}
-              <div className="flex space-x-3">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    downloadInvoice(invoice);
-                  }}
-                  className={`inline-flex flex-1 items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
-                    theme === "dark"
-                      ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  downloadInvoice(invoice);
+                }}
+                className={`inline-flex w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+                  theme === "dark"
+                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                }`}
+              >
+                <svg
+                  className="mr-2 h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <svg
-                    className="mr-2 h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  View Invoice
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onUploadProof(invoice);
-                  }}
-                  disabled={hasProof(invoice)}
-                  className={`inline-flex flex-1 items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
-                    hasProof(invoice)
-                      ? "cursor-not-allowed bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                      : theme === "dark"
-                      ? "bg-blue-600 text-white hover:bg-blue-700"
-                      : "bg-blue-600 text-white hover:bg-blue-700"
-                  }`}
-                >
-                  {hasProof(invoice) ? (
-                    <>
-                      <svg
-                        className="mr-2 h-4 w-4"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      Done
-                    </>
-                  ) : (
-                    <>
-                      <svg
-                        className="mr-2 h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
-                      Upload Proof
-                    </>
-                  )}
-                </button>
-              </div>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                View Invoice
+              </button>
             </div>
           </div>
         ))}

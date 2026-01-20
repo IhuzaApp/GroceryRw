@@ -4,6 +4,7 @@ import { useTheme } from "../../../context/ThemeContext";
 
 interface ActivityHeatmapProps {
   data?: number[][]; // Optional 2D array of activity levels (0-3)
+  hideSummary?: boolean; // Option to hide the summary stats
 }
 
 interface ActivitySummary {
@@ -16,7 +17,10 @@ interface ActivitySummary {
   ordersByHour: number[];
 }
 
-const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ data }) => {
+const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
+  data,
+  hideSummary = false,
+}) => {
   const { theme } = useTheme();
   const [activityData, setActivityData] = useState<number[][]>([]);
   const [summary, setSummary] = useState<ActivitySummary | null>(null);
@@ -111,7 +115,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ data }) => {
       </h3>
 
       {/* Summary Stats */}
-      {summary && (
+      {summary && !hideSummary && (
         <div className="mb-4 grid grid-cols-2 gap-4">
           <div
             className={`rounded-lg p-3 ${

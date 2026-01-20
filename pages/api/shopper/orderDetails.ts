@@ -76,6 +76,7 @@ interface OrderDetailsResponse {
     total: string;
     user_id: string;
     voucher_code: string | null;
+    combined_order_id: string | null;
   } | null;
 }
 
@@ -159,6 +160,21 @@ const GET_ORDER_DETAILS = gql`
         profile_picture
         updated_at
         role
+        Addresses {
+          city
+          created_at
+          id
+          is_default
+          latitude
+          longitude
+          placeDetails
+          postal_code
+          street
+          type
+          updated_at
+          user_id
+        }
+        is_guest
       }
       Shoppers {
         id
@@ -172,6 +188,25 @@ const GET_ORDER_DETAILS = gql`
       total
       user_id
       voucher_code
+      combined_order_id
+      Invoice {
+        Proof
+        created_at
+        customer_id
+        delivery_fee
+        discount
+        id
+        invoice_items
+        invoice_number
+        order_id
+        reel_order_id
+        restarurant_order_id
+        service_fee
+        status
+        subtotal
+        tax
+        total_amount
+      }
     }
   }
 `;
@@ -189,7 +224,7 @@ const GET_REEL_ORDER_DETAILS = gql`
       delivery_fee
       total
       quantity
-      delivery_note
+      delivery_notes
       Reel {
         id
         title
@@ -382,6 +417,227 @@ const GET_RESTAURANT_ORDER_DETAILS = gql`
   }
 `;
 
+// Queries to fetch related orders by combined_order_id
+const GET_RELATED_REGULAR_ORDERS = gql`
+  query GetRelatedRegularOrders(
+    $combinedOrderId: uuid!
+    $currentOrderId: uuid!
+  ) {
+    Orders(
+      where: {
+        combined_order_id: { _eq: $combinedOrderId }
+        id: { _neq: $currentOrderId }
+      }
+    ) {
+      id
+      OrderID
+      created_at
+      updated_at
+      status
+      service_fee
+      delivery_fee
+      combined_order_id
+      shop: Shop {
+        id
+        name
+        address
+        image
+        phone
+        latitude
+        longitude
+      }
+      address: Address {
+        id
+        latitude
+        longitude
+        street
+        city
+        postal_code
+        placeDetails
+      }
+      Order_Items {
+        id
+        quantity
+        price
+        Product {
+          id
+          image
+          final_price
+          measurement_unit
+          ProductName {
+            name
+            image
+            sku
+            barcode
+            id
+          }
+        }
+      }
+      Order_Items_aggregate {
+        aggregate {
+          count
+        }
+      }
+      orderedBy {
+        id
+        name
+        phone
+        profile_picture
+        email
+        gender
+        is_active
+        is_guest
+        created_at
+        Addresses {
+          city
+          created_at
+          id
+          is_default
+          latitude
+          longitude
+          placeDetails
+          postal_code
+          street
+          type
+          updated_at
+          user_id
+        }
+      }
+      Shoppers {
+        id
+        name
+        phone
+        profile_picture
+      }
+      shop_id
+      total
+      user_id
+      pin
+      delivery_notes
+      assigned_at
+      Invoice {
+        Proof
+        created_at
+        customer_id
+        delivery_fee
+        discount
+        id
+        invoice_items
+        invoice_number
+        order_id
+        reel_order_id
+        restarurant_order_id
+        service_fee
+        status
+        subtotal
+        tax
+        total_amount
+      }
+    }
+  }
+`;
+
+const GET_RELATED_REEL_ORDERS = gql`
+  query GetRelatedReelOrders($combinedOrderId: uuid!, $currentOrderId: uuid!) {
+    reel_orders(
+      where: {
+        combined_order_id: { _eq: $combinedOrderId }
+        id: { _neq: $currentOrderId }
+      }
+    ) {
+      id
+      OrderID
+      created_at
+      updated_at
+      status
+      service_fee
+      delivery_fee
+      total
+      quantity
+      combined_order_id
+      Reel {
+        id
+        title
+        Price
+        Product
+        Restaurant {
+          id
+          name
+          location
+          lat
+          long
+        }
+      }
+      user: User {
+        id
+        name
+        phone
+        profile_picture
+      }
+      address: Address {
+        latitude
+        longitude
+        street
+        city
+        placeDetails
+      }
+    }
+  }
+`;
+
+const GET_RELATED_RESTAURANT_ORDERS = gql`
+  query GetRelatedRestaurantOrders(
+    $combinedOrderId: uuid!
+    $currentOrderId: uuid!
+  ) {
+    restaurant_orders(
+      where: {
+        combined_order_id: { _eq: $combinedOrderId }
+        id: { _neq: $currentOrderId }
+      }
+    ) {
+      id
+      OrderID
+      created_at
+      updated_at
+      status
+      delivery_fee
+      total
+      combined_order_id
+      Restaurant {
+        id
+        name
+        location
+        lat
+        long
+      }
+      orderedBy {
+        id
+        name
+        phone
+        profile_picture
+      }
+      address: Address {
+        street
+        city
+        placeDetails
+        latitude
+        longitude
+      }
+      restaurant_order_items {
+        id
+        quantity
+        price
+        restaurant_dishes {
+          name
+          image
+          price
+        }
+      }
+    }
+  }
+`;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -398,6 +654,10 @@ export default async function handler(
     const { id } = req.query;
 
     if (!id || typeof id !== "string") {
+      console.error("❌ [OrderDetails API] Invalid order ID:", {
+        id,
+        type: typeof id,
+      });
       res.status(400).json({ error: "Missing or invalid order ID" });
       return;
     }
@@ -549,7 +809,6 @@ export default async function handler(
     }
 
     if (!orderData) {
-      console.log("❌ [API] No order data found for ID:", { orderId: id });
       res.status(404).json({ error: "Order not found" });
       return;
     }
@@ -571,6 +830,27 @@ export default async function handler(
           sku: item.Product?.ProductName?.sku || null,
           productImage:
             item.Product?.ProductName?.image || item.Product?.image || null,
+          product: {
+            id: item.Product?.id || item.id, // Use Product.id from Products table, fallback to item.id
+            name: item.Product?.ProductName?.name || "Unknown Product",
+            image:
+              item.Product?.ProductName?.image || item.Product?.image || null,
+            final_price: item.Product?.final_price || item.price.toString(),
+            measurement_unit: item.Product?.measurement_unit || null,
+            barcode: item.Product?.ProductName?.barcode || null,
+            sku: item.Product?.ProductName?.sku || null,
+            ProductName: item.Product?.ProductName
+              ? {
+                  id: item.Product?.ProductName.id,
+                  name: item.Product?.ProductName.name,
+                  description: item.Product?.ProductName.description || "",
+                  barcode: item.Product?.ProductName.barcode || "",
+                  sku: item.Product?.ProductName.sku || "",
+                  image: item.Product?.ProductName.image || null,
+                  create_at: item.Product?.ProductName.create_at || "",
+                }
+              : null,
+          },
         };
 
         return formattedItem;
@@ -622,6 +902,7 @@ export default async function handler(
         assignedTo: orderData.Shoppers, // Include assignedTo data (shopper)
         customerId: orderData.orderedBy?.id, // Customer is ALWAYS from orderedBy
         shop: orderData.shop, // Include shop data
+        combinedOrderId: orderData.combined_order_id,
       };
     } else if (orderType === "reel") {
       // Handle reel orders
@@ -675,8 +956,8 @@ export default async function handler(
           user_id: orderData.Reel?.user_id,
         },
         quantity: quantity,
-        deliveryNote: orderData.delivery_note,
-        deliveryNotes: orderData.delivery_note, // Add deliveryNotes for compatibility
+        deliveryNote: orderData.delivery_notes,
+        deliveryNotes: orderData.delivery_notes, // Add deliveryNotes for compatibility
         customerName: orderData.user?.name,
         customerPhone: orderData.user?.phone,
         user: orderData.user, // Include full user data
@@ -685,6 +966,7 @@ export default async function handler(
         customerId: orderData.user?.id, // Add customerId for compatibility
         discount: orderData.discount || 0, // Add discount field
         deliveryPhotoUrl: orderData.delivery_photo_url, // Add delivery photo URL
+        combinedOrderId: orderData.combined_order_id,
       };
     } else if (orderType === "restaurant") {
       // Handle restaurant orders
@@ -757,7 +1039,210 @@ export default async function handler(
         discount: orderData.discount || 0,
         deliveryPhotoUrl: orderData.delivery_photo_url,
         deliveryTime: orderData.delivery_time,
+        combinedOrderId: orderData.combined_order_id,
       };
+    }
+
+    // Fetch related orders if this is part of a combined order
+    let relatedOrders: any[] = [];
+    if (orderData.combined_order_id) {
+      try {
+        const combinedOrderId = orderData.combined_order_id;
+
+        // Run all queries in parallel
+        const [relatedRegular, relatedReel, relatedRestaurant] =
+          await Promise.all([
+            hasuraClient.request<any>(GET_RELATED_REGULAR_ORDERS, {
+              combinedOrderId,
+              currentOrderId: id,
+            }),
+            hasuraClient.request<any>(GET_RELATED_REEL_ORDERS, {
+              combinedOrderId,
+              currentOrderId: id,
+            }),
+            hasuraClient.request<any>(GET_RELATED_RESTAURANT_ORDERS, {
+              combinedOrderId,
+              currentOrderId: id,
+            }),
+          ]);
+
+        // Process Regular Orders
+        if (relatedRegular?.Orders) {
+          const processedRegular = relatedRegular.Orders.map((order: any) => {
+            const items =
+              order.Order_Items?.map((item: any) => ({
+                id: item.id,
+                name: item.Product?.ProductName?.name || "Unknown Product",
+                quantity: item.quantity,
+                price: parseFloat(item.price) || 0,
+                measurement_unit: item.Product?.measurement_unit || null,
+                productImage:
+                  item.Product?.ProductName?.image ||
+                  item.Product?.image ||
+                  null,
+                product: {
+                  id: item.Product?.id || item.id, // Use Product.id from Products table
+                  name: item.Product?.ProductName?.name || "Unknown Product",
+                  image:
+                    item.Product?.ProductName?.image ||
+                    item.Product?.image ||
+                    null,
+                  final_price:
+                    item.Product?.final_price || item.price.toString(),
+                  measurement_unit: item.Product?.measurement_unit || null,
+                  barcode: item.Product?.ProductName?.barcode || null,
+                  sku: item.Product?.ProductName?.sku || null,
+                  ProductName: item.Product?.ProductName
+                    ? {
+                        id: item.Product?.ProductName.id,
+                        name: item.Product?.ProductName.name,
+                        description:
+                          item.Product?.ProductName.description || "",
+                        barcode: item.Product?.ProductName.barcode || "",
+                        sku: item.Product?.ProductName.sku || "",
+                        image: item.Product?.ProductName.image || null,
+                        create_at: item.Product?.ProductName.create_at || "",
+                      }
+                    : null,
+                },
+              })) || [];
+
+            const subTotal = items.reduce(
+              (sum: number, item: any) => sum + item.price * item.quantity,
+              0
+            );
+
+            return {
+              id: order.id,
+              OrderID: order.OrderID || order.id,
+              orderType: "regular",
+              status: order.status,
+              shopName: order.shop?.name || "Unknown Shop",
+              shopAddress: order.shop?.address,
+              shop: order.shop, // Full shop object
+              customerId: order.orderedBy?.id,
+              customerPhone: order.orderedBy?.phone,
+              customerName: order.orderedBy?.name,
+              address: order.address,
+              orderedBy: order.orderedBy,
+              total: parseFloat(order.total || subTotal.toString()), // Use total if available or calc
+              items: items,
+              combinedOrderId: order.combined_order_id,
+              Invoice: order.Invoice,
+            };
+          });
+          relatedOrders = [...relatedOrders, ...processedRegular];
+        }
+
+        // Process Reel Orders
+        if (relatedReel?.reel_orders) {
+          const processedReel = relatedReel.reel_orders.map((order: any) => {
+            return {
+              id: order.id,
+              OrderID: order.OrderID || order.id,
+              orderType: "reel",
+              status: order.status,
+              shopName: order.Reel?.Restaurant?.name || "Reel Order",
+              shopAddress: order.Reel?.Restaurant?.location,
+              shop: order.Reel?.Restaurant
+                ? {
+                    id: order.Reel.Restaurant.id,
+                    name: order.Reel.Restaurant.name,
+                    address: order.Reel.Restaurant.location,
+                    phone: order.Reel.Restaurant.phone,
+                    image: null, // Add image field if available
+                  }
+                : null,
+              customerId: order.user?.id,
+              customerPhone: order.user?.phone,
+              customerName: order.user?.name,
+              total: parseFloat(order.total || "0"),
+              items: [
+                {
+                  id: order.id,
+                  name: order.Reel?.Product || "Reel Product",
+                  quantity: order.quantity,
+                  price: parseFloat(order.Reel?.Price || "0"),
+                  productImage: null, // Reel doesn't have a direct product image easily accessible here
+                },
+              ],
+              combinedOrderId: order.combined_order_id,
+            };
+          });
+          relatedOrders = [...relatedOrders, ...processedReel];
+        }
+
+        // Process Restaurant Orders
+        if (relatedRestaurant?.restaurant_orders) {
+          const processedRestaurant = relatedRestaurant.restaurant_orders.map(
+            (order: any) => {
+              const items =
+                order.restaurant_order_items?.map((item: any) => ({
+                  id: item.id,
+                  name: item.restaurant_dishes?.name || "Dish",
+                  quantity: item.quantity,
+                  price: parseFloat(item.price) || 0,
+                  productImage: item.restaurant_dishes?.image || null,
+                })) || [];
+
+              return {
+                id: order.id,
+                OrderID: order.OrderID || order.id,
+                orderType: "restaurant",
+                status: order.status,
+                shopName: order.Restaurant?.name || "Restaurant",
+                shopAddress: order.Restaurant?.location,
+                shop: order.Restaurant
+                  ? {
+                      id: order.Restaurant.id,
+                      name: order.Restaurant.name,
+                      address: order.Restaurant.location,
+                      phone: order.Restaurant.phone,
+                      image: (order.Restaurant as any).logo,
+                    }
+                  : null,
+                customerId: order.orderedBy?.id,
+                customerPhone: order.orderedBy?.phone,
+                customerName: order.orderedBy?.name,
+                total: parseFloat(order.total || "0"),
+                items: items,
+                combinedOrderId: order.combined_order_id,
+              };
+            }
+          );
+          relatedOrders = [...relatedOrders, ...processedRestaurant];
+        }
+      } catch (err) {
+        console.error("❌ [API] Error fetching related orders:", err);
+        // Don't fail the whole request if related orders fail
+      }
+    }
+
+    // Add related orders to the response and calculate aggregates
+    if (formattedOrder) {
+      formattedOrder.combinedOrders = relatedOrders;
+
+      // specific aggregations for combined orders
+      if (orderData.combined_order_id && relatedOrders.length > 0) {
+        // Create comprehensive lists including the main order and all related orders
+        const allOrders = [formattedOrder, ...relatedOrders];
+
+        // Extract IDs and Names
+        formattedOrder.orderIds = allOrders.map((o) => o.id).filter(Boolean);
+        formattedOrder.orderIDs = allOrders
+          .map((o) => o.OrderID)
+          .filter(Boolean);
+        formattedOrder.shopNames = Array.from(
+          new Set(allOrders.map((o) => o.shopName).filter(Boolean))
+        );
+
+        // Update shop name to indicate multiple stores if applicable
+        if (formattedOrder.shopNames.length > 1) {
+          formattedOrder.shopName = `${
+            formattedOrder.shopNames.length
+          } Stores: ${formattedOrder.shopNames.join(", ")}`;
+        }
+      }
     }
 
     res.status(200).json({

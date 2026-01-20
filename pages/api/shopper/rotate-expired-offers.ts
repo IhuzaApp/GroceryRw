@@ -181,6 +181,25 @@ const GET_AVAILABLE_SHOPPERS = gql`
       longitude
       full_name
       phone_number
+      Orders_aggregate(
+        where: { status: { _in: ["accepted", "in_progress", "picked_up"] } }
+      ) {
+        aggregate {
+          count
+        }
+      }
+      orderOffers_aggregate(
+        where: {
+          _and: [
+            { status: { _eq: "OFFERED" } }
+            { expires_at: { _gt: "now()" } }
+          ]
+        }
+      ) {
+        aggregate {
+          count
+        }
+      }
     }
   }
 `;
@@ -436,10 +455,35 @@ export default async function handler(
 
         const availableShoppers = availableShoppersData.Shoppers || [];
 
-        // Filter out shoppers who have already been offered
-        const eligibleShoppers = availableShoppers.filter(
-          (shopper: any) => !offeredShopperIds.has(shopper.id)
-        );
+        // Filter out shoppers who:
+        // 1. Have already been offered this order
+        // 2. Already have 2 or more active orders (cannot receive new offers until delivery)
+        // 3. Already have an active pending offer (one offer at a time rule)
+        const eligibleShoppers = availableShoppers.filter((shopper: any) => {
+          const alreadyOffered = offeredShopperIds.has(shopper.id);
+          const activeOrderCount =
+            shopper.Orders_aggregate?.aggregate?.count || 0;
+          const activeOfferCount =
+            shopper.orderOffers_aggregate?.aggregate?.count || 0;
+
+          if (alreadyOffered) return false;
+
+          if (activeOrderCount >= 2) {
+            console.log(
+              `⏭️ Skipping shopper ${shopper.full_name}: Already has ${activeOrderCount} active orders`
+            );
+            return false;
+          }
+
+          if (activeOfferCount > 0) {
+            console.log(
+              `⏭️ Skipping shopper ${shopper.full_name}: Already has a pending offer`
+            );
+            return false;
+          }
+
+          return true;
+        });
 
         if (eligibleShoppers.length === 0) {
           console.log(

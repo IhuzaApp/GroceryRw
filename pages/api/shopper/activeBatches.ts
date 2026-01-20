@@ -9,13 +9,7 @@ import { logger } from "../../../src/utils/logger";
 const GET_ACTIVE_ORDERS = gql`
   query GetActiveOrders($shopperId: uuid!) {
     Orders(
-      where: {
-        shopper_id: { _eq: $shopperId }
-        _and: [
-          { status: { _nin: ["null", "PENDING", "delivered"] } }
-          { status: { _is_null: false } }
-        ]
-      }
+      where: { shopper_id: { _eq: $shopperId }, status: { _neq: "delivered" } }
       order_by: { created_at: desc }
     ) {
       id
@@ -26,7 +20,11 @@ const GET_ACTIVE_ORDERS = gql`
       delivery_fee
       total
       delivery_time
+      combined_order_id
+      pin
+      shop_id
       Shop {
+        id
         name
         address
         latitude
@@ -45,6 +43,9 @@ const GET_ACTIVE_ORDERS = gql`
       Order_Items_aggregate {
         aggregate {
           count
+          sum {
+            quantity
+          }
         }
       }
     }
@@ -55,13 +56,7 @@ const GET_ACTIVE_ORDERS = gql`
 const GET_ACTIVE_REEL_ORDERS = gql`
   query GetActiveReelOrders($shopperId: uuid!) {
     reel_orders(
-      where: {
-        shopper_id: { _eq: $shopperId }
-        _and: [
-          { status: { _nin: ["null", "PENDING", "delivered"] } }
-          { status: { _is_null: false } }
-        ]
-      }
+      where: { shopper_id: { _eq: $shopperId }, status: { _neq: "delivered" } }
       order_by: { created_at: desc }
     ) {
       id
@@ -103,13 +98,7 @@ const GET_ACTIVE_REEL_ORDERS = gql`
 const GET_ACTIVE_RESTAURANT_ORDERS = gql`
   query GetActiveRestaurantOrders($shopperId: uuid!) {
     restaurant_orders(
-      where: {
-        shopper_id: { _eq: $shopperId }
-        _and: [
-          { status: { _nin: ["null", "PENDING", "delivered"] } }
-          { status: { _is_null: false } }
-        ]
-      }
+      where: { shopper_id: { _eq: $shopperId }, status: { _neq: "delivered" } }
       order_by: { created_at: desc }
     ) {
       id
@@ -191,18 +180,14 @@ export default async function handler(
   }
 
   try {
-    console.log("Checking hasuraClient...");
     if (!hasuraClient) {
-      console.error("Hasura client is not initialized!");
       throw new Error("Hasura client is not initialized");
     }
-    console.log("hasuraClient is initialized");
 
     // Fetch regular, reel, and restaurant orders in parallel
     let regularOrdersData, reelOrdersData, restaurantOrdersData;
 
     try {
-      console.log("Fetching orders from Hasura...");
       [regularOrdersData, reelOrdersData, restaurantOrdersData] =
         await Promise.all([
           hasuraClient.request<{
@@ -215,7 +200,11 @@ export default async function handler(
               delivery_fee: string | null;
               total: number | null;
               delivery_time: string | null;
+              combined_order_id: string | null;
+              pin: string | null;
+              shop_id: string;
               Shop: {
+                id: string;
                 name: string;
                 address: string;
                 latitude: string;
@@ -231,6 +220,9 @@ export default async function handler(
               Order_Items_aggregate: {
                 aggregate: {
                   count: number | null;
+                  sum: {
+                    quantity: number | null;
+                  } | null;
                 } | null;
               };
             }>;
@@ -304,7 +296,6 @@ export default async function handler(
             }>;
           }>(GET_ACTIVE_RESTAURANT_ORDERS, { shopperId: userId }),
         ]);
-      console.log("Orders fetched successfully");
     } catch (fetchError) {
       console.error("Error fetching orders from Hasura:", fetchError);
       console.error(
@@ -331,27 +322,140 @@ export default async function handler(
         regularOrders.length + reelOrders.length + restaurantOrders.length,
     });
 
-    // Transform regular orders
-    const transformedRegularOrders = regularOrders.map((o) => ({
+    // Group regular orders by combined_order_id
+    const combinedOrdersMap = new Map<string, typeof regularOrders>();
+    const standaloneOrders: typeof regularOrders = [];
+
+    regularOrders.forEach((order) => {
+      if (order.combined_order_id) {
+        const existing = combinedOrdersMap.get(order.combined_order_id) || [];
+        existing.push(order);
+        combinedOrdersMap.set(order.combined_order_id, existing);
+      } else {
+        standaloneOrders.push(order);
+      }
+    });
+
+    // Transform combined orders into single batches
+    const transformedCombinedOrders = Array.from(
+      combinedOrdersMap.entries()
+    ).map(([combinedOrderId, orders]) => {
+      console.log(
+        `🔍 [ActiveBatches API] Transforming combined order ${combinedOrderId}:`,
+        {
+          ordersInGroup: orders.length,
+          shopIds: orders.map((o) => o.shop_id),
+          shopNames: orders.map((o) => o.Shop.name),
+          statuses: orders.map((o) => o.status),
+        }
+      );
+      // Aggregate data from all orders in the combined order
+      const totalUnits = orders.reduce((sum, o) => {
+        const units = o.Order_Items_aggregate.aggregate?.sum?.quantity ?? 0;
+        return sum + units;
+      }, 0);
+      const totalItemLines = orders.reduce(
+        (sum, o) => sum + (o.Order_Items_aggregate.aggregate?.count ?? 0),
+        0
+      );
+      const totalAmount = orders.reduce((sum, o) => sum + (o.total ?? 0), 0);
+      const totalEarnings = orders.reduce(
+        (sum, o) =>
+          sum +
+          parseFloat(o.service_fee || "0") +
+          parseFloat(o.delivery_fee || "0"),
+        0
+      );
+      const shopNamesArray = Array.from(
+        new Set(orders.map((o) => o.Shop.name))
+      );
+      const shopNamesDisplay =
+        shopNamesArray.length === 2
+          ? `${shopNamesArray[0]} and ${shopNamesArray[1]}`
+          : shopNamesArray.join(", ");
+      const orderIDs = orders.map((o) => o.OrderID);
+      // Use the first order as the base for common data
+      const firstOrder = orders[0];
+
+      const customerNames = Array.from(
+        new Set(orders.map((o) => o.orderedBy?.name).filter(Boolean))
+      ) as string[];
+      const customerAddresses = Array.from(
+        new Set(
+          orders
+            .map((o) => `${o.Address.street}, ${o.Address.city}`)
+            .filter(Boolean)
+        )
+      ) as string[];
+      const customerNameDisplay =
+        customerNames.length === 2
+          ? `${customerNames[0]} & ${customerNames[1]}`
+          : customerNames.join(", ") || firstOrder.orderedBy.name;
+      const customerAddressDisplay =
+        customerAddresses.length === 2
+          ? `${customerAddresses[0]} | ${customerAddresses[1]}`
+          : customerAddresses.join(" | ") ||
+            `${firstOrder.Address.street}, ${firstOrder.Address.city}`;
+
+      return {
+        id: firstOrder.id, // Use first order's ID instead of combined_order_id
+        OrderID: `${firstOrder.OrderID}`, // Prefix to indicate combined
+        status: firstOrder.status, // Use status from first order
+        createdAt: firstOrder.created_at,
+        deliveryTime: firstOrder.delivery_time || undefined,
+        shopName: shopNamesDisplay,
+        shopNames: shopNamesArray,
+        shopAddress: `Multiple stores (${orders.length} orders)`,
+        shopLat: parseFloat(firstOrder.Shop.latitude),
+        shopLng: parseFloat(firstOrder.Shop.longitude),
+        customerName: customerNameDisplay,
+        customerNames,
+        customerAddress: customerAddressDisplay,
+        customerAddresses,
+        customerLat: parseFloat(firstOrder.Address.latitude),
+        customerLng: parseFloat(firstOrder.Address.longitude),
+        items: totalUnits,
+        itemsCount: totalItemLines,
+        total: totalAmount,
+        estimatedEarnings: totalEarnings.toFixed(2),
+        orderType: "combined" as const,
+        combinedOrderId: combinedOrderId,
+        pin: firstOrder.pin,
+        orderCount: orders.length,
+        orderIds: Array.from(
+          new Set([firstOrder.id, ...orders.map((o) => o.id)])
+        ), // Include all order IDs, ensuring first order is included
+        orderIDs,
+      };
+    });
+
+    // Transform standalone regular orders
+    const transformedStandaloneOrders = standaloneOrders.map((o) => ({
       id: o.id,
       OrderID: o.OrderID,
       status: o.status,
       createdAt: o.created_at,
       deliveryTime: o.delivery_time || undefined,
       shopName: o.Shop.name,
+      shopNames: [o.Shop.name],
       shopAddress: o.Shop.address,
       shopLat: parseFloat(o.Shop.latitude),
       shopLng: parseFloat(o.Shop.longitude),
       customerName: o.orderedBy.name,
+      customerNames: [o.orderedBy.name],
       customerAddress: `${o.Address.street}, ${o.Address.city}`,
+      customerAddresses: [`${o.Address.street}, ${o.Address.city}`],
       customerLat: parseFloat(o.Address.latitude),
       customerLng: parseFloat(o.Address.longitude),
-      items: o.Order_Items_aggregate.aggregate?.count ?? 0,
+      items: o.Order_Items_aggregate.aggregate?.sum?.quantity ?? 0,
+      itemsCount: o.Order_Items_aggregate.aggregate?.count ?? 0,
       total: o.total ?? 0,
       estimatedEarnings: (
         parseFloat(o.service_fee || "0") + parseFloat(o.delivery_fee || "0")
       ).toFixed(2),
       orderType: "regular" as const,
+      combinedOrderId: o.combined_order_id,
+      pin: o.pin,
     }));
 
     // Transform reel orders
@@ -367,6 +471,9 @@ export default async function handler(
         createdAt: o.created_at,
         deliveryTime: o.delivery_time || undefined,
         shopName: isRestaurantUserReel ? "Restaurant/User Reel" : "Reel Order",
+        shopNames: [
+          isRestaurantUserReel ? "Restaurant/User Reel" : "Reel Order",
+        ],
         shopAddress: isRestaurantUserReel
           ? "From Restaurant/User"
           : "From Reel Creator",
@@ -376,7 +483,7 @@ export default async function handler(
         customerAddress: `${o.Address.street}, ${o.Address.city}`,
         customerLat: parseFloat(o.Address.latitude),
         customerLng: parseFloat(o.Address.longitude),
-        items: 1, // Reel orders have 1 item
+        items: parseInt(o.quantity) || 1,
         total: parseFloat(o.total || "0"),
         estimatedEarnings: (
           parseFloat(o.service_fee || "0") + parseFloat(o.delivery_fee || "0")
@@ -402,6 +509,7 @@ export default async function handler(
       createdAt: o.created_at,
       deliveryTime: o.delivery_time || undefined,
       shopName: o.Restaurant.name,
+      shopNames: [o.Restaurant.name],
       shopAddress: o.Restaurant.location,
       shopLat: parseFloat(o.Restaurant.lat),
       shopLng: parseFloat(o.Restaurant.long),
@@ -409,7 +517,10 @@ export default async function handler(
       customerAddress: `${o.Address.street}, ${o.Address.city}`,
       customerLat: parseFloat(o.Address.latitude),
       customerLng: parseFloat(o.Address.longitude),
-      items: o.restaurant_order_items.length, // Count of dish orders
+      items: o.restaurant_order_items.reduce(
+        (sum, item) => sum + (parseInt(item.quantity) || 0),
+        0
+      ),
       total: parseFloat(o.total || "0"),
       estimatedEarnings: parseFloat(o.delivery_fee || "0").toFixed(2),
       orderType: "restaurant" as const,
@@ -419,7 +530,8 @@ export default async function handler(
 
     // Combine all types of orders
     const allActiveOrders = [
-      ...transformedRegularOrders,
+      ...transformedCombinedOrders,
+      ...transformedStandaloneOrders,
       ...transformedReelOrders,
       ...transformedRestaurantOrders,
     ];

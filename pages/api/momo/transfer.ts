@@ -12,17 +12,6 @@ export default async function handler(
   const { amount, currency, payerNumber, externalId, payerMessage, payeeNote } =
     req.body;
 
-  console.log("💰 [MoMo Transfer API] Starting transfer request...");
-  console.log("💰 [MoMo Transfer API] Request Body:", {
-    amount,
-    currency,
-    payerNumber,
-    externalId,
-    payerMessage,
-    payeeNote,
-    timestamp: new Date().toISOString(),
-  });
-
   // Validate required fields
   if (!amount || !currency || !payerNumber) {
     console.error("❌ [MoMo Transfer API] Validation Error:", {
@@ -46,12 +35,9 @@ export default async function handler(
   }
 
   const referenceId = uuidv4();
-  console.log("💰 [MoMo Transfer API] Generated Reference ID:", referenceId);
 
   try {
     // Check if we have valid MoMo credentials
-    console.log("💰 [MoMo Transfer API] Checking credentials...");
-    console.log("💰 [MoMo Transfer API] Environment:", process.env.NODE_ENV);
     console.log(
       "💰 [MoMo Transfer API] Sandbox URL:",
       process.env.MOMO_SANDBOX_URL
@@ -77,7 +63,8 @@ export default async function handler(
       console.log(
         "🧪 [MoMo Transfer API] Credentials not configured, simulating payment for testing"
       );
-      console.log("🧪 [MoMo Transfer API] Simulated Payment Details:", {
+
+      const simulatedResponse = {
         referenceId,
         amount,
         currency,
@@ -87,7 +74,7 @@ export default async function handler(
         payeeNote,
         status: "SUCCESSFUL",
         timestamp: new Date().toISOString(),
-      });
+      };
       // Simulate successful payment for testing
       return res.status(200).json({
         referenceId,
@@ -97,9 +84,7 @@ export default async function handler(
     }
 
     // 1. Get Access Token (this will use cached token if valid, or generate new one)
-    console.log("🔑 [MoMo Transfer API] Step 1: Getting access token...");
     const tokenUrl = `${process.env.MOMO_SANDBOX_URL}/collection/token/`;
-    console.log("🔑 [MoMo Transfer API] Token URL:", tokenUrl);
 
     const tokenHeaders = {
       "Ocp-Apim-Subscription-Key": process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX!,
@@ -108,7 +93,7 @@ export default async function handler(
       ).toString("base64")}`,
     };
 
-    console.log("🔑 [MoMo Transfer API] Token Request Headers:", {
+    console.log({
       "Ocp-Apim-Subscription-Key": "***HIDDEN***",
       Authorization: "***HIDDEN***",
     });
@@ -168,16 +153,14 @@ export default async function handler(
 
     const tokenData = await tokenRes.json();
     const { access_token } = tokenData;
-    console.log("✅ [MoMo Transfer API] Token received:", {
+    console.log({
       access_token: access_token ? "***TOKEN_RECEIVED***" : "NO_TOKEN",
       token_type: tokenData.token_type,
       expires_in: tokenData.expires_in,
     });
 
     // 2. Send Transfer request
-    console.log("💰 [MoMo Transfer API] Step 2: Sending transfer request...");
     const transferUrl = `${process.env.MOMO_SANDBOX_URL}/disbursement/v1_0/transfer`;
-    console.log("💰 [MoMo Transfer API] Transfer URL:", transferUrl);
 
     const transferPayload = {
       amount: amount.toString(),
@@ -191,7 +174,7 @@ export default async function handler(
       payeeNote: payeeNote || "Shopper payment confirmation",
     };
 
-    console.log("💰 [MoMo Transfer API] Transfer Payload:", {
+    console.log({
       amount: transferPayload.amount,
       currency: transferPayload.currency,
       externalId: transferPayload.externalId,
@@ -208,7 +191,7 @@ export default async function handler(
       "X-Target-Environment": "sandbox",
     };
 
-    console.log("💰 [MoMo Transfer API] Transfer Headers:", {
+    console.log({
       "Content-Type": transferHeaders["Content-Type"],
       "Ocp-Apim-Subscription-Key": "***HIDDEN***",
       Authorization: "***HIDDEN***",
@@ -232,7 +215,7 @@ export default async function handler(
     );
 
     if (transferRes.status === 202) {
-      console.log("✅ [MoMo Transfer API] Transfer Accepted:", {
+      console.log({
         referenceId,
         status: "PENDING",
         amount: transferPayload.amount,
