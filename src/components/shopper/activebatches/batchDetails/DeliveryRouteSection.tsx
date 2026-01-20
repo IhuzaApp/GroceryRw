@@ -14,6 +14,8 @@ interface Order {
   shopName?: string;
   Invoice?: any[];
   invoice?: any;
+  delivery_notes?: string;
+  comment?: string;
 }
 
 interface Customer {
@@ -88,6 +90,12 @@ export default function DeliveryRouteSection({
                 ?.Addresses?.[0];
 
             const isDelivered = orders.every((o) => o.status === "delivered");
+
+            // Find delivery notes from any order in the group
+            const deliveryNotes = orders.find((o) => o.delivery_notes)?.delivery_notes;
+
+            // Find customer comments from any order in the group
+            const customerComment = orders.find((o) => o.comment)?.comment;
 
             return (
               <div
@@ -212,6 +220,64 @@ export default function DeliveryRouteSection({
                     </div>
                   </div>
                 </div>
+
+                {/* Delivery Notes */}
+                {deliveryNotes && (
+                  <div className="mb-4 space-y-2 rounded-xl bg-amber-50 p-3 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700">
+                    <div className="flex items-start gap-2">
+                      <svg
+                        className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600 dark:text-amber-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-amber-900 dark:text-amber-100 mb-1">
+                          Delivery Notes
+                        </p>
+                        <p className="text-sm text-amber-800 dark:text-amber-200">
+                          {deliveryNotes}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Customer Comments */}
+                {customerComment && (
+                  <div className="mb-4 space-y-2 rounded-xl bg-blue-50 p-3 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700">
+                    <div className="flex items-start gap-2">
+                      <svg
+                        className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600 dark:text-blue-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                        />
+                      </svg>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
+                          Customer Comment
+                        </p>
+                        <p className="text-sm text-blue-800 dark:text-blue-200">
+                          {customerComment}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {!isDelivered && (
                   <div className="flex flex-col gap-4">
