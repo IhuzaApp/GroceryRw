@@ -30,6 +30,15 @@ const UPDATE_COMBINED_ORDERS = gql`
   }
 `;
 
+// Delete order offers when orders are delivered
+const DELETE_ORDER_OFFERS = gql`
+  mutation DeleteOrderOffers($orderIds: [uuid!]!) {
+    delete_order_offers(where: { order_id: { _in: $orderIds } }) {
+      affected_rows
+    }
+  }
+`;
+
 const UPDATE_COMBINED_REEL_ORDERS = gql`
   mutation UpdateCombinedReelOrders(
     $combinedId: uuid!
@@ -473,6 +482,19 @@ export default async function handler(
               ? walletError.message
               : "Failed to process wallet operation",
         });
+      }
+    }
+
+    // Clean up order offers when orders are delivered
+    if (status === "delivered" && updatedOrders.length > 0) {
+      try {
+        const orderIdsToClean = updatedOrders.map((order: any) => order.id);
+        await hasuraClient.request(DELETE_ORDER_OFFERS, {
+          orderIds: orderIdsToClean,
+        });
+      } catch (cleanupError) {
+        // Log the error but don't fail the entire operation
+        console.error("Error cleaning up order offers:", cleanupError);
       }
     }
 
