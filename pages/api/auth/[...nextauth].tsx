@@ -210,6 +210,9 @@ export const authOptions: NextAuthOptions = {
           }
         } catch (error) {
           console.error("Error fetching user data:", error);
+          // If Hasura is unavailable, set default values to allow authentication to continue
+          token.role = token.role || "user"; // Default to user role
+          token.is_guest = token.is_guest || false;
         }
       }
       return token;
