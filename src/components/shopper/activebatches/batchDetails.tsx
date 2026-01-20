@@ -2567,7 +2567,6 @@ export default function BatchDetails({
   // Render item card helper
   const renderItemCard = (item: any) => (
     <div
-      key={item.id}
       className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-800 sm:gap-4 sm:p-4"
     >
       <div
@@ -3627,7 +3626,11 @@ export default function BatchDetails({
                               <div className="space-y-2 sm:space-y-3">
                                 {itemsByShop
                                   .get(effectiveActiveShopId || "")
-                                  ?.map(renderItemCard)}
+                                  ?.map((item) => (
+                                    <div key={item.id}>
+                                      {renderItemCard(item)}
+                                    </div>
+                                  ))}
                               </div>
                             </div>
                           </div>
@@ -3643,7 +3646,11 @@ export default function BatchDetails({
                               {activeShopItems.length} Items
                             </h3>
                             <div className="space-y-2 sm:space-y-3">
-                              {activeShopItems.map(renderItemCard)}
+                              {activeShopItems.map((item) => (
+                                <div key={item.id}>
+                                  {renderItemCard(item)}
+                                </div>
+                              ))}
                             </div>
                           </div>
                         );
