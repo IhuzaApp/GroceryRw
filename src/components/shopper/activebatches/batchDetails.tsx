@@ -1016,6 +1016,7 @@ export default function BatchDetails({
     const isRestaurantUserReel =
       order?.orderType === "reel" &&
       (order?.reel?.restaurant_id || order?.reel?.user_id);
+    const isCombinedOrder = order?.combinedOrders && order.combinedOrders.length > 0;
 
     // For restaurant orders, show modal directly without generating invoice
     if (isRestaurantOrder) {
@@ -1026,6 +1027,47 @@ export default function BatchDetails({
     // For restaurant/user reel orders, show modal directly
     if (order?.orderType === "reel" && isRestaurantUserReel) {
       handleReelDeliveryConfirmation();
+      return;
+    }
+
+    // For combined orders, show delivery confirmation modal with PIN verification
+    if (isCombinedOrder) {
+      const combinedInvoiceData = {
+        id: `combined_${order.id}_${Date.now()}`,
+        invoiceNumber: order.OrderID || order.id.slice(-8),
+        orderId: order.id,
+        orderNumber: order.OrderID || order.id.slice(-8),
+        customer: order.orderedBy?.name || order.user?.name || "Customer",
+        customerEmail: order.orderedBy?.email || order.user?.email || "",
+        customerPhone: order.orderedBy?.phone || order.user?.phone || "",
+        shop: order.shop?.name || "Combined Order",
+        shopAddress: order.shop?.address || "",
+        deliveryStreet: order.address?.street || "",
+        deliveryCity: order.address?.city || "",
+        deliveryPostalCode: order.address?.postal_code || "",
+        deliveryPlaceDetails: order.address?.placeDetails || null,
+        deliveryAddress: order.address
+          ? `${order.address.street || ""}, ${order.address.city || ""}${
+              order.address.postal_code ? `, ${order.address.postal_code}` : ""
+            }`
+          : "",
+        dateCreated: new Date().toLocaleString(),
+        dateCompleted: new Date().toLocaleString(),
+        status: "delivered",
+        items: [],
+        subtotal: 0,
+        serviceFee: 0,
+        deliveryFee: 0,
+        total: 0,
+        orderType: "combined",
+        isReelOrder: false,
+        isRestaurantOrder: false,
+        combinedOrderIds: order.combinedOrders?.map((o: any) => o.id) || [],
+        combinedOrderNumbers: order.combinedOrders?.map((o: any) => o.OrderID || o.id.slice(-8)) || [],
+      };
+
+      setInvoiceData(combinedInvoiceData);
+      setShowInvoiceModal(true);
       return;
     }
 
@@ -1664,6 +1706,50 @@ export default function BatchDetails({
         );
       case "on_the_way":
       case "at_customer":
+        // For combined orders, don't show individual Confirm Delivery buttons - use the main combined order button instead
+        const isPartOfCombinedOrder = order?.combinedOrders?.some((co: any) => co.id === activeOrder.id);
+        if (isPartOfCombinedOrder) {
+          return (
+            <div
+              className={`flex flex-col items-center justify-center rounded-xl border-2 p-4 text-center ${
+                theme === "dark"
+                  ? "border-blue-600 bg-blue-900/20"
+                  : "border-blue-400 bg-blue-50"
+              }`}
+            >
+              <svg
+                className={`mx-auto mb-2 h-8 w-8 ${
+                  theme === "dark" ? "text-blue-400" : "text-blue-600"
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <p
+                className={`text-sm font-medium ${
+                  theme === "dark" ? "text-blue-300" : "text-blue-800"
+                }`}
+              >
+                Part of combined order
+              </p>
+              <p
+                className={`text-xs ${
+                  theme === "dark" ? "text-blue-400" : "text-blue-600"
+                }`}
+              >
+                Use main delivery confirmation
+              </p>
+            </div>
+          );
+        }
+
         // Only show Confirm Delivery button if invoice proof has been uploaded for this specific order
         if (!uploadedProofs[activeOrder.id]) {
           return (
@@ -2242,7 +2328,7 @@ export default function BatchDetails({
           onClose={() => setShowInvoiceModal(false)}
           invoiceData={invoiceData}
           loading={invoiceLoading}
-          orderType={order?.orderType || "regular"}
+          orderType={(order?.combinedOrders && order.combinedOrders.length > 0) ? "combined" : (order?.orderType || "regular")}
         />
 
         {/* Shopper Chat Drawer - will only show on desktop when chat is open */}
@@ -2291,7 +2377,7 @@ export default function BatchDetails({
               {/* Main Info Grid - Hidden during shopping status on desktop, always visible in "Other Details" tab on mobile */}
               {(() => {
                 // For combined orders, hide the section if we have combined orders and any are still being processed
-                const hasCombinedOrders = !!(order?.combinedOrders?.length > 0);
+                const hasCombinedOrders = !!(order?.combinedOrders && order.combinedOrders.length > 0);
                 const hasUnprocessedCombinedOrders =
                   hasCombinedOrders &&
                   order?.combinedOrders?.some(
