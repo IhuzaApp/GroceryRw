@@ -2087,7 +2087,8 @@ export default function BatchDetails({
                                   key={o.id}
                                   className="rounded-lg border border-slate-100 bg-slate-50/50 p-3 dark:border-slate-700 dark:bg-slate-800/50"
                                 >
-                                  <div className="mb-3 flex items-center justify-between">
+                                  {/* Hidden: Order ID, Invoice status, and Shop name section */}
+                                  {/* <div className="mb-3 flex items-center justify-between">
                                     <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                                       #{o.OrderID || o.id.slice(-8)}
                                     </span>
@@ -2114,7 +2115,7 @@ export default function BatchDetails({
                                         {(o as any).shop?.name || o.shopName}
                                       </span>
                                     </div>
-                                  </div>
+                                  </div> */}
                                   {/* No individual button - bottom button handles unified delivery */}
                                   <div className="text-center text-xs text-slate-500">
                                     Ready for delivery
@@ -2135,7 +2136,8 @@ export default function BatchDetails({
                                   key={o.id}
                                   className="rounded-lg border border-slate-100 bg-slate-50/50 p-3 dark:border-slate-700 dark:bg-slate-800/50"
                                 >
-                                  <div className="mb-3 flex items-center justify-between">
+                                  {/* Hidden: Order ID, Invoice status, and Shop name section */}
+                                  {/* <div className="mb-3 flex items-center justify-between">
                                     <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                                       #{o.OrderID || o.id.slice(-8)}
                                     </span>
@@ -2162,7 +2164,7 @@ export default function BatchDetails({
                                         {(o as any).shop?.name || o.shopName}
                                       </span>
                                     </div>
-                                  </div>
+                                  </div> */}
                                   {getActionButton(o)}
                                 </div>
                               );
