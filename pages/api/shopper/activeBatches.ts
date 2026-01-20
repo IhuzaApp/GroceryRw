@@ -22,7 +22,9 @@ const GET_ACTIVE_ORDERS = gql`
       delivery_time
       combined_order_id
       pin
+      shop_id
       Shop {
+        id
         name
         address
         latitude
@@ -200,7 +202,9 @@ export default async function handler(
               delivery_time: string | null;
               combined_order_id: string | null;
               pin: string | null;
+              shop_id: string;
               Shop: {
+                id: string;
                 name: string;
                 address: string;
                 latitude: string;
@@ -332,23 +336,6 @@ export default async function handler(
       }
     });
 
-    return {
-      combinedOrderGroups: combinedOrdersMap.size,
-      combinedOrderDetails: Array.from(combinedOrdersMap.entries()).map(
-        ([id, orders]) => ({
-          combinedOrderId: id,
-          orderCount: orders.length,
-          orders: orders.map((o) => ({
-            id: o.id,
-            OrderID: o.OrderID,
-            status: o.status,
-            shopId: o.shop_id,
-            shopName: o.Shop.name,
-          })),
-        })
-      ),
-    };
-
     // Transform combined orders into single batches
     const transformedCombinedOrders = Array.from(
       combinedOrdersMap.entries()
@@ -387,6 +374,9 @@ export default async function handler(
           ? `${shopNamesArray[0]} and ${shopNamesArray[1]}`
           : shopNamesArray.join(", ");
       const orderIDs = orders.map((o) => o.OrderID);
+      // Use the first order as the base for common data
+      const firstOrder = orders[0];
+
       const customerNames = Array.from(
         new Set(orders.map((o) => o.orderedBy?.name).filter(Boolean))
       ) as string[];
@@ -406,9 +396,6 @@ export default async function handler(
           ? `${customerAddresses[0]} | ${customerAddresses[1]}`
           : customerAddresses.join(" | ") ||
             `${firstOrder.Address.street}, ${firstOrder.Address.city}`;
-
-      // Use the first order as the base for common data
-      const firstOrder = orders[0];
 
       return {
         id: firstOrder.id, // Use first order's ID instead of combined_order_id
