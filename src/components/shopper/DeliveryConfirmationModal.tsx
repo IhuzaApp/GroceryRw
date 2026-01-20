@@ -242,9 +242,12 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       setForceOpen(true);
 
       // For combined orders, update all orders in the group
-      const orderIdsToUpdate = invoiceData.orderType === "combined" && invoiceData.combinedOrderIds && invoiceData.combinedOrderIds.length > 0
-        ? invoiceData.combinedOrderIds
-        : [invoiceData.orderId];
+      const orderIdsToUpdate =
+        invoiceData.orderType === "combined" &&
+        invoiceData.combinedOrderIds &&
+        invoiceData.combinedOrderIds.length > 0
+          ? invoiceData.combinedOrderIds
+          : [invoiceData.orderId];
 
       // Process wallet operations for all orders
       for (const orderId of orderIdsToUpdate) {

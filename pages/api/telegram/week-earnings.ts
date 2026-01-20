@@ -126,16 +126,21 @@ export default async function handler(
         `);
 
         const deliveryCommissionPercentage = parseFloat(
-          systemConfigResponse.System_configuratioins[0]?.deliveryCommissionPercentage || "20"
+          systemConfigResponse.System_configuratioins[0]
+            ?.deliveryCommissionPercentage || "20"
         );
 
         // Calculate platform fee and net earnings
-        const platformFee = (totalEarnings * deliveryCommissionPercentage) / 100;
+        const platformFee =
+          (totalEarnings * deliveryCommissionPercentage) / 100;
         const netEarnings = totalEarnings - platformFee;
 
         return netEarnings;
       } catch (error) {
-        console.error("Error fetching commission percentage, using default 20%:", error);
+        console.error(
+          "Error fetching commission percentage, using default 20%:",
+          error
+        );
         // Fallback: deduct 20% commission
         const platformFee = (totalEarnings * 20) / 100;
         return totalEarnings - platformFee;

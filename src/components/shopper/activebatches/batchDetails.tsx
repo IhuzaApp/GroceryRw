@@ -1016,7 +1016,9 @@ export default function BatchDetails({
     const isRestaurantUserReel =
       order?.orderType === "reel" &&
       (order?.reel?.restaurant_id || order?.reel?.user_id);
-    const isCombinedOrder = order?.orderType === "combined" || (order?.combinedOrders && order.combinedOrders.length > 0);
+    const isCombinedOrder =
+      order?.orderType === "combined" ||
+      (order?.combinedOrders && order.combinedOrders.length > 0);
 
     // For restaurant orders, show modal directly without generating invoice
     if (isRestaurantOrder) {
@@ -1033,8 +1035,16 @@ export default function BatchDetails({
     // For combined orders, show delivery confirmation modal with PIN verification
     if (isCombinedOrder) {
       // For combined orders from API, use orderIds array if available, otherwise fall back to combinedOrders
-      const allOrderIds = order.orderIds || [order.id, ...(order.combinedOrders?.map((o: any) => o.id) || [])];
-      const allOrderNumbers = order.orderIDs || [order.OrderID || order.id.slice(-8), ...(order.combinedOrders?.map((o: any) => o.OrderID || o.id.slice(-8)) || [])];
+      const allOrderIds = order.orderIds || [
+        order.id,
+        ...(order.combinedOrders?.map((o: any) => o.id) || []),
+      ];
+      const allOrderNumbers = order.orderIDs || [
+        order.OrderID || order.id.slice(-8),
+        ...(order.combinedOrders?.map(
+          (o: any) => o.OrderID || o.id.slice(-8)
+        ) || []),
+      ];
 
       const combinedInvoiceData = {
         id: `combined_${order.id}_${Date.now()}`,
@@ -2288,7 +2298,11 @@ export default function BatchDetails({
           onClose={() => setShowInvoiceModal(false)}
           invoiceData={invoiceData}
           loading={invoiceLoading}
-          orderType={(order?.combinedOrders && order.combinedOrders.length > 0) ? "combined" : (order?.orderType || "regular")}
+          orderType={
+            order?.combinedOrders && order.combinedOrders.length > 0
+              ? "combined"
+              : order?.orderType || "regular"
+          }
         />
 
         {/* Shopper Chat Drawer - will only show on desktop when chat is open */}
@@ -2337,7 +2351,9 @@ export default function BatchDetails({
               {/* Main Info Grid - Hidden during shopping status on desktop, always visible in "Other Details" tab on mobile */}
               {(() => {
                 // For combined orders, hide the section if we have combined orders and any are still being processed
-                const hasCombinedOrders = !!(order?.combinedOrders && order.combinedOrders.length > 0);
+                const hasCombinedOrders = !!(
+                  order?.combinedOrders && order.combinedOrders.length > 0
+                );
                 const hasUnprocessedCombinedOrders =
                   hasCombinedOrders &&
                   order?.combinedOrders?.some(

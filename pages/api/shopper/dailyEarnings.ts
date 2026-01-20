@@ -103,7 +103,9 @@ const getDateRange = (period: string) => {
 };
 
 // Calculate net earnings from an order (after platform commission deduction)
-const calculateOrderEarnings = async (order: OrdersResponse["Orders"][0]): Promise<number> => {
+const calculateOrderEarnings = async (
+  order: OrdersResponse["Orders"][0]
+): Promise<number> => {
   const serviceFee = parseFloat(order.service_fee || "0");
   const deliveryFee = parseFloat(order.delivery_fee || "0");
   const totalEarnings = serviceFee + deliveryFee;
@@ -123,7 +125,8 @@ const calculateOrderEarnings = async (order: OrdersResponse["Orders"][0]): Promi
     `);
 
     const deliveryCommissionPercentage = parseFloat(
-      systemConfigResponse.System_configuratioins[0]?.deliveryCommissionPercentage || "20"
+      systemConfigResponse.System_configuratioins[0]
+        ?.deliveryCommissionPercentage || "20"
     );
 
     // Calculate platform fee and net earnings
@@ -132,7 +135,10 @@ const calculateOrderEarnings = async (order: OrdersResponse["Orders"][0]): Promi
 
     return netEarnings;
   } catch (error) {
-    console.error("Error fetching commission percentage, using default 20%:", error);
+    console.error(
+      "Error fetching commission percentage, using default 20%:",
+      error
+    );
     // Fallback: deduct 20% commission
     const platformFee = (totalEarnings * 20) / 100;
     return totalEarnings - platformFee;
@@ -318,10 +324,13 @@ export default async function handler(
     const formattedData = await formatEarningsData(data.Orders, period);
 
     // Calculate the total net earnings (after commission)
-    const totalEarnings = await data.Orders.reduce(async (totalPromise, order) => {
-      const total = await totalPromise;
-      return total + await calculateOrderEarnings(order);
-    }, Promise.resolve(0));
+    const totalEarnings = await data.Orders.reduce(
+      async (totalPromise, order) => {
+        const total = await totalPromise;
+        return total + (await calculateOrderEarnings(order));
+      },
+      Promise.resolve(0)
+    );
 
     // Create a response that includes the earnings structure expected by the Sidebar
     return res.status(200).json({
