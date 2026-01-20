@@ -224,7 +224,7 @@ const GET_REEL_ORDER_DETAILS = gql`
       delivery_fee
       total
       quantity
-      delivery_note
+      delivery_notes
       Reel {
         id
         title
@@ -956,8 +956,8 @@ export default async function handler(
           user_id: orderData.Reel?.user_id,
         },
         quantity: quantity,
-        deliveryNote: orderData.delivery_note,
-        deliveryNotes: orderData.delivery_note, // Add deliveryNotes for compatibility
+        deliveryNote: orderData.delivery_notes,
+        deliveryNotes: orderData.delivery_notes, // Add deliveryNotes for compatibility
         customerName: orderData.user?.name,
         customerPhone: orderData.user?.phone,
         user: orderData.user, // Include full user data
