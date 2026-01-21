@@ -12,6 +12,23 @@ const GET_ORDER_DETAILS = gql`
       delivery_fee
       shopper_id
       user_id
+      combined_order_id
+      shop_id
+    }
+  }
+`;
+
+// GraphQL query to get combined orders from same shop
+const GET_COMBINED_ORDERS_SAME_SHOP = gql`
+  query GetCombinedOrdersSameShop($combinedId: uuid!, $shopId: uuid!) {
+    Orders(where: {
+      combined_order_id: { _eq: $combinedId }
+      shop_id: { _eq: $shopId }
+      shopper_id: { _is_null: false }
+    }) {
+      id
+      total
+      shop_id
     }
   }
 `;
@@ -488,7 +505,37 @@ export async function processWalletOperation(
   }
 
   const wallet = walletData.Wallets[0];
-  const orderTotal = parseFloat(order.total);
+
+  // Calculate order total - for same-shop combined orders, use batch total
+  let orderTotal = parseFloat(order.total);
+
+  // Check if this is a same-shop combined order for shopping operation
+  if (operation === "shopping" && !isReelOrder && !isRestaurantOrder && order.combined_order_id) {
+    try {
+      const combinedOrdersData = await hasuraClient!.request<{
+        Orders: Array<{
+          id: string;
+          total: string;
+          shop_id: string;
+        }>;
+      }>(GET_COMBINED_ORDERS_SAME_SHOP, {
+        combinedId: order.combined_order_id,
+        shopId: order.shop_id,
+      });
+
+      if (combinedOrdersData.Orders && combinedOrdersData.Orders.length > 1) {
+        // Calculate total for entire batch
+        orderTotal = combinedOrdersData.Orders.reduce((sum, combinedOrder) => {
+          return sum + parseFloat(combinedOrder.total);
+        }, 0);
+
+        console.log("🔍 WALLET OPERATION - Same shop batch total calculated:", orderTotal);
+      }
+    } catch (error) {
+      console.error("Error fetching combined orders for wallet operation:", error);
+      // Fall back to single order total if combined order query fails
+    }
+  }
 
   // Handle different wallet operations
   switch (operation) {
@@ -513,6 +560,32 @@ export async function processWalletOperation(
       );
 
     case "cancelled":
+      // For cancelled operations, we need to handle combined orders differently
+      // since the cancellation might affect the entire batch
+      if (!isReelOrder && !isRestaurantOrder && order.combined_order_id) {
+        // For same-shop combined orders, calculate the batch total for refund
+        try {
+          const combinedOrdersData = await hasuraClient!.request<{
+            Orders: Array<{
+              id: string;
+              total: string;
+              shop_id: string;
+            }>;
+          }>(GET_COMBINED_ORDERS_SAME_SHOP, {
+            combinedId: order.combined_order_id,
+            shopId: order.shop_id,
+          });
+
+          if (combinedOrdersData.Orders && combinedOrdersData.Orders.length > 1) {
+            orderTotal = combinedOrdersData.Orders.reduce((sum, combinedOrder) => {
+              return sum + parseFloat(combinedOrder.total);
+            }, 0);
+          }
+        } catch (error) {
+          console.error("Error fetching combined orders for cancellation:", error);
+        }
+      }
+
       return await handleCancelledOperation(
         wallet,
         order,
