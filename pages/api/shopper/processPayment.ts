@@ -97,13 +97,14 @@ const GET_SHOPPER_WALLET = gql`
 
 // GraphQL mutation to update wallet balances
 const UPDATE_WALLET_BALANCES = gql`
-  mutation UpdateWalletBalances($wallet_id: uuid!, $reserved_balance: String!) {
+  mutation UpdateWalletBalances($wallet_id: uuid!, $reserved_balance: String!, $available_balance: String!) {
     update_Wallets_by_pk(
       pk_columns: { id: $wallet_id }
-      _set: { reserved_balance: $reserved_balance }
+      _set: { reserved_balance: $reserved_balance, available_balance: $available_balance }
     ) {
       id
       reserved_balance
+      available_balance
     }
   }
 `;
@@ -255,6 +256,8 @@ export default async function handler(
       orderType,
       momoReferenceId,
       momoSuccess,
+      isSameShopCombined,
+      combinedOrders,
     } = req.body;
 
     console.log("🔍 BACKEND: Extracted request data:");
@@ -431,73 +434,99 @@ export default async function handler(
       });
     }
 
-    // Calculate refund amount if needed
-    let refundAmount = 0;
-    let refundNeeded = false;
-    let refundReason = "";
-    let refundData = null;
+    // Calculate refunds - for combined orders, create separate refunds for each order
+    let refundsData: any[] = [];
+    let totalRefundAmount = 0;
 
-    // For combined orders, use the batch total; otherwise use individual order total
-    const totalOrderValue = hasCombinedOrders
-      ? batchTotal
-      : (originalOrderTotal || parseFloat(isReelOrder ? orderData.total : orderData.total));
+    if (hasCombinedOrders && !isReelOrder) {
+      if (isSameShopCombined) {
+        // For same-shop combined orders, no refunds are needed
+        // The shopper gets paid for all found items and receives fees
+        // Refunds only apply when specific items are not found, but for same-shop
+        // combined orders, the shopper either finds all items or none
+        console.log("🔍 BACKEND: Same-shop combined order - no individual refunds needed");
+      } else {
+        // For different-shop combined orders, calculate refunds for each order individually
+        for (const order of allOrdersInBatch) {
+          const orderTotal = parseFloat(order.total);
+          const orderItemsTotal = order.Order_Items?.reduce((sum: number, item: any) => {
+            return sum + (parseFloat(item.price) * item.quantity);
+          }, 0) || 0;
 
-    // Calculate if there's a difference between original total and found items total
-    if (totalOrderValue > formattedOrderAmount) {
-      refundAmount = parseFloat(
-        (totalOrderValue - formattedOrderAmount).toFixed(2)
-      );
-      refundNeeded = true;
+          // Check if this order needs a refund
+          if (orderTotal > orderItemsTotal) {
+            const orderRefundAmount = parseFloat((orderTotal - orderItemsTotal).toFixed(2));
+            totalRefundAmount += orderRefundAmount;
 
-      // Get shop/restaurant name
-      const shopName = isReelOrder
-        ? orderData.Reel?.Restaurant?.name || "Unknown Restaurant"
-        : hasCombinedOrders
-        ? "Multiple Shops (Combined Order)"
-        : orderData.Shop?.name || "Unknown Shop";
+            // Create refund reason for this specific order
+            const shopName = order.Shop?.name || "Unknown Shop";
+            let orderRefundReason = `Refund for items not found during shopping at ${shopName}. `;
 
-      // Create detailed reason for the refund
-      refundReason = `Refund for items not found during shopping at ${shopName}. `;
+            // List items for this specific order
+            const orderItems = order.Order_Items?.map((item: any) =>
+              `${item.Product.ProductName?.name || "Unknown Product"} (${item.quantity})`
+            ).join(", ") || "No items found";
 
-      if (isReelOrder) {
-        // For reel orders, we don't have individual items, so just use the product name
-        refundReason += `Reel order: ${
-          orderData.Reel?.Restaurant?.name || "Unknown Restaurant"
-        }. `;
-      } else if (hasCombinedOrders) {
-        // For combined orders, list all shops and their items
-        const allShops = allOrdersInBatch.map(order =>
-          `${order.Shop?.name || "Unknown Shop"} (${order.OrderID})`
-        ).join(", ");
-        refundReason += `Combined orders from shops: ${allShops}. `;
+            orderRefundReason += `Order items: ${orderItems}. `;
+            orderRefundReason += `Original total: ${orderTotal}, found items total: ${orderItemsTotal}, refund amount: ${orderRefundAmount}.`;
 
-        // List all items from all orders
-        const allItems = allOrdersInBatch.flatMap(order =>
-          order.Order_Items?.map((item: any) =>
-            `${item.Product.ProductName?.name || "Unknown Product"} (${
-              item.quantity
-            }) from ${order.Shop?.name || "Unknown Shop"}`
-          ) || []
-        ).join(", ");
-        if (allItems) {
+            refundsData.push({
+              order_id: order.id,
+              amount: orderRefundAmount.toString(),
+              reason: orderRefundReason,
+              user_id: order.user_id,
+              status: "pending",
+              generated_by: "System",
+              paid: false,
+            });
+          }
+        }
+      }
+    } else {
+      // For single orders or reel orders, use existing logic
+      const totalOrderValue = originalOrderTotal || parseFloat(isReelOrder ? orderData.total : orderData.total);
+
+      // Calculate if there's a difference between original total and found items total
+      if (totalOrderValue > formattedOrderAmount) {
+        totalRefundAmount = parseFloat((totalOrderValue - formattedOrderAmount).toFixed(2));
+
+        // Get shop/restaurant name
+        const shopName = isReelOrder
+          ? orderData.Reel?.Restaurant?.name || "Unknown Restaurant"
+          : orderData.Shop?.name || "Unknown Shop";
+
+        // Create detailed reason for the refund
+        let refundReason = `Refund for items not found during shopping at ${shopName}. `;
+
+        if (isReelOrder) {
+          refundReason += `Reel order: ${orderData.Reel?.Restaurant?.name || "Unknown Restaurant"}. `;
+        } else {
+          // List all order items for regular single orders
+          const allItems = orderData.Order_Items.map(
+            (item: any) =>
+              `${item.Product.ProductName?.name || "Unknown Product"} (${item.quantity})`
+          ).join(", ");
           refundReason += `Order items: ${allItems}. `;
         }
-      } else {
-        // List all order items for regular single orders
-        const allItems = orderData.Order_Items.map(
-          (item: any) =>
-            `${item.Product.ProductName?.name || "Unknown Product"} (${
-              item.quantity
-            })`
-        ).join(", ");
-        refundReason += `Order items: ${allItems}. `;
-      }
 
-      refundReason += `Original total: ${totalOrderValue}, found items total: ${formattedOrderAmount}, refund amount: ${refundAmount}.`;
+        refundReason += `Original total: ${totalOrderValue}, found items total: ${formattedOrderAmount}, refund amount: ${totalRefundAmount}.`;
+
+        refundsData.push({
+          order_id: orderId,
+          amount: totalRefundAmount.toString(),
+          reason: refundReason,
+          user_id: orderData.user_id,
+          status: "pending",
+          generated_by: "System",
+          paid: false,
+        });
+      }
     }
 
-    // Handle refund creation first if needed
-    if (refundNeeded && refundAmount > 0) {
+    // Handle refund creation for each refund in the array
+    let createdRefunds: any[] = [];
+
+    for (const refundRecord of refundsData) {
       try {
         // Check if refund already exists for this order
         const existingRefundResponse = await hasuraClient.request<{
@@ -511,7 +540,7 @@ export default async function handler(
             paid: boolean;
           }>;
         }>(CHECK_EXISTING_REFUND, {
-          order_id: orderId,
+          order_id: refundRecord.order_id,
         });
 
         if (
@@ -519,19 +548,10 @@ export default async function handler(
           existingRefundResponse.Refunds.length > 0
         ) {
           // Refund already exists, use the existing one
-          refundData = existingRefundResponse.Refunds[0];
+          createdRefunds.push(existingRefundResponse.Refunds[0]);
+          console.log(`Refund already exists for order ${refundRecord.order_id}`);
         } else {
-          // Create new refund record with all required fields
-          const refundRecord = {
-            order_id: orderId,
-            amount: refundAmount.toString(),
-            status: "pending",
-            reason: refundReason,
-            user_id: orderData.user_id,
-            generated_by: "System",
-            paid: false,
-          };
-
+          // Create new refund record
           const refundResponse = await hasuraClient.request<RefundResponse>(
             CREATE_REFUND,
             {
@@ -541,14 +561,15 @@ export default async function handler(
 
           if (!refundResponse || !refundResponse.insert_Refunds_one) {
             throw new Error(
-              "Refund creation failed: Empty response from database"
+              `Refund creation failed for order ${refundRecord.order_id}: Empty response from database`
             );
           }
 
-          refundData = refundResponse.insert_Refunds_one;
+          createdRefunds.push(refundResponse.insert_Refunds_one);
+          console.log(`Created refund for order ${refundRecord.order_id}: ${refundResponse.insert_Refunds_one.amount}`);
         }
       } catch (refundError) {
-        console.error("Error creating refund record:", refundError);
+        console.error(`Error creating refund for order ${refundRecord.order_id}:`, refundError);
         // Add more detailed error logging to help diagnose the issue
         if (refundError instanceof Error) {
           console.error("Error message:", refundError.message);
@@ -556,7 +577,7 @@ export default async function handler(
         }
         // Fail the entire transaction if refund creation fails
         throw new Error(
-          `Failed to create refund: ${
+          `Failed to create refund for order ${refundRecord.order_id}: ${
             refundError instanceof Error ? refundError.message : "Unknown error"
           }`
         );
@@ -577,9 +598,39 @@ export default async function handler(
     console.log("🔍 Backend: batchTotal:", batchTotal);
     console.log("🔍 Backend: originalOrderTotal:", originalOrderTotal);
     console.log("🔍 Backend: formattedOrderAmount:", formattedOrderAmount);
+    console.log("🔍 Backend: isSameShopCombined:", isSameShopCombined);
     console.log("🔍 Backend: originalAmount to deduct:", originalAmount);
 
-    const newReserved = currentReserved - originalAmount;
+    let newReserved = currentReserved;
+    let newAvailable = parseFloat(wallet.available_balance);
+
+    if (isSameShopCombined && hasCombinedOrders) {
+      // SAME SHOP COMBINED ORDERS: Special wallet handling
+      console.log("🔍 BACKEND: SAME SHOP COMBINED - Special wallet logic");
+
+      // 1. Remove found items amount from reserved balance
+      newReserved = currentReserved - formattedOrderAmount;
+      console.log("🔍 BACKEND: Deducting found items from reserved:", formattedOrderAmount);
+
+      // 2. Calculate total fees from all orders in the batch (shopper earnings)
+      let totalFees = 0;
+      allOrdersInBatch.forEach((order: any) => {
+        const serviceFee = parseFloat(order.service_fee || "0");
+        const deliveryFee = parseFloat(order.delivery_fee || "0");
+        totalFees += serviceFee + deliveryFee;
+        console.log(`🔍 BACKEND: Order ${order.id} fees: service ${serviceFee} + delivery ${deliveryFee} = ${serviceFee + deliveryFee}`);
+      });
+
+      console.log("🔍 BACKEND: Total fees (shopper earnings):", totalFees);
+
+      // 3. Add fees to available balance
+      newAvailable = parseFloat(wallet.available_balance) + totalFees;
+      console.log("🔍 BACKEND: Adding fees to available balance:", newAvailable);
+
+    } else {
+      // NORMAL ORDERS: Use existing logic
+      newReserved = currentReserved - originalAmount;
+    }
 
     console.log("🔍 BACKEND: ===== WALLET UPDATE CALCULATION =====");
     console.log("🔍 BACKEND: hasCombinedOrders:", hasCombinedOrders);
@@ -592,9 +643,12 @@ export default async function handler(
 
     // Update the wallet balances
     console.log("🔍 BACKEND: Executing wallet update...");
+    console.log("🔍 BACKEND: New reserved balance:", newReserved);
+    console.log("🔍 BACKEND: New available balance:", newAvailable);
     const updateResult = await hasuraClient.request(UPDATE_WALLET_BALANCES, {
       wallet_id: walletId,
       reserved_balance: newReserved.toString(),
+      available_balance: newAvailable.toString(),
     });
     console.log("🔍 BACKEND: Wallet update result:", updateResult);
     console.log("🔍 BACKEND: Wallet update completed successfully");
@@ -652,9 +706,21 @@ export default async function handler(
       // Skipping wallet transaction creation for reel order to avoid foreign key constraint issues
     }
 
+    // Calculate fees added for same-shop combined orders
+    let feesAddedToAvailable = 0;
+    if (isSameShopCombined && hasCombinedOrders) {
+      allOrdersInBatch.forEach((order: any) => {
+        const serviceFee = parseFloat(order.service_fee || "0");
+        const deliveryFee = parseFloat(order.delivery_fee || "0");
+        feesAddedToAvailable += serviceFee + deliveryFee;
+      });
+    }
+
     const responseData = {
       success: true,
-      message: hasCombinedOrders
+      message: isSameShopCombined
+        ? "Same-shop combined orders payment processed successfully"
+        : hasCombinedOrders
         ? "Combined orders payment processed successfully"
         : "Payment processed successfully",
       paymentDetails: {
@@ -663,15 +729,19 @@ export default async function handler(
         originalTotal: originalOrderTotal,
         batchTotal: hasCombinedOrders ? batchTotal : undefined,
         combinedOrdersCount: hasCombinedOrders ? allOrdersInBatch.length : undefined,
+        isSameShopCombined: isSameShopCombined,
         timestamp: new Date().toISOString(),
       },
       walletUpdate: {
         oldReservedBalance: currentReserved,
         newReservedBalance: newReserved,
-        deductedAmount: originalAmount,
+        oldAvailableBalance: parseFloat(wallet.available_balance),
+        newAvailableBalance: newAvailable,
+        deductedAmount: isSameShopCombined ? formattedOrderAmount : originalAmount,
+        feesAddedToAvailable: feesAddedToAvailable,
       },
-      refund: refundData,
-      refundAmount: refundAmount,
+      refunds: createdRefunds,
+      totalRefundAmount: totalRefundAmount,
     };
 
     console.log("🔍 Backend: Sending response:", responseData);

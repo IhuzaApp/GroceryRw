@@ -167,67 +167,88 @@ export default function OrderSummarySection({
           <>
             {getActiveOrder.status === "shopping" && (
               <>
-                <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
-                  <span>Items Found</span>
-                  <span className="font-medium">
-                    {getActiveOrderItems.filter((item) => item.found)
-                      .length || 0}{" "}
-                    / {getActiveOrderItems.length || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
-                  <span>Units Found</span>
-                  <span className="font-medium">
-                    {getActiveOrderItems.reduce((total, item) => {
-                      if (item.found) {
-                        return total + (item.foundQuantity || item.quantity);
-                      }
-                      return total;
-                    }, 0) || 0}{" "}
-                    /{" "}
-                    {getActiveOrderItems.reduce(
-                      (total, item) => total + item.quantity,
-                      0
-                    ) || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
-                  <span>Units Not Found</span>
-                  <span className="font-medium">
-                    {getActiveOrderItems.reduce((total, item) => {
-                      if (!item.found) {
-                        return total + item.quantity;
-                      } else if (
-                        item.found &&
-                        item.foundQuantity &&
-                        item.foundQuantity < item.quantity
-                      ) {
-                        return total + (item.quantity - item.foundQuantity);
-                      }
-                      return total;
-                    }, 0) || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm text-red-600 dark:text-red-400">
-                  <span>Refund Amount</span>
-                  <span className="font-medium">
-                    -
-                    {formatCurrency(
-                      getActiveOrderItems.reduce((total, item) => {
-                        return total + item.price * item.quantity;
-                      }, 0) -
-                        getActiveOrderItems.reduce((total, item) => {
-                          if (item.found) {
-                            return (
-                              total +
-                              item.price * (item.foundQuantity || item.quantity)
-                            );
-                          }
-                          return total;
-                        }, 0)
-                    )}
-                  </span>
-                </div>
+                {(() => {
+                  // Check if we have same-shop combined orders
+                  const hasCombinedOrders = order?.combinedOrders && order.combinedOrders.length > 0;
+                  const mainShopId = order?.shop?.id;
+                  const sameShopCombinedOrders = hasCombinedOrders
+                    ? order.combinedOrders.filter(co => co.shop?.id === mainShopId)
+                    : [];
+                  const hasSameShopCombinedOrders = sameShopCombinedOrders.length > 0;
+
+                  // For same-shop combined orders, aggregate items from all orders in the batch
+                  const summaryItems = hasSameShopCombinedOrders
+                    ? [
+                        ...(order?.Order_Items || []),
+                        ...sameShopCombinedOrders.flatMap(co => co.Order_Items || [])
+                      ]
+                    : getActiveOrderItems;
+
+                  const itemsFound = summaryItems.filter((item) => item.found).length;
+                  const totalItems = summaryItems.length;
+                  const unitsFound = summaryItems.reduce((total, item) => {
+                    if (item.found) {
+                      return total + (item.foundQuantity || item.quantity);
+                    }
+                    return total;
+                  }, 0);
+                  const totalUnits = summaryItems.reduce(
+                    (total, item) => total + item.quantity,
+                    0
+                  );
+                  const unitsNotFound = summaryItems.reduce((total, item) => {
+                    if (!item.found) {
+                      return total + item.quantity;
+                    } else if (
+                      item.found &&
+                      item.foundQuantity &&
+                      item.foundQuantity < item.quantity
+                    ) {
+                      return total + (item.quantity - item.foundQuantity);
+                    }
+                    return total;
+                  }, 0);
+                  const refundAmount = summaryItems.reduce((total, item) => {
+                    return total + item.price * item.quantity;
+                  }, 0) - summaryItems.reduce((total, item) => {
+                    if (item.found) {
+                      return (
+                        total +
+                        item.price * (item.foundQuantity || item.quantity)
+                      );
+                    }
+                    return total;
+                  }, 0);
+
+                  return (
+                    <>
+                      <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
+                        <span>Items Found</span>
+                        <span className="font-medium">
+                          {itemsFound} / {totalItems}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
+                        <span>Units Found</span>
+                        <span className="font-medium">
+                          {unitsFound} / {totalUnits}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
+                        <span>Units Not Found</span>
+                        <span className="font-medium">
+                          {unitsNotFound}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm text-red-600 dark:text-red-400">
+                        <span>Refund Amount</span>
+                        <span className="font-medium">
+                          -{formatCurrency(refundAmount)}
+                        </span>
+                      </div>
+                    </>
+                  );
+                })()}
               </>
             )}
             {(() => {

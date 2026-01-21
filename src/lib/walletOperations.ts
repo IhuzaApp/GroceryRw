@@ -506,33 +506,57 @@ export async function processWalletOperation(
 
   const wallet = walletData.Wallets[0];
 
-  // Calculate order total - for same-shop combined orders, use batch total
+  // Calculate order total - for same-shop combined orders, calculate from Order_Items
   let orderTotal = parseFloat(order.total);
 
   // Check if this is a same-shop combined order for shopping operation
   if (operation === "shopping" && !isReelOrder && !isRestaurantOrder && order.combined_order_id) {
     try {
+      // Query to get order items for combined orders
+      const GET_COMBINED_ORDER_ITEMS = gql`
+        query GetCombinedOrderItems($combinedId: uuid!, $shopId: uuid!) {
+          Orders(where: {
+            combined_order_id: { _eq: $combinedId }
+            shop_id: { _eq: $shopId }
+            shopper_id: { _is_null: false }
+          }) {
+            id
+            Order_Items {
+              price
+              quantity
+            }
+          }
+        }
+      `;
+
       const combinedOrdersData = await hasuraClient!.request<{
         Orders: Array<{
           id: string;
-          total: string;
-          shop_id: string;
+          Order_Items: Array<{
+            price: string;
+            quantity: string;
+          }>;
         }>;
-      }>(GET_COMBINED_ORDERS_SAME_SHOP, {
+      }>(GET_COMBINED_ORDER_ITEMS, {
         combinedId: order.combined_order_id,
         shopId: order.shop_id,
       });
 
-      if (combinedOrdersData.Orders && combinedOrdersData.Orders.length > 1) {
-        // Calculate total for entire batch
-        orderTotal = combinedOrdersData.Orders.reduce((sum, combinedOrder) => {
-          return sum + parseFloat(combinedOrder.total);
+      if (combinedOrdersData.Orders && combinedOrdersData.Orders.length > 0) {
+        // Calculate total from all Order_Items across the batch
+        orderTotal = combinedOrdersData.Orders.reduce((batchTotal, combinedOrder) => {
+          const orderItemsTotal = combinedOrder.Order_Items.reduce((orderTotal, item) => {
+            const price = parseFloat(item.price || "0");
+            const quantity = parseFloat(item.quantity || "0");
+            return orderTotal + (price * quantity);
+          }, 0);
+          return batchTotal + orderItemsTotal;
         }, 0);
 
-        console.log("🔍 WALLET OPERATION - Same shop batch total calculated:", orderTotal);
+        console.log("🔍 WALLET OPERATION - Same shop batch total from items:", orderTotal);
       }
     } catch (error) {
-      console.error("Error fetching combined orders for wallet operation:", error);
+      console.error("Error fetching combined order items for wallet operation:", error);
       // Fall back to single order total if combined order query fails
     }
   }
@@ -563,26 +587,49 @@ export async function processWalletOperation(
       // For cancelled operations, we need to handle combined orders differently
       // since the cancellation might affect the entire batch
       if (!isReelOrder && !isRestaurantOrder && order.combined_order_id) {
-        // For same-shop combined orders, calculate the batch total for refund
+        // For same-shop combined orders, calculate the batch total from items for refund
         try {
+          const GET_COMBINED_ORDER_ITEMS = gql`
+            query GetCombinedOrderItems($combinedId: uuid!, $shopId: uuid!) {
+              Orders(where: {
+                combined_order_id: { _eq: $combinedId }
+                shop_id: { _eq: $shopId }
+                shopper_id: { _is_null: false }
+              }) {
+                id
+                Order_Items {
+                  price
+                  quantity
+                }
+              }
+            }
+          `;
+
           const combinedOrdersData = await hasuraClient!.request<{
             Orders: Array<{
               id: string;
-              total: string;
-              shop_id: string;
+              Order_Items: Array<{
+                price: string;
+                quantity: string;
+              }>;
             }>;
-          }>(GET_COMBINED_ORDERS_SAME_SHOP, {
+          }>(GET_COMBINED_ORDER_ITEMS, {
             combinedId: order.combined_order_id,
             shopId: order.shop_id,
           });
 
-          if (combinedOrdersData.Orders && combinedOrdersData.Orders.length > 1) {
-            orderTotal = combinedOrdersData.Orders.reduce((sum, combinedOrder) => {
-              return sum + parseFloat(combinedOrder.total);
+          if (combinedOrdersData.Orders && combinedOrdersData.Orders.length > 0) {
+            orderTotal = combinedOrdersData.Orders.reduce((batchTotal, combinedOrder) => {
+              const orderItemsTotal = combinedOrder.Order_Items.reduce((orderTotal, item) => {
+                const price = parseFloat(item.price || "0");
+                const quantity = parseFloat(item.quantity || "0");
+                return orderTotal + (price * quantity);
+              }, 0);
+              return batchTotal + orderItemsTotal;
             }, 0);
           }
         } catch (error) {
-          console.error("Error fetching combined orders for cancellation:", error);
+          console.error("Error fetching combined order items for cancellation:", error);
         }
       }
 
