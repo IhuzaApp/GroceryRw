@@ -178,6 +178,114 @@ export default function BatchDetails({
   const [otp, setOtp] = useState("");
   const [generatedOtp, setGeneratedOtp] = useState("");
   const [otpVerifyLoading, setOtpVerifyLoading] = useState(false);
+
+  // Debug log to verify console is working
+  console.log("🔍 DEBUG: BatchDetails component rendered, order:", order?.id);
+
+  // Detailed order information logging
+  useEffect(() => {
+    if (order) {
+      console.log("🔍 DETAILED ORDER INFO:");
+      console.log("🔍 Order ID:", order.id);
+      console.log("🔍 Order total:", order.total);
+      console.log("🔍 Order status:", order.status);
+      console.log("🔍 Order type:", order.orderType);
+      console.log("🔍 Has combinedOrders array:", !!order.combinedOrders);
+      console.log("🔍 CombinedOrders count:", order.combinedOrders?.length || 0);
+
+      if (order.combinedOrders && order.combinedOrders.length > 0) {
+        console.log("🔍 COMBINED ORDERS DETAILS:");
+        order.combinedOrders.forEach((co, index) => {
+          console.log(`🔍 Combined Order ${index + 1}:`, {
+            id: co.id,
+            total: co.total,
+            status: co.status,
+            orderType: co.orderType,
+            shop: co.shop?.name || 'No shop'
+          });
+        });
+
+        // For wallet calculations, use base item totals (all items), not found items
+        console.log("🔍 DETAILED ITEM CALCULATIONS:");
+
+        // Check if combined orders are from same shop or different shops
+        const mainShopId = order.shop?.id;
+        const sameShopOrders = order.combinedOrders.filter(co => co.shop?.id === mainShopId);
+        const differentShopOrders = order.combinedOrders.filter(co => co.shop?.id !== mainShopId);
+
+        console.log(`🔍 Main shop: ${mainShopId}`);
+        console.log(`🔍 Same shop combined orders: ${sameShopOrders.length}`);
+        console.log(`🔍 Different shop combined orders: ${differentShopOrders.length}`);
+
+        let batchTotal = 0;
+
+        if (sameShopOrders.length > 0) {
+          // For same shop combined orders: sum all items from main + all combined orders
+          console.log("🔍 SAME SHOP LOGIC: Summing all orders (main + combined)");
+          let allOrdersTotal = 0;
+
+          // Main order items
+          if (order.Order_Items) {
+            console.log("🔍 Main order items:");
+            order.Order_Items.forEach((item, index) => {
+              const price = parseFloat(item.price?.toString() || "0");
+              const quantity = parseFloat(item.quantity?.toString() || "0");
+              const itemTotal = price * quantity;
+              console.log(`🔍 Item ${index + 1}: $${price} × ${quantity} = $${itemTotal}`);
+              allOrdersTotal += itemTotal;
+            });
+          }
+
+          // Same shop combined order items
+          sameShopOrders.forEach((co, coIndex) => {
+            if (co.Order_Items) {
+              console.log(`🔍 Combined order ${coIndex + 1} (${co.id}) items:`);
+              co.Order_Items.forEach((item, itemIndex) => {
+                const price = parseFloat(item.price?.toString() || "0");
+                const quantity = parseFloat(item.quantity?.toString() || "0");
+                const itemTotal = price * quantity;
+                console.log(`🔍 Item ${itemIndex + 1}: $${price} × ${quantity} = $${itemTotal}`);
+                allOrdersTotal += itemTotal;
+              });
+            }
+          });
+
+          batchTotal = allOrdersTotal;
+          console.log("🔍 Same shop batch total:", batchTotal);
+
+        } else if (differentShopOrders.length > 0) {
+          // For different shop combined orders: items are already aggregated in Order_Items during data transformation
+          console.log("🔍 DIFFERENT SHOP LOGIC: Items already aggregated in main Order_Items");
+          if (order.Order_Items) {
+            console.log("🔍 All aggregated items (main + different shop combined):");
+            order.Order_Items.forEach((item, index) => {
+              const price = parseFloat(item.price?.toString() || "0");
+              const quantity = parseFloat(item.quantity?.toString() || "0");
+              const itemTotal = price * quantity;
+              console.log(`🔍 Item ${index + 1}: $${price} × ${quantity} = $${itemTotal}`);
+              batchTotal += itemTotal;
+            });
+          }
+          console.log("🔍 Different shop batch total:", batchTotal);
+        } else {
+          // No combined orders, just main order
+          console.log("🔍 SINGLE ORDER: Main order only");
+          if (order.Order_Items) {
+            order.Order_Items.forEach((item, index) => {
+              const price = parseFloat(item.price?.toString() || "0");
+              const quantity = parseFloat(item.quantity?.toString() || "0");
+              const itemTotal = price * quantity;
+              console.log(`🔍 Item ${index + 1}: $${price} × ${quantity} = $${itemTotal}`);
+              batchTotal += itemTotal;
+            });
+          }
+          console.log("🔍 Single order total:", batchTotal);
+        }
+      } else {
+        console.log("🔍 No combined orders found");
+      }
+    }
+  }, [order]);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [invoiceData, setInvoiceData] = useState<any>(null);
   const [invoiceLoading, setInvoiceLoading] = useState(false);
@@ -278,6 +386,50 @@ export default function BatchDetails({
 
     return 0;
   }, [order]);
+
+  // Calculate unique shops from main order and combined orders
+  const uniqueShops = useMemo(() => {
+    const shops = [];
+    const shopIds = new Set();
+
+    // Add main order shop
+    if (order?.shop && !shopIds.has(order.shop.id)) {
+      shopIds.add(order.shop.id);
+      shops.push(order.shop);
+    }
+
+    // Add shops from combined orders
+    order?.combinedOrders?.forEach((combinedOrder) => {
+      if (combinedOrder?.shop && !shopIds.has(combinedOrder.shop.id)) {
+        shopIds.add(combinedOrder.shop.id);
+        shops.push(combinedOrder.shop);
+      }
+    });
+
+    return shops;
+  }, [order?.shop, order?.combinedOrders]);
+
+  // Calculate unique customers from main order and combined orders
+  const uniqueCustomers = useMemo(() => {
+    const customers = [];
+    const customerIds = new Set();
+
+    // Add main order customer
+    if (order?.user && !customerIds.has(order.user.id)) {
+      customerIds.add(order.user.id);
+      customers.push(order.user);
+    }
+
+    // Add customers from combined orders
+    order?.combinedOrders?.forEach((combinedOrder) => {
+      if (combinedOrder?.user && !customerIds.has(combinedOrder.user.id)) {
+        customerIds.add(combinedOrder.user.id);
+        customers.push(combinedOrder.user);
+      }
+    });
+
+    return customers;
+  }, [order?.user, order?.combinedOrders]);
 
   // Add useEffect to get current location when component mounts
   useEffect(() => {
@@ -624,13 +776,111 @@ export default function BatchDetails({
 
     setPaymentLoading(true);
     // Payment debug info calculated
+    console.log("🔍 DEBUG: Starting wallet balance check for payment");
     try {
       // First check if there's enough balance in the wallet
       const wallet = await fetchWalletBalance();
 
       if (wallet) {
-        const orderAmount = calculateFoundItemsTotal();
+        // For combined orders, just add the total of all orders
+        const hasCombinedOrders = order?.combinedOrders && order.combinedOrders.length > 0;
+        let orderAmount = 0;
+        if (hasCombinedOrders) {
+          console.log("🔍 Frontend: Processing combined orders");
+          console.log("🔍 Frontend: Main order stored total (with fees):", order.total);
+
+          console.log("🔍 Frontend: Combined orders details:");
+          order.combinedOrders?.forEach((co: any, index: number) => {
+            console.log(`🔍 Frontend: Combined order ${index + 1}:`, {
+              id: co.id,
+              storedTotal: co.total,
+              status: co.status
+            });
+          });
+
+          // Check if combined orders are from same shop or different shops
+          const mainShopId = order.shop?.id;
+          const sameShopOrders = order.combinedOrders.filter(co => co.shop?.id === mainShopId);
+          const differentShopOrders = order.combinedOrders.filter(co => co.shop?.id !== mainShopId);
+
+          console.log(`🔍 Frontend: Main shop: ${mainShopId}`);
+          console.log(`🔍 Frontend: Same shop combined orders: ${sameShopOrders.length}`);
+          console.log(`🔍 Frontend: Different shop combined orders: ${differentShopOrders.length}`);
+
+          if (sameShopOrders.length > 0) {
+            // SAME SHOP: Reserve entire batch total (they shop together)
+            console.log("🔍 Frontend: SAME SHOP LOGIC - Reserve batch total");
+            orderAmount = 0;
+
+            // Sum ALL items from main order and same-shop combined orders
+            if (order.Order_Items) {
+              order.Order_Items.forEach((item) => {
+                const price = parseFloat(item.price?.toString() || "0");
+                const quantity = parseFloat(item.quantity?.toString() || "0");
+                orderAmount += price * quantity;
+              });
+            }
+
+            sameShopOrders.forEach((co: any) => {
+              if (co.Order_Items) {
+                co.Order_Items.forEach((item) => {
+                  const price = parseFloat(item.price?.toString() || "0");
+                  const quantity = parseFloat(item.quantity?.toString() || "0");
+                  orderAmount += price * quantity;
+                });
+              }
+            });
+
+            console.log("🔍 Frontend: Same shop batch total reserved:", orderAmount);
+
+          } else if (differentShopOrders.length > 0) {
+            // DIFFERENT SHOPS: Reserve only current order total (they shop separately)
+            console.log("🔍 Frontend: DIFFERENT SHOP LOGIC - Reserve only current order");
+
+            // Only reserve for the current/main order items
+            if (order.Order_Items) {
+              order.Order_Items.forEach((item) => {
+                const price = parseFloat(item.price?.toString() || "0");
+                const quantity = parseFloat(item.quantity?.toString() || "0");
+                orderAmount += price * quantity;
+              });
+            }
+
+            console.log("🔍 Frontend: Current order total reserved:", orderAmount);
+            console.log("🔍 Frontend: Note: Combined orders from different shops reserve separately when started");
+          }
+        } else {
+          orderAmount = calculateFoundItemsTotal();
+          console.log("🔍 Frontend: Single order amount:", orderAmount);
+        }
         const reservedBalance = parseFloat(wallet.reserved_balance);
+        console.log("🔍 Frontend: Current reserved balance:", reservedBalance);
+        console.log("🔍 Frontend: Final order amount to reserve:", orderAmount);
+
+        // Wallet reservation summary
+        console.log("🔍 WALLET RESERVATION SUMMARY:");
+        console.log("🔍 Total amount being reserved in wallet:", orderAmount);
+
+        if (hasCombinedOrders) {
+          const mainShopId = order.shop?.id;
+          const sameShopOrders = order.combinedOrders.filter(co => co.shop?.id === mainShopId);
+          const differentShopOrders = order.combinedOrders.filter(co => co.shop?.id !== mainShopId);
+
+          if (sameShopOrders.length > 0) {
+            console.log("🔍 TYPE: Same-shop combined orders");
+            console.log("🔍 LOGIC: Reserve entire batch (shop together)");
+          } else if (differentShopOrders.length > 0) {
+            console.log("🔍 TYPE: Different-shop combined orders");
+            console.log("🔍 LOGIC: Reserve only current order (shop separately)");
+            console.log("🔍 VERIFICATION: Should be main order only, not combined total");
+          }
+        } else {
+          console.log("🔍 TYPE: Single order");
+        }
+
+        const storedTotal = parseFloat(order.total?.toString() || "0") + (order.combinedOrders?.reduce((sum, co) => sum + parseFloat(co.total?.toString() || "0"), 0) || 0);
+        console.log("🔍 Stored totals in database:", storedTotal);
+        console.log("🔍 Reserved amount in wallet:", orderAmount);
 
         if (reservedBalance < orderAmount) {
           // Not enough balance, show error toast
@@ -690,7 +940,9 @@ export default function BatchDetails({
       }
 
       // Get the actual order amount being processed
-      const orderAmount = calculateFoundItemsTotal();
+      // For combined orders, use batch total for wallet operations
+      const hasCombinedOrders = order?.combinedOrders && order.combinedOrders.length > 0;
+      const orderAmount = hasCombinedOrders ? calculateBatchTotal() : calculateFoundItemsTotal();
       // Get the original order total for refund calculation
       const originalOrderTotal = calculateOriginalSubtotal(
         paymentTargetOrderId || undefined
@@ -797,6 +1049,16 @@ export default function BatchDetails({
         return;
       }
 
+      console.log("🔍 Frontend: Sending payment request to backend");
+      console.log("🔍 Frontend: Request payload:", {
+        orderId: order.id,
+        orderAmount: orderAmount,
+        originalOrderTotal: originalOrderTotal,
+        orderType: order.orderType || "regular",
+        momoReferenceId: momoReferenceId,
+        momoSuccess: momoPaymentSuccess,
+      });
+
       // Make API request to update wallet balance and process payment
       let paymentSuccess = false;
       let walletUpdated = false;
@@ -824,6 +1086,8 @@ export default function BatchDetails({
         }
 
         const paymentData = await response.json();
+
+        console.log("🔍 Frontend: Received payment response:", paymentData);
 
         // Check if a refund was created
         if (paymentData.refund) {
@@ -1590,6 +1854,53 @@ export default function BatchDetails({
     return foundTotal;
   };
 
+  // Calculate total for entire batch (all combined orders) - used for wallet operations
+  const calculateBatchTotal = () => {
+    if (!order) return 0;
+
+    // For reel orders, sum all reel orders in the batch
+    let reelTotal = 0;
+    if (order.orderType === "reel") {
+      reelTotal += parseFloat(order.total?.toString() || "0");
+    }
+    order.combinedOrders?.forEach((sub: any) => {
+      if (sub.orderType === "reel") {
+        reelTotal += parseFloat(sub.total?.toString() || "0");
+      }
+    });
+
+    if (reelTotal > 0) return reelTotal;
+
+    // For regular orders, calculate based on found items from all orders in batch
+    let allItems: any[] = [];
+
+    // Add main order items
+    if (order.Order_Items) {
+      allItems = [...order.Order_Items];
+    }
+
+    // Add combined order items
+    order.combinedOrders?.forEach((combinedOrder: any) => {
+      if (combinedOrder.Order_Items) {
+        allItems = [...allItems, ...combinedOrder.Order_Items];
+      }
+    });
+
+    if (allItems.length === 0) return 0;
+
+    const total = allItems
+      .filter((item) => item.found)
+      .reduce((total, item) => {
+        // Use foundQuantity if available, otherwise use full quantity
+        const quantity =
+          item.foundQuantity !== undefined ? item.foundQuantity : item.quantity;
+        return total + item.price * quantity;
+      }, 0);
+
+    return total;
+  };
+
+
   // Determine if we should show order items and summary
   const shouldShowOrderDetails = () => {
     if (!order) return false;
@@ -2102,12 +2413,22 @@ export default function BatchDetails({
               data.order.id
             );
 
-            // If combined orders exist, aggregate their items too
+            // If combined orders exist, handle them based on same shop vs different shops
             if (
               data.order.combinedOrders &&
               data.order.combinedOrders.length > 0
             ) {
-              data.order.combinedOrders.forEach((subOrder: any) => {
+              // Check if all combined orders are from the same shop as the main order
+              const mainShopId = data.order.shop?.id;
+              const sameShopOrders = data.order.combinedOrders.filter(
+                (subOrder: any) => subOrder.shop?.id === mainShopId
+              );
+              const differentShopOrders = data.order.combinedOrders.filter(
+                (subOrder: any) => subOrder.shop?.id !== mainShopId
+              );
+
+              // For orders from the SAME shop: DON'T duplicate items, just keep them separate for combinedOrders array
+              sameShopOrders.forEach((subOrder: any) => {
                 if (subOrder.items && subOrder.id !== data.order.id) {
                   const subItems = transformOrderItems(
                     subOrder.items,
@@ -2115,7 +2436,20 @@ export default function BatchDetails({
                     subOrder.id
                   );
                   subOrder.Order_Items = subItems; // Attach for split view
-                  allItems = [...allItems, ...subItems];
+                  // DON'T add to allItems for same shop orders to avoid duplication
+                }
+              });
+
+              // For orders from DIFFERENT shops: Add items to allItems for multi-shop logic
+              differentShopOrders.forEach((subOrder: any) => {
+                if (subOrder.items && subOrder.id !== data.order.id) {
+                  const subItems = transformOrderItems(
+                    subOrder.items,
+                    subOrder.shop?.id,
+                    subOrder.id
+                  );
+                  subOrder.Order_Items = subItems; // Attach for split view
+                  allItems = [...allItems, ...subItems]; // Add to main items for different shops
                 }
               });
             }

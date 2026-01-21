@@ -1224,6 +1224,9 @@ export default async function handler(
 
       // specific aggregations for combined orders
       if (orderData.combined_order_id && relatedOrders.length > 0) {
+        // Set order type to combined when there are combined orders
+        formattedOrder.orderType = "combined";
+
         // Create comprehensive lists including the main order and all related orders
         const allOrders = [formattedOrder, ...relatedOrders];
 

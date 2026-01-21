@@ -8,8 +8,8 @@ interface OrderSummarySectionProps {
   order: OrderDetailsType;
   isSummaryExpanded: boolean;
   onToggleSummary: () => void;
-  getActiveOrder: () => any;
-  getActiveOrderItems: () => any[];
+  getActiveOrder: any;
+  getActiveOrderItems: any[];
   calculateFoundItemsTotal: () => number;
   calculateOriginalSubtotal: () => number;
 }
@@ -153,27 +153,27 @@ export default function OrderSummarySection({
           })()
         ) : (
           <>
-            {getActiveOrder().status === "shopping" && (
+            {getActiveOrder.status === "shopping" && (
               <>
                 <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                   <span>Items Found</span>
                   <span className="font-medium">
-                    {getActiveOrderItems().filter((item) => item.found)
+                    {getActiveOrderItems.filter((item) => item.found)
                       .length || 0}{" "}
-                    / {getActiveOrderItems().length || 0}
+                    / {getActiveOrderItems.length || 0}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                   <span>Units Found</span>
                   <span className="font-medium">
-                    {getActiveOrderItems().reduce((total, item) => {
+                    {getActiveOrderItems.reduce((total, item) => {
                       if (item.found) {
                         return total + (item.foundQuantity || item.quantity);
                       }
                       return total;
                     }, 0) || 0}{" "}
                     /{" "}
-                    {getActiveOrderItems().reduce(
+                    {getActiveOrderItems.reduce(
                       (total, item) => total + item.quantity,
                       0
                     ) || 0}
@@ -182,7 +182,7 @@ export default function OrderSummarySection({
                 <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                   <span>Units Not Found</span>
                   <span className="font-medium">
-                    {getActiveOrderItems().reduce((total, item) => {
+                    {getActiveOrderItems.reduce((total, item) => {
                       if (!item.found) {
                         return total + item.quantity;
                       } else if (
@@ -201,10 +201,10 @@ export default function OrderSummarySection({
                   <span className="font-medium">
                     -
                     {formatCurrency(
-                      getActiveOrderItems().reduce((total, item) => {
+                      getActiveOrderItems.reduce((total, item) => {
                         return total + item.price * item.quantity;
                       }, 0) -
-                        getActiveOrderItems().reduce((total, item) => {
+                        getActiveOrderItems.reduce((total, item) => {
                           if (item.found) {
                             return (
                               total +
@@ -219,7 +219,7 @@ export default function OrderSummarySection({
               </>
             )}
             {(() => {
-              const activeOrder = getActiveOrder();
+              const activeOrder = getActiveOrder;
               const itemsTotal =
                 activeOrder?.status === "shopping"
                   ? calculateFoundItemsTotal()

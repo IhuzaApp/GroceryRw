@@ -17,6 +17,7 @@ const GET_ORDER_DETAILS = gql`
       delivery_fee
       shopper_id
       status
+      combined_order_id
       Shop {
         id
         name
@@ -30,6 +31,26 @@ const GET_ORDER_DETAILS = gql`
             name
           }
         }
+      }
+    }
+  }
+`;
+
+// GraphQL query to get combined orders by combined_order_id
+const GET_COMBINED_ORDERS = gql`
+  query GetCombinedOrders($combined_order_id: uuid!) {
+    Orders(where: { combined_order_id: { _eq: $combined_order_id } }) {
+      id
+      OrderID
+      user_id
+      total
+      service_fee
+      delivery_fee
+      shopper_id
+      status
+      Shop {
+        id
+        name
       }
     }
   }
@@ -141,6 +162,7 @@ interface OrderDetails {
     delivery_fee: string;
     shopper_id: string;
     status: string;
+    combined_order_id: string | null;
     Shop: {
       id: string;
       name: string;
@@ -207,6 +229,10 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  console.log("🔍 BACKEND: processPayment API called");
+  console.log("🔍 BACKEND: Request method:", req.method);
+  console.log("🔍 BACKEND: Request body:", req.body);
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -231,6 +257,12 @@ export default async function handler(
       momoSuccess,
     } = req.body;
 
+    console.log("🔍 BACKEND: Extracted request data:");
+    console.log("🔍 BACKEND: orderId:", orderId);
+    console.log("🔍 BACKEND: orderAmount:", orderAmount);
+    console.log("🔍 BACKEND: originalOrderTotal:", originalOrderTotal);
+    console.log("🔍 BACKEND: orderType:", orderType);
+
     // Validate required fields
     if (!orderId || !momoCode || !privateKey || orderAmount === undefined) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -238,6 +270,11 @@ export default async function handler(
 
     // Format order amount to ensure consistent handling
     const formattedOrderAmount = parseFloat(Number(orderAmount).toFixed(2));
+
+    console.log("🔍 Backend: Received payment request");
+    console.log("🔍 Backend: orderId:", orderId);
+    console.log("🔍 Backend: orderAmount received:", orderAmount);
+    console.log("🔍 Backend: formattedOrderAmount:", formattedOrderAmount);
 
     // In a real-world scenario, this would integrate with a payment processor
     // For now, we'll skip that and just update the database directly
@@ -249,6 +286,12 @@ export default async function handler(
 
     let orderData: any = null;
     let isReelOrder = orderType === "reel";
+    let allOrdersInBatch: any[] = [];
+    let batchTotal = 0;
+    let hasCombinedOrders = false;
+
+    console.log("🔍 Backend: Fetching order details for:", orderId);
+    console.log("🔍 Backend: Order type:", orderType);
 
     // Get order details based on order type
     if (isReelOrder) {
@@ -263,6 +306,9 @@ export default async function handler(
       if (!orderData) {
         return res.status(404).json({ error: "Reel order not found" });
       }
+      allOrdersInBatch = [orderData];
+      batchTotal = parseFloat(orderData.total);
+      console.log("🔍 Backend: Reel order found, total:", batchTotal);
     } else {
       const orderResponse = await hasuraClient.request<OrderDetails>(
         GET_ORDER_DETAILS,
@@ -275,7 +321,73 @@ export default async function handler(
       if (!orderData) {
         return res.status(404).json({ error: "Order not found" });
       }
+
+      console.log("🔍 Backend: Main order found:", {
+        id: orderData.id,
+        total: orderData.total,
+        combined_order_id: orderData.combined_order_id
+      });
+
+      // Check if this order has combined orders
+      allOrdersInBatch = [orderData];
+      batchTotal = parseFloat(orderData.total);
+
+      if (orderData.combined_order_id) {
+        hasCombinedOrders = true;
+        console.log("🔍 Backend: Order has combined_order_id:", orderData.combined_order_id);
+
+        // Fetch all orders with the same combined_order_id
+        const combinedOrdersResponse = await hasuraClient.request<{
+          Orders: any[];
+        }>(GET_COMBINED_ORDERS, {
+          combined_order_id: orderData.combined_order_id,
+        });
+
+        console.log("🔍 Backend: Combined orders response:", combinedOrdersResponse);
+
+        if (combinedOrdersResponse.Orders && combinedOrdersResponse.Orders.length > 0) {
+          allOrdersInBatch = combinedOrdersResponse.Orders;
+          console.log("🔍 Backend: Found combined orders details:");
+        allOrdersInBatch.forEach((order: any, index: number) => {
+          console.log(`🔍 Backend: Combined order ${index + 1}:`, {
+            id: order.id,
+            OrderID: order.OrderID,
+            total: order.total,
+            status: order.status,
+            shop: order.Shop?.name
+          });
+        });
+
+          // Use the frontend calculated amount (base item total, not stored totals with fees)
+          console.log("🔍 Backend: Using frontend calculated base items total:", formattedOrderAmount);
+          console.log("🔍 Backend: Stored totals with fees would be:");
+          allOrdersInBatch.forEach((order: any, index: number) => {
+            console.log(`🔍 Backend: Order ${index + 1} (${order.id}): stored total ${order.total}`);
+          });
+          const storedTotalSum = allOrdersInBatch.reduce((sum, order) => sum + parseFloat(order.total), 0);
+          console.log("🔍 Backend: Stored totals sum (with fees):", storedTotalSum);
+          console.log("🔍 Backend: Using base items total instead:", formattedOrderAmount);
+
+          batchTotal = formattedOrderAmount;
+        } else {
+          console.log("🔍 Backend: No combined orders found");
+        }
+      } else {
+        console.log("🔍 Backend: No combined_order_id found");
+      }
     }
+
+    console.log("🔍 Backend: ===== FINAL PROCESSING SUMMARY =====");
+    console.log("🔍 Backend: hasCombinedOrders:", hasCombinedOrders);
+    console.log("🔍 Backend: allOrdersInBatch count:", allOrdersInBatch.length);
+    console.log("🔍 Backend: Individual order totals:", allOrdersInBatch.map(o => ({
+      id: o.id,
+      OrderID: o.OrderID,
+      total: o.total
+    })));
+    console.log("🔍 Backend: Calculated batchTotal:", batchTotal);
+    console.log("🔍 Backend: Received formattedOrderAmount:", formattedOrderAmount);
+    console.log("🔍 Backend: Match check - batchTotal === formattedOrderAmount:", batchTotal === formattedOrderAmount);
 
     // Get shopper's wallet
     const shopperId = orderData.shopper_id;
@@ -295,11 +407,23 @@ export default async function handler(
     const wallet = walletResponse.Wallets[0];
     const walletId = wallet.id;
 
+    console.log("🔍 Backend: Wallet found:", {
+      id: walletId,
+      available_balance: wallet.available_balance,
+      reserved_balance: wallet.reserved_balance
+    });
+
     // Check if there's enough in the reserved balance
     const currentReserved = parseFloat(wallet.reserved_balance);
     const formattedReservedBalance = parseFloat(currentReserved.toFixed(2));
 
+    console.log("🔍 Backend: Balance check:");
+    console.log("🔍 Backend: Current reserved balance:", currentReserved);
+    console.log("🔍 Backend: Formatted reserved balance:", formattedReservedBalance);
+    console.log("🔍 Backend: Required amount:", formattedOrderAmount);
+
     if (formattedReservedBalance < formattedOrderAmount) {
+      console.log("🔍 Backend: Insufficient balance!");
       return res.status(400).json({
         error: `Insufficient reserved balance. You have ${formatCurrency(
           formattedReservedBalance
@@ -313,10 +437,10 @@ export default async function handler(
     let refundReason = "";
     let refundData = null;
 
-    // If originalOrderTotal is provided, use it; otherwise get from orderData
-    const totalOrderValue =
-      originalOrderTotal ||
-      parseFloat(isReelOrder ? orderData.total : orderData.total);
+    // For combined orders, use the batch total; otherwise use individual order total
+    const totalOrderValue = hasCombinedOrders
+      ? batchTotal
+      : (originalOrderTotal || parseFloat(isReelOrder ? orderData.total : orderData.total));
 
     // Calculate if there's a difference between original total and found items total
     if (totalOrderValue > formattedOrderAmount) {
@@ -328,6 +452,8 @@ export default async function handler(
       // Get shop/restaurant name
       const shopName = isReelOrder
         ? orderData.Reel?.Restaurant?.name || "Unknown Restaurant"
+        : hasCombinedOrders
+        ? "Multiple Shops (Combined Order)"
         : orderData.Shop?.name || "Unknown Shop";
 
       // Create detailed reason for the refund
@@ -338,8 +464,26 @@ export default async function handler(
         refundReason += `Reel order: ${
           orderData.Reel?.Restaurant?.name || "Unknown Restaurant"
         }. `;
+      } else if (hasCombinedOrders) {
+        // For combined orders, list all shops and their items
+        const allShops = allOrdersInBatch.map(order =>
+          `${order.Shop?.name || "Unknown Shop"} (${order.OrderID})`
+        ).join(", ");
+        refundReason += `Combined orders from shops: ${allShops}. `;
+
+        // List all items from all orders
+        const allItems = allOrdersInBatch.flatMap(order =>
+          order.Order_Items?.map((item: any) =>
+            `${item.Product.ProductName?.name || "Unknown Product"} (${
+              item.quantity
+            }) from ${order.Shop?.name || "Unknown Shop"}`
+          ) || []
+        ).join(", ");
+        if (allItems) {
+          refundReason += `Order items: ${allItems}. `;
+        }
       } else {
-        // List all order items for regular orders
+        // List all order items for regular single orders
         const allItems = orderData.Order_Items.map(
           (item: any) =>
             `${item.Product.ProductName?.name || "Unknown Product"} (${
@@ -423,29 +567,70 @@ export default async function handler(
     // or if no refund was needed
 
     // Calculate the new reserved balance after deducting the full original amount
-    const originalAmount = originalOrderTotal || formattedOrderAmount;
+    // For combined orders, use the batch total; otherwise use the individual order amount
+    const originalAmount = hasCombinedOrders
+      ? batchTotal
+      : (originalOrderTotal || formattedOrderAmount);
+
+    console.log("🔍 Backend: Wallet update calculation:");
+    console.log("🔍 Backend: hasCombinedOrders:", hasCombinedOrders);
+    console.log("🔍 Backend: batchTotal:", batchTotal);
+    console.log("🔍 Backend: originalOrderTotal:", originalOrderTotal);
+    console.log("🔍 Backend: formattedOrderAmount:", formattedOrderAmount);
+    console.log("🔍 Backend: originalAmount to deduct:", originalAmount);
+
     const newReserved = currentReserved - originalAmount;
 
+    console.log("🔍 BACKEND: ===== WALLET UPDATE CALCULATION =====");
+    console.log("🔍 BACKEND: hasCombinedOrders:", hasCombinedOrders);
+    console.log("🔍 BACKEND: batchTotal:", batchTotal);
+    console.log("🔍 BACKEND: originalOrderTotal:", originalOrderTotal);
+    console.log("🔍 BACKEND: formattedOrderAmount:", formattedOrderAmount);
+    console.log("🔍 BACKEND: Current reserved balance:", currentReserved);
+    console.log("🔍 BACKEND: Amount to deduct:", originalAmount);
+    console.log("🔍 BACKEND: New reserved balance will be:", newReserved);
+
     // Update the wallet balances
-    await hasuraClient.request(UPDATE_WALLET_BALANCES, {
+    console.log("🔍 BACKEND: Executing wallet update...");
+    const updateResult = await hasuraClient.request(UPDATE_WALLET_BALANCES, {
       wallet_id: walletId,
       reserved_balance: newReserved.toString(),
     });
+    console.log("🔍 BACKEND: Wallet update result:", updateResult);
+    console.log("🔍 BACKEND: Wallet update completed successfully");
 
     // Create wallet transaction records for the payment
     // Note: Wallet_Transactions table is designed for regular orders only
     // For reel orders, we skip creating wallet transactions to avoid foreign key constraint issues
     if (!isReelOrder) {
       // Build description with MoMo payment details
-      let description = `Payment from reserved balance for found order items. MoMo Code: ${momoCode}`;
+      let baseDescription = `Payment from reserved balance for found order items. MoMo Code: ${momoCode}`;
 
       if (momoReferenceId && momoSuccess !== undefined) {
         const momoStatus = momoSuccess ? "SUCCESSFUL" : "FAILED";
-        description += ` | MoMo Payment: ${momoStatus} | Reference ID: ${momoReferenceId}`;
+        baseDescription += ` | MoMo Payment: ${momoStatus} | Reference ID: ${momoReferenceId}`;
       }
 
-      const transactions = [
-        {
+      const transactions = [];
+
+      if (hasCombinedOrders) {
+        // For combined orders, create transactions for each order in the batch
+        for (const order of allOrdersInBatch) {
+          const orderAmount = parseFloat(order.total);
+          transactions.push({
+            wallet_id: walletId,
+            amount: orderAmount.toFixed(2),
+            type: "payment",
+            status: "completed",
+            related_order_id: order.id,
+            related_reel_orderId: null,
+            related_restaurant_order_id: null,
+            description: `${baseDescription} | Combined Order Batch - Order ${order.OrderID}`,
+          });
+        }
+      } else {
+        // For single orders, create one transaction
+        transactions.push({
           wallet_id: walletId,
           amount: formattedOrderAmount.toFixed(2),
           type: "payment",
@@ -453,9 +638,9 @@ export default async function handler(
           related_order_id: orderId,
           related_reel_orderId: null,
           related_restaurant_order_id: null,
-          description: description,
-        },
-      ];
+          description: baseDescription,
+        });
+      }
 
       const transactionResponse = await hasuraClient.request(
         CREATE_WALLET_TRANSACTIONS,
@@ -467,13 +652,17 @@ export default async function handler(
       // Skipping wallet transaction creation for reel order to avoid foreign key constraint issues
     }
 
-    return res.status(200).json({
+    const responseData = {
       success: true,
-      message: "Payment processed successfully",
+      message: hasCombinedOrders
+        ? "Combined orders payment processed successfully"
+        : "Payment processed successfully",
       paymentDetails: {
         orderId,
         amount: formattedOrderAmount,
         originalTotal: originalOrderTotal,
+        batchTotal: hasCombinedOrders ? batchTotal : undefined,
+        combinedOrdersCount: hasCombinedOrders ? allOrdersInBatch.length : undefined,
         timestamp: new Date().toISOString(),
       },
       walletUpdate: {
@@ -483,7 +672,11 @@ export default async function handler(
       },
       refund: refundData,
       refundAmount: refundAmount,
-    });
+    };
+
+    console.log("🔍 Backend: Sending response:", responseData);
+
+    return res.status(200).json(responseData);
   } catch (error) {
     console.error("Error processing payment:", error);
     return res.status(500).json({
