@@ -337,7 +337,7 @@ export default async function handler(
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const { orderId, orderType = "regular", invoiceProofPhoto } = req.body;
+    const { orderId, orderType = "regular", invoiceProofPhoto, foundItemsTotal } = req.body;
 
     // Validate required fields
     if (!orderId) {
@@ -505,22 +505,41 @@ export default async function handler(
       // For regular orders, use the order items
       const items = order.Order_Items;
 
-      itemsTotal = items.reduce((total: number, item: any) => {
-        return total + parseFloat(item.price) * item.quantity;
-      }, 0);
+      // For same-shop combined orders, use the found items total if provided
+      // This ensures each invoice shows only the found items for that specific order
+      if (foundItemsTotal !== undefined) {
+        itemsTotal = foundItemsTotal;
+        // For combined orders with specified found items total, we create a single invoice item
+        // representing all found items for this order
+        invoiceItems = [
+          {
+            id: `found_items_${order.id}`,
+            name: "Found Items",
+            quantity: 1,
+            unit_price: foundItemsTotal,
+            total: foundItemsTotal,
+            unit: "batch",
+          },
+        ];
+      } else {
+        // Calculate from all order items (normal case)
+        itemsTotal = items.reduce((total: number, item: any) => {
+          return total + parseFloat(item.price) * item.quantity;
+        }, 0);
+
+        // Create invoice items for regular orders
+        invoiceItems = items.map((item: any) => ({
+          id: item.id,
+          name: item.Product.ProductName?.name || "Unknown Product",
+          quantity: item.quantity,
+          unit_price: parseFloat(item.price),
+          total: parseFloat(item.price) * item.quantity,
+          unit: item.Product.measurement_unit || "item",
+        }));
+      }
 
       shopName = order.Shop.name;
       shopAddress = order.Shop.address;
-
-      // Create invoice items for regular orders
-      invoiceItems = items.map((item: any) => ({
-        id: item.id,
-        name: item.Product.ProductName?.name || "Unknown Product",
-        quantity: item.quantity,
-        unit_price: parseFloat(item.price),
-        total: parseFloat(item.price) * item.quantity,
-        unit: item.Product.measurement_unit || "item",
-      }));
     }
 
     const serviceFee = isRestaurantOrder
@@ -533,18 +552,33 @@ export default async function handler(
       order.OrderID || order.id.slice(-8)
     }-${new Date().getTime().toString().slice(-6)}`;
 
-    // Calculate tax (VAT) - same as order summary calculation (18% of final total)
-    const finalTotalBeforeTax = itemsTotal + serviceFee + deliveryFee;
-    const taxAmount = finalTotalBeforeTax * (18 / 118);
-    const subtotalAfterTax = finalTotalBeforeTax - taxAmount;
+    // For same-shop combined orders with found items total, don't add fees to the total
+    // The total should equal the found items amount only
+    const hasFoundItemsTotal = foundItemsTotal !== undefined;
+
+    let finalTotalBeforeTax: number;
+    let taxAmount: number;
+    let subtotalAfterTax: number;
+
+    if (hasFoundItemsTotal) {
+      // For same-shop combined orders: total = found items only (no fees)
+      finalTotalBeforeTax = itemsTotal;
+      taxAmount = finalTotalBeforeTax * (18 / 118);
+      subtotalAfterTax = finalTotalBeforeTax - taxAmount;
+    } else {
+      // Normal orders: include fees
+      finalTotalBeforeTax = itemsTotal + serviceFee + deliveryFee;
+      taxAmount = finalTotalBeforeTax * (18 / 118);
+      subtotalAfterTax = finalTotalBeforeTax - taxAmount;
+    }
 
     // Format values for database storage
     const subtotalStr = subtotalAfterTax.toFixed(2);
-    const serviceFeeStr = serviceFee.toFixed(2);
-    const deliveryFeeStr = deliveryFee.toFixed(2);
+    const serviceFeeStr = hasFoundItemsTotal ? "0.00" : serviceFee.toFixed(2);
+    const deliveryFeeStr = hasFoundItemsTotal ? "0.00" : deliveryFee.toFixed(2);
     const discountStr = "0.00"; // Assuming no discount for now
     const taxStr = taxAmount.toFixed(2);
-    const totalAmount = finalTotalBeforeTax.toFixed(2);
+    const totalAmount = hasFoundItemsTotal ? itemsTotal.toFixed(2) : finalTotalBeforeTax.toFixed(2);
 
     const invoicePayload = {
       customer_id: isReelOrder
@@ -620,10 +654,11 @@ export default async function handler(
       subtotal: itemsTotal,
       serviceFee,
       deliveryFee,
-      // When in shopping mode, the displayed total should match the subtotal without fees
-      // For other modes, include the fees
-      total:
-        order.status === "shopping"
+      // For same-shop combined orders with found items total, total = found items only
+      // For other orders, use normal calculation
+      total: hasFoundItemsTotal
+        ? itemsTotal
+        : order.status === "shopping"
           ? itemsTotal
           : itemsTotal + serviceFee + deliveryFee,
       orderType: isReelOrder
