@@ -12,6 +12,7 @@ interface OrderSummarySectionProps {
   getActiveOrderItems: any[];
   calculateFoundItemsTotal: () => number;
   calculateOriginalSubtotal: () => number;
+  calculateBatchTotal: () => number;
 }
 
 export default function OrderSummarySection({
@@ -22,6 +23,7 @@ export default function OrderSummarySection({
   getActiveOrderItems,
   calculateFoundItemsTotal,
   calculateOriginalSubtotal,
+  calculateBatchTotal,
 }: OrderSummarySectionProps) {
   return (
     <div
@@ -65,7 +67,17 @@ export default function OrderSummarySection({
               </h2>
               {order.status === "shopping" && !isSummaryExpanded && (
                 <span className="text-sm font-semibold text-green-600 dark:text-green-400 sm:hidden">
-                  {formatCurrency(calculateFoundItemsTotal())}
+                  {(() => {
+                    // Check if we have same-shop combined orders
+                    const hasCombinedOrders = order?.combinedOrders && order.combinedOrders.length > 0;
+                    const mainShopId = order?.shop?.id;
+                    const sameShopCombinedOrders = hasCombinedOrders
+                      ? order.combinedOrders.filter(co => co.shop?.id === mainShopId)
+                      : [];
+                    const hasSameShopCombinedOrders = sameShopCombinedOrders.length > 0;
+
+                    return formatCurrency(hasSameShopCombinedOrders ? calculateBatchTotal() : calculateFoundItemsTotal());
+                  })()}
                 </span>
               )}
             </div>
@@ -220,10 +232,24 @@ export default function OrderSummarySection({
             )}
             {(() => {
               const activeOrder = getActiveOrder;
-              const itemsTotal =
-                activeOrder?.status === "shopping"
-                  ? calculateFoundItemsTotal()
-                  : calculateOriginalSubtotal();
+
+              // Check if we have same-shop combined orders
+              const hasCombinedOrders = order?.combinedOrders && order.combinedOrders.length > 0;
+              const mainShopId = order?.shop?.id;
+              const sameShopCombinedOrders = hasCombinedOrders
+                ? order.combinedOrders.filter(co => co.shop?.id === mainShopId)
+                : [];
+              const hasSameShopCombinedOrders = sameShopCombinedOrders.length > 0;
+
+              // For same-shop combined orders, use batch total instead of individual order total
+              const itemsTotal = hasSameShopCombinedOrders
+                ? (activeOrder?.status === "shopping"
+                    ? calculateBatchTotal()
+                    : calculateBatchTotal()) // For completed orders, also use batch total
+                : (activeOrder?.status === "shopping"
+                    ? calculateFoundItemsTotal()
+                    : calculateOriginalSubtotal());
+
               const discount = activeOrder?.discount || 0;
               const finalTotal = itemsTotal - discount;
               const vat = finalTotal * (18 / 118);

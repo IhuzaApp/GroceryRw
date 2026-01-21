@@ -1888,8 +1888,13 @@ export default function BatchDetails({
 
     if (allItems.length === 0) return 0;
 
+    // Check if any order in the batch is currently shopping
+    const isAnyOrderShopping = [order, ...(order.combinedOrders || [])].some(
+      (o) => o.status === "shopping"
+    );
+
     const total = allItems
-      .filter((item) => item.found)
+      .filter((item) => isAnyOrderShopping ? item.found : true) // Only filter by found if shopping has started
       .reduce((total, item) => {
         // Use foundQuantity if available, otherwise use full quantity
         const quantity =
@@ -2755,6 +2760,7 @@ export default function BatchDetails({
                   getActiveOrderItems={getActiveOrderItems}
                   calculateFoundItemsTotal={calculateFoundItemsTotal}
                   calculateOriginalSubtotal={calculateOriginalSubtotal}
+                  calculateBatchTotal={calculateBatchTotal}
                 />
               )}
 
