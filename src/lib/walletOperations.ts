@@ -21,11 +21,13 @@ const GET_ORDER_DETAILS = gql`
 // GraphQL query to get combined orders from same shop
 const GET_COMBINED_ORDERS_SAME_SHOP = gql`
   query GetCombinedOrdersSameShop($combinedId: uuid!, $shopId: uuid!) {
-    Orders(where: {
-      combined_order_id: { _eq: $combinedId }
-      shop_id: { _eq: $shopId }
-      shopper_id: { _is_null: false }
-    }) {
+    Orders(
+      where: {
+        combined_order_id: { _eq: $combinedId }
+        shop_id: { _eq: $shopId }
+        shopper_id: { _is_null: false }
+      }
+    ) {
       id
       total
       shop_id
@@ -510,16 +512,23 @@ export async function processWalletOperation(
   let orderTotal = parseFloat(order.total);
 
   // Check if this is a same-shop combined order for shopping operation
-  if (operation === "shopping" && !isReelOrder && !isRestaurantOrder && order.combined_order_id) {
+  if (
+    operation === "shopping" &&
+    !isReelOrder &&
+    !isRestaurantOrder &&
+    order.combined_order_id
+  ) {
     try {
       // Query to get order items for combined orders
       const GET_COMBINED_ORDER_ITEMS = gql`
         query GetCombinedOrderItems($combinedId: uuid!, $shopId: uuid!) {
-          Orders(where: {
-            combined_order_id: { _eq: $combinedId }
-            shop_id: { _eq: $shopId }
-            shopper_id: { _is_null: false }
-          }) {
+          Orders(
+            where: {
+              combined_order_id: { _eq: $combinedId }
+              shop_id: { _eq: $shopId }
+              shopper_id: { _is_null: false }
+            }
+          ) {
             id
             Order_Items {
               price
@@ -544,19 +553,31 @@ export async function processWalletOperation(
 
       if (combinedOrdersData.Orders && combinedOrdersData.Orders.length > 0) {
         // Calculate total from all Order_Items across the batch
-        orderTotal = combinedOrdersData.Orders.reduce((batchTotal, combinedOrder) => {
-          const orderItemsTotal = combinedOrder.Order_Items.reduce((orderTotal, item) => {
-            const price = parseFloat(item.price || "0");
-            const quantity = parseFloat(item.quantity || "0");
-            return orderTotal + (price * quantity);
-          }, 0);
-          return batchTotal + orderItemsTotal;
-        }, 0);
+        orderTotal = combinedOrdersData.Orders.reduce(
+          (batchTotal, combinedOrder) => {
+            const orderItemsTotal = combinedOrder.Order_Items.reduce(
+              (orderTotal, item) => {
+                const price = parseFloat(item.price || "0");
+                const quantity = parseFloat(item.quantity || "0");
+                return orderTotal + price * quantity;
+              },
+              0
+            );
+            return batchTotal + orderItemsTotal;
+          },
+          0
+        );
 
-        console.log("🔍 WALLET OPERATION - Same shop batch total from items:", orderTotal);
+        console.log(
+          "🔍 WALLET OPERATION - Same shop batch total from items:",
+          orderTotal
+        );
       }
     } catch (error) {
-      console.error("Error fetching combined order items for wallet operation:", error);
+      console.error(
+        "Error fetching combined order items for wallet operation:",
+        error
+      );
       // Fall back to single order total if combined order query fails
     }
   }
@@ -591,11 +612,13 @@ export async function processWalletOperation(
         try {
           const GET_COMBINED_ORDER_ITEMS = gql`
             query GetCombinedOrderItems($combinedId: uuid!, $shopId: uuid!) {
-              Orders(where: {
-                combined_order_id: { _eq: $combinedId }
-                shop_id: { _eq: $shopId }
-                shopper_id: { _is_null: false }
-              }) {
+              Orders(
+                where: {
+                  combined_order_id: { _eq: $combinedId }
+                  shop_id: { _eq: $shopId }
+                  shopper_id: { _is_null: false }
+                }
+              ) {
                 id
                 Order_Items {
                   price
@@ -618,18 +641,30 @@ export async function processWalletOperation(
             shopId: order.shop_id,
           });
 
-          if (combinedOrdersData.Orders && combinedOrdersData.Orders.length > 0) {
-            orderTotal = combinedOrdersData.Orders.reduce((batchTotal, combinedOrder) => {
-              const orderItemsTotal = combinedOrder.Order_Items.reduce((orderTotal, item) => {
-                const price = parseFloat(item.price || "0");
-                const quantity = parseFloat(item.quantity || "0");
-                return orderTotal + (price * quantity);
-              }, 0);
-              return batchTotal + orderItemsTotal;
-            }, 0);
+          if (
+            combinedOrdersData.Orders &&
+            combinedOrdersData.Orders.length > 0
+          ) {
+            orderTotal = combinedOrdersData.Orders.reduce(
+              (batchTotal, combinedOrder) => {
+                const orderItemsTotal = combinedOrder.Order_Items.reduce(
+                  (orderTotal, item) => {
+                    const price = parseFloat(item.price || "0");
+                    const quantity = parseFloat(item.quantity || "0");
+                    return orderTotal + price * quantity;
+                  },
+                  0
+                );
+                return batchTotal + orderItemsTotal;
+              },
+              0
+            );
           }
         } catch (error) {
-          console.error("Error fetching combined order items for cancellation:", error);
+          console.error(
+            "Error fetching combined order items for cancellation:",
+            error
+          );
         }
       }
 

@@ -191,7 +191,10 @@ export default function BatchDetails({
       console.log("🔍 Order status:", order.status);
       console.log("🔍 Order type:", order.orderType);
       console.log("🔍 Has combinedOrders array:", !!order.combinedOrders);
-      console.log("🔍 CombinedOrders count:", order.combinedOrders?.length || 0);
+      console.log(
+        "🔍 CombinedOrders count:",
+        order.combinedOrders?.length || 0
+      );
 
       if (order.combinedOrders && order.combinedOrders.length > 0) {
         console.log("🔍 COMBINED ORDERS DETAILS:");
@@ -201,10 +204,9 @@ export default function BatchDetails({
             total: co.total,
             status: co.status,
             orderType: co.orderType,
-            shop: co.shop?.name || 'No shop'
+            shop: co.shop?.name || "No shop",
           });
         });
-
       } else {
         console.log("🔍 No combined orders found");
       }
@@ -218,7 +220,9 @@ export default function BatchDetails({
     {}
   );
   const [combinedOrderIds, setCombinedOrderIds] = useState<string[]>([]);
-  const [combinedOrderNumbers, setCombinedOrderNumbers] = useState<string[]>([]);
+  const [combinedOrderNumbers, setCombinedOrderNumbers] = useState<string[]>(
+    []
+  );
   const [lastOrderAmount, setLastOrderAmount] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<"items" | "details">("items");
   const [walletData, setWalletData] = useState<any>(null);
@@ -772,13 +776,16 @@ export default function BatchDetails({
 
       // Get the actual order amount being processed
       // For combined orders, use batch total for wallet operations
-      const hasCombinedOrders = order?.combinedOrders && order.combinedOrders.length > 0;
+      const hasCombinedOrders =
+        order?.combinedOrders && order.combinedOrders.length > 0;
       let orderAmount = 0;
 
       if (hasCombinedOrders) {
         // Check if combined orders are from same shop or different shops
         const mainShopId = order.shop?.id;
-        const sameShopOrders = order.combinedOrders.filter(co => co.shop?.id === mainShopId);
+        const sameShopOrders = order.combinedOrders.filter(
+          (co) => co.shop?.id === mainShopId
+        );
 
         if (sameShopOrders.length > 0) {
           // SAME SHOP: Use batch total of found items (fees already added to earnings)
@@ -911,12 +918,17 @@ export default function BatchDetails({
       let walletUpdated = false;
       try {
         // Check if this is a same-shop combined order
-        const hasCombinedOrders = order?.combinedOrders && order.combinedOrders.length > 0;
-        const isSameShopCombined = hasCombinedOrders ? (() => {
-          const mainShopId = order.shop?.id;
-          const sameShopOrders = order.combinedOrders.filter(co => co.shop?.id === mainShopId);
-          return sameShopOrders.length > 0;
-        })() : false;
+        const hasCombinedOrders =
+          order?.combinedOrders && order.combinedOrders.length > 0;
+        const isSameShopCombined = hasCombinedOrders
+          ? (() => {
+              const mainShopId = order.shop?.id;
+              const sameShopOrders = order.combinedOrders.filter(
+                (co) => co.shop?.id === mainShopId
+              );
+              return sameShopOrders.length > 0;
+            })()
+          : false;
 
         const response = await fetch("/api/shopper/processPayment", {
           method: "POST",
@@ -933,7 +945,9 @@ export default function BatchDetails({
             momoReferenceId: momoReferenceId, // Pass MoMo reference ID
             momoSuccess: momoPaymentSuccess, // Pass MoMo success status
             isSameShopCombined: isSameShopCombined, // Pass same-shop combined flag
-            combinedOrders: hasCombinedOrders ? order.combinedOrders : undefined, // Pass combined orders data
+            combinedOrders: hasCombinedOrders
+              ? order.combinedOrders
+              : undefined, // Pass combined orders data
           }),
         });
 
@@ -952,8 +966,8 @@ export default function BatchDetails({
             // Single refund notification
             toaster.push(
               <Notification type="info" header="Refund Scheduled" closable>
-                A refund of {formatCurrency(paymentData.totalRefundAmount)} has been
-                scheduled for items not found.
+                A refund of {formatCurrency(paymentData.totalRefundAmount)} has
+                been scheduled for items not found.
               </Notification>,
               { placement: "topEnd", duration: 5000 }
             );
@@ -961,8 +975,9 @@ export default function BatchDetails({
             // Multiple refunds notification
             toaster.push(
               <Notification type="info" header="Refunds Scheduled" closable>
-                Total refunds of {formatCurrency(paymentData.totalRefundAmount)} have been
-                scheduled for items not found across {paymentData.refunds.length} orders.
+                Total refunds of {formatCurrency(paymentData.totalRefundAmount)}{" "}
+                have been scheduled for items not found across{" "}
+                {paymentData.refunds.length} orders.
               </Notification>,
               { placement: "topEnd", duration: 5000 }
             );
@@ -999,20 +1014,30 @@ export default function BatchDetails({
         setGeneratedOtp("");
 
         // Check if this is a same-shop combined order
-        const hasCombinedOrders = order?.combinedOrders && order.combinedOrders.length > 0;
-        const isSameShopCombined = hasCombinedOrders ? (() => {
-          const mainShopId = order.shop?.id;
-          const sameShopOrders = order.combinedOrders.filter(co => co.shop?.id === mainShopId);
-          return sameShopOrders.length > 0;
-        })() : false;
+        const hasCombinedOrders =
+          order?.combinedOrders && order.combinedOrders.length > 0;
+        const isSameShopCombined = hasCombinedOrders
+          ? (() => {
+              const mainShopId = order.shop?.id;
+              const sameShopOrders = order.combinedOrders.filter(
+                (co) => co.shop?.id === mainShopId
+              );
+              return sameShopOrders.length > 0;
+            })()
+          : false;
 
         if (isSameShopCombined) {
           // SAME SHOP COMBINED ORDERS: Generate invoices and show proof modal
-          console.log("🔍 SAME SHOP COMBINED: Generating invoices and showing proof modal");
+          console.log(
+            "🔍 SAME SHOP COMBINED: Generating invoices and showing proof modal"
+          );
 
           // Generate invoices for all orders in the same-shop batch
           try {
-            const allOrderIds = [order.id, ...order.combinedOrders.map(co => co.id)];
+            const allOrderIds = [
+              order.id,
+              ...order.combinedOrders.map((co) => co.id),
+            ];
             const generatedInvoices: any[] = [];
             const combinedIds: string[] = [];
             const combinedNumbers: string[] = [];
@@ -1021,13 +1046,19 @@ export default function BatchDetails({
             for (const orderId of allOrderIds) {
               try {
                 const invoice = await generateInvoice(orderId);
-                console.log(`🔍 Generated invoice for order ${orderId}:`, invoice.invoiceNumber);
+                console.log(
+                  `🔍 Generated invoice for order ${orderId}:`,
+                  invoice.invoiceNumber
+                );
 
                 generatedInvoices.push(invoice);
                 combinedIds.push(orderId);
                 combinedNumbers.push(invoice.orderNumber);
               } catch (singleInvoiceError) {
-                console.error(`Error generating invoice for order ${orderId}:`, singleInvoiceError);
+                console.error(
+                  `Error generating invoice for order ${orderId}:`,
+                  singleInvoiceError
+                );
                 // Continue with other invoices even if one fails
               }
             }
@@ -1043,16 +1074,22 @@ export default function BatchDetails({
               // Store the order amount for later use in invoice proof handling
               setLastOrderAmount(orderAmount);
 
-              console.log(`🔍 Successfully generated ${generatedInvoices.length} invoices for same-shop combined orders`);
+              console.log(
+                `🔍 Successfully generated ${generatedInvoices.length} invoices for same-shop combined orders`
+              );
             } else {
               throw new Error("Failed to generate any invoices");
             }
-
           } catch (invoiceError) {
             console.error("Error generating invoices:", invoiceError);
             toaster.push(
-              <Notification type="warning" header="Invoice Generation Warning" closable>
-                Payment successful but there was an issue generating invoices. You can continue to delivery.
+              <Notification
+                type="warning"
+                header="Invoice Generation Warning"
+                closable
+              >
+                Payment successful but there was an issue generating invoices.
+                You can continue to delivery.
               </Notification>,
               { placement: "topEnd", duration: 5000 }
             );
@@ -1060,7 +1097,11 @@ export default function BatchDetails({
 
           // Show success notification for same-shop combined orders
           toaster.push(
-            <Notification type="success" header="Payment Complete - Same Shop Combined" closable>
+            <Notification
+              type="success"
+              header="Payment Complete - Same Shop Combined"
+              closable
+            >
               ✅ MoMo payment successful
               <br />
               ✅ Found items amount removed from reserved balance
@@ -1077,7 +1118,6 @@ export default function BatchDetails({
 
           // Show invoice proof modal for same-shop combined orders
           setShowInvoiceProofModal(true);
-
         } else {
           // DIFFERENT SHOP COMBINED ORDERS or SINGLE ORDERS: Use existing logic
           const targetId = paymentTargetOrderId || order.id;
@@ -1361,7 +1401,10 @@ export default function BatchDetails({
 
       // Check if this is for same-shop combined orders (multiple order IDs)
       if (combinedOrderIds.length > 1) {
-        console.log("🔍 Handling invoice proof for same-shop combined orders:", combinedOrderIds);
+        console.log(
+          "🔍 Handling invoice proof for same-shop combined orders:",
+          combinedOrderIds
+        );
 
         // Calculate found items total for each order in the batch
         // For same-shop combined orders, distribute the total found items proportionally
@@ -1378,16 +1421,20 @@ export default function BatchDetails({
         // Generate invoice with proof for each order in the combined batch
         for (const orderId of combinedOrderIds) {
           try {
-            const targetOrder = allOrders.find((o) => o?.id === orderId) || order;
+            const targetOrder =
+              allOrders.find((o) => o?.id === orderId) || order;
 
             // Calculate found items total for this specific order
             // Proportionally distribute based on original item values
             const serviceFee = parseFloat(targetOrder.service_fee || "0");
             const deliveryFee = parseFloat(targetOrder.delivery_fee || "0");
             const originalOrderTotal = parseFloat(targetOrder.total);
-            const originalItemsValue = originalOrderTotal - serviceFee - deliveryFee;
+            const originalItemsValue =
+              originalOrderTotal - serviceFee - deliveryFee;
             const proportion = originalItemsValue / totalOriginalItemsValue;
-            const foundItemsForThisOrder = Math.round(totalFoundItems * proportion);
+            const foundItemsForThisOrder = Math.round(
+              totalFoundItems * proportion
+            );
 
             const invoiceResponse = await fetch("/api/invoices/generate", {
               method: "POST",
@@ -1415,13 +1462,18 @@ export default function BatchDetails({
               console.log(`✅ Invoice proof uploaded for order ${orderId}`);
             }
           } catch (singleOrderError) {
-            console.error(`Error processing invoice for order ${orderId}:`, singleOrderError);
+            console.error(
+              `Error processing invoice for order ${orderId}:`,
+              singleOrderError
+            );
             // Continue with other orders
           }
         }
 
         // Update status to on_the_way for same-shop combined orders after proof upload
-        console.log("🔍 SAME SHOP COMBINED: Updating all orders to on_the_way after proof upload");
+        console.log(
+          "🔍 SAME SHOP COMBINED: Updating all orders to on_the_way after proof upload"
+        );
         await Promise.all(
           combinedOrderIds.map((id) => onUpdateStatus(id, "on_the_way"))
         );
@@ -1449,14 +1501,16 @@ export default function BatchDetails({
 
         // Show success notification
         toaster.push(
-          <Notification type="success" header="Proof Uploaded - Orders Moving" closable>
+          <Notification
+            type="success"
+            header="Proof Uploaded - Orders Moving"
+            closable
+          >
             ✅ Invoice proof uploaded successfully
-            <br />
-            ✅ All orders in batch moved to On The Way
+            <br />✅ All orders in batch moved to On The Way
           </Notification>,
           { placement: "topEnd", duration: 5000 }
         );
-
       } else {
         // Handle single order (existing logic)
         const allInBatch = [order, ...(order.combinedOrders || [])];
@@ -1945,7 +1999,7 @@ export default function BatchDetails({
     );
 
     const total = allItems
-      .filter((item) => isAnyOrderShopping ? item.found : true) // Only filter by found if shopping has started
+      .filter((item) => (isAnyOrderShopping ? item.found : true)) // Only filter by found if shopping has started
       .reduce((total, item) => {
         // Use foundQuantity if available, otherwise use full quantity
         const quantity =
@@ -1955,7 +2009,6 @@ export default function BatchDetails({
 
     return total;
   };
-
 
   // Determine if we should show order items and summary
   const shouldShowOrderDetails = () => {
@@ -2485,14 +2538,17 @@ export default function BatchDetails({
 
               // For orders from the SAME shop: DON'T duplicate items, just keep them separate for combinedOrders array
               sameShopOrders.forEach((subOrder: any) => {
-                console.log(`🔍 DATA TRANSFORMATION - Same shop order ${subOrder.id}:`, {
-                  hasItems: !!subOrder.items,
-                  itemsCount: subOrder.items?.length || 0,
-                  orderId: subOrder.id,
-                  mainOrderId: data.order.id,
-                  hasOrder_Items: !!subOrder.Order_Items,
-                  order_ItemsCount: subOrder.Order_Items?.length || 0
-                });
+                console.log(
+                  `🔍 DATA TRANSFORMATION - Same shop order ${subOrder.id}:`,
+                  {
+                    hasItems: !!subOrder.items,
+                    itemsCount: subOrder.items?.length || 0,
+                    orderId: subOrder.id,
+                    mainOrderId: data.order.id,
+                    hasOrder_Items: !!subOrder.Order_Items,
+                    order_ItemsCount: subOrder.Order_Items?.length || 0,
+                  }
+                );
                 if (subOrder.items && subOrder.id !== data.order.id) {
                   const subItems = transformOrderItems(
                     subOrder.items,
@@ -2500,13 +2556,22 @@ export default function BatchDetails({
                     subOrder.id
                   );
                   subOrder.Order_Items = subItems; // Attach for split view
-                  console.log(`🔍 DATA TRANSFORMATION - Attached ${subItems.length} items to same-shop order ${subOrder.id}`);
+                  console.log(
+                    `🔍 DATA TRANSFORMATION - Attached ${subItems.length} items to same-shop order ${subOrder.id}`
+                  );
                   // DON'T add to allItems for same shop orders to avoid duplication
-                } else if (subOrder.Order_Items && subOrder.id !== data.order.id) {
+                } else if (
+                  subOrder.Order_Items &&
+                  subOrder.id !== data.order.id
+                ) {
                   // Already has Order_Items from previous transformation
-                  console.log(`🔍 DATA TRANSFORMATION - Same shop order ${subOrder.id} already has ${subOrder.Order_Items.length} Order_Items`);
+                  console.log(
+                    `🔍 DATA TRANSFORMATION - Same shop order ${subOrder.id} already has ${subOrder.Order_Items.length} Order_Items`
+                  );
                 } else {
-                  console.log(`🔍 DATA TRANSFORMATION - Skipping same-shop order ${subOrder.id} (no items/Order_Items or is main order)`);
+                  console.log(
+                    `🔍 DATA TRANSFORMATION - Skipping same-shop order ${subOrder.id} (no items/Order_Items or is main order)`
+                  );
                 }
               });
 

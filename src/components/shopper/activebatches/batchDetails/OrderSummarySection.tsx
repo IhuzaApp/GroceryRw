@@ -69,14 +69,22 @@ export default function OrderSummarySection({
                 <span className="text-sm font-semibold text-green-600 dark:text-green-400 sm:hidden">
                   {(() => {
                     // Check if we have same-shop combined orders
-                    const hasCombinedOrders = order?.combinedOrders && order.combinedOrders.length > 0;
+                    const hasCombinedOrders =
+                      order?.combinedOrders && order.combinedOrders.length > 0;
                     const mainShopId = order?.shop?.id;
                     const sameShopCombinedOrders = hasCombinedOrders
-                      ? order.combinedOrders.filter(co => co.shop?.id === mainShopId)
+                      ? order.combinedOrders.filter(
+                          (co) => co.shop?.id === mainShopId
+                        )
                       : [];
-                    const hasSameShopCombinedOrders = sameShopCombinedOrders.length > 0;
+                    const hasSameShopCombinedOrders =
+                      sameShopCombinedOrders.length > 0;
 
-                    return formatCurrency(hasSameShopCombinedOrders ? calculateBatchTotal() : calculateFoundItemsTotal());
+                    return formatCurrency(
+                      hasSameShopCombinedOrders
+                        ? calculateBatchTotal()
+                        : calculateFoundItemsTotal()
+                    );
                   })()}
                 </span>
               )}
@@ -169,22 +177,30 @@ export default function OrderSummarySection({
               <>
                 {(() => {
                   // Check if we have same-shop combined orders
-                  const hasCombinedOrders = order?.combinedOrders && order.combinedOrders.length > 0;
+                  const hasCombinedOrders =
+                    order?.combinedOrders && order.combinedOrders.length > 0;
                   const mainShopId = order?.shop?.id;
                   const sameShopCombinedOrders = hasCombinedOrders
-                    ? order.combinedOrders.filter(co => co.shop?.id === mainShopId)
+                    ? order.combinedOrders.filter(
+                        (co) => co.shop?.id === mainShopId
+                      )
                     : [];
-                  const hasSameShopCombinedOrders = sameShopCombinedOrders.length > 0;
+                  const hasSameShopCombinedOrders =
+                    sameShopCombinedOrders.length > 0;
 
                   // For same-shop combined orders, aggregate items from all orders in the batch
                   const summaryItems = hasSameShopCombinedOrders
                     ? [
                         ...(order?.Order_Items || []),
-                        ...sameShopCombinedOrders.flatMap(co => co.Order_Items || [])
+                        ...sameShopCombinedOrders.flatMap(
+                          (co) => co.Order_Items || []
+                        ),
                       ]
                     : getActiveOrderItems;
 
-                  const itemsFound = summaryItems.filter((item) => item.found).length;
+                  const itemsFound = summaryItems.filter(
+                    (item) => item.found
+                  ).length;
                   const totalItems = summaryItems.length;
                   const unitsFound = summaryItems.reduce((total, item) => {
                     if (item.found) {
@@ -208,17 +224,19 @@ export default function OrderSummarySection({
                     }
                     return total;
                   }, 0);
-                  const refundAmount = summaryItems.reduce((total, item) => {
-                    return total + item.price * item.quantity;
-                  }, 0) - summaryItems.reduce((total, item) => {
-                    if (item.found) {
-                      return (
-                        total +
-                        item.price * (item.foundQuantity || item.quantity)
-                      );
-                    }
-                    return total;
-                  }, 0);
+                  const refundAmount =
+                    summaryItems.reduce((total, item) => {
+                      return total + item.price * item.quantity;
+                    }, 0) -
+                    summaryItems.reduce((total, item) => {
+                      if (item.found) {
+                        return (
+                          total +
+                          item.price * (item.foundQuantity || item.quantity)
+                        );
+                      }
+                      return total;
+                    }, 0);
 
                   return (
                     <>
@@ -236,9 +254,7 @@ export default function OrderSummarySection({
                       </div>
                       <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                         <span>Units Not Found</span>
-                        <span className="font-medium">
-                          {unitsNotFound}
-                        </span>
+                        <span className="font-medium">{unitsNotFound}</span>
                       </div>
                       <div className="flex justify-between text-sm text-red-600 dark:text-red-400">
                         <span>Refund Amount</span>
@@ -255,21 +271,25 @@ export default function OrderSummarySection({
               const activeOrder = getActiveOrder;
 
               // Check if we have same-shop combined orders
-              const hasCombinedOrders = order?.combinedOrders && order.combinedOrders.length > 0;
+              const hasCombinedOrders =
+                order?.combinedOrders && order.combinedOrders.length > 0;
               const mainShopId = order?.shop?.id;
               const sameShopCombinedOrders = hasCombinedOrders
-                ? order.combinedOrders.filter(co => co.shop?.id === mainShopId)
+                ? order.combinedOrders.filter(
+                    (co) => co.shop?.id === mainShopId
+                  )
                 : [];
-              const hasSameShopCombinedOrders = sameShopCombinedOrders.length > 0;
+              const hasSameShopCombinedOrders =
+                sameShopCombinedOrders.length > 0;
 
               // For same-shop combined orders, use batch total instead of individual order total
               const itemsTotal = hasSameShopCombinedOrders
-                ? (activeOrder?.status === "shopping"
-                    ? calculateBatchTotal()
-                    : calculateBatchTotal()) // For completed orders, also use batch total
-                : (activeOrder?.status === "shopping"
-                    ? calculateFoundItemsTotal()
-                    : calculateOriginalSubtotal());
+                ? activeOrder?.status === "shopping"
+                  ? calculateBatchTotal()
+                  : calculateBatchTotal() // For completed orders, also use batch total
+                : activeOrder?.status === "shopping"
+                ? calculateFoundItemsTotal()
+                : calculateOriginalSubtotal();
 
               const discount = activeOrder?.discount || 0;
               const finalTotal = itemsTotal - discount;

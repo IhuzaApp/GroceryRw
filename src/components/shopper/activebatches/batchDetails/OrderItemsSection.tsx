@@ -24,10 +24,11 @@ export default function OrderItemsSection({
   itemsLoading,
 }: OrderItemsSectionProps) {
   // Check if we have same-shop combined orders (multiple orders from same shop)
-  const hasCombinedOrders = order?.combinedOrders && order.combinedOrders.length > 0;
+  const hasCombinedOrders =
+    order?.combinedOrders && order.combinedOrders.length > 0;
   const mainShopId = order?.shop?.id;
   const sameShopCombinedOrders = hasCombinedOrders
-    ? order.combinedOrders.filter(co => co.shop?.id === mainShopId)
+    ? order.combinedOrders.filter((co) => co.shop?.id === mainShopId)
     : [];
   const hasSameShopCombinedOrders = sameShopCombinedOrders.length > 0;
 
@@ -52,18 +53,26 @@ export default function OrderItemsSection({
           orderId: order.OrderID || order.id,
           order: order,
           items: order.Order_Items || [],
-          customerName: order.orderedBy?.name || order.user?.name || order.customer?.name || 'Customer',
-          isVisible: order.status === "accepted" || order.status === "shopping"
+          customerName:
+            order.orderedBy?.name ||
+            order.user?.name ||
+            order.customer?.name ||
+            "Customer",
+          isVisible: order.status === "accepted" || order.status === "shopping",
         },
         // Then combined orders from same shop
-        ...sameShopCombinedOrders.map(co => ({
+        ...sameShopCombinedOrders.map((co) => ({
           orderId: co.OrderID || co.id,
           order: co,
           items: co.Order_Items || [],
-          customerName: co.orderedBy?.name || co.user?.name || co.customer?.name || 'Customer',
-          isVisible: co.status === "accepted" || co.status === "shopping"
-        }))
-      ].filter(group => group.isVisible)
+          customerName:
+            co.orderedBy?.name ||
+            co.user?.name ||
+            co.customer?.name ||
+            "Customer",
+          isVisible: co.status === "accepted" || co.status === "shopping",
+        })),
+      ].filter((group) => group.isVisible)
     : [];
 
   const allGroups = Array.from(itemsByShop.entries());
@@ -79,10 +88,13 @@ export default function OrderItemsSection({
 
   // Combined order rendering logic - determine split types early for useEffect
   const isSplit = groups.length > 1;
-  const isSameShopCustomerSplit = hasSameShopCombinedOrders && orderGroups.length > 1;
+  const isSameShopCustomerSplit =
+    hasSameShopCombinedOrders && orderGroups.length > 1;
 
   // For same-shop customer tabs, use orderId instead of shopId
-  const isCurrentlyActiveOrderVisible = orderGroups.some(group => group.orderId == activeShopId); // Use == for number/string comparison
+  const isCurrentlyActiveOrderVisible = orderGroups.some(
+    (group) => group.orderId == activeShopId
+  ); // Use == for number/string comparison
   const effectiveActiveOrderId = isCurrentlyActiveOrderVisible
     ? activeShopId
     : orderGroups.length > 0
@@ -101,14 +113,24 @@ export default function OrderItemsSection({
   React.useEffect(() => {
     if (isSameShopCustomerSplit) {
       // For same-shop combined orders, set to first order if not already set
-      if (orderGroups.length > 0 && !orderGroups.some(group => group.orderId == activeShopId)) { // Use == for number/string comparison
+      if (
+        orderGroups.length > 0 &&
+        !orderGroups.some((group) => group.orderId == activeShopId)
+      ) {
+        // Use == for number/string comparison
         onSetActiveShopId(orderGroups[0].orderId);
       }
     } else if (groups.length === 1 && activeShopId !== groups[0][0]) {
       // For different shops, set to the only visible shop
       onSetActiveShopId(groups[0][0]);
     }
-  }, [groups, orderGroups, activeShopId, onSetActiveShopId, isSameShopCustomerSplit]);
+  }, [
+    groups,
+    orderGroups,
+    activeShopId,
+    onSetActiveShopId,
+    isSameShopCustomerSplit,
+  ]);
 
   if (itemsLoading) {
     return (
@@ -161,7 +183,6 @@ export default function OrderItemsSection({
     );
   }
 
-
   // Helper to get shop name
   const getShopName = (sid: string) => {
     if (sid === order.shop?.id) return order.shop?.name;
@@ -186,14 +207,14 @@ export default function OrderItemsSection({
             <button
               key={group.orderId}
               onClick={() => onSetActiveShopId(group.orderId)}
-              className={`flex flex-shrink-0 items-center gap-2 rounded-xl border-2 px-3 py-2 text-sm font-semibold transition-all duration-200 max-w-[200px] ${
+              className={`flex max-w-[200px] flex-shrink-0 items-center gap-2 rounded-xl border-2 px-3 py-2 text-sm font-semibold transition-all duration-200 ${
                 effectiveActiveOrderId == group.orderId // Use == for number/string comparison
                   ? "border-green-600 bg-green-600 text-white shadow-lg shadow-green-200 dark:shadow-green-900/30"
                   : "border-slate-200 bg-white text-slate-600 hover:border-green-400 hover:text-green-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
               }`}
             >
               <span
-                className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] flex-shrink-0 ${
+                className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[10px] ${
                   effectiveActiveOrderId == group.orderId // Use == for number/string comparison
                     ? "bg-white/20"
                     : "bg-slate-100 dark:bg-slate-700"
@@ -202,11 +223,16 @@ export default function OrderItemsSection({
                 {idx + 1}
               </span>
               <div className="min-w-0 flex-1 truncate text-left">
-                {group.customerName} <span className={`text-xs ${
-                  effectiveActiveOrderId == group.orderId // Use == for number/string comparison
-                    ? "text-white/90"
-                    : "text-slate-500 dark:text-slate-400"
-                }`}>#{group.orderId}</span>
+                {group.customerName}{" "}
+                <span
+                  className={`text-xs ${
+                    effectiveActiveOrderId == group.orderId // Use == for number/string comparison
+                      ? "text-white/90"
+                      : "text-slate-500 dark:text-slate-400"
+                  }`}
+                >
+                  #{group.orderId}
+                </span>
               </div>
             </button>
           ))}
@@ -214,7 +240,9 @@ export default function OrderItemsSection({
 
         {/* Active Order Items */}
         {(() => {
-          const activeGroup = orderGroups.find(group => group.orderId == effectiveActiveOrderId); // Use == for number/string comparison
+          const activeGroup = orderGroups.find(
+            (group) => group.orderId == effectiveActiveOrderId
+          ); // Use == for number/string comparison
           if (!activeGroup) return null;
 
           return (
@@ -338,8 +366,7 @@ export default function OrderItemsSection({
         </div>
         <div className="space-y-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/30 sm:p-6">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            {displayName} •{" "}
-            {displayItems.length} Items
+            {displayName} • {displayItems.length} Items
           </h3>
           <div className="space-y-2 sm:space-y-3">
             {displayItems.map((item) => {
