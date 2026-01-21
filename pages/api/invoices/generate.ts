@@ -337,7 +337,12 @@ export default async function handler(
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const { orderId, orderType = "regular", invoiceProofPhoto, foundItemsTotal } = req.body;
+    const {
+      orderId,
+      orderType = "regular",
+      invoiceProofPhoto,
+      foundItemsTotal,
+    } = req.body;
 
     // Validate required fields
     if (!orderId) {
@@ -578,7 +583,9 @@ export default async function handler(
     const deliveryFeeStr = hasFoundItemsTotal ? "0.00" : deliveryFee.toFixed(2);
     const discountStr = "0.00"; // Assuming no discount for now
     const taxStr = taxAmount.toFixed(2);
-    const totalAmount = hasFoundItemsTotal ? itemsTotal.toFixed(2) : finalTotalBeforeTax.toFixed(2);
+    const totalAmount = hasFoundItemsTotal
+      ? itemsTotal.toFixed(2)
+      : finalTotalBeforeTax.toFixed(2);
 
     const invoicePayload = {
       customer_id: isReelOrder
@@ -659,8 +666,8 @@ export default async function handler(
       total: hasFoundItemsTotal
         ? itemsTotal
         : order.status === "shopping"
-          ? itemsTotal
-          : itemsTotal + serviceFee + deliveryFee,
+        ? itemsTotal
+        : itemsTotal + serviceFee + deliveryFee,
       orderType: isReelOrder
         ? "reel"
         : isRestaurantOrder

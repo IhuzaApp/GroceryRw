@@ -97,10 +97,17 @@ const GET_SHOPPER_WALLET = gql`
 
 // GraphQL mutation to update wallet balances
 const UPDATE_WALLET_BALANCES = gql`
-  mutation UpdateWalletBalances($wallet_id: uuid!, $reserved_balance: String!, $available_balance: String!) {
+  mutation UpdateWalletBalances(
+    $wallet_id: uuid!
+    $reserved_balance: String!
+    $available_balance: String!
+  ) {
     update_Wallets_by_pk(
       pk_columns: { id: $wallet_id }
-      _set: { reserved_balance: $reserved_balance, available_balance: $available_balance }
+      _set: {
+        reserved_balance: $reserved_balance
+        available_balance: $available_balance
+      }
     ) {
       id
       reserved_balance
@@ -328,7 +335,7 @@ export default async function handler(
       console.log("🔍 Backend: Main order found:", {
         id: orderData.id,
         total: orderData.total,
-        combined_order_id: orderData.combined_order_id
+        combined_order_id: orderData.combined_order_id,
       });
 
       // Check if this order has combined orders
@@ -337,7 +344,10 @@ export default async function handler(
 
       if (orderData.combined_order_id) {
         hasCombinedOrders = true;
-        console.log("🔍 Backend: Order has combined_order_id:", orderData.combined_order_id);
+        console.log(
+          "🔍 Backend: Order has combined_order_id:",
+          orderData.combined_order_id
+        );
 
         // Fetch all orders with the same combined_order_id
         const combinedOrdersResponse = await hasuraClient.request<{
@@ -346,30 +356,52 @@ export default async function handler(
           combined_order_id: orderData.combined_order_id,
         });
 
-        console.log("🔍 Backend: Combined orders response:", combinedOrdersResponse);
+        console.log(
+          "🔍 Backend: Combined orders response:",
+          combinedOrdersResponse
+        );
 
-        if (combinedOrdersResponse.Orders && combinedOrdersResponse.Orders.length > 0) {
+        if (
+          combinedOrdersResponse.Orders &&
+          combinedOrdersResponse.Orders.length > 0
+        ) {
           allOrdersInBatch = combinedOrdersResponse.Orders;
           console.log("🔍 Backend: Found combined orders details:");
-        allOrdersInBatch.forEach((order: any, index: number) => {
-          console.log(`🔍 Backend: Combined order ${index + 1}:`, {
-            id: order.id,
-            OrderID: order.OrderID,
-            total: order.total,
-            status: order.status,
-            shop: order.Shop?.name
+          allOrdersInBatch.forEach((order: any, index: number) => {
+            console.log(`🔍 Backend: Combined order ${index + 1}:`, {
+              id: order.id,
+              OrderID: order.OrderID,
+              total: order.total,
+              status: order.status,
+              shop: order.Shop?.name,
+            });
           });
-        });
 
           // Use the frontend calculated amount (base item total, not stored totals with fees)
-          console.log("🔍 Backend: Using frontend calculated base items total:", formattedOrderAmount);
+          console.log(
+            "🔍 Backend: Using frontend calculated base items total:",
+            formattedOrderAmount
+          );
           console.log("🔍 Backend: Stored totals with fees would be:");
           allOrdersInBatch.forEach((order: any, index: number) => {
-            console.log(`🔍 Backend: Order ${index + 1} (${order.id}): stored total ${order.total}`);
+            console.log(
+              `🔍 Backend: Order ${index + 1} (${order.id}): stored total ${
+                order.total
+              }`
+            );
           });
-          const storedTotalSum = allOrdersInBatch.reduce((sum, order) => sum + parseFloat(order.total), 0);
-          console.log("🔍 Backend: Stored totals sum (with fees):", storedTotalSum);
-          console.log("🔍 Backend: Using base items total instead:", formattedOrderAmount);
+          const storedTotalSum = allOrdersInBatch.reduce(
+            (sum, order) => sum + parseFloat(order.total),
+            0
+          );
+          console.log(
+            "🔍 Backend: Stored totals sum (with fees):",
+            storedTotalSum
+          );
+          console.log(
+            "🔍 Backend: Using base items total instead:",
+            formattedOrderAmount
+          );
 
           batchTotal = formattedOrderAmount;
         } else {
@@ -383,14 +415,23 @@ export default async function handler(
     console.log("🔍 Backend: ===== FINAL PROCESSING SUMMARY =====");
     console.log("🔍 Backend: hasCombinedOrders:", hasCombinedOrders);
     console.log("🔍 Backend: allOrdersInBatch count:", allOrdersInBatch.length);
-    console.log("🔍 Backend: Individual order totals:", allOrdersInBatch.map(o => ({
-      id: o.id,
-      OrderID: o.OrderID,
-      total: o.total
-    })));
+    console.log(
+      "🔍 Backend: Individual order totals:",
+      allOrdersInBatch.map((o) => ({
+        id: o.id,
+        OrderID: o.OrderID,
+        total: o.total,
+      }))
+    );
     console.log("🔍 Backend: Calculated batchTotal:", batchTotal);
-    console.log("🔍 Backend: Received formattedOrderAmount:", formattedOrderAmount);
-    console.log("🔍 Backend: Match check - batchTotal === formattedOrderAmount:", batchTotal === formattedOrderAmount);
+    console.log(
+      "🔍 Backend: Received formattedOrderAmount:",
+      formattedOrderAmount
+    );
+    console.log(
+      "🔍 Backend: Match check - batchTotal === formattedOrderAmount:",
+      batchTotal === formattedOrderAmount
+    );
 
     // Get shopper's wallet
     const shopperId = orderData.shopper_id;
@@ -413,7 +454,7 @@ export default async function handler(
     console.log("🔍 Backend: Wallet found:", {
       id: walletId,
       available_balance: wallet.available_balance,
-      reserved_balance: wallet.reserved_balance
+      reserved_balance: wallet.reserved_balance,
     });
 
     // Check if there's enough in the reserved balance
@@ -422,7 +463,10 @@ export default async function handler(
 
     console.log("🔍 Backend: Balance check:");
     console.log("🔍 Backend: Current reserved balance:", currentReserved);
-    console.log("🔍 Backend: Formatted reserved balance:", formattedReservedBalance);
+    console.log(
+      "🔍 Backend: Formatted reserved balance:",
+      formattedReservedBalance
+    );
     console.log("🔍 Backend: Required amount:", formattedOrderAmount);
 
     if (formattedReservedBalance < formattedOrderAmount) {
@@ -444,18 +488,23 @@ export default async function handler(
         // The shopper gets paid for all found items and receives fees
         // Refunds only apply when specific items are not found, but for same-shop
         // combined orders, the shopper either finds all items or none
-        console.log("🔍 BACKEND: Same-shop combined order - no individual refunds needed");
+        console.log(
+          "🔍 BACKEND: Same-shop combined order - no individual refunds needed"
+        );
       } else {
         // For different-shop combined orders, calculate refunds for each order individually
         for (const order of allOrdersInBatch) {
           const orderTotal = parseFloat(order.total);
-          const orderItemsTotal = order.Order_Items?.reduce((sum: number, item: any) => {
-            return sum + (parseFloat(item.price) * item.quantity);
-          }, 0) || 0;
+          const orderItemsTotal =
+            order.Order_Items?.reduce((sum: number, item: any) => {
+              return sum + parseFloat(item.price) * item.quantity;
+            }, 0) || 0;
 
           // Check if this order needs a refund
           if (orderTotal > orderItemsTotal) {
-            const orderRefundAmount = parseFloat((orderTotal - orderItemsTotal).toFixed(2));
+            const orderRefundAmount = parseFloat(
+              (orderTotal - orderItemsTotal).toFixed(2)
+            );
             totalRefundAmount += orderRefundAmount;
 
             // Create refund reason for this specific order
@@ -463,9 +512,13 @@ export default async function handler(
             let orderRefundReason = `Refund for items not found during shopping at ${shopName}. `;
 
             // List items for this specific order
-            const orderItems = order.Order_Items?.map((item: any) =>
-              `${item.Product.ProductName?.name || "Unknown Product"} (${item.quantity})`
-            ).join(", ") || "No items found";
+            const orderItems =
+              order.Order_Items?.map(
+                (item: any) =>
+                  `${item.Product.ProductName?.name || "Unknown Product"} (${
+                    item.quantity
+                  })`
+              ).join(", ") || "No items found";
 
             orderRefundReason += `Order items: ${orderItems}. `;
             orderRefundReason += `Original total: ${orderTotal}, found items total: ${orderItemsTotal}, refund amount: ${orderRefundAmount}.`;
@@ -484,11 +537,15 @@ export default async function handler(
       }
     } else {
       // For single orders or reel orders, use existing logic
-      const totalOrderValue = originalOrderTotal || parseFloat(isReelOrder ? orderData.total : orderData.total);
+      const totalOrderValue =
+        originalOrderTotal ||
+        parseFloat(isReelOrder ? orderData.total : orderData.total);
 
       // Calculate if there's a difference between original total and found items total
       if (totalOrderValue > formattedOrderAmount) {
-        totalRefundAmount = parseFloat((totalOrderValue - formattedOrderAmount).toFixed(2));
+        totalRefundAmount = parseFloat(
+          (totalOrderValue - formattedOrderAmount).toFixed(2)
+        );
 
         // Get shop/restaurant name
         const shopName = isReelOrder
@@ -499,12 +556,16 @@ export default async function handler(
         let refundReason = `Refund for items not found during shopping at ${shopName}. `;
 
         if (isReelOrder) {
-          refundReason += `Reel order: ${orderData.Reel?.Restaurant?.name || "Unknown Restaurant"}. `;
+          refundReason += `Reel order: ${
+            orderData.Reel?.Restaurant?.name || "Unknown Restaurant"
+          }. `;
         } else {
           // List all order items for regular single orders
           const allItems = orderData.Order_Items.map(
             (item: any) =>
-              `${item.Product.ProductName?.name || "Unknown Product"} (${item.quantity})`
+              `${item.Product.ProductName?.name || "Unknown Product"} (${
+                item.quantity
+              })`
           ).join(", ");
           refundReason += `Order items: ${allItems}. `;
         }
@@ -549,7 +610,9 @@ export default async function handler(
         ) {
           // Refund already exists, use the existing one
           createdRefunds.push(existingRefundResponse.Refunds[0]);
-          console.log(`Refund already exists for order ${refundRecord.order_id}`);
+          console.log(
+            `Refund already exists for order ${refundRecord.order_id}`
+          );
         } else {
           // Create new refund record
           const refundResponse = await hasuraClient.request<RefundResponse>(
@@ -566,10 +629,15 @@ export default async function handler(
           }
 
           createdRefunds.push(refundResponse.insert_Refunds_one);
-          console.log(`Created refund for order ${refundRecord.order_id}: ${refundResponse.insert_Refunds_one.amount}`);
+          console.log(
+            `Created refund for order ${refundRecord.order_id}: ${refundResponse.insert_Refunds_one.amount}`
+          );
         }
       } catch (refundError) {
-        console.error(`Error creating refund for order ${refundRecord.order_id}:`, refundError);
+        console.error(
+          `Error creating refund for order ${refundRecord.order_id}:`,
+          refundError
+        );
         // Add more detailed error logging to help diagnose the issue
         if (refundError instanceof Error) {
           console.error("Error message:", refundError.message);
@@ -591,7 +659,7 @@ export default async function handler(
     // For combined orders, use the batch total; otherwise use the individual order amount
     const originalAmount = hasCombinedOrders
       ? batchTotal
-      : (originalOrderTotal || formattedOrderAmount);
+      : originalOrderTotal || formattedOrderAmount;
 
     console.log("🔍 Backend: Wallet update calculation:");
     console.log("🔍 Backend: hasCombinedOrders:", hasCombinedOrders);
@@ -610,7 +678,10 @@ export default async function handler(
 
       // 1. Remove found items amount from reserved balance
       newReserved = currentReserved - formattedOrderAmount;
-      console.log("🔍 BACKEND: Deducting found items from reserved:", formattedOrderAmount);
+      console.log(
+        "🔍 BACKEND: Deducting found items from reserved:",
+        formattedOrderAmount
+      );
 
       // 2. Calculate total fees from all orders in the batch (shopper earnings)
       let totalFees = 0;
@@ -618,15 +689,23 @@ export default async function handler(
         const serviceFee = parseFloat(order.service_fee || "0");
         const deliveryFee = parseFloat(order.delivery_fee || "0");
         totalFees += serviceFee + deliveryFee;
-        console.log(`🔍 BACKEND: Order ${order.id} fees: service ${serviceFee} + delivery ${deliveryFee} = ${serviceFee + deliveryFee}`);
+        console.log(
+          `🔍 BACKEND: Order ${
+            order.id
+          } fees: service ${serviceFee} + delivery ${deliveryFee} = ${
+            serviceFee + deliveryFee
+          }`
+        );
       });
 
       console.log("🔍 BACKEND: Total fees (shopper earnings):", totalFees);
 
       // 3. Add fees to available balance
       newAvailable = parseFloat(wallet.available_balance) + totalFees;
-      console.log("🔍 BACKEND: Adding fees to available balance:", newAvailable);
-
+      console.log(
+        "🔍 BACKEND: Adding fees to available balance:",
+        newAvailable
+      );
     } else {
       // NORMAL ORDERS: Use existing logic
       newReserved = currentReserved - originalAmount;
@@ -728,7 +807,9 @@ export default async function handler(
         amount: formattedOrderAmount,
         originalTotal: originalOrderTotal,
         batchTotal: hasCombinedOrders ? batchTotal : undefined,
-        combinedOrdersCount: hasCombinedOrders ? allOrdersInBatch.length : undefined,
+        combinedOrdersCount: hasCombinedOrders
+          ? allOrdersInBatch.length
+          : undefined,
         isSameShopCombined: isSameShopCombined,
         timestamp: new Date().toISOString(),
       },
@@ -737,7 +818,9 @@ export default async function handler(
         newReservedBalance: newReserved,
         oldAvailableBalance: parseFloat(wallet.available_balance),
         newAvailableBalance: newAvailable,
-        deductedAmount: isSameShopCombined ? formattedOrderAmount : originalAmount,
+        deductedAmount: isSameShopCombined
+          ? formattedOrderAmount
+          : originalAmount,
         feesAddedToAvailable: feesAddedToAvailable,
       },
       refunds: createdRefunds,
