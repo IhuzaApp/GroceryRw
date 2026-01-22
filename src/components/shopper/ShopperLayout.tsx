@@ -254,13 +254,18 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
     }
   };
 
+  // Check if we're on a batch details page (hide header on mobile)
+  const isBatchDetailsPage = typeof window !== 'undefined' &&
+    window.location.pathname.includes('/Plasa/active-batches/batch/');
+
   // session contains user: { id, name, email, phone, gender, address }
   // status is 'authenticated' | 'loading' | 'unauthenticated'
   return (
     <div
       className={`h-screen ${theme === "dark" ? "bg-gray-900" : "bg-gray-50"}`}
     >
-      <ShopperHeader />
+      {/* Hide header on mobile for batch details pages */}
+      {!(isMobile && isBatchDetailsPage) && <ShopperHeader />}
       <div className="flex h-full">
         <ShopperSidebar />
         <main
