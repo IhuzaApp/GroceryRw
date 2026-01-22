@@ -875,12 +875,19 @@ export default function BatchDetails({
         return;
       }
 
-        orderId: order.id,
-        orderAmount: orderAmount,
-        originalOrderTotal: originalOrderTotal,
-        orderType: order.orderType || "regular",
-        momoReferenceId: momoReferenceId,
-        momoSuccess: momoPaymentSuccess,
+      const response = await fetch("/api/shopper/processPayment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId: order.id,
+          orderAmount: orderAmount,
+          originalOrderTotal: originalOrderTotal,
+          orderType: order.orderType || "regular",
+          momoReferenceId: momoReferenceId,
+          momoSuccess: momoPaymentSuccess,
+        }),
       });
 
       // Make API request to update wallet balance and process payment
