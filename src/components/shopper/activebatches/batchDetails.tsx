@@ -2125,9 +2125,35 @@ export default function BatchDetails({
               ) || []
           ) || [];
 
-        const allRelevantItems = [...relevantItems, ...combinedOrderItems];
-        const hasFoundItems =
-          allRelevantItems?.some((item: any) => item.found) || false;
+        // Check if this is a same-shop combined order
+        const hasCombinedOrders =
+          order?.combinedOrders && order.combinedOrders.length > 0;
+        const mainShopId = order?.shop?.id;
+        const sameShopCombinedOrders = hasCombinedOrders
+          ? order.combinedOrders.filter(
+              (co) => co.shop?.id === mainShopId
+            )
+          : [];
+        const hasSameShopCombinedOrders = sameShopCombinedOrders.length > 0;
+
+        let hasFoundItems = false;
+
+        if (hasSameShopCombinedOrders) {
+          // For same-shop combined orders, require items to be found across ALL orders in the batch
+          const allOrdersInBatch = [order, ...sameShopCombinedOrders];
+          hasFoundItems = allOrdersInBatch.every((batchOrder: any) => {
+            const orderItems = batchOrder.Order_Items || [];
+            const shopFilteredItems = orderItems.filter(
+              (item: any) =>
+                !(item as any).shopId || (item as any).shopId === mainShopId
+            );
+            return shopFilteredItems.some((item: any) => item.found);
+          });
+        } else {
+          // For regular orders, check if any items are found (existing logic)
+          const allRelevantItems = [...relevantItems, ...combinedOrderItems];
+          hasFoundItems = allRelevantItems?.some((item: any) => item.found) || false;
+        }
 
         // Shopping status calculated
 
@@ -2142,7 +2168,12 @@ export default function BatchDetails({
             disabled={!hasFoundItems}
             className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
           >
-            {hasFoundItems ? "Make Payment" : "Mark Items as Found to Continue"}
+            {hasFoundItems
+              ? "Make Payment"
+              : hasSameShopCombinedOrders
+              ? "Mark Items as Found in All Orders to Continue"
+              : "Mark Items as Found to Continue"
+            }
           </Button>
         );
       case "on_the_way":
