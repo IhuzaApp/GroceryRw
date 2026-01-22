@@ -37,6 +37,12 @@ export default function BottomActionButton({
           ordersByCustomer.get(customerKey)!.push(o);
         });
 
+        // Check if there are multiple customers - if so, hide bottom button
+        const hasMultipleCustomers = ordersByCustomer.size > 1;
+        if (hasMultipleCustomers) {
+          return null; // Hide bottom button for multi-customer deliveries
+        }
+
         // Check if any customer group has all orders ready for delivery
         const readyCustomerGroup = Array.from(ordersByCustomer.entries()).find(
           ([customerKey, orders]) => {

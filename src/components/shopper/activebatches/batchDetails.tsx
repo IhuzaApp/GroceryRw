@@ -2944,6 +2944,21 @@ export default function BatchDetails({
 
               <div className="hidden pt-2 sm:block sm:pt-4">
                 {(() => {
+                  // Check if there are multiple customers - if so, hide desktop action button
+                  const allOrders = [order, ...(order?.combinedOrders || [])];
+                  const customerKeys = new Set<string>();
+                  allOrders.forEach((o) => {
+                    const customerPhone = (o as any).orderedBy?.phone || o.customerPhone || "unknown";
+                    const customerId = (o as any).orderedBy?.id || o.customerId || "unknown";
+                    const customerKey = `${customerId}_${customerPhone}`;
+                    customerKeys.add(customerKey);
+                  });
+
+                  const hasMultipleCustomers = customerKeys.size > 1;
+                  if (hasMultipleCustomers) {
+                    return null; // Hide desktop action button for multi-customer deliveries
+                  }
+
                   const actionOrder =
                     activeShopId === order?.shop?.id
                       ? order
