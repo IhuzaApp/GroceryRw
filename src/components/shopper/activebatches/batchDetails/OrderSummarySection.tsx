@@ -133,11 +133,11 @@ export default function OrderSummarySection({
             }`}
             style={{ maxHeight }}
           >
-      })()}
-        {order.orderType === "reel" ? (
-          (() => {
-            const itemsTotal =
-              parseFloat(order.reel?.Price || "0") * (order.quantity || 1);
+            {/* End of container div opening, now show content */}
+            {order.orderType === "reel" ? (
+              (() => {
+                const itemsTotal =
+                  parseFloat(order.reel?.Price || "0") * (order.quantity || 1);
             const discount = order.discount || 0;
             const finalTotal = itemsTotal - discount;
             const vat = finalTotal * (taxRate / (1 + taxRate));
