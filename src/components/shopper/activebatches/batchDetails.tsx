@@ -180,37 +180,10 @@ export default function BatchDetails({
   const [otpVerifyLoading, setOtpVerifyLoading] = useState(false);
 
   // Debug log to verify console is working
-  console.log("🔍 DEBUG: BatchDetails component rendered, order:", order?.id);
 
   // Detailed order information logging
   useEffect(() => {
-    if (order) {
-      console.log("🔍 DETAILED ORDER INFO:");
-      console.log("🔍 Order ID:", order.id);
-      console.log("🔍 Order total:", order.total);
-      console.log("🔍 Order status:", order.status);
-      console.log("🔍 Order type:", order.orderType);
-      console.log("🔍 Has combinedOrders array:", !!order.combinedOrders);
-      console.log(
-        "🔍 CombinedOrders count:",
-        order.combinedOrders?.length || 0
-      );
-
-      if (order.combinedOrders && order.combinedOrders.length > 0) {
-        console.log("🔍 COMBINED ORDERS DETAILS:");
-        order.combinedOrders.forEach((co, index) => {
-          console.log(`🔍 Combined Order ${index + 1}:`, {
-            id: co.id,
-            total: co.total,
-            status: co.status,
-            orderType: co.orderType,
-            shop: co.shop?.name || "No shop",
-          });
-        });
-      } else {
-        console.log("🔍 No combined orders found");
-      }
-    }
+    // Debug logging removed
   }, [order]);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [invoiceData, setInvoiceData] = useState<any>(null);
@@ -707,7 +680,6 @@ export default function BatchDetails({
 
     setPaymentLoading(true);
     // Payment debug info calculated
-    console.log("🔍 DEBUG: Starting wallet balance check for payment");
     try {
       // First check if there's enough balance in the wallet
       const wallet = await fetchWalletBalance();
@@ -903,8 +875,6 @@ export default function BatchDetails({
         return;
       }
 
-      console.log("🔍 Frontend: Sending payment request to backend");
-      console.log("🔍 Frontend: Request payload:", {
         orderId: order.id,
         orderAmount: orderAmount,
         originalOrderTotal: originalOrderTotal,
@@ -958,7 +928,6 @@ export default function BatchDetails({
 
         const paymentData = await response.json();
 
-        console.log("🔍 Frontend: Received payment response:", paymentData);
 
         // Check if refunds were created
         if (paymentData.refunds && paymentData.refunds.length > 0) {

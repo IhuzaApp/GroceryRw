@@ -139,13 +139,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
   // Debug log to check button state
   useEffect(() => {
-    console.log("PaymentModal button state:", {
-      momoCode,
-      paymentLoading,
-      paymentStatus,
-      isDisabled:
-        !momoCode.trim() || paymentStatus === "processing" || paymentLoading,
-    });
+    // Debug logging removed
   }, [momoCode, paymentLoading, paymentStatus]);
 
   if (!open || !isMounted) return null;

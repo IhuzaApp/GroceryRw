@@ -430,7 +430,6 @@ export const getServerSideProps: GetServerSideProps<
   `;
 
   try {
-    console.log("🔍 Starting batch details fetch for ID:", id);
 
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");

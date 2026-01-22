@@ -237,9 +237,6 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  console.log("🔍 BACKEND: processPayment API called");
-  console.log("🔍 BACKEND: Request method:", req.method);
-  console.log("🔍 BACKEND: Request body:", req.body);
 
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -267,11 +264,6 @@ export default async function handler(
       combinedOrders,
     } = req.body;
 
-    console.log("🔍 BACKEND: Extracted request data:");
-    console.log("🔍 BACKEND: orderId:", orderId);
-    console.log("🔍 BACKEND: orderAmount:", orderAmount);
-    console.log("🔍 BACKEND: originalOrderTotal:", originalOrderTotal);
-    console.log("🔍 BACKEND: orderType:", orderType);
 
     // Validate required fields
     if (!orderId || !momoCode || !privateKey || orderAmount === undefined) {
@@ -281,10 +273,6 @@ export default async function handler(
     // Format order amount to ensure consistent handling
     const formattedOrderAmount = parseFloat(Number(orderAmount).toFixed(2));
 
-    console.log("🔍 Backend: Received payment request");
-    console.log("🔍 Backend: orderId:", orderId);
-    console.log("🔍 Backend: orderAmount received:", orderAmount);
-    console.log("🔍 Backend: formattedOrderAmount:", formattedOrderAmount);
 
     // In a real-world scenario, this would integrate with a payment processor
     // For now, we'll skip that and just update the database directly
@@ -300,8 +288,6 @@ export default async function handler(
     let batchTotal = 0;
     let hasCombinedOrders = false;
 
-    console.log("🔍 Backend: Fetching order details for:", orderId);
-    console.log("🔍 Backend: Order type:", orderType);
 
     // Get order details based on order type
     if (isReelOrder) {
@@ -318,7 +304,6 @@ export default async function handler(
       }
       allOrdersInBatch = [orderData];
       batchTotal = parseFloat(orderData.total);
-      console.log("🔍 Backend: Reel order found, total:", batchTotal);
     } else {
       const orderResponse = await hasuraClient.request<OrderDetails>(
         GET_ORDER_DETAILS,
@@ -332,11 +317,6 @@ export default async function handler(
         return res.status(404).json({ error: "Order not found" });
       }
 
-      console.log("🔍 Backend: Main order found:", {
-        id: orderData.id,
-        total: orderData.total,
-        combined_order_id: orderData.combined_order_id,
-      });
 
       // Check if this order has combined orders
       allOrdersInBatch = [orderData];
@@ -344,11 +324,6 @@ export default async function handler(
 
       if (orderData.combined_order_id) {
         hasCombinedOrders = true;
-        console.log(
-          "🔍 Backend: Order has combined_order_id:",
-          orderData.combined_order_id
-        );
-
         // Fetch all orders with the same combined_order_id
         const combinedOrdersResponse = await hasuraClient.request<{
           Orders: any[];
@@ -356,40 +331,11 @@ export default async function handler(
           combined_order_id: orderData.combined_order_id,
         });
 
-        console.log(
-          "🔍 Backend: Combined orders response:",
-          combinedOrdersResponse
-        );
-
         if (
           combinedOrdersResponse.Orders &&
           combinedOrdersResponse.Orders.length > 0
         ) {
           allOrdersInBatch = combinedOrdersResponse.Orders;
-          console.log("🔍 Backend: Found combined orders details:");
-          allOrdersInBatch.forEach((order: any, index: number) => {
-            console.log(`🔍 Backend: Combined order ${index + 1}:`, {
-              id: order.id,
-              OrderID: order.OrderID,
-              total: order.total,
-              status: order.status,
-              shop: order.Shop?.name,
-            });
-          });
-
-          // Use the frontend calculated amount (base item total, not stored totals with fees)
-          console.log(
-            "🔍 Backend: Using frontend calculated base items total:",
-            formattedOrderAmount
-          );
-          console.log("🔍 Backend: Stored totals with fees would be:");
-          allOrdersInBatch.forEach((order: any, index: number) => {
-            console.log(
-              `🔍 Backend: Order ${index + 1} (${order.id}): stored total ${
-                order.total
-              }`
-            );
-          });
           const storedTotalSum = allOrdersInBatch.reduce(
             (sum, order) => sum + parseFloat(order.total),
             0
@@ -404,17 +350,11 @@ export default async function handler(
           );
 
           batchTotal = formattedOrderAmount;
-        } else {
-          console.log("🔍 Backend: No combined orders found");
         }
       } else {
-        console.log("🔍 Backend: No combined_order_id found");
       }
     }
 
-    console.log("🔍 Backend: ===== FINAL PROCESSING SUMMARY =====");
-    console.log("🔍 Backend: hasCombinedOrders:", hasCombinedOrders);
-    console.log("🔍 Backend: allOrdersInBatch count:", allOrdersInBatch.length);
     console.log(
       "🔍 Backend: Individual order totals:",
       allOrdersInBatch.map((o) => ({
@@ -423,7 +363,6 @@ export default async function handler(
         total: o.total,
       }))
     );
-    console.log("🔍 Backend: Calculated batchTotal:", batchTotal);
     console.log(
       "🔍 Backend: Received formattedOrderAmount:",
       formattedOrderAmount
@@ -451,26 +390,13 @@ export default async function handler(
     const wallet = walletResponse.Wallets[0];
     const walletId = wallet.id;
 
-    console.log("🔍 Backend: Wallet found:", {
-      id: walletId,
-      available_balance: wallet.available_balance,
-      reserved_balance: wallet.reserved_balance,
-    });
 
     // Check if there's enough in the reserved balance
     const currentReserved = parseFloat(wallet.reserved_balance);
     const formattedReservedBalance = parseFloat(currentReserved.toFixed(2));
 
-    console.log("🔍 Backend: Balance check:");
-    console.log("🔍 Backend: Current reserved balance:", currentReserved);
-    console.log(
-      "🔍 Backend: Formatted reserved balance:",
-      formattedReservedBalance
-    );
-    console.log("🔍 Backend: Required amount:", formattedOrderAmount);
 
     if (formattedReservedBalance < formattedOrderAmount) {
-      console.log("🔍 Backend: Insufficient balance!");
       return res.status(400).json({
         error: `Insufficient reserved balance. You have ${formatCurrency(
           formattedReservedBalance
@@ -661,20 +587,12 @@ export default async function handler(
       ? batchTotal
       : originalOrderTotal || formattedOrderAmount;
 
-    console.log("🔍 Backend: Wallet update calculation:");
-    console.log("🔍 Backend: hasCombinedOrders:", hasCombinedOrders);
-    console.log("🔍 Backend: batchTotal:", batchTotal);
-    console.log("🔍 Backend: originalOrderTotal:", originalOrderTotal);
-    console.log("🔍 Backend: formattedOrderAmount:", formattedOrderAmount);
-    console.log("🔍 Backend: isSameShopCombined:", isSameShopCombined);
-    console.log("🔍 Backend: originalAmount to deduct:", originalAmount);
 
     let newReserved = currentReserved;
     let newAvailable = parseFloat(wallet.available_balance);
 
     if (isSameShopCombined && hasCombinedOrders) {
       // SAME SHOP COMBINED ORDERS: Special wallet handling
-      console.log("🔍 BACKEND: SAME SHOP COMBINED - Special wallet logic");
 
       // 1. Remove found items amount from reserved balance
       newReserved = currentReserved - formattedOrderAmount;
@@ -698,7 +616,6 @@ export default async function handler(
         );
       });
 
-      console.log("🔍 BACKEND: Total fees before platform deduction:", totalFees);
 
       // 3. Fetch delivery commission percentage and calculate platform fee
       const systemConfigResponse = await hasuraClient.request(GET_SYSTEM_CONFIG_FOR_FEES);
@@ -709,41 +626,21 @@ export default async function handler(
       const platformFee = (totalFees * deliveryCommissionPercentage) / 100;
       const shopperEarnings = totalFees - platformFee;
 
-      console.log("🔍 BACKEND: Delivery commission percentage:", deliveryCommissionPercentage + "%");
-      console.log("🔍 BACKEND: Platform fee:", platformFee);
-      console.log("🔍 BACKEND: Shopper earnings after platform fee:", shopperEarnings);
 
       // 4. Add shopper earnings (after platform fee deduction) to available balance
       newAvailable = parseFloat(wallet.available_balance) + shopperEarnings;
-      console.log(
-        "🔍 BACKEND: Adding shopper earnings to available balance:",
-        newAvailable
-      );
     } else {
       // NORMAL ORDERS: Use existing logic
       newReserved = currentReserved - originalAmount;
     }
 
-    console.log("🔍 BACKEND: ===== WALLET UPDATE CALCULATION =====");
-    console.log("🔍 BACKEND: hasCombinedOrders:", hasCombinedOrders);
-    console.log("🔍 BACKEND: batchTotal:", batchTotal);
-    console.log("🔍 BACKEND: originalOrderTotal:", originalOrderTotal);
-    console.log("🔍 BACKEND: formattedOrderAmount:", formattedOrderAmount);
-    console.log("🔍 BACKEND: Current reserved balance:", currentReserved);
-    console.log("🔍 BACKEND: Amount to deduct:", originalAmount);
-    console.log("🔍 BACKEND: New reserved balance will be:", newReserved);
 
     // Update the wallet balances
-    console.log("🔍 BACKEND: Executing wallet update...");
-    console.log("🔍 BACKEND: New reserved balance:", newReserved);
-    console.log("🔍 BACKEND: New available balance:", newAvailable);
     const updateResult = await hasuraClient.request(UPDATE_WALLET_BALANCES, {
       wallet_id: walletId,
       reserved_balance: newReserved.toString(),
       available_balance: newAvailable.toString(),
     });
-    console.log("🔍 BACKEND: Wallet update result:", updateResult);
-    console.log("🔍 BACKEND: Wallet update completed successfully");
 
     // Create wallet transaction records for the payment
     // Note: Wallet_Transactions table is designed for regular orders only
@@ -840,7 +737,6 @@ export default async function handler(
       totalRefundAmount: totalRefundAmount,
     };
 
-    console.log("🔍 Backend: Sending response:", responseData);
 
     return res.status(200).json(responseData);
   } catch (error) {

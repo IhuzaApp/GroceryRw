@@ -50,24 +50,7 @@ export default function QuantityConfirmationModal({
 
   // Check if item is weight-based
   useEffect(() => {
-    console.log(
-      "🔍 [QuantityConfirmationModal] useEffect triggered, currentItem exists:",
-      !!currentItem
-    );
     if (currentItem) {
-      console.log(
-        "🔍 [QuantityConfirmationModal] FULL currentItem:",
-        JSON.stringify(currentItem, null, 2)
-      );
-      console.log(
-        "🔍 [QuantityConfirmationModal] currentItem.product:",
-        currentItem.product
-      );
-      console.log(
-        "🔍 [QuantityConfirmationModal] currentItem.product.ProductName:",
-        currentItem.product?.ProductName
-      );
-
       // Access measurement_unit from the correct path based on GraphQL schema
       let unit = "";
 
@@ -91,18 +74,6 @@ export default function QuantityConfirmationModal({
 
       setIsWeightBased(isWeight);
       setMeasurementUnit(unit);
-
-      console.log("🔍 [QuantityConfirmationModal] Barcode/SKU check:");
-      console.log("  - product.barcode:", currentItem.product?.barcode);
-      console.log(
-        "  - product.ProductName.barcode:",
-        currentItem.product?.ProductName?.barcode
-      );
-      console.log("  - product.sku:", currentItem.product?.sku);
-      console.log(
-        "  - product.ProductName.sku:",
-        currentItem.product?.ProductName?.sku
-      );
 
       // Calculate price per unit weight
       if (isWeight && currentItem.product.final_price) {
@@ -208,15 +179,6 @@ export default function QuantityConfirmationModal({
       return;
     }
 
-    console.log(
-      "🔍 [QuantityConfirmationModal] No barcode/SKU found for validation:",
-      {
-        itemBarcode,
-        itemSku,
-        hasBarcode: !!itemBarcode,
-        hasSku: !!itemSku,
-      }
-    );
 
     // If the item has NO barcode or SKU in the database, it cannot be validated.
     setBarcodeValidation({
