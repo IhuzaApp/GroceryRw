@@ -2567,17 +2567,6 @@ export default function BatchDetails({
 
               // For orders from the SAME shop: DON'T duplicate items, just keep them separate for combinedOrders array
               sameShopOrders.forEach((subOrder: any) => {
-                console.log(
-                  `🔍 DATA TRANSFORMATION - Same shop order ${subOrder.id}:`,
-                  {
-                    hasItems: !!subOrder.items,
-                    itemsCount: subOrder.items?.length || 0,
-                    orderId: subOrder.id,
-                    mainOrderId: data.order.id,
-                    hasOrder_Items: !!subOrder.Order_Items,
-                    order_ItemsCount: subOrder.Order_Items?.length || 0,
-                  }
-                );
                 if (subOrder.items && subOrder.id !== data.order.id) {
                   const subItems = transformOrderItems(
                     subOrder.items,
@@ -2585,22 +2574,7 @@ export default function BatchDetails({
                     subOrder.id
                   );
                   subOrder.Order_Items = subItems; // Attach for split view
-                  console.log(
-                    `🔍 DATA TRANSFORMATION - Attached ${subItems.length} items to same-shop order ${subOrder.id}`
-                  );
                   // DON'T add to allItems for same shop orders to avoid duplication
-                } else if (
-                  subOrder.Order_Items &&
-                  subOrder.id !== data.order.id
-                ) {
-                  // Already has Order_Items from previous transformation
-                  console.log(
-                    `🔍 DATA TRANSFORMATION - Same shop order ${subOrder.id} already has ${subOrder.Order_Items.length} Order_Items`
-                  );
-                } else {
-                  console.log(
-                    `🔍 DATA TRANSFORMATION - Skipping same-shop order ${subOrder.id} (no items/Order_Items or is main order)`
-                  );
                 }
               });
 
