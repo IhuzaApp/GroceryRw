@@ -18,7 +18,7 @@ interface OrderSummarySectionProps {
 
 export default function OrderSummarySection({
   order,
-  isSummaryExpanded,
+  isSummaryExpanded = false,
   onToggleSummary,
   getActiveOrder,
   getActiveOrderItems,
@@ -27,6 +27,7 @@ export default function OrderSummarySection({
   calculateBatchTotal,
 }: OrderSummarySectionProps) {
   const { taxRate } = useTaxRate();
+
   return (
     <div
       className={`overflow-hidden border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl ${
@@ -121,17 +122,18 @@ export default function OrderSummarySection({
       </div>
 
       {/* Content */}
-      <div
-        className={`overflow-y-auto px-4 py-4 transition-all duration-300 ${
-          order.status === "shopping" && !isSummaryExpanded
-            ? "hidden sm:block"
-            : ""
-        }`}
-        style={{
-          maxHeight:
-            order.status === "shopping" && isSummaryExpanded ? "50vh" : "auto",
-        }}
-      >
+      {(() => {
+        const isHidden = order.status === "shopping" && !isSummaryExpanded;
+        const maxHeight = order.status === "shopping" && isSummaryExpanded ? "50vh" : "auto";
+
+        return (
+          <div
+            className={`overflow-y-auto px-4 py-4 transition-all duration-300 ${
+              isHidden ? "hidden sm:block" : ""
+            }`}
+            style={{ maxHeight }}
+          >
+      })()}
         {order.orderType === "reel" ? (
           (() => {
             const itemsTotal =
@@ -175,7 +177,7 @@ export default function OrderSummarySection({
           })()
         ) : (
           <>
-            {getActiveOrder.status === "shopping" && (
+            {order.status === "shopping" && (
               <>
                 {(() => {
                   // Check if we have same-shop combined orders
@@ -361,7 +363,9 @@ export default function OrderSummarySection({
             )}
           </>
         )}
-      </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
