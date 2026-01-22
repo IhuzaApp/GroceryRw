@@ -254,7 +254,8 @@ export default function OrderItemsSection({
               <div className="space-y-2 sm:space-y-3">
                 {activeGroup.items.map((item) => {
                   // Show Mark Found button only if the specific order containing this item is in shopping status
-                  const isBatchShopping = activeGroup.order.status === "shopping";
+                  const isBatchShopping =
+                    activeGroup.order.status === "shopping";
 
                   return (
                     <div key={item.id}>
