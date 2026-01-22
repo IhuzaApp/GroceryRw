@@ -237,7 +237,6 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -264,7 +263,6 @@ export default async function handler(
       combinedOrders,
     } = req.body;
 
-
     // Validate required fields
     if (!orderId || !momoCode || !privateKey || orderAmount === undefined) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -272,7 +270,6 @@ export default async function handler(
 
     // Format order amount to ensure consistent handling
     const formattedOrderAmount = parseFloat(Number(orderAmount).toFixed(2));
-
 
     // In a real-world scenario, this would integrate with a payment processor
     // For now, we'll skip that and just update the database directly
@@ -287,7 +284,6 @@ export default async function handler(
     let allOrdersInBatch: any[] = [];
     let batchTotal = 0;
     let hasCombinedOrders = false;
-
 
     // Get order details based on order type
     if (isReelOrder) {
@@ -316,7 +312,6 @@ export default async function handler(
       if (!orderData) {
         return res.status(404).json({ error: "Order not found" });
       }
-
 
       // Check if this order has combined orders
       allOrdersInBatch = [orderData];
@@ -390,11 +385,9 @@ export default async function handler(
     const wallet = walletResponse.Wallets[0];
     const walletId = wallet.id;
 
-
     // Check if there's enough in the reserved balance
     const currentReserved = parseFloat(wallet.reserved_balance);
     const formattedReservedBalance = parseFloat(currentReserved.toFixed(2));
-
 
     if (formattedReservedBalance < formattedOrderAmount) {
       return res.status(400).json({
@@ -587,7 +580,6 @@ export default async function handler(
       ? batchTotal
       : originalOrderTotal || formattedOrderAmount;
 
-
     let newReserved = currentReserved;
     let newAvailable = parseFloat(wallet.available_balance);
 
@@ -616,16 +608,17 @@ export default async function handler(
         );
       });
 
-
       // 3. Fetch delivery commission percentage and calculate platform fee
-      const systemConfigResponse = await hasuraClient.request(GET_SYSTEM_CONFIG_FOR_FEES);
+      const systemConfigResponse = await hasuraClient.request(
+        GET_SYSTEM_CONFIG_FOR_FEES
+      );
       const deliveryCommissionPercentage = parseFloat(
-        systemConfigResponse?.System_configuratioins?.[0]?.deliveryCommissionPercentage || "20"
+        systemConfigResponse?.System_configuratioins?.[0]
+          ?.deliveryCommissionPercentage || "20"
       );
 
       const platformFee = (totalFees * deliveryCommissionPercentage) / 100;
       const shopperEarnings = totalFees - platformFee;
-
 
       // 4. Add shopper earnings (after platform fee deduction) to available balance
       newAvailable = parseFloat(wallet.available_balance) + shopperEarnings;
@@ -633,7 +626,6 @@ export default async function handler(
       // NORMAL ORDERS: Use existing logic
       newReserved = currentReserved - originalAmount;
     }
-
 
     // Update the wallet balances
     const updateResult = await hasuraClient.request(UPDATE_WALLET_BALANCES, {
@@ -736,7 +728,6 @@ export default async function handler(
       refunds: createdRefunds,
       totalRefundAmount: totalRefundAmount,
     };
-
 
     return res.status(200).json(responseData);
   } catch (error) {

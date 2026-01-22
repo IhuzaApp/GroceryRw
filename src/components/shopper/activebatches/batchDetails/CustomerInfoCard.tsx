@@ -20,10 +20,15 @@ export default function CustomerInfoCard({
   theme,
 }: CustomerInfoCardProps) {
   console.log("🔍 CustomerInfoCard: uniqueCustomers:", uniqueCustomers);
-  console.log("🔍 CustomerInfoCard: uniqueCustomers length:", uniqueCustomers?.length);
+  console.log(
+    "🔍 CustomerInfoCard: uniqueCustomers length:",
+    uniqueCustomers?.length
+  );
 
   if (!uniqueCustomers || uniqueCustomers.length === 0) {
-    console.log("🔍 CustomerInfoCard: No customers to display, showing fallback");
+    console.log(
+      "🔍 CustomerInfoCard: No customers to display, showing fallback"
+    );
     return (
       <div className="rounded-none border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
         <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">

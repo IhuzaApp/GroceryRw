@@ -69,8 +69,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       setIsMobile(window.innerWidth < 768);
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const formattedCurrency = (amount: number) => {
@@ -240,7 +240,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         >
           {currentStep === "momo" ? (
             <>
-
               <div className="space-y-4">
                 {/* MoMo Code Input */}
                 <div className="space-y-2">
@@ -485,7 +484,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
               {/* Warning Message */}
               <div
-                className={`mt-6 rounded-xl border-l-4 p-4 transition-all duration-200 ${!isMobile ? 'cursor-pointer hover:shadow-md' : ''} ${
+                className={`mt-6 rounded-xl border-l-4 p-4 transition-all duration-200 ${
+                  !isMobile ? "cursor-pointer hover:shadow-md" : ""
+                } ${
                   theme === "dark"
                     ? "border-yellow-500 bg-yellow-900/20 text-yellow-300"
                     : "border-yellow-500 bg-yellow-50 text-yellow-800"
@@ -499,7 +500,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               >
                 <div className="flex items-start gap-3">
                   <div
-                    className={`rounded-full p-1 flex-shrink-0 ${
+                    className={`flex-shrink-0 rounded-full p-1 ${
                       theme === "dark" ? "bg-yellow-600" : "bg-yellow-100"
                     }`}
                   >
@@ -519,36 +520,55 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       />
                     </svg>
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1">
-                        <p className="mb-1 font-semibold">Payment Instructions</p>
+                        <p className="mb-1 font-semibold">
+                          Payment Instructions
+                        </p>
                         <div className="text-sm opacity-90">
-                          <p className={isMobile ? "" : (!warningExpanded ? "overflow-hidden" : "")} style={isMobile ? undefined : (!warningExpanded ? {
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                            lineHeight: '1.4',
-                            maxHeight: '2.8em'
-                          } : undefined)}>
-                            Enter your MoMo code and click "Verify & Proceed to OTP"
-                            to continue. After OTP verification, the MoMo payment will
-                            be initiated automatically.
+                          <p
+                            className={
+                              isMobile
+                                ? ""
+                                : !warningExpanded
+                                ? "overflow-hidden"
+                                : ""
+                            }
+                            style={
+                              isMobile
+                                ? undefined
+                                : !warningExpanded
+                                ? {
+                                    display: "-webkit-box",
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: "vertical",
+                                    lineHeight: "1.4",
+                                    maxHeight: "2.8em",
+                                  }
+                                : undefined
+                            }
+                          >
+                            Enter your MoMo code and click "Verify & Proceed to
+                            OTP" to continue. After OTP verification, the MoMo
+                            payment will be initiated automatically.
                           </p>
                           {(isMobile || warningExpanded) && (
-                            <div className="border-t border-yellow-300/30 pt-3 mt-3">
-                              <p className="mb-1 font-semibold text-sm">🔒 Secure Payment Processing</p>
+                            <div className="mt-3 border-t border-yellow-300/30 pt-3">
+                              <p className="mb-1 text-sm font-semibold">
+                                🔒 Secure Payment Processing
+                              </p>
                               <p className="text-sm opacity-90">
-                                Your payment is processed securely through our trusted
-                                payment gateway. Enter your MoMo code to complete the
-                                transaction safely.
+                                Your payment is processed securely through our
+                                trusted payment gateway. Enter your MoMo code to
+                                complete the transaction safely.
                               </p>
                             </div>
                           )}
                         </div>
                       </div>
                       {!isMobile && (
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex flex-shrink-0 items-center gap-2">
                           <span className="text-sm font-medium opacity-75">
                             {warningExpanded ? "Show less" : "Show more"}
                           </span>

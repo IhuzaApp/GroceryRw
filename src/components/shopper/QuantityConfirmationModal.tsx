@@ -179,7 +179,6 @@ export default function QuantityConfirmationModal({
       return;
     }
 
-
     // If the item has NO barcode or SKU in the database, it cannot be validated.
     setBarcodeValidation({
       isValid: false,
