@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { formatCurrency } from "../../../lib/formatCurrency";
 import { OrderDetailsType, OrderItem } from "../types";
+import { useTaxRate } from "../../../hooks/useTaxRate";
 
 interface OrderSummaryProps {
   order: OrderDetailsType;
@@ -20,6 +21,7 @@ export default function OrderSummary({
   calculateFoundItemsTotal,
 }: OrderSummaryProps) {
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
+  const { taxRate } = useTaxRate();
 
   if (!shouldShowOrderDetails()) {
     return null;
@@ -118,7 +120,7 @@ export default function OrderSummary({
               parseFloat(order.reel?.Price || "0") * (order.quantity || 1);
             const discount = order.discount || 0;
             const finalTotal = itemsTotal - discount;
-            const vat = finalTotal * (18 / 118);
+            const vat = finalTotal * (taxRate / (1 + taxRate));
             const subtotal = finalTotal - vat;
 
             return (
@@ -130,7 +132,7 @@ export default function OrderSummary({
                   </span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
-                  <span>VAT (18%)</span>
+                  <span>VAT ({(taxRate * 100).toFixed(0)}%)</span>
                   <span className="font-medium">{formatCurrency(vat)}</span>
                 </div>
                 {discount > 0 && (

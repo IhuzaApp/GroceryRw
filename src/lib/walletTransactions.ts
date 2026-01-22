@@ -221,11 +221,25 @@ export const recordPaymentTransactions = async (
 };
 
 // Function to generate invoice
-export const generateInvoice = async (orderId: string) => {
+export const generateInvoice = async (orderId: string, skipForCombined: boolean = false) => {
   try {
     // On client-side, use the API route instead of direct Hasura access
     if (isClient) {
       console.log(`Generating invoice for order ${orderId}`);
+
+      // Skip invoice generation for combined orders during initial creation
+      // They will be created during proof capture instead
+      if (skipForCombined) {
+        console.log(`Skipping invoice generation for combined order ${orderId} - will be created during proof capture`);
+        return {
+          id: `placeholder_${orderId}`,
+          invoiceNumber: `PLACEHOLDER-${orderId.slice(-8)}`,
+          orderId,
+          total: 0,
+          status: 'pending'
+        };
+      }
+
       const response = await fetch("/api/invoices/generate", {
         method: "POST",
         headers: {
