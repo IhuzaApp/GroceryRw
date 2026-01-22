@@ -1264,17 +1264,56 @@ export default function BatchDetails({
     setShowInvoiceModal(true);
   };
 
-  // NEW: Handle delivery confirmation button click - generates invoice first, then shows modal
-  const handleDeliveryConfirmationClick = () => {
-    if (!order?.id) return;
+  // Handle individual order delivery confirmation (for delivery route section)
+  const handleIndividualDeliveryConfirmation = (targetOrder: any) => {
+    // Show delivery confirmation modal for individual order
+    // This is similar to combined order handling but for single orders
+    const allOrderIds = [targetOrder.id];
 
-    const isRestaurantOrder = order?.orderType === "restaurant";
+    const combinedInvoiceData = {
+      id: `individual_${targetOrder.id}_${Date.now()}`,
+      invoiceNumber: targetOrder.OrderID || targetOrder.id.slice(-8),
+      orderId: targetOrder.id,
+      orderNumber: targetOrder.OrderID || targetOrder.id.slice(-8),
+      customer: targetOrder.orderedBy?.name || targetOrder.user?.name || "Customer",
+      customerEmail: targetOrder.orderedBy?.email || targetOrder.user?.email || "",
+      customerPhone: targetOrder.orderedBy?.phone || targetOrder.user?.phone || "",
+      customerAddress: targetOrder.address
+        ? `${targetOrder.address.street || ""}, ${targetOrder.address.city || ""}`
+        : "Address not available",
+      items_count: 1,
+      shop_name: targetOrder.shop?.name || "Shop",
+      shop_address: targetOrder.shop?.address || "Address not available",
+      delivery_time: targetOrder.delivery_time,
+      delivery_notes: targetOrder.delivery_notes,
+      order_status: targetOrder.status,
+      total_amount: 0, // Will be calculated
+      subtotal: 0,
+      delivery_fee: 0,
+      service_fee: 0,
+      tax: 0,
+      status: "pending",
+      created_at: new Date().toISOString(),
+      invoice_items: [],
+      Proof: null,
+    };
+
+    setInvoiceData(combinedInvoiceData);
+    setShowInvoiceModal(true);
+  };
+
+  // NEW: Handle delivery confirmation button click - generates invoice first, then shows modal
+  const handleDeliveryConfirmationClick = (targetOrderOverride?: any) => {
+    const activeOrder = targetOrderOverride || order;
+    if (!activeOrder?.id) return;
+
+    const isRestaurantOrder = activeOrder?.orderType === "restaurant";
     const isRestaurantUserReel =
-      order?.orderType === "reel" &&
-      (order?.reel?.restaurant_id || order?.reel?.user_id);
+      activeOrder?.orderType === "reel" &&
+      (activeOrder?.reel?.restaurant_id || activeOrder?.reel?.user_id);
     const isCombinedOrder =
-      order?.orderType === "combined" ||
-      (order?.combinedOrders && order.combinedOrders.length > 0);
+      activeOrder?.orderType === "combined" ||
+      (activeOrder?.combinedOrders && activeOrder.combinedOrders.length > 0);
 
     // For restaurant orders, show modal directly without generating invoice
     if (isRestaurantOrder) {
@@ -1283,12 +1322,18 @@ export default function BatchDetails({
     }
 
     // For restaurant/user reel orders, show modal directly
-    if (order?.orderType === "reel" && isRestaurantUserReel) {
+    if (activeOrder?.orderType === "reel" && isRestaurantUserReel) {
       handleReelDeliveryConfirmation();
       return;
     }
 
-    // For combined orders, show delivery confirmation modal with PIN verification
+    // For individual orders (not the main batch), show individual delivery confirmation
+    if (!isCombinedOrder && targetOrderOverride) {
+      handleIndividualDeliveryConfirmation(activeOrder);
+      return;
+    }
+
+    // For combined orders (main batch), show delivery confirmation modal with PIN verification
     if (isCombinedOrder) {
       // For combined orders from API, use orderIds array if available, otherwise fall back to combinedOrders
       const allOrderIds = order.orderIds || [
@@ -2124,6 +2169,22 @@ export default function BatchDetails({
         // For delivery route section, individual buttons should always be available
         // regardless of multi-customer status, since each customer group handles its own deliveries
 
+        // Check if this batch has multiple customers going to different delivery routes
+        const allOrdersInBatch = [order, ...(order?.combinedOrders || [])];
+        const customerKeys = new Set<string>();
+        allOrdersInBatch.forEach((o) => {
+          const customerPhone = (o as any).orderedBy?.phone || o.customerPhone || "unknown";
+          const customerId = (o as any).orderedBy?.id || o.customerId || "unknown";
+          const customerKey = `${customerId}_${customerPhone}`;
+          customerKeys.add(customerKey);
+        });
+
+        // Hide main batch button if multiple customers (individual deliveries handled separately)
+        const hasMultipleCustomers = customerKeys.size > 1;
+        if (hasMultipleCustomers && !targetOrderOverride) {
+          return null; // Hide main batch button for multi-customer orders
+        }
+
         // Only show Confirm Delivery button if invoice proof has been uploaded for this specific order
         if (!uploadedProofs[activeOrder.id]) {
           return (
@@ -2179,7 +2240,7 @@ export default function BatchDetails({
             color="green"
             size="lg"
             block
-            onClick={handleDeliveryConfirmationClick}
+            onClick={() => handleDeliveryConfirmationClick(activeOrder)}
             className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
           >
             Confirm Delivery
