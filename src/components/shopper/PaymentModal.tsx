@@ -56,10 +56,21 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   );
   const [isMounted, setIsMounted] = useState(false);
   const [warningExpanded, setWarningExpanded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Check if component is mounted (for SSR compatibility)
   useEffect(() => {
     setIsMounted(true);
+    // Check if mobile on mount
+    setIsMobile(window.innerWidth < 768);
+
+    // Add resize listener
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const formattedCurrency = (amount: number) => {
@@ -474,12 +485,17 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
               {/* Warning Message */}
               <div
-                className={`mt-6 rounded-xl border-l-4 p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
+                className={`mt-6 rounded-xl border-l-4 p-4 transition-all duration-200 ${!isMobile ? 'cursor-pointer hover:shadow-md' : ''} ${
                   theme === "dark"
                     ? "border-yellow-500 bg-yellow-900/20 text-yellow-300"
                     : "border-yellow-500 bg-yellow-50 text-yellow-800"
                 }`}
-                onClick={() => setWarningExpanded(!warningExpanded)}
+                onClick={() => {
+                  // Only allow expansion on desktop (md and above)
+                  if (!isMobile) {
+                    setWarningExpanded(!warningExpanded);
+                  }
+                }}
               >
                 <div className="flex items-start gap-3">
                   <div
@@ -508,18 +524,18 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       <div className="flex-1">
                         <p className="mb-1 font-semibold">Payment Instructions</p>
                         <div className="text-sm opacity-90">
-                          <p className={!warningExpanded ? "overflow-hidden" : ""} style={!warningExpanded ? {
+                          <p className={isMobile ? "" : (!warningExpanded ? "overflow-hidden" : "")} style={isMobile ? undefined : (!warningExpanded ? {
                             display: '-webkit-box',
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: 'vertical',
                             lineHeight: '1.4',
                             maxHeight: '2.8em'
-                          } : undefined}>
+                          } : undefined)}>
                             Enter your MoMo code and click "Verify & Proceed to OTP"
                             to continue. After OTP verification, the MoMo payment will
                             be initiated automatically.
                           </p>
-                          {warningExpanded && (
+                          {(isMobile || warningExpanded) && (
                             <div className="border-t border-yellow-300/30 pt-3 mt-3">
                               <p className="mb-1 font-semibold text-sm">🔒 Secure Payment Processing</p>
                               <p className="text-sm opacity-90">
@@ -531,26 +547,28 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <span className="text-sm font-medium opacity-75">
-                          {warningExpanded ? "Show less" : "Show more"}
-                        </span>
-                        <svg
-                          className={`h-4 w-4 transition-transform duration-200 ${
-                            warningExpanded ? "rotate-180" : ""
-                          }`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </div>
+                      {!isMobile && (
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className="text-sm font-medium opacity-75">
+                            {warningExpanded ? "Show less" : "Show more"}
+                          </span>
+                          <svg
+                            className={`h-4 w-4 transition-transform duration-200 ${
+                              warningExpanded ? "rotate-180" : ""
+                            }`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
