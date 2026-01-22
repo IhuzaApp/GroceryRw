@@ -430,7 +430,6 @@ export const getServerSideProps: GetServerSideProps<
   `;
 
   try {
-
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }

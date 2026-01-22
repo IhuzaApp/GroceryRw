@@ -318,7 +318,10 @@ export default function BatchDetails({
     console.log("🔍 batchDetails: Calculating uniqueCustomers");
     console.log("🔍 batchDetails: order?.user:", order?.user);
     console.log("🔍 batchDetails: order?.orderedBy:", order?.orderedBy);
-    console.log("🔍 batchDetails: order?.combinedOrders:", order?.combinedOrders);
+    console.log(
+      "🔍 batchDetails: order?.combinedOrders:",
+      order?.combinedOrders
+    );
 
     const customers = [];
     const customerIds = new Set();
@@ -341,8 +344,15 @@ export default function BatchDetails({
     // Add customers from combined orders - check both user and orderedBy fields
     order?.combinedOrders?.forEach((combinedOrder) => {
       const combinedCustomer = combinedOrder?.user || combinedOrder?.orderedBy;
-      if (combinedCustomer && combinedCustomer.id && !customerIds.has(combinedCustomer.id)) {
-        console.log("🔍 batchDetails: Adding combined order customer:", combinedCustomer);
+      if (
+        combinedCustomer &&
+        combinedCustomer.id &&
+        !customerIds.has(combinedCustomer.id)
+      ) {
+        console.log(
+          "🔍 batchDetails: Adding combined order customer:",
+          combinedCustomer
+        );
         customerIds.add(combinedCustomer.id);
         customers.push({
           ...combinedCustomer,
@@ -958,7 +968,6 @@ export default function BatchDetails({
         }
 
         const paymentData = await response.json();
-
 
         // Check if refunds were created
         if (paymentData.refunds && paymentData.refunds.length > 0) {
@@ -2176,7 +2185,8 @@ export default function BatchDetails({
         } else {
           // For regular orders, check if any items are found (existing logic)
           const allRelevantItems = [...relevantItems, ...combinedOrderItems];
-          hasFoundItems = allRelevantItems?.some((item: any) => item.found) || false;
+          hasFoundItems =
+            allRelevantItems?.some((item: any) => item.found) || false;
         }
 
         // Shopping status calculated
@@ -2196,8 +2206,7 @@ export default function BatchDetails({
               ? "Make Payment"
               : hasSameShopCombinedOrders
               ? "Mark Items as Found in All Orders to Continue"
-              : "Mark Items as Found to Continue"
-            }
+              : "Mark Items as Found to Continue"}
           </Button>
         );
       case "on_the_way":
@@ -2863,20 +2872,30 @@ export default function BatchDetails({
             />
 
             {/* Content */}
-            <div className={`space-y-3 px-0 pb-3 pt-1 sm:space-y-8 sm:p-8 ${
-              // Add extra bottom margin on mobile when Order Summary is fixed at bottom
-              (() => {
-                const hasCombinedOrders = !!(order?.combinedOrders && order.combinedOrders.length > 0);
-                const hasAnyOrderInShopping = hasCombinedOrders
-                  ? [order, ...(order.combinedOrders || [])].some(o => o.status === "shopping")
-                  : order.status === "shopping";
-                const shouldShowAtBottom = hasCombinedOrders
-                  ? [order, ...(order.combinedOrders || [])].some(o => ["shopping", "accepted", "paid"].includes(o.status))
-                  : hasAnyOrderInShopping;
+            <div
+              className={`space-y-3 px-0 pb-3 pt-1 sm:space-y-8 sm:p-8 ${
+                // Add extra bottom margin on mobile when Order Summary is fixed at bottom
+                (() => {
+                  const hasCombinedOrders = !!(
+                    order?.combinedOrders && order.combinedOrders.length > 0
+                  );
+                  const hasAnyOrderInShopping = hasCombinedOrders
+                    ? [order, ...(order.combinedOrders || [])].some(
+                        (o) => o.status === "shopping"
+                      )
+                    : order.status === "shopping";
+                  const shouldShowAtBottom = hasCombinedOrders
+                    ? [order, ...(order.combinedOrders || [])].some((o) =>
+                        ["shopping", "accepted", "paid"].includes(o.status)
+                      )
+                    : hasAnyOrderInShopping;
 
-                return shouldShowOrderDetails() && shouldShowAtBottom ? "pb-[6rem] sm:pb-3" : "";
-              })()
-            }`}>
+                  return shouldShowOrderDetails() && shouldShowAtBottom
+                    ? "pb-[6rem] sm:pb-3"
+                    : "";
+                })()
+              }`}
+            >
               {/* Order Progress Steps - Hidden on Mobile */}
               <ProgressStepsSection order={order} currentStep={currentStep} />
 
@@ -2926,7 +2945,10 @@ export default function BatchDetails({
 
                   {/* Customer Info */}
                   {(() => {
-                    console.log("🔍 batchDetails: Rendering CustomerInfoCard with uniqueCustomers:", uniqueCustomers);
+                    console.log(
+                      "🔍 batchDetails: Rendering CustomerInfoCard with uniqueCustomers:",
+                      uniqueCustomers
+                    );
                     return (
                       <CustomerInfoCard
                         order={order}
@@ -2961,13 +2983,17 @@ export default function BatchDetails({
                 <OrderSummarySection
                   order={order}
                   isSummaryExpanded={isSummaryExpanded}
-                  onToggleSummary={() => setIsSummaryExpanded(!isSummaryExpanded)}
+                  onToggleSummary={() =>
+                    setIsSummaryExpanded(!isSummaryExpanded)
+                  }
                   getActiveOrder={getActiveOrder}
                   getActiveOrderItems={getActiveOrderItems}
                   calculateFoundItemsTotal={calculateFoundItemsTotal}
                   calculateOriginalSubtotal={calculateOriginalSubtotal}
                   calculateBatchTotal={calculateBatchTotal}
-                  hasCombinedOrders={!!(order?.combinedOrders && order.combinedOrders.length > 0)}
+                  hasCombinedOrders={
+                    !!(order?.combinedOrders && order.combinedOrders.length > 0)
+                  }
                 />
               )}
 
@@ -3001,7 +3027,12 @@ export default function BatchDetails({
                         );
 
                   // Hide delivery button for multi-customer orders, but allow payment button
-                  if (hasMultipleCustomers && actionOrder && (actionOrder.status === "on_the_way" || actionOrder.status === "at_customer")) {
+                  if (
+                    hasMultipleCustomers &&
+                    actionOrder &&
+                    (actionOrder.status === "on_the_way" ||
+                      actionOrder.status === "at_customer")
+                  ) {
                     return null; // Hide desktop delivery button for multi-customer orders
                   }
 
