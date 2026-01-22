@@ -23,7 +23,9 @@ interface TaxRateResponse {
 export async function getTaxRate(): Promise<number> {
   try {
     if (!hasuraClient) {
-      console.warn('Hasura client not available, using default tax rate of 18%');
+      console.warn(
+        "Hasura client not available, using default tax rate of 18%"
+      );
       return 0.18; // Default fallback
     }
 
@@ -40,10 +42,12 @@ export async function getTaxRate(): Promise<number> {
       }
     }
 
-    console.warn('Tax rate not found in system configuration, using default of 18%');
+    console.warn(
+      "Tax rate not found in system configuration, using default of 18%"
+    );
     return 0.18; // Default fallback
   } catch (error) {
-    console.error('Error fetching tax rate:', error);
+    console.error("Error fetching tax rate:", error);
     return 0.18; // Default fallback
   }
 }
@@ -55,7 +59,10 @@ export async function getTaxRate(): Promise<number> {
  * @param taxRate - Tax rate as decimal (e.g., 0.18 for 18%)
  * @returns number - The tax amount
  */
-export function calculateTaxAmount(totalWithTax: number, taxRate: number = 0.18): number {
+export function calculateTaxAmount(
+  totalWithTax: number,
+  taxRate: number = 0.18
+): number {
   return totalWithTax * (taxRate / (1 + taxRate));
 }
 
@@ -65,6 +72,9 @@ export function calculateTaxAmount(totalWithTax: number, taxRate: number = 0.18)
  * @param taxRate - Tax rate as decimal (e.g., 0.18 for 18%)
  * @returns number - The subtotal amount (total minus tax)
  */
-export function calculateSubtotalFromTotal(totalWithTax: number, taxRate: number = 0.18): number {
+export function calculateSubtotalFromTotal(
+  totalWithTax: number,
+  taxRate: number = 0.18
+): number {
   return totalWithTax - calculateTaxAmount(totalWithTax, taxRate);
 }

@@ -139,7 +139,7 @@ export default function DeliveryRouteSection({
                               }, ${address?.city || ""}`
                             )
                           }
-                          className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-white shadow-md hover:bg-blue-600 hover:shadow-lg transition-all duration-200"
+                          className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-white shadow-md transition-all duration-200 hover:bg-blue-600 hover:shadow-lg"
                           title="Get Directions"
                         >
                           <svg
@@ -160,7 +160,7 @@ export default function DeliveryRouteSection({
                           onClick={() =>
                             handleChatClick(customerId, customer.name)
                           }
-                          className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500 text-white shadow-md hover:bg-purple-600 hover:shadow-lg transition-all duration-200"
+                          className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500 text-white shadow-md transition-all duration-200 hover:bg-purple-600 hover:shadow-lg"
                           title="Chat with Customer"
                         >
                           <svg
@@ -184,12 +184,16 @@ export default function DeliveryRouteSection({
                             }
                           }}
                           disabled={!customer.phone}
-                          className={`flex h-10 w-10 items-center justify-center rounded-full text-white shadow-md hover:shadow-lg transition-all duration-200 ${
+                          className={`flex h-10 w-10 items-center justify-center rounded-full text-white shadow-md transition-all duration-200 hover:shadow-lg ${
                             customer.phone
                               ? "bg-green-500 hover:bg-green-600"
-                              : "bg-gray-400 cursor-not-allowed"
+                              : "cursor-not-allowed bg-gray-400"
                           }`}
-                          title={customer.phone ? "Call Customer" : "No phone number available"}
+                          title={
+                            customer.phone
+                              ? "Call Customer"
+                              : "No phone number available"
+                          }
                         >
                           <svg
                             className="h-5 w-5"
