@@ -55,6 +55,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     "momo"
   );
   const [isMounted, setIsMounted] = useState(false);
+  const [warningExpanded, setWarningExpanded] = useState(false);
 
   // Check if component is mounted (for SSR compatibility)
   useEffect(() => {
@@ -473,15 +474,16 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
               {/* Warning Message */}
               <div
-                className={`mt-6 rounded-xl border-l-4 p-4 ${
+                className={`mt-6 rounded-xl border-l-4 p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
                   theme === "dark"
                     ? "border-yellow-500 bg-yellow-900/20 text-yellow-300"
                     : "border-yellow-500 bg-yellow-50 text-yellow-800"
                 }`}
+                onClick={() => setWarningExpanded(!warningExpanded)}
               >
                 <div className="flex items-start gap-3">
                   <div
-                    className={`rounded-full p-1 ${
+                    className={`rounded-full p-1 flex-shrink-0 ${
                       theme === "dark" ? "bg-yellow-600" : "bg-yellow-100"
                     }`}
                   >
@@ -501,20 +503,54 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       />
                     </svg>
                   </div>
-                  <div>
-                    <p className="mb-1 font-semibold">Payment Instructions</p>
-                    <p className="text-sm opacity-90 mb-3">
-                      Enter your MoMo code and click "Verify & Proceed to OTP"
-                      to continue. After OTP verification, the MoMo payment will
-                      be initiated automatically.
-                    </p>
-                    <div className="border-t border-yellow-300/30 pt-3 mt-3">
-                      <p className="mb-1 font-semibold text-sm">🔒 Secure Payment Processing</p>
-                      <p className="text-sm opacity-90">
-                        Your payment is processed securely through our trusted
-                        payment gateway. Enter your MoMo code to complete the
-                        transaction safely.
-                      </p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <p className="mb-1 font-semibold">Payment Instructions</p>
+                        <div className="text-sm opacity-90">
+                          <p className={!warningExpanded ? "overflow-hidden" : ""} style={!warningExpanded ? {
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            lineHeight: '1.4',
+                            maxHeight: '2.8em'
+                          } : undefined}>
+                            Enter your MoMo code and click "Verify & Proceed to OTP"
+                            to continue. After OTP verification, the MoMo payment will
+                            be initiated automatically.
+                          </p>
+                          {warningExpanded && (
+                            <div className="border-t border-yellow-300/30 pt-3 mt-3">
+                              <p className="mb-1 font-semibold text-sm">🔒 Secure Payment Processing</p>
+                              <p className="text-sm opacity-90">
+                                Your payment is processed securely through our trusted
+                                payment gateway. Enter your MoMo code to complete the
+                                transaction safely.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-sm font-medium opacity-75">
+                          {warningExpanded ? "Show less" : "Show more"}
+                        </span>
+                        <svg
+                          className={`h-4 w-4 transition-transform duration-200 ${
+                            warningExpanded ? "rotate-180" : ""
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </div>
                     </div>
                   </div>
                 </div>
