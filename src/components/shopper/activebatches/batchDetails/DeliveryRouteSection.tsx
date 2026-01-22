@@ -41,9 +41,9 @@ export default function DeliveryRouteSection({
   return (
     <div className="space-y-6 px-3 sm:px-0">
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
           <svg
-            className="h-5 w-5 text-blue-600 dark:text-blue-400"
+            className="h-5 w-5 text-gray-600 dark:text-gray-400"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -102,15 +102,15 @@ export default function DeliveryRouteSection({
             return (
               <div
                 key={customerId}
-                className={`relative rounded-2xl border bg-white p-4 shadow-sm transition-all dark:bg-gray-800 ${
+                className={`relative rounded-xl border bg-white p-4 shadow-sm transition-all dark:bg-gray-800 ${
                   isDelivered
                     ? "opacity-60 grayscale"
-                    : "border-blue-200 shadow-md dark:border-blue-900"
+                    : "border-gray-200 shadow-md dark:border-gray-700"
                 }`}
               >
                 <div className="mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 font-bold text-white shadow-sm">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 font-bold text-gray-700 dark:bg-gray-700 dark:text-gray-300">
                       {index + 1}
                     </span>
                     <div>
@@ -128,17 +128,97 @@ export default function DeliveryRouteSection({
                       </p>
                     </div>
                   </div>
-                  {isDelivered && (
-                    <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                      Completed
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {!isDelivered && (
+                      <>
+                        <button
+                          onClick={() =>
+                            handleDirectionsClick(
+                              `${
+                                address?.street || firstOrder.customerAddress
+                              }, ${address?.city || ""}`
+                            )
+                          }
+                          className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-white shadow-md hover:bg-blue-600 hover:shadow-lg transition-all duration-200"
+                          title="Get Directions"
+                        >
+                          <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                            />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleChatClick(customerId, customer.name)
+                          }
+                          className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500 text-white shadow-md hover:bg-purple-600 hover:shadow-lg transition-all duration-200"
+                          title="Chat with Customer"
+                        >
+                          <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                            />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (customer.phone) {
+                              window.location.href = `tel:${customer.phone}`;
+                            }
+                          }}
+                          disabled={!customer.phone}
+                          className={`flex h-10 w-10 items-center justify-center rounded-full text-white shadow-md hover:shadow-lg transition-all duration-200 ${
+                            customer.phone
+                              ? "bg-green-500 hover:bg-green-600"
+                              : "bg-gray-400 cursor-not-allowed"
+                          }`}
+                          title={customer.phone ? "Call Customer" : "No phone number available"}
+                        >
+                          <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                            />
+                          </svg>
+                        </button>
+                      </>
+                    )}
+                    {isDelivered && (
+                      <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                        Completed
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                <div className="mb-4 space-y-2 rounded-xl bg-slate-50 p-3 dark:bg-slate-700/50">
+                <div className="mb-4 space-y-2 rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
                   <div className="flex items-start gap-2">
                     <svg
-                      className="mt-1 h-4 w-4 text-slate-400"
+                      className="mt-1 h-4 w-4 text-gray-400"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -170,7 +250,7 @@ export default function DeliveryRouteSection({
                       {/* Address type and place details */}
                       <div className="flex flex-wrap items-center gap-3 text-sm">
                         {address?.type && (
-                          <span className="inline-flex items-center gap-2 rounded-full bg-slate-200 px-3 py-1 text-slate-700 dark:bg-slate-600 dark:text-slate-300">
+                          <span className="inline-flex items-center gap-2 rounded-full bg-gray-200 px-3 py-1 text-gray-700 dark:bg-gray-600 dark:text-gray-300">
                             <svg
                               className="h-4 w-4"
                               fill="none"
@@ -193,7 +273,7 @@ export default function DeliveryRouteSection({
                         {address?.placeDetails && (
                           <div className="flex flex-wrap gap-2">
                             {address.placeDetails.gateNumber && (
-                              <span className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                              <span className="inline-flex items-center gap-2 rounded-full bg-gray-200 px-3 py-1 text-gray-700 dark:bg-gray-600 dark:text-gray-300">
                                 <svg
                                   className="h-4 w-4"
                                   fill="none"
@@ -212,7 +292,7 @@ export default function DeliveryRouteSection({
                             )}
 
                             {address.placeDetails.gateColor && (
-                              <span className="inline-flex items-center gap-2 rounded-full bg-green-100 px-3 py-1 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                              <span className="inline-flex items-center gap-2 rounded-full bg-gray-200 px-3 py-1 text-gray-700 dark:bg-gray-600 dark:text-gray-300">
                                 <svg
                                   className="h-4 w-4"
                                   fill="none"
@@ -231,7 +311,7 @@ export default function DeliveryRouteSection({
                             )}
 
                             {address.placeDetails.floor && (
-                              <span className="inline-flex items-center gap-2 rounded-full bg-purple-100 px-3 py-1 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                              <span className="inline-flex items-center gap-2 rounded-full bg-gray-200 px-3 py-1 text-gray-700 dark:bg-gray-600 dark:text-gray-300">
                                 <svg
                                   className="h-4 w-4"
                                   fill="none"
@@ -250,7 +330,7 @@ export default function DeliveryRouteSection({
                             )}
 
                             {address.placeDetails.doorNumber && (
-                              <span className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
+                              <span className="inline-flex items-center gap-2 rounded-full bg-gray-200 px-3 py-1 text-gray-700 dark:bg-gray-600 dark:text-gray-300">
                                 <svg
                                   className="h-4 w-4"
                                   fill="none"
@@ -276,10 +356,10 @@ export default function DeliveryRouteSection({
 
                 {/* Delivery Notes */}
                 {deliveryNotes && (
-                  <div className="mb-4 space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-700 dark:bg-amber-900/20">
+                  <div className="mb-4 space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-600 dark:bg-gray-800/50">
                     <div className="flex items-start gap-2">
                       <svg
-                        className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600 dark:text-amber-400"
+                        className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-600 dark:text-gray-400"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -305,10 +385,10 @@ export default function DeliveryRouteSection({
 
                 {/* Customer Comments */}
                 {customerComment && (
-                  <div className="mb-4 space-y-2 rounded-xl border border-blue-200 bg-blue-50 p-3 dark:border-blue-700 dark:bg-blue-900/20">
+                  <div className="mb-4 space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-600 dark:bg-gray-800/50">
                     <div className="flex items-start gap-2">
                       <svg
-                        className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600 dark:text-blue-400"
+                        className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-600 dark:text-gray-400"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -333,149 +413,90 @@ export default function DeliveryRouteSection({
                 )}
 
                 {!isDelivered && (
-                  <div className="flex flex-col gap-4">
-                    <div className="grid grid-cols-2 gap-3">
-                      <Button
-                        appearance="primary"
-                        color="blue"
-                        block
-                        onClick={() =>
-                          handleDirectionsClick(
-                            `${
-                              address?.street || firstOrder.customerAddress
-                            }, ${address?.city || ""}`
-                          )
-                        }
-                      >
-                        <div className="flex items-center justify-center gap-2">
-                          <svg
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-                            />
-                          </svg>
-                          Directions
-                        </div>
-                      </Button>
-                      <Button
-                        appearance="ghost"
-                        color="violet"
-                        block
-                        onClick={() =>
-                          handleChatClick(customerId, customer.name)
-                        }
-                      >
-                        <div className="flex items-center justify-center gap-2">
-                          <svg
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                            />
-                          </svg>
-                          Chat
-                        </div>
-                      </Button>
-                    </div>
+                  <div className="space-y-3">
+                    {(() => {
+                      // Check if all orders in this customer group are ready for delivery
+                      // (have invoice proofs uploaded and are in on_the_way/at_customer status)
+                      const allOrdersReadyForDelivery = orders.every((o) => {
+                        const hasInvoice =
+                          (o as any).Invoice?.length > 0 ||
+                          (o as any).invoice ||
+                          uploadedProofs[o.id];
+                        const isInDeliveryStatus =
+                          o.status === "on_the_way" ||
+                          o.status === "at_customer";
+                        return hasInvoice && isInDeliveryStatus;
+                      });
 
-                    <div className="space-y-3 pt-2">
-                      {(() => {
-                        // Check if all orders in this customer group are ready for delivery
-                        // (have invoice proofs uploaded and are in on_the_way/at_customer status)
-                        const allOrdersReadyForDelivery = orders.every((o) => {
+                      // If all orders are ready for delivery, show order cards without buttons
+                      // The bottom button will handle unified delivery confirmation
+                      if (allOrdersReadyForDelivery && orders.length > 1) {
+                        return orders.map((o) => {
                           const hasInvoice =
                             (o as any).Invoice?.length > 0 ||
                             (o as any).invoice ||
                             uploadedProofs[o.id];
-                          const isInDeliveryStatus =
-                            o.status === "on_the_way" ||
-                            o.status === "at_customer";
-                          return hasInvoice && isInDeliveryStatus;
+
+                          return (
+                            <div
+                              key={o.id}
+                              className="rounded-lg border border-slate-100 bg-slate-50/50 p-3 dark:border-slate-700 dark:bg-slate-800/50"
+                            >
+                              {/* No individual button - bottom button handles unified delivery */}
+                              <div className="text-center text-xs text-slate-500">
+                                Ready for delivery
+                              </div>
+                            </div>
+                          );
                         });
+                      } else {
+                        // Show individual buttons for each order
+                        return orders.map((o) => {
+                          const hasInvoice =
+                            (o as any).Invoice?.length > 0 ||
+                            (o as any).invoice ||
+                            uploadedProofs[o.id];
 
-                        // If all orders are ready for delivery, show order cards without buttons
-                        // The bottom button will handle unified delivery confirmation
-                        if (allOrdersReadyForDelivery && orders.length > 1) {
-                          return orders.map((o) => {
-                            const hasInvoice =
-                              (o as any).Invoice?.length > 0 ||
-                              (o as any).invoice ||
-                              uploadedProofs[o.id];
-
-                            return (
-                              <div
-                                key={o.id}
-                                className="rounded-lg border border-slate-100 bg-slate-50/50 p-3 dark:border-slate-700 dark:bg-slate-800/50"
-                              >
-                                {/* No individual button - bottom button handles unified delivery */}
-                                <div className="text-center text-xs text-slate-500">
-                                  Ready for delivery
-                                </div>
-                              </div>
-                            );
-                          });
-                        } else {
-                          // Show individual buttons for each order
-                          return orders.map((o) => {
-                            const hasInvoice =
-                              (o as any).Invoice?.length > 0 ||
-                              (o as any).invoice ||
-                              uploadedProofs[o.id];
-
-                            return (
-                              <div
-                                key={o.id}
-                                className="rounded-lg border border-slate-100 bg-slate-50/50 p-3 dark:border-slate-700 dark:bg-slate-800/50"
-                              >
-                                {/* Hidden: Order ID, Invoice status, and Shop name section */}
-                                {/* <div className="mb-3 flex items-center justify-between">
-                                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                                    #{o.OrderID || o.id.slice(-8)}
-                                  </span>
-                                  <div className="flex items-center gap-2">
-                                    {hasInvoice && (
-                                      <span className="flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-[9px] font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                                        <svg
-                                          className="h-3 w-3"
-                                          fill="none"
-                                          viewBox="0 0 24 24"
-                                          stroke="currentColor"
-                                        >
-                                          <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                                          />
-                                        </svg>
-                                        Invoice
-                                      </span>
-                                    )}
-                                    <span className="text-[10px] font-bold text-slate-500">
-                                      {(o as any).shop?.name || o.shopName}
+                          return (
+                            <div
+                              key={o.id}
+                              className="rounded-lg border border-slate-100 bg-slate-50/50 p-3 dark:border-slate-700 dark:bg-slate-800/50"
+                            >
+                              {/* Hidden: Order ID, Invoice status, and Shop name section */}
+                              {/* <div className="mb-3 flex items-center justify-between">
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                  #{o.OrderID || o.id.slice(-8)}
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  {hasInvoice && (
+                                    <span className="flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-[9px] font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                      <svg
+                                        className="h-3 w-3"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        />
+                                      </svg>
+                                      Invoice
                                     </span>
-                                  </div>
-                                </div> */}
-                                {getActionButton(o)}
-                              </div>
-                            );
-                          });
-                        }
-                      })()}
-                    </div>
+                                  )}
+                                  <span className="text-[10px] font-bold text-slate-500">
+                                    {(o as any).shop?.name || o.shopName}
+                                  </span>
+                                </div>
+                              </div> */}
+                              {getActionButton(o)}
+                            </div>
+                          );
+                        });
+                      }
+                    })()}
                   </div>
                 )}
               </div>
