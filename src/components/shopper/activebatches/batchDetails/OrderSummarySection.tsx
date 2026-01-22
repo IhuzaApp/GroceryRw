@@ -14,6 +14,7 @@ interface OrderSummarySectionProps {
   calculateFoundItemsTotal: () => number;
   calculateOriginalSubtotal: () => number;
   calculateBatchTotal: () => number;
+  hasCombinedOrders?: boolean;
 }
 
 export default function OrderSummarySection({
@@ -25,13 +26,24 @@ export default function OrderSummarySection({
   calculateFoundItemsTotal,
   calculateOriginalSubtotal,
   calculateBatchTotal,
+  hasCombinedOrders = false,
 }: OrderSummarySectionProps) {
   const { taxRate } = useTaxRate();
+
+  // Determine if any order in the batch is in shopping status (for combined orders)
+  const hasAnyOrderInShopping = hasCombinedOrders
+    ? [order, ...(order.combinedOrders || [])].some(o => o.status === "shopping")
+    : order.status === "shopping";
+
+  // For combined orders, also show at bottom when any order is being processed (accepted, shopping, paid)
+  const shouldShowAtBottom = hasCombinedOrders
+    ? [order, ...(order.combinedOrders || [])].some(o => ["shopping", "accepted", "paid"].includes(o.status))
+    : hasAnyOrderInShopping;
 
   return (
     <div
       className={`overflow-hidden border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl ${
-        order.status === "shopping"
+        shouldShowAtBottom
           ? "fixed bottom-[4.5rem] left-0 right-0 z-[9998] rounded-t-3xl border-x-0 border-b-0 shadow-[0_-4px_20px_rgba(0,0,0,0.15)] sm:relative sm:bottom-auto sm:z-auto sm:rounded-2xl sm:border sm:shadow-lg"
           : "rounded-t-2xl border-x-0 border-t-0 shadow-lg sm:rounded-2xl sm:border"
       }`}
@@ -39,10 +51,10 @@ export default function OrderSummarySection({
       {/* Header with Gradient */}
       <div
         className={`bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-4 dark:from-green-900/20 dark:to-emerald-900/20 ${
-          order.status === "shopping" ? "cursor-pointer sm:cursor-default" : ""
+          shouldShowAtBottom ? "cursor-pointer sm:cursor-default" : ""
         }`}
         onClick={() => {
-          if (order.status === "shopping" && window.innerWidth < 640) {
+          if (shouldShowAtBottom && window.innerWidth < 640) {
             onToggleSummary();
           }
         }}
@@ -68,31 +80,35 @@ export default function OrderSummarySection({
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">
                 Order Summary
               </h2>
-              {order.status === "shopping" && !isSummaryExpanded && (
-                <span className="text-sm font-semibold text-green-600 dark:text-green-400 sm:hidden">
-                  {(() => {
-                    // Check if we have same-shop combined orders
-                    const hasCombinedOrders =
-                      order?.combinedOrders && order.combinedOrders.length > 0;
-                    const mainShopId = order?.shop?.id;
-                    const sameShopCombinedOrders = hasCombinedOrders
-                      ? order.combinedOrders.filter(
-                          (co) => co.shop?.id === mainShopId
-                        )
-                      : [];
-                    const hasSameShopCombinedOrders =
-                      sameShopCombinedOrders.length > 0;
-
-                    return formatCurrency(
-                      hasSameShopCombinedOrders
-                        ? calculateBatchTotal()
-                        : calculateFoundItemsTotal()
-                    );
-                  })()}
-                </span>
-              )}
             </div>
           </div>
+
+          {/* Total Amount on the Right - Show prominently for accepted status */}
+          {order.status === "accepted" && (
+            <div className="text-right">
+              <div className="text-xl font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-3 py-1 rounded-lg">
+                {(() => {
+                  // Check if we have same-shop combined orders
+                  const hasCombinedOrders =
+                    order?.combinedOrders && order.combinedOrders.length > 0;
+                  const mainShopId = order?.shop?.id;
+                  const sameShopCombinedOrders = hasCombinedOrders
+                    ? order.combinedOrders.filter(
+                        (co) => co.shop?.id === mainShopId
+                      )
+                    : [];
+                  const hasSameShopCombinedOrders =
+                    sameShopCombinedOrders.length > 0;
+
+                  return formatCurrency(
+                    hasSameShopCombinedOrders
+                      ? calculateBatchTotal()
+                      : calculateFoundItemsTotal()
+                  );
+                })()}
+              </div>
+            </div>
+          )}
           {order.status === "shopping" && (
             <button
               className="sm:hidden"
@@ -123,8 +139,8 @@ export default function OrderSummarySection({
 
       {/* Content */}
       {(() => {
-        const isHidden = order.status === "shopping" && !isSummaryExpanded;
-        const maxHeight = order.status === "shopping" && isSummaryExpanded ? "50vh" : "auto";
+        const isHidden = shouldShowAtBottom && !isSummaryExpanded;
+        const maxHeight = shouldShowAtBottom && isSummaryExpanded ? "50vh" : "auto";
 
         return (
           <div

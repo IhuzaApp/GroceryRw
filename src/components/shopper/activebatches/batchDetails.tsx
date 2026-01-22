@@ -2871,7 +2871,7 @@ export default function BatchDetails({
                   (order.status !== "shopping" || activeTab === "details") &&
                   !showPaymentModal &&
                   !paymentTargetOrderId &&
-                  !hasUnprocessedCombinedOrders;
+                  (!hasUnprocessedCombinedOrders || activeTab === "details");
 
                 return shouldShow;
               })() && (
@@ -2925,6 +2925,7 @@ export default function BatchDetails({
                   calculateFoundItemsTotal={calculateFoundItemsTotal}
                   calculateOriginalSubtotal={calculateOriginalSubtotal}
                   calculateBatchTotal={calculateBatchTotal}
+                  hasCombinedOrders={!!(order?.combinedOrders && order.combinedOrders.length > 0)}
                 />
               )}
 
