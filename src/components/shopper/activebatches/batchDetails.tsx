@@ -2863,7 +2863,20 @@ export default function BatchDetails({
             />
 
             {/* Content */}
-            <div className="space-y-3 px-0 pb-3 pt-1 sm:space-y-8 sm:p-8">
+            <div className={`space-y-3 px-0 pb-3 pt-1 sm:space-y-8 sm:p-8 ${
+              // Add extra bottom margin on mobile when Order Summary is fixed at bottom
+              (() => {
+                const hasCombinedOrders = !!(order?.combinedOrders && order.combinedOrders.length > 0);
+                const hasAnyOrderInShopping = hasCombinedOrders
+                  ? [order, ...(order.combinedOrders || [])].some(o => o.status === "shopping")
+                  : order.status === "shopping";
+                const shouldShowAtBottom = hasCombinedOrders
+                  ? [order, ...(order.combinedOrders || [])].some(o => ["shopping", "accepted", "paid"].includes(o.status))
+                  : hasAnyOrderInShopping;
+
+                return shouldShowOrderDetails() && shouldShowAtBottom ? "pb-[6rem] sm:pb-3" : "";
+              })()
+            }`}>
               {/* Order Progress Steps - Hidden on Mobile */}
               <ProgressStepsSection order={order} currentStep={currentStep} />
 
