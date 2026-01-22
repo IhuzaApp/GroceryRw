@@ -2888,7 +2888,7 @@ export default function BatchDetails({
                 <OrderSummarySection
                   order={order}
                   isSummaryExpanded={isSummaryExpanded}
-                  onToggleSummary={setIsSummaryExpanded}
+                  onToggleSummary={() => setIsSummaryExpanded(!isSummaryExpanded)}
                   getActiveOrder={getActiveOrder}
                   getActiveOrderItems={getActiveOrderItems}
                   calculateFoundItemsTotal={calculateFoundItemsTotal}
