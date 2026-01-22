@@ -2121,6 +2121,9 @@ export default function BatchDetails({
         );
       case "on_the_way":
       case "at_customer":
+        // For delivery route section, individual buttons should always be available
+        // regardless of multi-customer status, since each customer group handles its own deliveries
+
         // Only show Confirm Delivery button if invoice proof has been uploaded for this specific order
         if (!uploadedProofs[activeOrder.id]) {
           return (
