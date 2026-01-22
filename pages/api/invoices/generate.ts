@@ -542,28 +542,18 @@ export default async function handler(
     let taxAmount: number;
     let subtotalAfterTax: number;
 
-    if (hasFoundItemsTotal) {
-      // For same-shop combined orders: use found items total with tax calculation
-      finalTotalBeforeTax = itemsTotal;
+    // Calculate total including fees for all orders
+    finalTotalBeforeTax = itemsTotal + serviceFee + deliveryFee;
 
-      // Get dynamic tax rate from system configuration
-      const taxRate = await getTaxRate();
-      taxAmount = calculateTaxAmount(finalTotalBeforeTax, taxRate);
-      subtotalAfterTax = calculateSubtotalFromTotal(finalTotalBeforeTax, taxRate);
-    } else {
-      // Normal orders: include fees
-      finalTotalBeforeTax = itemsTotal + serviceFee + deliveryFee;
-
-      // Get dynamic tax rate from system configuration
-      const taxRate = await getTaxRate();
-      taxAmount = calculateTaxAmount(finalTotalBeforeTax, taxRate);
-      subtotalAfterTax = calculateSubtotalFromTotal(finalTotalBeforeTax, taxRate);
-    }
+    // Get dynamic tax rate from system configuration
+    const taxRate = await getTaxRate();
+    taxAmount = calculateTaxAmount(finalTotalBeforeTax, taxRate);
+    subtotalAfterTax = calculateSubtotalFromTotal(finalTotalBeforeTax, taxRate);
 
     // Format values for database storage
     const subtotalStr = subtotalAfterTax.toFixed(2);
-    const serviceFeeStr = hasFoundItemsTotal ? "0.00" : serviceFee.toFixed(2);
-    const deliveryFeeStr = hasFoundItemsTotal ? "0.00" : deliveryFee.toFixed(2);
+    const serviceFeeStr = serviceFee.toFixed(2);
+    const deliveryFeeStr = deliveryFee.toFixed(2);
     const discountStr = "0.00"; // Assuming no discount for now
     const taxStr = taxAmount.toFixed(2);
     const totalAmount = hasFoundItemsTotal
@@ -641,16 +631,11 @@ export default async function handler(
       dateCompleted: new Date(order.updated_at).toLocaleString(),
       status: order.status,
       items: invoiceItems,
-      subtotal: itemsTotal,
+      subtotal: subtotalAfterTax,
       serviceFee,
       deliveryFee,
-      // For same-shop combined orders with found items total, total = found items only
-      // For other orders, use normal calculation
-      total: hasFoundItemsTotal
-        ? itemsTotal
-        : order.status === "shopping"
-        ? itemsTotal
-        : itemsTotal + serviceFee + deliveryFee,
+      // Total includes items, service fee, and delivery fee
+      total: itemsTotal + serviceFee + deliveryFee,
       orderType: isReelOrder
         ? "reel"
         : isRestaurantOrder
