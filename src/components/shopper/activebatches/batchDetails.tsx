@@ -2186,10 +2186,11 @@ export default function BatchDetails({
           customerKeys.add(customerKey);
         });
 
-        // Hide main batch button if multiple customers (individual deliveries handled separately)
+        // Hide main batch delivery button if multiple customers (individual deliveries handled separately)
+        // But keep payment button visible for same-shop combined orders
         const hasMultipleCustomers = customerKeys.size > 1;
         if (hasMultipleCustomers && !targetOrderOverride) {
-          return null; // Hide main batch button for multi-customer orders
+          return null; // Hide main batch delivery button for multi-customer orders
         }
 
         // Only show Confirm Delivery button if invoice proof has been uploaded for this specific order
@@ -2966,16 +2967,19 @@ export default function BatchDetails({
                   });
 
                   const hasMultipleCustomers = customerKeys.size > 1;
-                  if (hasMultipleCustomers) {
-                    return null; // Hide desktop action button for multi-customer deliveries
-                  }
 
+                  // For multi-customer orders, hide delivery button but keep payment button visible
                   const actionOrder =
                     activeShopId === order?.shop?.id
                       ? order
                       : order?.combinedOrders?.find(
                           (o) => o.shop?.id === activeShopId
                         );
+
+                  // Hide delivery button for multi-customer orders, but allow payment button
+                  if (hasMultipleCustomers && actionOrder && (actionOrder.status === "on_the_way" || actionOrder.status === "at_customer")) {
+                    return null; // Hide desktop delivery button for multi-customer orders
+                  }
 
                   // Action button info calculated
 
