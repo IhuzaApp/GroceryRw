@@ -16,7 +16,9 @@ export default function HeaderSection({
   onBack,
 }: HeaderSectionProps) {
   return (
-    <div className={`sticky top-0 z-40 border-b border-gray-200 bg-white px-0 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 sm:relative sm:top-auto sm:z-auto sm:border-b-0 sm:bg-transparent sm:p-6`}>
+    <div
+      className={`sticky top-0 z-40 border-b border-gray-200 bg-white px-0 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 sm:relative sm:top-auto sm:z-auto sm:border-b-0 sm:bg-transparent sm:p-6`}
+    >
       <div className="flex flex-row items-center justify-between gap-2 px-3 sm:gap-4 sm:px-0">
         <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
           <Button

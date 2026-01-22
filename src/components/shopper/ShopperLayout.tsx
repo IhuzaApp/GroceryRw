@@ -255,8 +255,9 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
   };
 
   // Check if we're on a batch details page (hide header on mobile)
-  const isBatchDetailsPage = typeof window !== 'undefined' &&
-    window.location.pathname.includes('/Plasa/active-batches/batch/');
+  const isBatchDetailsPage =
+    typeof window !== "undefined" &&
+    window.location.pathname.includes("/Plasa/active-batches/batch/");
 
   // session contains user: { id, name, email, phone, gender, address }
   // status is 'authenticated' | 'loading' | 'unauthenticated'

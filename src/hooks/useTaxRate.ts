@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export function useTaxRate() {
   const [taxRate, setTaxRate] = useState<number>(0.18); // Default to 18%
@@ -9,10 +9,10 @@ export function useTaxRate() {
     const fetchTaxRate = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/queries/system-configuration', {
-          method: 'GET',
+        const response = await fetch("/api/queries/system-configuration", {
+          method: "GET",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         });
 
@@ -31,8 +31,8 @@ export function useTaxRate() {
           setTaxRate(0.18);
         }
       } catch (err) {
-        console.error('Error fetching tax rate:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
+        console.error("Error fetching tax rate:", err);
+        setError(err instanceof Error ? err.message : "Unknown error");
         // Keep default tax rate on error
         setTaxRate(0.18);
       } finally {

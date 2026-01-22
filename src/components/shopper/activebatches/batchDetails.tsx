@@ -1275,11 +1275,16 @@ export default function BatchDetails({
       invoiceNumber: targetOrder.OrderID || targetOrder.id.slice(-8),
       orderId: targetOrder.id,
       orderNumber: targetOrder.OrderID || targetOrder.id.slice(-8),
-      customer: targetOrder.orderedBy?.name || targetOrder.user?.name || "Customer",
-      customerEmail: targetOrder.orderedBy?.email || targetOrder.user?.email || "",
-      customerPhone: targetOrder.orderedBy?.phone || targetOrder.user?.phone || "",
+      customer:
+        targetOrder.orderedBy?.name || targetOrder.user?.name || "Customer",
+      customerEmail:
+        targetOrder.orderedBy?.email || targetOrder.user?.email || "",
+      customerPhone:
+        targetOrder.orderedBy?.phone || targetOrder.user?.phone || "",
       customerAddress: targetOrder.address
-        ? `${targetOrder.address.street || ""}, ${targetOrder.address.city || ""}`
+        ? `${targetOrder.address.street || ""}, ${
+            targetOrder.address.city || ""
+          }`
         : "Address not available",
       items_count: 1,
       shop_name: targetOrder.shop?.name || "Shop",
@@ -2173,8 +2178,10 @@ export default function BatchDetails({
         const allOrdersInBatch = [order, ...(order?.combinedOrders || [])];
         const customerKeys = new Set<string>();
         allOrdersInBatch.forEach((o) => {
-          const customerPhone = (o as any).orderedBy?.phone || o.customerPhone || "unknown";
-          const customerId = (o as any).orderedBy?.id || o.customerId || "unknown";
+          const customerPhone =
+            (o as any).orderedBy?.phone || o.customerPhone || "unknown";
+          const customerId =
+            (o as any).orderedBy?.id || o.customerId || "unknown";
           const customerKey = `${customerId}_${customerPhone}`;
           customerKeys.add(customerKey);
         });
@@ -2948,8 +2955,12 @@ export default function BatchDetails({
                   const allOrders = [order, ...(order?.combinedOrders || [])];
                   const customerKeys = new Set<string>();
                   allOrders.forEach((o) => {
-                    const customerPhone = (o as any).orderedBy?.phone || o.customerPhone || "unknown";
-                    const customerId = (o as any).orderedBy?.id || o.customerId || "unknown";
+                    const customerPhone =
+                      (o as any).orderedBy?.phone ||
+                      o.customerPhone ||
+                      "unknown";
+                    const customerId =
+                      (o as any).orderedBy?.id || o.customerId || "unknown";
                     const customerKey = `${customerId}_${customerPhone}`;
                     customerKeys.add(customerKey);
                   });

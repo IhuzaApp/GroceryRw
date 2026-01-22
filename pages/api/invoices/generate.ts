@@ -3,7 +3,11 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]";
 import { gql } from "graphql-request";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
-import { getTaxRate, calculateTaxAmount, calculateSubtotalFromTotal } from "../../../src/lib/getTaxRate";
+import {
+  getTaxRate,
+  calculateTaxAmount,
+  calculateSubtotalFromTotal,
+} from "../../../src/lib/getTaxRate";
 
 // GraphQL query to get regular order details for invoice
 const GET_ORDER_DETAILS_FOR_INVOICE = gql`
