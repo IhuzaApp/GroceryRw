@@ -1043,9 +1043,10 @@ export default function BatchDetails({
             const combinedNumbers: string[] = [];
 
             // Generate invoice for each order in the batch
+            // For combined orders, skip initial invoice generation - they will be created during proof capture
             for (const orderId of allOrderIds) {
               try {
-                const invoice = await generateInvoice(orderId);
+                const invoice = await generateInvoice(orderId, true); // Skip for combined orders
                 console.log(
                   `🔍 Generated invoice for order ${orderId}:`,
                   invoice.invoiceNumber
@@ -1406,35 +1407,15 @@ export default function BatchDetails({
           combinedOrderIds
         );
 
-        // Calculate found items total for each order in the batch
-        // For same-shop combined orders, distribute the total found items proportionally
-        const totalFoundItems = lastOrderAmount; // The total amount paid for found items
-        const allOrders = [order, ...order.combinedOrders];
-        const totalOriginalItemsValue = allOrders.reduce((sum, o) => {
-          // Calculate original item value without fees for each order
-          const serviceFee = parseFloat(o.service_fee || "0");
-          const deliveryFee = parseFloat(o.delivery_fee || "0");
-          const orderTotal = parseFloat(o.total);
-          return sum + (orderTotal - serviceFee - deliveryFee);
-        }, 0);
+        // For same-shop combined orders, calculate the actual found items total for each order
+        // Each invoice should reflect the actual found items value for that specific order
 
         // Generate invoice with proof for each order in the combined batch
         for (const orderId of combinedOrderIds) {
           try {
-            const targetOrder =
-              allOrders.find((o) => o?.id === orderId) || order;
-
-            // Calculate found items total for this specific order
-            // Proportionally distribute based on original item values
-            const serviceFee = parseFloat(targetOrder.service_fee || "0");
-            const deliveryFee = parseFloat(targetOrder.delivery_fee || "0");
-            const originalOrderTotal = parseFloat(targetOrder.total);
-            const originalItemsValue =
-              originalOrderTotal - serviceFee - deliveryFee;
-            const proportion = originalItemsValue / totalOriginalItemsValue;
-            const foundItemsForThisOrder = Math.round(
-              totalFoundItems * proportion
-            );
+            // Calculate the actual found items total for this specific order
+            // This uses the item-level found status and quantities
+            const foundItemsForThisOrder = calculateFoundTotal(orderId);
 
             const invoiceResponse = await fetch("/api/invoices/generate", {
               method: "POST",
@@ -1443,7 +1424,7 @@ export default function BatchDetails({
               },
               body: JSON.stringify({
                 orderId: orderId,
-                orderType: targetOrder?.orderType || "regular",
+                orderType: "regular", // Combined orders are regular type
                 invoiceProofPhoto: imageDataUrl, // Same proof photo for all orders in the batch
                 foundItemsTotal: foundItemsForThisOrder, // Pass the calculated found items for this order
               }),
@@ -1774,7 +1755,7 @@ export default function BatchDetails({
   const calculateFoundTotal = (targetOrderId?: string) => {
     if (!order) return 0;
 
-    const useAll = !isMultiShop || !targetOrderId;
+    const useAll = !targetOrderId;
 
     // Sum for reels
     let reelTotal = 0;

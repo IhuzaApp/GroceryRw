@@ -2,7 +2,8 @@
 
 import React from "react";
 import { formatCurrency } from "../../../../lib/formatCurrency";
-import { OrderDetailsType } from "../../types/order";
+import { OrderDetailsType } from "../types";
+import { useTaxRate } from "../../../../hooks/useTaxRate";
 
 interface OrderSummarySectionProps {
   order: OrderDetailsType;
@@ -25,6 +26,7 @@ export default function OrderSummarySection({
   calculateOriginalSubtotal,
   calculateBatchTotal,
 }: OrderSummarySectionProps) {
+  const { taxRate } = useTaxRate();
   return (
     <div
       className={`overflow-hidden border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl ${
@@ -136,7 +138,7 @@ export default function OrderSummarySection({
               parseFloat(order.reel?.Price || "0") * (order.quantity || 1);
             const discount = order.discount || 0;
             const finalTotal = itemsTotal - discount;
-            const vat = finalTotal * (18 / 118);
+            const vat = finalTotal * (taxRate / (1 + taxRate));
             const subtotal = finalTotal - vat;
 
             return (
@@ -148,7 +150,7 @@ export default function OrderSummarySection({
                   </span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
-                  <span>VAT (18%)</span>
+                  <span>VAT ({(taxRate * 100).toFixed(0)}%)</span>
                   <span className="font-medium">{formatCurrency(vat)}</span>
                 </div>
                 {discount > 0 && (
@@ -293,7 +295,7 @@ export default function OrderSummarySection({
 
               const discount = activeOrder?.discount || 0;
               const finalTotal = itemsTotal - discount;
-              const vat = finalTotal * (18 / 118);
+              const vat = finalTotal * (taxRate / (1 + taxRate));
               const subtotal = finalTotal - vat;
 
               return (
@@ -305,7 +307,7 @@ export default function OrderSummarySection({
                     </span>
                   </div>
                   <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
-                    <span>VAT (18%)</span>
+                    <span>VAT ({(taxRate * 100).toFixed(0)}%)</span>
                     <span className="font-medium">{formatCurrency(vat)}</span>
                   </div>
                   {discount > 0 && (

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]";
 import { gql } from "graphql-request";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
+import { getTaxRate, calculateTaxAmount, calculateSubtotalFromTotal } from "../../../src/lib/getTaxRate";
 
 // GraphQL query to get regular order details for invoice
 const GET_ORDER_DETAILS_FOR_INVOICE = gql`
@@ -349,39 +350,15 @@ export default async function handler(
       return res.status(400).json({ error: "Missing required field: orderId" });
     }
 
-    // Handle invoice proof photo upload if provided
-    let invoiceProofUrl = "";
+    // Handle invoice proof photo - store directly as image data
+    let invoiceProofData = "";
     if (invoiceProofPhoto) {
       try {
-        // Upload to Cloudinary
-        const cloudinaryResponse = await fetch(
-          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              file: invoiceProofPhoto,
-              upload_preset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
-              folder: "invoice_proofs",
-            }),
-          }
-        );
-
-        if (!cloudinaryResponse.ok) {
-          const errorText = await cloudinaryResponse.text();
-          console.error(
-            "Failed to upload invoice proof to Cloudinary:",
-            errorText
-          );
-        } else {
-          const cloudinaryData = await cloudinaryResponse.json();
-          invoiceProofUrl = cloudinaryData.secure_url;
-        }
-      } catch (uploadError) {
-        console.error("Error uploading invoice proof:", uploadError);
-        // Continue without the proof URL rather than failing the entire invoice
+        // Store the image data directly in the database instead of uploading to Cloudinary
+        invoiceProofData = invoiceProofPhoto;
+      } catch (error) {
+        console.error("Error processing invoice proof:", error);
+        // Continue without the proof data rather than failing the entire invoice
       }
     }
 
@@ -566,15 +543,21 @@ export default async function handler(
     let subtotalAfterTax: number;
 
     if (hasFoundItemsTotal) {
-      // For same-shop combined orders: total = found items only (no fees)
+      // For same-shop combined orders: use found items total with tax calculation
       finalTotalBeforeTax = itemsTotal;
-      taxAmount = finalTotalBeforeTax * (18 / 118);
-      subtotalAfterTax = finalTotalBeforeTax - taxAmount;
+
+      // Get dynamic tax rate from system configuration
+      const taxRate = await getTaxRate();
+      taxAmount = calculateTaxAmount(finalTotalBeforeTax, taxRate);
+      subtotalAfterTax = calculateSubtotalFromTotal(finalTotalBeforeTax, taxRate);
     } else {
       // Normal orders: include fees
       finalTotalBeforeTax = itemsTotal + serviceFee + deliveryFee;
-      taxAmount = finalTotalBeforeTax * (18 / 118);
-      subtotalAfterTax = finalTotalBeforeTax - taxAmount;
+
+      // Get dynamic tax rate from system configuration
+      const taxRate = await getTaxRate();
+      taxAmount = calculateTaxAmount(finalTotalBeforeTax, taxRate);
+      subtotalAfterTax = calculateSubtotalFromTotal(finalTotalBeforeTax, taxRate);
     }
 
     // Format values for database storage
@@ -604,7 +587,7 @@ export default async function handler(
       subtotal: subtotalStr,
       tax: taxStr,
       total_amount: totalAmount,
-      Proof: invoiceProofUrl,
+      Proof: invoiceProofData,
     };
 
     // Save invoice data to the database
