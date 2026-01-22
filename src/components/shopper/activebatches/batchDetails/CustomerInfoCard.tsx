@@ -19,6 +19,40 @@ export default function CustomerInfoCard({
   onChatClick,
   theme,
 }: CustomerInfoCardProps) {
+  console.log("🔍 CustomerInfoCard: uniqueCustomers:", uniqueCustomers);
+  console.log("🔍 CustomerInfoCard: uniqueCustomers length:", uniqueCustomers?.length);
+
+  if (!uniqueCustomers || uniqueCustomers.length === 0) {
+    console.log("🔍 CustomerInfoCard: No customers to display, showing fallback");
+    return (
+      <div className="rounded-none border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
+        <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
+          <span className="inline-block rounded-full bg-sky-100 p-1.5 sm:p-2">
+            <svg
+              className="h-4 w-4 text-sky-600 sm:h-5 sm:w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+          </span>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
+            Customer
+          </h2>
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-white p-4 text-center text-slate-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-400">
+          No customer information available
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-none border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
       <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
