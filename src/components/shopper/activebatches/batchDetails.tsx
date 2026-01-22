@@ -2130,8 +2130,8 @@ export default function BatchDetails({
           order?.combinedOrders && order.combinedOrders.length > 0;
         const mainShopId = order?.shop?.id;
         const sameShopCombinedOrders = hasCombinedOrders
-          ? order.combinedOrders.filter(
-              (co) => co.shop?.id === mainShopId
+          ? (order.combinedOrders ?? []).filter(
+              (co) => co?.shop?.id === mainShopId
             )
           : [];
         const hasSameShopCombinedOrders = sameShopCombinedOrders.length > 0;
