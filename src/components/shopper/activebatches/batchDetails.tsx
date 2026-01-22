@@ -315,25 +315,49 @@ export default function BatchDetails({
 
   // Calculate unique customers from main order and combined orders
   const uniqueCustomers = useMemo(() => {
+    console.log("🔍 batchDetails: Calculating uniqueCustomers");
+    console.log("🔍 batchDetails: order?.user:", order?.user);
+    console.log("🔍 batchDetails: order?.orderedBy:", order?.orderedBy);
+    console.log("🔍 batchDetails: order?.combinedOrders:", order?.combinedOrders);
+
     const customers = [];
     const customerIds = new Set();
 
-    // Add main order customer
-    if (order?.user && !customerIds.has(order.user.id)) {
-      customerIds.add(order.user.id);
-      customers.push(order.user);
+    // Add main order customer - check both user and orderedBy fields
+    const mainCustomer = order?.user || order?.orderedBy;
+    if (mainCustomer && mainCustomer.id && !customerIds.has(mainCustomer.id)) {
+      console.log("🔍 batchDetails: Adding main order customer:", mainCustomer);
+      customerIds.add(mainCustomer.id);
+      customers.push({
+        ...mainCustomer,
+        // Ensure we have all required fields for CustomerInfoCard
+        name: mainCustomer.name,
+        email: mainCustomer.email || mainCustomer.email,
+        profile_picture: mainCustomer.profile_picture || null,
+        phone: mainCustomer.phone,
+      });
     }
 
-    // Add customers from combined orders
+    // Add customers from combined orders - check both user and orderedBy fields
     order?.combinedOrders?.forEach((combinedOrder) => {
-      if (combinedOrder?.user && !customerIds.has(combinedOrder.user.id)) {
-        customerIds.add(combinedOrder.user.id);
-        customers.push(combinedOrder.user);
+      const combinedCustomer = combinedOrder?.user || combinedOrder?.orderedBy;
+      if (combinedCustomer && combinedCustomer.id && !customerIds.has(combinedCustomer.id)) {
+        console.log("🔍 batchDetails: Adding combined order customer:", combinedCustomer);
+        customerIds.add(combinedCustomer.id);
+        customers.push({
+          ...combinedCustomer,
+          // Ensure we have all required fields for CustomerInfoCard
+          name: combinedCustomer.name,
+          email: combinedCustomer.email || combinedCustomer.email,
+          profile_picture: combinedCustomer.profile_picture || null,
+          phone: combinedCustomer.phone,
+        });
       }
     });
 
+    console.log("🔍 batchDetails: Final uniqueCustomers:", customers);
     return customers;
-  }, [order?.user, order?.combinedOrders]);
+  }, [order?.user, order?.orderedBy, order?.combinedOrders]);
 
   // Add useEffect to get current location when component mounts
   useEffect(() => {
@@ -2888,13 +2912,18 @@ export default function BatchDetails({
                   />
 
                   {/* Customer Info */}
-                  <CustomerInfoCard
-                    order={order}
-                    uniqueCustomers={uniqueCustomers}
-                    onDirectionsClick={handleDirectionsClick}
-                    onChatClick={handleChatClick}
-                    theme={theme}
-                  />
+                  {(() => {
+                    console.log("🔍 batchDetails: Rendering CustomerInfoCard with uniqueCustomers:", uniqueCustomers);
+                    return (
+                      <CustomerInfoCard
+                        order={order}
+                        uniqueCustomers={uniqueCustomers}
+                        onDirectionsClick={handleDirectionsClick}
+                        onChatClick={handleChatClick}
+                        theme={theme}
+                      />
+                    );
+                  })()}
                 </div>
               )}
 
