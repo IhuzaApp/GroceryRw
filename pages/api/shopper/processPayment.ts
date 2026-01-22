@@ -683,7 +683,7 @@ export default async function handler(
         formattedOrderAmount
       );
 
-      // 2. Calculate total fees from all orders in the batch (shopper earnings)
+      // 2. Calculate total fees from all orders in the batch
       let totalFees = 0;
       allOrdersInBatch.forEach((order: any) => {
         const serviceFee = parseFloat(order.service_fee || "0");
@@ -698,12 +698,25 @@ export default async function handler(
         );
       });
 
-      console.log("🔍 BACKEND: Total fees (shopper earnings):", totalFees);
+      console.log("🔍 BACKEND: Total fees before platform deduction:", totalFees);
 
-      // 3. Add fees to available balance
-      newAvailable = parseFloat(wallet.available_balance) + totalFees;
+      // 3. Fetch delivery commission percentage and calculate platform fee
+      const systemConfigResponse = await hasuraClient.request(GET_SYSTEM_CONFIG_FOR_FEES);
+      const deliveryCommissionPercentage = parseFloat(
+        systemConfigResponse?.System_configuratioins?.[0]?.deliveryCommissionPercentage || "20"
+      );
+
+      const platformFee = (totalFees * deliveryCommissionPercentage) / 100;
+      const shopperEarnings = totalFees - platformFee;
+
+      console.log("🔍 BACKEND: Delivery commission percentage:", deliveryCommissionPercentage + "%");
+      console.log("🔍 BACKEND: Platform fee:", platformFee);
+      console.log("🔍 BACKEND: Shopper earnings after platform fee:", shopperEarnings);
+
+      // 4. Add shopper earnings (after platform fee deduction) to available balance
+      newAvailable = parseFloat(wallet.available_balance) + shopperEarnings;
       console.log(
-        "🔍 BACKEND: Adding fees to available balance:",
+        "🔍 BACKEND: Adding shopper earnings to available balance:",
         newAvailable
       );
     } else {
