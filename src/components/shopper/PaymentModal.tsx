@@ -1048,9 +1048,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white transition-all duration-200 ${
                     !otp.trim() || otp.length !== 5 || otpLoading
                       ? "cursor-not-allowed bg-gray-400"
-                      : theme === "dark"
-                      ? "bg-purple-600 shadow-lg hover:bg-purple-700 hover:shadow-purple-500/25"
-                      : "bg-purple-600 shadow-lg hover:bg-purple-700 hover:shadow-purple-500/25"
+                      : "bg-green-600 shadow-lg hover:bg-green-700 hover:shadow-green-500/25"
                   }`}
                 >
                   {otpLoading ? (
