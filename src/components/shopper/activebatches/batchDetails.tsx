@@ -315,21 +315,12 @@ export default function BatchDetails({
 
   // Calculate unique customers from main order and combined orders
   const uniqueCustomers = useMemo(() => {
-    console.log("🔍 batchDetails: Calculating uniqueCustomers");
-    console.log("🔍 batchDetails: order?.user:", order?.user);
-    console.log("🔍 batchDetails: order?.orderedBy:", order?.orderedBy);
-    console.log(
-      "🔍 batchDetails: order?.combinedOrders:",
-      order?.combinedOrders
-    );
-
     const customers = [];
     const customerIds = new Set();
 
     // Add main order customer - check both user and orderedBy fields
     const mainCustomer = order?.user || order?.orderedBy;
     if (mainCustomer && mainCustomer.id && !customerIds.has(mainCustomer.id)) {
-      console.log("🔍 batchDetails: Adding main order customer:", mainCustomer);
       customerIds.add(mainCustomer.id);
       customers.push({
         ...mainCustomer,
@@ -349,10 +340,6 @@ export default function BatchDetails({
         combinedCustomer.id &&
         !customerIds.has(combinedCustomer.id)
       ) {
-        console.log(
-          "🔍 batchDetails: Adding combined order customer:",
-          combinedCustomer
-        );
         customerIds.add(combinedCustomer.id);
         customers.push({
           ...combinedCustomer,
@@ -365,7 +352,6 @@ export default function BatchDetails({
       }
     });
 
-    console.log("🔍 batchDetails: Final uniqueCustomers:", customers);
     return customers;
   }, [order?.user, order?.orderedBy, order?.combinedOrders]);
 
@@ -2944,21 +2930,13 @@ export default function BatchDetails({
                   />
 
                   {/* Customer Info */}
-                  {(() => {
-                    console.log(
-                      "🔍 batchDetails: Rendering CustomerInfoCard with uniqueCustomers:",
-                      uniqueCustomers
-                    );
-                    return (
-                      <CustomerInfoCard
-                        order={order}
-                        uniqueCustomers={uniqueCustomers}
-                        onDirectionsClick={handleDirectionsClick}
-                        onChatClick={handleChatClick}
-                        theme={theme}
-                      />
-                    );
-                  })()}
+                  <CustomerInfoCard
+                    order={order}
+                    uniqueCustomers={uniqueCustomers}
+                    onDirectionsClick={handleDirectionsClick}
+                    onChatClick={handleChatClick}
+                    theme={theme}
+                  />
                 </div>
               )}
 
