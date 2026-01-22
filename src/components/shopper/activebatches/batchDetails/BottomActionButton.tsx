@@ -37,10 +37,29 @@ export default function BottomActionButton({
           ordersByCustomer.get(customerKey)!.push(o);
         });
 
-        // Check if there are multiple customers - if so, hide bottom button
+        // Check if there are multiple customers - if so, show status info instead of action button
         const hasMultipleCustomers = ordersByCustomer.size > 1;
         if (hasMultipleCustomers) {
-          return null; // Hide bottom button for multi-customer deliveries
+          return (
+            <div className="flex items-center justify-center py-3 text-sm text-gray-600 dark:text-gray-400">
+              <div className="flex items-center gap-2">
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span>Deliver to each customer individually</span>
+              </div>
+            </div>
+          );
         }
 
         // Check if any customer group has all orders ready for delivery
