@@ -253,11 +253,8 @@ export default function OrderItemsSection({
               </h3>
               <div className="space-y-2 sm:space-y-3">
                 {activeGroup.items.map((item) => {
-                  // In combined orders, show Mark Found button if ANY order in the batch is shopping
-                  const allOrders = [order, ...(order.combinedOrders || [])];
-                  const isBatchShopping = allOrders.some(
-                    (o) => o.status === "shopping"
-                  );
+                  // Show Mark Found button only if the specific order containing this item is in shopping status
+                  const isBatchShopping = activeGroup.order.status === "shopping";
 
                   return (
                     <div key={item.id}>
@@ -321,11 +318,12 @@ export default function OrderItemsSection({
           </h3>
           <div className="space-y-2 sm:space-y-3">
             {itemsByShop.get(effectiveActiveShopId || "")?.map((item) => {
-              // In combined orders, show Mark Found button if ANY order in the batch is shopping
-              const allOrders = [order, ...(order.combinedOrders || [])];
-              const isBatchShopping = allOrders.some(
-                (o) => o.status === "shopping"
+              // Find the order that contains this item by checking the shopId
+              const itemOrder = [order, ...(order.combinedOrders || [])].find(
+                (o) => (o.shop?.id || o.shop_id) === effectiveActiveShopId
               );
+              // Show Mark Found button only if the order containing this item is in shopping status
+              const isBatchShopping = itemOrder?.status === "shopping";
 
               return (
                 <div key={item.id}>
@@ -370,11 +368,9 @@ export default function OrderItemsSection({
           </h3>
           <div className="space-y-2 sm:space-y-3">
             {displayItems.map((item) => {
-              // In combined orders, show Mark Found button if ANY order in the batch is shopping
-              const allOrders = [order, ...(order.combinedOrders || [])];
-              const isBatchShopping = allOrders.some(
-                (o) => o.status === "shopping"
-              );
+              // For the default view, show Mark Found button only for the main order's status
+              // This is a fallback case when no specific shop/order is active
+              const isBatchShopping = order.status === "shopping";
 
               return (
                 <div key={item.id}>
