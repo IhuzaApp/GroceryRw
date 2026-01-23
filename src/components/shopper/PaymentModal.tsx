@@ -9,12 +9,12 @@ interface PaymentModalProps {
   onSubmit: () => void;
   momoCode: string;
   setMomoCode: (value: string) => void;
-  privateKey: string;
   orderAmount: number;
   serviceFee: number;
   deliveryFee: number;
   paymentLoading: boolean;
   externalId?: string; // Order or batch ID for reference
+  orderId?: number; // Numeric OrderID from database
   orderPin?: string; // Generated order PIN to display
   // OTP related props
   otp: string;
@@ -30,12 +30,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   onSubmit,
   momoCode,
   setMomoCode,
-  privateKey,
   orderAmount,
   serviceFee,
   deliveryFee,
   paymentLoading,
   externalId,
+  orderId,
   orderPin,
   otp,
   setOtp,
@@ -155,6 +155,21 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
   if (!open || !isMounted) return null;
 
+  // Console logs for mobile payment modal
+  if (isMobile && open) {
+    console.log("🔄 PaymentModal opened on mobile");
+    console.log("📋 Order Details:", {
+      OrderID: orderId, // Numeric OrderID from database
+      id: externalId, // UUID id from database
+      orderAmount: orderAmount,
+      serviceFee: serviceFee,
+      deliveryFee: deliveryFee,
+      momoCode: momoCode,
+      currentStep: currentStep,
+      paymentStatus: paymentStatus
+    });
+  }
+
   const modalContent = (
     <div className="fixed inset-0 z-[999999] flex items-end justify-center bg-black/70 backdrop-blur-md p-0 sm:items-center sm:p-4">
       <div
@@ -194,17 +209,28 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 />
               </svg>
             </div>
-            <h2
-              className={`text-xl font-bold ${
-                theme === "dark" ? "text-gray-100" : "text-gray-800"
-              }`}
-            >
-              {currentStep === "momo"
-                ? "Process Payment"
-                : currentStep === "otp"
-                ? "Verify OTP"
-                : "Order Complete!"}
-            </h2>
+            <div>
+              <h2
+                className={`text-xl font-bold ${
+                  theme === "dark" ? "text-gray-100" : "text-gray-800"
+                }`}
+              >
+                {currentStep === "momo"
+                  ? "Process Payment"
+                  : currentStep === "otp"
+                  ? "Verify OTP"
+                  : "Order Complete!"}
+              </h2>
+              {orderId && (
+                <div
+                  className={`text-2xl font-bold tracking-wider ${
+                    theme === "dark" ? "text-blue-400" : "text-blue-600"
+                  }`}
+                >
+                  Order #{orderId}
+                </div>
+              )}
+            </div>
             <button
               onClick={onClose}
               className={`rounded-xl p-2 transition-colors ${
