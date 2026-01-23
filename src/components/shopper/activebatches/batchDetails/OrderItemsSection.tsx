@@ -319,12 +319,17 @@ export default function OrderItemsSection({
           </h3>
           <div className="space-y-2 sm:space-y-3">
             {itemsByShop.get(effectiveActiveShopId || "")?.map((item) => {
-              // Find the order that contains this item by checking the shopId
-              const itemOrder = [order, ...(order.combinedOrders || [])].find(
+              // For different shops combined orders, check if ANY order from this shop is still shopping
+              // This allows marking items as found even if some orders from the same shop are already on_the_way
+              const shopOrders = [order, ...(order.combinedOrders || [])].filter(
                 (o) => (o.shop?.id || o.shop_id) === effectiveActiveShopId
               );
-              // Show Mark Found button only if the order containing this item is in shopping status
-              const isBatchShopping = itemOrder?.status === "shopping";
+              const hasAnyOrderShopping = shopOrders.some(
+                (o) => o.status === "accepted" || o.status === "shopping"
+              );
+
+              // Show Mark Found button if any order from this shop is still in shopping/accepted status
+              const isBatchShopping = hasAnyOrderShopping;
 
               return (
                 <div key={item.id}>
@@ -369,9 +374,17 @@ export default function OrderItemsSection({
           </h3>
           <div className="space-y-2 sm:space-y-3">
             {displayItems.map((item) => {
-              // For the default view, show Mark Found button only for the main order's status
-              // This is a fallback case when no specific shop/order is active
-              const isBatchShopping = order.status === "shopping";
+              // For the default view, check if any order is still active for this shop
+              // This ensures buttons remain visible even if some orders are on_the_way
+              const shopOrders = [order, ...(order.combinedOrders || [])].filter(
+                (o) => (o.shop?.id || o.shop_id) === effectiveActiveShopId
+              );
+              const hasAnyOrderActive = shopOrders.some(
+                (o) => o.status === "accepted" || o.status === "shopping"
+              );
+
+              // Show Mark Found button if any order from this shop is still active
+              const isBatchShopping = hasAnyOrderActive;
 
               return (
                 <div key={item.id}>
