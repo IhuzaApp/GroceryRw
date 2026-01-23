@@ -1166,9 +1166,9 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                       </svg>
                     </div>
                     <div>
-                      <h3 className="font-bold text-green-600 dark:text-green-400">
+                      <h5 className="font-bold text-green-600 dark:text-green-400">
                         PIN Verified Successfully!
-                      </h3>
+                      </h5>
                       <p
                         className={`text-sm ${
                           theme === "dark" ? "text-gray-300" : "text-gray-600"
@@ -1227,17 +1227,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                     <div className="relative h-12 w-12">
                       <div className="absolute inset-0 animate-spin rounded-full border-4 border-green-200 border-t-green-600"></div>
                     </div>
-                    <p
-                      className={`mt-3 text-base font-medium ${
-                        theme === "dark" ? "text-gray-200" : "text-gray-700"
-                      }`}
-                    >
-                      Updating order status...
-                    </p>
                   </div>
-                  <p className="mt-2 text-sm text-gray-500">
-                    Please wait while we confirm your delivery...
-                  </p>
                 </div>
               )}
 
