@@ -182,6 +182,7 @@ export default function QuantityConfirmationModal({
           isWeightBased: false,
         });
         setShowBarcodeScanner(false);
+        setShowManualInput(false); // Also reset manual input state
       } else {
         setBarcodeValidation({
           isValid: false,
