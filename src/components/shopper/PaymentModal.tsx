@@ -117,13 +117,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     onVerifyOtp();
   };
 
-  // Function to go back to MoMo step
-  const handleBackToMomo = () => {
-    setCurrentStep("momo");
-    setPaymentStatus("idle");
-    setStatusMessage("");
-    setOtp("");
-  };
 
   // Reset status when modal opens
   useEffect(() => {
@@ -460,46 +453,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           ) : currentStep === "otp" ? (
             <>
               {/* OTP Step Content */}
-              <div
-                className={`mb-4 rounded-xl border-l-4 p-3 ${
-                  theme === "dark"
-                    ? "border-purple-500 bg-purple-900/20 text-purple-300"
-                    : "border-purple-500 bg-purple-50 text-purple-800"
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`rounded-full p-1 ${
-                      theme === "dark" ? "bg-purple-600" : "bg-purple-100"
-                    }`}
-                  >
-                    <svg
-                      className={`h-4 w-4 ${
-                        theme === "dark" ? "text-white" : "text-purple-600"
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="mb-1 font-semibold">
-                      OTP Verification Required
-                    </p>
-                    <p className="text-sm opacity-90">
-                      Please enter the 5-digit OTP that was displayed in the
-                      alert popup to complete your payment verification.
-                    </p>
-                  </div>
-                </div>
-              </div>
 
               {/* OTP Input with Square Boxes */}
               <div className="space-y-4">
@@ -972,22 +925,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                           d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      Verify OTP & Complete Payment
+                      Complete Payment
                     </>
                   )}
-                </button>
-                <button
-                  onClick={handleBackToMomo}
-                  disabled={otpLoading}
-                  className={`rounded-xl px-6 py-3 font-semibold transition-all duration-200 ${
-                    otpLoading
-                      ? "cursor-not-allowed border border-gray-400 text-gray-400"
-                      : theme === "dark"
-                      ? "border border-gray-600 text-gray-300 hover:bg-gray-700"
-                      : "border border-gray-300 text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  Back
                 </button>
               </>
             ) : null}

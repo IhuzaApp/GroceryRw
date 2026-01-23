@@ -631,20 +631,28 @@ export default function BatchDetails({
 
   // Function to get shop distance
 
-  // Generate a 5-digit OTP
-  const generateOtp = () => {
-    const randomOtp = Math.floor(10000 + Math.random() * 90000).toString();
-    setGeneratedOtp(randomOtp);
+  // Generate a 5-digit OTP with first 2 digits based on OrderID
+  const generateOtp = (orderId: number) => {
+    // Get last 2 digits of OrderID (ensures it's always 2 digits)
+    const orderIdDigits = (orderId % 100).toString().padStart(2, '0');
+
+    // Generate 3 random digits
+    const randomDigits = Math.floor(100 + Math.random() * 900).toString();
+
+    // Combine: first 2 digits from OrderID + 3 random digits
+    const secureOtp = orderIdDigits + randomDigits;
+
+    setGeneratedOtp(secureOtp);
     // Store in session storage
     if (typeof window !== "undefined") {
-      sessionStorage.setItem("payment_otp", randomOtp);
+      sessionStorage.setItem("payment_otp", secureOtp);
     }
 
     // Show as alert for demo purposes
     setTimeout(() => {
-      alert(`For testing purposes, your OTP is: ${randomOtp}`);
+      alert(`For testing purposes, your OTP is: ${secureOtp}`);
     }, 500);
-    return randomOtp;
+    return secureOtp;
   };
 
   // Function to generate a random private key
@@ -733,7 +741,7 @@ export default function BatchDetails({
       }
 
       // If we have enough balance or couldn't check, proceed with OTP
-      generateOtp();
+      generateOtp(targetOrderForPayment.OrderID);
 
       // Keep payment modal open - it will handle OTP step internally
       setPaymentLoading(false);
@@ -766,15 +774,23 @@ export default function BatchDetails({
 
     setOtpVerifyLoading(true);
     try {
-      // Verify OTP
-      if (otp !== generatedOtp) {
-        throw new Error("Invalid OTP. Please try again.");
-      }
-
       // Get the target order for payment (main order or specific combined order)
       const targetOrderForPayment = paymentTargetOrderId
         ? order.combinedOrders?.find(co => co.id === paymentTargetOrderId) || order
         : order;
+
+      // Verify OTP format (first 2 digits must match OrderID)
+      const expectedOrderIdDigits = (targetOrderForPayment.OrderID % 100).toString().padStart(2, '0');
+      const enteredOrderIdDigits = otp.substring(0, 2);
+
+      if (enteredOrderIdDigits !== expectedOrderIdDigits) {
+        throw new Error("Invalid OTP format. Please check your OTP and try again.");
+      }
+
+      // Verify complete OTP
+      if (otp !== generatedOtp) {
+        throw new Error("Invalid OTP. Please try again.");
+      }
 
       // Get the actual order amount being processed
       // For combined orders, use batch total for wallet operations
