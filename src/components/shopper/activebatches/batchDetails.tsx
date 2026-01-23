@@ -189,6 +189,8 @@ export default function BatchDetails({
   const [invoiceData, setInvoiceData] = useState<any>(null);
   const [invoiceLoading, setInvoiceLoading] = useState(false);
   const [showInvoiceProofModal, setShowInvoiceProofModal] = useState(false);
+  const [showInvoiceProofLoading, setShowInvoiceProofLoading] = useState(false);
+  const [invoiceProofTargetOrder, setInvoiceProofTargetOrder] = useState<any>(null);
   const [uploadedProofs, setUploadedProofs] = useState<Record<string, boolean>>(
     {}
   );
@@ -243,6 +245,93 @@ export default function BatchDetails({
       []
     );
   }, [order?.Order_Items, order?.combinedOrders, isMultiShop, activeShopId]);
+
+  // Check for orders that need invoice proof upload
+  useEffect(() => {
+    if (!order || showInvoiceProofModal || showInvoiceProofLoading || showPaymentModal || paymentLoading) return;
+
+    const checkForPendingInvoiceProof = async () => {
+      try {
+        console.log("🔍 Checking for orders needing invoice proof...");
+
+        // Check main order
+        if (order.status === "on_the_way") {
+          const hasInvoice = await checkOrderHasInvoice(order.id);
+          if (!hasInvoice) {
+            console.log("📄 MAIN ORDER needs invoice proof:", {
+              OrderID: order.OrderID,
+              id: order.id,
+              status: order.status,
+              orderType: order.orderType || 'regular',
+              hasInvoice: false,
+              paymentStatus: 'on_the_way (ready for delivery)'
+            });
+            setInvoiceProofTargetOrder(order);
+            console.log("🎯 Setting invoice proof target to MAIN ORDER:", order.OrderID);
+            setShowInvoiceProofModal(true);
+            return;
+          } else {
+            console.log("✅ MAIN ORDER already has invoice:", {
+              OrderID: order.OrderID,
+              id: order.id,
+              status: order.status
+            });
+          }
+        }
+
+        // Check combined orders
+        if (order.combinedOrders && order.combinedOrders.length > 0) {
+          console.log(`🔍 Checking ${order.combinedOrders.length} combined orders...`);
+
+          for (const combinedOrder of order.combinedOrders) {
+            if (combinedOrder.status === "on_the_way") {
+              const hasInvoice = await checkOrderHasInvoice(combinedOrder.id);
+              if (!hasInvoice) {
+                console.log("📄 COMBINED ORDER needs invoice proof:", {
+                  OrderID: combinedOrder.OrderID,
+                  id: combinedOrder.id,
+                  status: combinedOrder.status,
+                  orderType: combinedOrder.orderType || 'regular',
+                  shopName: combinedOrder.Shop?.name || 'Unknown Shop',
+                  shopId: combinedOrder.Shop?.id || 'Unknown',
+                  hasInvoice: false,
+                  paymentStatus: 'on_the_way (ready for delivery)',
+                  mainOrderId: order.id,
+                  mainOrderStatus: order.status
+                });
+                setInvoiceProofTargetOrder(combinedOrder);
+                console.log("🎯 Setting invoice proof target to COMBINED ORDER:", combinedOrder.OrderID);
+                setShowInvoiceProofModal(true);
+                return;
+              } else {
+                console.log("✅ COMBINED ORDER already has invoice:", {
+                  OrderID: combinedOrder.OrderID,
+                  id: combinedOrder.id,
+                  status: combinedOrder.status,
+                  shopName: combinedOrder.Shop?.name || 'Unknown Shop'
+                });
+              }
+            } else {
+              console.log("⏭️ COMBINED ORDER not ready for invoice proof:", {
+                OrderID: combinedOrder.OrderID,
+                id: combinedOrder.id,
+                status: combinedOrder.status,
+                shopName: combinedOrder.Shop?.name || 'Unknown Shop'
+              });
+            }
+          }
+        }
+
+        console.log("✅ All orders in batch have invoices or are not ready for delivery");
+      } catch (error) {
+        console.error("❌ Error checking for pending invoice proof:", error);
+      }
+    };
+
+    // Small delay to ensure component is fully loaded
+    const timeoutId = setTimeout(checkForPendingInvoiceProof, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [order, showInvoiceProofModal, showInvoiceProofLoading, showPaymentModal, paymentLoading]);
 
   // Get the currently active order object (main or combined)
   const getActiveOrder = useMemo(() => {
@@ -629,6 +718,21 @@ export default function BatchDetails({
 
   // Function to calculate distance between two points
 
+  // Function to check if an order has an invoice
+  const checkOrderHasInvoice = async (orderId: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`/api/invoices/check-existence?orderId=${orderId}`);
+      if (response.ok) {
+        const data = await response.json();
+        return data.hasInvoice || false;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error checking invoice existence:", error);
+      return false;
+    }
+  };
+
   // Function to get shop distance
 
   // Generate a 5-digit OTP with first 2 digits based on OrderID
@@ -1013,6 +1117,9 @@ export default function BatchDetails({
       // Close payment modal (which includes OTP step)
       setShowPaymentModal(false);
 
+      // Show loading modal while preparing invoice proof modal
+      setShowInvoiceProofLoading(true);
+
       // Only proceed with invoice proof if payment was successful
       if (paymentSuccess && walletUpdated) {
         // Clear payment info
@@ -1127,6 +1234,7 @@ export default function BatchDetails({
 
           // Show invoice proof modal for same-shop combined orders
           setShowInvoiceProofModal(true);
+          setShowInvoiceProofLoading(false);
         } else {
           // DIFFERENT SHOP COMBINED ORDERS or SINGLE ORDERS: Use existing logic
           const targetId = paymentTargetOrderId || order.id;
@@ -1155,6 +1263,7 @@ export default function BatchDetails({
 
           // Show invoice proof modal for proof upload
           setShowInvoiceProofModal(true);
+          setShowInvoiceProofLoading(false);
 
           // Show success notification
           toaster.push(
@@ -2836,36 +2945,31 @@ export default function BatchDetails({
           generatedOtp={generatedOtp}
         />
 
+        {/* Invoice Proof Loading Modal */}
+        {showInvoiceProofLoading && (
+          <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/70 backdrop-blur-md">
+            <div className="flex flex-col items-center justify-center rounded-2xl bg-white p-8 shadow-2xl dark:bg-gray-800">
+              <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-green-200 border-t-green-600"></div>
+              <h3 className="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-100">
+                Preparing Invoice Proof
+              </h3>
+              <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+                Please wait while we prepare the invoice proof upload...
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Invoice Proof Modal */}
         <InvoiceProofModal
           open={showInvoiceProofModal}
-          onClose={() => setShowInvoiceProofModal(false)}
+          onClose={() => {
+            setShowInvoiceProofModal(false);
+            setInvoiceProofTargetOrder(null);
+          }}
           onProofCaptured={handleInvoiceProofCaptured}
-          orderId={
-            paymentTargetOrderId ||
-            (order &&
-              [order, ...(order.combinedOrders || [])].find(
-                (o) => (o.shop?.id || o.shop_id) === activeShopId
-              )?.id) ||
-            order?.id ||
-            ""
-          }
-          orderNumber={
-            (order &&
-              [order, ...(order.combinedOrders || [])].find(
-                (o) =>
-                  o.id ===
-                  (paymentTargetOrderId ||
-                    (order &&
-                      [order, ...(order.combinedOrders || [])].find(
-                        (o) => (o.shop?.id || o.shop_id) === activeShopId
-                      )?.id) ||
-                    order?.id)
-              )?.OrderID) ||
-            order?.OrderID ||
-            order?.id.slice(-8) ||
-            ""
-          }
+          orderId={invoiceProofTargetOrder?.id || ""}
+          orderNumber={invoiceProofTargetOrder?.OrderID || ""}
           combinedOrderIds={combinedOrderIds}
           combinedOrderNumbers={combinedOrderNumbers}
         />
