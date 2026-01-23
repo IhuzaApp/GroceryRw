@@ -1567,8 +1567,75 @@ export default function BatchDetails({
     try {
       setLoading(true);
 
+      // If we have a specific target order from invoice proof detection, only generate for that order
+      if (invoiceProofTargetOrder) {
+        console.log(
+          "🎯 Generating invoice for specific target order:",
+          invoiceProofTargetOrder.OrderID,
+          invoiceProofTargetOrder.id
+        );
+
+        const invoiceResponse = await fetch("/api/invoices/generate", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            orderId: invoiceProofTargetOrder.id,
+            orderType: invoiceProofTargetOrder.orderType || "regular",
+            invoiceProofPhoto: imageDataUrl,
+            foundItemsTotal: calculateFoundItemsTotal(), // Use the total for the batch
+          }),
+        });
+
+        if (invoiceResponse.ok) {
+          const invoiceResult = await invoiceResponse.json();
+
+          if (invoiceResult.success && invoiceResult.invoice) {
+            // Mark invoice proof as uploaded for this order
+            setUploadedProofs((prev) => ({ ...prev, [invoiceProofTargetOrder.id]: true }));
+            console.log(`✅ Invoice proof uploaded for target order ${invoiceProofTargetOrder.OrderID}`);
+
+            // Update the specific order status to "on_the_way"
+            await onUpdateStatus(invoiceProofTargetOrder.id, "on_the_way");
+
+            // Update local state for the specific order
+            if (order.id === invoiceProofTargetOrder.id) {
+              setOrder({ ...order, status: "on_the_way" as string });
+            } else if (order.combinedOrders) {
+              const updatedCombined = order.combinedOrders.map((o) =>
+                o.id === invoiceProofTargetOrder.id
+                  ? { ...o, status: "on_the_way" as string }
+                  : o
+              );
+              setOrder({
+                ...order,
+                combinedOrders: updatedCombined,
+              });
+            }
+
+            // Clear the target order
+            setInvoiceProofTargetOrder(null);
+
+            // Show success notification
+            toaster.push(
+              <Notification
+                type="success"
+                header="Proof Uploaded Successfully"
+                closable
+              >
+                ✅ Invoice proof uploaded for Order #{invoiceProofTargetOrder.OrderID}
+                <br />✅ Order moved to On The Way for delivery
+              </Notification>,
+              { placement: "topEnd", duration: 5000 }
+            );
+          }
+        } else {
+          throw new Error("Failed to generate invoice");
+        }
+      }
       // Check if this is for same-shop combined orders (multiple order IDs)
-      if (combinedOrderIds.length > 1) {
+      else if (combinedOrderIds.length > 1) {
         console.log(
           "🔍 Handling invoice proof for same-shop combined orders:",
           combinedOrderIds

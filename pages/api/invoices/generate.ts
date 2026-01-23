@@ -314,6 +314,23 @@ interface RestaurantOrderDetails {
   } | null;
 }
 
+// GraphQL query to get wallet transaction amount for order
+const GET_WALLET_TRANSACTION_AMOUNT = gql`
+  query GetWalletTransactionAmount($orderId: uuid!) {
+    Wallet_Transactions(
+      where: {
+        related_order_id: { _eq: $orderId }
+        type: { _eq: "payment" }
+        status: { _eq: "completed" }
+      }
+      limit: 1
+    ) {
+      amount
+      id
+    }
+  }
+`;
+
 // GraphQL mutation return type
 interface AddInvoiceResult {
   insert_Invoices: {
@@ -542,12 +559,36 @@ export default async function handler(
     // The total should equal the found items amount only
     const hasFoundItemsTotal = foundItemsTotal !== undefined;
 
+    // Get the actual payment amount from wallet transactions (for regular orders)
+    let walletTransactionAmount: number | null = null;
+    if (!isReelOrder && !isRestaurantOrder) {
+      try {
+        const walletTransactionResult = await hasuraClient.request(GET_WALLET_TRANSACTION_AMOUNT, {
+          orderId: orderId,
+        });
+
+        if (walletTransactionResult.Wallet_Transactions && walletTransactionResult.Wallet_Transactions.length > 0) {
+          walletTransactionAmount = parseFloat(walletTransactionResult.Wallet_Transactions[0].amount);
+          console.log(`💰 Using wallet transaction amount for invoice: ${walletTransactionAmount} for order ${orderId}`);
+        } else {
+          console.log(`⚠️ No wallet transaction found for order ${orderId}, falling back to calculated amount`);
+        }
+      } catch (error) {
+        console.error("Error fetching wallet transaction amount:", error);
+      }
+    }
+
     let finalTotalBeforeTax: number;
     let taxAmount: number;
     let subtotalAfterTax: number;
 
-    // Calculate total including fees for all orders
-    finalTotalBeforeTax = itemsTotal + serviceFee + deliveryFee;
+    // Use wallet transaction amount if available, otherwise calculate from items
+    if (walletTransactionAmount !== null) {
+      finalTotalBeforeTax = walletTransactionAmount;
+    } else {
+      // Calculate total including fees for all orders (fallback)
+      finalTotalBeforeTax = itemsTotal + serviceFee + deliveryFee;
+    }
 
     // Get dynamic tax rate from system configuration
     const taxRate = await getTaxRate();
@@ -560,9 +601,22 @@ export default async function handler(
     const deliveryFeeStr = deliveryFee.toFixed(2);
     const discountStr = "0.00"; // Assuming no discount for now
     const taxStr = taxAmount.toFixed(2);
-    const totalAmount = hasFoundItemsTotal
+
+    // For invoice proof uploads, always use the wallet transaction amount
+    // For regular invoice generation, use the calculated logic
+    const totalAmount = walletTransactionAmount !== null
+      ? walletTransactionAmount.toFixed(2)
+      : hasFoundItemsTotal
       ? itemsTotal.toFixed(2)
       : finalTotalBeforeTax.toFixed(2);
+
+    console.log(`📊 Invoice total calculation for order ${orderId}:`, {
+      walletTransactionAmount,
+      itemsTotal,
+      finalTotalBeforeTax,
+      hasFoundItemsTotal,
+      selectedTotal: totalAmount
+    });
 
     const invoicePayload = {
       customer_id: isReelOrder
