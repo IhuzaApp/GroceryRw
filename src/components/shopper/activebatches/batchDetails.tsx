@@ -1569,12 +1569,6 @@ export default function BatchDetails({
 
       // If we have a specific target order from invoice proof detection, only generate for that order
       if (invoiceProofTargetOrder) {
-        console.log(
-          "🎯 Generating invoice for specific target order:",
-          invoiceProofTargetOrder.OrderID,
-          invoiceProofTargetOrder.id
-        );
-
         const invoiceResponse = await fetch("/api/invoices/generate", {
           method: "POST",
           headers: {
@@ -1594,7 +1588,6 @@ export default function BatchDetails({
           if (invoiceResult.success && invoiceResult.invoice) {
             // Mark invoice proof as uploaded for this order
             setUploadedProofs((prev) => ({ ...prev, [invoiceProofTargetOrder.id]: true }));
-            console.log(`✅ Invoice proof uploaded for target order ${invoiceProofTargetOrder.OrderID}`);
 
             // Update the specific order status to "on_the_way"
             await onUpdateStatus(invoiceProofTargetOrder.id, "on_the_way");
