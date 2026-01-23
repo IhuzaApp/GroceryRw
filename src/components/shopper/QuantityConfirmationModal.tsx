@@ -613,7 +613,7 @@ export default function QuantityConfirmationModal({
                             placeholder={
                               currentItem?.product.barcode ||
                               currentItem?.product.ProductName?.barcode
-                                ? "Enter Barcode"
+                                ? "Barcode"
                                 : currentItem?.product.sku ||
                                   currentItem?.product.ProductName?.sku
                                 ? "SKU"
