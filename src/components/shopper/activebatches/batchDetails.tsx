@@ -2810,6 +2810,9 @@ export default function BatchDetails({
           deliveryFee={getBatchFee("deliveryFee")}
           paymentLoading={paymentLoading}
           externalId={paymentTargetOrderId || order?.id}
+          orderId={paymentTargetOrderId
+            ? order.combinedOrders?.find(co => co.id === paymentTargetOrderId)?.OrderID || order?.OrderID
+            : order?.OrderID}
           otp={otp}
           setOtp={setOtp}
           otpLoading={otpVerifyLoading}
