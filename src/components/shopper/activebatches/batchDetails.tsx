@@ -699,6 +699,11 @@ export default function BatchDetails({
     if (!order?.id) return;
 
     setPaymentLoading(true);
+
+    // Get the target order for payment (main order or specific combined order)
+    const targetOrderForPayment = paymentTargetOrderId
+      ? order.combinedOrders?.find(co => co.id === paymentTargetOrderId) || order
+      : order;
     // Payment debug info calculated
     try {
       // First check if there's enough balance in the wallet
@@ -766,6 +771,11 @@ export default function BatchDetails({
         throw new Error("Invalid OTP. Please try again.");
       }
 
+      // Get the target order for payment (main order or specific combined order)
+      const targetOrderForPayment = paymentTargetOrderId
+        ? order.combinedOrders?.find(co => co.id === paymentTargetOrderId) || order
+        : order;
+
       // Get the actual order amount being processed
       // For combined orders, use batch total for wallet operations
       const hasCombinedOrders =
@@ -783,8 +793,8 @@ export default function BatchDetails({
           // SAME SHOP: Use batch total of found items (fees already added to earnings)
           orderAmount = calculateBatchTotal();
         } else {
-          // DIFFERENT SHOPS: Use batch total (items are aggregated)
-          orderAmount = calculateBatchTotal();
+          // DIFFERENT SHOPS: Use specific order's found items total, not batch total
+          orderAmount = calculateFoundItemsTotal();
         }
       } else {
         orderAmount = calculateFoundItemsTotal();
@@ -813,7 +823,7 @@ export default function BatchDetails({
             amount: orderAmount,
             currency: systemConfig?.currency || "RWF",
             payerNumber: momoCode,
-            externalId: order.id || `SHOPPER-PAYMENT-${Date.now()}`,
+            externalId: targetOrderForPayment.id || `SHOPPER-PAYMENT-${Date.now()}`,
             payerMessage: "Payment for Shopper Items",
             payeeNote: "Shopper payment confirmation",
           }),
@@ -899,6 +909,7 @@ export default function BatchDetails({
       let paymentSuccess = false;
       let walletUpdated = false;
       try {
+
         // Check if this is a same-shop combined order
         const hasCombinedOrders =
           order?.combinedOrders && order.combinedOrders.length > 0;
@@ -918,20 +929,21 @@ export default function BatchDetails({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            orderId: order.id,
-            momoCode,
-            privateKey,
-            orderAmount: orderAmount, // Only the value of found items (no fees)
-            originalOrderTotal: originalOrderTotal, // Original subtotal for refund calculation
-            orderType: order.orderType || "regular", // Pass order type to API
-            momoReferenceId: momoReferenceId, // Pass MoMo reference ID
-            momoSuccess: momoPaymentSuccess, // Pass MoMo success status
-            isSameShopCombined: isSameShopCombined, // Pass same-shop combined flag
-            combinedOrders: hasCombinedOrders
-              ? order.combinedOrders
-              : undefined, // Pass combined orders data
-          }),
+          orderId: targetOrderForPayment.id,
+          momoCode,
+          privateKey,
+          orderAmount: orderAmount, // Only the value of found items (no fees)
+          originalOrderTotal: originalOrderTotal, // Original subtotal for refund calculation
+          orderType: targetOrderForPayment.orderType || "regular", // Pass order type to API
+          momoReferenceId: momoReferenceId, // Pass MoMo reference ID
+          momoSuccess: momoPaymentSuccess, // Pass MoMo success status
+          isSameShopCombined: isSameShopCombined, // Pass same-shop combined flag
+          combinedOrders: hasCombinedOrders
+            ? order.combinedOrders
+            : undefined, // Pass combined orders data
+        }),
         });
+
 
         if (!response.ok) {
           const errorData = await response.json();
@@ -1564,9 +1576,6 @@ export default function BatchDetails({
         setUploadedProofs((prev) => ({ ...prev, [targetId as string]: true }));
 
         // Update status to on_the_way for this specific order after invoice generation
-        console.log(
-          `🔍 DIFFERENT SHOP COMBINED: Updating order ${targetId} to on_the_way after invoice generation`
-        );
         await onUpdateStatus(targetId, "on_the_way");
 
         // Update local state for this specific order
@@ -1674,6 +1683,7 @@ export default function BatchDetails({
       !isRestaurantOrder &&
       !isRestaurantUserReel
     ) {
+      console.log("💰 Setting payment target for order:", idToUpdate, "status:", newStatus);
       setPaymentTargetOrderId(idToUpdate);
       handleShowPaymentModal();
       return;
@@ -1996,6 +2006,7 @@ export default function BatchDetails({
         : order?.combinedOrders?.find((o) => o.shop?.id === activeShopId)
             ?.id) ||
       order?.id;
+
 
     // For reel orders
     const targetOrder =

@@ -344,14 +344,6 @@ export default async function handler(
             (sum, order) => sum + parseFloat(order.total),
             0
           );
-          console.log(
-            "🔍 Backend: Stored totals sum (with fees):",
-            storedTotalSum
-          );
-          console.log(
-            "🔍 Backend: Using base items total instead:",
-            formattedOrderAmount
-          );
 
           batchTotal = formattedOrderAmount;
         }
@@ -359,22 +351,6 @@ export default async function handler(
       }
     }
 
-    console.log(
-      "🔍 Backend: Individual order totals:",
-      allOrdersInBatch.map((o) => ({
-        id: o.id,
-        OrderID: o.OrderID,
-        total: o.total,
-      }))
-    );
-    console.log(
-      "🔍 Backend: Received formattedOrderAmount:",
-      formattedOrderAmount
-    );
-    console.log(
-      "🔍 Backend: Match check - batchTotal === formattedOrderAmount:",
-      batchTotal === formattedOrderAmount
-    );
 
     // Get shopper's wallet
     const shopperId = orderData.shopper_id;
@@ -419,9 +395,6 @@ export default async function handler(
         // The shopper gets paid for all found items and receives fees
         // Refunds only apply when specific items are not found, but for same-shop
         // combined orders, the shopper either finds all items or none
-        console.log(
-          "🔍 BACKEND: Same-shop combined order - no individual refunds needed"
-        );
       } else {
         // For different-shop combined orders, only calculate refund for the specific order being paid for
         // Find the specific order being paid for in the batch
@@ -436,9 +409,6 @@ export default async function handler(
           // If all items are found, orderOriginalTotal should equal formattedOrderAmount
           const allItemsFound = orderOriginalTotal <= formattedOrderAmount;
 
-          console.log(
-            `🔍 BACKEND: Order ${currentOrder.OrderID} - Original total: ${orderOriginalTotal}, Found items total: ${formattedOrderAmount}, All items found: ${allItemsFound}`
-          );
 
           if (!allItemsFound) {
             // Only create refund when items are not found
@@ -473,13 +443,7 @@ export default async function handler(
               paid: false,
             });
 
-            console.log(
-              `💰 BACKEND: Created refund for order ${currentOrder.OrderID}: ${orderRefundAmount} (items not found)`
-            );
           } else {
-            console.log(
-              `✅ BACKEND: No refund needed for order ${currentOrder.OrderID} - all items found`
-            );
           }
         }
       }
@@ -493,9 +457,6 @@ export default async function handler(
       // If all items are found, totalOrderValue should equal formattedOrderAmount
       const allItemsFound = totalOrderValue <= formattedOrderAmount;
 
-      console.log(
-        `🔍 BACKEND: ${isReelOrder ? 'Reel' : 'Single'} Order - Original total: ${totalOrderValue}, Found items total: ${formattedOrderAmount}, All items found: ${allItemsFound}`
-      );
 
       if (!allItemsFound) {
         // Only create refund when items are not found
@@ -538,13 +499,7 @@ export default async function handler(
           paid: false,
         });
 
-        console.log(
-          `💰 BACKEND: Created refund for ${isReelOrder ? 'reel' : 'single'} order: ${totalRefundAmount} (items not found)`
-        );
       } else {
-        console.log(
-          `✅ BACKEND: No refund needed for ${isReelOrder ? 'reel' : 'single'} order - all items found`
-        );
       }
     }
 
@@ -633,10 +588,6 @@ export default async function handler(
 
       // 1. Remove found items amount from reserved balance
       newReserved = currentReserved - formattedOrderAmount;
-      console.log(
-        "🔍 BACKEND: Deducting found items from reserved:",
-        formattedOrderAmount
-      );
 
       // 2. Calculate total fees from all orders in the batch
       let totalFees = 0;
@@ -644,13 +595,6 @@ export default async function handler(
         const serviceFee = parseFloat(order.service_fee || "0");
         const deliveryFee = parseFloat(order.delivery_fee || "0");
         totalFees += serviceFee + deliveryFee;
-        console.log(
-          `🔍 BACKEND: Order ${
-            order.id
-          } fees: service ${serviceFee} + delivery ${deliveryFee} = ${
-            serviceFee + deliveryFee
-          }`
-        );
       });
 
       // 3. Fetch delivery commission percentage and calculate platform fee
