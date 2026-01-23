@@ -569,9 +569,6 @@ export default async function handler(
 
         if (walletTransactionResult.Wallet_Transactions && walletTransactionResult.Wallet_Transactions.length > 0) {
           walletTransactionAmount = parseFloat(walletTransactionResult.Wallet_Transactions[0].amount);
-          console.log(`💰 Using wallet transaction amount for invoice: ${walletTransactionAmount} for order ${orderId}`);
-        } else {
-          console.log(`⚠️ No wallet transaction found for order ${orderId}, falling back to calculated amount`);
         }
       } catch (error) {
         console.error("Error fetching wallet transaction amount:", error);
@@ -609,14 +606,6 @@ export default async function handler(
       : hasFoundItemsTotal
       ? itemsTotal.toFixed(2)
       : finalTotalBeforeTax.toFixed(2);
-
-    console.log(`📊 Invoice total calculation for order ${orderId}:`, {
-      walletTransactionAmount,
-      itemsTotal,
-      finalTotalBeforeTax,
-      hasFoundItemsTotal,
-      selectedTotal: totalAmount
-    });
 
     const invoicePayload = {
       customer_id: isReelOrder
