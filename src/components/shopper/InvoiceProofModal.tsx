@@ -116,12 +116,12 @@ const InvoiceProofModal: React.FC<InvoiceProofModalProps> = ({
             <div className="flex items-center gap-3">
               <div
                 className={`rounded-full p-2 ${
-                  theme === "dark" ? "bg-blue-600" : "bg-blue-100"
+                  theme === "dark" ? "bg-green-600" : "bg-green-100"
                 }`}
               >
                 <svg
                   className={`h-6 w-6 ${
-                    theme === "dark" ? "text-white" : "text-blue-600"
+                    theme === "dark" ? "text-white" : "text-green-600"
                   }`}
                   fill="none"
                   stroke="currentColor"
@@ -143,7 +143,7 @@ const InvoiceProofModal: React.FC<InvoiceProofModalProps> = ({
                 >
                   {uploading
                     ? "Uploading Invoice Proof..."
-                    : "Invoice Proof Required"}
+                    : "Upload Invoice Proof"}
                 </h3>
                 <p
                   className={`text-sm ${
@@ -195,42 +195,6 @@ const InvoiceProofModal: React.FC<InvoiceProofModalProps> = ({
             }`}
           >
             <div className="space-y-4">
-              {/* Instructions */}
-              <div
-                className={`rounded-xl border-l-4 p-4 ${
-                  theme === "dark"
-                    ? "border-blue-500 bg-blue-900/20 text-blue-300"
-                    : "border-blue-500 bg-blue-50 text-blue-800"
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <svg
-                    className={`mt-0.5 h-5 w-5 flex-shrink-0 ${
-                      theme === "dark" ? "text-blue-400" : "text-blue-600"
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <div className="flex-1">
-                    <h4 className="font-semibold">
-                      Payment Complete - Invoice Proof Required
-                    </h4>
-                    <p className="mt-1 text-sm">
-                      Please take a clear photo of the payment receipt or
-                      invoice before proceeding to delivery. This serves as
-                      proof of purchase.
-                    </p>
-                  </div>
-                </div>
-              </div>
 
               {/* Capture Section */}
               {!capturedImage && !uploading && (
@@ -241,7 +205,7 @@ const InvoiceProofModal: React.FC<InvoiceProofModalProps> = ({
                       : "border-gray-200 bg-gray-50"
                   }`}
                 >
-                  <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600">
+                  <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-green-600">
                     <svg
                       className="h-12 w-12 text-white"
                       fill="none"
@@ -278,7 +242,7 @@ const InvoiceProofModal: React.FC<InvoiceProofModalProps> = ({
                   </p>
                   <button
                     onClick={() => setShowCameraCapture(true)}
-                    className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-700 hover:to-purple-700 hover:shadow-blue-500/25"
+                    className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-green-700 px-6 py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:from-green-700 hover:to-green-800 hover:shadow-green-500/25"
                   >
                     <svg
                       className="h-5 w-5"
@@ -380,7 +344,7 @@ const InvoiceProofModal: React.FC<InvoiceProofModalProps> = ({
               {uploading && (
                 <div className="py-8 text-center">
                   <div className="mx-auto mb-4 h-16 w-16">
-                    <div className="h-full w-full animate-spin rounded-full border-4 border-blue-200 border-t-blue-600"></div>
+                    <div className="h-full w-full animate-spin rounded-full border-4 border-green-200 border-t-green-600"></div>
                   </div>
                   <p
                     className={`text-lg font-medium ${
@@ -425,7 +389,7 @@ const InvoiceProofModal: React.FC<InvoiceProofModalProps> = ({
             >
               <button
                 onClick={handleConfirm}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-green-700 px-6 py-3 font-semibold text-white transition-all duration-200 hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:w-auto"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-green-700 px-6 py-3 font-semibold text-white transition-all duration-200 hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
               >
                 <svg
                   className="h-5 w-5"
@@ -442,9 +406,6 @@ const InvoiceProofModal: React.FC<InvoiceProofModalProps> = ({
                 </svg>
                 Confirm & Generate Invoice
               </button>
-              <p className="mt-2 text-center text-xs text-gray-500">
-                This will generate the invoice and proceed to delivery
-              </p>
             </div>
           )}
         </div>
