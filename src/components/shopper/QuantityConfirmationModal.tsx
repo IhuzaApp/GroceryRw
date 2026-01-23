@@ -749,11 +749,20 @@ export default function QuantityConfirmationModal({
                         value={isWeightBased ? foundWeight : foundQuantity}
                         onChange={(e) => {
                           const numValue = Number(e.target.value) || 0;
+                          // Prevent entering quantities higher than requested
+                          const maxAllowed = currentItem?.quantity || 0;
+                          const validValue = Math.min(numValue, maxAllowed);
+
                           if (isWeightBased) {
-                            setFoundWeight(numValue);
-                            setFoundQuantity(numValue); // Update quantity for compatibility
+                            setFoundWeight(validValue);
+                            setFoundQuantity(validValue); // Update quantity for compatibility
                           } else {
-                            setFoundQuantity(numValue);
+                            setFoundQuantity(validValue);
+                          }
+
+                          // If user tried to enter a higher value, update the input to show the capped value
+                          if (numValue > maxAllowed) {
+                            e.target.value = validValue.toString();
                           }
                         }}
                         min={0}

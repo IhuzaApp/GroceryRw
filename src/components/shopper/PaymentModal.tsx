@@ -55,7 +55,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     "momo"
   );
   const [isMounted, setIsMounted] = useState(false);
-  const [warningExpanded, setWarningExpanded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   // Check if component is mounted (for SSR compatibility)
@@ -157,13 +156,13 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   if (!open || !isMounted) return null;
 
   const modalContent = (
-    <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/70 px-0 backdrop-blur-md md:px-4">
+    <div className="fixed inset-0 z-[999999] flex items-end justify-center bg-black/70 backdrop-blur-md p-0 sm:items-center sm:p-4">
       <div
-        className={`flex h-full w-full flex-col overflow-hidden shadow-2xl md:h-auto md:max-h-[90vh] md:max-w-2xl md:rounded-2xl ${
+        className={`w-full max-w-[550px] rounded-t-2xl border-0 shadow-2xl sm:rounded-2xl ${
           theme === "dark"
-            ? "border-gray-700 bg-gray-800"
-            : "border-gray-200 bg-white"
-        } md:border`}
+            ? "bg-gray-800 sm:border-gray-700"
+            : "bg-white sm:border-gray-200"
+        } sm:border`}
       >
         {/* Header */}
         <div
@@ -234,8 +233,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
         {/* Body */}
         <div
-          className={`flex-1 overflow-y-auto p-4 md:p-6 ${
-            theme === "dark" ? "bg-gray-800 text-gray-100" : "bg-white"
+          className={`max-h-[70vh] overflow-y-auto px-6 py-4 sm:px-8 ${
+            theme === "dark" ? "bg-gray-800" : "bg-white"
           }`}
         >
           {currentStep === "momo" ? (
@@ -282,56 +281,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       }`}
                     />
                   </div>
-                </div>
-
-                {/* Private Key Input */}
-                <div className="space-y-2">
-                  <label
-                    className={`block text-sm font-semibold ${
-                      theme === "dark" ? "text-gray-300" : "text-gray-700"
-                    }`}
-                  >
-                    Private Key (Auto-generated)
-                  </label>
-                  <div className="relative">
-                    <div
-                      className={`pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3`}
-                    >
-                      <svg
-                        className={`h-5 w-5 ${
-                          theme === "dark" ? "text-gray-400" : "text-gray-500"
-                        }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1 1 21 9z"
-                        />
-                      </svg>
-                    </div>
-                    <input
-                      type="text"
-                      value={privateKey}
-                      disabled
-                      className={`w-full rounded-xl border-2 py-3 pl-10 pr-4 transition-all ${
-                        theme === "dark"
-                          ? "cursor-not-allowed border-gray-600 bg-gray-700 text-gray-400"
-                          : "cursor-not-allowed border-gray-300 bg-gray-50 text-gray-500"
-                      }`}
-                    />
-                  </div>
-                  <p
-                    className={`text-xs ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-500"
-                    }`}
-                  >
-                    This is a one-time key for this transaction. Keep it for
-                    your records.
-                  </p>
                 </div>
               </div>
 
@@ -481,118 +430,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   </div>
                 </div>
               )}
-
-              {/* Warning Message */}
-              <div
-                className={`mt-6 rounded-xl border-l-4 p-4 transition-all duration-200 ${
-                  !isMobile ? "cursor-pointer hover:shadow-md" : ""
-                } ${
-                  theme === "dark"
-                    ? "border-yellow-500 bg-yellow-900/20 text-yellow-300"
-                    : "border-yellow-500 bg-yellow-50 text-yellow-800"
-                }`}
-                onClick={() => {
-                  // Only allow expansion on desktop (md and above)
-                  if (!isMobile) {
-                    setWarningExpanded(!warningExpanded);
-                  }
-                }}
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`flex-shrink-0 rounded-full p-1 ${
-                      theme === "dark" ? "bg-yellow-600" : "bg-yellow-100"
-                    }`}
-                  >
-                    <svg
-                      className={`h-4 w-4 ${
-                        theme === "dark" ? "text-white" : "text-yellow-600"
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                      />
-                    </svg>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
-                        <p className="mb-1 font-semibold">
-                          Payment Instructions
-                        </p>
-                        <div className="text-sm opacity-90">
-                          <p
-                            className={
-                              isMobile
-                                ? ""
-                                : !warningExpanded
-                                ? "overflow-hidden"
-                                : ""
-                            }
-                            style={
-                              isMobile
-                                ? undefined
-                                : !warningExpanded
-                                ? {
-                                    display: "-webkit-box",
-                                    WebkitLineClamp: 2,
-                                    WebkitBoxOrient: "vertical",
-                                    lineHeight: "1.4",
-                                    maxHeight: "2.8em",
-                                  }
-                                : undefined
-                            }
-                          >
-                            Enter your MoMo code and click "Verify & Proceed to
-                            OTP" to continue. After OTP verification, the MoMo
-                            payment will be initiated automatically.
-                          </p>
-                          {(isMobile || warningExpanded) && (
-                            <div className="mt-3 border-t border-yellow-300/30 pt-3">
-                              <p className="mb-1 text-sm font-semibold">
-                                🔒 Secure Payment Processing
-                              </p>
-                              <p className="text-sm opacity-90">
-                                Your payment is processed securely through our
-                                trusted payment gateway. Enter your MoMo code to
-                                complete the transaction safely.
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      {!isMobile && (
-                        <div className="flex flex-shrink-0 items-center gap-2">
-                          <span className="text-sm font-medium opacity-75">
-                            {warningExpanded ? "Show less" : "Show more"}
-                          </span>
-                          <svg
-                            className={`h-4 w-4 transition-transform duration-200 ${
-                              warningExpanded ? "rotate-180" : ""
-                            }`}
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 9l-7 7-7-7"
-                            />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
             </>
           ) : currentStep === "otp" ? (
             <>
