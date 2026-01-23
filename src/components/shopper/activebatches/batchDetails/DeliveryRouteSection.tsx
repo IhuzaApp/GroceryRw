@@ -114,7 +114,7 @@ export default function DeliveryRouteSection({
                       {index + 1}
                     </span>
                     <div>
-                      <h3 className="font-bold text-gray-900 dark:text-white">
+                      <h3 className="font-bold text-gray-900 dark:text-white text-sm sm:text-base">
                         {customer.name}
                         {customer.phone && (
                           <span className="ml-2 text-xs font-normal text-slate-500">
@@ -122,7 +122,7 @@ export default function DeliveryRouteSection({
                           </span>
                         )}
                       </h3>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 sm:text-sm">
                         {orders.length} Order{orders.length > 1 ? "s" : ""} to
                         deliver
                       </p>
@@ -219,7 +219,7 @@ export default function DeliveryRouteSection({
                   </div>
                 </div>
 
-                <div className="mb-4 space-y-2 rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
+                <div className="mb-3 space-y-1 rounded-lg bg-gray-50 p-2 dark:bg-gray-700/50 sm:mb-4 sm:space-y-2 sm:p-3">
                   <div className="flex items-start gap-2">
                     <svg
                       className="mt-1 h-4 w-4 text-gray-400"
@@ -236,7 +236,7 @@ export default function DeliveryRouteSection({
                     </svg>
                     <div className="flex-1 space-y-1">
                       {/* Main address line */}
-                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300 sm:text-base">
                         {address?.street ||
                           firstOrder.customerAddress ||
                           "No Address"}
@@ -244,7 +244,7 @@ export default function DeliveryRouteSection({
 
                       {/* City and postal code */}
                       {(address?.city || address?.postal_code) && (
-                        <p className="text-xs text-slate-600 dark:text-slate-400">
+                        <p className="text-xs text-slate-600 dark:text-slate-400 sm:text-sm">
                           {address.city || ""}
                           {address.city && address.postal_code && ", "}
                           {address.postal_code || ""}
@@ -417,7 +417,7 @@ export default function DeliveryRouteSection({
                 )}
 
                 {!isDelivered && (
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3">
                     {(() => {
                       // Check if all orders in this customer group are ready for delivery
                       // (have invoice proofs uploaded and are in on_the_way/at_customer status)
@@ -444,11 +444,14 @@ export default function DeliveryRouteSection({
                           return (
                             <div
                               key={o.id}
-                              className="rounded-lg border border-slate-100 bg-slate-50/50 p-3 dark:border-slate-700 dark:bg-slate-800/50"
+                              className="rounded-lg border border-slate-100 bg-slate-50/50 p-2 dark:border-slate-700 dark:bg-slate-800/50 sm:p-3"
                             >
                               {/* No individual button - bottom button handles unified delivery */}
-                              <div className="text-center text-xs text-slate-500">
-                                Ready for delivery
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-slate-500 sm:text-sm">Ready for delivery</span>
+                                <span className="text-xs font-semibold text-green-600 dark:text-green-400 sm:text-sm">
+                                  #{o.OrderID || o.id.slice(-8)}
+                                </span>
                               </div>
                             </div>
                           );
