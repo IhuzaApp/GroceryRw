@@ -694,18 +694,30 @@ export default async function handler(
       const transactions = [];
 
       if (hasCombinedOrders) {
-        // For combined orders, create transactions for each order in the batch
-        for (const order of allOrdersInBatch) {
-          const orderAmount = parseFloat(order.total);
+        if (isSameShopCombined) {
+          // For same-shop combined orders, create one transaction for the entire batch
+          // Individual per-order transactions would require individual found amounts which aren't available during payment
           transactions.push({
             wallet_id: walletId,
-            amount: orderAmount.toFixed(2),
+            amount: formattedOrderAmount.toFixed(2),
             type: "payment",
             status: "completed",
-            related_order_id: order.id,
+            related_order_id: orderId, // Primary order ID for the batch
             related_reel_orderId: null,
             related_restaurant_order_id: null,
-            description: `${baseDescription} | Combined Order Batch - Order ${order.OrderID}`,
+            description: `${baseDescription} | Same-Shop Combined Order Batch (${allOrdersInBatch.length} orders)`,
+          });
+        } else {
+          // For different-shop combined orders, create transaction only for the specific order being paid for
+          transactions.push({
+            wallet_id: walletId,
+            amount: formattedOrderAmount.toFixed(2),
+            type: "payment",
+            status: "completed",
+            related_order_id: orderId,
+            related_reel_orderId: null,
+            related_restaurant_order_id: null,
+            description: `${baseDescription} | Different-Shop Combined Order - Order ${orderData.OrderID}`,
           });
         }
       } else {
