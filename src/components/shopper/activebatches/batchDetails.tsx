@@ -895,21 +895,6 @@ export default function BatchDetails({
         return;
       }
 
-      const response = await fetch("/api/shopper/processPayment", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          orderId: order.id,
-          orderAmount: orderAmount,
-          originalOrderTotal: originalOrderTotal,
-          orderType: order.orderType || "regular",
-          momoReferenceId: momoReferenceId,
-          momoSuccess: momoPaymentSuccess,
-        }),
-      });
-
       // Make API request to update wallet balance and process payment
       let paymentSuccess = false;
       let walletUpdated = false;
@@ -1547,6 +1532,10 @@ export default function BatchDetails({
         const targetId = (paymentTargetOrderId || matchingOrder.id) as string;
         const targetOrder = allInBatch.find((o) => o?.id === targetId) || order;
 
+        // For different-shop combined orders, calculate the actual found items total for this specific order
+        // This ensures each invoice shows only the found items for that specific order
+        const foundItemsForThisOrder = calculateFoundTotal(targetId);
+
         // Generate invoice with proof photo for the specific order
         const invoiceResponse = await fetch("/api/invoices/generate", {
           method: "POST",
@@ -1557,6 +1546,7 @@ export default function BatchDetails({
             orderId: targetId,
             orderType: targetOrder?.orderType || "regular",
             invoiceProofPhoto: imageDataUrl, // Send the invoice proof photo
+            foundItemsTotal: foundItemsForThisOrder, // Pass the calculated found items for this order
           }),
         });
 
@@ -1573,8 +1563,44 @@ export default function BatchDetails({
         // Mark invoice proof as uploaded for this specific order
         setUploadedProofs((prev) => ({ ...prev, [targetId as string]: true }));
 
+        // Update status to on_the_way for this specific order after invoice generation
+        console.log(
+          `🔍 DIFFERENT SHOP COMBINED: Updating order ${targetId} to on_the_way after invoice generation`
+        );
+        await onUpdateStatus(targetId, "on_the_way");
+
+        // Update local state for this specific order
+        if (order) {
+          const updatedMain = order.id === targetId
+            ? { ...order, status: "on_the_way" as string }
+            : order;
+          const updatedCombined = (order.combinedOrders || []).map((o) =>
+            o.id === targetId
+              ? { ...o, status: "on_the_way" as string }
+              : o
+          );
+
+          setOrder({
+            ...updatedMain,
+            combinedOrders: updatedCombined,
+          });
+        }
+
         // Clear payment target now that invoice is generated
         setPaymentTargetOrderId(null);
+
+        // Show success notification for different-shop combined order
+        toaster.push(
+          <Notification
+            type="success"
+            header="Proof Uploaded - Order Moving"
+            closable
+          >
+            ✅ Invoice proof uploaded successfully
+            <br />✅ Order moved to On The Way
+          </Notification>,
+          { placement: "topEnd", duration: 5000 }
+        );
       }
 
       // Close invoice proof modal

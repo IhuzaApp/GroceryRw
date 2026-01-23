@@ -95,6 +95,15 @@ const GET_SHOPPER_WALLET = gql`
   }
 `;
 
+// GraphQL query to get system configuration for fees
+const GET_SYSTEM_CONFIG_FOR_FEES = gql`
+  query GetSystemConfig {
+    System_configuratioins(limit: 1) {
+      deliveryCommissionPercentage
+    }
+  }
+`;
+
 // GraphQL mutation to update wallet balances
 const UPDATE_WALLET_BALANCES = gql`
   mutation UpdateWalletBalances(
@@ -397,7 +406,10 @@ export default async function handler(
       });
     }
 
-    // Calculate refunds - for combined orders, create separate refunds for each order
+    // Calculate refunds - ONLY create refunds when items are NOT found
+    // Logic: Compare original order total vs found items total
+    // - If original total > found items total: items were not found, create refund
+    // - If original total <= found items total: all items found, no refund needed
     let refundsData: any[] = [];
     let totalRefundAmount = 0;
 
@@ -411,28 +423,37 @@ export default async function handler(
           "🔍 BACKEND: Same-shop combined order - no individual refunds needed"
         );
       } else {
-        // For different-shop combined orders, calculate refunds for each order individually
-        for (const order of allOrdersInBatch) {
-          const orderTotal = parseFloat(order.total);
-          const orderItemsTotal =
-            order.Order_Items?.reduce((sum: number, item: any) => {
-              return sum + parseFloat(item.price) * item.quantity;
-            }, 0) || 0;
+        // For different-shop combined orders, only calculate refund for the specific order being paid for
+        // Find the specific order being paid for in the batch
+        const currentOrder = allOrdersInBatch.find(order => order.id === orderId);
 
-          // Check if this order needs a refund
-          if (orderTotal > orderItemsTotal) {
+        if (currentOrder) {
+          // Only create refund for this specific order if items were not found
+          // The frontend sends originalOrderTotal (total of all ordered items) and orderAmount (total of found items)
+          const orderOriginalTotal = originalOrderTotal || parseFloat(currentOrder.total);
+
+          // CRITICAL: Only create refund if some items were NOT found
+          // If all items are found, orderOriginalTotal should equal formattedOrderAmount
+          const allItemsFound = orderOriginalTotal <= formattedOrderAmount;
+
+          console.log(
+            `🔍 BACKEND: Order ${currentOrder.OrderID} - Original total: ${orderOriginalTotal}, Found items total: ${formattedOrderAmount}, All items found: ${allItemsFound}`
+          );
+
+          if (!allItemsFound) {
+            // Only create refund when items are not found
             const orderRefundAmount = parseFloat(
-              (orderTotal - orderItemsTotal).toFixed(2)
+              (orderOriginalTotal - formattedOrderAmount).toFixed(2)
             );
             totalRefundAmount += orderRefundAmount;
 
             // Create refund reason for this specific order
-            const shopName = order.Shop?.name || "Unknown Shop";
+            const shopName = currentOrder.Shop?.name || "Unknown Shop";
             let orderRefundReason = `Refund for items not found during shopping at ${shopName}. `;
 
             // List items for this specific order
             const orderItems =
-              order.Order_Items?.map(
+              currentOrder.Order_Items?.map(
                 (item: any) =>
                   `${item.Product.ProductName?.name || "Unknown Product"} (${
                     item.quantity
@@ -440,17 +461,25 @@ export default async function handler(
               ).join(", ") || "No items found";
 
             orderRefundReason += `Order items: ${orderItems}. `;
-            orderRefundReason += `Original total: ${orderTotal}, found items total: ${orderItemsTotal}, refund amount: ${orderRefundAmount}.`;
+            orderRefundReason += `Original total: ${orderOriginalTotal}, found items total: ${formattedOrderAmount}, refund amount: ${orderRefundAmount}.`;
 
             refundsData.push({
-              order_id: order.id,
+              order_id: currentOrder.id,
               amount: orderRefundAmount.toString(),
               reason: orderRefundReason,
-              user_id: order.user_id,
+              user_id: currentOrder.user_id,
               status: "pending",
               generated_by: "System",
               paid: false,
             });
+
+            console.log(
+              `💰 BACKEND: Created refund for order ${currentOrder.OrderID}: ${orderRefundAmount} (items not found)`
+            );
+          } else {
+            console.log(
+              `✅ BACKEND: No refund needed for order ${currentOrder.OrderID} - all items found`
+            );
           }
         }
       }
@@ -460,8 +489,16 @@ export default async function handler(
         originalOrderTotal ||
         parseFloat(isReelOrder ? orderData.total : orderData.total);
 
-      // Calculate if there's a difference between original total and found items total
-      if (totalOrderValue > formattedOrderAmount) {
+      // CRITICAL: Only create refund if some items were NOT found
+      // If all items are found, totalOrderValue should equal formattedOrderAmount
+      const allItemsFound = totalOrderValue <= formattedOrderAmount;
+
+      console.log(
+        `🔍 BACKEND: ${isReelOrder ? 'Reel' : 'Single'} Order - Original total: ${totalOrderValue}, Found items total: ${formattedOrderAmount}, All items found: ${allItemsFound}`
+      );
+
+      if (!allItemsFound) {
+        // Only create refund when items are not found
         totalRefundAmount = parseFloat(
           (totalOrderValue - formattedOrderAmount).toFixed(2)
         );
@@ -500,6 +537,14 @@ export default async function handler(
           generated_by: "System",
           paid: false,
         });
+
+        console.log(
+          `💰 BACKEND: Created refund for ${isReelOrder ? 'reel' : 'single'} order: ${totalRefundAmount} (items not found)`
+        );
+      } else {
+        console.log(
+          `✅ BACKEND: No refund needed for ${isReelOrder ? 'reel' : 'single'} order - all items found`
+        );
       }
     }
 
