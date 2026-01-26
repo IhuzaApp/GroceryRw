@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useTheme } from "../../../context/ThemeContext";
 import { formatCurrencySync } from "../../../utils/formatCurrency";
@@ -39,8 +39,32 @@ interface BatchCardMobileProps {
 export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
   const { theme } = useTheme();
   const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const isReelOrder = order.orderType === "reel";
   const isRestaurantOrder = order.orderType === "restaurant";
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    if (showMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showMenu]);
+
+  const handleContactSupport = () => {
+    setShowMenu(false);
+    // TODO: Implement contact support functionality
+    alert(`Contact support about order #${order.OrderID}`);
+  };
 
   // Get icon color - always green for mobile
   const getIconColor = () => {
@@ -214,24 +238,68 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
       }`}
     >
       {/* Ellipsis Menu Button - Top Right */}
-      <button
-        onClick={() => setShowMenu(!showMenu)}
-        className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
-      >
-        <svg
-          className="h-5 w-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      <div className="absolute right-4 top-4" ref={menuRef}>
+        <button
+          onClick={() => setShowMenu(!showMenu)}
+          className={`rounded-lg p-1.5 transition-colors ${
+            theme === "dark"
+              ? "text-gray-400 hover:bg-gray-700 hover:text-gray-200"
+              : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          }`}
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-          />
-        </svg>
-      </button>
+          <svg
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+            />
+          </svg>
+        </button>
+
+        {/* Dropdown Menu */}
+        {showMenu && (
+          <div
+            className={`absolute right-0 top-10 z-50 min-w-[180px] rounded-lg border shadow-lg ${
+              theme === "dark"
+                ? "border-gray-700 bg-gray-800"
+                : "border-gray-200 bg-white"
+            }`}
+          >
+            <div className="py-1">
+              {/* Contact Support */}
+              <button
+                onClick={handleContactSupport}
+                className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors ${
+                  theme === "dark"
+                    ? "text-gray-200 hover:bg-gray-700"
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <svg
+                  className="h-5 w-5 text-green-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"
+                  />
+                </svg>
+                <span>Contact Support</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Service/Provider Header */}
       <div className="mb-4 flex items-center gap-3">
