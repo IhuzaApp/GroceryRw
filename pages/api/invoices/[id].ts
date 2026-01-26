@@ -77,7 +77,7 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
   yPos += 16;
 
   // Business name with invoice ID
-  doc.setFontSize(14);
+  doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(0, 0, 0);
   const businessName = `#${invoiceData.invoiceNumber}`;
@@ -85,7 +85,7 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
   const businessNameWidth = doc.getTextWidth(businessName);
   doc.text(businessName, (pageWidth - businessNameWidth) / 2, yPos);
 
-  yPos += 14;
+  yPos += 20;
 
   // Company details - centered
   doc.setFontSize(9);
@@ -117,8 +117,8 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
   doc.setFontSize(9);
   doc.setTextColor(0, 0, 0);
 
-  // Calculate fixed positions for better alignment
-  const priceStartX = pageWidth - margin - 70; // Fixed position for prices
+  // Calculate fixed positions for better alignment - push prices to right edge
+  const priceStartX = pageWidth - margin; // Push prices to the right edge
 
   invoiceData.items.forEach((item: any, index: number) => {
     // Check if we need a new page
@@ -128,7 +128,7 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
     }
 
     // Item name on left (truncate if too long to fit before price area)
-    const maxItemWidth = priceStartX - margin - 10; // Leave space before price
+    const maxItemWidth = priceStartX - margin - 15; // Leave space before price
     let itemName = item.name;
     if (doc.getTextWidth(itemName) > maxItemWidth) {
       // Truncate item name to fit
