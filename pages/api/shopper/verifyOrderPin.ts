@@ -12,10 +12,72 @@ export default async function handler(
   }
 
   try {
-    const { orderId, pin, orderType = "regular" } = req.body;
+    const { orderId, pin, orderType = "regular", combinedOrderIds } = req.body;
 
     if (!orderId || !pin) {
       return res.status(400).json({ error: "Missing orderId or PIN" });
+    }
+
+    // Handle combined_customer orders - verify all orders have the same PIN
+    if (orderType === "combined_customer" && combinedOrderIds && combinedOrderIds.length > 0) {
+      // Fetch PINs for all orders
+      const pinsQuery = gql`
+        query GetOrdersPins($orderIds: [uuid!]!) {
+          Orders(where: { id: { _in: $orderIds } }) {
+            id
+            pin
+          }
+        }
+      `;
+
+      const pinsData = await hasuraClient.request<any>(pinsQuery, {
+        orderIds: combinedOrderIds,
+      });
+
+      const orders = pinsData.Orders;
+
+      if (!orders || orders.length === 0) {
+        return res.status(404).json({
+          error: "No orders found",
+          verified: false,
+        });
+      }
+
+      if (orders.length !== combinedOrderIds.length) {
+        return res.status(400).json({
+          error: "Some orders not found",
+          verified: false,
+        });
+      }
+
+      // Check if all orders have the same PIN
+      const pins = orders.map((o: any) => o.pin).filter(Boolean);
+      const uniquePins = [...new Set(pins)];
+
+      if (uniquePins.length === 0) {
+        return res.status(400).json({
+          error: "No PINs found for orders",
+          verified: false,
+        });
+      }
+
+      if (uniquePins.length > 1) {
+        return res.status(400).json({
+          error: "Orders have different PINs. All orders must have the same PIN.",
+          verified: false,
+          pinsMismatch: true,
+        });
+      }
+
+      // Verify the PIN against the shared PIN
+      const verified = uniquePins[0] === pin;
+
+      return res.status(200).json({
+        verified,
+        message: verified
+          ? "All orders have the same PIN and verification successful"
+          : "Invalid PIN. All orders must have the same PIN.",
+      });
     }
 
     // Handle combined orders specially

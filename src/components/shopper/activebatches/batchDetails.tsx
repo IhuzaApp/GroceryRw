@@ -1424,6 +1424,59 @@ export default function BatchDetails({
     setShowInvoiceModal(true);
   };
 
+  // Handle combined customer delivery confirmation - opens modal for multiple orders to same customer
+  const handleCombinedCustomerDeliveryConfirmation = async (customerOrders: any[]) => {
+    if (!customerOrders || customerOrders.length === 0) return;
+
+    try {
+      setInvoiceLoading(true);
+      setShowInvoiceModal(true);
+
+      // Prepare invoice data for all orders in the customer group
+      const allOrderIds = customerOrders.map(o => o.id);
+      const allOrderNumbers = customerOrders.map(o => o.OrderID || o.id.slice(-8));
+
+      // Generate combined invoice data
+      const combinedInvoiceData = {
+        id: allOrderIds[0], // Use first order ID as primary
+        invoiceNumber: `COMBINED-${allOrderNumbers.join('-')}`,
+        orderId: allOrderIds[0],
+        orderNumber: allOrderNumbers.join(' + '),
+        customer: customerOrders[0].orderedBy?.name || customerOrders[0].customerName || "Customer",
+        customerEmail: customerOrders[0].orderedBy?.email || "",
+        customerPhone: customerOrders[0].orderedBy?.phone || customerOrders[0].customerPhone,
+        shop: customerOrders.map(o => o.shop?.name || o.shopName).join(', '),
+        shopAddress: customerOrders[0].shop?.address || "",
+        deliveryAddress: customerOrders[0].address?.street || customerOrders[0].customerAddress,
+        deliveryStreet: customerOrders[0].address?.street,
+        deliveryCity: customerOrders[0].address?.city,
+        deliveryPostalCode: customerOrders[0].address?.postal_code,
+        deliveryPlaceDetails: customerOrders[0].address?.placeDetails,
+        dateCreated: new Date().toISOString(),
+        dateCompleted: new Date().toISOString(),
+        status: "delivered",
+        items: [], // Will be populated if needed
+        subtotal: customerOrders.reduce((sum, o) => sum + parseFloat(o.subtotal?.toString() || "0"), 0),
+        serviceFee: customerOrders.reduce((sum, o) => sum + parseFloat(o.serviceFee?.toString() || "0"), 0),
+        deliveryFee: customerOrders.reduce((sum, o) => sum + parseFloat(o.deliveryFee?.toString() || "0"), 0),
+        total: customerOrders.reduce((sum, o) => sum + parseFloat(o.total?.toString() || "0"), 0),
+        isReelOrder: false,
+        isRestaurantOrder: false,
+        orderType: "combined_customer",
+        combinedOrderIds: allOrderIds,
+        combinedOrderNumbers: allOrderNumbers,
+      };
+
+      setInvoiceData(combinedInvoiceData);
+    } catch (error) {
+      console.error("Error preparing combined delivery confirmation:", error);
+      setShowInvoiceModal(false);
+      setInvoiceLoading(false);
+    } finally {
+      setInvoiceLoading(false);
+    }
+  };
+
   // NEW: Handle delivery confirmation button click - generates invoice first, then shows modal
   const handleDeliveryConfirmationClick = (targetOrderOverride?: any) => {
     const activeOrder = targetOrderOverride || order;
@@ -2535,6 +2588,12 @@ export default function BatchDetails({
         handleDirectionsClick={handleDirectionsClick}
         handleChatClick={handleChatClick}
         getActionButton={getActionButton}
+        onConfirmDeliveryForCustomer={(orders) => {
+          // Confirm delivery for all orders in this customer group
+          orders.forEach((o) => {
+            handleUpdateStatus("delivered", o.id);
+          });
+        }}
       />
     );
   };
@@ -3250,6 +3309,7 @@ export default function BatchDetails({
           uploadedProofs={uploadedProofs}
           getActionButton={getActionButton}
           onUpdateStatus={handleUpdateStatus}
+          onCombinedDeliveryConfirmation={handleCombinedCustomerDeliveryConfirmation}
         />
       </div>
     </>

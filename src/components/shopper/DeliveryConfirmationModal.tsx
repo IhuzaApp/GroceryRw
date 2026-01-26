@@ -48,7 +48,7 @@ interface DeliveryConfirmationModalProps {
   onClose: () => void;
   invoiceData: InvoiceData | null;
   loading: boolean;
-  orderType?: "regular" | "reel" | "restaurant" | "combined";
+  orderType?: "regular" | "reel" | "restaurant" | "combined" | "combined_customer";
 }
 
 const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
@@ -141,25 +141,87 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       setVerifyingPin(true);
       setPinError(null);
 
-      const response = await fetch(`/api/shopper/verifyOrderPin`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderId: invoiceData.orderId,
-          pin: pinInput,
-          orderType: orderType,
-        }),
-      });
+      // For combined customer deliveries, verify PIN for ALL orders
+      const orderIdsToVerify = orderType === "combined_customer" &&
+        invoiceData.combinedOrderIds &&
+        invoiceData.combinedOrderIds.length > 0
+        ? invoiceData.combinedOrderIds
+        : [invoiceData.orderId];
 
-      const data = await response.json();
+      // For combined_customer, use the API endpoint that validates all orders have the same PIN
+      if (orderType === "combined_customer" && orderIdsToVerify.length > 1) {
+        const response = await fetch(`/api/shopper/verifyOrderPin`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: invoiceData.orderId, // Primary order ID
+            pin: pinInput,
+            orderType: "combined_customer",
+            combinedOrderIds: orderIdsToVerify,
+          }),
+        });
 
-      if (response.ok && data.verified) {
-        // PIN is correct
+        const data = await response.json();
+
+        if (response.ok && data.verified) {
+          // All orders have the same PIN and it matches
+          setProofType("pin");
+          setPhotoUploaded(true);
+          setPinError(null);
+        } else {
+          // PIN verification failed or orders have different PINs
+          const newAttempts = pinAttempts + 1;
+          setPinAttempts(newAttempts);
+
+          if (newAttempts >= 2) {
+            setPinError(
+              data.error || "PIN verification failed twice. Please take a photo for proof of delivery."
+            );
+            setTimeout(() => {
+              setCurrentVerificationStep("photo");
+              setPinError(null);
+            }, 2000);
+          } else {
+            setPinError(
+              data.error || `Incorrect PIN. ${2 - newAttempts} attempt(s) remaining.`
+            );
+            setPinInput("");
+          }
+        }
+        return;
+      }
+
+      // For single orders or non-combined_customer, verify normally
+      let allVerified = true;
+      let failedOrderIds: string[] = [];
+
+      // Verify PIN for each order
+      for (const orderId of orderIdsToVerify) {
+        const response = await fetch(`/api/shopper/verifyOrderPin`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId,
+            pin: pinInput,
+            orderType: orderType,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!(response.ok && data.verified)) {
+          allVerified = false;
+          failedOrderIds.push(orderId);
+        }
+      }
+
+      if (allVerified) {
+        // All PINs are correct
         setProofType("pin");
         setPhotoUploaded(true);
         setPinError(null);
       } else {
-        // PIN is incorrect
+        // Some PINs are incorrect
         const newAttempts = pinAttempts + 1;
         setPinAttempts(newAttempts);
 
@@ -241,9 +303,10 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       setConfirmingDelivery(true);
       setForceOpen(true);
 
-      // For combined orders, update all orders in the group
+      // For combined orders (both "combined" and "combined_customer"), update all orders in the group
       const orderIdsToUpdate =
-        invoiceData.orderType === "combined" &&
+        (invoiceData.orderType === "combined" ||
+          invoiceData.orderType === "combined_customer") &&
         invoiceData.combinedOrderIds &&
         invoiceData.combinedOrderIds.length > 0
           ? invoiceData.combinedOrderIds
@@ -564,6 +627,8 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                     ? "Confirming Delivery..."
                     : deliveryConfirmed
                     ? "Delivery Confirmed!"
+                    : orderType === "combined_customer"
+                    ? "Combined Delivery Confirmation"
                     : "Delivery Confirmation"}
                 </h3>
                 <p
@@ -571,7 +636,9 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                     theme === "dark" ? "text-gray-300" : "text-gray-600"
                   }`}
                 >
-                  Order #{invoiceData.orderNumber}
+                  {orderType === "combined_customer"
+                    ? `${invoiceData.combinedOrderNumbers?.length || 1} Orders: ${invoiceData.orderNumber}`
+                    : `Order #${invoiceData.orderNumber}`}
                 </p>
               </div>
             </div>
@@ -603,14 +670,18 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
           {/* Body */}
           <div
-            className={`max-h-[70vh] flex-1 overflow-y-auto px-6 py-8 sm:px-8 ${
+            className={`max-h-[70vh] flex-1 overflow-y-auto px-6 py-4 sm:px-8 sm:py-8 ${
               theme === "dark" ? "bg-gray-800 text-gray-100" : "bg-white"
+            } ${
+              currentVerificationStep === "pin" && !photoUploaded
+                ? "pb-24 sm:pb-8"
+                : ""
             }`}
           >
-            <div className="space-y-4">
+            <div className="space-y-2 sm:space-y-4">
               {/* Delivery Address Section */}
               <div
-                className={`rounded-xl border p-4 ${
+                className={`hidden rounded-xl border p-4 sm:block ${
                   theme === "dark"
                     ? "border-gray-700 bg-gray-900/50"
                     : "border-gray-200 bg-gray-50"
@@ -823,12 +894,12 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                         </div>
                       )}
                       <p className="mt-2">
-                        {invoiceData.deliveryStreet ||
-                          invoiceData.deliveryAddress ||
-                          "Address not available"}
-                        {invoiceData.deliveryCity &&
+                        {(invoiceData?.deliveryStreet ||
+                          invoiceData?.deliveryAddress ||
+                          "Address not available")}
+                        {invoiceData?.deliveryCity &&
                           `, ${invoiceData.deliveryCity}`}
-                        {invoiceData.deliveryPostalCode &&
+                        {invoiceData?.deliveryPostalCode &&
                           `, ${invoiceData.deliveryPostalCode}`}
                       </p>
                     </div>
@@ -839,10 +910,10 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
               {/* PIN Verification Section */}
               {currentVerificationStep === "pin" && !photoUploaded && (
                 <div
-                  className={`rounded-xl border-2 p-4 ${
+                  className={`px-4 py-2 sm:rounded-xl sm:border-2 sm:p-4 ${
                     theme === "dark"
-                      ? "border-green-600 bg-green-900/20"
-                      : "border-green-200 bg-green-50"
+                      ? "sm:border-green-600 sm:bg-green-900/20"
+                      : "sm:border-green-200 sm:bg-green-50"
                   }`}
                 >
                   <div className="mb-3 flex items-center gap-3">
@@ -876,7 +947,9 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                           theme === "dark" ? "text-gray-300" : "text-gray-600"
                         }`}
                       >
-                        Ask customer for their order PIN
+                        {orderType === "combined_customer"
+                          ? "Ask customer for their PIN (must match all orders)"
+                          : "Ask customer for their order PIN"}
                       </p>
                     </div>
                   </div>
@@ -885,8 +958,9 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                       theme === "dark" ? "text-gray-400" : "text-gray-600"
                     }`}
                   >
-                    Please ask the customer for their 2-digit order PIN to
-                    confirm delivery.
+                    {orderType === "combined_customer"
+                      ? "Please ask the customer for their 2-digit PIN. This PIN must match for all orders to proceed with delivery."
+                      : "Please ask the customer for their 2-digit order PIN to confirm delivery."}
                   </p>
 
                   {/* PIN Input Form */}
@@ -940,10 +1014,11 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                       </div>
                     )}
 
+                    {/* Desktop button - hidden on mobile */}
                     <button
                       onClick={handleVerifyPin}
                       disabled={verifyingPin || pinInput.length !== 2}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-green-700 px-6 py-4 font-semibold text-white shadow-lg transition-all duration-200 hover:from-green-700 hover:to-green-800 hover:shadow-green-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="hidden w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-green-700 px-6 py-4 font-semibold text-white shadow-lg transition-all duration-200 hover:from-green-700 hover:to-green-800 hover:shadow-green-500/25 disabled:cursor-not-allowed disabled:opacity-50 sm:flex"
                     >
                       {verifyingPin ? (
                         <>
@@ -1252,6 +1327,41 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
               )}
             </div>
           </div>
+
+          {/* Fixed PIN Button for Mobile - Only shown during PIN verification */}
+          {currentVerificationStep === "pin" && !photoUploaded && (
+            <div className="fixed bottom-0 left-0 right-0 z-[10000] border-t border-gray-200 bg-white p-3 pb-safe shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:hidden">
+              <button
+                onClick={handleVerifyPin}
+                disabled={verifyingPin || pinInput.length !== 2}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-green-700 px-6 py-4 font-semibold text-white shadow-lg transition-all duration-200 hover:from-green-700 hover:to-green-800 hover:shadow-green-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {verifyingPin ? (
+                  <>
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                    Verifying PIN...
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"
+                      />
+                    </svg>
+                    Confirm Pin For Delivery
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
