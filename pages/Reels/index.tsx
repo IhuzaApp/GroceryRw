@@ -277,6 +277,7 @@ interface BasePost {
   shopLat?: number;
   shopLng?: number;
   shopAlt?: number;
+  created_on?: string; // Timestamp for sorting/randomization
 }
 
 interface RestaurantPost extends BasePost {
@@ -399,6 +400,51 @@ const formatTimestamp = (timestamp: string): string => {
   if (diffInMinutes < 60) return `${diffInMinutes}m`;
   if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h`;
   return `${Math.floor(diffInMinutes / 1440)}d`;
+};
+
+// Randomize reels while prioritizing recent ones
+const randomizeReelsWithPriority = (reels: FoodPost[]): FoodPost[] => {
+  const now = Date.now();
+  const oneDayAgo = now - 24 * 60 * 60 * 1000; // 24 hours
+  const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000; // 7 days
+
+  // Group reels by recency based on created_on timestamp
+  const recentReels: FoodPost[] = []; // Last 24 hours
+  const weekReels: FoodPost[] = []; // Last week
+  const olderReels: FoodPost[] = []; // Older than a week
+
+  reels.forEach((reel) => {
+    const createdOn = reel.created_on ? new Date(reel.created_on).getTime() : 0;
+    const age = now - createdOn;
+
+    if (age <= 24 * 60 * 60 * 1000) {
+      // Last 24 hours - highest priority
+      recentReels.push(reel);
+    } else if (age <= 7 * 24 * 60 * 60 * 1000) {
+      // Last week - medium priority
+      weekReels.push(reel);
+    } else {
+      // Older than a week - lower priority
+      olderReels.push(reel);
+    }
+  });
+
+  // Fisher-Yates shuffle function
+  const shuffle = <T>(array: T[]): T[] => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
+  // Randomize within each group and concatenate (recent first)
+  return [
+    ...shuffle(recentReels),
+    ...shuffle(weekReels),
+    ...shuffle(olderReels),
+  ];
 };
 
 // Check if current user has liked a reel
@@ -689,6 +735,7 @@ export default function FoodReelsApp() {
       commentsList,
       shop_id: dbReel.shop_id || null,
       restaurant_id: dbReel.restaurant_id || null,
+      created_on: dbReel.created_on, // Include created_on for randomization
       shopLat,
       shopLng,
       shopAlt,
@@ -939,12 +986,15 @@ export default function FoodReelsApp() {
           convertDatabaseReelToFoodPost(reel)
         );
 
+        // Randomize reels while prioritizing recent ones
+        const randomizedPosts = randomizeReelsWithPriority(convertedPosts);
+
         // Update state first
-        setPosts(convertedPosts);
+        setPosts(randomizedPosts);
 
         // Try to update cache, but don't fail if it doesn't work
         try {
-          setCachedReels(convertedPosts);
+          setCachedReels(randomizedPosts);
         } catch (cacheError) {
           console.warn(
             "Failed to update cache, continuing without cache:",
@@ -987,12 +1037,15 @@ export default function FoodReelsApp() {
         convertDatabaseReelToFoodPost(reel)
       );
 
+      // Randomize reels while prioritizing recent ones
+      const randomizedPosts = randomizeReelsWithPriority(convertedPosts);
+
       // Update state first for immediate UI update
-      setPosts(convertedPosts);
+      setPosts(randomizedPosts);
 
       // Try to update cache, but don't fail if it doesn't work
       try {
-        setCachedReels(convertedPosts);
+        setCachedReels(randomizedPosts);
       } catch (cacheError) {
         console.warn(
           "Failed to update cache, continuing without cache:",
