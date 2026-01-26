@@ -22,6 +22,8 @@ interface BottomActionButtonProps {
   getActionButton: (actionOrder: any) => React.ReactNode;
   onUpdateStatus: (status: string, orderId: string) => void;
   onCombinedDeliveryConfirmation?: (orders: any[]) => void;
+  /** When provided (e.g. same-shop order tabs), use this for the active order instead of resolving by activeShopId */
+  getActiveOrder?: () => any;
 }
 
 export default function BottomActionButton({
@@ -31,6 +33,7 @@ export default function BottomActionButton({
   getActionButton,
   onUpdateStatus,
   onCombinedDeliveryConfirmation,
+  getActiveOrder,
 }: BottomActionButtonProps) {
   // Check if we're in delivery phase and all orders for current customer are ready
   const allOrders = [order, ...(order?.combinedOrders || [])];
@@ -70,8 +73,9 @@ export default function BottomActionButton({
   const readyCustomerGroup = readyCustomerGroups[0];
 
   // Default behavior - get action button for active order
-  const actionOrder =
-    activeShopId === order?.shop?.id
+  const actionOrder = getActiveOrder
+    ? getActiveOrder()
+    : activeShopId === order?.shop?.id
       ? order
       : order?.combinedOrders?.find((o) => o.shop?.id === activeShopId);
 

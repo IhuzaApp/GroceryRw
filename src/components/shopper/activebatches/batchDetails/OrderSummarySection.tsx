@@ -14,7 +14,10 @@ interface OrderSummarySectionProps {
   calculateFoundItemsTotal: () => number;
   calculateOriginalSubtotal: () => number;
   calculateBatchTotal: () => number;
+  calculateOriginalBatchSubtotal?: () => number;
   hasCombinedOrders?: boolean;
+  /** True when all combined orders are from the same shop (batch payment & summary) */
+  hasSameShopCombinedOrders?: boolean;
 }
 
 export default function OrderSummarySection({
@@ -26,7 +29,9 @@ export default function OrderSummarySection({
   calculateFoundItemsTotal,
   calculateOriginalSubtotal,
   calculateBatchTotal,
+  calculateOriginalBatchSubtotal = () => 0,
   hasCombinedOrders = false,
+  hasSameShopCombinedOrders = false,
 }: OrderSummarySectionProps) {
   const { taxRate } = useTaxRate();
 
@@ -91,25 +96,11 @@ export default function OrderSummarySection({
           {order.status === "accepted" && (
             <div className="text-right">
               <div className="rounded-lg bg-green-50 px-3 py-1 text-xl font-bold text-green-600 dark:bg-green-900/20 dark:text-green-400">
-                {(() => {
-                  // Check if we have same-shop combined orders
-                  const hasCombinedOrders =
-                    order?.combinedOrders && order.combinedOrders.length > 0;
-                  const mainShopId = order?.shop?.id;
-                  const sameShopCombinedOrders = hasCombinedOrders
-                    ? order.combinedOrders.filter(
-                        (co) => co.shop?.id === mainShopId
-                      )
-                    : [];
-                  const hasSameShopCombinedOrders =
-                    sameShopCombinedOrders.length > 0;
-
-                  return formatCurrency(
-                    hasSameShopCombinedOrders
-                      ? calculateBatchTotal()
-                      : calculateFoundItemsTotal()
-                  );
-                })()}
+                {formatCurrency(
+                  hasSameShopCombinedOrders
+                    ? calculateOriginalBatchSubtotal()
+                    : calculateOriginalSubtotal()
+                )}
               </div>
             </div>
           )}
@@ -201,28 +192,18 @@ export default function OrderSummarySection({
                 {order.status === "shopping" && (
                   <>
                     {(() => {
-                      // Check if we have same-shop combined orders
-                      const hasCombinedOrders =
+                      // Same-shop combined: batch items (all orders). Different-shop: active order only.
+                      const summaryItems =
+                        hasSameShopCombinedOrders &&
                         order?.combinedOrders &&
-                        order.combinedOrders.length > 0;
-                      const mainShopId = order?.shop?.id;
-                      const sameShopCombinedOrders = hasCombinedOrders
-                        ? order.combinedOrders.filter(
-                            (co) => co.shop?.id === mainShopId
-                          )
-                        : [];
-                      const hasSameShopCombinedOrders =
-                        sameShopCombinedOrders.length > 0;
-
-                      // For same-shop combined orders, aggregate items from all orders in the batch
-                      const summaryItems = hasSameShopCombinedOrders
-                        ? [
-                            ...(order?.Order_Items || []),
-                            ...sameShopCombinedOrders.flatMap(
-                              (co) => co.Order_Items || []
-                            ),
-                          ]
-                        : getActiveOrderItems;
+                        order.combinedOrders.length > 0
+                          ? [
+                              ...(order?.Order_Items || []),
+                              ...order.combinedOrders.flatMap(
+                                (co: any) => co.Order_Items || []
+                              ),
+                            ]
+                          : getActiveOrderItems;
 
                       const itemsFound = summaryItems.filter(
                         (item) => item.found
@@ -298,27 +279,22 @@ export default function OrderSummarySection({
                 )}
                 {(() => {
                   const activeOrder = getActiveOrder;
+                  const anyOrderShopping =
+                    hasCombinedOrders &&
+                    [order, ...(order.combinedOrders || [])].some(
+                      (o) => o?.status === "shopping"
+                    );
 
-                  // Check if we have same-shop combined orders
-                  const hasCombinedOrders =
-                    order?.combinedOrders && order.combinedOrders.length > 0;
-                  const mainShopId = order?.shop?.id;
-                  const sameShopCombinedOrders = hasCombinedOrders
-                    ? order.combinedOrders.filter(
-                        (co) => co.shop?.id === mainShopId
-                      )
-                    : [];
-                  const hasSameShopCombinedOrders =
-                    sameShopCombinedOrders.length > 0;
-
-                  // For same-shop combined orders, use batch total instead of individual order total
-                  const itemsTotal = hasSameShopCombinedOrders
-                    ? activeOrder?.status === "shopping"
-                      ? calculateBatchTotal()
-                      : calculateBatchTotal() // For completed orders, also use batch total
-                    : activeOrder?.status === "shopping"
-                    ? calculateFoundItemsTotal()
-                    : calculateOriginalSubtotal();
+                  // Same-shop: batch total when any order is shopping, batch original otherwise.
+                  // Different-shop: active order found total / original subtotal.
+                  const itemsTotal =
+                    hasSameShopCombinedOrders
+                      ? anyOrderShopping
+                        ? calculateBatchTotal()
+                        : calculateOriginalBatchSubtotal()
+                      : activeOrder?.status === "shopping"
+                      ? calculateFoundItemsTotal()
+                      : calculateOriginalSubtotal();
 
                   const discount = activeOrder?.discount || 0;
                   const finalTotal = itemsTotal - discount;
@@ -379,9 +355,9 @@ export default function OrderSummarySection({
                       <p className="text-sm text-blue-900 dark:text-blue-100">
                         <strong>Note:</strong> The total reflects only the value
                         of found items. Service fee (
-                        {formatCurrency(parseFloat(order.serviceFee || "0"))})
+                        {formatCurrency(parseFloat(getActiveOrder?.serviceFee || order.serviceFee || "0"))})
                         and delivery fee (
-                        {formatCurrency(parseFloat(order.deliveryFee || "0"))})
+                        {formatCurrency(parseFloat(getActiveOrder?.deliveryFee || order.deliveryFee || "0"))})
                         were already added to your wallet as earnings when you
                         started shopping.
                       </p>

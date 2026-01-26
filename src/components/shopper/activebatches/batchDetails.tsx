@@ -222,29 +222,43 @@ export default function BatchDetails({
     return shops.size > 1;
   }, [order?.shop?.id, order?.shop_id, order?.combinedOrders]);
 
-  // Get items for the currently active shop tab
+  const hasSameShopCombinedOrders = useMemo(() => {
+    const has = order?.combinedOrders && order.combinedOrders.length > 0;
+    if (!has) return false;
+    const mainId = order?.shop?.id || order?.shop_id;
+    if (!mainId) return false;
+    return order.combinedOrders.every((co: any) => {
+      const coShopId = co.shop?.id ?? co.Shop?.id ?? co.shop_id;
+      return coShopId === mainId;
+    });
+  }, [order?.shop?.id, order?.shop_id, order?.combinedOrders]);
 
   // Get items for the currently active order (main or combined)
   const getActiveOrderItems = useMemo(() => {
+    if (hasSameShopCombinedOrders && activeShopId && order) {
+      const s = String(activeShopId);
+      if (order.id === s || String(order.OrderID) === s) {
+        return order.Order_Items || [];
+      }
+      const co = order.combinedOrders?.find(
+        (o: any) => o.id === s || String(o.OrderID) === s
+      );
+      if (co) return co.Order_Items || [];
+    }
     if (!isMultiShop || !activeShopId) {
-      // Single shop or main order - return main order items
       return order?.Order_Items || [];
     }
-
-    // Find the active combined order
     const activeCombinedOrder = order?.combinedOrders?.find(
       (co) => co.shop?.id === activeShopId
     );
     if (activeCombinedOrder) {
       return activeCombinedOrder.Order_Items || [];
     }
-
-    // Fallback to main order items filtered by shop
     return (
       order?.Order_Items?.filter((item: any) => item.shopId === activeShopId) ||
       []
     );
-  }, [order?.Order_Items, order?.combinedOrders, isMultiShop, activeShopId]);
+  }, [order, order?.Order_Items, order?.combinedOrders, isMultiShop, activeShopId, hasSameShopCombinedOrders]);
 
   // Check for orders that need invoice proof upload
   useEffect(() => {
@@ -335,15 +349,22 @@ export default function BatchDetails({
 
   // Get the currently active order object (main or combined)
   const getActiveOrder = useMemo(() => {
+    if (hasSameShopCombinedOrders && activeShopId && order) {
+      const s = String(activeShopId);
+      if (order.id === s || String(order.OrderID) === s) return order;
+      const co = order.combinedOrders?.find(
+        (o: any) => o.id === s || String(o.OrderID) === s
+      );
+      if (co) return co;
+    }
     if (!isMultiShop || !activeShopId) {
       return order;
     }
-
     const activeCombinedOrder = order?.combinedOrders?.find(
       (co) => co.shop?.id === activeShopId
     );
     return activeCombinedOrder || order;
-  }, [order, order?.combinedOrders, isMultiShop, activeShopId]);
+  }, [order, order?.combinedOrders, isMultiShop, activeShopId, hasSameShopCombinedOrders]);
 
   const currentStep = useMemo(() => {
     if (!order) return 0;
@@ -822,8 +843,8 @@ export default function BatchDetails({
       const wallet = await fetchWalletBalance();
 
       if (wallet) {
-        // Check wallet balance for payment
-        const orderAmount = calculateFoundItemsTotal();
+        // Same-shop: batch total; different-shop: target order found total
+        const orderAmount = getPaymentOrderAmount();
         const reservedBalance = parseFloat(wallet.reserved_balance);
 
         if (reservedBalance < orderAmount) {
@@ -896,33 +917,9 @@ export default function BatchDetails({
         throw new Error("Invalid OTP. Please try again.");
       }
 
-      // Get the actual order amount being processed
-      // For combined orders, use batch total for wallet operations
-      const hasCombinedOrders =
-        order?.combinedOrders && order.combinedOrders.length > 0;
-      let orderAmount = 0;
-
-      if (hasCombinedOrders) {
-        // Check if combined orders are from same shop or different shops
-        const mainShopId = order.shop?.id;
-        const sameShopOrders = order.combinedOrders.filter(
-          (co) => co.shop?.id === mainShopId
-        );
-
-        if (sameShopOrders.length > 0) {
-          // SAME SHOP: Use batch total of found items (fees already added to earnings)
-          orderAmount = calculateBatchTotal();
-        } else {
-          // DIFFERENT SHOPS: Use specific order's found items total, not batch total
-          orderAmount = calculateFoundItemsTotal();
-        }
-      } else {
-        orderAmount = calculateFoundItemsTotal();
-      }
-      // Get the original order total for refund calculation
-      const originalOrderTotal = calculateOriginalSubtotal(
-        paymentTargetOrderId || undefined
-      );
+      // Same-shop combined: batch total (all orders). Different-shop: target order only.
+      const orderAmount = getPaymentOrderAmount();
+      const originalOrderTotal = getOriginalOrderTotalForPayment();
 
       // Initiate MoMo payment after OTP verification
       let momoPaymentSuccess = false;
@@ -1030,18 +1027,8 @@ export default function BatchDetails({
       let walletUpdated = false;
       try {
 
-        // Check if this is a same-shop combined order
         const hasCombinedOrders =
           order?.combinedOrders && order.combinedOrders.length > 0;
-        const isSameShopCombined = hasCombinedOrders
-          ? (() => {
-              const mainShopId = order.shop?.id;
-              const sameShopOrders = order.combinedOrders.filter(
-                (co) => co.shop?.id === mainShopId
-              );
-              return sameShopOrders.length > 0;
-            })()
-          : false;
 
         const response = await fetch("/api/shopper/processPayment", {
           method: "POST",
@@ -1052,15 +1039,15 @@ export default function BatchDetails({
           orderId: targetOrderForPayment.id,
           momoCode,
           privateKey,
-          orderAmount: orderAmount, // Only the value of found items (no fees)
-          originalOrderTotal: originalOrderTotal, // Original subtotal for refund calculation
-          orderType: targetOrderForPayment.orderType || "regular", // Pass order type to API
-          momoReferenceId: momoReferenceId, // Pass MoMo reference ID
-          momoSuccess: momoPaymentSuccess, // Pass MoMo success status
-          isSameShopCombined: isSameShopCombined, // Pass same-shop combined flag
+          orderAmount: orderAmount,
+          originalOrderTotal: originalOrderTotal,
+          orderType: targetOrderForPayment.orderType || "regular",
+          momoReferenceId: momoReferenceId,
+          momoSuccess: momoPaymentSuccess,
+          isSameShopCombined: hasSameShopCombinedOrders, // batch payment & invoice for same-shop only
           combinedOrders: hasCombinedOrders
             ? order.combinedOrders
-            : undefined, // Pass combined orders data
+            : undefined,
         }),
         });
 
@@ -1128,20 +1115,10 @@ export default function BatchDetails({
         setOtp("");
         setGeneratedOtp("");
 
-        // Check if this is a same-shop combined order
         const hasCombinedOrders =
           order?.combinedOrders && order.combinedOrders.length > 0;
-        const isSameShopCombined = hasCombinedOrders
-          ? (() => {
-              const mainShopId = order.shop?.id;
-              const sameShopOrders = order.combinedOrders.filter(
-                (co) => co.shop?.id === mainShopId
-              );
-              return sameShopOrders.length > 0;
-            })()
-          : false;
 
-        if (isSameShopCombined) {
+        if (hasSameShopCombinedOrders) {
           // SAME SHOP COMBINED ORDERS: Generate invoices and show proof modal
           console.log(
             "🔍 SAME SHOP COMBINED: Generating invoices and showing proof modal"
@@ -1151,7 +1128,7 @@ export default function BatchDetails({
           try {
             const allOrderIds = [
               order.id,
-              ...order.combinedOrders.map((co) => co.id),
+              ...(order.combinedOrders || []).map((co) => co.id),
             ];
             const generatedInvoices: any[] = [];
             const combinedIds: string[] = [];
@@ -2143,16 +2120,26 @@ export default function BatchDetails({
   const calculateOriginalSubtotal = (targetOrderId?: string) => {
     if (!order) return 0;
 
-    // If no targetOrderId provided but we have an activeShopId in multi-shop mode, use active shop
-    const effectiveTargetId =
-      targetOrderId ||
-      (isMultiShop && activeShopId
-        ? activeShopId === order?.shop?.id
+    // Resolve effective target: explicit param, then same-shop order tab, then multi-shop tab, else main
+    let effectiveTargetId = targetOrderId ?? undefined;
+    if (!effectiveTargetId && hasSameShopCombinedOrders && activeShopId) {
+      const s = String(activeShopId);
+      if (order.id === s || String(order.OrderID) === s) effectiveTargetId = order.id;
+      else {
+        const co = order.combinedOrders?.find(
+          (o: any) => o.id === s || String(o.OrderID) === s
+        );
+        if (co) effectiveTargetId = co.id;
+      }
+    }
+    if (!effectiveTargetId && isMultiShop && activeShopId) {
+      effectiveTargetId =
+        activeShopId === order?.shop?.id
           ? order?.id
-          : order?.combinedOrders?.find((o) => o.shop?.id === activeShopId)?.id
-        : undefined);
+          : order?.combinedOrders?.find((o) => o.shop?.id === activeShopId)?.id;
+    }
 
-    const useAll = !isMultiShop || !effectiveTargetId;
+    const useAll = !effectiveTargetId;
 
     // Sum for reels
     let reelSubtotal = 0;
@@ -2178,30 +2165,25 @@ export default function BatchDetails({
     // For regular orders, calculate based on order items
     if (!order.Order_Items) return 0;
 
-    let itemsToSum = order.Order_Items;
-    if (!useAll && targetOrderId) {
-      if (targetOrderId === order.id) {
+    let itemsToSum: any[] = [];
+    if (!useAll && effectiveTargetId) {
+      if (effectiveTargetId === order.id) {
         itemsToSum = order.Order_Items.filter(
           (item) =>
             !(item as any).shopId || (item as any).shopId === order.shop?.id
         );
       } else {
         const targetSub = order.combinedOrders?.find(
-          (o) => o.id === targetOrderId
+          (o) => o.id === effectiveTargetId
         );
-        const targetShopId = targetSub?.shop?.id;
-        if (targetShopId) {
-          itemsToSum = order.Order_Items.filter(
-            (item) => (item as any).shopId === targetShopId
-          );
-        }
+        itemsToSum = targetSub?.Order_Items || [];
       }
-    } else if (!useAll) {
-      // If we ever need targeted subtotal in multi-shop summary, we'd filter here.
-      // But summary usually shows active shop total.
+    } else if (!useAll && (activeShopId || order.shop?.id)) {
       itemsToSum = order.Order_Items.filter(
         (item: any) => (item as any).shopId === (activeShopId || order.shop?.id)
       );
+    } else {
+      itemsToSum = order.Order_Items;
     }
 
     return itemsToSum.reduce(
@@ -2236,15 +2218,25 @@ export default function BatchDetails({
 
   // Calculate the true total based on found items (for shopping mode)
   const calculateFoundItemsTotal = () => {
-    // Priority: 1. Payment target, 2. Active shop tab, 3. Main order
-    const targetId =
-      paymentTargetOrderId ||
-      (activeShopId === order?.shop?.id
-        ? order?.id
-        : order?.combinedOrders?.find((o) => o.shop?.id === activeShopId)
-            ?.id) ||
-      order?.id;
-
+    // Priority: 1. Payment target, 2. Active tab (same-shop orderId or multi-shop shopId), 3. Main order
+    let targetId = paymentTargetOrderId ?? undefined;
+    if (!targetId && hasSameShopCombinedOrders && activeShopId && order) {
+      const s = String(activeShopId);
+      if (order.id === s || String(order.OrderID) === s) targetId = order.id;
+      else {
+        const co = order.combinedOrders?.find(
+          (o: any) => o.id === s || String(o.OrderID) === s
+        );
+        if (co) targetId = co.id;
+      }
+    }
+    if (!targetId && isMultiShop && activeShopId) {
+      targetId =
+        activeShopId === order?.shop?.id
+          ? order?.id
+          : order?.combinedOrders?.find((o) => o.shop?.id === activeShopId)?.id;
+    }
+    if (!targetId) targetId = order?.id;
 
     // For reel orders
     const targetOrder =
@@ -2258,6 +2250,35 @@ export default function BatchDetails({
     // For regular orders, return the found items total for the target order
     const foundTotal = calculateFoundTotal(targetId || undefined);
     return foundTotal;
+  };
+
+  // Original subtotal for entire batch (main + same-shop combined) — for refund when paying batch
+  const calculateOriginalBatchSubtotal = () => {
+    if (!order) return 0;
+    let total = 0;
+    if (order.Order_Items) {
+      total += order.Order_Items.reduce((s, i) => s + i.price * i.quantity, 0);
+    }
+    (order.combinedOrders || []).forEach((co: any) => {
+      (co.Order_Items || []).forEach((i: any) => {
+        total += (typeof i.price === "string" ? parseFloat(i.price) : i.price) * (i.quantity || 0);
+      });
+    });
+    return total;
+  };
+
+  /** Amount to charge: batch total for same-shop combined, else active/target order found total */
+  const getPaymentOrderAmount = () => {
+    const hasCombined = order?.combinedOrders && order.combinedOrders.length > 0;
+    if (hasCombined && hasSameShopCombinedOrders) return calculateBatchTotal();
+    return calculateFoundItemsTotal();
+  };
+
+  /** Original total for refund calc: batch original for same-shop, else target order original */
+  const getOriginalOrderTotalForPayment = () => {
+    const hasCombined = order?.combinedOrders && order.combinedOrders.length > 0;
+    if (hasCombined && hasSameShopCombinedOrders) return calculateOriginalBatchSubtotal();
+    return calculateOriginalSubtotal(paymentTargetOrderId || undefined);
   };
 
   // Calculate total for entire batch (all combined orders) - used for wallet operations
@@ -2397,60 +2418,24 @@ export default function BatchDetails({
           }
         }
 
-        // For regular orders, check if any items are marked as found
-        // If items are in the root Order_Items list, filter them by shopId if it's a sub-order
-        const relevantItems =
-          activeOrder.Order_Items ||
-          order?.Order_Items?.filter(
-            (item) =>
-              !(item as any).shopId ||
-              (item as any).shopId === activeOrder.shop?.id
-          ) ||
-          [];
-
-        // For combined orders, also check items in combined orders
-        const combinedOrderItems =
-          order?.combinedOrders?.flatMap(
-            (combinedOrder: any) =>
-              combinedOrder.Order_Items?.filter(
-                (item: any) =>
-                  !(item as any).shopId ||
-                  (item as any).shopId === activeOrder.shop?.id
-              ) || []
-          ) || [];
-
-        // Check if this is a same-shop combined order
-        const hasCombinedOrders =
-          order?.combinedOrders && order.combinedOrders.length > 0;
-        const mainShopId = order?.shop?.id;
-        const sameShopCombinedOrders = hasCombinedOrders
-          ? (order.combinedOrders ?? []).filter(
-              (co) => co?.shop?.id === mainShopId
-            )
-          : [];
-        const hasSameShopCombinedOrders = sameShopCombinedOrders.length > 0;
-
-        let hasFoundItems = false;
-
+        // Same-shop combined: require items found in ALL orders (batch payment).
+        // Different-shop: require only active order's items (per-order payment).
+        let hasFoundItems: boolean;
         if (hasSameShopCombinedOrders) {
-          // For same-shop combined orders, require items to be found across ALL orders in the batch
-          const allOrdersInBatch = [order, ...sameShopCombinedOrders];
+          const mainShopId = order?.shop?.id || order?.shop_id;
+          const allOrdersInBatch = [order, ...(order?.combinedOrders ?? [])];
           hasFoundItems = allOrdersInBatch.every((batchOrder: any) => {
-            const orderItems = batchOrder.Order_Items || [];
-            const shopFilteredItems = orderItems.filter(
+            const orderItems = batchOrder?.Order_Items || [];
+            const shopFiltered = orderItems.filter(
               (item: any) =>
                 !(item as any).shopId || (item as any).shopId === mainShopId
             );
-            return shopFilteredItems.some((item: any) => item.found);
+            return shopFiltered.some((item: any) => item.found);
           });
         } else {
-          // For regular orders, check if any items are found (existing logic)
-          const allRelevantItems = [...relevantItems, ...combinedOrderItems];
-          hasFoundItems =
-            allRelevantItems?.some((item: any) => item.found) || false;
+          const relevantItems = activeOrder.Order_Items || [];
+          hasFoundItems = relevantItems.some((item: any) => item.found) || false;
         }
-
-        // Shopping status calculated
 
         return (
           <Button
@@ -3049,7 +3034,7 @@ export default function BatchDetails({
           momoCode={momoCode}
           setMomoCode={setMomoCode}
           privateKey={privateKey}
-          orderAmount={calculateFoundItemsTotal()}
+          orderAmount={getPaymentOrderAmount()}
           serviceFee={getBatchFee("serviceFee")}
           deliveryFee={getBatchFee("deliveryFee")}
           paymentLoading={paymentLoading}
@@ -3227,7 +3212,7 @@ export default function BatchDetails({
                 <OrderItemsSection
                   order={order}
                   activeTab={activeTab}
-                  activeShopId={activeShopId}
+                  activeShopId={activeShopId ?? ""}
                   onSetActiveShopId={setActiveShopId}
                   onToggleItemFound={toggleItemFound}
                   onShowProductImage={showProductImage}
@@ -3248,9 +3233,11 @@ export default function BatchDetails({
                   calculateFoundItemsTotal={calculateFoundItemsTotal}
                   calculateOriginalSubtotal={calculateOriginalSubtotal}
                   calculateBatchTotal={calculateBatchTotal}
+                  calculateOriginalBatchSubtotal={calculateOriginalBatchSubtotal}
                   hasCombinedOrders={
                     !!(order?.combinedOrders && order.combinedOrders.length > 0)
                   }
+                  hasSameShopCombinedOrders={hasSameShopCombinedOrders}
                 />
               )}
 
@@ -3305,11 +3292,12 @@ export default function BatchDetails({
         {/* Fixed Bottom Action Button - Mobile Only */}
         <BottomActionButton
           order={order}
-          activeShopId={activeShopId}
+          activeShopId={activeShopId ?? ""}
           uploadedProofs={uploadedProofs}
           getActionButton={getActionButton}
           onUpdateStatus={handleUpdateStatus}
           onCombinedDeliveryConfirmation={handleCombinedCustomerDeliveryConfirmation}
+          getActiveOrder={() => getActiveOrder}
         />
       </div>
     </>
