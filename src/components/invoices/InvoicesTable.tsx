@@ -204,13 +204,10 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                   <div className="h-4 w-16 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
                 </th>
                 <th className="px-4 py-4">
+                  <div className="h-4 w-16 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                </th>
+                <th className="px-4 py-4">
                   <div className="h-4 w-12 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
-                </th>
-                <th className="px-4 py-4">
-                  <div className="h-4 w-16 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
-                </th>
-                <th className="px-4 py-4">
-                  <div className="h-4 w-16 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
                 </th>
               </tr>
             </thead>
@@ -237,13 +234,13 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                     <div className="h-4 w-20 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
                   </td>
                   <td className="px-4 py-4">
-                    <div className="h-6 w-24 animate-pulse rounded-full bg-gray-300 dark:bg-gray-600"></div>
+                    <div className="h-4 w-16 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="h-4 w-16 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
                   </td>
                   <td className="px-4 py-4">
                     <div className="h-4 w-20 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="h-4 w-24 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex items-center justify-end space-x-2">
@@ -413,7 +410,14 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                   theme === "dark" ? "text-gray-400" : "text-gray-500"
                 }`}
               >
-                Account
+                Tax Fees
+              </th>
+              <th
+                className={`px-4 py-4 text-left text-xs font-medium ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                Earnings
               </th>
               <th
                 className={`px-4 py-4 text-left text-xs font-medium ${
@@ -421,13 +425,6 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                 }`}
               >
                 Date
-              </th>
-              <th
-                className={`px-4 py-4 text-left text-xs font-medium ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
-              >
-                Method
               </th>
               <th
                 className={`px-4 py-4 text-right text-xs font-medium ${
@@ -508,19 +505,27 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                   </span>
                 </td>
 
-                {/* Account/Category Tag */}
+                {/* Tax Fees */}
                 <td className="px-4 py-4">
                   <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getCategoryColor(
-                      invoice.order_type,
-                      invoice.shop_name
-                    )}`}
+                    className={`text-sm font-medium ${
+                      theme === "dark" ? "text-gray-200" : "text-gray-900"
+                    }`}
                   >
-                    {invoice.order_type === "regular"
-                      ? invoice.shop_name || "Shop"
-                      : invoice.order_type === "reel"
-                      ? "Reel Order"
-                      : "Restaurant"}
+                    {formatCurrencySync(invoice.tax || 0)}
+                  </span>
+                </td>
+
+                {/* Earnings */}
+                <td className="px-4 py-4">
+                  <span
+                    className={`text-sm font-semibold ${
+                      theme === "dark" ? "text-green-400" : "text-green-600"
+                    }`}
+                  >
+                    {formatCurrencySync(
+                      (invoice.service_fee || 0) + (invoice.delivery_fee || 0)
+                    )}
                   </span>
                 </td>
 
@@ -532,19 +537,6 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                     }`}
                   >
                     {formatDate(invoice.created_at)}
-                  </span>
-                </td>
-
-                {/* Method/Status */}
-                <td className="px-4 py-4">
-                  <span
-                    className={`text-sm ${
-                      theme === "dark" ? "text-gray-300" : "text-gray-700"
-                    }`}
-                  >
-                    {invoice.status === "paid"
-                      ? "Invoice Payment"
-                      : "Request Payment"}
                   </span>
                 </td>
 
