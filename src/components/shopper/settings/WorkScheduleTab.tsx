@@ -335,7 +335,9 @@ export default function WorkScheduleTab() {
             key={slot.day}
             className={`flex flex-col space-y-4 pb-6 ${
               index < schedule.length - 1
-                ? `border-b ${theme === "dark" ? "border-gray-700" : "border-gray-200"}`
+                ? `border-b ${
+                    theme === "dark" ? "border-gray-700" : "border-gray-200"
+                  }`
                 : ""
             }`}
           >

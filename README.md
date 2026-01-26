@@ -12609,6 +12609,7 @@ This section documents the complete workflow from when a shopper accepts a combi
 #### Type 1: Different Shops, Same Customer (`combined_customer`)
 
 **Characteristics:**
+
 - Multiple orders from different shops
 - All orders go to the same customer (same delivery address, same customer ID and phone)
 - All orders share the same `combined_order_id`
@@ -12616,6 +12617,7 @@ This section documents the complete workflow from when a shopper accepts a combi
 - Orders can be from different shops but delivered to one location
 
 **Example Scenario:**
+
 - Order A: From Shop 1 to Customer X
 - Order B: From Shop 2 to Customer X
 - Both orders have `combined_order_id: "abc-123"` and `pin: "42"`
@@ -12623,6 +12625,7 @@ This section documents the complete workflow from when a shopper accepts a combi
 #### Type 2: Same Shop, Different Customers (`combined`)
 
 **Characteristics:**
+
 - Multiple orders from the same shop
 - Orders go to different customers (different delivery addresses, different customer IDs/phones)
 - All orders share the same `combined_order_id`
@@ -12630,6 +12633,7 @@ This section documents the complete workflow from when a shopper accepts a combi
 - Orders are grouped for shopping efficiency but delivered separately
 
 **Example Scenario:**
+
 - Order A: From Shop 1 to Customer X (PIN: "42")
 - Order B: From Shop 1 to Customer Y (PIN: "67")
 - Both orders have `combined_order_id: "abc-123"` but different PINs
@@ -12641,6 +12645,7 @@ This section documents the complete workflow from when a shopper accepts a combi
 #### Phase 1: Order Acceptance
 
 **1.1 Shopper Receives Offer**
+
 - System sends offer notification for combined order
 - Shopper sees combined order details in their dashboard
 - System displays:
@@ -12650,6 +12655,7 @@ This section documents the complete workflow from when a shopper accepts a combi
   - Estimated earnings
 
 **1.2 Shopper Accepts Batch**
+
 - Shopper clicks "Accept Batch" button
 - System verifies:
   - Shopper has less than 2 active orders
@@ -12665,6 +12671,7 @@ This section documents the complete workflow from when a shopper accepts a combi
   - All order offers are marked as "ACCEPTED"
 
 **1.3 Batch Assignment Complete**
+
 - Shopper is now responsible for all orders in the combined batch
 - Orders appear in the "Active Batches" section
 - System tracks all orders together under one batch view
@@ -12674,6 +12681,7 @@ This section documents the complete workflow from when a shopper accepts a combi
 #### Phase 2: Shopping Phase
 
 **2.1 Shopper Starts Shopping**
+
 - Shopper navigates to the batch details page
 - System displays:
   - All orders grouped by shop (for different shops) or by customer (for same shop)
@@ -12682,6 +12690,7 @@ This section documents the complete workflow from when a shopper accepts a combi
   - Delivery addresses on map
 
 **2.2 Status Update: "shopping"**
+
 - When shopper clicks "Start Shopping":
   - For `combined_customer` (same customer):
     - System updates ALL orders' status to "shopping" simultaneously
@@ -12693,6 +12702,7 @@ This section documents the complete workflow from when a shopper accepts a combi
     - All orders are locked for this shopper
 
 **2.3 Shopping Process**
+
 - Shopper visits each shop to collect items
 - For different shops: Shopper goes to Shop 1, then Shop 2, etc.
 - For same shop: Shopper collects items for all orders in one visit
@@ -12702,6 +12712,7 @@ This section documents the complete workflow from when a shopper accepts a combi
   - Order-specific tabs (for same shop, different customers)
 
 **2.4 Item Verification**
+
 - Shopper marks items as found or not found
 - System updates item status in real-time
 - Missing items are noted for each order independently
@@ -12711,6 +12722,7 @@ This section documents the complete workflow from when a shopper accepts a combi
 #### Phase 3: Payment and Invoice Generation
 
 **3.1 Payment Processing**
+
 - After shopping is complete, shopper proceeds to payment
 - For `combined_customer` (same customer):
   - Shopper processes payment for ALL orders together
@@ -12724,6 +12736,7 @@ This section documents the complete workflow from when a shopper accepts a combi
   - Each order maintains its own invoice reference
 
 **3.2 Invoice Proof Upload**
+
 - System checks if invoice proof is required for each order
 - For `combined_customer` (same customer):
   - One invoice proof can cover all orders (if they're all from the same shop)
@@ -12733,6 +12746,7 @@ This section documents the complete workflow from when a shopper accepts a combi
   - System prompts shopper to upload proof for each order individually
 
 **3.3 Status Update: "picked" or "on_the_way"**
+
 - After payment and invoice proof:
   - For `combined_customer` (same customer):
     - All orders' status updated to "on_the_way" simultaneously
@@ -12746,6 +12760,7 @@ This section documents the complete workflow from when a shopper accepts a combi
 #### Phase 4: Delivery Phase
 
 **4.1 Route Planning**
+
 - System displays delivery route based on order type:
   - For `combined_customer` (same customer):
     - Single delivery address shown
@@ -12757,6 +12772,7 @@ This section documents the complete workflow from when a shopper accepts a combi
     - Shopper can deliver in any order (route optimization suggested)
 
 **4.2 Status Update: "at_customer"**
+
 - When shopper arrives at delivery location:
   - For `combined_customer` (same customer):
     - Shopper can mark all orders as "at_customer" together
@@ -12858,10 +12874,12 @@ else {
 **5.2 Key Flags and Parameters**
 
 - **`updateOnlyThisOrder`**: Boolean flag that prevents batch updates
+
   - `true`: Update only the specific order (different customers scenario)
   - `false`: Update all orders in batch (same customer scenario)
 
 - **`combined_order_id`**: UUID that groups orders together
+
   - All orders in a combined batch share this ID
   - Used to identify related orders
 
@@ -12876,6 +12894,7 @@ else {
 **6.1 Shopping Phase Wallet Operations**
 
 When status changes to "shopping":
+
 - For `combined_customer` (same customer):
   - Wallet operations processed for ALL orders
   - Earnings are reserved for each order individually
@@ -12888,6 +12907,7 @@ When status changes to "shopping":
 **6.2 Delivery Phase Wallet Operations**
 
 When status changes to "delivered":
+
 - For `combined_customer` (same customer):
   - Wallet operations processed for ALL orders sequentially
   - Earnings are added to available balance for each order
@@ -12902,23 +12922,28 @@ When status changes to "delivered":
 ### Decision Flow: How System Determines Order Type
 
 **Step 1: Check if order has `combined_order_id`**
+
 - If no `combined_order_id`: Treat as single order
 - If `combined_order_id` exists: Proceed to Step 2
 
 **Step 2: Fetch all orders with same `combined_order_id`**
+
 - Query database for all orders sharing the `combined_order_id`
 - Get customer information for each order
 
 **Step 3: Compare customers**
+
 - Extract customer ID and phone for each order
 - Create unique customer keys: `customerId_phone`
 - Count unique customer keys
 
 **Step 4: Determine order type**
+
 - If unique customer keys = 1: `combined_customer` (same customer)
 - If unique customer keys > 1: `combined` (different customers)
 
 **Step 5: Apply appropriate logic**
+
 - `combined_customer`: Process all orders together
 - `combined`: Process each order independently
 
@@ -12929,10 +12954,12 @@ When status changes to "delivered":
 #### Scenario A: Different Shops, Same Customer
 
 **Setup:**
+
 - Order 1: Shop A → Customer X (combined_order_id: "abc", PIN: "42")
 - Order 2: Shop B → Customer X (combined_order_id: "abc", PIN: "42")
 
 **Shopper Workflow:**
+
 1. Accepts batch → Both orders assigned
 2. Starts shopping → Both orders status = "shopping"
 3. Visits Shop A → Collects Order 1 items
@@ -12950,10 +12977,12 @@ When status changes to "delivered":
 #### Scenario B: Same Shop, Different Customers
 
 **Setup:**
+
 - Order 1: Shop A → Customer X (combined_order_id: "abc", PIN: "42")
 - Order 2: Shop A → Customer Y (combined_order_id: "abc", PIN: "67")
 
 **Shopper Workflow:**
+
 1. Accepts batch → Both orders assigned
 2. Starts shopping → Both orders status = "shopping"
 3. Visits Shop A → Collects items for both orders in one visit
@@ -12978,6 +13007,7 @@ When status changes to "delivered":
 ### Key Technical Implementation Points
 
 1. **Customer Detection Logic:**
+
    ```typescript
    const customerKeys = new Set<string>();
    allOrdersInBatch.forEach((order) => {
@@ -12988,13 +13018,15 @@ When status changes to "delivered":
    ```
 
 2. **Status Update Logic:**
+
    ```typescript
-   const updateOnlyThisOrder = 
-     orderType === "combined" || 
+   const updateOnlyThisOrder =
+     orderType === "combined" ||
      (orderIdsToUpdate.length === 1 && orderType !== "combined_customer");
    ```
 
 3. **Delivery Confirmation Logic:**
+
    ```typescript
    if (orderType === "combined_customer") {
      // Update all orders together

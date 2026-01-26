@@ -44,13 +44,13 @@ export default function MobileGeneralTab() {
             </h3>
             <a
               href="#"
-              className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors dark:text-blue-400"
+              className="text-sm font-medium text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400"
             >
               About notifications?
             </a>
           </div>
           <div className="space-y-3">
-            <label className="flex items-center gap-3 cursor-pointer">
+            <label className="flex cursor-pointer items-center gap-3">
               <input
                 type="checkbox"
                 checked={notifications.dailyProductivity}
@@ -60,7 +60,7 @@ export default function MobileGeneralTab() {
                     dailyProductivity: e.target.checked,
                   }))
                 }
-                className="h-4 w-4 rounded border-2 border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all dark:border-gray-600"
+                className="h-4 w-4 cursor-pointer rounded border-2 border-gray-300 text-blue-600 transition-all focus:ring-2 focus:ring-blue-500 dark:border-gray-600"
               />
               <span
                 className={`text-sm ${
@@ -70,7 +70,7 @@ export default function MobileGeneralTab() {
                 Daily productivity update
               </span>
             </label>
-            <label className="flex items-center gap-3 cursor-pointer">
+            <label className="flex cursor-pointer items-center gap-3">
               <input
                 type="checkbox"
                 checked={notifications.newEventCreated}
@@ -80,7 +80,7 @@ export default function MobileGeneralTab() {
                     newEventCreated: e.target.checked,
                   }))
                 }
-                className="h-4 w-4 rounded border-2 border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all dark:border-gray-600"
+                className="h-4 w-4 cursor-pointer rounded border-2 border-gray-300 text-blue-600 transition-all focus:ring-2 focus:ring-blue-500 dark:border-gray-600"
               />
               <span
                 className={`text-sm ${
@@ -90,7 +90,7 @@ export default function MobileGeneralTab() {
                 New event created
               </span>
             </label>
-            <label className="flex items-center gap-3 cursor-pointer">
+            <label className="flex cursor-pointer items-center gap-3">
               <input
                 type="checkbox"
                 checked={notifications.whenAddedOnNewTeam}
@@ -100,7 +100,7 @@ export default function MobileGeneralTab() {
                     whenAddedOnNewTeam: e.target.checked,
                   }))
                 }
-                className="h-4 w-4 rounded border-2 border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all dark:border-gray-600"
+                className="h-4 w-4 cursor-pointer rounded border-2 border-gray-300 text-blue-600 transition-all focus:ring-2 focus:ring-blue-500 dark:border-gray-600"
               />
               <span
                 className={`text-sm ${

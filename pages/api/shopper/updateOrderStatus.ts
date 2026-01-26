@@ -342,12 +342,15 @@ export default async function handler(
     // If updateOnlyThisOrder is true, we should only update the specific order
     // even if it's part of a combined order (e.g., orders going to different customers)
     if (shouldUpdateOnlyThisOrder) {
-      console.log("🔄 [UPDATE ORDER STATUS] Updating ONLY this order (different customers):", {
-        orderId,
-        combinedId,
-        status,
-      });
-      
+      console.log(
+        "🔄 [UPDATE ORDER STATUS] Updating ONLY this order (different customers):",
+        {
+          orderId,
+          combinedId,
+          status,
+        }
+      );
+
       // Single order update - skip combined order logic
       const UPDATE_ORDER_STATUS = gql`
         mutation UpdateOrderStatus(

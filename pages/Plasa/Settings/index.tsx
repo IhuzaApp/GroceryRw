@@ -224,9 +224,7 @@ function SettingsPage() {
           >
             Security Settings
           </h3>
-          <p
-            className={theme === "dark" ? "text-gray-300" : "text-gray-600"}
-          >
+          <p className={theme === "dark" ? "text-gray-300" : "text-gray-600"}>
             Security settings coming soon...
           </p>
         </div>
@@ -243,9 +241,7 @@ function SettingsPage() {
           >
             My Profile
           </h3>
-          <p
-            className={theme === "dark" ? "text-gray-300" : "text-gray-600"}
-          >
+          <p className={theme === "dark" ? "text-gray-300" : "text-gray-600"}>
             Profile settings coming soon...
           </p>
         </div>
@@ -262,9 +258,7 @@ function SettingsPage() {
           >
             Preferences
           </h3>
-          <p
-            className={theme === "dark" ? "text-gray-300" : "text-gray-600"}
-          >
+          <p className={theme === "dark" ? "text-gray-300" : "text-gray-600"}>
             Preferences settings coming soon...
           </p>
         </div>
@@ -281,9 +275,7 @@ function SettingsPage() {
           >
             Applications
           </h3>
-          <p
-            className={theme === "dark" ? "text-gray-300" : "text-gray-600"}
-          >
+          <p className={theme === "dark" ? "text-gray-300" : "text-gray-600"}>
             Applications settings coming soon...
           </p>
         </div>
@@ -396,7 +388,7 @@ function SettingsPage() {
 
             <div className="flex gap-8">
               {/* Left Sidebar Navigation */}
-              <aside className="hidden md:block w-64 flex-shrink-0">
+              <aside className="hidden w-64 flex-shrink-0 md:block">
                 <nav className="space-y-8">
                   {/* ACCOUNT Section */}
                   <div>
@@ -469,8 +461,8 @@ function SettingsPage() {
                 <div
                   className={`rounded-xl border shadow-sm transition-shadow ${
                     theme === "dark"
-                      ? "bg-gray-800 border-gray-700 shadow-gray-900/50"
-                      : "bg-white border-gray-200 shadow-gray-100"
+                      ? "border-gray-700 bg-gray-800 shadow-gray-900/50"
+                      : "border-gray-200 bg-white shadow-gray-100"
                   }`}
                 >
                   {tabs.find((tab) => tab.key === activeTab)?.component}

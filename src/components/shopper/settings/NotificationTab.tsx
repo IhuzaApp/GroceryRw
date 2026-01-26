@@ -564,9 +564,7 @@ export default function NotificationTab() {
                   <div
                     key={location.id}
                     className={`flex items-center justify-between rounded-lg p-4 ${
-                      theme === "dark"
-                        ? "bg-gray-800/50"
-                        : "bg-gray-50"
+                      theme === "dark" ? "bg-gray-800/50" : "bg-gray-50"
                     }`}
                   >
                     <div>

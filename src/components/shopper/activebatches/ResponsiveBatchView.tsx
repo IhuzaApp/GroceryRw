@@ -80,7 +80,9 @@ export function ResponsiveBatchView({
     const grouped: { [key: string]: { orders: Order[]; date: Date } } = {};
 
     ordersList.forEach((order) => {
-      const date = new Date(order.createdAt || order.created_at || order.deliveryTime || Date.now());
+      const date = new Date(
+        order.createdAt || order.created_at || order.deliveryTime || Date.now()
+      );
       const dayKey = date.toLocaleDateString("en-US", {
         day: "numeric",
         month: "long",
@@ -177,8 +179,8 @@ export function ResponsiveBatchView({
   return (
     <div>
       {/* Filters - Show on both desktop and mobile */}
-      <BatchFilters 
-        onFilterChange={handleFilterChange} 
+      <BatchFilters
+        onFilterChange={handleFilterChange}
         onRefresh={onRefresh}
         isRefreshing={isRefreshing}
       />

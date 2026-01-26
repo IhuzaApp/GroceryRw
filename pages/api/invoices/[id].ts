@@ -35,11 +35,14 @@ async function loadImageAsBase64(imagePath: string): Promise<string> {
 }
 
 // Function to generate PDF buffer
-async function generateInvoicePdf(invoiceData: any, baseUrl?: string): Promise<Buffer> {
+async function generateInvoicePdf(
+  invoiceData: any,
+  baseUrl?: string
+): Promise<Buffer> {
   // Create PDF with narrow receipt size (80mm width, standard thermal receipt size)
   // 80mm = 226.77 points (1mm = 2.83465 points)
   const receiptWidth = 226.77; // 80mm in points
-  
+
   // Calculate approximate content height more accurately (with increased spacing)
   const headerHeight = 80; // Business name, address, phone, separator (increased spacing)
   const itemHeight = 12; // Increased spacing between items
@@ -50,12 +53,20 @@ async function generateInvoicePdf(invoiceData: any, baseUrl?: string): Promise<B
   const qrCodeHeight = 80; // QR code and label
   const footerHeight = 25; // Thank you message (increased spacing)
   const padding = 40; // Top and bottom padding (increased)
-  
-  const calculatedHeight = headerHeight + itemsHeight + separatorHeight + summaryHeight + paymentHeight + qrCodeHeight + footerHeight + padding;
-  
+
+  const calculatedHeight =
+    headerHeight +
+    itemsHeight +
+    separatorHeight +
+    summaryHeight +
+    paymentHeight +
+    qrCodeHeight +
+    footerHeight +
+    padding;
+
   // Use calculated height with a reasonable minimum
   const receiptHeight = Math.max(calculatedHeight, 300);
-  
+
   const doc = new jsPDF({
     orientation: "portrait",
     unit: "pt",
@@ -74,7 +85,7 @@ async function generateInvoicePdf(invoiceData: any, baseUrl?: string): Promise<B
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.5);
   doc.line(margin, yPos, pageWidth - margin, yPos);
-  
+
   yPos += 16;
 
   // Business name with invoice ID
@@ -133,7 +144,10 @@ async function generateInvoicePdf(invoiceData: any, baseUrl?: string): Promise<B
     let itemName = item.name;
     if (doc.getTextWidth(itemName) > maxItemWidth) {
       // Truncate item name to fit
-      while (doc.getTextWidth(itemName + "...") > maxItemWidth && itemName.length > 0) {
+      while (
+        doc.getTextWidth(itemName + "...") > maxItemWidth &&
+        itemName.length > 0
+      ) {
         itemName = itemName.substring(0, itemName.length - 1);
       }
       itemName += "...";
@@ -239,7 +253,9 @@ async function generateInvoicePdf(invoiceData: any, baseUrl?: string): Promise<B
   yPos += 12;
 
   // Vendor ID (using order number or invoice ID)
-  const vendorId = `Vendor ID: ${invoiceData.orderNumber || invoiceData.invoiceNumber}`;
+  const vendorId = `Vendor ID: ${
+    invoiceData.orderNumber || invoiceData.invoiceNumber
+  }`;
   doc.text(vendorId, margin, yPos);
 
   yPos += 12;

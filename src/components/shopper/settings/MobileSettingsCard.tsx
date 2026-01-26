@@ -27,12 +27,12 @@ export default function MobileSettingsCard({
     <div
       className={`mb-3 rounded-xl p-4 shadow-sm transition-all ${
         theme === "dark"
-          ? "bg-white/5 border border-gray-800"
-          : "bg-white border border-gray-100"
+          ? "border border-gray-800 bg-white/5"
+          : "border border-gray-100 bg-white"
       }`}
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4 flex-1 min-w-0">
+        <div className="flex min-w-0 flex-1 items-center gap-4">
           {/* Icon */}
           <div
             className={`flex-shrink-0 ${
@@ -43,9 +43,9 @@ export default function MobileSettingsCard({
           </div>
 
           {/* Title and Description */}
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             <h3
-              className={`text-base font-semibold mb-0.5 ${
+              className={`mb-0.5 text-base font-semibold ${
                 theme === "dark" ? "text-white" : "text-gray-900"
               }`}
             >
@@ -64,13 +64,9 @@ export default function MobileSettingsCard({
         </div>
 
         {/* Interactive Element */}
-        <div className="flex-shrink-0 ml-3">
+        <div className="ml-3 flex-shrink-0">
           {type === "toggle" ? (
-            <Toggle
-              checked={value}
-              onChange={onChange}
-              size="md"
-            />
+            <Toggle checked={value} onChange={onChange} size="md" />
           ) : (
             <button
               onClick={onNavigate}

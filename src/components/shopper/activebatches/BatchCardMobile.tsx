@@ -71,7 +71,6 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
     return "bg-green-500";
   };
 
-
   // Get service/provider name
   const getServiceName = () => {
     if (isReelOrder) {
@@ -105,7 +104,9 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
       case "at_customer":
         return "At Customer";
       default:
-        return status.charAt(0).toUpperCase() + status.slice(1).replace("_", " ");
+        return (
+          status.charAt(0).toUpperCase() + status.slice(1).replace("_", " ")
+        );
     }
   };
 
@@ -119,11 +120,11 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
       const overdueMinutes = Math.ceil(Math.abs(timeDiff) / (1000 * 60));
       const overdueHours = Math.floor(overdueMinutes / 60);
       const overdueMins = overdueMinutes % 60;
-      return { 
-        isOverdue: true, 
-        minutes: overdueMins, 
-        hours: overdueHours, 
-        totalMinutes: overdueMinutes 
+      return {
+        isOverdue: true,
+        minutes: overdueMins,
+        hours: overdueHours,
+        totalMinutes: overdueMinutes,
       };
     }
 
@@ -146,7 +147,9 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
     if (years > 0) {
       const remainingMonths = Math.floor((days % 365) / 30);
       if (remainingMonths > 0) {
-        return `${years} year${years > 1 ? "s" : ""} ${remainingMonths} month${remainingMonths > 1 ? "s" : ""}`;
+        return `${years} year${years > 1 ? "s" : ""} ${remainingMonths} month${
+          remainingMonths > 1 ? "s" : ""
+        }`;
       }
       return `${years} year${years > 1 ? "s" : ""}`;
     }
@@ -154,7 +157,9 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
     if (months > 0) {
       const remainingDays = days % 30;
       if (remainingDays > 0) {
-        return `${months} month${months > 1 ? "s" : ""} ${remainingDays} day${remainingDays > 1 ? "s" : ""}`;
+        return `${months} month${months > 1 ? "s" : ""} ${remainingDays} day${
+          remainingDays > 1 ? "s" : ""
+        }`;
       }
       return `${months} month${months > 1 ? "s" : ""}`;
     }
@@ -162,7 +167,9 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
     if (weeks > 0) {
       const remainingDays = days % 7;
       if (remainingDays > 0) {
-        return `${weeks} week${weeks > 1 ? "s" : ""} ${remainingDays} day${remainingDays > 1 ? "s" : ""}`;
+        return `${weeks} week${weeks > 1 ? "s" : ""} ${remainingDays} day${
+          remainingDays > 1 ? "s" : ""
+        }`;
       }
       return `${weeks} week${weeks > 1 ? "s" : ""}`;
     }
@@ -199,7 +206,9 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
     const deliveryDate = new Date(order.deliveryTime);
 
     if (countdown.isOverdue) {
-      const overdueText = `Delayed by ${formatOverdueTime(countdown.totalMinutes)}`;
+      const overdueText = `Delayed by ${formatOverdueTime(
+        countdown.totalMinutes
+      )}`;
       return {
         text: overdueText,
         color: theme === "dark" ? "text-red-400" : "text-red-600",
@@ -214,8 +223,7 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
     });
 
     // Determine color based on remaining time
-    let colorClass =
-      theme === "dark" ? "text-green-400" : "text-green-600"; // Default: green (plenty of time)
+    let colorClass = theme === "dark" ? "text-green-400" : "text-green-600"; // Default: green (plenty of time)
 
     if (countdown.totalMinutes <= 30) {
       // Yellow when getting close (30 minutes or less)
@@ -314,7 +322,7 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
       <div className="mb-4 flex items-center gap-3">
         {/* Circular Icon - Green with OrderID */}
         <div
-          className={`flex h-12 w-12 items-center justify-center rounded-full ${getIconColor()} text-white font-bold text-sm`}
+          className={`flex h-12 w-12 items-center justify-center rounded-full ${getIconColor()} text-sm font-bold text-white`}
         >
           #{order.OrderID}
         </div>
@@ -402,7 +410,7 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
             className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
               theme === "dark"
                 ? "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-gray-100"
-                : "bg-white text-gray-600 hover:bg-gray-50 shadow-sm border border-gray-200"
+                : "border border-gray-200 bg-white text-gray-600 shadow-sm hover:bg-gray-50"
             }`}
           >
             <svg

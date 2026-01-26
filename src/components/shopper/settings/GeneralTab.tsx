@@ -52,13 +52,13 @@ export default function GeneralTab() {
             </h3>
             <a
               href="#"
-              className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors dark:text-blue-400 dark:hover:text-blue-300"
+              className="text-sm font-medium text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
             >
               About notifications?
             </a>
           </div>
           <div className="space-y-4">
-            <label className="flex items-center gap-3 cursor-pointer group">
+            <label className="group flex cursor-pointer items-center gap-3">
               <input
                 type="checkbox"
                 checked={notifications.dailyProductivity}
@@ -68,7 +68,7 @@ export default function GeneralTab() {
                     dailyProductivity: e.target.checked,
                   }))
                 }
-                className="h-4 w-4 rounded border-2 border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer transition-all group-hover:border-blue-400 dark:border-gray-600 dark:focus:ring-blue-400"
+                className="h-4 w-4 cursor-pointer rounded border-2 border-gray-300 text-blue-600 transition-all focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 group-hover:border-blue-400 dark:border-gray-600 dark:focus:ring-blue-400"
               />
               <span
                 className={`text-sm ${
@@ -78,7 +78,7 @@ export default function GeneralTab() {
                 Daily productivity update
               </span>
             </label>
-            <label className="flex items-center gap-3 cursor-pointer group">
+            <label className="group flex cursor-pointer items-center gap-3">
               <input
                 type="checkbox"
                 checked={notifications.newEventCreated}
@@ -88,7 +88,7 @@ export default function GeneralTab() {
                     newEventCreated: e.target.checked,
                   }))
                 }
-                className="h-4 w-4 rounded border-2 border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer transition-all group-hover:border-blue-400 dark:border-gray-600 dark:focus:ring-blue-400"
+                className="h-4 w-4 cursor-pointer rounded border-2 border-gray-300 text-blue-600 transition-all focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 group-hover:border-blue-400 dark:border-gray-600 dark:focus:ring-blue-400"
               />
               <span
                 className={`text-sm ${
@@ -98,7 +98,7 @@ export default function GeneralTab() {
                 New event created
               </span>
             </label>
-            <label className="flex items-center gap-3 cursor-pointer group">
+            <label className="group flex cursor-pointer items-center gap-3">
               <input
                 type="checkbox"
                 checked={notifications.whenAddedOnNewTeam}
@@ -108,7 +108,7 @@ export default function GeneralTab() {
                     whenAddedOnNewTeam: e.target.checked,
                   }))
                 }
-                className="h-4 w-4 rounded border-2 border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer transition-all group-hover:border-blue-400 dark:border-gray-600 dark:focus:ring-blue-400"
+                className="h-4 w-4 cursor-pointer rounded border-2 border-gray-300 text-blue-600 transition-all focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 group-hover:border-blue-400 dark:border-gray-600 dark:focus:ring-blue-400"
               />
               <span
                 className={`text-sm ${
@@ -145,11 +145,7 @@ export default function GeneralTab() {
             </p>
           </div>
           <div className="flex-shrink-0">
-            <Toggle
-              checked={mobilePush}
-              onChange={setMobilePush}
-              size="md"
-            />
+            <Toggle checked={mobilePush} onChange={setMobilePush} size="md" />
           </div>
         </div>
 

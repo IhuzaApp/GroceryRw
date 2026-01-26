@@ -5,7 +5,15 @@ import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import { authenticatedFetch } from "../../../lib/authenticatedFetch";
 import { logger } from "../../../utils/logger";
-import { useToaster, Message, Modal, Button, Toggle, DatePicker, SelectPicker } from "rsuite";
+import {
+  useToaster,
+  Message,
+  Modal,
+  Button,
+  Toggle,
+  DatePicker,
+  SelectPicker,
+} from "rsuite";
 import UpdateShopperDrawer from "./UpdateShopperDrawer";
 import CameraCapture from "../../ui/CameraCapture";
 
@@ -45,7 +53,7 @@ export default function ShopperProfileComponent() {
   const router = useRouter();
   const { data: session } = useSession();
   const toaster = useToaster();
-  
+
   const [loading, setLoading] = useState<boolean>(true);
   const [user, setUser] = useState<{
     id: string;
@@ -55,11 +63,12 @@ export default function ShopperProfileComponent() {
     profile_picture?: string;
     created_at: string;
   } | null>(null);
-  
+
   const [shopperData, setShopperData] = useState<ShopperData | null>(null);
   const [showUpdateDrawer, setShowUpdateDrawer] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showNationalIdUnderProfile, setShowNationalIdUnderProfile] = useState(false);
+  const [showNationalIdUnderProfile, setShowNationalIdUnderProfile] =
+    useState(false);
   const [showCameraCapture, setShowCameraCapture] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [isComponentMounted, setIsComponentMounted] = useState(false);
@@ -68,7 +77,7 @@ export default function ShopperProfileComponent() {
   useEffect(() => {
     setIsComponentMounted(true);
   }, []);
-  
+
   // Form state
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -102,21 +111,24 @@ export default function ShopperProfileComponent() {
 
   // Copy to clipboard function
   const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text).then(() => {
-      toaster.push(
-        <Message type="success" closable>
-          {label} copied to clipboard
-        </Message>,
-        { placement: "topEnd", duration: 3000 }
-      );
-    }).catch(() => {
-      toaster.push(
-        <Message type="error" closable>
-          Failed to copy {label}
-        </Message>,
-        { placement: "topEnd", duration: 3000 }
-      );
-    });
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        toaster.push(
+          <Message type="success" closable>
+            {label} copied to clipboard
+          </Message>,
+          { placement: "topEnd", duration: 3000 }
+        );
+      })
+      .catch(() => {
+        toaster.push(
+          <Message type="error" closable>
+            Failed to copy {label}
+          </Message>,
+          { placement: "topEnd", duration: 3000 }
+        );
+      });
   };
 
   // Load data
@@ -136,7 +148,7 @@ export default function ShopperProfileComponent() {
         if (isMounted && userData.user) {
           setUser(userData.user);
           setEmail(userData.user.email);
-          
+
           // Split name
           const nameParts = splitName(userData.user.name);
           setFirstName(nameParts.firstName);
@@ -153,19 +165,19 @@ export default function ShopperProfileComponent() {
         const profileData = await profileRes.json();
         if (isMounted && profileData.shopper) {
           setShopperData(profileData.shopper);
-          
+
           // Update form fields
           const nameParts = splitName(profileData.shopper.full_name);
           setFirstName(nameParts.firstName);
           setLastName(nameParts.lastName);
           setPhoneNumber(profileData.shopper.phone_number || "");
           setPosition(profileData.shopper.transport_mode || "");
-          
+
           // Set email from User relation if available
           if (profileData.shopper.User?.email) {
             setEmail(profileData.shopper.User.email);
           }
-          
+
           // Set onboarding date if available
           if (profileData.shopper.created_at) {
             setOnboardingDate(new Date(profileData.shopper.created_at));
@@ -196,7 +208,7 @@ export default function ShopperProfileComponent() {
 
     try {
       const fullName = `${firstName} ${lastName}`.trim();
-      
+
       const response = await fetch("/api/queries/update-shopper", {
         method: "POST",
         headers: {
@@ -314,8 +326,11 @@ export default function ShopperProfileComponent() {
   };
 
   // Get profile image - prioritize shopper profile_photo
-  const profileImage = shopperData?.profile_photo || user?.profile_picture || "/assets/images/profile.jpg";
-  
+  const profileImage =
+    shopperData?.profile_photo ||
+    user?.profile_picture ||
+    "/assets/images/profile.jpg";
+
   // Get added date
   const addedDate = shopperData?.created_at || user?.created_at || "";
   const formattedAddedDate = formatDate(addedDate);
@@ -326,12 +341,19 @@ export default function ShopperProfileComponent() {
   // Check if national_id is a base64 image
   const isNationalIdImage = (value: string | undefined | null): boolean => {
     if (!value) return false;
-    return value.startsWith("data:image") || value.startsWith("http://") || value.startsWith("https://");
+    return (
+      value.startsWith("data:image") ||
+      value.startsWith("http://") ||
+      value.startsWith("https://")
+    );
   };
 
   // Get national ID image source (could be from national_id field or separate photo fields)
   const getNationalIdImage = () => {
-    if (shopperData?.national_id && isNationalIdImage(shopperData.national_id)) {
+    if (
+      shopperData?.national_id &&
+      isNationalIdImage(shopperData.national_id)
+    ) {
       return shopperData.national_id;
     }
     if (shopperData?.national_id_photo_front) {
@@ -348,22 +370,24 @@ export default function ShopperProfileComponent() {
     if (!shopperData?.created_at) {
       return shopperData?.Employment_id || "N/A";
     }
-    
+
     // Extract year from created_at and get last 2 digits
     const joinYear = new Date(shopperData.created_at).getFullYear();
     const yearLastTwo = joinYear % 100; // Get last 2 digits (e.g., 2020 -> 20, 2025 -> 25)
-    
+
     // Get the Employment_id (could be just a number or already formatted)
     const employeeId = shopperData.Employment_id || "";
-    
+
     // If Employment_id exists, combine year (last 2 digits) + id (padded to 2 digits)
     if (employeeId) {
       // Convert employeeId to number and pad to 2 digits
       const idNumber = parseInt(employeeId.toString(), 10);
-      const paddedId = isNaN(idNumber) ? employeeId.toString().padStart(2, '0') : idNumber.toString().padStart(2, '0');
+      const paddedId = isNaN(idNumber)
+        ? employeeId.toString().padStart(2, "0")
+        : idNumber.toString().padStart(2, "0");
       return `${yearLastTwo}${paddedId}`;
     }
-    
+
     // If no Employment_id, just show last 2 digits of year
     return `${yearLastTwo}`;
   };
@@ -374,7 +398,7 @@ export default function ShopperProfileComponent() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-green-600 mx-auto"></div>
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-green-600"></div>
           <p className="text-gray-600">Loading profile...</p>
         </div>
       </div>
@@ -414,10 +438,9 @@ export default function ShopperProfileComponent() {
         {/* Main Content - Two Column Layout */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
           {/* Left Column */}
-          <div className="lg:col-span-5 space-y-6">
+          <div className="space-y-6 lg:col-span-5">
             {/* PROFILE IMAGE Section */}
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-lg">
-     
               <div className="mb-4 flex justify-center">
                 <div className="relative aspect-square w-full max-w-xs overflow-hidden rounded-lg bg-gray-100 shadow-md">
                   <Image
@@ -428,43 +451,52 @@ export default function ShopperProfileComponent() {
                   />
                 </div>
               </div>
-              {showNationalIdUnderProfile && (nationalIdImage || shopperData?.national_id_photo_back) && (
-                <div className="mb-4 space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    National ID
-                  </label>
-                  <div className={`grid gap-3 ${nationalIdImage && shopperData?.national_id_photo_back ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                    {nationalIdImage && (
-                      <div className="relative aspect-[16/10] min-h-[120px] overflow-hidden rounded-lg border-2 border-gray-300 bg-gray-100 shadow-md">
-                        <img
-                          src={nationalIdImage}
-                          alt="National ID"
-                          className="h-full w-full object-contain p-1"
-                        />
-                        <div className="absolute bottom-1 left-1 rounded bg-black/60 px-2 py-0.5 text-xs text-white">
-                          {shopperData?.national_id_photo_back ? "Front" : "ID"}
+              {showNationalIdUnderProfile &&
+                (nationalIdImage || shopperData?.national_id_photo_back) && (
+                  <div className="mb-4 space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      National ID
+                    </label>
+                    <div
+                      className={`grid gap-3 ${
+                        nationalIdImage && shopperData?.national_id_photo_back
+                          ? "grid-cols-2"
+                          : "grid-cols-1"
+                      }`}
+                    >
+                      {nationalIdImage && (
+                        <div className="relative aspect-[16/10] min-h-[120px] overflow-hidden rounded-lg border-2 border-gray-300 bg-gray-100 shadow-md">
+                          <img
+                            src={nationalIdImage}
+                            alt="National ID"
+                            className="h-full w-full object-contain p-1"
+                          />
+                          <div className="absolute bottom-1 left-1 rounded bg-black/60 px-2 py-0.5 text-xs text-white">
+                            {shopperData?.national_id_photo_back
+                              ? "Front"
+                              : "ID"}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    {shopperData?.national_id_photo_back && (
-                      <div className="relative aspect-[16/10] min-h-[120px] overflow-hidden rounded-lg border-2 border-gray-300 bg-gray-100 shadow-md">
-                        <img
-                          src={shopperData.national_id_photo_back}
-                          alt="National ID Back"
-                          className="h-full w-full object-contain p-1"
-                        />
-                        <div className="absolute bottom-1 left-1 rounded bg-black/60 px-2 py-0.5 text-xs text-white">
-                          Back
+                      )}
+                      {shopperData?.national_id_photo_back && (
+                        <div className="relative aspect-[16/10] min-h-[120px] overflow-hidden rounded-lg border-2 border-gray-300 bg-gray-100 shadow-md">
+                          <img
+                            src={shopperData.national_id_photo_back}
+                            alt="National ID Back"
+                            className="h-full w-full object-contain p-1"
+                          />
+                          <div className="absolute bottom-1 left-1 rounded bg-black/60 px-2 py-0.5 text-xs text-white">
+                            Back
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
               <button
                 onClick={() => setShowCameraCapture(true)}
                 disabled={uploadingPhoto}
-                className="flex w-full max-w-xs mx-auto items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-green-700 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:from-green-700 hover:to-green-800 hover:shadow-green-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+                className="mx-auto flex w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-green-700 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:from-green-700 hover:to-green-800 hover:shadow-green-500/25 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {uploadingPhoto ? (
                   <>
@@ -512,7 +544,7 @@ export default function ShopperProfileComponent() {
                     type="text"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
-                    className="w-full rounded-xl border-2 border-gray-300 bg-white px-4 py-3 text-sm transition-all focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 hover:border-green-400"
+                    className="w-full rounded-xl border-2 border-gray-300 bg-white px-4 py-3 text-sm transition-all hover:border-green-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                 </div>
                 <div>
@@ -523,7 +555,7 @@ export default function ShopperProfileComponent() {
                     type="text"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
-                    className="w-full rounded-xl border-2 border-gray-300 bg-white px-4 py-3 text-sm transition-all focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 hover:border-green-400"
+                    className="w-full rounded-xl border-2 border-gray-300 bg-white px-4 py-3 text-sm transition-all hover:border-green-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                 </div>
                 <div>
@@ -580,7 +612,9 @@ export default function ShopperProfileComponent() {
                       className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                     <button
-                      onClick={() => copyToClipboard(phoneNumber, "Phone number")}
+                      onClick={() =>
+                        copyToClipboard(phoneNumber, "Phone number")
+                      }
                       className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-gray-400 transition-colors hover:text-gray-600"
                     >
                       <svg
@@ -608,78 +642,111 @@ export default function ShopperProfileComponent() {
                     value={position}
                     onChange={(e) => setPosition(e.target.value)}
                     placeholder="e.g., Delivery Driver"
-                    className="w-full rounded-xl border-2 border-gray-300 bg-white px-4 py-3 text-sm transition-all focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 hover:border-green-400"
+                    className="w-full rounded-xl border-2 border-gray-300 bg-white px-4 py-3 text-sm transition-all hover:border-green-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                 </div>
-                {(nationalIdImage || shopperData?.national_id_photo_back || (shopperData?.national_id && !isNationalIdImage(shopperData.national_id))) && (
+                {(nationalIdImage ||
+                  shopperData?.national_id_photo_back ||
+                  (shopperData?.national_id &&
+                    !isNationalIdImage(shopperData.national_id))) && (
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-gray-700">
                       National ID
                     </label>
-                    {(nationalIdImage || shopperData?.national_id_photo_back) ? (
+                    {nationalIdImage || shopperData?.national_id_photo_back ? (
                       <div className="flex gap-2">
                         {nationalIdImage && (
                           <button
-                            onClick={() => setShowNationalIdUnderProfile(!showNationalIdUnderProfile)}
+                            onClick={() =>
+                              setShowNationalIdUnderProfile(
+                                !showNationalIdUnderProfile
+                              )
+                            }
                             className={`relative h-24 w-36 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all hover:shadow-md ${
-                              showNationalIdUnderProfile 
-                                ? 'border-blue-500 bg-blue-50' 
-                                : 'border-gray-300 bg-gray-100 hover:border-blue-400'
+                              showNationalIdUnderProfile
+                                ? "border-blue-500 bg-blue-50"
+                                : "border-gray-300 bg-gray-100 hover:border-blue-400"
                             }`}
-                            title={showNationalIdUnderProfile ? "Click to hide" : "Click to view under profile"}
+                            title={
+                              showNationalIdUnderProfile
+                                ? "Click to hide"
+                                : "Click to view under profile"
+                            }
                           >
                             <img
                               src={nationalIdImage}
                               alt="National ID"
                               className="h-full w-full object-cover"
                             />
-                            <div className={`absolute inset-0 flex items-center justify-center transition-all ${
-                              showNationalIdUnderProfile 
-                                ? 'bg-green-500/20' 
-                                : 'bg-black/0 hover:bg-black/10'
-                            }`}>
-                              <span className={`text-xs font-semibold transition-opacity ${
-                                showNationalIdUnderProfile 
-                                  ? 'text-green-700 opacity-100' 
-                                  : 'text-white opacity-0 hover:opacity-100'
-                              }`}>
-                                {showNationalIdUnderProfile ? "✓ Showing" : "View"}
+                            <div
+                              className={`absolute inset-0 flex items-center justify-center transition-all ${
+                                showNationalIdUnderProfile
+                                  ? "bg-green-500/20"
+                                  : "bg-black/0 hover:bg-black/10"
+                              }`}
+                            >
+                              <span
+                                className={`text-xs font-semibold transition-opacity ${
+                                  showNationalIdUnderProfile
+                                    ? "text-green-700 opacity-100"
+                                    : "text-white opacity-0 hover:opacity-100"
+                                }`}
+                              >
+                                {showNationalIdUnderProfile
+                                  ? "✓ Showing"
+                                  : "View"}
                               </span>
                             </div>
-                            <div className="absolute top-1 right-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white">
-                              {shopperData?.national_id_photo_back ? "Front" : "ID"}
+                            <div className="absolute right-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                              {shopperData?.national_id_photo_back
+                                ? "Front"
+                                : "ID"}
                             </div>
                           </button>
                         )}
                         {shopperData?.national_id_photo_back && (
                           <button
-                            onClick={() => setShowNationalIdUnderProfile(!showNationalIdUnderProfile)}
+                            onClick={() =>
+                              setShowNationalIdUnderProfile(
+                                !showNationalIdUnderProfile
+                              )
+                            }
                             className={`relative h-24 w-36 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all hover:shadow-md ${
-                              showNationalIdUnderProfile 
-                                ? 'border-blue-500 bg-blue-50' 
-                                : 'border-gray-300 bg-gray-100 hover:border-blue-400'
+                              showNationalIdUnderProfile
+                                ? "border-blue-500 bg-blue-50"
+                                : "border-gray-300 bg-gray-100 hover:border-blue-400"
                             }`}
-                            title={showNationalIdUnderProfile ? "Click to hide" : "Click to view under profile"}
+                            title={
+                              showNationalIdUnderProfile
+                                ? "Click to hide"
+                                : "Click to view under profile"
+                            }
                           >
                             <img
                               src={shopperData.national_id_photo_back}
                               alt="National ID Back"
                               className="h-full w-full object-cover"
                             />
-                            <div className={`absolute inset-0 flex items-center justify-center transition-all ${
-                              showNationalIdUnderProfile 
-                                ? 'bg-green-500/20' 
-                                : 'bg-black/0 hover:bg-black/10'
-                            }`}>
-                              <span className={`text-xs font-semibold transition-opacity ${
-                                showNationalIdUnderProfile 
-                                  ? 'text-green-700 opacity-100' 
-                                  : 'text-white opacity-0 hover:opacity-100'
-                              }`}>
-                                {showNationalIdUnderProfile ? "✓ Showing" : "View"}
+                            <div
+                              className={`absolute inset-0 flex items-center justify-center transition-all ${
+                                showNationalIdUnderProfile
+                                  ? "bg-green-500/20"
+                                  : "bg-black/0 hover:bg-black/10"
+                              }`}
+                            >
+                              <span
+                                className={`text-xs font-semibold transition-opacity ${
+                                  showNationalIdUnderProfile
+                                    ? "text-green-700 opacity-100"
+                                    : "text-white opacity-0 hover:opacity-100"
+                                }`}
+                              >
+                                {showNationalIdUnderProfile
+                                  ? "✓ Showing"
+                                  : "View"}
                               </span>
                             </div>
-                            <div className="absolute top-1 right-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                            <div className="absolute right-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white">
                               Back
                             </div>
                           </button>
@@ -693,11 +760,12 @@ export default function ShopperProfileComponent() {
                         className="w-full rounded-xl border-2 border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-700"
                       />
                     )}
-                    {shopperData?.national_id && !isNationalIdImage(shopperData.national_id) && (
-                      <p className="mt-1.5 text-xs text-gray-500">
-                        ID Number: {shopperData.national_id}
-                      </p>
-                    )}
+                    {shopperData?.national_id &&
+                      !isNationalIdImage(shopperData.national_id) && (
+                        <p className="mt-1.5 text-xs text-gray-500">
+                          ID Number: {shopperData.national_id}
+                        </p>
+                      )}
                   </div>
                 )}
                 <div>
@@ -706,7 +774,12 @@ export default function ShopperProfileComponent() {
                   </label>
                   <input
                     type="text"
-                    value={shopperData?.transport_mode ? shopperData.transport_mode.charAt(0).toUpperCase() + shopperData.transport_mode.slice(1).replace("_", " ") : "N/A"}
+                    value={
+                      shopperData?.transport_mode
+                        ? shopperData.transport_mode.charAt(0).toUpperCase() +
+                          shopperData.transport_mode.slice(1).replace("_", " ")
+                        : "N/A"
+                    }
                     readOnly
                     className="w-full rounded-xl border-2 border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-700"
                   />
@@ -717,7 +790,12 @@ export default function ShopperProfileComponent() {
                   </label>
                   <input
                     type="text"
-                    value={shopperData?.status ? shopperData.status.charAt(0).toUpperCase() + shopperData.status.slice(1) : "N/A"}
+                    value={
+                      shopperData?.status
+                        ? shopperData.status.charAt(0).toUpperCase() +
+                          shopperData.status.slice(1)
+                        : "N/A"
+                    }
                     readOnly
                     className="w-full rounded-xl border-2 border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-700"
                   />
@@ -742,7 +820,11 @@ export default function ShopperProfileComponent() {
                     </label>
                     <input
                       type="text"
-                      value={`${shopperData.guarantor}${shopperData.guarantorRelationship ? ` (${shopperData.guarantorRelationship})` : ""}`}
+                      value={`${shopperData.guarantor}${
+                        shopperData.guarantorRelationship
+                          ? ` (${shopperData.guarantorRelationship})`
+                          : ""
+                      }`}
                       readOnly
                       className="w-full rounded-xl border-2 border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-700"
                     />
@@ -753,7 +835,7 @@ export default function ShopperProfileComponent() {
           </div>
 
           {/* Right Column */}
-          <div className="lg:col-span-7 space-y-6">
+          <div className="space-y-6 lg:col-span-7">
             {/* ROLE Section */}
             <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
               <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-700">
@@ -775,16 +857,22 @@ export default function ShopperProfileComponent() {
                     Account Manager
                   </label>
                   <div className="rounded-xl border-2 border-gray-300 bg-gray-50 p-4">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="mb-2 flex items-center gap-2">
                       <div className="h-6 w-6 rounded-full bg-gray-300"></div>
-                      <span className="text-sm font-medium text-gray-700">SupportRwanda</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        SupportRwanda
+                      </span>
                     </div>
                     <div className="ml-8 space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-gray-500">Email:</span>
-                        <span className="text-xs text-gray-700">rwandaSupport@plas.rw</span>
+                        <span className="text-xs text-gray-700">
+                          rwandaSupport@plas.rw
+                        </span>
                         <button
-                          onClick={() => copyToClipboard("rwandaSupport@plas.rw", "Email")}
+                          onClick={() =>
+                            copyToClipboard("rwandaSupport@plas.rw", "Email")
+                          }
                           className="ml-1 rounded p-0.5 text-gray-400 transition-colors hover:text-gray-600"
                         >
                           <svg
@@ -804,9 +892,13 @@ export default function ShopperProfileComponent() {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-gray-500">Phone:</span>
-                        <span className="text-xs text-gray-700">+250 788 123 456</span>
+                        <span className="text-xs text-gray-700">
+                          +250 788 123 456
+                        </span>
                         <button
-                          onClick={() => copyToClipboard("+250 788 123 456", "Phone number")}
+                          onClick={() =>
+                            copyToClipboard("+250 788 123 456", "Phone number")
+                          }
                           className="ml-1 rounded p-0.5 text-gray-400 transition-colors hover:text-gray-600"
                         >
                           <svg
@@ -840,7 +932,7 @@ export default function ShopperProfileComponent() {
                   <label className="mb-1.5 block text-sm font-medium text-gray-700">
                     Starts on
                   </label>
-                  <div className="[&_.rs-picker-toggle]:rounded-xl [&_.rs-picker-toggle]:border-2 [&_.rs-picker-toggle]:border-gray-300 [&_.rs-picker-toggle]:bg-white [&_.rs-picker-toggle]:px-4 [&_.rs-picker-toggle]:py-3 [&_.rs-picker-toggle]:text-sm [&_.rs-picker-toggle]:transition-all [&_.rs-picker-toggle]:hover:border-green-400 [&_.rs-picker-toggle:focus-within]:border-green-500 [&_.rs-picker-toggle:focus-within]:ring-2 [&_.rs-picker-toggle:focus-within]:ring-green-500">
+                  <div className="[&_.rs-picker-toggle:focus-within]:border-green-500 [&_.rs-picker-toggle:focus-within]:ring-2 [&_.rs-picker-toggle:focus-within]:ring-green-500 [&_.rs-picker-toggle]:rounded-xl [&_.rs-picker-toggle]:border-2 [&_.rs-picker-toggle]:border-gray-300 [&_.rs-picker-toggle]:bg-white [&_.rs-picker-toggle]:px-4 [&_.rs-picker-toggle]:py-3 [&_.rs-picker-toggle]:text-sm [&_.rs-picker-toggle]:transition-all [&_.rs-picker-toggle]:hover:border-green-400">
                     <DatePicker
                       value={onboardingDate}
                       onChange={(date) => setOnboardingDate(date)}
@@ -865,7 +957,7 @@ export default function ShopperProfileComponent() {
                   <div className="mb-2">
                     <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
                       <div
-                        className="h-full bg-green-600 transition-all shadow-sm"
+                        className="h-full bg-green-600 shadow-sm transition-all"
                         style={{ width: `${onboardingProgress}%` }}
                       ></div>
                     </div>
@@ -913,7 +1005,8 @@ export default function ShopperProfileComponent() {
         </Modal.Header>
         <Modal.Body>
           <p className="text-gray-600">
-            Are you sure you want to delete this shopper? This action cannot be undone.
+            Are you sure you want to delete this shopper? This action cannot be
+            undone.
           </p>
         </Modal.Body>
         <Modal.Footer>

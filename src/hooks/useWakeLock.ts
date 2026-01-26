@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 /**
  * Custom hook to manage Screen Wake Lock API
  * Prevents the screen from turning off when the shopper is active
- * 
+ *
  * @param enabled - Whether the wake lock should be active
  */
 export function useWakeLock(enabled: boolean) {

@@ -38,7 +38,9 @@ export default async function handler(
 
   try {
     if (!hasuraClient) {
-      return res.status(500).json({ message: "Database connection not available" });
+      return res
+        .status(500)
+        .json({ message: "Database connection not available" });
     }
 
     const { invoiceId, orderId } = req.query;
@@ -72,7 +74,9 @@ export default async function handler(
         });
       }
     } else {
-      return res.status(400).json({ message: "Invoice ID or Order ID is required" });
+      return res
+        .status(400)
+        .json({ message: "Invoice ID or Order ID is required" });
     }
 
     const invoice =

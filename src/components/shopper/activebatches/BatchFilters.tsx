@@ -15,7 +15,11 @@ export interface FilterState {
   search?: string;
 }
 
-export function BatchFilters({ onFilterChange, onRefresh, isRefreshing = false }: BatchFiltersProps) {
+export function BatchFilters({
+  onFilterChange,
+  onRefresh,
+  isRefreshing = false,
+}: BatchFiltersProps) {
   const { theme } = useTheme();
   const [filters, setFilters] = useState<FilterState>({});
   const [showOrderTypeDropdown, setShowOrderTypeDropdown] = useState(false);
@@ -833,7 +837,7 @@ export function BatchFilters({ onFilterChange, onRefresh, isRefreshing = false }
               theme === "dark"
                 ? "border-gray-600 bg-gray-800 text-gray-200 hover:bg-gray-700 active:bg-gray-600"
                 : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 active:bg-gray-100"
-            } ${isRefreshing ? "opacity-50 cursor-not-allowed" : ""}`}
+            } ${isRefreshing ? "cursor-not-allowed opacity-50" : ""}`}
             title="Refresh active batches"
           >
             <svg

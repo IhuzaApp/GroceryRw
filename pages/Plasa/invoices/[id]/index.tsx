@@ -226,7 +226,7 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
           theme === "dark" ? "bg-gray-900" : "bg-gray-50"
         } py-8`}
       >
-        <div className="mx-auto w-full max-w-9xl px-4 sm:px-6 lg:px-8 xl:px-12">
+        <div className="max-w-9xl mx-auto w-full px-4 sm:px-6 lg:px-8 xl:px-12">
           {/* Action Buttons */}
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <button

@@ -718,7 +718,9 @@ export default async function handler(
             related_order_id: refund.order_id,
             related_reel_orderId: null,
             related_restaurant_order_id: null,
-            description: `Refund for items not found: ${refund.reason || "Items not available during shopping"}`,
+            description: `Refund for items not found: ${
+              refund.reason || "Items not available during shopping"
+            }`,
           });
         }
       }
@@ -742,7 +744,9 @@ export default async function handler(
           related_order_id: refund.order_id,
           related_reel_orderId: null,
           related_restaurant_order_id: null,
-          description: `Refund for items not found: ${refund.reason || "Items not available during shopping"}`,
+          description: `Refund for items not found: ${
+            refund.reason || "Items not available during shopping"
+          }`,
         }));
 
         await hasuraClient.request(CREATE_WALLET_TRANSACTIONS, {

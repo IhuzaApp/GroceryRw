@@ -177,11 +177,7 @@ export default function ShopperSidebar() {
       path: "/",
       label: "Dashboard",
       icon: (
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path
             d="M22 12.2039V13.725C22 17.6258 22 19.5763 20.8284 20.7881C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.7881C2 19.5763 2 17.6258 2 13.725V12.2039C2 9.91549 2 8.77128 2.5192 7.82274C3.0384 6.87421 3.98695 6.28551 5.88403 5.10813L7.88403 3.86687C9.88939 2.62229 10.8921 2 12 2C13.1079 2 14.1106 2.62229 16.116 3.86687L18.116 5.10812C20.0131 6.28551 20.9616 6.87421 21.4808 7.82274"
             stroke="currentColor"
@@ -208,11 +204,7 @@ export default function ShopperSidebar() {
       path: "/Plasa/active-batches",
       label: "Active",
       icon: (
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path
             d="M7.5 18C8.32843 18 9 18.6716 9 19.5C9 20.3284 8.32843 21 7.5 21C6.67157 21 6 20.3284 6 19.5C6 18.6716 6.67157 18 7.5 18Z"
             stroke="currentColor"
@@ -280,11 +272,7 @@ export default function ShopperSidebar() {
       path: "/Plasa/invoices",
       label: "Invoices",
       icon: (
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path
             d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z"
             stroke="currentColor"
@@ -782,7 +770,9 @@ export default function ShopperSidebar() {
           {/* Get home item and other items separately */}
           {(() => {
             const homeItem = navigationItems.find((item) => item.path === "/");
-            const otherItems = navigationItems.filter((item) => item.path !== "/");
+            const otherItems = navigationItems.filter(
+              (item) => item.path !== "/"
+            );
             const homeIsActive =
               isActive("/") &&
               !isActive("/Plasa/active-batches") &&
