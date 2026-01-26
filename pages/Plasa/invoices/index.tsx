@@ -147,14 +147,6 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
             >
               My Invoices
             </h1>
-            <p
-              className={`mt-2 text-sm ${
-                theme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
-              View invoices and upload proof of delivery for your completed
-              orders
-            </p>
           </div>
 
           {/* Filters */}
