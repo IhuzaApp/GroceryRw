@@ -281,7 +281,7 @@ export default function OrderItemsSection({
 
                   let isBatchShopping = false;
                   if (isSameCustomerSameShop) {
-                    // For same-customer, same-shop combined orders, show button if ANY order is shopping/accepted
+                    // For same-customer, same-shop combined orders, show button if ANY order is shopping
                     const allSameCustomerSameShopOrders = [
                       order,
                       ...(order.combinedOrders || []),
@@ -291,13 +291,11 @@ export default function OrderItemsSection({
                         getCustomerId(o) === mainCustomerId
                     );
                     isBatchShopping = allSameCustomerSameShopOrders.some(
-                      (o) => o.status === "accepted" || o.status === "shopping"
+                      (o) => o.status === "shopping"
                     );
                   } else {
                     // For different customers or different shops, only check the specific order
-                    isBatchShopping =
-                      activeGroup.order.status === "accepted" ||
-                      activeGroup.order.status === "shopping";
+                    isBatchShopping = activeGroup.order.status === "shopping";
                   }
 
                   return (
@@ -371,10 +369,10 @@ export default function OrderItemsSection({
                 (o) => (o.shop?.id || o.shop_id) === effectiveActiveShopId
               );
               const hasAnyOrderShopping = shopOrders.some(
-                (o) => o.status === "accepted" || o.status === "shopping"
+                (o) => o.status === "shopping"
               );
 
-              // Show Mark Found button if any order from this shop is still in shopping/accepted status
+              // Show Mark Found button if any order from this shop is still in shopping status
               const isBatchShopping = hasAnyOrderShopping;
 
               return (
@@ -427,7 +425,7 @@ export default function OrderItemsSection({
 
               let isBatchShopping = false;
               if (isSameCustomerSameShop) {
-                // For same-customer, same-shop combined orders, show button if ANY order is shopping/accepted
+                // For same-customer, same-shop combined orders, show button if ANY order is shopping
                 const allSameCustomerSameShopOrders = [
                   order,
                   ...(order.combinedOrders || []),
@@ -437,10 +435,10 @@ export default function OrderItemsSection({
                     getCustomerId(o) === mainCustomerId
                 );
                 isBatchShopping = allSameCustomerSameShopOrders.some(
-                  (o) => o.status === "accepted" || o.status === "shopping"
+                  (o) => o.status === "shopping"
                 );
               } else {
-                // For different customers or different shops, check if any order from this shop is still active
+                // For different customers or different shops, check if any order from this shop is still shopping
                 const shopOrders = [
                   order,
                   ...(order.combinedOrders || []),
@@ -448,7 +446,7 @@ export default function OrderItemsSection({
                   (o) => (o.shop?.id || o.shop_id) === effectiveActiveShopId
                 );
                 isBatchShopping = shopOrders.some(
-                  (o) => o.status === "accepted" || o.status === "shopping"
+                  (o) => o.status === "shopping"
                 );
               }
 

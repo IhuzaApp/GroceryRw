@@ -824,6 +824,13 @@ export default function NotificationSystem({
         removeToastForOrder(orderId);
         toast.success("Order accepted successfully! 🎉");
 
+        // Dispatch custom event to notify other components (like BatchDetails) to refetch
+        window.dispatchEvent(
+          new CustomEvent("order-accepted", {
+            detail: { orderId },
+          })
+        );
+
         // Note: Removed onAcceptBatch callback to prevent redirect
         // User stays on current page with success toast
 
