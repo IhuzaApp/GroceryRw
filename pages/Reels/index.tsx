@@ -372,19 +372,11 @@ interface DatabaseReel {
     id: string;
     created_on: string;
     User: {
-      gender: string;
-      email: string;
+      id: string;
       name: string;
-      phone: string;
       role: string;
       profile_picture?: string;
     } | null;
-  }>;
-  reel_likes: Array<{
-    created_at: string;
-    id: string;
-    reel_id: string;
-    user_id: string;
   }>;
 }
 
@@ -447,13 +439,6 @@ const randomizeReelsWithPriority = (reels: FoodPost[]): FoodPost[] => {
   ];
 };
 
-// Check if current user has liked a reel
-const checkUserLikeStatus = (
-  reelLikes: Array<{ user_id: string }>,
-  currentUserId: string
-): boolean => {
-  return reelLikes.some((like) => like.user_id === currentUserId);
-};
 
 // Cache configuration
 const CACHE_KEY = "reels_cache";
@@ -667,13 +652,11 @@ export default function FoodReelsApp() {
 
   // Convert database reel to FoodPost format with current user's like status
   const convertDatabaseReelToFoodPost = (dbReel: DatabaseReel): FoodPost => {
-    const currentUserId = session?.user?.id;
-    const userHasLiked = currentUserId
-      ? checkUserLikeStatus(dbReel.reel_likes, currentUserId)
-      : false;
+    // Use isLiked field from database (set by backend based on current user)
+    const userHasLiked = dbReel.isLiked || false;
 
-    // Convert comments
-    const commentsList: Comment[] = dbReel.Reels_comments.map((comment) => ({
+    // Convert comments - handle case where Reels_comments might be undefined
+    const commentsList: Comment[] = (dbReel.Reels_comments || []).map((comment) => ({
       id: comment.id,
       user: {
         name: comment.User?.name || "Plas Reel Agent",
@@ -728,8 +711,8 @@ export default function FoodReelsApp() {
         category: dbReel.category,
       },
       stats: {
-        likes: dbReel.reel_likes.length, // Use actual likes count from reel_likes
-        comments: dbReel.Reels_comments.length,
+        likes: parseInt(dbReel.likes || "0"), // Use likes count from database
+        comments: (dbReel.Reels_comments || []).length,
       },
       isLiked: userHasLiked, // Use actual user like status
       commentsList,

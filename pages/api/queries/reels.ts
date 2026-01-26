@@ -7,9 +7,14 @@ import type { Session } from "next-auth";
 import { logger } from "../../../src/utils/logger";
 
 // Fetch all reels with user and restaurant details
+// Optimized: Limited comments (20 most recent), removed individual likes array, removed sensitive user fields
 const GET_ALL_REELS = gql`
-  query GetAllReels {
-    Reels(order_by: { created_on: desc }) {
+  query GetAllReels($limit: Int, $offset: Int) {
+    Reels(
+      order_by: { created_on: desc }
+      limit: $limit
+      offset: $offset
+    ) {
       id
       category
       created_on
@@ -35,29 +40,24 @@ const GET_ALL_REELS = gql`
         longitude
       }
       User {
-        email
-        gender
         id
-        is_active
         name
-        created_at
-        role
-        phone
         profile_picture
+        role
       }
       Restaurant {
-        created_at
-        email
         id
         lat
         location
         long
         name
-        phone
         profile
         verified
       }
-      Reels_comments {
+      Reels_comments(
+        order_by: { created_on: desc }
+        limit: 20
+      ) {
         user_id
         text
         reel_id
@@ -66,29 +66,25 @@ const GET_ALL_REELS = gql`
         id
         created_on
         User {
-          gender
-          email
+          id
           name
-          phone
+          profile_picture
           role
         }
-      }
-      reel_likes {
-        created_at
-        id
-        reel_id
-        user_id
       }
     }
   }
 `;
 
 // Fetch reels by user ID
+// Optimized: Limited comments (20 most recent), removed individual likes array, removed sensitive user fields
 const GET_REELS_BY_USER = gql`
-  query GetReelsByUser($user_id: uuid!) {
+  query GetReelsByUser($user_id: uuid!, $limit: Int, $offset: Int) {
     Reels(
       where: { user_id: { _eq: $user_id } }
       order_by: { created_on: desc }
+      limit: $limit
+      offset: $offset
     ) {
       id
       category
@@ -115,29 +111,24 @@ const GET_REELS_BY_USER = gql`
         longitude
       }
       User {
-        email
-        gender
         id
-        is_active
         name
-        created_at
-        role
-        phone
         profile_picture
+        role
       }
       Restaurant {
-        created_at
-        email
         id
         lat
         location
         long
         name
-        phone
         profile
         verified
       }
-      Reels_comments {
+      Reels_comments(
+        order_by: { created_on: desc }
+        limit: 20
+      ) {
         user_id
         text
         reel_id
@@ -146,29 +137,25 @@ const GET_REELS_BY_USER = gql`
         id
         created_on
         User {
-          gender
-          email
+          id
           name
-          phone
+          profile_picture
           role
         }
-      }
-      reel_likes {
-        created_at
-        id
-        reel_id
-        user_id
       }
     }
   }
 `;
 
 // Fetch reels by restaurant ID
+// Optimized: Limited comments (20 most recent), removed individual likes array, removed sensitive user fields
 const GET_REELS_BY_RESTAURANT = gql`
-  query GetReelsByRestaurant($restaurant_id: uuid!) {
+  query GetReelsByRestaurant($restaurant_id: uuid!, $limit: Int, $offset: Int) {
     Reels(
       where: { restaurant_id: { _eq: $restaurant_id } }
       order_by: { created_on: desc }
+      limit: $limit
+      offset: $offset
     ) {
       id
       category
@@ -195,29 +182,24 @@ const GET_REELS_BY_RESTAURANT = gql`
         longitude
       }
       User {
-        email
-        gender
         id
-        is_active
         name
-        created_at
-        role
-        phone
         profile_picture
+        role
       }
       Restaurant {
-        created_at
-        email
         id
         lat
         location
         long
         name
-        phone
         profile
         verified
       }
-      Reels_comments {
+      Reels_comments(
+        order_by: { created_on: desc }
+        limit: 20
+      ) {
         user_id
         text
         reel_id
@@ -226,18 +208,11 @@ const GET_REELS_BY_RESTAURANT = gql`
         id
         created_on
         User {
-          gender
-          email
+          id
           name
-          phone
+          profile_picture
           role
         }
-      }
-      reel_likes {
-        created_at
-        id
-        reel_id
-        user_id
       }
     }
   }
@@ -388,12 +363,6 @@ interface Reel {
       role: string;
     };
   }>;
-  reel_likes: Array<{
-    created_at: string;
-    id: string;
-    reel_id: string;
-    user_id: string;
-  }>;
 }
 interface ReelsResponse {
   Reels: Reel[];
@@ -443,7 +412,11 @@ async function handleGetReels(req: NextApiRequest, res: NextApiResponse) {
   if (!hasuraClient) {
     return res.status(500).json({ error: "Hasura client not initialized" });
   }
-  const { user_id, restaurant_id, type } = req.query;
+  const { user_id, restaurant_id, type, limit, offset } = req.query;
+
+  // Default limit to 100 reels to prevent 4MB limit
+  const limitValue = limit ? parseInt(limit as string) : 100;
+  const offsetValue = offset ? parseInt(offset as string) : 0;
 
   try {
     let data: ReelsResponse;
@@ -451,16 +424,23 @@ async function handleGetReels(req: NextApiRequest, res: NextApiResponse) {
     if (user_id) {
       data = await hasuraClient.request<ReelsResponse>(GET_REELS_BY_USER, {
         user_id: user_id as string,
+        limit: limitValue,
+        offset: offsetValue,
       });
     } else if (restaurant_id) {
       data = await hasuraClient.request<ReelsResponse>(
         GET_REELS_BY_RESTAURANT,
         {
           restaurant_id: restaurant_id as string,
+          limit: limitValue,
+          offset: offsetValue,
         }
       );
     } else {
-      data = await hasuraClient.request<ReelsResponse>(GET_ALL_REELS);
+      data = await hasuraClient.request<ReelsResponse>(GET_ALL_REELS, {
+        limit: limitValue,
+        offset: offsetValue,
+      });
     }
 
     let reels = data.Reels;
@@ -469,7 +449,7 @@ async function handleGetReels(req: NextApiRequest, res: NextApiResponse) {
     }
 
     logger.info(`Found ${reels.length} reels`, "ReelsAPI");
-    res.status(200).json({ reels });
+    res.status(200).json({ reels, hasMore: reels.length === limitValue });
   } catch (error) {
     logger.error("Error fetching reels", "ReelsAPI", error);
     res.status(500).json({ error: "Failed to fetch reels" });
