@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
@@ -6,6 +7,7 @@ import { authenticatedFetch } from "../../../lib/authenticatedFetch";
 import { logger } from "../../../utils/logger";
 import { useToaster, Message, Modal, Button, Toggle, DatePicker, SelectPicker } from "rsuite";
 import UpdateShopperDrawer from "./UpdateShopperDrawer";
+import CameraCapture from "../../ui/CameraCapture";
 
 interface ShopperData {
   id: string;
@@ -58,6 +60,14 @@ export default function ShopperProfileComponent() {
   const [showUpdateDrawer, setShowUpdateDrawer] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showNationalIdUnderProfile, setShowNationalIdUnderProfile] = useState(false);
+  const [showCameraCapture, setShowCameraCapture] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [isComponentMounted, setIsComponentMounted] = useState(false);
+
+  // Check if component is mounted (for SSR compatibility)
+  useEffect(() => {
+    setIsComponentMounted(true);
+  }, []);
   
   // Form state
   const [firstName, setFirstName] = useState("");
@@ -238,6 +248,71 @@ export default function ShopperProfileComponent() {
     setShowDeleteModal(false);
   };
 
+  // Handle photo capture from CameraCapture component
+  const handlePhotoCapture = async (imageDataUrl: string) => {
+    if (!session?.user?.id) {
+      toaster.push(
+        <Message type="error" closable>
+          User session not found
+        </Message>,
+        { placement: "topEnd", duration: 5000 }
+      );
+      return;
+    }
+
+    setUploadingPhoto(true);
+    setShowCameraCapture(false);
+
+    try {
+      const response = await fetch("/api/shopper/uploadShopperPhoto", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          photoType: "profile_photo",
+          photoData: imageDataUrl,
+          user_id: session.user.id,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to upload profile photo");
+      }
+
+      // Update local state with new photo
+      setShopperData((prev) =>
+        prev
+          ? {
+              ...prev,
+              profile_photo: imageDataUrl,
+            }
+          : null
+      );
+
+      toaster.push(
+        <Message type="success" closable>
+          Profile photo updated successfully
+        </Message>,
+        { placement: "topEnd", duration: 5000 }
+      );
+    } catch (error) {
+      logger.error(
+        "Error uploading profile photo:",
+        error instanceof Error ? error.message : String(error)
+      );
+      toaster.push(
+        <Message type="error" closable>
+          Failed to upload profile photo. Please try again.
+        </Message>,
+        { placement: "topEnd", duration: 5000 }
+      );
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   // Get profile image - prioritize shopper profile_photo
   const profileImage = shopperData?.profile_photo || user?.profile_picture || "/assets/images/profile.jpg";
   
@@ -342,10 +417,8 @@ export default function ShopperProfileComponent() {
           <div className="lg:col-span-5 space-y-6">
             {/* PROFILE IMAGE Section */}
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-lg">
-              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-700">
-                PROFILE IMAGE
-              </h2>
-              <div className="mb-4">
+     
+              <div className="mb-4 flex justify-center">
                 <div className="relative aspect-square w-full max-w-xs overflow-hidden rounded-lg bg-gray-100 shadow-md">
                   <Image
                     src={profileImage}
@@ -389,29 +462,39 @@ export default function ShopperProfileComponent() {
                 </div>
               )}
               <button
-                onClick={() => setShowUpdateDrawer(true)}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-green-700 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:from-green-700 hover:to-green-800 hover:shadow-green-500/25"
+                onClick={() => setShowCameraCapture(true)}
+                disabled={uploadingPhoto}
+                className="flex w-full max-w-xs mx-auto items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-green-700 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:from-green-700 hover:to-green-800 hover:shadow-green-500/25 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-                Change Profile Image
+                {uploadingPhoto ? (
+                  <>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                    Change Profile Image
+                  </>
+                )}
               </button>
             </div>
 
@@ -858,6 +941,22 @@ export default function ShopperProfileComponent() {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Camera Capture for Profile Photo - Rendered via Portal */}
+      {isComponentMounted &&
+        createPortal(
+          showCameraCapture && (
+            <CameraCapture
+              isOpen={showCameraCapture}
+              onClose={() => setShowCameraCapture(false)}
+              onCapture={handlePhotoCapture}
+              cameraType="user"
+              title="Capture Profile Photo"
+              mirrorVideo={true}
+            />
+          ),
+          document.body
+        )}
     </div>
   );
 }
