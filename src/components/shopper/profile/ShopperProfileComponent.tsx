@@ -213,7 +213,10 @@ export default function ShopperProfileComponent() {
       // Reload data
       window.location.reload();
     } catch (error) {
-      logger.error("Error saving changes:", error);
+      logger.error(
+        "Error saving changes:",
+        error instanceof Error ? error.message : String(error)
+      );
       toaster.push(
         <Message type="error" closable>
           Failed to save changes
@@ -264,11 +267,39 @@ export default function ShopperProfileComponent() {
 
   const nationalIdImage = getNationalIdImage();
 
+  // Format Employee ID: Last 2 digits of year + ID (padded to 2 digits)
+  // Example: 2020 + 4 = 2004, 2025 + 4 = 2504
+  const getFormattedEmployeeId = (): string => {
+    if (!shopperData?.created_at) {
+      return shopperData?.Employment_id || "N/A";
+    }
+    
+    // Extract year from created_at and get last 2 digits
+    const joinYear = new Date(shopperData.created_at).getFullYear();
+    const yearLastTwo = joinYear % 100; // Get last 2 digits (e.g., 2020 -> 20, 2025 -> 25)
+    
+    // Get the Employment_id (could be just a number or already formatted)
+    const employeeId = shopperData.Employment_id || "";
+    
+    // If Employment_id exists, combine year (last 2 digits) + id (padded to 2 digits)
+    if (employeeId) {
+      // Convert employeeId to number and pad to 2 digits
+      const idNumber = parseInt(employeeId.toString(), 10);
+      const paddedId = isNaN(idNumber) ? employeeId.toString().padStart(2, '0') : idNumber.toString().padStart(2, '0');
+      return `${yearLastTwo}${paddedId}`;
+    }
+    
+    // If no Employment_id, just show last 2 digits of year
+    return `${yearLastTwo}`;
+  };
+
+  const formattedEmployeeId = getFormattedEmployeeId();
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600 mx-auto"></div>
+          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-green-600 mx-auto"></div>
           <p className="text-gray-600">Loading profile...</p>
         </div>
       </div>
@@ -281,24 +312,6 @@ export default function ShopperProfileComponent() {
         {/* Header Section */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3 sm:gap-4">
-            <button
-              onClick={() => router.back()}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 transition-colors hover:bg-gray-50"
-            >
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
             <div className="flex min-w-0 items-center gap-3">
               <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full">
                 <Image
@@ -317,28 +330,9 @@ export default function ShopperProfileComponent() {
           <div className="flex flex-wrap items-center gap-3 sm:gap-4">
             {formattedAddedDate && (
               <span className="text-xs text-gray-500 sm:text-sm">
-                Added on {formattedAddedDate}
+                Joined on {formattedAddedDate}
               </span>
             )}
-            <button
-              onClick={() => setShowDeleteModal(true)}
-              className="flex items-center gap-2 rounded-lg border border-red-300 bg-white px-3 py-2 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 sm:px-4 sm:text-sm"
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                />
-              </svg>
-              <span className="hidden sm:inline">Delete</span>
-            </button>
           </div>
         </div>
 
@@ -347,12 +341,12 @@ export default function ShopperProfileComponent() {
           {/* Left Column */}
           <div className="lg:col-span-5 space-y-6">
             {/* PROFILE IMAGE Section */}
-            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-lg">
               <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-700">
                 PROFILE IMAGE
               </h2>
               <div className="mb-4">
-                <div className="relative aspect-square w-full max-w-xs overflow-hidden rounded-lg bg-gray-100">
+                <div className="relative aspect-square w-full max-w-xs overflow-hidden rounded-lg bg-gray-100 shadow-md">
                   <Image
                     src={profileImage}
                     alt="Profile"
@@ -368,7 +362,7 @@ export default function ShopperProfileComponent() {
                   </label>
                   <div className={`grid gap-3 ${nationalIdImage && shopperData?.national_id_photo_back ? 'grid-cols-2' : 'grid-cols-1'}`}>
                     {nationalIdImage && (
-                      <div className="relative aspect-[16/10] min-h-[120px] overflow-hidden rounded-lg border-2 border-gray-300 bg-gray-100">
+                      <div className="relative aspect-[16/10] min-h-[120px] overflow-hidden rounded-lg border-2 border-gray-300 bg-gray-100 shadow-md">
                         <img
                           src={nationalIdImage}
                           alt="National ID"
@@ -380,7 +374,7 @@ export default function ShopperProfileComponent() {
                       </div>
                     )}
                     {shopperData?.national_id_photo_back && (
-                      <div className="relative aspect-[16/10] min-h-[120px] overflow-hidden rounded-lg border-2 border-gray-300 bg-gray-100">
+                      <div className="relative aspect-[16/10] min-h-[120px] overflow-hidden rounded-lg border-2 border-gray-300 bg-gray-100 shadow-md">
                         <img
                           src={shopperData.national_id_photo_back}
                           alt="National ID Back"
@@ -396,7 +390,7 @@ export default function ShopperProfileComponent() {
               )}
               <button
                 onClick={() => setShowUpdateDrawer(true)}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-green-700 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:from-green-700 hover:to-green-800 hover:shadow-green-500/25"
               >
                 <svg
                   className="h-4 w-4"
@@ -422,7 +416,7 @@ export default function ShopperProfileComponent() {
             </div>
 
             {/* EMPLOYEE DETAILS Section */}
-            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-lg">
               <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-700">
                 EMPLOYEE DETAILS
               </h2>
@@ -435,7 +429,7 @@ export default function ShopperProfileComponent() {
                     type="text"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full rounded-xl border-2 border-gray-300 bg-white px-4 py-3 text-sm transition-all focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 hover:border-green-400"
                   />
                 </div>
                 <div>
@@ -446,7 +440,7 @@ export default function ShopperProfileComponent() {
                     type="text"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full rounded-xl border-2 border-gray-300 bg-white px-4 py-3 text-sm transition-all focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 hover:border-green-400"
                   />
                 </div>
                 <div>
@@ -455,9 +449,9 @@ export default function ShopperProfileComponent() {
                   </label>
                   <input
                     type="text"
-                    value={shopperData?.Employment_id || "N/A"}
+                    value={formattedEmployeeId}
                     readOnly
-                    className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700"
+                    className="w-full rounded-xl border-2 border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-700"
                   />
                 </div>
                 <div>
@@ -469,7 +463,7 @@ export default function ShopperProfileComponent() {
                       type="email"
                       value={email}
                       readOnly
-                      className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full rounded-xl border-2 border-gray-300 bg-gray-50 px-4 py-3 pr-10 text-sm transition-all focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500"
                     />
                     <button
                       onClick={() => copyToClipboard(email, "Email")}
@@ -531,7 +525,7 @@ export default function ShopperProfileComponent() {
                     value={position}
                     onChange={(e) => setPosition(e.target.value)}
                     placeholder="e.g., Delivery Driver"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full rounded-xl border-2 border-gray-300 bg-white px-4 py-3 text-sm transition-all focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 hover:border-green-400"
                   />
                 </div>
                 {(nationalIdImage || shopperData?.national_id_photo_back || (shopperData?.national_id && !isNationalIdImage(shopperData.national_id))) && (
@@ -558,12 +552,12 @@ export default function ShopperProfileComponent() {
                             />
                             <div className={`absolute inset-0 flex items-center justify-center transition-all ${
                               showNationalIdUnderProfile 
-                                ? 'bg-blue-500/20' 
+                                ? 'bg-green-500/20' 
                                 : 'bg-black/0 hover:bg-black/10'
                             }`}>
                               <span className={`text-xs font-semibold transition-opacity ${
                                 showNationalIdUnderProfile 
-                                  ? 'text-blue-700 opacity-100' 
+                                  ? 'text-green-700 opacity-100' 
                                   : 'text-white opacity-0 hover:opacity-100'
                               }`}>
                                 {showNationalIdUnderProfile ? "✓ Showing" : "View"}
@@ -591,12 +585,12 @@ export default function ShopperProfileComponent() {
                             />
                             <div className={`absolute inset-0 flex items-center justify-center transition-all ${
                               showNationalIdUnderProfile 
-                                ? 'bg-blue-500/20' 
+                                ? 'bg-green-500/20' 
                                 : 'bg-black/0 hover:bg-black/10'
                             }`}>
                               <span className={`text-xs font-semibold transition-opacity ${
                                 showNationalIdUnderProfile 
-                                  ? 'text-blue-700 opacity-100' 
+                                  ? 'text-green-700 opacity-100' 
                                   : 'text-white opacity-0 hover:opacity-100'
                               }`}>
                                 {showNationalIdUnderProfile ? "✓ Showing" : "View"}
@@ -613,7 +607,7 @@ export default function ShopperProfileComponent() {
                         type="text"
                         value={shopperData?.national_id || "N/A"}
                         readOnly
-                        className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700"
+                        className="w-full rounded-xl border-2 border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-700"
                       />
                     )}
                     {shopperData?.national_id && !isNationalIdImage(shopperData.national_id) && (
@@ -631,7 +625,7 @@ export default function ShopperProfileComponent() {
                     type="text"
                     value={shopperData?.transport_mode ? shopperData.transport_mode.charAt(0).toUpperCase() + shopperData.transport_mode.slice(1).replace("_", " ") : "N/A"}
                     readOnly
-                    className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700"
+                    className="w-full rounded-xl border-2 border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-700"
                   />
                 </div>
                 <div>
@@ -642,7 +636,7 @@ export default function ShopperProfileComponent() {
                     type="text"
                     value={shopperData?.status ? shopperData.status.charAt(0).toUpperCase() + shopperData.status.slice(1) : "N/A"}
                     readOnly
-                    className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700"
+                    className="w-full rounded-xl border-2 border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-700"
                   />
                 </div>
                 {shopperData?.telegram_id && (
@@ -654,7 +648,7 @@ export default function ShopperProfileComponent() {
                       type="text"
                       value={shopperData.telegram_id}
                       readOnly
-                      className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700"
+                      className="w-full rounded-xl border-2 border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-700"
                     />
                   </div>
                 )}
@@ -667,7 +661,7 @@ export default function ShopperProfileComponent() {
                       type="text"
                       value={`${shopperData.guarantor}${shopperData.guarantorRelationship ? ` (${shopperData.guarantorRelationship})` : ""}`}
                       readOnly
-                      className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700"
+                      className="w-full rounded-xl border-2 border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-700"
                     />
                   </div>
                 )}
@@ -682,43 +676,22 @@ export default function ShopperProfileComponent() {
               <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-700">
                 ROLE
               </h2>
-              <div className="rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+              <div className="rounded-xl border-2 border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-700">
                 {role}
               </div>
             </div>
 
             {/* TEAM Section */}
-            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-lg">
               <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-700">
                 TEAM
               </h2>
               <div className="space-y-4">
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                    HR
-                  </label>
-                  <SelectPicker
-                    data={[
-                      { label: "Kate Middleton", value: "kate" },
-                      { label: "No HR assigned", value: "" },
-                    ]}
-                    value="kate"
-                    style={{ width: "100%" }}
-                    cleanable={false}
-                    searchable={false}
-                    renderMenuItem={(label, item) => (
-                      <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-full bg-gray-300"></div>
-                        <span>{label}</span>
-                      </div>
-                    )}
-                  />
-                </div>
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
                     Account Manager
                   </label>
-                  <div className="rounded-lg border border-gray-300 bg-gray-50 p-3">
+                  <div className="rounded-xl border-2 border-gray-300 bg-gray-50 p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="h-6 w-6 rounded-full bg-gray-300"></div>
                       <span className="text-sm font-medium text-gray-700">SupportRwanda</span>
@@ -771,27 +744,6 @@ export default function ShopperProfileComponent() {
                     </div>
                   </div>
                 </div>
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                    Lead
-                  </label>
-                  <SelectPicker
-                    data={[
-                      { label: "Eugene Hummell", value: "eugene" },
-                      { label: "No Lead assigned", value: "" },
-                    ]}
-                    value="eugene"
-                    style={{ width: "100%" }}
-                    cleanable={false}
-                    searchable={false}
-                    renderMenuItem={(label, item) => (
-                      <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-full bg-gray-300"></div>
-                        <span>{label}</span>
-                      </div>
-                    )}
-                  />
-                </div>
               </div>
             </div>
 
@@ -821,19 +773,19 @@ export default function ShopperProfileComponent() {
                     </span>
                   </div>
                   <div className="mb-2">
-                    <span className="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">
+                    <span className="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800 shadow-sm">
                       Onboarding
                     </span>
                   </div>
                   <div className="mb-2">
                     <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
                       <div
-                        className="h-full bg-blue-600 transition-all"
+                        className="h-full bg-green-600 transition-all shadow-sm"
                         style={{ width: `${onboardingProgress}%` }}
                       ></div>
                     </div>
                   </div>
-                  <button className="text-sm text-blue-600 hover:text-blue-700 hover:underline">
+                  <button className="text-sm font-medium text-green-600 transition-colors hover:text-green-700 hover:underline">
                     View Answers
                   </button>
                 </div>
@@ -870,13 +822,13 @@ export default function ShopperProfileComponent() {
         <div className="mt-8 flex flex-col-reverse gap-4 sm:flex-row sm:justify-end">
           <button
             onClick={() => router.back()}
-            className="w-full rounded-lg border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 sm:w-auto"
+            className="w-full rounded-xl border-2 border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-700 shadow-md transition-all hover:bg-gray-50 hover:shadow-lg sm:w-auto"
           >
             Cancel
           </button>
           <button
             onClick={handleSaveChanges}
-            className="w-full rounded-lg bg-gray-900 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-gray-800 sm:w-auto"
+            className="w-full rounded-xl bg-gradient-to-r from-green-600 to-green-700 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:from-green-700 hover:to-green-800 hover:shadow-green-500/25 sm:w-auto"
           >
             Save Changes
           </button>
