@@ -52,13 +52,13 @@ export default function GeneralTab() {
             </h3>
             <a
               href="#"
-              className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
+              className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors dark:text-blue-400 dark:hover:text-blue-300"
             >
               About notifications?
             </a>
           </div>
           <div className="space-y-4">
-            <label className="flex items-center gap-3 cursor-pointer">
+            <label className="flex items-center gap-3 cursor-pointer group">
               <input
                 type="checkbox"
                 checked={notifications.dailyProductivity}
@@ -68,7 +68,7 @@ export default function GeneralTab() {
                     dailyProductivity: e.target.checked,
                   }))
                 }
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                className="h-4 w-4 rounded border-2 border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer transition-all group-hover:border-blue-400 dark:border-gray-600 dark:focus:ring-blue-400"
               />
               <span
                 className={`text-sm ${
@@ -78,7 +78,7 @@ export default function GeneralTab() {
                 Daily productivity update
               </span>
             </label>
-            <label className="flex items-center gap-3 cursor-pointer">
+            <label className="flex items-center gap-3 cursor-pointer group">
               <input
                 type="checkbox"
                 checked={notifications.newEventCreated}
@@ -88,7 +88,7 @@ export default function GeneralTab() {
                     newEventCreated: e.target.checked,
                   }))
                 }
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                className="h-4 w-4 rounded border-2 border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer transition-all group-hover:border-blue-400 dark:border-gray-600 dark:focus:ring-blue-400"
               />
               <span
                 className={`text-sm ${
@@ -98,7 +98,7 @@ export default function GeneralTab() {
                 New event created
               </span>
             </label>
-            <label className="flex items-center gap-3 cursor-pointer">
+            <label className="flex items-center gap-3 cursor-pointer group">
               <input
                 type="checkbox"
                 checked={notifications.whenAddedOnNewTeam}
@@ -108,7 +108,7 @@ export default function GeneralTab() {
                     whenAddedOnNewTeam: e.target.checked,
                   }))
                 }
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                className="h-4 w-4 rounded border-2 border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer transition-all group-hover:border-blue-400 dark:border-gray-600 dark:focus:ring-blue-400"
               />
               <span
                 className={`text-sm ${
@@ -122,7 +122,11 @@ export default function GeneralTab() {
         </div>
 
         {/* Mobile push notifications */}
-        <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-6 dark:border-gray-700">
+        <div
+          className={`mb-6 flex items-center justify-between border-b pb-6 ${
+            theme === "dark" ? "border-gray-700" : "border-gray-200"
+          }`}
+        >
           <div className="flex-1 pr-8">
             <h3
               className={`mb-1.5 text-base font-semibold ${
@@ -150,7 +154,11 @@ export default function GeneralTab() {
         </div>
 
         {/* Desktop Notification */}
-        <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-6 dark:border-gray-700">
+        <div
+          className={`mb-6 flex items-center justify-between border-b pb-6 ${
+            theme === "dark" ? "border-gray-700" : "border-gray-200"
+          }`}
+        >
           <div className="flex-1 pr-8">
             <h3
               className={`mb-1.5 text-base font-semibold ${
@@ -178,7 +186,11 @@ export default function GeneralTab() {
         </div>
 
         {/* Email Notification */}
-        <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-6 dark:border-gray-700">
+        <div
+          className={`mb-6 flex items-center justify-between border-b pb-6 ${
+            theme === "dark" ? "border-gray-700" : "border-gray-200"
+          }`}
+        >
           <div className="flex-1 pr-8">
             <h3
               className={`mb-1.5 text-base font-semibold ${
@@ -216,7 +228,11 @@ export default function GeneralTab() {
         </h2>
 
         {/* Appearance */}
-        <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-6 dark:border-gray-700">
+        <div
+          className={`mb-6 flex items-center justify-between border-b pb-6 ${
+            theme === "dark" ? "border-gray-700" : "border-gray-200"
+          }`}
+        >
           <div className="flex-1 pr-8">
             <h3
               className={`mb-1.5 text-base font-semibold ${
@@ -240,13 +256,18 @@ export default function GeneralTab() {
               onChange={(value) => setAppearance(value || "light")}
               cleanable={false}
               searchable={false}
-              style={{ width: 120 }}
+              style={{ width: 140 }}
+              className="custom-select-picker"
             />
           </div>
         </div>
 
         {/* Two-factor authentication */}
-        <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-6 dark:border-gray-700">
+        <div
+          className={`mb-6 flex items-center justify-between border-b pb-6 ${
+            theme === "dark" ? "border-gray-700" : "border-gray-200"
+          }`}
+        >
           <div className="flex-1 pr-8">
             <h3
               className={`mb-1.5 text-base font-semibold ${
@@ -274,7 +295,11 @@ export default function GeneralTab() {
         </div>
 
         {/* Language */}
-        <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-6 dark:border-gray-700">
+        <div
+          className={`mb-6 flex items-center justify-between border-b pb-6 ${
+            theme === "dark" ? "border-gray-700" : "border-gray-200"
+          }`}
+        >
           <div className="flex-1 pr-8">
             <h3
               className={`mb-1.5 text-base font-semibold ${
@@ -298,7 +323,8 @@ export default function GeneralTab() {
               onChange={(value) => setLanguage(value || "english")}
               cleanable={false}
               searchable={false}
-              style={{ width: 120 }}
+              style={{ width: 140 }}
+              className="custom-select-picker"
             />
           </div>
         </div>
