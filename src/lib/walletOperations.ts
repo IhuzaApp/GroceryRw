@@ -245,8 +245,9 @@ export async function handleDeliveredOperation(
   let newReservedBalance = wallet.reserved_balance; // Keep existing for restaurant orders
   let refundAmount = 0;
 
-  // Only adjust reserved balance for regular orders (not restaurant or reel orders)
-  if (!isRestaurantOrder && !isReelOrder) {
+  // Adjust reserved balance for regular orders and reel orders (not restaurant orders)
+  // Restaurant orders don't use reserved balance
+  if (!isRestaurantOrder) {
     if (currentReservedBalance >= orderTotal) {
       newReservedBalance = (currentReservedBalance - orderTotal).toFixed(2);
     } else {

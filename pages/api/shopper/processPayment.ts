@@ -614,30 +614,8 @@ export default async function handler(
       // SAME SHOP COMBINED ORDERS: Special wallet handling
 
       // 1. Remove found items amount from reserved balance
+      // NOTE: Earnings are NOT added here - they will be added when orders are delivered
       newReserved = currentReserved - formattedOrderAmount;
-
-      // 2. Calculate total fees from all orders in the batch
-      let totalFees = 0;
-      allOrdersInBatch.forEach((order: any) => {
-        const serviceFee = parseFloat(order.service_fee || "0");
-        const deliveryFee = parseFloat(order.delivery_fee || "0");
-        totalFees += serviceFee + deliveryFee;
-      });
-
-      // 3. Fetch delivery commission percentage and calculate platform fee
-      const systemConfigResponse = await hasuraClient.request(
-        GET_SYSTEM_CONFIG_FOR_FEES
-      );
-      const deliveryCommissionPercentage = parseFloat(
-        systemConfigResponse?.System_configuratioins?.[0]
-          ?.deliveryCommissionPercentage || "20"
-      );
-
-      const platformFee = (totalFees * deliveryCommissionPercentage) / 100;
-      const shopperEarnings = totalFees - platformFee;
-
-      // 4. Add shopper earnings (after platform fee deduction) to available balance
-      newAvailable = parseFloat(wallet.available_balance) + shopperEarnings;
     } else if (hasCombinedOrders && !isSameShopCombined) {
       // DIFFERENT SHOP COMBINED ORDERS: Process payment for specific order only
       // Find the specific order being paid for
@@ -658,27 +636,8 @@ export default async function handler(
 
       // Deduct the original order total from reserved balance
       // (The found items amount is already accounted for in formattedOrderAmount)
+      // NOTE: Earnings are NOT added here - they will be added when orders are delivered
       newReserved = currentReserved - orderOriginalTotal;
-
-      // Calculate fees for this specific order only
-      const serviceFee = parseFloat(currentOrder.service_fee || "0");
-      const deliveryFee = parseFloat(currentOrder.delivery_fee || "0");
-      const orderFees = serviceFee + deliveryFee;
-
-      // Fetch delivery commission percentage and calculate platform fee
-      const systemConfigResponse = await hasuraClient.request(
-        GET_SYSTEM_CONFIG_FOR_FEES
-      );
-      const deliveryCommissionPercentage = parseFloat(
-        systemConfigResponse?.System_configuratioins?.[0]
-          ?.deliveryCommissionPercentage || "20"
-      );
-
-      const platformFee = (orderFees * deliveryCommissionPercentage) / 100;
-      const shopperEarnings = orderFees - platformFee;
-
-      // Add shopper earnings (after platform fee deduction) to available balance
-      newAvailable = parseFloat(wallet.available_balance) + shopperEarnings;
     } else {
       // SINGLE ORDERS: Use existing logic
       newReserved = currentReserved - originalAmount;
@@ -756,26 +715,9 @@ export default async function handler(
       // Skipping wallet transaction creation for reel order to avoid foreign key constraint issues
     }
 
-    // Calculate fees added to available balance
-    let feesAddedToAvailable = 0;
-    if (isSameShopCombined && hasCombinedOrders) {
-      // For same-shop combined orders, sum fees from all orders in batch
-      allOrdersInBatch.forEach((order: any) => {
-        const serviceFee = parseFloat(order.service_fee || "0");
-        const deliveryFee = parseFloat(order.delivery_fee || "0");
-        feesAddedToAvailable += serviceFee + deliveryFee;
-      });
-    } else if (hasCombinedOrders && !isSameShopCombined) {
-      // For different-shop combined orders, only calculate fees for the specific order being paid for
-      const currentOrder = allOrdersInBatch.find(
-        (order) => order.id === orderId
-      );
-      if (currentOrder) {
-        const serviceFee = parseFloat(currentOrder.service_fee || "0");
-        const deliveryFee = parseFloat(currentOrder.delivery_fee || "0");
-        feesAddedToAvailable = serviceFee + deliveryFee;
-      }
-    }
+    // NOTE: Earnings are NOT added to available balance during payment
+    // Earnings will be added when orders are delivered via handleDeliveredOperation
+    const feesAddedToAvailable = 0;
 
     const responseData = {
       success: true,
