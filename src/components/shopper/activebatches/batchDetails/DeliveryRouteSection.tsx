@@ -29,6 +29,7 @@ interface DeliveryRouteSectionProps {
   handleDirectionsClick: (address: string) => void;
   handleChatClick: (customerId: string, customerName: string) => void;
   getActionButton: (order: Order) => React.ReactNode;
+  onConfirmDeliveryForCustomer?: (orders: Order[]) => void;
 }
 
 export default function DeliveryRouteSection({
@@ -37,6 +38,7 @@ export default function DeliveryRouteSection({
   handleDirectionsClick,
   handleChatClick,
   getActionButton,
+  onConfirmDeliveryForCustomer,
 }: DeliveryRouteSectionProps) {
   return (
     <div className="space-y-6 px-3 sm:px-0">
