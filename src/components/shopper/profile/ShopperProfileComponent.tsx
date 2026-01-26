@@ -878,22 +878,6 @@ export default function ShopperProfileComponent() {
             </div>
           </div>
         </div>
-
-        {/* Footer Buttons */}
-        <div className="mt-8 flex flex-col-reverse gap-4 sm:flex-row sm:justify-end">
-          <button
-            onClick={() => router.back()}
-            className="w-full rounded-xl border-2 border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-700 shadow-md transition-all hover:bg-gray-50 hover:shadow-lg sm:w-auto"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSaveChanges}
-            className="w-full rounded-xl bg-gradient-to-r from-green-600 to-green-700 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:from-green-700 hover:to-green-800 hover:shadow-green-500/25 sm:w-auto"
-          >
-            Save Changes
-          </button>
-        </div>
       </div>
 
       {/* Update Shopper Drawer */}
