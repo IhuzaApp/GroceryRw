@@ -85,15 +85,18 @@ export default async function handler(
       });
     }
 
-    // Handle combined orders specially
+    // Handle combined orders (different customers/routes)
+    // NOTE: For "combined" orderType (different customers), verify ONLY the specific order
+    // Do NOT verify all orders in the combined group - each order should be verified independently
+    // Only "combined_customer" (same customer) should verify all orders together
     if (orderType === "combined") {
-      // First, get the order to check if it has a combined_order_id
+      // For combined orders going to different customers/routes,
+      // verify only the specific order being delivered
       const orderQuery = gql`
-        query GetOrderCombinedId($orderId: uuid!) {
+        query GetOrderPin($orderId: uuid!) {
           Orders_by_pk(id: $orderId) {
             id
             pin
-            combined_order_id
           }
         }
       `;
@@ -109,65 +112,12 @@ export default async function handler(
           .json({ error: "Order not found", verified: false });
       }
 
-      // If this order has a combined_order_id, verify all orders in the group have the same PIN
-      if (order.combined_order_id) {
-        const combinedQuery = gql`
-          query GetCombinedOrdersPins($combined_order_id: uuid!) {
-            Orders(where: { combined_order_id: { _eq: $combined_order_id } }) {
-              id
-              pin
-            }
-          }
-        `;
-
-        const combinedData = await hasuraClient.request<any>(combinedQuery, {
-          combined_order_id: order.combined_order_id,
-        });
-
-        const combinedOrders = combinedData.Orders;
-
-        if (!combinedOrders || combinedOrders.length === 0) {
-          return res.status(404).json({
-            error: "No combined orders found",
-            verified: false,
-          });
-        }
-
-        // Check if all orders in the combined group have the same PIN
-        const pins = combinedOrders.map((o: any) => o.pin).filter(Boolean);
-        const uniquePins = [...new Set(pins)];
-
-        if (uniquePins.length === 0) {
-          return res.status(400).json({
-            error: "No PINs found for combined orders",
-            verified: false,
-          });
-        }
-
-        if (uniquePins.length > 1) {
-          return res.status(400).json({
-            error: "Combined orders have inconsistent PINs",
-            verified: false,
-          });
-        }
-
-        // Verify the PIN against the shared PIN
-        const verified = uniquePins[0] === pin;
-
-        return res.status(200).json({
-          verified,
-          message: verified
-            ? "Combined order PIN verified successfully"
-            : "Invalid PIN for combined order",
-        });
-      } else {
-        // This is a combined order type but no combined_order_id - treat as regular order
-        const verified = order.pin && order.pin === pin;
-        return res.status(200).json({
-          verified,
-          message: verified ? "PIN verified successfully" : "Invalid PIN",
-        });
-      }
+      // Verify only this specific order's PIN
+      const verified = order.pin && order.pin === pin;
+      return res.status(200).json({
+        verified,
+        message: verified ? "PIN verified successfully" : "Invalid PIN",
+      });
     }
 
     // Query the appropriate table based on order type

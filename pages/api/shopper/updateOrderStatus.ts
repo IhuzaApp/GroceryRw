@@ -102,13 +102,17 @@ export default async function handler(
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  const { orderId, status } = req.body;
+  const { orderId, status, updateOnlyThisOrder } = req.body;
 
   if (!orderId || !status) {
     return res
       .status(400)
       .json({ error: "Missing required fields: orderId and status" });
   }
+
+  // If updateOnlyThisOrder is true, we should only update the specific order
+  // even if it's part of a combined order (e.g., orders going to different customers)
+  const shouldUpdateOnlyThisOrder = updateOnlyThisOrder === true;
 
   // Validate status value
   const validStatuses = [
@@ -334,9 +338,96 @@ export default async function handler(
 
     let updatedOrders: any[] = [];
 
-    // If this order is part of a combined order, update all orders with same combined_order_id AND same shop_id
+    // IMPORTANT: Check updateOnlyThisOrder FIRST before checking combinedId
+    // If updateOnlyThisOrder is true, we should only update the specific order
+    // even if it's part of a combined order (e.g., orders going to different customers)
+    if (shouldUpdateOnlyThisOrder) {
+      console.log("🔄 [UPDATE ORDER STATUS] Updating ONLY this order (different customers):", {
+        orderId,
+        combinedId,
+        status,
+      });
+      
+      // Single order update - skip combined order logic
+      const UPDATE_ORDER_STATUS = gql`
+        mutation UpdateOrderStatus(
+          $id: uuid!
+          $status: String!
+          $updated_at: timestamptz!
+        ) {
+          update_Orders_by_pk(
+            pk_columns: { id: $id }
+            _set: { status: $status, updated_at: $updated_at }
+          ) {
+            id
+            status
+            updated_at
+          }
+        }
+      `;
+      const UPDATE_REEL_ORDER_STATUS = gql`
+        mutation UpdateReelOrderStatus(
+          $id: uuid!
+          $status: String!
+          $updated_at: timestamptz!
+        ) {
+          update_reel_orders_by_pk(
+            pk_columns: { id: $id }
+            _set: { status: $status, updated_at: $updated_at }
+          ) {
+            id
+            status
+            updated_at
+          }
+        }
+      `;
+      const UPDATE_RESTAURANT_ORDER_STATUS = gql`
+        mutation UpdateRestaurantOrderStatus(
+          $id: uuid!
+          $status: String!
+          $updated_at: timestamptz!
+        ) {
+          update_restaurant_orders_by_pk(
+            pk_columns: { id: $id }
+            _set: { status: $status, updated_at: $updated_at }
+          ) {
+            id
+            status
+            updated_at
+          }
+        }
+      `;
 
-    if (combinedId) {
+      if (isReelOrder) {
+        const result = await hasuraClient.request<any>(
+          UPDATE_REEL_ORDER_STATUS,
+          {
+            id: orderId,
+            status,
+            updated_at: currentTimestamp,
+          }
+        );
+        updatedOrders = [result.update_reel_orders_by_pk];
+      } else if (isRestaurantOrder) {
+        const result = await hasuraClient.request<any>(
+          UPDATE_RESTAURANT_ORDER_STATUS,
+          {
+            id: orderId,
+            status,
+            updated_at: currentTimestamp,
+          }
+        );
+        updatedOrders = [result.update_restaurant_orders_by_pk];
+      } else {
+        const result = await hasuraClient.request<any>(UPDATE_ORDER_STATUS, {
+          id: orderId,
+          status,
+          updated_at: currentTimestamp,
+        });
+        updatedOrders = [result.update_Orders_by_pk];
+      }
+    } else if (combinedId) {
+      // If this order is part of a combined order, update all orders with same combined_order_id AND same shop_id
       const variables = {
         combinedId,
         status,
