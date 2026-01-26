@@ -277,28 +277,18 @@ export default async function handler(
 
         // Calculate new balances
         const orderTotal = parseFloat(order.total);
-        const serviceFee = parseFloat(order.service_fee || "0");
-        const deliveryFee = parseFloat(order.delivery_fee || "0");
-
-        const currentAvailableBalance = parseFloat(wallet.available_balance);
         const currentReservedBalance = parseFloat(wallet.reserved_balance);
 
-        // Add service fee and delivery fee to available balance
-        const newAvailableBalance = (
-          currentAvailableBalance +
-          serviceFee +
-          deliveryFee
-        ).toFixed(2);
-
-        // Add order total to reserved balance
+        // NOTE: Earnings are NOT added here - they will be added when the order is delivered
+        // Only add order total to reserved balance
         const newReservedBalance = (
           currentReservedBalance + orderTotal
         ).toFixed(2);
 
-        // Update wallet balances
+        // Update wallet balances (only reserved balance changes, available balance stays the same)
         await hasuraClient.request(UPDATE_WALLET_BALANCES, {
           wallet_id: wallet.id,
-          available_balance: newAvailableBalance,
+          available_balance: wallet.available_balance, // Keep existing available balance
           reserved_balance: newReservedBalance,
         });
 
