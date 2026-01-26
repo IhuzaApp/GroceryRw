@@ -1,7 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useTheme } from "../../../context/ThemeContext";
-import { StatusBadge } from "./StatusBadge";
 import { formatCurrencySync } from "../../../utils/formatCurrency";
 
 interface Order {
@@ -39,15 +38,71 @@ interface BatchCardMobileProps {
 
 export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
   const { theme } = useTheme();
+  const [showMenu, setShowMenu] = useState(false);
   const isReelOrder = order.orderType === "reel";
   const isRestaurantOrder = order.orderType === "restaurant";
 
+  // Get icon color based on order type
+  const getIconColor = () => {
+    if (isReelOrder) return "bg-green-500";
+    if (isRestaurantOrder) return "bg-blue-500";
+    return "bg-orange-500";
+  };
+
+
+  // Get service/provider name
+  const getServiceName = () => {
+    if (isReelOrder) {
+      return order.reel?.title || "Quick Batch";
+    }
+    if (isRestaurantOrder) {
+      return order.shopName || "Restaurant Order";
+    }
+    return order.shopName || "Batch";
+  };
+
+  // Get destination text
+  const getDestination = () => {
+    if (isReelOrder) {
+      return `${order.customerName || "Customer"}`;
+    }
+    return `${order.shopName} to ${order.customerName}`;
+  };
+
+  // Get status label text
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "accepted":
+        return "Accepted";
+      case "picked":
+        return "Picked Up";
+      case "shopping":
+        return "Shopping";
+      case "on_the_way":
+        return "On The Way";
+      case "at_customer":
+        return "At Customer";
+      default:
+        return status.charAt(0).toUpperCase() + status.slice(1).replace("_", " ");
+    }
+  };
+
+  // Calculate delivery countdown (same as desktop)
   const getDeliveryCountdown = (deliveryTime: string) => {
     const deliveryDate = new Date(deliveryTime);
     const timeDiff = deliveryDate.getTime() - currentTime.getTime();
 
     if (timeDiff <= 0) {
-      return { isOverdue: true, minutes: 0, totalMinutes: 0, hours: 0 };
+      // Calculate overdue time
+      const overdueMinutes = Math.ceil(Math.abs(timeDiff) / (1000 * 60));
+      const overdueHours = Math.floor(overdueMinutes / 60);
+      const overdueMins = overdueMinutes % 60;
+      return { 
+        isOverdue: true, 
+        minutes: overdueMins, 
+        hours: overdueHours, 
+        totalMinutes: overdueMinutes 
+      };
     }
 
     const totalMinutes = Math.ceil(timeDiff / (1000 * 60));
@@ -57,121 +112,138 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
     return { isOverdue: false, minutes, hours, totalMinutes };
   };
 
-  const getNextActionButton = (status: string) => {
-    const buttonClass = isReelOrder
-      ? "rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:from-indigo-700 hover:to-purple-700 shadow-md hover:shadow-indigo-500/25 flex items-center gap-1"
-      : isRestaurantOrder
-      ? "rounded-lg bg-gradient-to-r from-orange-600 to-red-600 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:from-orange-700 hover:to-red-700 shadow-md hover:shadow-orange-500/25 flex items-center gap-1"
-      : "rounded-lg bg-gradient-to-r from-emerald-600 to-green-600 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:from-emerald-700 hover:to-green-700 shadow-md hover:shadow-emerald-500/25 flex items-center gap-1";
+  // Format overdue time in a human-readable way
+  const formatOverdueTime = (totalMinutes: number) => {
+    const minutes = totalMinutes;
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const weeks = Math.floor(days / 7);
+    const months = Math.floor(days / 30);
+    const years = Math.floor(days / 365);
 
-    const isRestaurantUserReel =
-      order.reel?.restaurant_id || order.reel?.user_id;
-
-    switch (status) {
-      case "accepted":
-        return (
-          <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <button className={buttonClass}>
-              <svg
-                className="h-3 w-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                {isRestaurantUserReel ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  />
-                ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                )}
-              </svg>
-              {isRestaurantUserReel ? "Start Delivery" : "Start Shopping"}
-            </button>
-          </Link>
-        );
-      case "at_customer":
-      case "on_the_way":
-        return (
-          <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <button className={buttonClass}>
-              <svg
-                className="h-3 w-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              Confirm Delivery
-            </button>
-          </Link>
-        );
-      default:
-        return (
-          <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <button className={buttonClass}>
-              <svg
-                className="h-3 w-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                />
-              </svg>
-              View Details
-            </button>
-          </Link>
-        );
+    if (years > 0) {
+      const remainingMonths = Math.floor((days % 365) / 30);
+      if (remainingMonths > 0) {
+        return `${years} year${years > 1 ? "s" : ""} ${remainingMonths} month${remainingMonths > 1 ? "s" : ""}`;
+      }
+      return `${years} year${years > 1 ? "s" : ""}`;
     }
+
+    if (months > 0) {
+      const remainingDays = days % 30;
+      if (remainingDays > 0) {
+        return `${months} month${months > 1 ? "s" : ""} ${remainingDays} day${remainingDays > 1 ? "s" : ""}`;
+      }
+      return `${months} month${months > 1 ? "s" : ""}`;
+    }
+
+    if (weeks > 0) {
+      const remainingDays = days % 7;
+      if (remainingDays > 0) {
+        return `${weeks} week${weeks > 1 ? "s" : ""} ${remainingDays} day${remainingDays > 1 ? "s" : ""}`;
+      }
+      return `${weeks} week${weeks > 1 ? "s" : ""}`;
+    }
+
+    if (days > 0) {
+      const remainingHours = hours % 24;
+      if (remainingHours > 0) {
+        return `${days} day${days > 1 ? "s" : ""} ${remainingHours}h`;
+      }
+      return `${days} day${days > 1 ? "s" : ""}`;
+    }
+
+    if (hours > 0) {
+      const remainingMinutes = minutes % 60;
+      if (remainingMinutes > 0) {
+        return `${hours}h ${remainingMinutes}m`;
+      }
+      return `${hours}h`;
+    }
+
+    return `${minutes}m`;
   };
+
+  // Format expected delivery time with countdown
+  const formatExpectedDeliveryTime = () => {
+    if (!order.deliveryTime) {
+      return { text: "N/A", color: "text-gray-600" };
+    }
+
+    const countdown = getDeliveryCountdown(order.deliveryTime);
+    const deliveryDate = new Date(order.deliveryTime);
+
+    if (countdown.isOverdue) {
+      const overdueText = `Delayed by ${formatOverdueTime(countdown.totalMinutes)}`;
+      return { text: overdueText, color: "text-red-600" };
+    }
+
+    // Format the delivery time
+    const timeString = deliveryDate.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+    // Determine color based on remaining time
+    let colorClass = "text-green-600"; // Default: green (plenty of time)
+    
+    if (countdown.totalMinutes <= 30) {
+      // Yellow when getting close (30 minutes or less)
+      colorClass = "text-yellow-600";
+    }
+
+    // Add countdown
+    let timeText = "";
+    if (countdown.totalMinutes <= 30) {
+      timeText = `${timeString} (${countdown.totalMinutes}m remaining)`;
+    } else if (countdown.hours > 0) {
+      timeText = `${timeString} (${countdown.hours}h ${countdown.minutes}m remaining)`;
+    } else {
+      timeText = `${timeString} (${countdown.minutes}m remaining)`;
+    }
+
+    return { text: timeText, color: colorClass };
+  };
+
+  // Get delivery time info once
+  const deliveryTimeInfo = formatExpectedDeliveryTime();
 
   return (
     <div
-      className={`rounded-xl border-2 p-4 transition-all duration-300 hover:shadow-lg ${
-        theme === "dark"
-          ? isReelOrder
-            ? "border-purple-600 bg-gradient-to-br from-gray-800 to-purple-900/20 text-gray-100 hover:border-purple-500 hover:shadow-purple-500/25"
-            : isRestaurantOrder
-            ? "border-orange-600 bg-gradient-to-br from-gray-800 to-orange-900/20 text-gray-100 hover:border-orange-500 hover:shadow-orange-500/25"
-            : "border-emerald-600 bg-gradient-to-br from-gray-800 to-emerald-900/20 text-gray-100 hover:border-emerald-500 hover:shadow-emerald-500/25"
-          : isReelOrder
-          ? "border-purple-200 bg-gradient-to-br from-white to-purple-50 text-gray-900 hover:border-purple-300 hover:shadow-purple-500/25"
-          : isRestaurantOrder
-          ? "border-orange-200 bg-gradient-to-br from-white to-orange-50 text-gray-900 hover:border-orange-300 hover:shadow-orange-500/25"
-          : "border-emerald-200 bg-gradient-to-br from-white to-emerald-50 text-gray-900 hover:border-emerald-300 hover:shadow-emerald-500/25"
+      className={`relative rounded-2xl bg-white p-4 shadow-sm ${
+        theme === "dark" ? "bg-gray-800" : "bg-white"
       }`}
     >
-      {/* Batch Type Indicators */}
-      <div className="mb-3 flex flex-wrap items-center justify-center gap-2">
-        {isReelOrder && (
-          <div className="flex items-center gap-1 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 px-3 py-1 text-center text-xs font-bold text-white shadow-md">
+      {/* Ellipsis Menu Button - Top Right */}
+      <button
+        onClick={() => setShowMenu(!showMenu)}
+        className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
+      >
+        <svg
+          className="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+          />
+        </svg>
+      </button>
+
+      {/* Service/Provider Header */}
+      <div className="mb-4 flex items-center gap-3">
+        {/* Circular Icon */}
+        <div
+          className={`flex h-12 w-12 items-center justify-center rounded-full ${getIconColor()} text-white`}
+        >
+          {isReelOrder ? (
             <svg
-              className="h-3 w-3"
+              className="h-6 w-6"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -183,14 +255,9 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
                 d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
               />
             </svg>
-            Quick Batch
-          </div>
-        )}
-
-        {isRestaurantOrder && (
-          <div className="flex items-center gap-1 rounded-full bg-gradient-to-r from-orange-600 to-red-600 px-3 py-1 text-center text-xs font-bold text-white shadow-md">
+          ) : isRestaurantOrder ? (
             <svg
-              className="h-3 w-3"
+              className="h-6 w-6"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -202,149 +269,128 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
                 d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
               />
             </svg>
-            Restaurant Order
-          </div>
-        )}
-
-        {/* Status Badge */}
-        <StatusBadge status={order.status} />
-
-        {order.deliveryTime &&
-          !isReelOrder &&
-          !isRestaurantOrder &&
-          (() => {
-            const countdown = getDeliveryCountdown(order.deliveryTime);
-            if (!countdown.isOverdue) return null; // Only show if overdue
-            return (
-              <div className="flex items-center gap-1 rounded-full bg-gradient-to-r from-red-600 to-rose-600 px-3 py-1 text-center text-xs font-bold text-white shadow-md">
-                <svg
-                  className="h-3 w-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                OVERDUE
-              </div>
-            );
-          })()}
-      </div>
-
-      {/* Header Section */}
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div
-            className={`rounded-xl p-3 shadow-md ${
-              isReelOrder
-                ? theme === "dark"
-                  ? "bg-gradient-to-br from-indigo-500 to-purple-600"
-                  : "bg-gradient-to-br from-indigo-400 to-purple-500"
-                : isRestaurantOrder
-                ? theme === "dark"
-                  ? "bg-gradient-to-br from-orange-500 to-red-600"
-                  : "bg-gradient-to-br from-orange-400 to-red-500"
-                : theme === "dark"
-                ? "bg-gradient-to-br from-emerald-500 to-green-600"
-                : "bg-gradient-to-br from-emerald-400 to-green-500"
-            }`}
-          >
+          ) : (
             <svg
-              className="h-6 w-6 text-white"
+              className="h-6 w-6"
               fill="none"
-              viewBox="0 0 24 24"
               stroke="currentColor"
+              viewBox="0 0 24 24"
             >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
               />
             </svg>
-          </div>
-          <div>
-            <h3
-              className={`text-lg font-bold ${
-                theme === "dark" ? "text-gray-100" : "text-gray-900"
-              }`}
-            >
-              #{order.OrderID}
-            </h3>
-            <p
-              className={`text-sm ${
-                theme === "dark" ? "text-gray-300" : "text-gray-600"
-              }`}
-            >
-              {order.items} items
-            </p>
-          </div>
+          )}
         </div>
-
-        <div
-          className={`rounded-lg p-3 ${
-            theme === "dark" ? "bg-gray-700" : "bg-gray-50"
+        {/* Service Name */}
+        <h3
+          className={`text-lg font-bold ${
+            theme === "dark" ? "text-gray-100" : "text-gray-900"
           }`}
         >
-          <div className="text-center">
-            <p
-              className={`text-xl font-bold ${
-                isReelOrder
-                  ? theme === "dark"
-                    ? "text-indigo-400"
-                    : "text-indigo-600"
-                  : isRestaurantOrder
-                  ? theme === "dark"
-                    ? "text-orange-400"
-                    : "text-orange-600"
-                  : theme === "dark"
-                  ? "text-emerald-400"
-                  : "text-emerald-600"
-              }`}
-            >
-              {formatCurrencySync(order.estimatedEarnings || 0)}
-            </p>
-            <p
-              className={`text-xs font-medium ${
-                theme === "dark" ? "text-gray-400" : "text-gray-500"
-              }`}
-            >
-              Earnings
-            </p>
-          </div>
+          {getServiceName()}
+        </h3>
+      </div>
+
+      {/* Details Section */}
+      <div className="mb-4 space-y-2">
+        {/* Destination */}
+        <div>
+          <p
+            className={`text-xs ${
+              theme === "dark" ? "text-gray-400" : "text-gray-500"
+            }`}
+          >
+            Destination
+          </p>
+          <p
+            className={`text-sm font-medium ${
+              theme === "dark" ? "text-gray-200" : "text-gray-800"
+            }`}
+          >
+            {getDestination()}
+          </p>
+        </div>
+
+        {/* Earning */}
+        <div>
+          <p
+            className={`text-xs ${
+              theme === "dark" ? "text-gray-400" : "text-gray-500"
+            }`}
+          >
+            Earning
+          </p>
+          <p
+            className={`text-sm font-medium ${
+              theme === "dark" ? "text-gray-200" : "text-gray-800"
+            }`}
+          >
+            {formatCurrencySync(order.estimatedEarnings || 0)}
+          </p>
+        </div>
+
+        {/* Expected Delivery Time */}
+        <div>
+          <p
+            className={`text-xs ${
+              theme === "dark" ? "text-gray-400" : "text-gray-500"
+            }`}
+          >
+            Expected delivery time
+          </p>
+          <p
+            className={`text-sm font-medium ${
+              theme === "dark" 
+                ? deliveryTimeInfo.color === "text-red-600"
+                  ? "text-red-400"
+                  : deliveryTimeInfo.color === "text-yellow-600"
+                  ? "text-yellow-400"
+                  : "text-green-400"
+                : deliveryTimeInfo.color
+            }`}
+          >
+            {deliveryTimeInfo.text}
+          </p>
         </div>
       </div>
 
       {/* Footer Actions */}
-      <div className="flex items-center justify-between gap-2">
-        <a
-          href={`https://maps.google.com/?q=${order.customerLat},${order.customerLng}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`flex items-center gap-1 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 ${
-            theme === "dark"
-              ? "text-blue-400 hover:bg-blue-900/20 hover:text-blue-300"
-              : "text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-          }`}
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="h-4 w-4"
+      <div className="flex items-center justify-between gap-3">
+        {/* Status Badge/Label */}
+        <div className="flex-1">
+          <span className="inline-flex items-center rounded-full bg-green-100 px-3 py-1.5 text-sm font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
+            {getStatusLabel(order.status)}
+          </span>
+        </div>
+
+        {/* Detail Arrow Button - Navigate to order details */}
+        <Link href={`/Plasa/active-batches/batch/${order.id}`}>
+          <button
+            className={`flex h-10 w-10 items-center justify-center rounded-full ${
+              theme === "dark"
+                ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                : "bg-white text-gray-600 hover:bg-gray-50 shadow-sm"
+            } transition-colors`}
           >
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-            <circle cx="12" cy="10" r="3" />
-          </svg>
-          Directions
-        </a>
-        {getNextActionButton(order.status)}
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+        </Link>
       </div>
     </div>
   );

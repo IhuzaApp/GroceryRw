@@ -74,6 +74,35 @@ export function ResponsiveBatchView({
     setFilteredOrders(orders);
   }, [orders]);
 
+  // Group orders by day (created_at) for mobile view
+  const groupOrdersByDay = (ordersList: Order[]) => {
+    const grouped: { [key: string]: { orders: Order[]; date: Date } } = {};
+
+    ordersList.forEach((order) => {
+      const date = new Date(order.createdAt || order.deliveryTime || Date.now());
+      const dayKey = date.toLocaleDateString("en-US", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+
+      if (!grouped[dayKey]) {
+        grouped[dayKey] = { orders: [], date };
+      }
+      grouped[dayKey].orders.push(order);
+    });
+
+    // Sort days in descending order (most recent first)
+    return Object.keys(grouped)
+      .sort((a, b) => {
+        return grouped[b].date.getTime() - grouped[a].date.getTime();
+      })
+      .map((day) => ({
+        day,
+        orders: grouped[day].orders,
+      }));
+  };
+
   const calculateUrgency = (order: Order): string => {
     const now = currentTime.getTime();
 
@@ -180,15 +209,28 @@ export function ResponsiveBatchView({
 
           {/* Mobile Card View - Hidden on desktop */}
           <div className="block lg:hidden">
-            <div className="grid grid-cols-1 gap-4 sm:gap-6">
-              {filteredOrders.map((order) => (
-                <BatchCardMobile
-                  key={order.id}
-                  order={order}
-                  currentTime={currentTime}
-                />
-              ))}
-            </div>
+            {groupOrdersByDay(filteredOrders).map(({ day, orders }) => (
+              <div key={day} className="mb-6">
+                {/* Day Header */}
+                <h2
+                  className={`mb-4 text-lg font-bold ${
+                    theme === "dark" ? "text-gray-100" : "text-gray-900"
+                  }`}
+                >
+                  {day}
+                </h2>
+                {/* Cards for this day */}
+                <div className="grid grid-cols-1 gap-4">
+                  {orders.map((order) => (
+                    <BatchCardMobile
+                      key={order.id}
+                      order={order}
+                      currentTime={currentTime}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </>
       )}

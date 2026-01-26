@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button, Panel, Badge, Loader, toaster, Message } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
 import { useAuth } from "../../../context/AuthContext";
 import { useTheme } from "../../../context/ThemeContext";
+import { useSession } from "next-auth/react";
 import { logger } from "../../../utils/logger";
 import { formatCurrencySync } from "../../../utils/formatCurrency";
 import { ResponsiveBatchView } from "./ResponsiveBatchView";
@@ -86,6 +88,7 @@ export default function ActiveBatches({
   initialError = null,
 }: ActiveBatchesProps) {
   const { role } = useAuth();
+  const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [activeOrders, setActiveOrders] = useState<Order[]>(initialOrders);
@@ -96,6 +99,7 @@ export default function ActiveBatches({
   const { theme } = useTheme();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const checkIfMobile = () => {
@@ -316,7 +320,22 @@ export default function ActiveBatches({
         {/* Show orders or loading skeletons */}
         {(isLoading || (fetchSuccess && activeOrders.length > 0)) && (
           <ResponsiveBatchView 
-            orders={activeOrders} 
+            orders={
+              isMobile && searchQuery
+                ? activeOrders.filter(
+                    (order) =>
+                      order.OrderID.toString()
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase()) ||
+                      order.customerName
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase()) ||
+                      order.shopName
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase())
+                  )
+                : activeOrders
+            } 
             isLoading={isLoading}
             onRefresh={() => refetchActiveBatches(false)}
             isRefreshing={isRefreshing}
