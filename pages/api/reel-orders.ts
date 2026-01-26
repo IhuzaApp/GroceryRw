@@ -12,6 +12,7 @@ function generateOrderPin(): string {
 }
 
 // Create a reel order
+// Note: pin field is not in reel_orders schema, but we generate it for consistency with other order types
 const CREATE_REEL_ORDER = gql`
   mutation CreateReelOrder(
     $user_id: uuid!
@@ -25,7 +26,6 @@ const CREATE_REEL_ORDER = gql`
     $delivery_time: String!
     $delivery_note: String
     $delivery_address_id: uuid!
-    $pin: String!
   ) {
     insert_reel_orders_one(
       object: {
@@ -40,14 +40,12 @@ const CREATE_REEL_ORDER = gql`
         delivery_time: $delivery_time
         delivery_note: $delivery_note
         delivery_address_id: $delivery_address_id
-        pin: $pin
         shopper_id: null
         status: "PENDING"
       }
     ) {
       id
       OrderID
-      pin
     }
   }
 `;
@@ -102,10 +100,12 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    // Generate PIN and create reel order
+    // Generate PIN (same way as checkoutCard.tsx - 2-digit, 00-99)
     const orderPin = generateOrderPin();
+    
+    // Create reel order (pin field not in schema, but we generate it for response)
     const orderRes = await hasuraClient.request<{
-      insert_reel_orders_one: { id: string; OrderID: string; pin: string };
+      insert_reel_orders_one: { id: string; OrderID: string };
     }>(CREATE_REEL_ORDER, {
       user_id,
       reel_id,
@@ -118,18 +118,16 @@ export default async function handler(
       delivery_time,
       delivery_note: delivery_note || "",
       delivery_address_id,
-      pin: orderPin,
     });
 
     const orderId = orderRes.insert_reel_orders_one.id;
     const orderNumber = orderRes.insert_reel_orders_one.OrderID;
-    const pin = orderRes.insert_reel_orders_one.pin;
 
     return res.status(200).json({
       success: true,
       order_id: orderId,
       order_number: orderNumber,
-      pin: pin,
+      pin: orderPin, // Return generated PIN (same format as checkoutCard)
       message: "Reel order placed successfully",
     });
   } catch (error: any) {
