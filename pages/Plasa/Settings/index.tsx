@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/router";
 import ShopperLayout from "../../../src/components/shopper/ShopperLayout";
 import { useTheme } from "../../../src/context/ThemeContext";
 import GeneralTab from "../../../src/components/shopper/settings/GeneralTab";
+import MobileGeneralTab from "../../../src/components/shopper/settings/MobileGeneralTab";
 import WorkScheduleTab from "../../../src/components/shopper/settings/WorkScheduleTab";
 import PaymentTab from "../../../src/components/shopper/settings/PaymentTab";
 import NotificationTab from "../../../src/components/shopper/settings/NotificationTab";
@@ -21,6 +22,16 @@ function SettingsPage() {
   const router = useRouter();
   const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState("general");
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Memoize the tab change handler
   const handleTabChange = useCallback(
@@ -305,6 +316,36 @@ function SettingsPage() {
 
   const activeTabLabel = navItems.find((item) => item.key === activeTab)?.label;
 
+  // Mobile view - render mobile-specific components
+  if (isMobile) {
+    return (
+      <AuthGuard requireAuth={true} requireRole="shopper">
+        <ShopperLayout>
+          <div className="pb-20">
+            {/* Mobile Content */}
+            {activeTab === "general" && <MobileGeneralTab />}
+            {activeTab !== "general" && (
+              <div
+                className={`min-h-screen p-4 ${
+                  theme === "dark" ? "bg-gray-900" : "bg-gray-50"
+                }`}
+              >
+                <p
+                  className={`${
+                    theme === "dark" ? "text-gray-400" : "text-gray-600"
+                  }`}
+                >
+                  Mobile view for {activeTab} coming soon...
+                </p>
+              </div>
+            )}
+          </div>
+        </ShopperLayout>
+      </AuthGuard>
+    );
+  }
+
+  // Desktop view
   return (
     <AuthGuard requireAuth={true} requireRole="shopper">
       <ShopperLayout>
@@ -355,7 +396,7 @@ function SettingsPage() {
 
             <div className="flex gap-8">
               {/* Left Sidebar Navigation */}
-              <aside className="w-64 flex-shrink-0">
+              <aside className="hidden md:block w-64 flex-shrink-0">
                 <nav className="space-y-8">
                   {/* ACCOUNT Section */}
                   <div>
