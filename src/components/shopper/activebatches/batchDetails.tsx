@@ -281,7 +281,6 @@ export default function BatchDetails({
 
     const checkForPendingInvoiceProof = async () => {
       try {
-
         // Check main order
         if (order.status === "on_the_way") {
           const hasInvoice = await checkOrderHasInvoice(order.id);
@@ -305,7 +304,6 @@ export default function BatchDetails({
             }
           }
         }
-
       } catch (error) {
         console.error("❌ Error checking for pending invoice proof:", error);
       }
@@ -890,7 +888,9 @@ export default function BatchDetails({
         : order;
 
       // Verify OTP format (first 2 digits must match OrderID)
-      const expectedOrderIdDigits = ((targetOrderForPayment.OrderID as unknown as number) % 100)
+      const expectedOrderIdDigits = (
+        (targetOrderForPayment.OrderID as unknown as number) % 100
+      )
         .toString()
         .padStart(2, "0");
       const enteredOrderIdDigits = otp.substring(0, 2);
@@ -1348,7 +1348,6 @@ export default function BatchDetails({
 
   // Handle individual order delivery confirmation (for delivery route section)
   const handleIndividualDeliveryConfirmation = (targetOrder: any) => {
-
     // Show delivery confirmation modal for individual order
     // This is similar to combined order handling but for single orders
     const allOrderIds = [targetOrder.id];
@@ -1388,7 +1387,6 @@ export default function BatchDetails({
       isReelOrder: false,
       isRestaurantOrder: false,
     };
-
 
     setInvoiceData(combinedInvoiceData);
     setShowInvoiceModal(true);
@@ -1474,31 +1472,30 @@ export default function BatchDetails({
     const activeOrder = targetOrderOverride || order;
     if (!activeOrder?.id) return;
 
-
     const isRestaurantOrder = activeOrder?.orderType === "restaurant";
     const isRestaurantUserReel =
       activeOrder?.orderType === "reel" &&
       (activeOrder?.reel?.restaurant_id || activeOrder?.reel?.user_id);
-    
+
     // IMPORTANT: Check if the MAIN batch order has combined orders, not just the clicked order
     // This ensures we correctly identify combined orders even when clicking a specific order card
-    const hasCombinedOrdersInBatch = 
+    const hasCombinedOrdersInBatch =
       (order?.combinedOrders && order.combinedOrders.length > 0) ||
       (order?.orderIds && order.orderIds.length > 1) ||
       order?.orderType === "combined";
-    
+
     // Also check if the clicked order is part of the main batch's combined orders
-    const isClickedOrderPartOfBatch = targetOrderOverride && hasCombinedOrdersInBatch && (
-      order?.combinedOrders?.some((o: any) => o.id === activeOrder.id) ||
-      order?.orderIds?.includes(activeOrder.id) ||
-      order.id === activeOrder.id
-    );
-    
+    const isClickedOrderPartOfBatch =
+      targetOrderOverride &&
+      hasCombinedOrdersInBatch &&
+      (order?.combinedOrders?.some((o: any) => o.id === activeOrder.id) ||
+        order?.orderIds?.includes(activeOrder.id) ||
+        order.id === activeOrder.id);
+
     const isCombinedOrder =
       activeOrder?.orderType === "combined" ||
       hasCombinedOrdersInBatch ||
       isClickedOrderPartOfBatch;
-
 
     // For restaurant orders, show modal directly without generating invoice
     if (isRestaurantOrder) {
@@ -1520,8 +1517,7 @@ export default function BatchDetails({
       if (!o) return;
       const customerPhone =
         (o as any).orderedBy?.phone || o.customerPhone || "unknown";
-      const customerId =
-        (o as any).orderedBy?.id || o.customerId || "unknown";
+      const customerId = (o as any).orderedBy?.id || o.customerId || "unknown";
       const customerKey = `${customerId}_${customerPhone}`;
       customerKeys.add(customerKey);
     });
@@ -1541,11 +1537,9 @@ export default function BatchDetails({
       // For combined orders going to same customer, we should process all orders together
       const isSpecificOrderClick = !!targetOrderOverride;
 
-
       // If a specific order was clicked AND orders go to different customers,
       // only process that specific order (not all combined orders)
       if (isSpecificOrderClick && hasMultipleCustomers) {
-
         // Process only the clicked order - treat it as a combined order going to different customers
         // We set orderType to "combined" but will pass updateOnlyThisOrder flag to API
         const targetOrder = targetOrderOverride;
@@ -1554,9 +1548,12 @@ export default function BatchDetails({
           invoiceNumber: targetOrder.OrderID || targetOrder.id.slice(-8),
           orderId: targetOrder.id,
           orderNumber: targetOrder.OrderID || targetOrder.id.slice(-8),
-          customer: targetOrder.orderedBy?.name || targetOrder.user?.name || "Customer",
-          customerEmail: targetOrder.orderedBy?.email || targetOrder.user?.email || "",
-          customerPhone: targetOrder.orderedBy?.phone || targetOrder.user?.phone || "",
+          customer:
+            targetOrder.orderedBy?.name || targetOrder.user?.name || "Customer",
+          customerEmail:
+            targetOrder.orderedBy?.email || targetOrder.user?.email || "",
+          customerPhone:
+            targetOrder.orderedBy?.phone || targetOrder.user?.phone || "",
           shop: targetOrder.shop?.name || "Shop",
           shopAddress: targetOrder.shop?.address || "",
           deliveryStreet: targetOrder.address?.street || "",
@@ -1564,8 +1561,12 @@ export default function BatchDetails({
           deliveryPostalCode: targetOrder.address?.postal_code || "",
           deliveryPlaceDetails: targetOrder.address?.placeDetails || null,
           deliveryAddress: targetOrder.address
-            ? `${targetOrder.address.street || ""}, ${targetOrder.address.city || ""}${
-                targetOrder.address.postal_code ? `, ${targetOrder.address.postal_code}` : ""
+            ? `${targetOrder.address.street || ""}, ${
+                targetOrder.address.city || ""
+              }${
+                targetOrder.address.postal_code
+                  ? `, ${targetOrder.address.postal_code}`
+                  : ""
               }`
             : "",
           dateCreated: new Date().toLocaleString(),
@@ -1580,7 +1581,6 @@ export default function BatchDetails({
           isReelOrder: false,
           isRestaurantOrder: false,
         };
-
 
         setInvoiceData(mockInvoiceData);
         setShowInvoiceModal(true);
@@ -1600,7 +1600,6 @@ export default function BatchDetails({
           (o: any) => o.OrderID || o.id.slice(-8)
         ) || []),
       ];
-
 
       const combinedInvoiceData = {
         id: `combined_${order.id}_${Date.now()}`,
@@ -2860,8 +2859,7 @@ export default function BatchDetails({
           return (
             items?.map((item: any) => {
               // Handle both data formats: flattened (from orderDetails API) and nested (from combined orders API)
-              const isNestedFormat =
-                item.product && item.product.ProductName;
+              const isNestedFormat = item.product && item.product.ProductName;
 
               let productId,
                 productName,
@@ -2880,14 +2878,11 @@ export default function BatchDetails({
                   item.product?.image ||
                   "/images/groceryPlaceholder.png";
                 finalPrice =
-                  item.product?.final_price ||
-                  item.price?.toString() ||
-                  "0";
+                  item.product?.final_price || item.price?.toString() || "0";
                 measurementUnit = item.product?.measurement_unit || "item";
                 productNameData = {
                   id: item.product?.ProductName?.id || item.id,
-                  name:
-                    item.product?.ProductName?.name || "Unknown Product",
+                  name: item.product?.ProductName?.name || "Unknown Product",
                   description: item.product?.ProductName?.description || "",
                   barcode: item.product?.ProductName?.barcode || "",
                   sku: item.product?.ProductName?.sku || "",
@@ -2908,9 +2903,7 @@ export default function BatchDetails({
                   item.productImage ||
                   "/images/groceryPlaceholder.png";
                 finalPrice =
-                  item.product?.final_price ||
-                  item.price?.toString() ||
-                  "0";
+                  item.product?.final_price || item.price?.toString() || "0";
                 measurementUnit =
                   item.product?.measurement_unit ||
                   item.measurement_unit ||
@@ -2920,8 +2913,7 @@ export default function BatchDetails({
                   ? {
                       id: item.product.ProductName.id,
                       name: item.product.ProductName.name,
-                      description:
-                        item.product.ProductName.description || "",
+                      description: item.product.ProductName.description || "",
                       barcode: item.product.ProductName.barcode || "",
                       sku: item.product.ProductName.sku || "",
                       image:
@@ -2939,8 +2931,7 @@ export default function BatchDetails({
                       barcode: item.barcode || "",
                       sku: item.sku || "",
                       image:
-                        item.productImage ||
-                        "/images/groceryPlaceholder.png",
+                        item.productImage || "/images/groceryPlaceholder.png",
                       create_at: new Date().toISOString(),
                     };
               }
@@ -2975,10 +2966,7 @@ export default function BatchDetails({
         );
 
         // Handle combined orders
-        if (
-          data.order.combinedOrders &&
-          data.order.combinedOrders.length > 0
-        ) {
+        if (data.order.combinedOrders && data.order.combinedOrders.length > 0) {
           const mainShopId = data.order.shop?.id;
           const sameShopOrders = data.order.combinedOrders.filter(
             (subOrder: any) => subOrder.shop?.id === mainShopId
@@ -3038,7 +3026,7 @@ export default function BatchDetails({
       const { orderId } = event.detail;
       const currentOrderId = order?.id;
       const currentCombinedOrders = order?.combinedOrders || [];
-      
+
       // Refetch if this order or any combined order was accepted
       if (
         currentOrderId === orderId ||
@@ -3053,10 +3041,16 @@ export default function BatchDetails({
     };
 
     // Listen for custom event
-    window.addEventListener("order-accepted", handleOrderAccepted as EventListener);
+    window.addEventListener(
+      "order-accepted",
+      handleOrderAccepted as EventListener
+    );
 
     return () => {
-      window.removeEventListener("order-accepted", handleOrderAccepted as EventListener);
+      window.removeEventListener(
+        "order-accepted",
+        handleOrderAccepted as EventListener
+      );
     };
   }, [order?.id, order?.combinedOrders]);
 

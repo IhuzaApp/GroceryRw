@@ -131,7 +131,8 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
     };
 
     const config =
-      statusConfig[normalizedStatus as keyof typeof statusConfig] || statusConfig.pending;
+      statusConfig[normalizedStatus as keyof typeof statusConfig] ||
+      statusConfig.pending;
 
     return (
       <span
@@ -640,7 +641,9 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                     {formatDate(invoice.created_at)}
                   </p>
                 </div>
-                <div className="flex-shrink-0">{getStatusBadge(invoice.status)}</div>
+                <div className="flex-shrink-0">
+                  {getStatusBadge(invoice.status)}
+                </div>
               </div>
 
               {/* Customer Info */}

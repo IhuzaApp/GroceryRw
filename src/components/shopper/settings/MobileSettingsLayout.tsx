@@ -31,16 +31,14 @@ export default function MobileSettingsLayout({
       <div
         className={`sticky top-0 z-10 ${
           theme === "dark" ? "bg-gray-900" : "bg-white"
-        } border-b ${
-          theme === "dark" ? "border-gray-800" : "border-gray-200"
-        }`}
+        } border-b ${theme === "dark" ? "border-gray-800" : "border-gray-200"}`}
       >
         <div className="px-4 py-4">
           {/* Back Button and Title */}
-          <div className="flex items-center gap-4 mb-3">
+          <div className="mb-3 flex items-center gap-4">
             <button
               onClick={handleBack}
-              className={`p-2 -ml-2 rounded-lg transition-colors ${
+              className={`-ml-2 rounded-lg p-2 transition-colors ${
                 theme === "dark"
                   ? "text-gray-400 hover:bg-gray-800"
                   : "text-gray-600 hover:bg-gray-100"

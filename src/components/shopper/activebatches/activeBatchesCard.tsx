@@ -124,97 +124,106 @@ export default function ActiveBatches({
   }, []);
 
   // Refetch function that can be called manually or automatically
-  const refetchActiveBatches = useCallback(async (showLoading = true) => {
-    // Skip if not a shopper
-    if (role !== "shopper") {
-      setIsLoading(false);
-      return;
-    }
+  const refetchActiveBatches = useCallback(
+    async (showLoading = true) => {
+      // Skip if not a shopper
+      if (role !== "shopper") {
+        setIsLoading(false);
+        return;
+      }
 
-    if (showLoading) {
-      setIsLoading(true);
-    } else {
-      setIsRefreshing(true);
-    }
-    setError(null);
-    setFetchSuccess(false);
+      if (showLoading) {
+        setIsLoading(true);
+      } else {
+        setIsRefreshing(true);
+      }
+      setError(null);
+      setFetchSuccess(false);
 
-    const controller = new AbortController();
-    const signal = controller.signal;
+      const controller = new AbortController();
+      const signal = controller.signal;
 
-    async function fetchActiveBatches() {
-      // Add minimum loading time to ensure skeleton is visible (only for initial load)
-      const startTime = Date.now();
-      const minLoadingTime = showLoading ? 800 : 0; // No minimum for refresh
+      async function fetchActiveBatches() {
+        // Add minimum loading time to ensure skeleton is visible (only for initial load)
+        const startTime = Date.now();
+        const minLoadingTime = showLoading ? 800 : 0; // No minimum for refresh
 
-      try {
-        const response = await fetch("/api/shopper/activeBatches", {
-          signal,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          logger.error("API Error Response", "ActiveBatchesCard", {
-            status: response.status,
-            error: errorData,
+        try {
+          const response = await fetch("/api/shopper/activeBatches", {
+            signal,
+            headers: {
+              "Content-Type": "application/json",
+            },
           });
-          throw new Error(errorData.error || "Failed to fetch active batches");
-        }
 
-        const data = await response.json();
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            logger.error("API Error Response", "ActiveBatchesCard", {
+              status: response.status,
+              error: errorData,
+            });
+            throw new Error(
+              errorData.error || "Failed to fetch active batches"
+            );
+          }
 
-        if (!data.batches || data.batches.length === 0) {
-          logger.info("No active batches found", "ActiveBatchesCard", {
-            message: data.message,
-          });
-          setActiveOrders([]);
+          const data = await response.json();
+
+          if (!data.batches || data.batches.length === 0) {
+            logger.info("No active batches found", "ActiveBatchesCard", {
+              message: data.message,
+            });
+            setActiveOrders([]);
+            setFetchSuccess(true);
+            setFetchAttempted(true);
+            return;
+          }
+
+          setActiveOrders(data.batches);
           setFetchSuccess(true);
           setFetchAttempted(true);
-          return;
+        } catch (err) {
+          // Don't set error if it was canceled
+          if (err instanceof Error && err.name === "AbortError") {
+            return;
+          }
+
+          logger.error(
+            "Error fetching active batches",
+            "ActiveBatchesCard",
+            err
+          );
+          const errorMessage =
+            err instanceof Error ? err.message : "An unknown error occurred";
+          setError(errorMessage);
+          setFetchSuccess(false);
+          setFetchAttempted(true);
+          toaster.push(
+            <Message showIcon type="error" header="Error">
+              {errorMessage}
+            </Message>,
+            { placement: "topEnd" }
+          );
+        } finally {
+          // Ensure minimum loading time has passed (only for initial load)
+          const elapsedTime = Date.now() - startTime;
+          const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+
+          setTimeout(() => {
+            setIsLoading(false);
+            setIsRefreshing(false);
+          }, remainingTime);
         }
-
-        setActiveOrders(data.batches);
-        setFetchSuccess(true);
-        setFetchAttempted(true);
-      } catch (err) {
-        // Don't set error if it was canceled
-        if (err instanceof Error && err.name === "AbortError") {
-          return;
-        }
-
-        logger.error("Error fetching active batches", "ActiveBatchesCard", err);
-        const errorMessage =
-          err instanceof Error ? err.message : "An unknown error occurred";
-        setError(errorMessage);
-        setFetchSuccess(false);
-        setFetchAttempted(true);
-        toaster.push(
-          <Message showIcon type="error" header="Error">
-            {errorMessage}
-          </Message>,
-          { placement: "topEnd" }
-        );
-      } finally {
-        // Ensure minimum loading time has passed (only for initial load)
-        const elapsedTime = Date.now() - startTime;
-        const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
-
-        setTimeout(() => {
-          setIsLoading(false);
-          setIsRefreshing(false);
-        }, remainingTime);
       }
-    }
 
-    await fetchActiveBatches();
+      await fetchActiveBatches();
 
-    return () => {
-      controller.abort();
-    };
-  }, [role]);
+      return () => {
+        controller.abort();
+      };
+    },
+    [role]
+  );
 
   // Fetch orders client-side - always fetch when component mounts or role changes
   useEffect(() => {
@@ -232,10 +241,16 @@ export default function ActiveBatches({
     };
 
     // Listen for custom event
-    window.addEventListener("order-accepted", handleOrderAccepted as EventListener);
+    window.addEventListener(
+      "order-accepted",
+      handleOrderAccepted as EventListener
+    );
 
     return () => {
-      window.removeEventListener("order-accepted", handleOrderAccepted as EventListener);
+      window.removeEventListener(
+        "order-accepted",
+        handleOrderAccepted as EventListener
+      );
     };
   }, [refetchActiveBatches]);
 
@@ -274,7 +289,6 @@ export default function ActiveBatches({
               >
                 Active Batches
               </h1>
-            
             </div>
 
             {/* Search Bar and Refresh Button */}
@@ -287,7 +301,7 @@ export default function ActiveBatches({
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className={`w-full rounded-xl border-2 py-3.5 pl-12 pr-4 text-sm font-medium transition-all duration-200 ${
                     theme === "dark"
-                      ? "border-gray-700 bg-gray-800 text-gray-100 placeholder-gray-400 focus:border-blue-500 focus:bg-gray-750 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      ? "focus:bg-gray-750 border-gray-700 bg-gray-800 text-gray-100 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                       : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   }`}
                 />
@@ -309,7 +323,7 @@ export default function ActiveBatches({
                   </svg>
                 </div>
               </div>
-              
+
               {/* Refresh Button */}
               <button
                 onClick={() => refetchActiveBatches(false)}
@@ -318,7 +332,7 @@ export default function ActiveBatches({
                   theme === "dark"
                     ? "border-gray-700 bg-gray-800 text-gray-200 hover:border-gray-600 hover:bg-gray-700 active:bg-gray-600"
                     : "border-gray-200 bg-white text-gray-700 shadow-sm hover:border-gray-300 hover:bg-gray-50 active:bg-gray-100"
-                } ${isRefreshing ? "opacity-50 cursor-not-allowed" : ""}`}
+                } ${isRefreshing ? "cursor-not-allowed opacity-50" : ""}`}
                 title="Refresh batches"
               >
                 <svg
@@ -398,7 +412,7 @@ export default function ActiveBatches({
 
         {/* Show orders or loading skeletons */}
         {(isLoading || (fetchSuccess && activeOrders.length > 0)) && (
-          <ResponsiveBatchView 
+          <ResponsiveBatchView
             orders={
               isMobile && searchQuery
                 ? activeOrders.filter(
@@ -414,7 +428,7 @@ export default function ActiveBatches({
                         .includes(searchQuery.toLowerCase())
                   )
                 : activeOrders
-            } 
+            }
             isLoading={isLoading}
             onRefresh={() => refetchActiveBatches(false)}
             isRefreshing={isRefreshing}

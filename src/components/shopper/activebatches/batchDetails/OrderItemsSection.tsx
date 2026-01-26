@@ -47,7 +47,9 @@ export default function OrderItemsSection({
 
   // Helper to get customer ID from an order
   const getCustomerId = (o: any) => {
-    return o.orderedBy?.id || o.user_id || o.customer?.id || o.customerId || null;
+    return (
+      o.orderedBy?.id || o.user_id || o.customer?.id || o.customerId || null
+    );
   };
 
   // Check if combined orders are from the same customer

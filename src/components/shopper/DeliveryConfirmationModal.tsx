@@ -311,7 +311,6 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       setConfirmingDelivery(true);
       setForceOpen(true);
 
-
       // Determine which orders to update based on order type:
       // - combined_customer: All orders go to same customer, update all at once (earnings added for all)
       // - combined: Orders go to different customers/routes, update ONLY current order (ignore combinedOrderIds)
@@ -319,11 +318,12 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       // IMPORTANT: For "combined" (different customers), we must only update the specific order,
       // even if combinedOrderIds is present, because each order goes to a different customer
       let orderIdsToUpdate: string[];
-      
+
       if (invoiceData.orderType === "combined_customer") {
         // Same customer: update all orders together
         orderIdsToUpdate =
-          invoiceData.combinedOrderIds && invoiceData.combinedOrderIds.length > 0
+          invoiceData.combinedOrderIds &&
+          invoiceData.combinedOrderIds.length > 0
             ? invoiceData.combinedOrderIds
             : [invoiceData.orderId];
       } else {
@@ -361,9 +361,10 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       // even if it has a combined_order_id
       // If orderType is "combined" OR if we're only updating one order (not combined_customer),
       // we should set updateOnlyThisOrder to true to prevent updating all orders in the batch
-      const updateOnlyThisOrder = 
-        invoiceData.orderType === "combined" || 
-        (orderIdsToUpdate.length === 1 && invoiceData.orderType !== "combined_customer");
+      const updateOnlyThisOrder =
+        invoiceData.orderType === "combined" ||
+        (orderIdsToUpdate.length === 1 &&
+          invoiceData.orderType !== "combined_customer");
       for (const orderId of orderIdsToUpdate) {
         const response = await fetch("/api/shopper/updateOrderStatus", {
           method: "POST",
@@ -381,41 +382,44 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
         }
       }
 
-
       setDeliveryConfirmed(true);
 
       // For combined orders going to different customers, check if there are other pending orders
       // Only redirect if all orders in the combined batch are delivered
       let shouldRedirect = true;
-      
-      if (invoiceData.orderType === "combined" && orderIdsToUpdate.length === 1) {
+
+      if (
+        invoiceData.orderType === "combined" &&
+        orderIdsToUpdate.length === 1
+      ) {
         try {
-          
           // First, get the order details to find the combined_order_id
-          const orderDetailsResponse = await fetch(`/api/shopper/orderDetails?orderId=${invoiceData.orderId}`);
+          const orderDetailsResponse = await fetch(
+            `/api/shopper/orderDetails?orderId=${invoiceData.orderId}`
+          );
           if (orderDetailsResponse.ok) {
             const orderDetailsData = await orderDetailsResponse.json();
             const combinedOrderId = orderDetailsData.order?.combined_order_id;
-            
+
             if (combinedOrderId) {
               // Fetch all orders in the combined batch
               const combinedOrdersResponse = await fetch(
                 `/api/queries/combined-orders?combined_order_id=${combinedOrderId}`
               );
-              
+
               if (combinedOrdersResponse.ok) {
                 const combinedOrdersData = await combinedOrdersResponse.json();
                 const allOrdersInBatch = combinedOrdersData.orders || [];
-                
+
                 // Check if any orders are still pending (not delivered and not cancelled)
                 // Any order that's not delivered and not cancelled is considered pending
                 const pendingOrders = allOrdersInBatch.filter(
-                  (order: any) => 
-                    order.id !== invoiceData.orderId && 
-                    order.status !== "delivered" && 
+                  (order: any) =>
+                    order.id !== invoiceData.orderId &&
+                    order.status !== "delivered" &&
                     order.status !== "cancelled"
                 );
-                
+
                 if (pendingOrders.length > 0) {
                   shouldRedirect = false;
                   // Close the modal but don't redirect - stay on the page so user can deliver remaining orders

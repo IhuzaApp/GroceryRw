@@ -45,7 +45,8 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     };
 
     const config =
-      statusConfig[normalizedStatus as keyof typeof statusConfig] || statusConfig.pending;
+      statusConfig[normalizedStatus as keyof typeof statusConfig] ||
+      statusConfig.pending;
 
     return (
       <span
@@ -86,9 +87,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   return (
     <div
       className={`mb-6 rounded-2xl border ${
-        theme === "dark"
-          ? "border-gray-50"
-          : "bg-white shadow-sm"
+        theme === "dark" ? "border-gray-50" : "bg-white shadow-sm"
       } transition-all duration-200 hover:shadow-md`}
     >
       {/* Header */}
