@@ -470,6 +470,53 @@ a:visited {
   }
 }
 
+/* Settings Page - Improved SelectPicker and Input Styles */
+.rs-picker-toggle {
+  border-radius: 0.5rem !important;
+  transition: all 0.2s ease !important;
+}
+
+.rs-picker-toggle:hover {
+  border-color: #3b82f6 !important;
+}
+
+.rs-picker-toggle:focus,
+.rs-picker-toggle.rs-picker-toggle-active {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.dark .rs-picker-toggle {
+  background-color: #111827 !important;
+  border-color: #374151 !important;
+  color: #f3f4f6 !important;
+}
+
+.dark .rs-picker-toggle:hover {
+  border-color: #4b5563 !important;
+  background-color: #1f2937 !important;
+}
+
+.dark .rs-picker-menu {
+  background-color: #1f2937 !important;
+  border-color: #374151 !important;
+}
+
+.dark .rs-picker-select-menu-item {
+  color: #f3f4f6 !important;
+}
+
+.dark .rs-picker-select-menu-item:hover,
+.dark .rs-picker-select-menu-item.rs-picker-select-menu-item-focus {
+  background-color: #374151 !important;
+  color: #ffffff !important;
+}
+
+.dark .rs-picker-select-menu-item-active {
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
+}
+
 /* Mobile-specific scroll behavior */
 @media (max-width: 767px) {
   .reels-container {
@@ -631,4 +678,51 @@ body.hide-bottom-bar nav {
   body.hide-bottom-bar nav.fixed.bottom-0 {
     display: none !important;
   }
+}
+
+/* Settings Page - Improved SelectPicker and Input Styles */
+.rs-picker-toggle {
+  border-radius: 0.5rem !important;
+  transition: all 0.2s ease !important;
+}
+
+.rs-picker-toggle:hover {
+  border-color: #3b82f6 !important;
+}
+
+.rs-picker-toggle:focus,
+.rs-picker-toggle.rs-picker-toggle-active {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.dark .rs-picker-toggle {
+  background-color: #111827 !important;
+  border-color: #374151 !important;
+  color: #f3f4f6 !important;
+}
+
+.dark .rs-picker-toggle:hover {
+  border-color: #4b5563 !important;
+  background-color: #1f2937 !important;
+}
+
+.dark .rs-picker-menu {
+  background-color: #1f2937 !important;
+  border-color: #374151 !important;
+}
+
+.dark .rs-picker-select-menu-item {
+  color: #f3f4f6 !important;
+}
+
+.dark .rs-picker-select-menu-item:hover,
+.dark .rs-picker-select-menu-item.rs-picker-select-menu-item-focus {
+  background-color: #374151 !important;
+  color: #ffffff !important;
+}
+
+.dark .rs-picker-select-menu-item-active {
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
 }

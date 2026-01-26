@@ -426,11 +426,11 @@ function SettingsPage() {
               {/* Main Content Area */}
               <main className="flex-1">
                 <div
-                  className={`rounded-lg ${
+                  className={`rounded-xl border shadow-sm transition-shadow ${
                     theme === "dark"
-                      ? "bg-gray-800 border-gray-700"
-                      : "bg-white border-gray-200"
-                  } border`}
+                      ? "bg-gray-800 border-gray-700 shadow-gray-900/50"
+                      : "bg-white border-gray-200 shadow-gray-100"
+                  }`}
                 >
                   {tabs.find((tab) => tab.key === activeTab)?.component}
                 </div>

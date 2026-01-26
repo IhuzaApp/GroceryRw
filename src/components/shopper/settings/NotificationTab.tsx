@@ -58,6 +58,81 @@ interface NotificationSettings {
 }
 
 export default function NotificationTab() {
+  // Helper function to get notification icon
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case "new_order":
+        return (
+          <svg
+            className="h-5 w-5 text-blue-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+        );
+      case "batch_orders":
+        return (
+          <svg
+            className="h-5 w-5 text-green-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+            />
+          </svg>
+        );
+      default:
+        return (
+          <svg
+            className="h-5 w-5 text-gray-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+            />
+          </svg>
+        );
+    }
+  };
+
+  // Helper function to format time
+  const formatTime = (timestamp: number) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) {
+      return "Just now";
+    } else if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60);
+      return `${minutes}m ago`;
+    } else if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600);
+      return `${hours}h ago`;
+    } else if (diffInSeconds < 604800) {
+      const days = Math.floor(diffInSeconds / 86400);
+      return `${days}d ago`;
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
   const { data: session } = useSession();
   const { theme } = useTheme();
   const { isLoaded: isGoogleMapsLoaded } = useGoogleMap();
@@ -399,17 +474,17 @@ export default function NotificationTab() {
   }
 
   return (
-    <div className="p-4">
+    <div className="p-8">
       <h3
-        className={`mb-4 text-lg font-semibold ${
+        className={`mb-2 text-xl font-bold ${
           theme === "dark" ? "text-white" : "text-gray-900"
         }`}
       >
         Notification Settings
       </h3>
       <p
-        className={`mb-6 ${
-          theme === "dark" ? "text-gray-300" : "text-gray-600"
+        className={`mb-8 text-sm ${
+          theme === "dark" ? "text-gray-400" : "text-gray-600"
         }`}
       >
         Configure how you receive notifications for orders and batches based on
@@ -417,33 +492,27 @@ export default function NotificationTab() {
       </p>
 
       {/* Location Settings */}
-      <div
-        className={`mb-6 rounded-lg border p-4 ${
-          theme === "dark"
-            ? "border-gray-700 bg-gray-800"
-            : "border-gray-200 bg-white"
-        }`}
-      >
+      <div className="mb-8">
         <h4
-          className={`mb-4 font-medium ${
+          className={`mb-6 text-lg font-semibold ${
             theme === "dark" ? "text-white" : "text-gray-900"
           }`}
         >
           Location Preferences
         </h4>
 
-        <div className="mb-4">
+        <div className="mb-6">
           <div className="flex items-center justify-between">
             <div>
               <span
-                className={`font-medium ${
+                className={`text-base font-semibold ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
                 Use Live Location
               </span>
               <p
-                className={`text-sm ${
+                className={`mt-1.5 text-sm leading-relaxed ${
                   theme === "dark" ? "text-gray-400" : "text-gray-600"
                 }`}
               >
@@ -459,10 +528,10 @@ export default function NotificationTab() {
         </div>
 
         {!settings.use_live_location && (
-          <div className="mt-4">
-            <div className="mb-3 flex items-center justify-between">
+          <div className="mt-6">
+            <div className="mb-4 flex items-center justify-between">
               <span
-                className={`font-medium ${
+                className={`text-base font-semibold ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
@@ -490,14 +559,14 @@ export default function NotificationTab() {
                 No custom locations added. You can add up to 2 locations.
               </p>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {settings.custom_locations.map((location) => (
                   <div
                     key={location.id}
-                    className={`flex items-center justify-between rounded border p-3 ${
+                    className={`flex items-center justify-between rounded-lg p-4 ${
                       theme === "dark"
-                        ? "border-gray-600 bg-gray-700"
-                        : "border-gray-200 bg-gray-50"
+                        ? "bg-gray-800/50"
+                        : "bg-gray-50"
                     }`}
                   >
                     <div>
@@ -509,7 +578,7 @@ export default function NotificationTab() {
                         {location.name}
                       </div>
                       <div
-                        className={`text-sm ${
+                        className={`mt-1 text-sm ${
                           theme === "dark" ? "text-gray-400" : "text-gray-600"
                         }`}
                       >
@@ -533,21 +602,19 @@ export default function NotificationTab() {
 
       {/* Distance Settings */}
       <div
-        className={`mb-6 rounded-lg border p-4 ${
-          theme === "dark"
-            ? "border-gray-700 bg-gray-800"
-            : "border-gray-200 bg-white"
+        className={`mb-8 border-b pb-8 ${
+          theme === "dark" ? "border-gray-700" : "border-gray-200"
         }`}
       >
         <h4
-          className={`mb-4 font-medium ${
+          className={`mb-1.5 text-base font-semibold ${
             theme === "dark" ? "text-white" : "text-gray-900"
           }`}
         >
           Maximum Distance
         </h4>
         <p
-          className={`mb-3 text-sm ${
+          className={`mb-4 text-sm leading-relaxed ${
             theme === "dark" ? "text-gray-400" : "text-gray-600"
           }`}
         >
@@ -559,37 +626,35 @@ export default function NotificationTab() {
           onChange={handleMaxDistanceChange}
           cleanable={false}
           searchable={false}
-          className="w-32"
+          style={{ width: 140 }}
         />
       </div>
 
       {/* Notification Types */}
       <div
-        className={`mb-6 rounded-lg border p-4 ${
-          theme === "dark"
-            ? "border-gray-700 bg-gray-800"
-            : "border-gray-200 bg-white"
+        className={`mb-8 border-b pb-8 ${
+          theme === "dark" ? "border-gray-700" : "border-gray-200"
         }`}
       >
         <h4
-          className={`mb-4 font-medium ${
+          className={`mb-6 text-lg font-semibold ${
             theme === "dark" ? "text-white" : "text-gray-900"
           }`}
         >
           Notification Types
         </h4>
-        <div className="space-y-3">
+        <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex-1 pr-8">
               <span
-                className={`font-medium ${
+                className={`text-base font-semibold ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
                 New Orders
               </span>
               <p
-                className={`text-sm ${
+                className={`mt-1.5 text-sm leading-relaxed ${
                   theme === "dark" ? "text-gray-400" : "text-gray-600"
                 }`}
               >
@@ -606,16 +671,16 @@ export default function NotificationTab() {
           </div>
 
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex-1 pr-8">
               <span
-                className={`font-medium ${
+                className={`text-base font-semibold ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
                 Batch Orders
               </span>
               <p
-                className={`text-sm ${
+                className={`mt-1.5 text-sm leading-relaxed ${
                   theme === "dark" ? "text-gray-400" : "text-gray-600"
                 }`}
               >
@@ -632,16 +697,16 @@ export default function NotificationTab() {
           </div>
 
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex-1 pr-8">
               <span
-                className={`font-medium ${
+                className={`text-base font-semibold ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
                 Earnings Updates
               </span>
               <p
-                className={`text-sm ${
+                className={`mt-1.5 text-sm leading-relaxed ${
                   theme === "dark" ? "text-gray-400" : "text-gray-600"
                 }`}
               >
@@ -658,16 +723,16 @@ export default function NotificationTab() {
           </div>
 
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex-1 pr-8">
               <span
-                className={`font-medium ${
+                className={`text-base font-semibold ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
                 System Notifications
               </span>
               <p
-                className={`text-sm ${
+                className={`mt-1.5 text-sm leading-relaxed ${
                   theme === "dark" ? "text-gray-400" : "text-gray-600"
                 }`}
               >
@@ -687,31 +752,29 @@ export default function NotificationTab() {
 
       {/* Sound Settings */}
       <div
-        className={`mb-6 rounded-lg border p-4 ${
-          theme === "dark"
-            ? "border-gray-700 bg-gray-800"
-            : "border-gray-200 bg-white"
+        className={`mb-8 border-b pb-8 ${
+          theme === "dark" ? "border-gray-700" : "border-gray-200"
         }`}
       >
         <h4
-          className={`mb-4 font-medium ${
+          className={`mb-6 text-lg font-semibold ${
             theme === "dark" ? "text-white" : "text-gray-900"
           }`}
         >
           Sound Settings
         </h4>
-        <div className="space-y-3">
+        <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex-1 pr-8">
               <span
-                className={`font-medium ${
+                className={`text-base font-semibold ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
                 Enable Sound Notifications
               </span>
               <p
-                className={`text-sm ${
+                className={`mt-1.5 text-sm leading-relaxed ${
                   theme === "dark" ? "text-gray-400" : "text-gray-600"
                 }`}
               >
@@ -773,16 +836,10 @@ export default function NotificationTab() {
       </div>
 
       {/* Notification History Section */}
-      <div
-        className={`mb-6 rounded-lg border p-4 ${
-          theme === "dark"
-            ? "border-gray-700 bg-gray-800"
-            : "border-gray-200 bg-white"
-        }`}
-      >
-        <div className="mb-4 flex items-center justify-between">
+      <div className="mb-8">
+        <div className="mb-6 flex items-center justify-between">
           <h4
-            className={`font-medium ${
+            className={`text-lg font-semibold ${
               theme === "dark" ? "text-white" : "text-gray-900"
             }`}
           >
@@ -812,132 +869,14 @@ export default function NotificationTab() {
                 </p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {notifications.map((notification, index) => (
                   <div
                     key={index}
-                    className={`cursor-pointer rounded border p-3 transition-colors ${
+                    className={`cursor-pointer rounded-lg p-4 transition-colors ${
                       theme === "dark"
-                        ? "border-gray-600 hover:bg-gray-700"
-                        : "border-gray-200 hover:bg-gray-50"
-                    } ${
-                      !notification.read ? "bg-blue-50 dark:bg-blue-900/20" : ""
-                    }`}
-                    onClick={() => {
-                      // Mark as read when clicked
-                      if (!notification.read) {
-                        const allHistory = JSON.parse(
-                          localStorage.getItem("fcm_notification_history") ||
-                            "[]"
-                        );
-                        const updatedHistory = allHistory.map(
-                          (n: NotificationItem) =>
-                            n.timestamp === notification.timestamp
-                              ? { ...n, read: true }
-                              : n
-                        );
-                        localStorage.setItem(
-                          "fcm_notification_history",
-                          JSON.stringify(updatedHistory)
-                        );
-                        loadNotificationHistory();
-                      }
-
-                      // Navigate to relevant page
-                      if (
-                        (notification.type === "new_order" ||
-                          notification.type === "batch_orders") &&
-                        notification.orderId
-                      ) {
-                        window.location.href = `/Plasa/active-batches`;
-                      }
-                    }}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={`h-2 w-2 rounded-full ${
-                            !notification.read
-                              ? "animate-pulse bg-blue-500"
-                              : "bg-gray-400"
-                          }`}
-                        />
-                        <div className="flex-shrink-0">
-                          {getNotificationIcon(notification.type)}
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium">{notification.title}</h4>
-                          <span className="text-xs text-gray-500">
-                            {formatTime(notification.timestamp)}
-                          </span>
-                        </div>
-                        <p
-                          className={`mt-1 text-sm ${
-                            theme === "dark" ? "text-gray-400" : "text-gray-600"
-                          }`}
-                        >
-                          {notification.body}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Notification History Section */}
-      <div
-        className={`mb-6 rounded-lg border p-4 ${
-          theme === "dark"
-            ? "border-gray-700 bg-gray-800"
-            : "border-gray-200 bg-white"
-        }`}
-      >
-        <div className="mb-4 flex items-center justify-between">
-          <h4
-            className={`font-medium ${
-              theme === "dark" ? "text-white" : "text-gray-900"
-            }`}
-          >
-            New Order Notifications
-          </h4>
-          <Button
-            appearance="subtle"
-            size="sm"
-            onClick={() => {
-              setShowNotificationHistory(!showNotificationHistory);
-              if (!showNotificationHistory) {
-                loadNotificationHistory();
-              }
-            }}
-          >
-            {showNotificationHistory ? "Hide" : "Show"} History
-          </Button>
-        </div>
-
-        {showNotificationHistory && (
-          <div className="max-h-96 overflow-y-auto">
-            {notifications.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                <p>No new order notifications yet</p>
-                <p className="mt-1 text-xs">
-                  New order notifications will appear here
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {notifications.map((notification, index) => (
-                  <div
-                    key={index}
-                    className={`cursor-pointer rounded border p-3 transition-colors ${
-                      theme === "dark"
-                        ? "border-gray-600 hover:bg-gray-700"
-                        : "border-gray-200 hover:bg-gray-50"
+                        ? "hover:bg-gray-800/50"
+                        : "hover:bg-gray-50"
                     } ${
                       !notification.read ? "bg-blue-50 dark:bg-blue-900/20" : ""
                     }`}

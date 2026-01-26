@@ -6,34 +6,34 @@ export default function PaymentTab() {
   const { theme } = useTheme();
 
   return (
-    <div className="p-4">
+    <div className="p-8">
       <h3
-        className={`mb-4 text-lg font-semibold ${
+        className={`mb-2 text-xl font-bold ${
           theme === "dark" ? "text-white" : "text-gray-900"
         }`}
       >
         Payment Information
       </h3>
-      <p className={theme === "dark" ? "text-gray-300" : "text-gray-600"}>
+      <p
+        className={`mb-8 text-sm ${
+          theme === "dark" ? "text-gray-400" : "text-gray-600"
+        }`}
+      >
         Configure your payment information here...
       </p>
 
-      <div
-        className={`rounded-lg border p-4 ${
-          theme === "dark" ? "border-gray-700" : "border-gray-200"
-        }`}
-      >
+      <div className="p-6">
         <h4
-          className={`mb-2 font-medium ${
+          className={`mb-6 text-lg font-semibold ${
             theme === "dark" ? "text-white" : "text-gray-900"
           }`}
         >
           Bank Account
         </h4>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2">
           <div>
             <label
-              className={`block text-sm font-medium ${
+              className={`mb-2 block text-sm font-medium ${
                 theme === "dark" ? "text-gray-300" : "text-gray-700"
               }`}
             >
@@ -41,16 +41,17 @@ export default function PaymentTab() {
             </label>
             <input
               type="text"
-              className={`mt-1 block w-full rounded-md border p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
+              placeholder="Enter account name"
+              className={`block w-full rounded-lg border px-4 py-2.5 text-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
                 theme === "dark"
-                  ? "border-gray-700 bg-gray-800 text-white"
-                  : "border-gray-300 bg-white text-gray-900"
+                  ? "border-gray-700 bg-gray-900/50 text-white placeholder-gray-500 focus:bg-gray-900"
+                  : "border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:bg-white"
               }`}
             />
           </div>
           <div>
             <label
-              className={`block text-sm font-medium ${
+              className={`mb-2 block text-sm font-medium ${
                 theme === "dark" ? "text-gray-300" : "text-gray-700"
               }`}
             >
@@ -58,16 +59,17 @@ export default function PaymentTab() {
             </label>
             <input
               type="text"
-              className={`mt-1 block w-full rounded-md border p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
+              placeholder="Enter account number"
+              className={`block w-full rounded-lg border px-4 py-2.5 text-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
                 theme === "dark"
-                  ? "border-gray-700 bg-gray-800 text-white"
-                  : "border-gray-300 bg-white text-gray-900"
+                  ? "border-gray-700 bg-gray-900/50 text-white placeholder-gray-500 focus:bg-gray-900"
+                  : "border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:bg-white"
               }`}
             />
           </div>
           <div>
             <label
-              className={`block text-sm font-medium ${
+              className={`mb-2 block text-sm font-medium ${
                 theme === "dark" ? "text-gray-300" : "text-gray-700"
               }`}
             >
@@ -75,16 +77,17 @@ export default function PaymentTab() {
             </label>
             <input
               type="text"
-              className={`mt-1 block w-full rounded-md border p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
+              placeholder="Enter bank name"
+              className={`block w-full rounded-lg border px-4 py-2.5 text-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
                 theme === "dark"
-                  ? "border-gray-700 bg-gray-800 text-white"
-                  : "border-gray-300 bg-white text-gray-900"
+                  ? "border-gray-700 bg-gray-900/50 text-white placeholder-gray-500 focus:bg-gray-900"
+                  : "border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:bg-white"
               }`}
             />
           </div>
           <div>
             <label
-              className={`block text-sm font-medium ${
+              className={`mb-2 block text-sm font-medium ${
                 theme === "dark" ? "text-gray-300" : "text-gray-700"
               }`}
             >
@@ -92,18 +95,25 @@ export default function PaymentTab() {
             </label>
             <input
               type="text"
-              className={`mt-1 block w-full rounded-md border p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
+              placeholder="Enter routing number"
+              className={`block w-full rounded-lg border px-4 py-2.5 text-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
                 theme === "dark"
-                  ? "border-gray-700 bg-gray-800 text-white"
-                  : "border-gray-300 bg-white text-gray-900"
+                  ? "border-gray-700 bg-gray-900/50 text-white placeholder-gray-500 focus:bg-gray-900"
+                  : "border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:bg-white"
               }`}
             />
           </div>
         </div>
 
-        <Button appearance="primary" color="blue" className="mt-4">
-          Save Payment Info
-        </Button>
+        <div className="mt-6 flex justify-end">
+          <Button
+            appearance="primary"
+            color="blue"
+            className="px-6 py-2 font-medium"
+          >
+            Save Payment Info
+          </Button>
+        </div>
       </div>
     </div>
   );
