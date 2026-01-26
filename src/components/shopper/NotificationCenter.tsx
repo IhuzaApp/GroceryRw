@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useTheme } from "../../context/ThemeContext";
 import { useFCMNotifications } from "../../hooks/useFCMNotifications";
+import { useSession } from "next-auth/react";
 
 // Check if mobile
 const useIsMobile = () => {
@@ -33,21 +34,53 @@ interface NotificationItem {
   orderCount?: number;
   totalEarnings?: number;
   storeNames?: string;
+  orderIds?: string | string[]; // For combined orders - can be string (JSON) or array
 }
 
 export default function NotificationCenter() {
   const { theme } = useTheme();
   const isMobile = useIsMobile();
+  const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [currency, setCurrency] = useState<string>("UGX");
+  const [assignedOrderIds, setAssignedOrderIds] = useState<Set<string>>(
+    new Set()
+  );
   const panelRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
 
   // Ensure FCM is initialized anywhere the notification bell exists
   // (singleton guarded in fcmClient to prevent duplicate listeners)
   const { isInitialized, hasPermission } = useFCMNotifications();
+
+  // Fetch active orders to filter out notifications for already-assigned orders
+  useEffect(() => {
+    const fetchActiveOrders = async () => {
+      if (!session?.user?.id) return;
+
+      try {
+        const response = await fetch("/api/shopper/activeOrders");
+        if (response.ok) {
+          const data = await response.json();
+          const orders = data.orders || [];
+          // Create a set of assigned order IDs (ensure they're strings)
+          const orderIds = new Set<string>(
+            orders.map((o: any) => String(o.id)).filter(Boolean)
+          );
+          setAssignedOrderIds(orderIds);
+        }
+      } catch (error) {
+        console.error("Error fetching active orders:", error);
+      }
+    };
+
+    fetchActiveOrders();
+    // Refresh active orders every 10 seconds
+    const interval = setInterval(fetchActiveOrders, 10000);
+    return () => clearInterval(interval);
+  }, [session?.user?.id]);
 
   useEffect(() => {
     loadNotifications();
@@ -70,7 +103,7 @@ export default function NotificationCenter() {
       );
       window.removeEventListener("storage", onHistoryUpdated as EventListener);
     };
-  }, []);
+  }, [assignedOrderIds]); // Reload when assigned orders change
 
   // Load currency from system configuration
   useEffect(() => {
@@ -127,17 +160,48 @@ export default function NotificationCenter() {
   // When opening the dropdown, refresh immediately (latest history)
   useEffect(() => {
     if (isOpen) loadNotifications();
-  }, [isOpen]);
+  }, [isOpen, assignedOrderIds]);
 
   const loadNotifications = () => {
     try {
       const history = JSON.parse(
         localStorage.getItem("fcm_notification_history") || "[]"
       );
-      // Intentionally no console logs here (keep UI quiet)
-      // Show ALL FCM notifications (no filtering)
+      // Filter out notifications for orders that are already assigned to this shopper
+      // This prevents showing notifications for orders the shopper has already accepted
+      const filteredHistory = history.filter((n: NotificationItem) => {
+        // If notification has an orderId, check if it's in assignedOrderIds
+        if (n.orderId && assignedOrderIds.size > 0) {
+          // For combined orders, check if any order in the group is assigned
+          if (n.orderIds) {
+            try {
+              // Handle both string (JSON) and array formats
+              const orderIdsArray =
+                typeof n.orderIds === "string"
+                  ? JSON.parse(n.orderIds)
+                  : Array.isArray(n.orderIds)
+                  ? n.orderIds
+                  : [];
+              const hasAssignedOrder = orderIdsArray.some((id: string) =>
+                assignedOrderIds.has(String(id))
+              );
+              if (hasAssignedOrder) {
+                return false; // Filter out - order is already assigned
+              }
+            } catch {
+              // If parsing fails, check the main orderId
+            }
+          }
+          // Check if the main orderId is assigned
+          if (assignedOrderIds.has(String(n.orderId))) {
+            return false; // Filter out - order is already assigned
+          }
+        }
+        return true; // Keep notification
+      });
+
       // Sort by timestamp (newest first)
-      const sortedNotifications = history.sort(
+      const sortedNotifications = filteredHistory.sort(
         (a: NotificationItem, b: NotificationItem) => b.timestamp - a.timestamp
       );
       setNotifications(sortedNotifications);
