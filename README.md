@@ -12589,6 +12589,437 @@ The system maintains separation between order creation (customer-facing) and ass
 
 This architecture ensures that the customer experience of creating multi-store orders remains independent of the complex shopper assignment algorithms running in the background, creating a seamless and efficient delivery ecosystem.
 
+---
+
+## 📦 Combined Order Processing: Complete Shopper Workflow
+
+### Overview
+
+The combined order system handles two distinct scenarios that require different processing logic:
+
+1. **Different Shops, Same Customer** - Multiple orders from different shops going to the same customer
+2. **Same Shop, Different Customers** - Multiple orders from the same shop going to different customers
+
+This section documents the complete workflow from when a shopper accepts a combined order through shopping, picking, delivery, and completion.
+
+---
+
+### Combined Order Types
+
+#### Type 1: Different Shops, Same Customer (`combined_customer`)
+
+**Characteristics:**
+- Multiple orders from different shops
+- All orders go to the same customer (same delivery address, same customer ID and phone)
+- All orders share the same `combined_order_id`
+- All orders share the same PIN for delivery verification
+- Orders can be from different shops but delivered to one location
+
+**Example Scenario:**
+- Order A: From Shop 1 to Customer X
+- Order B: From Shop 2 to Customer X
+- Both orders have `combined_order_id: "abc-123"` and `pin: "42"`
+
+#### Type 2: Same Shop, Different Customers (`combined`)
+
+**Characteristics:**
+- Multiple orders from the same shop
+- Orders go to different customers (different delivery addresses, different customer IDs/phones)
+- All orders share the same `combined_order_id`
+- Each order has its own unique PIN for delivery verification
+- Orders are grouped for shopping efficiency but delivered separately
+
+**Example Scenario:**
+- Order A: From Shop 1 to Customer X (PIN: "42")
+- Order B: From Shop 1 to Customer Y (PIN: "67")
+- Both orders have `combined_order_id: "abc-123"` but different PINs
+
+---
+
+### Complete Shopper Workflow: From Acceptance to Delivery
+
+#### Phase 1: Order Acceptance
+
+**1.1 Shopper Receives Offer**
+- System sends offer notification for combined order
+- Shopper sees combined order details in their dashboard
+- System displays:
+  - Number of orders in the batch
+  - Total number of items
+  - Combined delivery address (for same customer) or multiple addresses (for different customers)
+  - Estimated earnings
+
+**1.2 Shopper Accepts Batch**
+- Shopper clicks "Accept Batch" button
+- System verifies:
+  - Shopper has less than 2 active orders
+  - All offers in the batch are valid and not expired
+  - Shopper is within acceptable distance from order locations
+- For `combined_customer` (same customer):
+  - All orders in the batch are assigned to the shopper simultaneously
+  - All orders' status changes to "accepted"
+  - All order offers are marked as "ACCEPTED"
+- For `combined` (different customers):
+  - All orders in the batch are assigned to the shopper simultaneously
+  - All orders' status changes to "accepted"
+  - All order offers are marked as "ACCEPTED"
+
+**1.3 Batch Assignment Complete**
+- Shopper is now responsible for all orders in the combined batch
+- Orders appear in the "Active Batches" section
+- System tracks all orders together under one batch view
+
+---
+
+#### Phase 2: Shopping Phase
+
+**2.1 Shopper Starts Shopping**
+- Shopper navigates to the batch details page
+- System displays:
+  - All orders grouped by shop (for different shops) or by customer (for same shop)
+  - Items list for each order
+  - Shop locations on map
+  - Delivery addresses on map
+
+**2.2 Status Update: "shopping"**
+- When shopper clicks "Start Shopping":
+  - For `combined_customer` (same customer):
+    - System updates ALL orders' status to "shopping" simultaneously
+    - Wallet operations are processed for ALL orders (earnings are reserved)
+    - All orders are locked for this shopper
+  - For `combined` (different customers):
+    - System updates ALL orders' status to "shopping" simultaneously
+    - Wallet operations are processed for ALL orders (earnings are reserved)
+    - All orders are locked for this shopper
+
+**2.3 Shopping Process**
+- Shopper visits each shop to collect items
+- For different shops: Shopper goes to Shop 1, then Shop 2, etc.
+- For same shop: Shopper collects items for all orders in one visit
+- System tracks:
+  - Items found/not found for each order
+  - Shop-specific tabs for navigation
+  - Order-specific tabs (for same shop, different customers)
+
+**2.4 Item Verification**
+- Shopper marks items as found or not found
+- System updates item status in real-time
+- Missing items are noted for each order independently
+
+---
+
+#### Phase 3: Payment and Invoice Generation
+
+**3.1 Payment Processing**
+- After shopping is complete, shopper proceeds to payment
+- For `combined_customer` (same customer):
+  - Shopper processes payment for ALL orders together
+  - Single payment transaction covers all orders
+  - Invoice is generated for the combined batch
+  - All orders share the same invoice reference
+- For `combined` (different customers):
+  - Shopper processes payment for EACH order separately
+  - Each order has its own payment transaction
+  - Separate invoices are generated for each order
+  - Each order maintains its own invoice reference
+
+**3.2 Invoice Proof Upload**
+- System checks if invoice proof is required for each order
+- For `combined_customer` (same customer):
+  - One invoice proof can cover all orders (if they're all from the same shop)
+  - Or separate invoice proofs may be needed for each shop
+- For `combined` (different customers):
+  - Each order requires its own invoice proof
+  - System prompts shopper to upload proof for each order individually
+
+**3.3 Status Update: "picked" or "on_the_way"**
+- After payment and invoice proof:
+  - For `combined_customer` (same customer):
+    - All orders' status updated to "on_the_way" simultaneously
+    - All orders are ready for delivery to the same location
+  - For `combined` (different customers):
+    - All orders' status updated to "on_the_way" simultaneously
+    - Orders are ready for delivery to different locations
+
+---
+
+#### Phase 4: Delivery Phase
+
+**4.1 Route Planning**
+- System displays delivery route based on order type:
+  - For `combined_customer` (same customer):
+    - Single delivery address shown
+    - Optimized route from shops to customer location
+    - All orders delivered in one trip
+  - For `combined` (different customers):
+    - Multiple delivery addresses shown
+    - Optimized route showing all customer locations
+    - Shopper can deliver in any order (route optimization suggested)
+
+**4.2 Status Update: "at_customer"**
+- When shopper arrives at delivery location:
+  - For `combined_customer` (same customer):
+    - Shopper can mark all orders as "at_customer" together
+    - Or mark individually if needed
+    - System allows batch status update
+  - For `combined` (different customers):
+    - Each order must be marked "at_customer" separately
+    - Status updates are independent for each order
+    - Shopper navigates to each customer location separately
+
+**4.3 Delivery Confirmation Process**
+
+**For `combined_customer` (Same Customer):**
+
+1. **Shopper clicks delivery confirmation** for any order in the batch
+2. **System detects** it's a combined order going to the same customer
+3. **System identifies** all orders in the batch (using `combined_order_id`)
+4. **System checks** if all orders go to the same customer (same customer ID + phone)
+5. **Delivery Confirmation Modal opens** with:
+   - Combined order information
+   - All order numbers listed
+   - Single customer information
+   - Single delivery address
+6. **PIN Verification:**
+   - Shopper enters the shared PIN (same PIN for all orders)
+   - System verifies PIN matches all orders in the batch
+   - If PIN is correct, all orders are verified together
+   - If PIN fails twice, shopper must take photo proof
+7. **Delivery Confirmation:**
+   - When shopper confirms delivery:
+     - System processes wallet operations for ALL orders (adds earnings for each order)
+     - System updates ALL orders' status to "delivered" simultaneously
+     - `updateOnlyThisOrder` flag is set to `false` (updates all orders together)
+     - All orders are marked as completed
+8. **Redirect Logic:**
+   - After successful delivery, shopper is redirected to active batches page
+   - All orders are removed from active batches
+
+**For `combined` (Different Customers):**
+
+1. **Shopper clicks delivery confirmation** for a specific order
+2. **System detects** it's a combined order but going to different customers
+3. **System identifies** the specific order being delivered
+4. **System checks** customer information (different customer ID + phone from other orders)
+5. **Delivery Confirmation Modal opens** with:
+   - Single order information (the one being delivered)
+   - Single customer information
+   - Single delivery address
+6. **PIN Verification:**
+   - Shopper enters the specific order's PIN (unique PIN for this order)
+   - System verifies PIN matches only this specific order
+   - If PIN is correct, this order is verified
+   - If PIN fails twice, shopper must take photo proof
+7. **Delivery Confirmation:**
+   - When shopper confirms delivery:
+     - System processes wallet operations for ONLY this order (adds earnings for this order)
+     - System updates ONLY this order's status to "delivered"
+     - `updateOnlyThisOrder` flag is set to `true` (prevents updating other orders)
+     - Only this order is marked as completed
+8. **Redirect Logic:**
+   - System checks if other orders in the batch are still pending
+   - If other orders are pending:
+     - Modal closes but shopper stays on batch details page
+     - Shopper can continue delivering remaining orders
+   - If all orders are delivered:
+     - Shopper is redirected to active batches page
+     - Batch is removed from active batches
+
+---
+
+#### Phase 5: Status Update Logic (Technical Details)
+
+**5.1 Update Order Status API Behavior**
+
+The `updateOrderStatus` API handles combined orders with the following logic:
+
+```typescript
+// Priority 1: Check updateOnlyThisOrder flag FIRST
+if (updateOnlyThisOrder === true) {
+  // Update ONLY the specific order
+  // Used for: combined orders going to different customers
+  // Prevents updating all orders in the batch
+}
+
+// Priority 2: Check if order has combined_order_id
+else if (combined_order_id exists) {
+  // Update ALL orders with same combined_order_id AND same shop_id
+  // Used for: combined orders going to same customer
+  // Updates all orders together
+}
+
+// Priority 3: Single order update
+else {
+  // Regular single order update
+  // Used for: non-combined orders
+}
+```
+
+**5.2 Key Flags and Parameters**
+
+- **`updateOnlyThisOrder`**: Boolean flag that prevents batch updates
+  - `true`: Update only the specific order (different customers scenario)
+  - `false`: Update all orders in batch (same customer scenario)
+
+- **`combined_order_id`**: UUID that groups orders together
+  - All orders in a combined batch share this ID
+  - Used to identify related orders
+
+- **`shop_id`**: Used to filter combined orders
+  - For same shop scenarios, all orders share the same `shop_id`
+  - For different shops, orders have different `shop_id` values
+
+---
+
+#### Phase 6: Wallet Operations
+
+**6.1 Shopping Phase Wallet Operations**
+
+When status changes to "shopping":
+- For `combined_customer` (same customer):
+  - Wallet operations processed for ALL orders
+  - Earnings are reserved for each order individually
+  - Total reserved amount = sum of all orders' earnings
+- For `combined` (different customers):
+  - Wallet operations processed for ALL orders
+  - Earnings are reserved for each order individually
+  - Total reserved amount = sum of all orders' earnings
+
+**6.2 Delivery Phase Wallet Operations**
+
+When status changes to "delivered":
+- For `combined_customer` (same customer):
+  - Wallet operations processed for ALL orders sequentially
+  - Earnings are added to available balance for each order
+  - Total earnings added = sum of all orders' earnings
+- For `combined` (different customers):
+  - Wallet operations processed for ONLY the delivered order
+  - Earnings are added to available balance for that specific order
+  - Other orders' earnings remain reserved until they are delivered
+
+---
+
+### Decision Flow: How System Determines Order Type
+
+**Step 1: Check if order has `combined_order_id`**
+- If no `combined_order_id`: Treat as single order
+- If `combined_order_id` exists: Proceed to Step 2
+
+**Step 2: Fetch all orders with same `combined_order_id`**
+- Query database for all orders sharing the `combined_order_id`
+- Get customer information for each order
+
+**Step 3: Compare customers**
+- Extract customer ID and phone for each order
+- Create unique customer keys: `customerId_phone`
+- Count unique customer keys
+
+**Step 4: Determine order type**
+- If unique customer keys = 1: `combined_customer` (same customer)
+- If unique customer keys > 1: `combined` (different customers)
+
+**Step 5: Apply appropriate logic**
+- `combined_customer`: Process all orders together
+- `combined`: Process each order independently
+
+---
+
+### Example Scenarios
+
+#### Scenario A: Different Shops, Same Customer
+
+**Setup:**
+- Order 1: Shop A → Customer X (combined_order_id: "abc", PIN: "42")
+- Order 2: Shop B → Customer X (combined_order_id: "abc", PIN: "42")
+
+**Shopper Workflow:**
+1. Accepts batch → Both orders assigned
+2. Starts shopping → Both orders status = "shopping"
+3. Visits Shop A → Collects Order 1 items
+4. Visits Shop B → Collects Order 2 items
+5. Processes payment → Single payment for both orders
+6. Uploads invoice → One invoice proof (or separate if needed)
+7. Both orders status = "on_the_way"
+8. Arrives at Customer X → Both orders status = "at_customer"
+9. Confirms delivery → Enters PIN "42"
+10. System verifies PIN for both orders
+11. Both orders status = "delivered" simultaneously
+12. Wallet operations processed for both orders
+13. Redirected to active batches
+
+#### Scenario B: Same Shop, Different Customers
+
+**Setup:**
+- Order 1: Shop A → Customer X (combined_order_id: "abc", PIN: "42")
+- Order 2: Shop A → Customer Y (combined_order_id: "abc", PIN: "67")
+
+**Shopper Workflow:**
+1. Accepts batch → Both orders assigned
+2. Starts shopping → Both orders status = "shopping"
+3. Visits Shop A → Collects items for both orders in one visit
+4. Processes payment → Separate payments for each order
+5. Uploads invoices → Separate invoice proofs for each order
+6. Both orders status = "on_the_way"
+7. Arrives at Customer X → Order 1 status = "at_customer"
+8. Confirms delivery for Order 1 → Enters PIN "42"
+9. System verifies PIN for Order 1 only
+10. Order 1 status = "delivered", Order 2 remains "on_the_way"
+11. Wallet operations processed for Order 1 only
+12. Stays on batch page (Order 2 still pending)
+13. Navigates to Customer Y → Order 2 status = "at_customer"
+14. Confirms delivery for Order 2 → Enters PIN "67"
+15. System verifies PIN for Order 2 only
+16. Order 2 status = "delivered"
+17. Wallet operations processed for Order 2
+18. All orders delivered → Redirected to active batches
+
+---
+
+### Key Technical Implementation Points
+
+1. **Customer Detection Logic:**
+   ```typescript
+   const customerKeys = new Set<string>();
+   allOrdersInBatch.forEach((order) => {
+     const customerKey = `${customerId}_${customerPhone}`;
+     customerKeys.add(customerKey);
+   });
+   const hasMultipleCustomers = customerKeys.size > 1;
+   ```
+
+2. **Status Update Logic:**
+   ```typescript
+   const updateOnlyThisOrder = 
+     orderType === "combined" || 
+     (orderIdsToUpdate.length === 1 && orderType !== "combined_customer");
+   ```
+
+3. **Delivery Confirmation Logic:**
+   ```typescript
+   if (orderType === "combined_customer") {
+     // Update all orders together
+     orderIdsToUpdate = combinedOrderIds;
+     updateOnlyThisOrder = false;
+   } else {
+     // Update only this order
+     orderIdsToUpdate = [currentOrderId];
+     updateOnlyThisOrder = true;
+   }
+   ```
+
+4. **Redirect Logic:**
+   ```typescript
+   if (orderType === "combined" && pendingOrders.length > 0) {
+     // Stay on page, don't redirect
+     shouldRedirect = false;
+   } else {
+     // All orders delivered, redirect
+     shouldRedirect = true;
+   }
+   ```
+
+---
+
 ## Conclusion
 
 The Combined Order System provides a seamless multi-store shopping experience that benefits customers, the platform, and shoppers. By grouping orders with a shared Combined Order ID and PIN, the system maintains simplicity while enabling powerful cross-store functionality. The architecture is designed for scalability and can be enhanced with additional features like transaction safety, parallel processing, and intelligent order optimization.
