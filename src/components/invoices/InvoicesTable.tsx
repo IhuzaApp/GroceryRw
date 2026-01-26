@@ -103,6 +103,9 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
   };
 
   const getStatusBadge = (status: string) => {
+    // Normalize status: map "completed" to "paid" since completed orders should show as paid
+    const normalizedStatus = status === "completed" ? "paid" : status;
+
     const statusConfig = {
       paid: {
         color:
@@ -128,7 +131,7 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
     };
 
     const config =
-      statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+      statusConfig[normalizedStatus as keyof typeof statusConfig] || statusConfig.pending;
 
     return (
       <span
@@ -136,9 +139,9 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
       >
         <div
           className={`mr-2 h-2 w-2 rounded-full ${
-            status === "paid"
+            normalizedStatus === "paid"
               ? "bg-green-500"
-              : status === "pending"
+              : normalizedStatus === "pending"
               ? "bg-yellow-500"
               : "bg-red-500"
           }`}
@@ -169,16 +172,143 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600"></div>
-          <p
-            className={`mt-4 text-sm ${
-              theme === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}
-          >
-            Loading invoices...
-          </p>
+      <div
+        className={`overflow-hidden rounded-xl border ${
+          theme === "dark"
+            ? "border-gray-700 bg-gray-800/50"
+            : "border-gray-200 bg-white shadow-sm"
+        }`}
+      >
+        {/* Desktop Table Skeleton */}
+        <div className="hidden overflow-x-auto lg:block">
+          <table className="w-full">
+            <thead
+              className={`border-b ${
+                theme === "dark"
+                  ? "border-gray-700 bg-gray-800/30"
+                  : "border-gray-100 bg-gray-50"
+              }`}
+            >
+              <tr>
+                <th className="w-12 px-6 py-4"></th>
+                <th className="px-4 py-4">
+                  <div className="h-4 w-12 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                </th>
+                <th className="px-4 py-4">
+                  <div className="h-4 w-20 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                </th>
+                <th className="px-4 py-4">
+                  <div className="h-4 w-16 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                </th>
+                <th className="px-4 py-4">
+                  <div className="h-4 w-16 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                </th>
+                <th className="px-4 py-4">
+                  <div className="h-4 w-12 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                </th>
+                <th className="px-4 py-4">
+                  <div className="h-4 w-16 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                </th>
+                <th className="px-4 py-4">
+                  <div className="h-4 w-16 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                </th>
+              </tr>
+            </thead>
+            <tbody
+              className={`divide-y ${
+                theme === "dark" ? "divide-gray-700/50" : "divide-gray-100"
+              }`}
+            >
+              {[...Array(5)].map((_, index) => (
+                <tr key={index}>
+                  <td className="w-12 px-6 py-4">
+                    <div className="h-4 w-4 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="h-4 w-24 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="h-8 w-8 animate-pulse rounded-full bg-gray-300 dark:bg-gray-600"></div>
+                      <div className="h-4 w-32 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="h-4 w-20 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="h-6 w-24 animate-pulse rounded-full bg-gray-300 dark:bg-gray-600"></div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="h-4 w-20 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="h-4 w-24 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="flex items-center justify-end space-x-2">
+                      <div className="h-8 w-8 animate-pulse rounded-lg bg-gray-300 dark:bg-gray-600"></div>
+                      <div className="h-8 w-8 animate-pulse rounded-lg bg-gray-300 dark:bg-gray-600"></div>
+                      <div className="h-8 w-8 animate-pulse rounded-lg bg-gray-300 dark:bg-gray-600"></div>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile Cards Skeleton */}
+        <div className="space-y-4 p-2 sm:p-4 lg:hidden">
+          {[...Array(3)].map((_, index) => (
+            <div
+              key={index}
+              className={`rounded-xl border ${
+                theme === "dark"
+                  ? "border-gray-700 bg-gray-800/50"
+                  : "border-gray-200 bg-white shadow-sm"
+              }`}
+            >
+              <div className="p-4 sm:p-5">
+                {/* Header Skeleton */}
+                <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex-1">
+                    <div className="mb-2 h-5 w-32 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                    <div className="h-4 w-24 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  </div>
+                  <div className="h-6 w-20 animate-pulse rounded-full bg-gray-300 dark:bg-gray-600"></div>
+                </div>
+
+                {/* Customer Info Skeleton */}
+                <div className="mb-4">
+                  <div className="mb-1 h-4 w-16 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  <div className="mb-1 h-4 w-40 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  <div className="h-3 w-48 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                </div>
+
+                {/* Order Info Skeleton */}
+                <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4">
+                  <div>
+                    <div className="mb-1 h-4 w-12 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                    <div className="h-4 w-24 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  </div>
+                  <div>
+                    <div className="mb-1 h-4 w-12 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                    <div className="h-4 w-16 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  </div>
+                </div>
+
+                {/* Total Amount Skeleton */}
+                <div className="mb-4 flex items-center justify-between border-t border-gray-200 pt-4 dark:border-gray-700">
+                  <div className="h-4 w-20 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  <div className="h-6 w-24 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                </div>
+
+                {/* Button Skeleton */}
+                <div className="h-10 w-full animate-pulse rounded-lg bg-gray-300 dark:bg-gray-600"></div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );

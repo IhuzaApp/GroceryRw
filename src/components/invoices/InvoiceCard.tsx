@@ -17,6 +17,9 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   const { theme } = useTheme();
 
   const getStatusBadge = (status: string) => {
+    // Normalize status: map "completed" to "paid" since completed orders should show as paid
+    const normalizedStatus = status === "completed" ? "paid" : status;
+
     const statusConfig = {
       paid: {
         color:
@@ -42,7 +45,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     };
 
     const config =
-      statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+      statusConfig[normalizedStatus as keyof typeof statusConfig] || statusConfig.pending;
 
     return (
       <span
@@ -50,9 +53,9 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
       >
         <div
           className={`mr-2 h-2 w-2 rounded-full ${
-            status === "paid"
+            normalizedStatus === "paid"
               ? "bg-green-500"
-              : status === "pending"
+              : normalizedStatus === "pending"
               ? "bg-yellow-500"
               : "bg-red-500"
           }`}
