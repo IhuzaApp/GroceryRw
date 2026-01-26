@@ -150,7 +150,7 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
             theme === "dark" ? "bg-gray-900" : "bg-gray-50"
           } py-8`}
         >
-          <div className="mx-auto max-w-5xl px-4">
+          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 xl:px-12">
             <div className="animate-pulse">
               <div className="mb-8 h-10 w-32 rounded bg-gray-200 dark:bg-gray-700"></div>
               <div className="rounded-2xl bg-white p-12 shadow-sm dark:bg-gray-800">
@@ -171,7 +171,7 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
     return (
       <ShopperLayout>
         <div className="min-h-screen p-4">
-          <div className="mx-auto max-w-2xl">
+          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 xl:px-12">
             <div className="rounded-xl bg-white p-8 shadow-lg dark:bg-gray-800">
               <div className="text-center">
                 <div className="mb-4">
@@ -226,7 +226,7 @@ function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
           theme === "dark" ? "bg-gray-900" : "bg-gray-50"
         } py-8`}
       >
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full max-w-9xl px-4 sm:px-6 lg:px-8 xl:px-12">
           {/* Action Buttons */}
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <button
