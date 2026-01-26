@@ -88,6 +88,9 @@ export default function OrderModal({
   const [isMobile, setIsMobile] = useState(false);
   const [useDefaultPayment, setUseDefaultPayment] = useState(true);
   const [manualPhoneNumber, setManualPhoneNumber] = useState("");
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
 
   // Check if mobile on mount and resize
   useEffect(() => {
@@ -120,6 +123,40 @@ export default function OrderModal({
 
     if (open) {
       fetchSystemConfig();
+    }
+  }, [open]);
+
+  // Fetch addresses on modal open
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      try {
+        setLoadingAddresses(true);
+        const response = await fetch("/api/queries/addresses");
+        const data = await response.json();
+        
+        if (data.addresses) {
+          setSavedAddresses(data.addresses);
+          
+          // Set default address if available
+          const defaultAddr = data.addresses.find((a: any) => a.is_default);
+          if (defaultAddr) {
+            setSelectedAddressId(defaultAddr.id);
+            Cookies.set("delivery_address", JSON.stringify(defaultAddr));
+          } else if (data.addresses.length > 0) {
+            // Use first address if no default
+            setSelectedAddressId(data.addresses[0].id);
+            Cookies.set("delivery_address", JSON.stringify(data.addresses[0]));
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching addresses:", error);
+      } finally {
+        setLoadingAddresses(false);
+      }
+    };
+
+    if (open) {
+      fetchAddresses();
     }
   }, [open]);
 
@@ -173,6 +210,22 @@ export default function OrderModal({
     }
   }, [useDefaultPayment, defaultPaymentMethod, manualPhoneNumber]);
 
+  // Get selected address
+  const selectedAddress = selectedAddressId
+    ? savedAddresses.find((a: any) => a.id === selectedAddressId)
+    : null;
+
+  // Handle address selection change
+  const handleAddressChange = (addressId: string | null) => {
+    setSelectedAddressId(addressId);
+    if (addressId) {
+      const address = savedAddresses.find((a: any) => a.id === addressId);
+      if (address) {
+        Cookies.set("delivery_address", JSON.stringify(address));
+      }
+    }
+  };
+
   // Calculate fees and totals
   const basePrice = post?.restaurant?.price || post?.product?.price || 0;
   const subtotal = basePrice * quantity;
@@ -180,37 +233,47 @@ export default function OrderModal({
   // Service fee is always 0 for reel orders
   const serviceFee = 0;
 
-  // Delivery Fee calculations (same as checkoutCard.tsx)
+  // Delivery Fee calculations for reel orders
+  // Note: Reel orders don't have units surcharge
   const baseDeliveryFee = systemConfig
     ? parseInt(systemConfig.baseDeliveryFee)
     : 0;
 
-  // Surcharge based on units beyond extraUnits threshold
-  const extraUnitsThreshold = systemConfig
-    ? parseInt(systemConfig.extraUnits)
-    : 0;
-  const extraUnits = Math.max(0, quantity - extraUnitsThreshold);
-  const unitsSurcharge =
-    extraUnits * (systemConfig ? parseInt(systemConfig.unitsSurcharge) : 0);
-
   // Surcharge based on distance beyond 3km
+  // Use selected address first, then fallback to cookie
   let distanceKm = 0;
   let userAlt = 0;
-  const cookie = Cookies.get("delivery_address");
-  if (cookie) {
-    try {
-      const userAddr = JSON.parse(cookie);
-      const userLat = parseFloat(userAddr.latitude);
-      const userLng = parseFloat(userAddr.longitude);
-      userAlt = parseFloat(userAddr.altitude || "0");
-      distanceKm = getDistanceFromLatLonInKm(
-        userLat,
-        userLng,
-        shopLat,
-        shopLng
-      );
-    } catch (err) {
-      console.error("Error parsing delivery_address cookie:", err);
+  
+  if (selectedAddress && selectedAddress.latitude && selectedAddress.longitude) {
+    const userLat = parseFloat(selectedAddress.latitude.toString());
+    const userLng = parseFloat(selectedAddress.longitude.toString());
+    userAlt = parseFloat((selectedAddress.altitude || "0").toString());
+    distanceKm = getDistanceFromLatLonInKm(
+      userLat,
+      userLng,
+      shopLat,
+      shopLng
+    );
+  } else {
+    // Fallback to cookie
+    const cookie = Cookies.get("delivery_address");
+    if (cookie) {
+      try {
+        const userAddr = JSON.parse(cookie);
+        if (userAddr.latitude && userAddr.longitude) {
+          const userLat = parseFloat(userAddr.latitude.toString());
+          const userLng = parseFloat(userAddr.longitude.toString());
+          userAlt = parseFloat((userAddr.altitude || "0").toString());
+          distanceKm = getDistanceFromLatLonInKm(
+            userLat,
+            userLng,
+            shopLat,
+            shopLng
+          );
+        }
+      } catch (err) {
+        console.error("Error parsing delivery_address cookie:", err);
+      }
     }
   }
 
@@ -227,12 +290,15 @@ export default function OrderModal({
   const finalDistanceFee =
     rawDistanceFee > cappedDistanceFee ? cappedDistanceFee : rawDistanceFee;
 
-  // Final delivery fee includes unit surcharge
-  let deliveryFee = finalDistanceFee + unitsSurcharge;
-
   // Apply 50% discount on delivery fee if subtotal > 30,000
+  // Note: Reel orders don't have units surcharge, only distance-based fee
+  let deliveryFee = finalDistanceFee;
+  let deliveryFeeDiscount = 0;
+  const originalDeliveryFee = finalDistanceFee;
+  
   if (subtotal > 30000) {
-    deliveryFee = deliveryFee * 0.5;
+    deliveryFeeDiscount = finalDistanceFee * 0.5; // 50% discount
+    deliveryFee = finalDistanceFee * 0.5; // Final delivery fee after discount
   }
 
   const finalTotal = subtotal - discount + serviceFee + deliveryFee;
@@ -267,21 +333,12 @@ export default function OrderModal({
   // Handle order placement
   const handlePlaceOrder = async () => {
     // Validate delivery address
-    const cookieValue = Cookies.get("delivery_address");
-    if (!cookieValue) {
+    if (!selectedAddressId || !selectedAddress) {
       toast.error("Please select a delivery address.");
       return;
     }
 
-    let addressObj;
-    try {
-      addressObj = JSON.parse(cookieValue);
-    } catch (err) {
-      toast.error("Invalid delivery address. Please select again.");
-      return;
-    }
-
-    const deliveryAddressId = addressObj.id;
+    const deliveryAddressId = selectedAddress.id;
     if (!deliveryAddressId) {
       toast.error("Please select a valid delivery address.");
       return;
@@ -293,7 +350,12 @@ export default function OrderModal({
       const shoppingTime = systemConfig
         ? parseInt(systemConfig.shoppingTime)
         : 0;
-      const altKm = (shopAlt - userAlt) / 1000;
+      
+      // Get user altitude from selected address
+      const userAltFromAddress = selectedAddress?.altitude 
+        ? parseFloat(selectedAddress.altitude.toString()) 
+        : 0;
+      const altKm = (shopAlt - userAltFromAddress) / 1000;
       const distance3D = Math.sqrt(distanceKm * distanceKm + altKm * altKm);
       const travelTime = Math.ceil(distance3D);
       const totalTimeMinutes = travelTime + shoppingTime;
@@ -688,6 +750,74 @@ export default function OrderModal({
                   </div>
                 </div>
 
+                {/* Delivery Address Selection */}
+                <div className="space-y-2">
+                  <label
+                    className={`block text-sm font-semibold ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    Delivery Address *
+                  </label>
+                  {loadingAddresses ? (
+                    <div
+                      className={`flex items-center justify-center rounded-xl border-2 py-3 px-4 ${
+                        theme === "dark"
+                          ? "border-gray-600 bg-gray-700"
+                          : "border-gray-300 bg-white"
+                      }`}
+                    >
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-400 border-t-transparent"></div>
+                      <span
+                        className={`ml-2 text-sm ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
+                        Loading addresses...
+                      </span>
+                    </div>
+                  ) : savedAddresses.length === 0 ? (
+                    <div
+                      className={`rounded-xl border-2 p-4 text-center ${
+                        theme === "dark"
+                          ? "border-gray-600 bg-gray-700 text-gray-300"
+                          : "border-gray-300 bg-white text-gray-600"
+                      }`}
+                    >
+                      <p className="text-sm">
+                        No saved addresses. Please add an address first.
+                      </p>
+                    </div>
+                  ) : (
+                    <select
+                      value={selectedAddressId || ""}
+                      onChange={(e) => handleAddressChange(e.target.value || null)}
+                      className={`w-full rounded-xl border-2 py-3 px-4 transition-all focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                        theme === "dark"
+                          ? "border-gray-600 bg-gray-700 text-gray-100 focus:border-green-500"
+                          : "border-gray-300 bg-white text-gray-900 focus:border-green-500"
+                      }`}
+                    >
+                      {savedAddresses.map((address: any) => (
+                        <option key={address.id} value={address.id}>
+                          {address.street}, {address.city}
+                          {address.is_default ? " (Default)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  {selectedAddress && (
+                    <p
+                      className={`text-xs ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
+                      {selectedAddress.street}, {selectedAddress.city}
+                      {selectedAddress.postal_code && `, ${selectedAddress.postal_code}`}
+                    </p>
+                  )}
+                </div>
+
                 {/* Comments */}
                 <div className="space-y-2">
                   <label
@@ -1001,6 +1131,34 @@ export default function OrderModal({
                           -{formatCurrency(discount)}
                         </span>
                       </div>
+                    )}
+                    {subtotal > 30000 && deliveryFeeDiscount > 0 && (
+                      <>
+                        <div className="flex items-center justify-between py-2">
+                          <span
+                            className={`${
+                              theme === "dark" ? "text-gray-300" : "text-gray-600"
+                            }`}
+                          >
+                            Delivery Fee (Original)
+                          </span>
+                          <span
+                            className={`font-medium line-through ${
+                              theme === "dark" ? "text-gray-500" : "text-gray-400"
+                            }`}
+                          >
+                            {formatCurrency(originalDeliveryFee)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between py-2">
+                          <span className="text-green-600 dark:text-green-400">
+                            Delivery Fee Discount (50% off)
+                          </span>
+                          <span className="font-medium text-green-600 dark:text-green-400">
+                            -{formatCurrency(deliveryFeeDiscount)}
+                          </span>
+                        </div>
+                      </>
                     )}
                     <div className="flex items-center justify-between py-2">
                       <span
