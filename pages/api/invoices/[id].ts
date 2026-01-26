@@ -36,368 +36,220 @@ async function loadImageAsBase64(imagePath: string): Promise<string> {
 
 // Function to generate PDF buffer
 async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
-  const doc = new jsPDF();
+  // Create PDF with narrow receipt size (80mm width, standard thermal receipt size)
+  // 80mm = 226.77 points (1mm = 2.83465 points)
+  const receiptWidth = 226.77; // 80mm in points
+  
+  // Calculate approximate content height more accurately (with increased spacing)
+  const headerHeight = 80; // Business name, address, phone, separator (increased spacing)
+  const itemHeight = 12; // Increased spacing between items
+  const itemsHeight = invoiceData.items.length * itemHeight;
+  const separatorHeight = 12; // Increased spacing after separators
+  const summaryHeight = 60; // Subtotal, tax, total, separator (increased spacing)
+  const paymentHeight = 60; // Paid by, date, transaction IDs (increased spacing)
+  const footerHeight = 25; // Thank you message (increased spacing)
+  const padding = 40; // Top and bottom padding (increased)
+  
+  const calculatedHeight = headerHeight + itemsHeight + separatorHeight + summaryHeight + paymentHeight + footerHeight + padding;
+  
+  // Use calculated height with a reasonable minimum
+  const receiptHeight = Math.max(calculatedHeight, 300);
+  
+  const doc = new jsPDF({
+    orientation: "portrait",
+    unit: "pt",
+    format: [receiptWidth, receiptHeight],
+  });
 
   // Set initial position and page dimensions
-  let yPos = 20;
+  let yPos = 15;
+  let xPos = 0; // For drawing dotted lines
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
-  const margin = 20;
+  const margin = 15;
   const contentWidth = pageWidth - margin * 2;
 
-  // Add watermark function
-  const addWatermark = () => {
-    // Set watermark properties
-    doc.setTextColor(200, 200, 200); // Light gray
-    doc.setFontSize(60);
-    doc.setFont("helvetica", "bold");
+  // Simple line border at top (no decorative pattern)
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.5);
+  doc.line(margin, yPos, pageWidth - margin, yPos);
+  
+  yPos += 16;
 
-    // Calculate center position
-    const text = "ORIGINAL";
-    const textWidth = doc.getTextWidth(text);
-    const centerX = (pageWidth - textWidth) / 2;
-    const centerY = pageHeight / 2;
+  // Business name with invoice ID
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(0, 0, 0);
+  const businessName = `#${invoiceData.invoiceNumber}`;
+  // Center the business name
+  const businessNameWidth = doc.getTextWidth(businessName);
+  doc.text(businessName, (pageWidth - businessNameWidth) / 2, yPos);
 
-    // Add rotated watermark using text with angle
-    doc.text(text, centerX, centerY, { angle: -45 });
+  yPos += 14;
 
-    // Add additional security text
-    doc.setFontSize(20);
-    doc.text("PLAS", centerX - textWidth / 2, centerY + 40, { angle: -45 });
-    doc.text(invoiceData.invoiceNumber, centerX - textWidth / 2, centerY + 60, {
-      angle: -45,
-    });
-  };
+  // Company details - centered
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(0, 0, 0);
+  const companyAddress = "1KN Kigali, Rwanda";
+  const companyPhone = "0788829084";
+  const addressWidth = doc.getTextWidth(companyAddress);
+  const phoneWidth = doc.getTextWidth(companyPhone);
+  doc.text(companyAddress, (pageWidth - addressWidth) / 2, yPos);
+  yPos += 12;
+  doc.text(companyPhone, (pageWidth - phoneWidth) / 2, yPos);
 
-  // Add watermark to first page
-  addWatermark();
+  yPos += 14;
 
-  // Load and add the actual logo image
-  try {
-    const logoBase64 = await loadImageAsBase64("assets/logos/PlasLogoPNG.png");
-
-    // Add logo to PDF (positioned at top left)
-    doc.addImage(logoBase64, "PNG", margin, yPos - 10, 40, 20);
-  } catch (error) {
-    // Fallback: Add styled Plas text
-    doc.setFontSize(24);
-    doc.setTextColor(67, 175, 74); // Green color matching the logo
-    doc.setFont("helvetica", "bold");
-    doc.text("PLAS", margin, yPos);
+  // Draw dotted separator line
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.5);
+  xPos = margin;
+  while (xPos < pageWidth - margin) {
+    doc.line(xPos, yPos, xPos + 3, yPos);
+    xPos += 6;
   }
 
-  yPos += 15;
+  yPos += 12;
 
-  // Add invoice title
-  doc.setFontSize(18);
+  // Add items - thermal receipt style (item name left, price right)
+  doc.setFont("courier", "normal"); // Use monospace font for receipt look
+  doc.setFontSize(9);
   doc.setTextColor(0, 0, 0);
-  doc.setFont("helvetica", "bold");
-  doc.text("INVOICE", margin, yPos);
 
-  yPos += 10;
-
-  // Add invoice number and order number
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Invoice #: ${invoiceData.invoiceNumber}`, margin, yPos);
-  doc.text(
-    `Order #: ${
-      invoiceData.orderType === "reel"
-        ? `REEL-${invoiceData.invoiceNumber}`
-        : invoiceData.orderNumber || `INV-${invoiceData.invoiceNumber}`
-    }`,
-    pageWidth - margin - 50,
-    yPos
-  );
-
-  yPos += 8;
-
-  // Add dates
-  doc.text(`Date Created: ${invoiceData.dateCreated}`, margin, yPos);
-  doc.text(
-    `Date Completed: ${invoiceData.dateCompleted}`,
-    pageWidth - margin - 70,
-    yPos
-  );
-
-  yPos += 8;
-
-  // Add status
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(67, 175, 74); // Green for status
-  doc.text(`Status: ${invoiceData.status.toUpperCase()}`, margin, yPos);
-
-  yPos += 20;
-
-  // Add shop and customer information
-  doc.setTextColor(0, 0, 0);
-  doc.setFont("helvetica", "bold");
-  doc.text(
-    invoiceData.orderType === "reel" ? "RESTAURANT DETAILS" : "SHOP DETAILS",
-    margin,
-    yPos
-  );
-  doc.text("CUSTOMER DETAILS", pageWidth - margin - 60, yPos);
-
-  yPos += 8;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  doc.text(invoiceData.shop, margin, yPos);
-  doc.text(invoiceData.customer, pageWidth - margin - 60, yPos);
-
-  yPos += 5;
-
-  doc.text(invoiceData.shopAddress, margin, yPos);
-  doc.text(invoiceData.customerEmail, pageWidth - margin - 60, yPos);
-
-  yPos += 20;
-
-  // Add items table header
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(255, 255, 255);
-  doc.setFillColor(67, 175, 74); // Green background
-  doc.rect(margin, yPos - 5, contentWidth, 8, "F");
-
-  doc.text("Item", margin + 2, yPos);
-  doc.text("Qty", margin + 80, yPos);
-  doc.text("Unit Price", margin + 110, yPos);
-  doc.text("Total", margin + 150, yPos);
-
-  yPos += 10;
-
-  // Add items
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(10);
+  // Calculate fixed positions for better alignment
+  const priceStartX = pageWidth - margin - 70; // Fixed position for prices
 
   invoiceData.items.forEach((item: any, index: number) => {
     // Check if we need a new page
-    if (yPos > 250) {
+    if (yPos > pageHeight - 100) {
       doc.addPage();
       yPos = 20;
-      // Add watermark to new page
-      addWatermark();
     }
 
-    const bgColor = index % 2 === 0 ? [248, 250, 252] : [255, 255, 255]; // Light gray alternating
-    doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
-    doc.rect(margin, yPos - 3, contentWidth, 8, "F");
-
-    if (invoiceData.orderType === "reel") {
-      // For reel orders, show name and description
-      const itemName =
-        item.name.length > 25 ? item.name.substring(0, 22) + "..." : item.name;
-      doc.text(itemName, margin + 2, yPos);
-
-      if (item.description) {
-        doc.setFontSize(8);
-        doc.text(
-          `Desc: ${item.description.substring(0, 40)}${
-            item.description.length > 40 ? "..." : ""
-          }`,
-          margin + 2,
-          yPos + 3
-        );
-        doc.setFontSize(10);
+    // Item name on left (truncate if too long to fit before price area)
+    const maxItemWidth = priceStartX - margin - 10; // Leave space before price
+    let itemName = item.name;
+    if (doc.getTextWidth(itemName) > maxItemWidth) {
+      // Truncate item name to fit
+      while (doc.getTextWidth(itemName + "...") > maxItemWidth && itemName.length > 0) {
+        itemName = itemName.substring(0, itemName.length - 1);
       }
-
-      // Quantity
-      doc.text(item.quantity.toString(), margin + 80, yPos);
-
-      // Unit price
-      doc.text(formatCurrencySync(item.unitPrice), margin + 110, yPos);
-
-      // Total
-      doc.text(formatCurrencySync(item.total), margin + 150, yPos);
-
-      yPos += 12;
-    } else {
-      // For regular orders, show product details
-      const itemName =
-        item.name.length > 25 ? item.name.substring(0, 22) + "..." : item.name;
-      doc.text(itemName, margin + 2, yPos);
-
-      // Quantity
-      doc.text(item.quantity.toString(), margin + 80, yPos);
-
-      // Unit price
-      doc.text(formatCurrencySync(item.unitPrice), margin + 110, yPos);
-
-      // Total
-      doc.text(formatCurrencySync(item.total), margin + 150, yPos);
-
-      yPos += 8;
+      itemName += "...";
     }
+    doc.text(itemName, margin, yPos);
+
+    // Price on right - aligned to fixed position
+    const priceText = formatCurrencySync(item.total);
+    doc.text(priceText, priceStartX, yPos, { align: "right" });
+
+    yPos += 12;
   });
 
-  yPos += 10;
+  yPos += 12;
 
-  // Add summary section
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
+  // Draw dotted separator line
+  xPos = margin;
+  while (xPos < pageWidth - margin) {
+    doc.line(xPos, yPos, xPos + 3, yPos);
+    xPos += 6;
+  }
+
+  yPos += 14;
+
+  // Summary section - thermal receipt style
+  doc.setFont("courier", "normal");
+  doc.setFontSize(9);
   doc.setTextColor(0, 0, 0);
 
-  // Draw summary box
-  const summaryY = yPos;
-  doc.setDrawColor(67, 175, 74);
-  doc.setLineWidth(0.5);
-  doc.rect(margin, summaryY - 5, contentWidth, 40, "S");
+  // Sub Total - aligned to same position as items
+  const subtotalLabel = "Sub Total";
+  const subtotalValue = formatCurrencySync(invoiceData.subtotal);
+  doc.text(subtotalLabel, margin, yPos);
+  doc.text(subtotalValue, priceStartX, yPos, { align: "right" });
 
-  // Summary content
-  doc.text("SUMMARY", margin + 5, summaryY);
+  yPos += 12;
 
-  yPos += 8;
+  // Sales Tax (0%) - aligned to same position
+  const taxLabel = "Sales Tax";
+  const taxValue = formatCurrencySync(0); // VAT is 0%
+  doc.text(taxLabel, margin, yPos);
+  doc.text(taxValue, priceStartX, yPos, { align: "right" });
 
-  doc.setFont("helvetica", "normal");
+  yPos += 12;
+
+  // Draw dotted separator line
+  xPos = margin;
+  while (xPos < pageWidth - margin) {
+    doc.line(xPos, yPos, xPos + 3, yPos);
+    xPos += 6;
+  }
+
+  yPos += 14;
+
+  // TOTAL - bold and larger, aligned to same position
+  doc.setFont("courier", "bold");
+  doc.setFontSize(11);
+  const totalLabel = "TOTAL";
+  const totalValue = formatCurrencySync(invoiceData.total);
+  doc.text(totalLabel, margin, yPos);
+  doc.text(totalValue, priceStartX, yPos, { align: "right" });
+
+  yPos += 14;
+
+  // Draw dotted separator line
+  xPos = margin;
+  while (xPos < pageWidth - margin) {
+    doc.line(xPos, yPos, xPos + 3, yPos);
+    xPos += 6;
+  }
+
+  yPos += 14;
+
+  // Payment and transaction details
+  doc.setFont("courier", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(0, 0, 0);
+
+  // Paid By: Plas - better alignment
+  const paidByLabel = "Paid By:";
+  const paidByValue = "Plas";
+  doc.text(paidByLabel, margin, yPos);
+  doc.text(paidByValue, priceStartX, yPos, { align: "right" });
+
+  yPos += 12;
+
+  // Date and Time (format: MM/DD/YYYY HH:MM)
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const year = now.getFullYear();
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const dateTimeStr = `${month}/${day}/${year} ${hours}:${minutes}`;
+  doc.text(dateTimeStr, margin, yPos);
+
+  yPos += 12;
+
+  // Transaction ID
+  const transactionId = `Transaction ID: ${invoiceData.invoiceNumber}`;
+  doc.text(transactionId, margin, yPos);
+
+  yPos += 12;
+
+  // Vendor ID (using order number or invoice ID)
+  const vendorId = `Vendor ID: ${invoiceData.orderNumber || invoiceData.invoiceNumber}`;
+  doc.text(vendorId, margin, yPos);
+
+  yPos += 18;
+
+  // Footer - Thank you message
+  doc.setFont("courier", "normal");
   doc.setFontSize(10);
-
-  // Subtotal
-  doc.text("Subtotal:", margin + 10, yPos);
-  doc.text(
-    formatCurrencySync(invoiceData.subtotal),
-    pageWidth - margin - 10,
-    yPos,
-    { align: "right" }
-  );
-
-  yPos += 6;
-
-  // Service Fee
-  doc.text("Service Fee:", margin + 10, yPos);
-  doc.text(
-    formatCurrencySync(invoiceData.serviceFee),
-    pageWidth - margin - 10,
-    yPos,
-    { align: "right" }
-  );
-
-  yPos += 6;
-
-  // Delivery Fee
-  doc.text("Delivery Fee:", margin + 10, yPos);
-  doc.text(
-    formatCurrencySync(invoiceData.deliveryFee),
-    pageWidth - margin - 10,
-    yPos,
-    { align: "right" }
-  );
-
-  yPos += 8;
-
-  // Total
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.setTextColor(67, 175, 94);
-  doc.text("TOTAL:", margin + 10, yPos);
-  doc.text(
-    formatCurrencySync(invoiceData.total),
-    pageWidth - margin - 10,
-    yPos,
-    {
-      align: "right",
-    }
-  );
-
-  yPos += 20;
-
-  // Add footer note
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(100, 100, 100);
-  doc.text(
-    "Note: Service fee and delivery fee were added to the shopper's available wallet balance.",
-    margin,
-    yPos
-  );
-  yPos += 4;
-  doc.text("The payment reflects only the value of found items.", margin, yPos);
-
-  // Add security footer
-  yPos += 8;
-  doc.setFontSize(7);
-  doc.setTextColor(150, 150, 150);
-  const timestamp = new Date().toISOString();
-  doc.text(`Generated on: ${timestamp}`, margin, yPos);
-  yPos += 3;
-  doc.text(`Document ID: ${invoiceData.id}`, margin, yPos);
-  yPos += 3;
-  doc.text("This is an official document generated by PLAS", margin, yPos);
-
-  // Add QR Code to the last page
-  try {
-    // Generate QR code data with required information:
-    // - created_at (date)
-    // - product names
-    // - total amount excluding service fee and delivery fee
-    const productNames = invoiceData.items
-      .map((item: any) => item.name)
-      .join(", ");
-    const subtotalAmount = invoiceData.subtotal; // This is the amount excluding service and delivery fees
-
-    // Get the system currency
-    const currency = getCurrencySymbol();
-
-    // Create a more readable QR code data structure
-    const qrData = JSON.stringify({
-      invoice: {
-        id: invoiceData.id,
-        number: invoiceData.invoiceNumber,
-        created_at: invoiceData.dateCreated,
-        products: productNames,
-        subtotal: subtotalAmount,
-        currency: currency, // Use system configured currency
-        type: invoiceData.orderType,
-      },
-      // Add a human-readable summary for easy scanning
-      summary: `Invoice ${
-        invoiceData.invoiceNumber
-      } - ${productNames} - ${formatCurrencySync(subtotalAmount)} - ${
-        invoiceData.dateCreated
-      }`,
-    });
-
-    // Generate QR code as base64
-    const qrCodeDataUrl = await QRCode.toDataURL(qrData, {
-      width: 100,
-      margin: 1,
-      color: {
-        dark: "#000000",
-        light: "#FFFFFF",
-      },
-    });
-
-    // Calculate position for QR code (bottom right)
-    const pageHeight = doc.internal.pageSize.height;
-    const qrSize = 30;
-    const qrX = pageWidth - margin - qrSize;
-    const qrY = pageHeight - 50; // Position near bottom of page
-
-    // Add QR code to PDF (positioned at bottom right)
-    doc.addImage(qrCodeDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
-
-    // Add QR code label
-    doc.setFontSize(8);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont("helvetica", "normal");
-    doc.text("Invoice QR Code", qrX, qrY + qrSize + 5);
-  } catch (error) {
-    // Continue without QR code if there's an error
-  }
-
-  // Add page number
-  const pageCount = doc.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
-    doc.text(
-      `Page ${i} of ${pageCount}`,
-      pageWidth - margin - 30,
-      doc.internal.pageSize.height - 10
-    );
-  }
+  doc.setTextColor(0, 0, 0);
+  const thankYouText = "Thank you for using plas";
+  const thankYouWidth = doc.getTextWidth(thankYouText);
+  doc.text(thankYouText, (pageWidth - thankYouWidth) / 2, yPos);
 
   const buffer = Buffer.from(doc.output("arraybuffer"));
   return buffer;
