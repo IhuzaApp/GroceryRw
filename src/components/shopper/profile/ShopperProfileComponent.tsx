@@ -1,56 +1,50 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { formatCurrency } from "../../../lib/formatCurrency";
-import {
-  Panel,
-  Tag,
-  Button,
-  Nav,
-  Toggle,
-  DatePicker,
-  SelectPicker,
-  Loader,
-  Message,
-  Modal,
-  Form,
-  Input,
-  useToaster,
-  List,
-} from "rsuite";
-import Cookies from "js-cookie";
-import { useSession } from "next-auth/react";
-import { useAuth } from "../../../context/AuthContext";
-import { useTheme } from "../../../context/ThemeContext";
 import { useRouter } from "next/router";
-import { useGoogleMap } from "../../../context/GoogleMapProvider";
-import AddressSelectionPopup from "./AddressSelectionDrawer";
-import UpdateShopperDrawer from "./UpdateShopperDrawer";
-import { logger } from "../../../utils/logger";
-import { debounce } from "lodash";
-import VehicleManagement from "./VehicleManagement";
+import { useSession } from "next-auth/react";
 import { authenticatedFetch } from "../../../lib/authenticatedFetch";
+import { logger } from "../../../utils/logger";
+import { useToaster, Message, Modal, Button, Toggle, DatePicker, SelectPicker } from "rsuite";
+import UpdateShopperDrawer from "./UpdateShopperDrawer";
 
-// Type definitions for schedules
-interface TimeSlot {
-  day: string;
-  startTime: string;
-  endTime: string;
-  available: boolean;
-}
-
-interface ShopperStats {
-  totalDeliveries: number;
-  completionRate: number;
-  averageRating: number;
-  totalEarnings: number;
+interface ShopperData {
+  id: string;
+  full_name: string;
+  address: string;
+  phone_number: string;
+  national_id: string;
+  driving_license?: string;
+  transport_mode: string;
+  profile_photo?: string;
+  status: string;
+  active: boolean;
+  background_check_completed: boolean;
+  onboarding_step: string;
+  created_at: string;
+  updated_at: string;
+  Employment_id?: string;
+  national_id_photo_front?: string;
+  national_id_photo_back?: string;
+  drivingLicense_Image?: string;
+  telegram_id?: string;
+  guarantor?: string;
+  guarantorPhone?: string;
+  guarantorRelationship?: string;
+  mutual_status?: string;
+  Police_Clearance_Cert?: string;
+  proofOfResidency?: string;
+  User?: {
+    email: string;
+    phone?: string;
+  };
 }
 
 export default function ShopperProfileComponent() {
+  const router = useRouter();
   const { data: session } = useSession();
-  const { logout } = useAuth();
-  const { theme } = useTheme();
-  const [activeTab, setActiveTab] = useState("account");
-  // User data state
+  const toaster = useToaster();
+  
+  const [loading, setLoading] = useState<boolean>(true);
   const [user, setUser] = useState<{
     id: string;
     name: string;
@@ -59,96 +53,63 @@ export default function ShopperProfileComponent() {
     profile_picture?: string;
     created_at: string;
   } | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  
+  const [shopperData, setShopperData] = useState<ShopperData | null>(null);
+  const [showUpdateDrawer, setShowUpdateDrawer] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showNationalIdUnderProfile, setShowNationalIdUnderProfile] = useState(false);
+  
+  // Form state
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [position, setPosition] = useState("");
+  const [role] = useState("Shopper");
+  const [onboardingDate, setOnboardingDate] = useState<Date | null>(null);
+  const [onboardingProgress] = useState(35);
 
-  // Shopper-specific states
-  const [stats, setStats] = useState<ShopperStats>({
-    totalDeliveries: 0,
-    completionRate: 0,
-    averageRating: 0,
-    totalEarnings: 0,
-  });
-
-  // Schedule states
-  const [schedule, setSchedule] = useState<TimeSlot[]>([]);
-  const [scheduleLoading, setScheduleLoading] = useState<boolean>(true);
-  const [hasSchedule, setHasSchedule] = useState<boolean>(false);
-  const [saveMessage, setSaveMessage] = useState<{
-    type: "success" | "error" | "info";
-    text: string;
-  } | null>(null);
-
-  // Default address state
-  const [defaultAddr, setDefaultAddr] = useState<any | null>(null);
-  const [loadingAddr, setLoadingAddr] = useState<boolean>(true);
-
-  // State for temporary selected address (not persisted as default)
-  const [selectedAddr, setSelectedAddr] = useState<any | null>(null);
-
-  // Address selection modal state
-  const [addresses, setAddresses] = useState<any[]>([]);
-  const [showAddrModal, setShowAddrModal] = useState<boolean>(false);
-
-  // Add state for address modal
-  const [showAddressPopup, setShowAddressPopup] = useState(false);
-  const [addressFormValue, setAddressFormValue] = useState<{ address: string }>(
-    {
-      address: "",
-    }
-  );
-  const [updatingAddress, setUpdatingAddress] = useState(false);
-
-  // Days of the week
-  const days = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-  ];
-
-  // Time slots
-  const generateTimeSlots = () => {
-    const slots = [];
-    for (let i = 0; i < 24; i++) {
-      const hour = i < 10 ? `0${i}` : `${i}`;
-      slots.push({ label: `${hour}:00`, value: `${hour}:00:00` });
-      slots.push({ label: `${hour}:30`, value: `${hour}:30:00` });
-    }
-    return slots;
+  // Format date as DD.MM.YYYY
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}.${month}.${year}`;
   };
 
-  const timeSlots = generateTimeSlots();
-
-  // Function to format time for display
-  const formatTimeForDisplay = (time: string | undefined): string => {
-    if (!time) return "09:00:00";
-
-    // If time already has seconds, return as is
-    if (time.split(":").length === 3) return time;
-
-    // If time has only hours and minutes, add seconds
-    if (time.split(":").length === 2) return `${time}:00`;
-
-    // Default fallback
-    return "09:00:00";
+  // Split full name into first and last name
+  const splitName = (fullName: string) => {
+    const parts = fullName.trim().split(" ");
+    if (parts.length === 1) {
+      return { firstName: parts[0], lastName: "" };
+    }
+    const lastName = parts.slice(-1)[0];
+    const firstName = parts.slice(0, -1).join(" ");
+    return { firstName, lastName };
   };
 
-  // On mount, load any previously selected delivery address from cookie
-  useEffect(() => {
-    const saved = Cookies.get("delivery_address");
-    if (saved) {
-      try {
-        setSelectedAddr(JSON.parse(saved));
-      } catch {
-        // ignore invalid JSON
-      }
-    }
-  }, []);
+  // Copy to clipboard function
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      toaster.push(
+        <Message type="success" closable>
+          {label} copied to clipboard
+        </Message>,
+        { placement: "topEnd", duration: 3000 }
+      );
+    }).catch(() => {
+      toaster.push(
+        <Message type="error" closable>
+          Failed to copy {label}
+        </Message>,
+        { placement: "topEnd", duration: 3000 }
+      );
+    });
+  };
 
-  // Load current user data and shopper stats
+  // Load data
   useEffect(() => {
     let isMounted = true;
     const controller = new AbortController();
@@ -162,20 +123,14 @@ export default function ShopperProfileComponent() {
           signal: controller.signal,
         });
         const userData = await userRes.json();
-        if (isMounted) setUser(userData.user);
-
-        // Fetch shopper stats
-        const statsRes = await authenticatedFetch("/api/shopper/stats", {
-          signal: controller.signal,
-        });
-        const statsData = await statsRes.json();
-        if (isMounted) {
-          setStats({
-            totalDeliveries: statsData.totalDeliveries || 0,
-            completionRate: statsData.completionRate || 0,
-            averageRating: statsData.averageRating || 0,
-            totalEarnings: statsData.totalEarnings || 0,
-          });
+        if (isMounted && userData.user) {
+          setUser(userData.user);
+          setEmail(userData.user.email);
+          
+          // Split name
+          const nameParts = splitName(userData.user.name);
+          setFirstName(nameParts.firstName);
+          setLastName(nameParts.lastName);
         }
 
         // Fetch shopper profile
@@ -188,6 +143,23 @@ export default function ShopperProfileComponent() {
         const profileData = await profileRes.json();
         if (isMounted && profileData.shopper) {
           setShopperData(profileData.shopper);
+          
+          // Update form fields
+          const nameParts = splitName(profileData.shopper.full_name);
+          setFirstName(nameParts.firstName);
+          setLastName(nameParts.lastName);
+          setPhoneNumber(profileData.shopper.phone_number || "");
+          setPosition(profileData.shopper.transport_mode || "");
+          
+          // Set email from User relation if available
+          if (profileData.shopper.User?.email) {
+            setEmail(profileData.shopper.User.email);
+          }
+          
+          // Set onboarding date if available
+          if (profileData.shopper.created_at) {
+            setOnboardingDate(new Date(profileData.shopper.created_at));
+          }
         }
       } catch (error) {
         if (error instanceof Error && error.name === "AbortError") return;
@@ -195,14 +167,6 @@ export default function ShopperProfileComponent() {
           "Error loading shopper data:",
           error instanceof Error ? error.message : String(error)
         );
-        if (isMounted) {
-          setStats({
-            totalDeliveries: 0,
-            completionRate: 0,
-            averageRating: 0,
-            totalEarnings: 0,
-          });
-        }
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -216,392 +180,13 @@ export default function ShopperProfileComponent() {
     };
   }, []);
 
-  // Add a ref to track if we're already loading
-  const isLoadingRef = useRef(false);
-
-  // Load schedule using useCallback to memoize the function
-  const loadSchedule = useCallback(async () => {
-    // Prevent multiple concurrent loads
-    if (scheduleLoading) return;
-
-    const controller = new AbortController();
-    let isMounted = true;
-
-    try {
-      setScheduleLoading(true);
-      const res = await fetch("/api/queries/shopper-availability", {
-        signal: controller.signal,
-        headers: {
-          "Cache-Control": "no-cache",
-          Pragma: "no-cache",
-        },
-      });
-      const data = await res.json();
-
-      if (!isMounted) return;
-
-      if (data.shopper_availability) {
-        setHasSchedule(data.shopper_availability.length > 0);
-
-        // Map the received schedule to ensure all days are represented
-        const daysMap = new Map<string, TimeSlot>();
-
-        // First, initialize with default values for all days
-        days.forEach((day) => {
-          daysMap.set(day, {
-            day,
-            startTime: "09:00:00+00",
-            endTime: "17:00:00+00",
-            available: day !== "Sunday",
-          });
-        });
-
-        // Then, override with actual data from the server
-        data.shopper_availability.forEach((slot: any) => {
-          const day = days[slot.day_of_week - 1];
-          if (day) {
-            daysMap.set(day, {
-              day,
-              startTime: slot.start_time,
-              endTime: slot.end_time,
-              available: slot.is_available,
-            });
-          }
-        });
-
-        setSchedule(Array.from(daysMap.values()));
-      }
-    } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") return;
-      logger.error(
-        "Error loading schedule:",
-        error instanceof Error ? error.message : String(error)
-      );
-      if (isMounted) {
-        setHasSchedule(false);
-        const defaultSchedule: TimeSlot[] = days.map((day) => ({
-          day,
-          startTime: "09:00:00+00",
-          endTime: "17:00:00+00",
-          available: day !== "Sunday",
-        }));
-        setSchedule(defaultSchedule);
-      }
-    } finally {
-      if (isMounted) setScheduleLoading(false);
-    }
-
-    return () => {
-      isMounted = false;
-      controller.abort();
-    };
-  }, [scheduleLoading]);
-
-  // Create a debounced version of loadSchedule
-  const debouncedLoadSchedule = useCallback(
-    debounce(() => {
-      loadSchedule();
-    }, 1000),
-    [loadSchedule]
-  );
-
-  // Load schedule on component mount only
-  useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      const cleanup = await loadSchedule();
-      if (!mounted) cleanup?.();
-    };
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  // Load default address
-  useEffect(() => {
-    setLoadingAddr(true);
-    fetch("/api/queries/addresses")
-      .then(async (res) => {
-        if (!res.ok)
-          throw new Error(`Failed to load addresses (${res.status})`);
-        return res.json();
-      })
-      .then((data) => {
-        const def = (data.addresses || []).find((a: any) => a.is_default);
-        setDefaultAddr(def || null);
-        setAddresses(data.addresses || []);
-      })
-      .catch((err) => {
-        logger.error("Error fetching addresses:", err);
-        setDefaultAddr(null);
-      })
-      .finally(() => setLoadingAddr(false));
-  }, []);
-
-  // Handle availability toggle
-  const handleAvailabilityToggle = (day: string, available: boolean) => {
-    setSchedule((prev) =>
-      prev.map((slot) => (slot.day === day ? { ...slot, available } : slot))
-    );
-  };
-
-  // Handle time change
-  const handleTimeChange = (
-    day: string,
-    field: "startTime" | "endTime",
-    value: string
-  ) => {
-    setSchedule((prev) =>
-      prev.map((slot) =>
-        slot.day === day ? { ...slot, [field]: value } : slot
-      )
-    );
-  };
-
-  // Configure schedule - add default schedule to database
-  const configureSchedule = useCallback(() => {
-    if (!session) {
-      logger.error(
-        "No session available. Please log in.",
-        "ShopperProfileComponent"
-      );
-      setSaveMessage({
-        type: "error",
-        text: "Please log in to configure your schedule.",
-      });
-      return;
-    }
-
-    setSaveMessage({ type: "info", text: "Configuring your schedule..." });
-
-    fetch("/api/shopper/schedule", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify({ schedule }),
-    })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! Status: ${res.status}`);
-        }
-        return res.json();
-      })
-      .then((data) => {
-        setSaveMessage({
-          type: "success",
-          text: "Schedule configured successfully!",
-        });
-        setHasSchedule(true);
-        // Reload schedule to get the latest data
-        loadSchedule();
-      })
-      .catch((err) => {
-        setSaveMessage({
-          type: "error",
-          text: "Failed to configure schedule. Please try again.",
-        });
-      });
-  }, [session, schedule, loadSchedule, setSaveMessage, setHasSchedule]);
-
-  // Save schedule updates to backend
-  const saveScheduleUpdates = useCallback(() => {
-    if (!session) {
-      setSaveMessage({
-        type: "error",
-        text: "Please log in to save your schedule.",
-      });
-      return;
-    }
-
-    setSaveMessage({ type: "info", text: "Saving your schedule..." });
-
-    fetch("/api/shopper/schedule", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify({ schedule }),
-    })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! Status: ${res.status}`);
-        }
-        return res.json();
-      })
-      .then((data) => {
-        setSaveMessage({
-          type: "success",
-          text: "Schedule updated successfully!",
-        });
-      })
-      .catch((err) => {
-        logger.error("Error saving schedule:", err);
-        setSaveMessage({
-          type: "error",
-          text: "Failed to update schedule. Please try again.",
-        });
-      });
-  }, [session, schedule, setSaveMessage]);
-
-  // Clear save message after 5 seconds
-  useEffect(() => {
-    if (saveMessage) {
-      const timer = setTimeout(() => {
-        setSaveMessage(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [saveMessage]);
-
-  // Add shopper data state
-  const [shopperData, setShopperData] = useState<{
-    id: string;
-    full_name: string;
-    address: string;
-    phone_number: string;
-    national_id: string;
-    driving_license?: string;
-    transport_mode: string;
-    profile_photo?: string;
-    status: string;
-    active: boolean;
-    background_check_completed: boolean;
-    onboarding_step: string;
-    latitude: number | null;
-    longitude: number | null;
-    national_id_image?: string;
-    driving_license_image?: string;
-  } | null>(null);
-
-  const router = useRouter();
-  const toaster = useToaster();
-  const { isLoaded } = useGoogleMap();
-  const autocompleteServiceRef =
-    useRef<google.maps.places.AutocompleteService | null>(null);
-  const geocoderRef = useRef<google.maps.Geocoder | null>(null);
-
-  // Add state for address selection
-  const [suggestions, setSuggestions] = useState<
-    google.maps.places.AutocompletePrediction[]
-  >([]);
-  const [activeInput, setActiveInput] = useState(false);
-
-  useEffect(() => {
-    if (isLoaded && !autocompleteServiceRef.current) {
-      try {
-        // Keep using AutocompleteService for now as AutocompleteSuggestion is not fully ready
-        autocompleteServiceRef.current =
-          new google.maps.places.AutocompleteService();
-        geocoderRef.current = new google.maps.Geocoder();
-      } catch (error) {
-        logger.error(
-          "Error initializing Google Maps services:",
-          error instanceof Error ? error.message : String(error)
-        );
-      }
-    }
-  }, [isLoaded]);
-
-  // Handle address input change for autocomplete
-  const handleAddressChange = (val: string) => {
-    setAddressFormValue({ address: val });
-    if (val && autocompleteServiceRef.current) {
-      try {
-        autocompleteServiceRef.current.getPlacePredictions(
-          { input: val, componentRestrictions: { country: ["rw"] } },
-          (preds, status) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK && preds) {
-              setSuggestions(preds);
-              setActiveInput(true);
-            } else {
-              setSuggestions([]);
-            }
-          }
-        );
-      } catch (error) {
-        logger.error(
-          "Error getting place predictions:",
-          error instanceof Error ? error.message : String(error)
-        );
-        setSuggestions([]);
-      }
-    } else {
-      setSuggestions([]);
-      setActiveInput(false);
-    }
-  };
-
-  // On selecting an autocomplete suggestion
-  const handleSelect = (sug: google.maps.places.AutocompletePrediction) => {
-    setAddressFormValue({ address: sug.description });
-    setSuggestions([]);
-    setActiveInput(false);
-  };
-
-  // Function to handle address update
-  const handleAddressUpdate = async (address: string) => {
-    if (!shopperData?.id) return;
-
-    setUpdatingAddress(true);
-    try {
-      const response = await fetch("/api/queries/update-shopper-address", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          shopper_id: shopperData.id,
-          address,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update address");
-      }
-
-      const data = await response.json();
-      if (data.shopper) {
-        setShopperData((prev) =>
-          prev
-            ? {
-                ...prev,
-                address: data.shopper.address,
-              }
-            : null
-        );
-        setShowAddressPopup(false);
-        toaster.push(
-          <Message type="success" closable>
-            Service area updated successfully
-          </Message>
-        );
-      }
-    } catch (error: unknown) {
-      logger.error(
-        "Error updating address:",
-        error instanceof Error ? error.message : String(error)
-      );
-      toaster.push(
-        <Message type="error" closable>
-          Failed to update service area
-        </Message>
-      );
-    } finally {
-      setUpdatingAddress(false);
-    }
-  };
-
-  const [showUpdateDrawer, setShowUpdateDrawer] = useState(false);
-
-  // Update handler
-  const handleUpdateShopper = async (data: any) => {
+  // Handle save changes
+  const handleSaveChanges = async () => {
     if (!shopperData?.id) return;
 
     try {
+      const fullName = `${firstName} ${lastName}`.trim();
+      
       const response = await fetch("/api/queries/update-shopper", {
         method: "POST",
         headers: {
@@ -609,1057 +194,696 @@ export default function ShopperProfileComponent() {
         },
         body: JSON.stringify({
           shopper_id: shopperData.id,
-          ...data,
-          status: "pending", // Set status to pending for review
+          full_name: fullName,
+          phone_number: phoneNumber,
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || "Failed to update shopper information"
-        );
+        throw new Error("Failed to update shopper information");
       }
 
-      const result = await response.json();
-
-      // Logout completely (clears all caches and redirects)
-      await logout();
-    } catch (error: unknown) {
-      logger.error(
-        "Error updating shopper information:",
-        error instanceof Error ? error.message : String(error)
-      );
-      throw error;
-    }
-  };
-
-  // Add a function to check if vehicle tab should be shown
-  const shouldShowVehicleTab = () => {
-    return (
-      shopperData?.transport_mode &&
-      shopperData.transport_mode.toLowerCase() !== "foot" &&
-      shopperData.transport_mode.toLowerCase() !== "on foot"
-    );
-  };
-
-  // Add state for vehicles
-  const [vehicles, setVehicles] = useState<any[]>([]);
-  const [loadingVehicles, setLoadingVehicles] = useState(false);
-
-  // Add state for showing vehicle form
-  const [showVehicleForm, setShowVehicleForm] = useState(true);
-
-  // Add function to load vehicles
-  const loadVehicles = useCallback(async () => {
-    if (!session?.user?.id) return;
-
-    setLoadingVehicles(true);
-    try {
-      const response = await fetch(
-        `/api/queries/get-shopper-vehicles?user_id=${session.user.id}`
-      );
-      if (!response.ok) {
-        throw new Error("Failed to load vehicles");
-      }
-      const data = await response.json();
-
-      // Update vehicles state with the data from the response
-      setVehicles(data.data?.vehicles || []);
-
-      // Hide form if vehicles exist
-      if (data.data?.vehicles && data.data.vehicles.length > 0) {
-        setShowVehicleForm(false);
-      }
-    } catch (error) {
-      console.error("Error loading vehicles:", error);
-      logger.error(
-        "Error loading vehicles:",
-        error instanceof Error ? error.message : String(error)
-      );
       toaster.push(
-        <Message type="error" closable>
-          Failed to load vehicles
+        <Message type="success" closable>
+          Changes saved successfully
         </Message>,
         { placement: "topEnd", duration: 5000 }
       );
-    } finally {
-      setLoadingVehicles(false);
-    }
-  }, [session?.user?.id, toaster]);
 
-  // Load vehicles when component mounts or session changes
-  useEffect(() => {
-    if (session?.user?.id) {
-      loadVehicles();
+      // Reload data
+      window.location.reload();
+    } catch (error) {
+      logger.error("Error saving changes:", error);
+      toaster.push(
+        <Message type="error" closable>
+          Failed to save changes
+        </Message>,
+        { placement: "topEnd", duration: 5000 }
+      );
     }
-  }, [session?.user?.id]);
+  };
+
+  // Handle delete
+  const handleDelete = async () => {
+    // Implement delete functionality if needed
+    toaster.push(
+      <Message type="info" closable>
+        Delete functionality not implemented
+      </Message>,
+      { placement: "topEnd", duration: 5000 }
+    );
+    setShowDeleteModal(false);
+  };
+
+  // Get profile image - prioritize shopper profile_photo
+  const profileImage = shopperData?.profile_photo || user?.profile_picture || "/assets/images/profile.jpg";
+  
+  // Get added date
+  const addedDate = shopperData?.created_at || user?.created_at || "";
+  const formattedAddedDate = formatDate(addedDate);
+
+  // Get full name for display
+  const displayName = shopperData?.full_name || user?.name || "";
+
+  // Check if national_id is a base64 image
+  const isNationalIdImage = (value: string | undefined | null): boolean => {
+    if (!value) return false;
+    return value.startsWith("data:image") || value.startsWith("http://") || value.startsWith("https://");
+  };
+
+  // Get national ID image source (could be from national_id field or separate photo fields)
+  const getNationalIdImage = () => {
+    if (shopperData?.national_id && isNationalIdImage(shopperData.national_id)) {
+      return shopperData.national_id;
+    }
+    if (shopperData?.national_id_photo_front) {
+      return shopperData.national_id_photo_front;
+    }
+    return null;
+  };
+
+  const nationalIdImage = getNationalIdImage();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600 mx-auto"></div>
+          <p className="text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Mobile Header */}
-        <div className="mb-8 lg:hidden">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 to-green-600 p-8 text-white shadow-2xl">
-            <div className="absolute inset-0 bg-black/10"></div>
-            <div className="relative flex flex-col items-center">
-              {loading ? (
-                <>
-                  <div className="h-24 w-24 animate-pulse rounded-full bg-white/20" />
-                  <div className="mt-4 h-6 w-32 animate-pulse rounded bg-white/20" />
-                  <div className="mt-2 h-4 w-24 animate-pulse rounded bg-white/20" />
-                </>
-              ) : (
-                <>
-                  <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-white shadow-2xl ring-4 ring-white/20">
-                    <Image
-                      src={
-                        user?.profile_picture || "/assets/images/profile.jpg"
-                      }
-                      alt="Profile"
-                      width={96}
-                      height={96}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  <h2 className="mt-4 text-center text-xl font-bold">
-                    {user?.name}
-                  </h2>
-                  <p className="text-center text-sm opacity-90">
-                    Shopper since{" "}
-                    {user
-                      ? new Date(user.created_at).toLocaleString("default", {
-                          month: "long",
-                          year: "numeric",
-                        })
-                      : ""}
-                  </p>
-                  <div className="mt-4 flex flex-wrap justify-center gap-2">
-                    <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-medium backdrop-blur-sm">
-                      Shopper
-                    </span>
-                    <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-medium backdrop-blur-sm">
-                      {stats.averageRating.toFixed(1)} ★
-                    </span>
-                  </div>
-                </>
-              )}
+    <div className="min-h-screen bg-gray-50">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        {/* Header Section */}
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <button
+              onClick={() => router.back()}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 transition-colors hover:bg-gray-50"
+            >
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full">
+                <Image
+                  src={profileImage}
+                  alt="Profile"
+                  width={40}
+                  height={40}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <h1 className="truncate text-lg font-semibold text-gray-900 sm:text-xl lg:text-2xl">
+                {displayName}
+              </h1>
             </div>
-            {/* Decorative elements */}
-            <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10"></div>
-            <div className="absolute -bottom-4 -left-4 h-16 w-16 rounded-full bg-white/10"></div>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+            {formattedAddedDate && (
+              <span className="text-xs text-gray-500 sm:text-sm">
+                Added on {formattedAddedDate}
+              </span>
+            )}
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="flex items-center gap-2 rounded-lg border border-red-300 bg-white px-3 py-2 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 sm:px-4 sm:text-sm"
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+              <span className="hidden sm:inline">Delete</span>
+            </button>
           </div>
         </div>
 
-        {/* Desktop Layout */}
-        <div className="hidden lg:grid lg:grid-cols-12 lg:gap-8">
-          {/* Left Column - User Info & Stats */}
-          <div className="space-y-8 lg:col-span-4">
-            {/* Profile Card */}
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-green-600 p-8 text-white shadow-2xl">
-              <div className="absolute inset-0 bg-black/10"></div>
-              <div className="relative flex flex-col items-center">
-                {loading ? (
-                  <>
-                    <div className="h-28 w-28 animate-pulse rounded-full bg-white/20" />
-                    <div className="mt-6 h-6 w-40 animate-pulse rounded bg-white/20" />
-                    <div className="mt-3 h-4 w-32 animate-pulse rounded bg-white/20" />
-                  </>
-                ) : (
-                  <>
-                    <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-white shadow-2xl ring-4 ring-white/20">
-                      <Image
-                        src={
-                          user?.profile_picture || "/assets/images/profile.jpg"
-                        }
-                        alt="Profile"
-                        width={112}
-                        height={112}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    <h2 className="mt-6 text-center text-2xl font-bold">
-                      {user?.name}
-                    </h2>
-                    <p className="text-center text-sm opacity-90">
-                      Shopper since{" "}
-                      {user
-                        ? new Date(user.created_at).toLocaleString("default", {
-                            month: "long",
-                            year: "numeric",
-                          })
-                        : ""}
-                    </p>
-                    <div className="mt-6 flex flex-wrap justify-center gap-3">
-                      <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-medium backdrop-blur-sm">
-                        Shopper
-                      </span>
-                      <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-medium backdrop-blur-sm">
-                        {stats.averageRating.toFixed(1)} ★
-                      </span>
-                    </div>
-                  </>
-                )}
-              </div>
-              {/* Decorative elements */}
-              <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10"></div>
-              <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-white/10"></div>
-            </div>
-
-            {/* Stats Card */}
-            <div className="rounded-3xl border border-white/20 bg-white/80 p-6 shadow-xl backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/80">
-              <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
-                <span className="text-2xl">📊</span>
-                Performance Stats
-              </h3>
-              {loading ? (
-                <div className="grid grid-cols-2 gap-4">
-                  {Array(4)
-                    .fill(0)
-                    .map((_, idx) => (
-                      <div
-                        key={idx}
-                        className="h-20 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-700"
-                      />
-                    ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="rounded-2xl border border-blue-200/50 bg-gradient-to-br from-blue-50 to-blue-100 p-4 dark:border-blue-700/50 dark:from-blue-900/30 dark:to-blue-800/30">
-                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                      {stats.totalDeliveries}
-                    </div>
-                    <div className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                      Deliveries
-                    </div>
-                  </div>
-                  <div className="rounded-2xl border border-green-200/50 bg-gradient-to-br from-green-50 to-green-100 p-4 dark:border-green-700/50 dark:from-green-900/30 dark:to-green-800/30">
-                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                      {stats.completionRate}%
-                    </div>
-                    <div className="text-sm font-medium text-green-700 dark:text-green-300">
-                      Completion
-                    </div>
-                  </div>
-                  <div className="rounded-2xl border border-yellow-200/50 bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 dark:border-yellow-700/50 dark:from-yellow-900/30 dark:to-yellow-800/30">
-                    <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                      {stats.averageRating.toFixed(1)} ★
-                    </div>
-                    <div className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
-                      Rating
-                    </div>
-                  </div>
-                  <div className="rounded-2xl border border-purple-200/50 bg-gradient-to-br from-purple-50 to-purple-100 p-4 dark:border-purple-700/50 dark:from-purple-900/30 dark:to-purple-800/30">
-                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                      {formatCurrency(stats.totalEarnings)}
-                    </div>
-                    <div className="text-sm font-medium text-purple-700 dark:text-purple-300">
-                      Earnings
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Service Area Card */}
-            <div className="rounded-3xl border border-white/20 bg-white/80 p-6 shadow-xl backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/80">
-              <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
-                <span className="text-2xl">📍</span>
-                Service Area
-              </h3>
-              {loading ? (
-                <div className="h-16 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-700" />
-              ) : (
-                <div>
-                  <p className="mb-4 text-gray-700 dark:text-gray-300">
-                    {shopperData?.address || "No service area selected"}
-                  </p>
-                  <Button
-                    size="sm"
-                    appearance="primary"
-                    color="blue"
-                    onClick={() => setShowAddressPopup(true)}
-                    className="w-full"
-                  >
-                    <span className="mr-2">✏️</span>
-                    Change Service Area
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right Column - Content */}
-          <div className="lg:col-span-8">
-            <div className="mb-8">
-              <div className="rounded-2xl border border-white/20 bg-white/80 p-2 shadow-lg backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/80">
-                <nav className="flex space-x-2">
-                  {[
-                    { key: "account", label: "Account", icon: "👤" },
-                    ...(shouldShowVehicleTab()
-                      ? [{ key: "vehicles", label: "Vehicles", icon: "🚗" }]
-                      : []),
-                  ].map((tab) => (
-                    <button
-                      key={tab.key}
-                      onClick={() => setActiveTab(tab.key)}
-                      className={`${
-                        activeTab === tab.key
-                          ? "bg-gradient-to-r from-blue-500 to-green-500 text-white shadow-lg"
-                          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                      } flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200`}
-                    >
-                      <span className="text-lg">{tab.icon}</span>
-                      {tab.label}
-                    </button>
-                  ))}
-                </nav>
-              </div>
-            </div>
-
-            {activeTab === "account" && (
-              <div className="overflow-hidden rounded-3xl border border-white/20 bg-white/80 shadow-xl backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/80">
-                <div className="bg-gradient-to-r from-blue-500 to-green-500 px-6 py-4 text-white">
-                  <h3 className="flex items-center gap-2 text-xl font-bold">
-                    <span className="text-2xl">👤</span>
-                    Account Information
-                  </h3>
-                </div>
-                <div className="p-8">
-                  {loading ? (
-                    <div className="space-y-6">
-                      {Array(3)
-                        .fill(0)
-                        .map((_, idx) => (
-                          <div
-                            key={`skeleton-${idx}`}
-                            className={`h-20 animate-pulse rounded-lg ${
-                              theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                            }`}
-                          />
-                        ))}
-                    </div>
-                  ) : (
-                    <div className="space-y-6">
-                      {/* Personal Information */}
-                      <div className="rounded-2xl border border-blue-200/50 bg-gradient-to-br from-blue-50 to-blue-100 p-6 shadow-lg dark:border-blue-700/50 dark:from-blue-900/30 dark:to-blue-800/30">
-                        <div className="mb-6 flex items-center gap-3">
-                          <div className="rounded-xl bg-blue-500 p-3 text-white shadow-lg">
-                            <span className="text-xl">👤</span>
-                          </div>
-                          <h4 className="text-lg font-bold text-gray-900 dark:text-white">
-                            Personal Information
-                          </h4>
-                        </div>
-                        <div className="grid gap-6 sm:grid-cols-2">
-                          <div className="rounded-xl border border-white/50 bg-white/60 p-4 dark:border-gray-700/50 dark:bg-gray-800/60">
-                            <label className="mb-2 block text-sm font-medium text-blue-700 dark:text-blue-300">
-                              Full Name
-                            </label>
-                            <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                              {shopperData?.full_name || user?.name}
-                            </p>
-                          </div>
-                          <div className="rounded-xl border border-white/50 bg-white/60 p-4 dark:border-gray-700/50 dark:bg-gray-800/60">
-                            <label className="mb-2 block text-sm font-medium text-blue-700 dark:text-blue-300">
-                              Email
-                            </label>
-                            <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                              {user?.email}
-                            </p>
-                          </div>
-                          <div className="rounded-xl border border-white/50 bg-white/60 p-4 dark:border-gray-700/50 dark:bg-gray-800/60 sm:col-span-2">
-                            <label className="mb-2 block text-sm font-medium text-blue-700 dark:text-blue-300">
-                              Phone Number
-                            </label>
-                            <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                              {shopperData?.phone_number ||
-                                user?.phone ||
-                                "Not provided"}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Delivery Information */}
-                      <div className="rounded-2xl border border-green-200/50 bg-gradient-to-br from-green-50 to-green-100 p-6 shadow-lg dark:border-green-700/50 dark:from-green-900/30 dark:to-green-800/30">
-                        <div className="mb-6 flex items-center gap-3">
-                          <div className="rounded-xl bg-green-500 p-3 text-white shadow-lg">
-                            <span className="text-xl">🚚</span>
-                          </div>
-                          <h4 className="text-lg font-bold text-gray-900 dark:text-white">
-                            Delivery Information
-                          </h4>
-                        </div>
-                        <div className="grid gap-6 sm:grid-cols-2">
-                          <div className="rounded-xl border border-white/50 bg-white/60 p-4 dark:border-gray-700/50 dark:bg-gray-800/60">
-                            <label className="mb-2 block text-sm font-medium text-green-700 dark:text-green-300">
-                              Transport Mode
-                            </label>
-                            <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                              {shopperData?.transport_mode
-                                ? shopperData.transport_mode
-                                    .charAt(0)
-                                    .toUpperCase() +
-                                  shopperData.transport_mode
-                                    .slice(1)
-                                    .replace("_", " ")
-                                : "Not set"}
-                            </p>
-                          </div>
-                          <div className="rounded-xl border border-white/50 bg-white/60 p-4 dark:border-gray-700/50 dark:bg-gray-800/60">
-                            <label className="mb-2 block text-sm font-medium text-green-700 dark:text-green-300">
-                              Address
-                            </label>
-                            <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                              {shopperData?.address || "Not provided"}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Account Status */}
-                      <div className="rounded-2xl border border-purple-200/50 bg-gradient-to-br from-purple-50 to-purple-100 p-6 shadow-lg dark:border-purple-700/50 dark:from-purple-900/30 dark:to-purple-800/30">
-                        <div className="mb-6 flex items-center gap-3">
-                          <div className="rounded-xl bg-purple-500 p-3 text-white shadow-lg">
-                            <span className="text-xl">📊</span>
-                          </div>
-                          <h4 className="text-lg font-bold text-gray-900 dark:text-white">
-                            Account Status
-                          </h4>
-                        </div>
-                        <div className="grid gap-6 sm:grid-cols-2">
-                          <div className="rounded-xl border border-white/50 bg-white/60 p-4 dark:border-gray-700/50 dark:bg-gray-800/60">
-                            <label className="mb-3 block text-sm font-medium text-purple-700 dark:text-purple-300">
-                              Status
-                            </label>
-                            <span
-                              className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-medium ${
-                                shopperData?.status === "active"
-                                  ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300"
-                                  : shopperData?.status === "pending"
-                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"
-                                  : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300"
-                              }`}
-                            >
-                              {shopperData?.status
-                                ? shopperData.status.charAt(0).toUpperCase() +
-                                  shopperData.status.slice(1)
-                                : "Not registered"}
-                            </span>
-                          </div>
-                          <div className="rounded-xl border border-white/50 bg-white/60 p-4 dark:border-gray-700/50 dark:bg-gray-800/60">
-                            <label className="mb-3 block text-sm font-medium text-purple-700 dark:text-purple-300">
-                              Background Check
-                            </label>
-                            <span
-                              className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-medium ${
-                                shopperData?.background_check_completed
-                                  ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300"
-                                  : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"
-                              }`}
-                            >
-                              {shopperData?.background_check_completed
-                                ? "Completed"
-                                : "Pending"}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex justify-center pt-8">
-                        <Button
-                          appearance="primary"
-                          color="green"
-                          size="lg"
-                          onClick={() => setShowUpdateDrawer(true)}
-                          className="rounded-2xl bg-gradient-to-r from-green-500 to-green-600 px-12 py-4 text-lg font-semibold shadow-lg transition-all duration-200 hover:from-green-600 hover:to-green-700 hover:shadow-xl"
-                        >
-                          <span className="mr-2">✏️</span>
-                          Update Information
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+        {/* Main Content - Two Column Layout */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          {/* Left Column */}
+          <div className="lg:col-span-5 space-y-6">
+            {/* PROFILE IMAGE Section */}
+            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-700">
+                PROFILE IMAGE
+              </h2>
+              <div className="mb-4">
+                <div className="relative aspect-square w-full max-w-xs overflow-hidden rounded-lg bg-gray-100">
+                  <Image
+                    src={profileImage}
+                    alt="Profile"
+                    fill
+                    className="object-cover"
+                  />
                 </div>
               </div>
-            )}
-
-            {activeTab === "vehicles" && shouldShowVehicleTab() && (
-              <div className="space-y-6">
-                {vehicles.length > 0 ? (
-                  <Panel
-                    shaded
-                    bordered
-                    className={`${
-                      theme === "dark"
-                        ? "border-gray-700 bg-gray-800"
-                        : "border-gray-200 bg-white"
-                    }`}
-                  >
-                    <div className="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-                      <div className="flex items-center justify-between">
-                        <h3
-                          className={`text-lg font-semibold ${
-                            theme === "dark" ? "text-white" : "text-gray-900"
-                          }`}
-                        >
-                          Your Vehicles
-                        </h3>
-                        <Button
-                          appearance="primary"
-                          color="blue"
-                          onClick={() => {
-                            toaster.push(
-                              <Message type="info" closable>
-                                Please contact support to make changes to your
-                                vehicle information
-                              </Message>,
-                              { placement: "topEnd", duration: 5000 }
-                            );
-                          }}
-                        >
-                          <i className="fas fa-ticket-alt mr-2" />
-                          Raise Ticket
-                        </Button>
-                      </div>
-                    </div>
-
-                    {loadingVehicles ? (
-                      <div className="flex justify-center p-8">
-                        <Loader size="md" />
-                      </div>
-                    ) : (
-                      <div className="p-6">
-                        <List>
-                          {vehicles.map((vehicle) => (
-                            <List.Item key={vehicle.id}>
-                              <div className="flex items-center space-x-4 p-4">
-                                <div className="h-20 w-20 overflow-hidden rounded-lg">
-                                  <img
-                                    src={vehicle.photo}
-                                    alt={`${vehicle.type} photo`}
-                                    className="h-full w-full object-cover"
-                                  />
-                                </div>
-                                <div className="flex-1">
-                                  <h4
-                                    className={`font-semibold ${
-                                      theme === "dark"
-                                        ? "text-white"
-                                        : "text-gray-900"
-                                    }`}
-                                  >
-                                    {vehicle.type.charAt(0).toUpperCase() +
-                                      vehicle.type.slice(1)}
-                                  </h4>
-                                  <p
-                                    className={`${
-                                      theme === "dark"
-                                        ? "text-gray-300"
-                                        : "text-gray-600"
-                                    }`}
-                                  >
-                                    Model: {vehicle.model}
-                                  </p>
-                                  <p
-                                    className={`${
-                                      theme === "dark"
-                                        ? "text-gray-300"
-                                        : "text-gray-600"
-                                    }`}
-                                  >
-                                    Plate: {vehicle.plate_number}
-                                  </p>
-                                </div>
-                              </div>
-                            </List.Item>
-                          ))}
-                        </List>
+              {showNationalIdUnderProfile && (nationalIdImage || shopperData?.national_id_photo_back) && (
+                <div className="mb-4 space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    National ID
+                  </label>
+                  <div className={`grid gap-3 ${nationalIdImage && shopperData?.national_id_photo_back ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                    {nationalIdImage && (
+                      <div className="relative aspect-[16/10] min-h-[120px] overflow-hidden rounded-lg border-2 border-gray-300 bg-gray-100">
+                        <img
+                          src={nationalIdImage}
+                          alt="National ID"
+                          className="h-full w-full object-contain p-1"
+                        />
+                        <div className="absolute bottom-1 left-1 rounded bg-black/60 px-2 py-0.5 text-xs text-white">
+                          {shopperData?.national_id_photo_back ? "Front" : "ID"}
+                        </div>
                       </div>
                     )}
-                  </Panel>
-                ) : (
-                  <VehicleManagement
-                    userId={session?.user?.id || ""}
-                    onVehicleAdded={() => {
-                      loadVehicles();
-                      toaster.push(
-                        <Message type="success" closable>
-                          Vehicle added successfully
-                        </Message>,
-                        { placement: "topEnd", duration: 5000 }
-                      );
-                    }}
-                  />
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Layout */}
-      <div className="lg:hidden">
-        {/* Mobile Stats */}
-        <div className="mb-8">
-          <div className="rounded-3xl border border-white/20 bg-white/80 p-6 shadow-xl backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/80">
-            <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
-              <span className="text-2xl">📊</span>
-              Performance Stats
-            </h3>
-            {loading ? (
-              <div className="grid grid-cols-2 gap-4">
-                {Array(4)
-                  .fill(0)
-                  .map((_, idx) => (
-                    <div
-                      key={idx}
-                      className="h-20 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-700"
-                    />
-                  ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-2xl border border-blue-200/50 bg-gradient-to-br from-blue-50 to-blue-100 p-4 text-center dark:border-blue-700/50 dark:from-blue-900/30 dark:to-blue-800/30">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {stats.totalDeliveries}
-                  </div>
-                  <div className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                    Deliveries
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-green-200/50 bg-gradient-to-br from-green-50 to-green-100 p-4 text-center dark:border-green-700/50 dark:from-green-900/30 dark:to-green-800/30">
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {stats.completionRate}%
-                  </div>
-                  <div className="text-sm font-medium text-green-700 dark:text-green-300">
-                    Completion
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-yellow-200/50 bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 text-center dark:border-yellow-700/50 dark:from-yellow-900/30 dark:to-yellow-800/30">
-                  <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                    {stats.averageRating.toFixed(1)} ★
-                  </div>
-                  <div className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
-                    Rating
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-purple-200/50 bg-gradient-to-br from-purple-50 to-purple-100 p-4 text-center dark:border-purple-700/50 dark:from-purple-900/30 dark:to-purple-800/30">
-                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                    {formatCurrency(stats.totalEarnings)}
-                  </div>
-                  <div className="text-sm font-medium text-purple-700 dark:text-purple-300">
-                    Earnings
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Mobile Service Area */}
-        <div className="mb-8">
-          <div className="rounded-3xl border border-white/20 bg-white/80 p-6 shadow-xl backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/80">
-            <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
-              <span className="text-2xl">📍</span>
-              Service Area
-            </h3>
-            {loading ? (
-              <div className="h-16 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-700" />
-            ) : (
-              <div>
-                <p className="mb-4 text-gray-700 dark:text-gray-300">
-                  {shopperData?.address || "No service area selected"}
-                </p>
-                <Button
-                  size="sm"
-                  appearance="primary"
-                  color="blue"
-                  onClick={() => setShowAddressPopup(true)}
-                  className="w-full"
-                >
-                  <span className="mr-2">✏️</span>
-                  Change Service Area
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Mobile Tabs */}
-        <div className="mb-8">
-          <div className="rounded-2xl border border-white/20 bg-white/80 p-2 shadow-lg backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/80">
-            <nav className="flex space-x-2">
-              {[
-                { key: "account", label: "Account", icon: "👤" },
-                ...(shouldShowVehicleTab()
-                  ? [{ key: "vehicles", label: "Vehicles", icon: "🚗" }]
-                  : []),
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`${
-                    activeTab === tab.key
-                      ? "bg-gradient-to-r from-blue-500 to-green-500 text-white shadow-lg"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                  } flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200`}
-                >
-                  <span className="text-lg">{tab.icon}</span>
-                  {tab.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-        </div>
-
-        {/* Mobile Content */}
-        {activeTab === "account" && (
-          <Panel
-            shaded
-            bordered
-            className={`${
-              theme === "dark"
-                ? "border-gray-700 bg-gray-800"
-                : "border-gray-200 bg-white"
-            }`}
-          >
-            <div className="border-b border-gray-200 px-4 py-4 dark:border-gray-700">
-              <h3
-                className={`text-lg font-semibold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                Account Information
-              </h3>
-            </div>
-            <div className="p-4">
-              {loading ? (
-                <div className="space-y-4">
-                  {Array(3)
-                    .fill(0)
-                    .map((_, idx) => (
-                      <div
-                        key={`skeleton-${idx}`}
-                        className={`h-16 animate-pulse rounded-lg ${
-                          theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                        }`}
-                      />
-                    ))}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {/* Personal Information */}
-                  <div
-                    className={`rounded-lg border p-4 ${
-                      theme === "dark"
-                        ? "border-gray-700 bg-gray-800/50"
-                        : "border-gray-200 bg-gray-50"
-                    }`}
-                  >
-                    <div className="mb-4 flex items-center gap-2">
-                      <span className="text-lg">👤</span>
-                      <h4
-                        className={`font-medium ${
-                          theme === "dark" ? "text-white" : "text-gray-900"
-                        }`}
-                      >
-                        Personal Information
-                      </h4>
-                    </div>
-                    <div className="space-y-3">
-                      <div>
-                        <label
-                          className={`block text-xs font-medium ${
-                            theme === "dark" ? "text-gray-300" : "text-gray-700"
-                          }`}
-                        >
-                          Full Name
-                        </label>
-                        <p
-                          className={`text-sm font-medium ${
-                            theme === "dark" ? "text-white" : "text-gray-900"
-                          }`}
-                        >
-                          {shopperData?.full_name || user?.name}
-                        </p>
+                    {shopperData?.national_id_photo_back && (
+                      <div className="relative aspect-[16/10] min-h-[120px] overflow-hidden rounded-lg border-2 border-gray-300 bg-gray-100">
+                        <img
+                          src={shopperData.national_id_photo_back}
+                          alt="National ID Back"
+                          className="h-full w-full object-contain p-1"
+                        />
+                        <div className="absolute bottom-1 left-1 rounded bg-black/60 px-2 py-0.5 text-xs text-white">
+                          Back
+                        </div>
                       </div>
-                      <div>
-                        <label
-                          className={`block text-xs font-medium ${
-                            theme === "dark" ? "text-gray-300" : "text-gray-700"
-                          }`}
-                        >
-                          Email
-                        </label>
-                        <p
-                          className={`text-sm font-medium ${
-                            theme === "dark" ? "text-white" : "text-gray-900"
-                          }`}
-                        >
-                          {user?.email}
-                        </p>
-                      </div>
-                      <div>
-                        <label
-                          className={`block text-xs font-medium ${
-                            theme === "dark" ? "text-gray-300" : "text-gray-700"
-                          }`}
-                        >
-                          Phone Number
-                        </label>
-                        <p
-                          className={`text-sm font-medium ${
-                            theme === "dark" ? "text-white" : "text-gray-900"
-                          }`}
-                        >
-                          {shopperData?.phone_number ||
-                            user?.phone ||
-                            "Not provided"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Delivery Information */}
-                  <div
-                    className={`rounded-lg border p-4 ${
-                      theme === "dark"
-                        ? "border-gray-700 bg-gray-800/50"
-                        : "border-gray-200 bg-gray-50"
-                    }`}
-                  >
-                    <div className="mb-4 flex items-center gap-2">
-                      <span className="text-lg">🚚</span>
-                      <h4
-                        className={`font-medium ${
-                          theme === "dark" ? "text-white" : "text-gray-900"
-                        }`}
-                      >
-                        Delivery Information
-                      </h4>
-                    </div>
-                    <div className="space-y-3">
-                      <div>
-                        <label
-                          className={`block text-xs font-medium ${
-                            theme === "dark" ? "text-gray-300" : "text-gray-700"
-                          }`}
-                        >
-                          Transport Mode
-                        </label>
-                        <p
-                          className={`text-sm font-medium ${
-                            theme === "dark" ? "text-white" : "text-gray-900"
-                          }`}
-                        >
-                          {shopperData?.transport_mode
-                            ? shopperData.transport_mode
-                                .charAt(0)
-                                .toUpperCase() +
-                              shopperData.transport_mode
-                                .slice(1)
-                                .replace("_", " ")
-                            : "Not set"}
-                        </p>
-                      </div>
-                      <div>
-                        <label
-                          className={`block text-xs font-medium ${
-                            theme === "dark" ? "text-gray-300" : "text-gray-700"
-                          }`}
-                        >
-                          Address
-                        </label>
-                        <p
-                          className={`text-sm font-medium ${
-                            theme === "dark" ? "text-white" : "text-gray-900"
-                          }`}
-                        >
-                          {shopperData?.address || "Not provided"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Account Status */}
-                  <div
-                    className={`rounded-lg border p-4 ${
-                      theme === "dark"
-                        ? "border-gray-700 bg-gray-800/50"
-                        : "border-gray-200 bg-gray-50"
-                    }`}
-                  >
-                    <div className="mb-4 flex items-center gap-2">
-                      <span className="text-lg">📊</span>
-                      <h4
-                        className={`font-medium ${
-                          theme === "dark" ? "text-white" : "text-gray-900"
-                        }`}
-                      >
-                        Account Status
-                      </h4>
-                    </div>
-                    <div className="space-y-3">
-                      <div>
-                        <label
-                          className={`block text-xs font-medium ${
-                            theme === "dark" ? "text-gray-300" : "text-gray-700"
-                          }`}
-                        >
-                          Status
-                        </label>
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                            shopperData?.status === "active"
-                              ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300"
-                              : shopperData?.status === "pending"
-                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"
-                              : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300"
-                          }`}
-                        >
-                          {shopperData?.status
-                            ? shopperData.status.charAt(0).toUpperCase() +
-                              shopperData.status.slice(1)
-                            : "Not registered"}
-                        </span>
-                      </div>
-                      <div>
-                        <label
-                          className={`block text-xs font-medium ${
-                            theme === "dark" ? "text-gray-300" : "text-gray-700"
-                          }`}
-                        >
-                          Background Check
-                        </label>
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                            shopperData?.background_check_completed
-                              ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300"
-                              : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"
-                          }`}
-                        >
-                          {shopperData?.background_check_completed
-                            ? "Completed"
-                            : "Pending"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-center pt-4">
-                    <Button
-                      appearance="primary"
-                      color="green"
-                      size="lg"
-                      onClick={() => setShowUpdateDrawer(true)}
-                      className="w-full"
-                    >
-                      Update Information
-                    </Button>
+                    )}
                   </div>
                 </div>
               )}
-            </div>
-          </Panel>
-        )}
-
-        {activeTab === "vehicles" && shouldShowVehicleTab() && (
-          <div className="space-y-6">
-            {vehicles.length > 0 ? (
-              <Panel
-                shaded
-                bordered
-                className={`${
-                  theme === "dark"
-                    ? "border-gray-700 bg-gray-800"
-                    : "border-gray-200 bg-white"
-                }`}
+              <button
+                onClick={() => setShowUpdateDrawer(true)}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
               >
-                <div className="border-b border-gray-200 px-4 py-4 dark:border-gray-700">
-                  <h3
-                    className={`text-lg font-semibold ${
-                      theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}
-                  >
-                    Your Vehicles
-                  </h3>
-                </div>
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+                Change Profile Image
+              </button>
+            </div>
 
-                {loadingVehicles ? (
-                  <div className="flex justify-center p-8">
-                    <Loader size="md" />
+            {/* EMPLOYEE DETAILS Section */}
+            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-700">
+                EMPLOYEE DETAILS
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    Employee ID
+                  </label>
+                  <input
+                    type="text"
+                    value={shopperData?.Employment_id || "N/A"}
+                    readOnly
+                    className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="email"
+                      value={email}
+                      readOnly
+                      className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <button
+                      onClick={() => copyToClipboard(email, "Email")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-gray-400 transition-colors hover:text-gray-600"
+                    >
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </button>
                   </div>
-                ) : (
-                  <div className="p-4">
-                    <List>
-                      {vehicles.map((vehicle) => (
-                        <List.Item key={vehicle.id}>
-                          <div className="flex items-center space-x-4 p-3">
-                            <div className="h-16 w-16 overflow-hidden rounded-lg">
-                              <img
-                                src={vehicle.photo}
-                                alt={`${vehicle.type} photo`}
-                                className="h-full w-full object-cover"
-                              />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    Phone Number
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="tel"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <button
+                      onClick={() => copyToClipboard(phoneNumber, "Phone number")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-gray-400 transition-colors hover:text-gray-600"
+                    >
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    Position
+                  </label>
+                  <input
+                    type="text"
+                    value={position}
+                    onChange={(e) => setPosition(e.target.value)}
+                    placeholder="e.g., Delivery Driver"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                {(nationalIdImage || shopperData?.national_id_photo_back || (shopperData?.national_id && !isNationalIdImage(shopperData.national_id))) && (
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                      National ID
+                    </label>
+                    {(nationalIdImage || shopperData?.national_id_photo_back) ? (
+                      <div className="flex gap-2">
+                        {nationalIdImage && (
+                          <button
+                            onClick={() => setShowNationalIdUnderProfile(!showNationalIdUnderProfile)}
+                            className={`relative h-24 w-36 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all hover:shadow-md ${
+                              showNationalIdUnderProfile 
+                                ? 'border-blue-500 bg-blue-50' 
+                                : 'border-gray-300 bg-gray-100 hover:border-blue-400'
+                            }`}
+                            title={showNationalIdUnderProfile ? "Click to hide" : "Click to view under profile"}
+                          >
+                            <img
+                              src={nationalIdImage}
+                              alt="National ID"
+                              className="h-full w-full object-cover"
+                            />
+                            <div className={`absolute inset-0 flex items-center justify-center transition-all ${
+                              showNationalIdUnderProfile 
+                                ? 'bg-blue-500/20' 
+                                : 'bg-black/0 hover:bg-black/10'
+                            }`}>
+                              <span className={`text-xs font-semibold transition-opacity ${
+                                showNationalIdUnderProfile 
+                                  ? 'text-blue-700 opacity-100' 
+                                  : 'text-white opacity-0 hover:opacity-100'
+                              }`}>
+                                {showNationalIdUnderProfile ? "✓ Showing" : "View"}
+                              </span>
                             </div>
-                            <div className="flex-1">
-                              <h4
-                                className={`font-medium ${
-                                  theme === "dark"
-                                    ? "text-white"
-                                    : "text-gray-900"
-                                }`}
-                              >
-                                {vehicle.type.charAt(0).toUpperCase() +
-                                  vehicle.type.slice(1)}
-                              </h4>
-                              <p
-                                className={`text-sm ${
-                                  theme === "dark"
-                                    ? "text-gray-300"
-                                    : "text-gray-600"
-                                }`}
-                              >
-                                {vehicle.model} • {vehicle.plate_number}
-                              </p>
+                            <div className="absolute top-1 right-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                              {shopperData?.national_id_photo_back ? "Front" : "ID"}
                             </div>
-                          </div>
-                        </List.Item>
-                      ))}
-                    </List>
+                          </button>
+                        )}
+                        {shopperData?.national_id_photo_back && (
+                          <button
+                            onClick={() => setShowNationalIdUnderProfile(!showNationalIdUnderProfile)}
+                            className={`relative h-24 w-36 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all hover:shadow-md ${
+                              showNationalIdUnderProfile 
+                                ? 'border-blue-500 bg-blue-50' 
+                                : 'border-gray-300 bg-gray-100 hover:border-blue-400'
+                            }`}
+                            title={showNationalIdUnderProfile ? "Click to hide" : "Click to view under profile"}
+                          >
+                            <img
+                              src={shopperData.national_id_photo_back}
+                              alt="National ID Back"
+                              className="h-full w-full object-cover"
+                            />
+                            <div className={`absolute inset-0 flex items-center justify-center transition-all ${
+                              showNationalIdUnderProfile 
+                                ? 'bg-blue-500/20' 
+                                : 'bg-black/0 hover:bg-black/10'
+                            }`}>
+                              <span className={`text-xs font-semibold transition-opacity ${
+                                showNationalIdUnderProfile 
+                                  ? 'text-blue-700 opacity-100' 
+                                  : 'text-white opacity-0 hover:opacity-100'
+                              }`}>
+                                {showNationalIdUnderProfile ? "✓ Showing" : "View"}
+                              </span>
+                            </div>
+                            <div className="absolute top-1 right-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                              Back
+                            </div>
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        value={shopperData?.national_id || "N/A"}
+                        readOnly
+                        className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700"
+                      />
+                    )}
+                    {shopperData?.national_id && !isNationalIdImage(shopperData.national_id) && (
+                      <p className="mt-1.5 text-xs text-gray-500">
+                        ID Number: {shopperData.national_id}
+                      </p>
+                    )}
                   </div>
                 )}
-              </Panel>
-            ) : (
-              <VehicleManagement
-                userId={session?.user?.id || ""}
-                onVehicleAdded={() => {
-                  loadVehicles();
-                  toaster.push(
-                    <Message type="success" closable>
-                      Vehicle added successfully
-                    </Message>,
-                    { placement: "topEnd", duration: 5000 }
-                  );
-                }}
-              />
-            )}
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    Transport Mode
+                  </label>
+                  <input
+                    type="text"
+                    value={shopperData?.transport_mode ? shopperData.transport_mode.charAt(0).toUpperCase() + shopperData.transport_mode.slice(1).replace("_", " ") : "N/A"}
+                    readOnly
+                    className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    Status
+                  </label>
+                  <input
+                    type="text"
+                    value={shopperData?.status ? shopperData.status.charAt(0).toUpperCase() + shopperData.status.slice(1) : "N/A"}
+                    readOnly
+                    className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700"
+                  />
+                </div>
+                {shopperData?.telegram_id && (
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                      Telegram ID
+                    </label>
+                    <input
+                      type="text"
+                      value={shopperData.telegram_id}
+                      readOnly
+                      className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700"
+                    />
+                  </div>
+                )}
+                {shopperData?.guarantor && (
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                      Guarantor
+                    </label>
+                    <input
+                      type="text"
+                      value={`${shopperData.guarantor}${shopperData.guarantorRelationship ? ` (${shopperData.guarantorRelationship})` : ""}`}
+                      readOnly
+                      className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        )}
+
+          {/* Right Column */}
+          <div className="lg:col-span-7 space-y-6">
+            {/* ROLE Section */}
+            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-700">
+                ROLE
+              </h2>
+              <div className="rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                {role}
+              </div>
+            </div>
+
+            {/* TEAM Section */}
+            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-700">
+                TEAM
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    HR
+                  </label>
+                  <SelectPicker
+                    data={[
+                      { label: "Kate Middleton", value: "kate" },
+                      { label: "No HR assigned", value: "" },
+                    ]}
+                    value="kate"
+                    style={{ width: "100%" }}
+                    cleanable={false}
+                    searchable={false}
+                    renderMenuItem={(label, item) => (
+                      <div className="flex items-center gap-2">
+                        <div className="h-6 w-6 rounded-full bg-gray-300"></div>
+                        <span>{label}</span>
+                      </div>
+                    )}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    Account Manager
+                  </label>
+                  <div className="rounded-lg border border-gray-300 bg-gray-50 p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="h-6 w-6 rounded-full bg-gray-300"></div>
+                      <span className="text-sm font-medium text-gray-700">SupportRwanda</span>
+                    </div>
+                    <div className="ml-8 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500">Email:</span>
+                        <span className="text-xs text-gray-700">rwandaSupport@plas.rw</span>
+                        <button
+                          onClick={() => copyToClipboard("rwandaSupport@plas.rw", "Email")}
+                          className="ml-1 rounded p-0.5 text-gray-400 transition-colors hover:text-gray-600"
+                        >
+                          <svg
+                            className="h-3 w-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500">Phone:</span>
+                        <span className="text-xs text-gray-700">+250 788 123 456</span>
+                        <button
+                          onClick={() => copyToClipboard("+250 788 123 456", "Phone number")}
+                          className="ml-1 rounded p-0.5 text-gray-400 transition-colors hover:text-gray-600"
+                        >
+                          <svg
+                            className="h-3 w-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    Lead
+                  </label>
+                  <SelectPicker
+                    data={[
+                      { label: "Eugene Hummell", value: "eugene" },
+                      { label: "No Lead assigned", value: "" },
+                    ]}
+                    value="eugene"
+                    style={{ width: "100%" }}
+                    cleanable={false}
+                    searchable={false}
+                    renderMenuItem={(label, item) => (
+                      <div className="flex items-center gap-2">
+                        <div className="h-6 w-6 rounded-full bg-gray-300"></div>
+                        <span>{label}</span>
+                      </div>
+                    )}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* ONBOARDING Section */}
+            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-700">
+                ONBOARDING
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    Starts on
+                  </label>
+                  <DatePicker
+                    value={onboardingDate}
+                    onChange={(date) => setOnboardingDate(date)}
+                    format="dd.MM.yyyy"
+                    style={{ width: "100%" }}
+                    placeholder="Select date"
+                    oneTap
+                  />
+                </div>
+                <div>
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">
+                      Current Status
+                    </span>
+                  </div>
+                  <div className="mb-2">
+                    <span className="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">
+                      Onboarding
+                    </span>
+                  </div>
+                  <div className="mb-2">
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                      <div
+                        className="h-full bg-blue-600 transition-all"
+                        style={{ width: `${onboardingProgress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  <button className="text-sm text-blue-600 hover:text-blue-700 hover:underline">
+                    View Answers
+                  </button>
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    Onboarding Scripts
+                  </label>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3">
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-700">
+                            Shopper Scheduler
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {onboardingProgress}%
+                          </span>
+                        </div>
+                      </div>
+                      <Toggle
+                        checked={onboardingProgress > 0}
+                        onChange={() => {}}
+                        className="ml-4"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer Buttons */}
+        <div className="mt-8 flex flex-col-reverse gap-4 sm:flex-row sm:justify-end">
+          <button
+            onClick={() => router.back()}
+            className="w-full rounded-lg border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 sm:w-auto"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSaveChanges}
+            className="w-full rounded-lg bg-gray-900 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-gray-800 sm:w-auto"
+          >
+            Save Changes
+          </button>
+        </div>
       </div>
 
-      {/* Address Selection Popup */}
-      <AddressSelectionPopup
-        isOpen={showAddressPopup}
-        onClose={() => setShowAddressPopup(false)}
-        onSave={handleAddressUpdate}
-        currentAddress={shopperData?.address}
-        loading={updatingAddress}
-      />
-
-      {/* Add UpdateShopperDrawer */}
+      {/* Update Shopper Drawer */}
       {showUpdateDrawer && (
         <UpdateShopperDrawer
           isOpen={showUpdateDrawer}
@@ -1674,11 +898,36 @@ export default function ShopperProfileComponent() {
             profile_photo: shopperData?.profile_photo || "",
           }}
           onUpdate={async (data: any) => {
-            await handleUpdateShopper(data);
+            // Reload data after update
+            window.location.reload();
             return { success: true, message: "Shopper updated successfully" };
           }}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        open={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        size="sm"
+      >
+        <Modal.Header>
+          <Modal.Title>Delete Shopper</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p className="text-gray-600">
+            Are you sure you want to delete this shopper? This action cannot be undone.
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={() => setShowDeleteModal(false)} appearance="subtle">
+            Cancel
+          </Button>
+          <Button onClick={handleDelete} color="red" appearance="primary">
+            Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }
