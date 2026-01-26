@@ -35,7 +35,7 @@ async function loadImageAsBase64(imagePath: string): Promise<string> {
 }
 
 // Function to generate PDF buffer
-async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
+async function generateInvoicePdf(invoiceData: any, baseUrl?: string): Promise<Buffer> {
   // Create PDF with narrow receipt size (80mm width, standard thermal receipt size)
   // 80mm = 226.77 points (1mm = 2.83465 points)
   const receiptWidth = 226.77; // 80mm in points
@@ -47,10 +47,11 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
   const separatorHeight = 12; // Increased spacing after separators
   const summaryHeight = 60; // Subtotal, tax, total, separator (increased spacing)
   const paymentHeight = 60; // Paid by, date, transaction IDs (increased spacing)
+  const qrCodeHeight = 80; // QR code and label
   const footerHeight = 25; // Thank you message (increased spacing)
   const padding = 40; // Top and bottom padding (increased)
   
-  const calculatedHeight = headerHeight + itemsHeight + separatorHeight + summaryHeight + paymentHeight + footerHeight + padding;
+  const calculatedHeight = headerHeight + itemsHeight + separatorHeight + summaryHeight + paymentHeight + qrCodeHeight + footerHeight + padding;
   
   // Use calculated height with a reasonable minimum
   const receiptHeight = Math.max(calculatedHeight, 300);
@@ -240,6 +241,46 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
   // Vendor ID (using order number or invoice ID)
   const vendorId = `Vendor ID: ${invoiceData.orderNumber || invoiceData.invoiceNumber}`;
   doc.text(vendorId, margin, yPos);
+
+  yPos += 12;
+
+  // Add QR code for invoice verification
+  try {
+    // Use invoice ID for verification (most reliable)
+    const verificationUrl = baseUrl
+      ? `${baseUrl}/api/invoices/check-existence?invoiceId=${invoiceData.id}`
+      : `/api/invoices/check-existence?invoiceId=${invoiceData.id}`;
+
+    // Generate QR code as base64
+    const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, {
+      width: 80,
+      margin: 1,
+      color: {
+        dark: "#000000",
+        light: "#FFFFFF",
+      },
+    });
+
+    // Calculate position for QR code (centered)
+    const qrSize = 50;
+    const qrX = (pageWidth - qrSize) / 2;
+    const qrY = yPos;
+
+    // Add QR code to PDF
+    doc.addImage(qrCodeDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
+
+    // Add QR code label below
+    yPos += qrSize + 8;
+    doc.setFont("courier", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(0, 0, 0);
+    const qrLabel = "Scan to verify invoice";
+    const qrLabelWidth = doc.getTextWidth(qrLabel);
+    doc.text(qrLabel, (pageWidth - qrLabelWidth) / 2, yPos);
+  } catch (error) {
+    // Continue without QR code if there's an error
+    console.error("Error generating QR code:", error);
+  }
 
   yPos += 18;
 
@@ -580,7 +621,23 @@ export default async function handler(
     if (isPdfRequest) {
       // Generate PDF and return as file
       try {
-        const pdfBuffer = await generateInvoicePdf(transformedInvoice);
+        // Get base URL - use production domain or from request headers
+        let baseUrl: string;
+        if (process.env.NODE_ENV === "production") {
+          // Use production domain - always HTTPS
+          baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://plas.rw";
+          // Ensure it's HTTPS
+          if (!baseUrl.startsWith("https://")) {
+            baseUrl = baseUrl.replace(/^https?:\/\//, "https://");
+          }
+        } else {
+          // Development: use request headers
+          const protocol = req.headers["x-forwarded-proto"] || "http";
+          const host = req.headers.host || "localhost:3000";
+          baseUrl = `${protocol}://${host}`;
+        }
+
+        const pdfBuffer = await generateInvoicePdf(transformedInvoice, baseUrl);
 
         res.setHeader("Content-Type", "application/pdf");
         res.setHeader(
