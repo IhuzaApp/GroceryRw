@@ -235,28 +235,16 @@ export async function handleDeliveredOperation(
   const remainingEarnings = totalEarnings - platformFee;
 
   const currentAvailableBalance = parseFloat(wallet.available_balance);
-  const currentReservedBalance = parseFloat(wallet.reserved_balance);
 
   const newAvailableBalance = (
     currentAvailableBalance + remainingEarnings
   ).toFixed(2);
 
-  // Calculate reserved balance: never go below 0
-  let newReservedBalance = wallet.reserved_balance; // Keep existing for restaurant orders
-  let refundAmount = 0;
+  // NOTE: Reserved balance is NOT deducted here - it's already deducted during payment
+  // During delivery confirmation, we ONLY add earnings to available balance
+  const newReservedBalance = wallet.reserved_balance; // Keep reserved balance unchanged
 
-  // Adjust reserved balance for regular orders and reel orders (not restaurant orders)
-  // Restaurant orders don't use reserved balance
-  if (!isRestaurantOrder) {
-    if (currentReservedBalance >= orderTotal) {
-      newReservedBalance = (currentReservedBalance - orderTotal).toFixed(2);
-    } else {
-      newReservedBalance = "0.00";
-      refundAmount = orderTotal - currentReservedBalance;
-    }
-  }
-
-  // Update wallet balances
+  // Update wallet balances (only available balance changes, reserved balance stays the same)
   await hasuraClient!.request(UPDATE_WALLET_BALANCES, {
     wallet_id: wallet.id,
     available_balance: newAvailableBalance,
@@ -264,6 +252,7 @@ export async function handleDeliveredOperation(
   });
 
   // Create wallet transactions for delivered order
+  // NOTE: Only create earnings transaction - reserved balance deduction happens during payment
   if (!isReelOrder && !isRestaurantOrder) {
     const transactions = [
       {
@@ -276,32 +265,7 @@ export async function handleDeliveredOperation(
         related_restaurant_order_id: null,
         description: "Earnings after platform fee deduction",
       },
-      {
-        wallet_id: wallet.id,
-        amount: (
-          currentReservedBalance - parseFloat(newReservedBalance)
-        ).toFixed(2),
-        type: "expense",
-        status: "completed",
-        related_order_id: orderId,
-        related_reel_orderId: null,
-        related_restaurant_order_id: null,
-        description: "Reserved balance used for order goods",
-      },
     ];
-
-    if (refundAmount > 0) {
-      transactions.push({
-        wallet_id: wallet.id,
-        amount: refundAmount.toFixed(2),
-        type: "refund",
-        status: "completed",
-        related_order_id: orderId,
-        related_reel_orderId: null,
-        related_restaurant_order_id: null,
-        description: "Refund for excess reserved balance",
-      });
-    }
 
     await hasuraClient!.request(CREATE_WALLET_TRANSACTIONS, {
       transactions,
@@ -361,8 +325,7 @@ export async function handleDeliveredOperation(
     newReservedBalance,
     earningsAdded: remainingEarnings,
     platformFeeDeducted: platformFee,
-    refundAmount,
-    message: "Wallet updated for delivered order",
+    message: "Earnings added to wallet for delivered order",
   };
 }
 

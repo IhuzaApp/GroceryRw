@@ -1404,6 +1404,12 @@ export default function BatchDetails({
 
   // Handle individual order delivery confirmation (for delivery route section)
   const handleIndividualDeliveryConfirmation = (targetOrder: any) => {
+    console.log("🟣 [INDIVIDUAL DELIVERY] Processing individual order:", {
+      orderId: targetOrder.id,
+      orderNumber: targetOrder.OrderID || targetOrder.id.slice(-8),
+      customer: targetOrder.orderedBy?.name || targetOrder.user?.name,
+    });
+
     // Show delivery confirmation modal for individual order
     // This is similar to combined order handling but for single orders
     const allOrderIds = [targetOrder.id];
@@ -1439,7 +1445,12 @@ export default function BatchDetails({
       created_at: new Date().toISOString(),
       invoice_items: [],
       Proof: null,
+      orderType: "regular", // Explicitly set as regular order
+      isReelOrder: false,
+      isRestaurantOrder: false,
     };
+
+    console.log("🟣 [INDIVIDUAL DELIVERY] Setting invoice data with orderType: regular");
 
     setInvoiceData(combinedInvoiceData);
     setShowInvoiceModal(true);
@@ -1525,6 +1536,14 @@ export default function BatchDetails({
     const activeOrder = targetOrderOverride || order;
     if (!activeOrder?.id) return;
 
+    console.log("🔵 [DELIVERY CONFIRMATION] Card clicked:", {
+      clickedOrderId: activeOrder.id,
+      clickedOrderNumber: activeOrder.OrderID || activeOrder.id.slice(-8),
+      clickedCustomer: activeOrder.orderedBy?.name || activeOrder.user?.name || "Unknown",
+      isTargetOrderOverride: !!targetOrderOverride,
+      mainOrderId: order?.id,
+    });
+
     const isRestaurantOrder = activeOrder?.orderType === "restaurant";
     const isRestaurantUserReel =
       activeOrder?.orderType === "reel" &&
@@ -1532,6 +1551,15 @@ export default function BatchDetails({
     const isCombinedOrder =
       activeOrder?.orderType === "combined" ||
       (activeOrder?.combinedOrders && activeOrder.combinedOrders.length > 0);
+
+    console.log("🟡 [DELIVERY CONFIRMATION] Order type checks:", {
+      isRestaurantOrder,
+      isRestaurantUserReel,
+      isCombinedOrder,
+      activeOrderType: activeOrder?.orderType,
+      hasCombinedOrders: !!(activeOrder?.combinedOrders && activeOrder.combinedOrders.length > 0),
+      combinedOrdersCount: activeOrder?.combinedOrders?.length || 0,
+    });
 
     // For restaurant orders, show modal directly without generating invoice
     if (isRestaurantOrder) {
@@ -1547,12 +1575,102 @@ export default function BatchDetails({
 
     // For individual orders (not the main batch), show individual delivery confirmation
     if (!isCombinedOrder && targetOrderOverride) {
+      console.log("🟢 [DELIVERY CONFIRMATION] Individual order clicked (not combined):", {
+        orderId: activeOrder.id,
+        orderNumber: activeOrder.OrderID || activeOrder.id.slice(-8),
+      });
       handleIndividualDeliveryConfirmation(activeOrder);
       return;
     }
 
     // For combined orders (main batch), show delivery confirmation modal with PIN verification
     if (isCombinedOrder) {
+      // Check if this is a specific order being clicked (from delivery route) vs the main batch
+      // If targetOrderOverride is provided, it means a specific order card was clicked
+      // For combined orders going to different customers, we should only process that specific order
+      const isSpecificOrderClick = !!targetOrderOverride;
+      
+      // Check if orders are going to different customers
+      // IMPORTANT: Use the main batch order to check for multiple customers, not the clicked order
+      const allOrdersInBatch = [order, ...(order?.combinedOrders || [])];
+      const customerKeys = new Set<string>();
+      allOrdersInBatch.forEach((o) => {
+        const customerPhone =
+          (o as any).orderedBy?.phone || o.customerPhone || "unknown";
+        const customerId =
+          (o as any).orderedBy?.id || o.customerId || "unknown";
+        const customerKey = `${customerId}_${customerPhone}`;
+        customerKeys.add(customerKey);
+      });
+      const hasMultipleCustomers = customerKeys.size > 1;
+
+      console.log("🟡 [DELIVERY CONFIRMATION] Combined order check:", {
+        isSpecificOrderClick,
+        hasMultipleCustomers,
+        totalOrdersInBatch: allOrdersInBatch.length,
+        customerKeys: Array.from(customerKeys),
+        clickedOrderId: activeOrder.id,
+        clickedOrderCustomer: activeOrder.orderedBy?.name || activeOrder.user?.name,
+      });
+
+      // If a specific order was clicked AND orders go to different customers,
+      // only process that specific order (not all combined orders)
+      if (isSpecificOrderClick && hasMultipleCustomers) {
+        console.log("🟢 [DELIVERY CONFIRMATION] Processing SINGLE order (different customers):", {
+          orderId: activeOrder.id,
+          orderNumber: activeOrder.OrderID || activeOrder.id.slice(-8),
+          customer: activeOrder.orderedBy?.name || activeOrder.user?.name,
+          orderType: "combined", // Keep as "combined" but with flag to update only this order
+        });
+
+        // Process only the clicked order - treat it as a combined order going to different customers
+        // We set orderType to "combined" but will pass updateOnlyThisOrder flag to API
+        const targetOrder = targetOrderOverride;
+        const mockInvoiceData = {
+          id: `order_${targetOrder.id}_${Date.now()}`,
+          invoiceNumber: targetOrder.OrderID || targetOrder.id.slice(-8),
+          orderId: targetOrder.id,
+          orderNumber: targetOrder.OrderID || targetOrder.id.slice(-8),
+          customer: targetOrder.orderedBy?.name || targetOrder.user?.name || "Customer",
+          customerEmail: targetOrder.orderedBy?.email || targetOrder.user?.email || "",
+          customerPhone: targetOrder.orderedBy?.phone || targetOrder.user?.phone || "",
+          shop: targetOrder.shop?.name || "Shop",
+          shopAddress: targetOrder.shop?.address || "",
+          deliveryStreet: targetOrder.address?.street || "",
+          deliveryCity: targetOrder.address?.city || "",
+          deliveryPostalCode: targetOrder.address?.postal_code || "",
+          deliveryPlaceDetails: targetOrder.address?.placeDetails || null,
+          deliveryAddress: targetOrder.address
+            ? `${targetOrder.address.street || ""}, ${targetOrder.address.city || ""}${
+                targetOrder.address.postal_code ? `, ${targetOrder.address.postal_code}` : ""
+              }`
+            : "",
+          dateCreated: new Date().toLocaleString(),
+          dateCompleted: new Date().toLocaleString(),
+          status: "delivered",
+          items: [],
+          subtotal: 0,
+          serviceFee: 0,
+          deliveryFee: 0,
+          total: 0,
+          orderType: "combined", // Set as "combined" so we can pass updateOnlyThisOrder flag
+          isReelOrder: false,
+          isRestaurantOrder: false,
+        };
+
+        console.log("🟢 [DELIVERY CONFIRMATION] Set invoice data with orderType: combined (different customers):", {
+          orderId: mockInvoiceData.orderId,
+          orderType: mockInvoiceData.orderType,
+          customer: mockInvoiceData.customer,
+        });
+
+        setInvoiceData(mockInvoiceData);
+        setShowInvoiceModal(true);
+        return;
+      }
+
+      // For combined orders to same customer OR main batch click (not specific order),
+      // process all orders together
       // For combined orders from API, use orderIds array if available, otherwise fall back to combinedOrders
       const allOrderIds = order.orderIds || [
         order.id,
@@ -1564,6 +1682,14 @@ export default function BatchDetails({
           (o: any) => o.OrderID || o.id.slice(-8)
         ) || []),
       ];
+
+      console.log("🟠 [DELIVERY CONFIRMATION] Processing ALL orders (same customer or main batch):", {
+        orderType: hasMultipleCustomers ? "combined" : "combined_customer",
+        hasMultipleCustomers,
+        allOrderIds,
+        allOrderNumbers,
+        isSpecificOrderClick,
+      });
 
       const combinedInvoiceData = {
         id: `combined_${order.id}_${Date.now()}`,
@@ -1592,7 +1718,7 @@ export default function BatchDetails({
         serviceFee: 0,
         deliveryFee: 0,
         total: 0,
-        orderType: "combined",
+        orderType: hasMultipleCustomers ? "combined" : "combined_customer",
         isReelOrder: false,
         isRestaurantOrder: false,
         combinedOrderIds: allOrderIds,

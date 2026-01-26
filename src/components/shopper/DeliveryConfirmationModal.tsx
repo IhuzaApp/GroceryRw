@@ -311,17 +311,48 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       setConfirmingDelivery(true);
       setForceOpen(true);
 
-      // For combined_customer orders (same customer), update all orders in the group
-      // For combined orders (different customers/routes), update only the current order
-      const orderIdsToUpdate =
-        invoiceData.orderType === "combined_customer" &&
-        invoiceData.combinedOrderIds &&
-        invoiceData.combinedOrderIds.length > 0
-          ? invoiceData.combinedOrderIds
-          : [invoiceData.orderId];
+      console.log("🔴 [DELIVERY CONFIRMATION] Starting delivery confirmation:", {
+        orderId: invoiceData.orderId,
+        orderNumber: invoiceData.orderNumber,
+        orderType: invoiceData.orderType,
+        combinedOrderIds: invoiceData.combinedOrderIds,
+        customer: invoiceData.customer,
+      });
 
-      // Process wallet operations for all orders
+      // Determine which orders to update based on order type:
+      // - combined_customer: All orders go to same customer, update all at once (earnings added for all)
+      // - combined: Orders go to different customers/routes, update ONLY current order (ignore combinedOrderIds)
+      // - regular/reel/restaurant: Single order, update only current order
+      // IMPORTANT: For "combined" (different customers), we must only update the specific order,
+      // even if combinedOrderIds is present, because each order goes to a different customer
+      let orderIdsToUpdate: string[];
+      
+      if (invoiceData.orderType === "combined_customer") {
+        // Same customer: update all orders together
+        orderIdsToUpdate =
+          invoiceData.combinedOrderIds && invoiceData.combinedOrderIds.length > 0
+            ? invoiceData.combinedOrderIds
+            : [invoiceData.orderId];
+        console.log("🟢 [DELIVERY CONFIRMATION] Same customer - updating ALL orders:", orderIdsToUpdate);
+      } else {
+        // For "combined" (different customers) or any other type, only update the single order
+        // This ensures that orders going to different customers are updated independently
+        orderIdsToUpdate = [invoiceData.orderId];
+        console.log("🟡 [DELIVERY CONFIRMATION] Different customers or single order - updating SINGLE order:", {
+          orderIdsToUpdate,
+          orderType: invoiceData.orderType,
+          hasCombinedOrderIds: !!invoiceData.combinedOrderIds,
+          combinedOrderIdsCount: invoiceData.combinedOrderIds?.length || 0,
+        });
+      }
+
+      // Process wallet operations for each order sequentially
+      // For combined_customer: Processes all orders, adding earnings for each order to wallet
+      // For combined (different customers): Processes only the current order, adding earnings for that specific order
+      // Each order's earnings are calculated and added individually to the available balance
+      console.log("💰 [DELIVERY CONFIRMATION] Processing wallet operations for orders:", orderIdsToUpdate);
       for (const orderId of orderIdsToUpdate) {
+        console.log(`  → Processing wallet for order: ${orderId}`);
         const walletResponse = await fetch("/api/shopper/walletOperations", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -342,13 +373,34 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       }
 
       // Update order status to delivered for all orders
+      console.log("✅ [DELIVERY CONFIRMATION] Updating order status to delivered for orders:", orderIdsToUpdate);
+      // For combined orders going to different customers, we need to update only the specific order
+      // even if it has a combined_order_id
+      // If orderType is "combined" OR if we're only updating one order (not combined_customer),
+      // we should set updateOnlyThisOrder to true to prevent updating all orders in the batch
+      const updateOnlyThisOrder = 
+        invoiceData.orderType === "combined" || 
+        (orderIdsToUpdate.length === 1 && invoiceData.orderType !== "combined_customer");
+      console.log("🔄 [DELIVERY CONFIRMATION] updateOnlyThisOrder calculation:", {
+        orderType: invoiceData.orderType,
+        orderIdsCount: orderIdsToUpdate.length,
+        isCombined: invoiceData.orderType === "combined",
+        isSingleOrder: orderIdsToUpdate.length === 1,
+        isNotCombinedCustomer: invoiceData.orderType !== "combined_customer",
+        condition1: invoiceData.orderType === "combined",
+        condition2: orderIdsToUpdate.length === 1 && invoiceData.orderType !== "combined_customer",
+        finalFlag: updateOnlyThisOrder,
+      });
+      
       for (const orderId of orderIdsToUpdate) {
+        console.log(`  → Updating status for order: ${orderId} (updateOnlyThisOrder: ${updateOnlyThisOrder})`);
         const response = await fetch("/api/shopper/updateOrderStatus", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             orderId,
             status: "delivered",
+            updateOnlyThisOrder: updateOnlyThisOrder, // Pass flag to prevent updating all orders in combined batch
           }),
         });
 
@@ -357,6 +409,8 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
           throw new Error(errorData.message || "Failed to confirm delivery");
         }
       }
+
+      console.log("🎉 [DELIVERY CONFIRMATION] Successfully completed delivery for orders:", orderIdsToUpdate);
 
       setDeliveryConfirmed(true);
 

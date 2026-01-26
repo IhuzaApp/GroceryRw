@@ -705,6 +705,24 @@ export default async function handler(
         });
       }
 
+      // Add refund transactions if items were not found during payment
+      // This applies to all order types (regular, combined, reel, restaurant)
+      if (totalRefundAmount > 0 && createdRefunds.length > 0) {
+        // Create refund wallet transactions for each refund
+        for (const refund of createdRefunds) {
+          transactions.push({
+            wallet_id: walletId,
+            amount: refund.amount,
+            type: "refund",
+            status: "completed",
+            related_order_id: refund.order_id,
+            related_reel_orderId: null,
+            related_restaurant_order_id: null,
+            description: `Refund for items not found: ${refund.reason || "Items not available during shopping"}`,
+          });
+        }
+      }
+
       const transactionResponse = await hasuraClient.request(
         CREATE_WALLET_TRANSACTIONS,
         {
@@ -712,7 +730,26 @@ export default async function handler(
         }
       );
     } else {
-      // Skipping wallet transaction creation for reel order to avoid foreign key constraint issues
+      // For reel orders, create refund transactions if items were not found
+      // Note: Reel orders don't create payment transactions due to foreign key constraints,
+      // but we can still create refund transactions if needed
+      if (totalRefundAmount > 0 && createdRefunds.length > 0) {
+        const refundTransactions = createdRefunds.map((refund) => ({
+          wallet_id: walletId,
+          amount: refund.amount,
+          type: "refund",
+          status: "completed",
+          related_order_id: refund.order_id,
+          related_reel_orderId: null,
+          related_restaurant_order_id: null,
+          description: `Refund for items not found: ${refund.reason || "Items not available during shopping"}`,
+        }));
+
+        await hasuraClient.request(CREATE_WALLET_TRANSACTIONS, {
+          transactions: refundTransactions,
+        });
+      }
+      // Skipping wallet transaction creation for reel order payment to avoid foreign key constraint issues
     }
 
     // NOTE: Earnings are NOT added to available balance during payment
