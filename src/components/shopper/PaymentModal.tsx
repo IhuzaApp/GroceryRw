@@ -117,7 +117,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     onVerifyOtp();
   };
 
-
   // Reset status when modal opens
   useEffect(() => {
     if (open) {
@@ -159,12 +158,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       deliveryFee: deliveryFee,
       momoCode: momoCode,
       currentStep: currentStep,
-      paymentStatus: paymentStatus
+      paymentStatus: paymentStatus,
     });
   }
 
   const modalContent = (
-    <div className="fixed inset-0 z-[999999] flex items-end justify-center bg-black/70 backdrop-blur-md p-0 sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-[999999] flex items-end justify-center bg-black/70 p-0 backdrop-blur-md sm:items-center sm:p-4">
       <div
         className={`w-full max-w-[550px] rounded-t-2xl border-0 shadow-2xl sm:rounded-2xl ${
           theme === "dark"

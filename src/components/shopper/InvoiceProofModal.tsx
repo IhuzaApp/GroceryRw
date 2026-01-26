@@ -195,7 +195,6 @@ const InvoiceProofModal: React.FC<InvoiceProofModalProps> = ({
             }`}
           >
             <div className="space-y-4">
-
               {/* Capture Section */}
               {!capturedImage && !uploading && (
                 <div

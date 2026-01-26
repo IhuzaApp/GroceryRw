@@ -274,14 +274,14 @@ export default async function handler(
 
     // Validate required fields
     if (!orderId || !momoCode || !privateKey || orderAmount === undefined) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: "Missing required fields",
         details: {
           orderId: !!orderId,
           momoCode: !!momoCode,
           privateKey: !!privateKey,
-          orderAmount: orderAmount !== undefined
-        }
+          orderAmount: orderAmount !== undefined,
+        },
       });
     }
 
@@ -348,15 +348,17 @@ export default async function handler(
           combinedOrdersResponse.Orders.length > 0
         ) {
           allOrdersInBatch = combinedOrdersResponse.Orders;
-          
+
           // Verify that the order being paid for exists in the batch
-          const orderExistsInBatch = allOrdersInBatch.some(order => order.id === orderId);
+          const orderExistsInBatch = allOrdersInBatch.some(
+            (order) => order.id === orderId
+          );
           if (!orderExistsInBatch) {
-            return res.status(400).json({ 
-              error: `Order ${orderId} not found in combined orders batch with combined_order_id ${orderData.combined_order_id}` 
+            return res.status(400).json({
+              error: `Order ${orderId} not found in combined orders batch with combined_order_id ${orderData.combined_order_id}`,
             });
           }
-          
+
           const storedTotalSum = allOrdersInBatch.reduce(
             (sum, order) => sum + parseFloat(order.total),
             0
@@ -375,7 +377,6 @@ export default async function handler(
       } else {
       }
     }
-
 
     // Get shopper's wallet
     const shopperId = orderData.shopper_id;
@@ -423,17 +424,19 @@ export default async function handler(
       } else {
         // For different-shop combined orders, only calculate refund for the specific order being paid for
         // Find the specific order being paid for in the batch
-        const currentOrder = allOrdersInBatch.find(order => order.id === orderId);
+        const currentOrder = allOrdersInBatch.find(
+          (order) => order.id === orderId
+        );
 
         if (currentOrder) {
           // Only create refund for this specific order if items were not found
           // The frontend sends originalOrderTotal (total of all ordered items) and orderAmount (total of found items)
-          const orderOriginalTotal = originalOrderTotal || parseFloat(currentOrder.total);
+          const orderOriginalTotal =
+            originalOrderTotal || parseFloat(currentOrder.total);
 
           // CRITICAL: Only create refund if some items were NOT found
           // If all items are found, orderOriginalTotal should equal formattedOrderAmount
           const allItemsFound = orderOriginalTotal <= formattedOrderAmount;
-
 
           if (!allItemsFound) {
             // Only create refund when items are not found
@@ -467,7 +470,6 @@ export default async function handler(
               generated_by: "System",
               paid: false,
             });
-
           } else {
           }
         }
@@ -481,7 +483,6 @@ export default async function handler(
       // CRITICAL: Only create refund if some items were NOT found
       // If all items are found, totalOrderValue should equal formattedOrderAmount
       const allItemsFound = totalOrderValue <= formattedOrderAmount;
-
 
       if (!allItemsFound) {
         // Only create refund when items are not found
@@ -523,7 +524,6 @@ export default async function handler(
           generated_by: "System",
           paid: false,
         });
-
       } else {
       }
     }
@@ -602,9 +602,10 @@ export default async function handler(
     // Calculate the new reserved balance after deducting the full original amount
     // For same-shop combined orders, use the batch total; for different-shop combined orders,
     // use the specific order amount; otherwise use the individual order amount
-    const originalAmount = hasCombinedOrders && isSameShopCombined
-      ? batchTotal
-      : originalOrderTotal || formattedOrderAmount;
+    const originalAmount =
+      hasCombinedOrders && isSameShopCombined
+        ? batchTotal
+        : originalOrderTotal || formattedOrderAmount;
 
     let newReserved = currentReserved;
     let newAvailable = parseFloat(wallet.available_balance);
@@ -640,25 +641,30 @@ export default async function handler(
     } else if (hasCombinedOrders && !isSameShopCombined) {
       // DIFFERENT SHOP COMBINED ORDERS: Process payment for specific order only
       // Find the specific order being paid for
-      const currentOrder = allOrdersInBatch.find(order => order.id === orderId);
-      
+      const currentOrder = allOrdersInBatch.find(
+        (order) => order.id === orderId
+      );
+
       if (!currentOrder) {
-        return res.status(404).json({ error: "Order not found in combined orders batch" });
+        return res
+          .status(404)
+          .json({ error: "Order not found in combined orders batch" });
       }
 
       // For different-shop combined orders, only deduct the specific order amount
       // Use originalOrderTotal if provided (for refund calculation), otherwise use formattedOrderAmount
-      const orderOriginalTotal = originalOrderTotal || parseFloat(currentOrder.total);
-      
+      const orderOriginalTotal =
+        originalOrderTotal || parseFloat(currentOrder.total);
+
       // Deduct the original order total from reserved balance
       // (The found items amount is already accounted for in formattedOrderAmount)
       newReserved = currentReserved - orderOriginalTotal;
-      
+
       // Calculate fees for this specific order only
       const serviceFee = parseFloat(currentOrder.service_fee || "0");
       const deliveryFee = parseFloat(currentOrder.delivery_fee || "0");
       const orderFees = serviceFee + deliveryFee;
-      
+
       // Fetch delivery commission percentage and calculate platform fee
       const systemConfigResponse = await hasuraClient.request(
         GET_SYSTEM_CONFIG_FOR_FEES
@@ -667,10 +673,10 @@ export default async function handler(
         systemConfigResponse?.System_configuratioins?.[0]
           ?.deliveryCommissionPercentage || "20"
       );
-      
+
       const platformFee = (orderFees * deliveryCommissionPercentage) / 100;
       const shopperEarnings = orderFees - platformFee;
-      
+
       // Add shopper earnings (after platform fee deduction) to available balance
       newAvailable = parseFloat(wallet.available_balance) + shopperEarnings;
     } else {
@@ -761,7 +767,9 @@ export default async function handler(
       });
     } else if (hasCombinedOrders && !isSameShopCombined) {
       // For different-shop combined orders, only calculate fees for the specific order being paid for
-      const currentOrder = allOrdersInBatch.find(order => order.id === orderId);
+      const currentOrder = allOrdersInBatch.find(
+        (order) => order.id === orderId
+      );
       if (currentOrder) {
         const serviceFee = parseFloat(currentOrder.service_fee || "0");
         const deliveryFee = parseFloat(currentOrder.delivery_fee || "0");
@@ -782,7 +790,8 @@ export default async function handler(
         orderId,
         amount: formattedOrderAmount,
         originalTotal: originalOrderTotal,
-        batchTotal: hasCombinedOrders && isSameShopCombined ? batchTotal : undefined,
+        batchTotal:
+          hasCombinedOrders && isSameShopCombined ? batchTotal : undefined,
         combinedOrdersCount: hasCombinedOrders
           ? allOrdersInBatch.length
           : undefined,

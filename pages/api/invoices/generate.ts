@@ -563,12 +563,20 @@ export default async function handler(
     let walletTransactionAmount: number | null = null;
     if (!isReelOrder && !isRestaurantOrder) {
       try {
-        const walletTransactionResult = await hasuraClient.request(GET_WALLET_TRANSACTION_AMOUNT, {
-          orderId: orderId,
-        });
+        const walletTransactionResult = await hasuraClient.request(
+          GET_WALLET_TRANSACTION_AMOUNT,
+          {
+            orderId: orderId,
+          }
+        );
 
-        if (walletTransactionResult.Wallet_Transactions && walletTransactionResult.Wallet_Transactions.length > 0) {
-          walletTransactionAmount = parseFloat(walletTransactionResult.Wallet_Transactions[0].amount);
+        if (
+          walletTransactionResult.Wallet_Transactions &&
+          walletTransactionResult.Wallet_Transactions.length > 0
+        ) {
+          walletTransactionAmount = parseFloat(
+            walletTransactionResult.Wallet_Transactions[0].amount
+          );
         }
       } catch (error) {
         console.error("Error fetching wallet transaction amount:", error);
@@ -601,11 +609,12 @@ export default async function handler(
 
     // For invoice proof uploads, always use the wallet transaction amount
     // For regular invoice generation, use the calculated logic
-    const totalAmount = walletTransactionAmount !== null
-      ? walletTransactionAmount.toFixed(2)
-      : hasFoundItemsTotal
-      ? itemsTotal.toFixed(2)
-      : finalTotalBeforeTax.toFixed(2);
+    const totalAmount =
+      walletTransactionAmount !== null
+        ? walletTransactionAmount.toFixed(2)
+        : hasFoundItemsTotal
+        ? itemsTotal.toFixed(2)
+        : finalTotalBeforeTax.toFixed(2);
 
     const invoicePayload = {
       customer_id: isReelOrder

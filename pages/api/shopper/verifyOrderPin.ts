@@ -19,7 +19,11 @@ export default async function handler(
     }
 
     // Handle combined_customer orders - verify all orders have the same PIN
-    if (orderType === "combined_customer" && combinedOrderIds && combinedOrderIds.length > 0) {
+    if (
+      orderType === "combined_customer" &&
+      combinedOrderIds &&
+      combinedOrderIds.length > 0
+    ) {
       // Fetch PINs for all orders
       const pinsQuery = gql`
         query GetOrdersPins($orderIds: [uuid!]!) {
@@ -63,7 +67,8 @@ export default async function handler(
 
       if (uniquePins.length > 1) {
         return res.status(400).json({
-          error: "Orders have different PINs. All orders must have the same PIN.",
+          error:
+            "Orders have different PINs. All orders must have the same PIN.",
           verified: false,
           pinsMismatch: true,
         });

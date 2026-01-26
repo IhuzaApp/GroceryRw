@@ -321,7 +321,10 @@ export default function OrderItemsSection({
             {itemsByShop.get(effectiveActiveShopId || "")?.map((item) => {
               // For different shops combined orders, check if ANY order from this shop is still shopping
               // This allows marking items as found even if some orders from the same shop are already on_the_way
-              const shopOrders = [order, ...(order.combinedOrders || [])].filter(
+              const shopOrders = [
+                order,
+                ...(order.combinedOrders || []),
+              ].filter(
                 (o) => (o.shop?.id || o.shop_id) === effectiveActiveShopId
               );
               const hasAnyOrderShopping = shopOrders.some(
@@ -376,7 +379,10 @@ export default function OrderItemsSection({
             {displayItems.map((item) => {
               // For the default view, check if any order is still active for this shop
               // This ensures buttons remain visible even if some orders are on_the_way
-              const shopOrders = [order, ...(order.combinedOrders || [])].filter(
+              const shopOrders = [
+                order,
+                ...(order.combinedOrders || []),
+              ].filter(
                 (o) => (o.shop?.id || o.shop_id) === effectiveActiveShopId
               );
               const hasAnyOrderActive = shopOrders.some(
