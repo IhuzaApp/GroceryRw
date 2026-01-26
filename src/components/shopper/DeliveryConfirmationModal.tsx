@@ -414,10 +414,71 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
       setDeliveryConfirmed(true);
 
-      // Redirect after success
-      setTimeout(() => {
-        router.push("/Plasa/active-batches");
-      }, 1500);
+      // For combined orders going to different customers, check if there are other pending orders
+      // Only redirect if all orders in the combined batch are delivered
+      let shouldRedirect = true;
+      
+      if (invoiceData.orderType === "combined" && orderIdsToUpdate.length === 1) {
+        try {
+          console.log("🔍 [DELIVERY CONFIRMATION] Checking for pending orders in combined batch...");
+          
+          // First, get the order details to find the combined_order_id
+          const orderDetailsResponse = await fetch(`/api/shopper/orderDetails?orderId=${invoiceData.orderId}`);
+          if (orderDetailsResponse.ok) {
+            const orderDetailsData = await orderDetailsResponse.json();
+            const combinedOrderId = orderDetailsData.order?.combined_order_id;
+            
+            if (combinedOrderId) {
+              // Fetch all orders in the combined batch
+              const combinedOrdersResponse = await fetch(
+                `/api/queries/combined-orders?combined_order_id=${combinedOrderId}`
+              );
+              
+              if (combinedOrdersResponse.ok) {
+                const combinedOrdersData = await combinedOrdersResponse.json();
+                const allOrdersInBatch = combinedOrdersData.orders || [];
+                
+                // Check if any orders are still pending (not delivered and not cancelled)
+                // Any order that's not delivered and not cancelled is considered pending
+                const pendingOrders = allOrdersInBatch.filter(
+                  (order: any) => 
+                    order.id !== invoiceData.orderId && 
+                    order.status !== "delivered" && 
+                    order.status !== "cancelled"
+                );
+                
+                console.log("🔍 [DELIVERY CONFIRMATION] Combined batch check:", {
+                  combinedOrderId,
+                  totalOrdersInBatch: allOrdersInBatch.length,
+                  pendingOrdersCount: pendingOrders.length,
+                  pendingOrderIds: pendingOrders.map((o: any) => o.id),
+                });
+                
+                if (pendingOrders.length > 0) {
+                  console.log("⏸️ [DELIVERY CONFIRMATION] Other orders still pending - closing modal but staying on page");
+                  shouldRedirect = false;
+                  // Close the modal but don't redirect - stay on the page so user can deliver remaining orders
+                  setTimeout(() => {
+                    onClose();
+                  }, 1500);
+                } else {
+                  console.log("✅ [DELIVERY CONFIRMATION] All orders in batch delivered - redirecting");
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error checking for pending orders:", error);
+          // If there's an error checking, proceed with redirect anyway
+        }
+      }
+
+      // Redirect after success (only if all orders are delivered or not a combined order with different customers)
+      if (shouldRedirect) {
+        setTimeout(() => {
+          router.push("/Plasa/active-batches");
+        }, 1500);
+      }
     } catch (error) {
       console.error("Error confirming delivery:", error);
       setUploadError("Failed to confirm delivery. Please try again.");
