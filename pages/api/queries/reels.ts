@@ -31,6 +31,8 @@ const GET_ALL_REELS = gql`
         image
         description
         address
+        latitude
+        longitude
       }
       User {
         email
@@ -109,6 +111,8 @@ const GET_REELS_BY_USER = gql`
         image
         description
         address
+        latitude
+        longitude
       }
       User {
         email
@@ -187,6 +191,8 @@ const GET_REELS_BY_RESTAURANT = gql`
         image
         description
         address
+        latitude
+        longitude
       }
       User {
         email

@@ -78,12 +78,27 @@ export default function OrderModal({
   const [configLoading, setConfigLoading] = useState(true);
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<PaymentMethod | null>(null);
+  const [defaultPaymentMethod, setDefaultPaymentMethod] =
+    useState<PaymentMethod | null>(null);
   const [loadingPayment, setLoadingPayment] = useState(true);
   const [isOrderLoading, setIsOrderLoading] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [useDefaultPayment, setUseDefaultPayment] = useState(true);
+  const [manualPhoneNumber, setManualPhoneNumber] = useState("");
 
+  // Check if mobile on mount and resize
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    
+    checkIfMobile();
+    window.addEventListener("resize", checkIfMobile);
+    return () => window.removeEventListener("resize", checkIfMobile);
+  }, []);
 
   // Fetch system configuration
   useEffect(() => {
@@ -119,14 +134,16 @@ export default function OrderModal({
         );
 
         if (defaultMethod) {
-          setSelectedPaymentMethod({
+          const defaultPayment: PaymentMethod = {
             type:
               defaultMethod.method.toLowerCase() === "mtn momo"
                 ? "momo"
                 : "card",
             id: defaultMethod.id,
             number: defaultMethod.number,
-          });
+          };
+          setDefaultPaymentMethod(defaultPayment);
+          setSelectedPaymentMethod(defaultPayment);
         }
       } catch (error) {
         console.error("Error fetching default payment method:", error);
@@ -137,15 +154,33 @@ export default function OrderModal({
 
     if (open) {
       fetchDefaultPaymentMethod();
+      setUseDefaultPayment(true);
+      setManualPhoneNumber("");
     }
   }, [open]);
+
+  // Update selected payment method when switching between default and manual
+  useEffect(() => {
+    if (useDefaultPayment && defaultPaymentMethod) {
+      setSelectedPaymentMethod(defaultPaymentMethod);
+    } else if (!useDefaultPayment && manualPhoneNumber.trim()) {
+      setSelectedPaymentMethod({
+        type: defaultPaymentMethod?.type || "momo",
+        number: manualPhoneNumber.trim(),
+      });
+    } else if (!useDefaultPayment) {
+      setSelectedPaymentMethod(null);
+    }
+  }, [useDefaultPayment, defaultPaymentMethod, manualPhoneNumber]);
 
   // Calculate fees and totals
   const basePrice = post?.restaurant?.price || post?.product?.price || 0;
   const subtotal = basePrice * quantity;
 
-  // Service and Delivery Fee calculations
-  const serviceFee = systemConfig ? parseInt(systemConfig.serviceFee) : 0;
+  // Service fee is always 0 for reel orders
+  const serviceFee = 0;
+
+  // Delivery Fee calculations (same as checkoutCard.tsx)
   const baseDeliveryFee = systemConfig
     ? parseInt(systemConfig.baseDeliveryFee)
     : 0;
@@ -184,7 +219,7 @@ export default function OrderModal({
     Math.ceil(extraDistance) *
     (systemConfig ? parseInt(systemConfig.distanceSurcharge) : 0);
 
-  // Cap the distance-based delivery fee
+  // Cap the distance-based delivery fee (before units) at cappedDistanceFee
   const rawDistanceFee = baseDeliveryFee + distanceSurcharge;
   const cappedDistanceFee = systemConfig
     ? parseInt(systemConfig.cappedDistanceFee)
@@ -193,7 +228,13 @@ export default function OrderModal({
     rawDistanceFee > cappedDistanceFee ? cappedDistanceFee : rawDistanceFee;
 
   // Final delivery fee includes unit surcharge
-  const deliveryFee = finalDistanceFee + unitsSurcharge;
+  let deliveryFee = finalDistanceFee + unitsSurcharge;
+
+  // Apply 50% discount on delivery fee if subtotal > 30,000
+  if (subtotal > 30000) {
+    deliveryFee = deliveryFee * 0.5;
+  }
+
   const finalTotal = subtotal - discount + serviceFee + deliveryFee;
 
   // Handle promo code application
@@ -260,11 +301,12 @@ export default function OrderModal({
       const deliveryTimestamp = deliveryDate.toISOString();
 
       // Prepare reel order payload
+      // Service fee is always 0 for reel orders
       const payload = {
         reel_id: post.id,
         quantity: quantity,
         total: finalTotal.toString(),
-        service_fee: serviceFee.toString(),
+        service_fee: "0", // Always 0 for reel orders
         delivery_fee: deliveryFee.toString(),
         discount: discount > 0 ? discount.toString() : null,
         voucher_code: appliedPromo || null,
@@ -406,14 +448,18 @@ export default function OrderModal({
             {selectedPaymentMethod.type === "refund"
               ? "Using Refund Balance"
               : selectedPaymentMethod.type === "momo"
-              ? `MTN MoMo •••• ${selectedPaymentMethod.number?.slice(-3)}`
-              : `Card •••• ${selectedPaymentMethod.number?.slice(-4)}`}
+              ? `MTN MoMo ${selectedPaymentMethod.number ? `•••• ${selectedPaymentMethod.number.slice(-3)}` : ""}`
+              : `Card ${selectedPaymentMethod.number ? `•••• ${selectedPaymentMethod.number.slice(-4)}` : ""}`}
           </span>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             {selectedPaymentMethod.type === "refund"
               ? "Available balance will be used"
               : selectedPaymentMethod.type === "momo"
-              ? "Mobile money payment"
+              ? useDefaultPayment && defaultPaymentMethod
+                ? "Using default payment method"
+                : !useDefaultPayment && manualPhoneNumber
+                ? "Using manually entered phone number"
+                : "Mobile money payment"
               : "Credit/Debit card payment"}
           </p>
         </div>
@@ -425,7 +471,7 @@ export default function OrderModal({
 
   return (
     <div
-      className="fixed inset-0 z-[10000] flex flex-col bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/50 backdrop-blur-sm p-0 sm:items-center sm:p-4"
       onClick={onClose}
       style={{
         position: "fixed",
@@ -438,12 +484,16 @@ export default function OrderModal({
       }}
     >
       <div
-        className="mt-[5vh] flex flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-gray-800"
+        className="w-full max-w-[550px] flex flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-gray-800 sm:rounded-2xl sm:max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
-        style={{ height: "calc(100vh - 5vh)", marginBottom: 0 }}
+        style={{ 
+          height: isMobile ? "calc(100vh - 5vh)" : "auto",
+          maxHeight: isMobile ? "calc(100vh - 5vh)" : "90vh",
+          marginBottom: 0 
+        }}
       >
         {/* Header */}
-        <div className="flex flex-shrink-0 items-center justify-between rounded-t-3xl border-b border-gray-200 bg-white px-5 py-4 dark:border-gray-700 dark:bg-gray-800">
+        <div className="flex flex-shrink-0 items-center justify-between rounded-t-3xl border-b border-gray-200 bg-white px-5 py-4 dark:border-gray-700 dark:bg-gray-800 sm:px-6 sm:py-5">
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-gray-100 p-2 dark:bg-gray-700">
               <ShoppingCart className="h-6 w-6 text-gray-700 dark:text-gray-300" />
@@ -660,8 +710,8 @@ export default function OrderModal({
                   />
                 </div>
 
-                {/* Promo Code */}
-                <div className="space-y-2">
+                {/* Promo Code - Hidden for now */}
+                {/* <div className="space-y-2">
                   <label
                     className={`block text-sm font-semibold ${
                       theme === "dark" ? "text-gray-300" : "text-gray-700"
@@ -717,10 +767,10 @@ export default function OrderModal({
                       </p>
                     </div>
                   )}
-                </div>
+                </div> */}
 
                 {/* Payment Method */}
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <label
                     className={`block text-sm font-semibold ${
                       theme === "dark" ? "text-gray-300" : "text-gray-700"
@@ -728,15 +778,134 @@ export default function OrderModal({
                   >
                     Payment Method
                   </label>
-                  <div
-                    className={`rounded-xl border-2 p-4 ${
-                      theme === "dark"
-                        ? "border-gray-600 bg-gray-800"
-                        : "border-gray-300 bg-white"
-                    }`}
-                  >
-                    {renderPaymentMethod()}
+
+                  {/* Payment Method Selection */}
+                  <div className="space-y-3">
+                    {/* Use Default Option */}
+                    <div
+                      className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition-all ${
+                        useDefaultPayment
+                          ? theme === "dark"
+                            ? "border-green-500 bg-green-900/20"
+                            : "border-green-500 bg-green-50"
+                          : theme === "dark"
+                          ? "border-gray-600 bg-gray-800 hover:border-gray-500"
+                          : "border-gray-300 bg-white hover:border-gray-400"
+                      }`}
+                      onClick={() => setUseDefaultPayment(true)}
+                    >
+                      <input
+                        type="radio"
+                        checked={useDefaultPayment}
+                        onChange={() => setUseDefaultPayment(true)}
+                        className="h-4 w-4 cursor-pointer text-green-600 focus:ring-green-500"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`font-medium ${
+                              theme === "dark" ? "text-gray-100" : "text-gray-800"
+                            }`}
+                          >
+                            Use Default Payment Method
+                          </span>
+                        </div>
+                        {defaultPaymentMethod && (
+                          <p
+                            className={`mt-1 text-xs ${
+                              theme === "dark" ? "text-gray-400" : "text-gray-600"
+                            }`}
+                          >
+                            {defaultPaymentMethod.type === "momo"
+                              ? `MTN MoMo •••• ${defaultPaymentMethod.number?.slice(-3)}`
+                              : `Card •••• ${defaultPaymentMethod.number?.slice(-4)}`}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Manual Entry Option */}
+                    <div
+                      className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition-all ${
+                        !useDefaultPayment
+                          ? theme === "dark"
+                            ? "border-green-500 bg-green-900/20"
+                            : "border-green-500 bg-green-50"
+                          : theme === "dark"
+                          ? "border-gray-600 bg-gray-800 hover:border-gray-500"
+                          : "border-gray-300 bg-white hover:border-gray-400"
+                      }`}
+                      onClick={() => setUseDefaultPayment(false)}
+                    >
+                      <input
+                        type="radio"
+                        checked={!useDefaultPayment}
+                        onChange={() => setUseDefaultPayment(false)}
+                        className="mt-1 h-4 w-4 cursor-pointer text-green-600 focus:ring-green-500"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`font-medium ${
+                              theme === "dark" ? "text-gray-100" : "text-gray-800"
+                            }`}
+                          >
+                            Enter Phone Number Manually
+                          </span>
+                        </div>
+                        {!useDefaultPayment && (
+                          <div className="mt-3">
+                            <div className="relative">
+                              <div
+                                className={`pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3`}
+                              >
+                                <svg
+                                  className={`h-5 w-5 ${
+                                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                                  }`}
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                                  />
+                                </svg>
+                              </div>
+                              <input
+                                type="tel"
+                                value={manualPhoneNumber}
+                                onChange={(e) => setManualPhoneNumber(e.target.value)}
+                                placeholder="Enter phone number"
+                                className={`w-full rounded-xl border-2 py-3 pl-10 pr-4 transition-all focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                                  theme === "dark"
+                                    ? "border-gray-600 bg-gray-700 text-gray-100 placeholder-gray-400 focus:border-green-500"
+                                    : "border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-green-500"
+                                }`}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Current Selection Display */}
+                  {selectedPaymentMethod && (
+                    <div
+                      className={`mt-3 rounded-xl border-2 p-4 ${
+                        theme === "dark"
+                          ? "border-gray-600 bg-gray-800"
+                          : "border-gray-300 bg-white"
+                      }`}
+                    >
+                      {renderPaymentMethod()}
+                    </div>
+                  )}
                 </div>
 
                 {/* Order Summary */}
@@ -839,23 +1008,16 @@ export default function OrderModal({
                           theme === "dark" ? "text-gray-300" : "text-gray-600"
                         }`}
                       >
-                        Service Fee
-                      </span>
-                      <span
-                        className={`font-medium ${
-                          theme === "dark" ? "text-gray-100" : "text-gray-800"
-                        }`}
-                      >
-                        {formatCurrency(serviceFee)}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between py-2">
-                      <span
-                        className={`${
-                          theme === "dark" ? "text-gray-300" : "text-gray-600"
-                        }`}
-                      >
                         Delivery Fee
+                        {subtotal > 30000 && (
+                          <span
+                            className={`ml-2 text-xs ${
+                              theme === "dark" ? "text-green-400" : "text-green-600"
+                            }`}
+                          >
+                            (50% off)
+                          </span>
+                        )}
                       </span>
                       <span
                         className={`font-medium ${
@@ -874,7 +1036,7 @@ export default function OrderModal({
 
         {/* Footer */}
         <div
-          className={`flex flex-shrink-0 items-center justify-end gap-3 border-t p-4 md:p-5 ${
+          className={`flex flex-shrink-0 items-center justify-end gap-3 border-t p-4 sm:p-5 ${
             theme === "dark"
               ? "border-gray-700 bg-gray-800"
               : "border-gray-200 bg-white"

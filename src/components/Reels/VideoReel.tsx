@@ -1143,10 +1143,10 @@ export default function VideoReel({
         open={showOrderModal}
         onClose={() => setShowOrderModal(false)}
         post={post}
-        shopLat={post.type === "restaurant" ? 0 : 0} // You'll need to pass actual coordinates
-        shopLng={post.type === "restaurant" ? 0 : 0}
-        shopAlt={post.type === "restaurant" ? 0 : 0}
-        shopId={post.id}
+        shopLat={post.shopLat || 0}
+        shopLng={post.shopLng || 0}
+        shopAlt={post.shopAlt || 0}
+        shopId={post.shop_id || post.restaurant_id || post.id}
       />
     </>
   );

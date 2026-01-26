@@ -274,6 +274,9 @@ interface BasePost {
   commentsList: Comment[];
   shop_id?: string | null;
   restaurant_id?: string | null;
+  shopLat?: number;
+  shopLng?: number;
+  shopAlt?: number;
 }
 
 interface RestaurantPost extends BasePost {
@@ -333,6 +336,8 @@ interface DatabaseReel {
     id: string;
     image?: string;
     description?: string;
+    latitude?: string;
+    longitude?: string;
   } | null;
   User: {
     email: string;
@@ -640,6 +645,23 @@ export default function FoodReelsApp() {
       isLiked: comment.isLiked,
     }));
 
+    // Get coordinates from Restaurant or Shops
+    let shopLat = 0;
+    let shopLng = 0;
+    let shopAlt = 0;
+
+    if (dbReel.Restaurant) {
+      // Use Restaurant coordinates
+      shopLat = dbReel.Restaurant.lat || 0;
+      shopLng = dbReel.Restaurant.long || 0;
+      shopAlt = 0; // Restaurant doesn't have altitude in the schema
+    } else if (dbReel.Shops) {
+      // Use Shops coordinates (latitude and longitude are stored as strings)
+      shopLat = dbReel.Shops.latitude ? parseFloat(dbReel.Shops.latitude) : 0;
+      shopLng = dbReel.Shops.longitude ? parseFloat(dbReel.Shops.longitude) : 0;
+      shopAlt = 0; // Shops doesn't have altitude in the schema
+    }
+
     // Base post structure
     const basePost: BasePost = {
       id: dbReel.id,
@@ -667,6 +689,9 @@ export default function FoodReelsApp() {
       commentsList,
       shop_id: dbReel.shop_id || null,
       restaurant_id: dbReel.restaurant_id || null,
+      shopLat,
+      shopLng,
+      shopAlt,
     };
 
     // Helper function to extract string value
