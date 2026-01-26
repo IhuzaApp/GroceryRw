@@ -13,20 +13,21 @@ interface Order {
   OrderID: string | number;
   orderIDs?: Array<string | number>;
   status: string;
-  createdAt: string;
+  createdAt?: string;
+  created_at?: string;
   deliveryTime?: string;
-  shopName: string;
+  shopName?: string;
   shopNames?: string[];
-  shopAddress: string;
-  shopLat: number;
-  shopLng: number;
-  customerName: string;
-  customerAddress: string;
-  customerLat: number;
-  customerLng: number;
-  items: number;
+  shopAddress?: string;
+  shopLat?: number;
+  shopLng?: number;
+  customerName?: string;
+  customerAddress?: string;
+  customerLat?: number;
+  customerLng?: number;
+  items?: number;
   total: number;
-  estimatedEarnings: string;
+  estimatedEarnings?: string;
   orderType?: "regular" | "reel" | "restaurant" | "combined";
   reel?: {
     id: string;
@@ -79,7 +80,7 @@ export function ResponsiveBatchView({
     const grouped: { [key: string]: { orders: Order[]; date: Date } } = {};
 
     ordersList.forEach((order) => {
-      const date = new Date(order.createdAt || order.deliveryTime || Date.now());
+      const date = new Date(order.createdAt || order.created_at || order.deliveryTime || Date.now());
       const dayKey = date.toLocaleDateString("en-US", {
         day: "numeric",
         month: "long",

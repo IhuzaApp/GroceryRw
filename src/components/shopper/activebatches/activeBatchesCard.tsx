@@ -262,16 +262,95 @@ export default function ActiveBatches({
     >
       {/* Main Content */}
       <main className="mx-auto w-full max-w-[1920px] px-3 py-3 sm:px-6 sm:py-6">
+        {/* Mobile Header - Only show on mobile */}
+        {isMobile && (
+          <div className="mb-4">
+            {/* Header with Title and Profile Icon */}
+            <div className="mb-4 flex items-center justify-between">
+              <h1
+                className={`text-2xl font-bold ${
+                  theme === "dark" ? "text-gray-100" : "text-gray-900"
+                }`}
+              >
+                Active Batches
+              </h1>
+            
+            </div>
+
+            {/* Search Bar and Refresh Button */}
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  placeholder="Search batches..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={`w-full rounded-xl border-2 py-3.5 pl-12 pr-4 text-sm font-medium transition-all duration-200 ${
+                    theme === "dark"
+                      ? "border-gray-700 bg-gray-800 text-gray-100 placeholder-gray-400 focus:border-blue-500 focus:bg-gray-750 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  }`}
+                />
+                <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                  <svg
+                    className={`h-5 w-5 ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-400"
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
+              </div>
+              
+              {/* Refresh Button */}
+              <button
+                onClick={() => refetchActiveBatches(false)}
+                disabled={isRefreshing}
+                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 transition-all duration-200 ${
+                  theme === "dark"
+                    ? "border-gray-700 bg-gray-800 text-gray-200 hover:border-gray-600 hover:bg-gray-700 active:bg-gray-600"
+                    : "border-gray-200 bg-white text-gray-700 shadow-sm hover:border-gray-300 hover:bg-gray-50 active:bg-gray-100"
+                } ${isRefreshing ? "opacity-50 cursor-not-allowed" : ""}`}
+                title="Refresh batches"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                  className={`h-5 w-5 ${isRefreshing ? "animate-spin" : ""}`}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Page Title - Desktop Only */}
-        <div className="mb-4">
-          <p
-            className={`text-xl font-bold sm:text-2xl ${
-              theme === "dark" ? "text-gray-100" : "text-gray-900"
-            }`}
-          >
-            Active Batches
-          </p>
-        </div>
+        {!isMobile && (
+          <div className="mb-4">
+            <p
+              className={`text-xl font-bold sm:text-2xl ${
+                theme === "dark" ? "text-gray-100" : "text-gray-900"
+              }`}
+            >
+              Active Batches
+            </p>
+          </div>
+        )}
 
         {/* Display a warning when user doesn't have the shopper role */}
         {!isLoading && role !== "shopper" && (
@@ -327,10 +406,10 @@ export default function ActiveBatches({
                       order.OrderID.toString()
                         .toLowerCase()
                         .includes(searchQuery.toLowerCase()) ||
-                      order.customerName
+                      (order.customerName || "")
                         .toLowerCase()
                         .includes(searchQuery.toLowerCase()) ||
-                      order.shopName
+                      (order.shopName || "")
                         .toLowerCase()
                         .includes(searchQuery.toLowerCase())
                   )

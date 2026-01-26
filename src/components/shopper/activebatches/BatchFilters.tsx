@@ -795,8 +795,8 @@ export function BatchFilters({ onFilterChange, onRefresh, isRefreshing = false }
         </button>
       </div>
 
-      {/* Right side - Search and Refresh (Full width on mobile) */}
-      <div className="flex w-full flex-1 items-center gap-2 sm:min-w-[200px] sm:max-w-md">
+      {/* Right side - Search and Refresh (Hidden on mobile, shown on desktop) */}
+      <div className="hidden w-full flex-1 items-center gap-2 sm:flex sm:min-w-[200px] sm:max-w-md">
         <div className="relative flex-1">
           <input
             type="text"

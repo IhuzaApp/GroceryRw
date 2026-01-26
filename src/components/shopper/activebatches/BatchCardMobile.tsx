@@ -42,11 +42,9 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
   const isReelOrder = order.orderType === "reel";
   const isRestaurantOrder = order.orderType === "restaurant";
 
-  // Get icon color based on order type
+  // Get icon color - always green for mobile
   const getIconColor = () => {
-    if (isReelOrder) return "bg-green-500";
-    if (isRestaurantOrder) return "bg-blue-500";
-    return "bg-orange-500";
+    return "bg-green-500";
   };
 
 
@@ -237,53 +235,11 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
 
       {/* Service/Provider Header */}
       <div className="mb-4 flex items-center gap-3">
-        {/* Circular Icon */}
+        {/* Circular Icon - Green with OrderID */}
         <div
-          className={`flex h-12 w-12 items-center justify-center rounded-full ${getIconColor()} text-white`}
+          className={`flex h-12 w-12 items-center justify-center rounded-full ${getIconColor()} text-white font-bold text-sm`}
         >
-          {isReelOrder ? (
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-              />
-            </svg>
-          ) : isRestaurantOrder ? (
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
-              />
-            </svg>
-          ) : (
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-              />
-            </svg>
-          )}
+          #{order.OrderID}
         </div>
         {/* Service Name */}
         <h3
