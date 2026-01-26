@@ -436,6 +436,48 @@ const GET_CURRENT_ROUND_FOR_ORDER_IDS = gql`
   }
 `;
 
+// Query to verify order is still unassigned before sending notification
+const VERIFY_ORDER_UNASSIGNED_REGULAR = gql`
+  query VerifyOrderUnassignedRegular($order_id: uuid!) {
+    Orders_by_pk(id: $order_id) {
+      id
+      shopper_id
+      status
+    }
+  }
+`;
+
+const VERIFY_ORDER_UNASSIGNED_REEL = gql`
+  query VerifyOrderUnassignedReel($order_id: uuid!) {
+    reel_orders_by_pk(id: $order_id) {
+      id
+      shopper_id
+      status
+    }
+  }
+`;
+
+const VERIFY_ORDER_UNASSIGNED_RESTAURANT = gql`
+  query VerifyOrderUnassignedRestaurant($order_id: uuid!) {
+    restaurant_orders_by_pk(id: $order_id) {
+      id
+      shopper_id
+      status
+    }
+  }
+`;
+
+// Query to verify all orders in a combined group are unassigned
+const VERIFY_COMBINED_ORDERS_UNASSIGNED = gql`
+  query VerifyCombinedOrdersUnassigned($order_ids: [uuid!]!) {
+    Orders(where: { id: { _in: $order_ids } }) {
+      id
+      shopper_id
+      status
+    }
+  }
+`;
+
 // Haversine formula to calculate distance in kilometers
 function calculateDistanceKm(
   lat1: number,
@@ -1547,6 +1589,112 @@ export default async function handler(
     // This prevents duplicate notifications when polling refreshes the same offer
     if (!isExtendingOffer) {
       try {
+        // ========================================================================
+        // CRITICAL: Verify order is still unassigned before sending notification
+        // ========================================================================
+        // This prevents sending notifications for orders that were already accepted
+        // by this or another shopper between the query and notification send
+        // ========================================================================
+        let orderStillUnassigned = true;
+        let orderAssignedToShopper = false;
+
+        if (isCombinedRegular && combinedOrderIds.length > 0) {
+          // For combined orders, check all orders in the group
+          const verificationData = (await hasuraClient.request(
+            VERIFY_COMBINED_ORDERS_UNASSIGNED,
+            { order_ids: combinedOrderIds }
+          )) as any;
+
+          const assignedOrders = (verificationData.Orders || []).filter(
+            (o: any) => o.shopper_id !== null
+          );
+
+          if (assignedOrders.length > 0) {
+            orderStillUnassigned = false;
+            // Check if any order is assigned to this shopper
+            orderAssignedToShopper = assignedOrders.some(
+              (o: any) => o.shopper_id === user_id
+            );
+
+            console.log(
+              `❌ BLOCKING notification: Combined order group has ${assignedOrders.length} assigned order(s)`,
+              {
+                combinedOrderId: bestOrder.combined_order_id,
+                assignedOrders: assignedOrders.map((o: any) => ({
+                  orderId: o.id,
+                  shopperId: o.shopper_id,
+                  assignedToThisShopper: o.shopper_id === user_id,
+                })),
+              }
+            );
+          }
+        } else {
+          // For single orders, check the specific order
+          let verificationData: any;
+          if (bestOrder.orderType === "regular") {
+            verificationData = (await hasuraClient.request(
+              VERIFY_ORDER_UNASSIGNED_REGULAR,
+              { order_id: bestOrder.id }
+            )) as any;
+          } else if (bestOrder.orderType === "reel") {
+            verificationData = (await hasuraClient.request(
+              VERIFY_ORDER_UNASSIGNED_REEL,
+              { order_id: bestOrder.id }
+            )) as any;
+          } else if (bestOrder.orderType === "restaurant") {
+            verificationData = (await hasuraClient.request(
+              VERIFY_ORDER_UNASSIGNED_RESTAURANT,
+              { order_id: bestOrder.id }
+            )) as any;
+          }
+
+          const order =
+            verificationData?.Orders_by_pk ||
+            verificationData?.reel_orders_by_pk ||
+            verificationData?.restaurant_orders_by_pk;
+
+          if (order && order.shopper_id !== null) {
+            orderStillUnassigned = false;
+            orderAssignedToShopper = order.shopper_id === user_id;
+
+            console.log(
+              `❌ BLOCKING notification: Order ${bestOrder.id} is already assigned`,
+              {
+                orderId: bestOrder.id,
+                orderType: bestOrder.orderType,
+                assignedShopperId: order.shopper_id,
+                assignedToThisShopper: orderAssignedToShopper,
+                status: order.status,
+              }
+            );
+          }
+        }
+
+        if (!orderStillUnassigned) {
+          if (orderAssignedToShopper) {
+            console.log(
+              `⚠️ Order ${bestOrder.id} is already assigned to this shopper - skipping notification (order already accepted)`
+            );
+          } else {
+            console.log(
+              `⚠️ Order ${bestOrder.id} is already assigned to another shopper - skipping notification`
+            );
+          }
+          // Don't send notification - order is already assigned
+          return res.status(200).json({
+            success: false,
+            message: "Order is no longer available (already assigned)",
+            reason: "ORDER_ALREADY_ASSIGNED",
+            orderId: bestOrder.id,
+            note: "Order was assigned between query and notification send",
+          });
+        }
+
+        // Order is still unassigned - safe to send notification
+        console.log(
+          `✅ Verified order ${bestOrder.id} is still unassigned - sending notification`
+        );
+
         // Send notification aligned with what the UI should display/accept
         await sendNewOrderNotification(user_id, {
           id: responseOrder.id,
