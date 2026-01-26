@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { OrderItem } from "../../types/order";
+import { OrderItem } from "../types";
 import OrderItemCard from "../OrderItemCard";
 
 interface OrderItemsSectionProps {
@@ -28,7 +28,7 @@ export default function OrderItemsSection({
     order?.combinedOrders && order.combinedOrders.length > 0;
   const mainShopId = order?.shop?.id;
   const sameShopCombinedOrders = hasCombinedOrders
-    ? order.combinedOrders.filter((co) => co.shop?.id === mainShopId)
+    ? order.combinedOrders.filter((co: any) => co.shop?.id === mainShopId)
     : [];
   const hasSameShopCombinedOrders = sameShopCombinedOrders.length > 0;
 
@@ -45,6 +45,25 @@ export default function OrderItemsSection({
     });
   }
 
+  // Helper to get customer ID from an order
+  const getCustomerId = (o: any) => {
+    return o.orderedBy?.id || o.user_id || o.customer?.id || o.customerId || null;
+  };
+
+  // Check if combined orders are from the same customer
+  const mainCustomerId = getCustomerId(order);
+  const sameCustomerSameShopOrders = hasSameShopCombinedOrders
+    ? [
+        order,
+        ...sameShopCombinedOrders.filter((co: any) => {
+          const coCustomerId = getCustomerId(co);
+          return coCustomerId && coCustomerId === mainCustomerId;
+        }),
+      ]
+    : [order];
+  const hasSameCustomerSameShopCombinedOrders =
+    sameCustomerSameShopOrders.length > 1;
+
   // For same-shop combined orders, create order-specific groups
   const orderGroups = hasSameShopCombinedOrders
     ? [
@@ -58,10 +77,11 @@ export default function OrderItemsSection({
             order.user?.name ||
             order.customer?.name ||
             "Customer",
+          customerId: mainCustomerId,
           isVisible: order.status === "accepted" || order.status === "shopping",
         },
         // Then combined orders from same shop
-        ...sameShopCombinedOrders.map((co) => ({
+        ...sameShopCombinedOrders.map((co: any) => ({
           orderId: co.OrderID || co.id,
           order: co,
           items: co.Order_Items || [],
@@ -70,6 +90,7 @@ export default function OrderItemsSection({
             co.user?.name ||
             co.customer?.name ||
             "Customer",
+          customerId: getCustomerId(co),
           isVisible: co.status === "accepted" || co.status === "shopping",
         })),
       ].filter((group) => group.isVisible)
@@ -252,10 +273,32 @@ export default function OrderItemsSection({
                 {activeGroup.items.length} Items
               </h3>
               <div className="space-y-2 sm:space-y-3">
-                {activeGroup.items.map((item) => {
-                  // Show Mark Found button only if the specific order containing this item is in shopping status
-                  const isBatchShopping =
-                    activeGroup.order.status === "shopping";
+                {activeGroup.items.map((item: any) => {
+                  // Check if this order group is part of same-customer, same-shop combined orders
+                  const isSameCustomerSameShop =
+                    hasSameCustomerSameShopCombinedOrders &&
+                    activeGroup.customerId === mainCustomerId;
+
+                  let isBatchShopping = false;
+                  if (isSameCustomerSameShop) {
+                    // For same-customer, same-shop combined orders, show button if ANY order is shopping/accepted
+                    const allSameCustomerSameShopOrders = [
+                      order,
+                      ...(order.combinedOrders || []),
+                    ].filter(
+                      (o) =>
+                        (o.shop?.id || o.shop_id) === mainShopId &&
+                        getCustomerId(o) === mainCustomerId
+                    );
+                    isBatchShopping = allSameCustomerSameShopOrders.some(
+                      (o) => o.status === "accepted" || o.status === "shopping"
+                    );
+                  } else {
+                    // For different customers or different shops, only check the specific order
+                    isBatchShopping =
+                      activeGroup.order.status === "accepted" ||
+                      activeGroup.order.status === "shopping";
+                  }
 
                   return (
                     <div key={item.id}>
@@ -377,20 +420,37 @@ export default function OrderItemsSection({
           </h3>
           <div className="space-y-2 sm:space-y-3">
             {displayItems.map((item) => {
-              // For the default view, check if any order is still active for this shop
-              // This ensures buttons remain visible even if some orders are on_the_way
-              const shopOrders = [
-                order,
-                ...(order.combinedOrders || []),
-              ].filter(
-                (o) => (o.shop?.id || o.shop_id) === effectiveActiveShopId
-              );
-              const hasAnyOrderActive = shopOrders.some(
-                (o) => o.status === "accepted" || o.status === "shopping"
-              );
+              // Check if this is a same-customer, same-shop combined order scenario
+              const isSameCustomerSameShop =
+                hasSameCustomerSameShopCombinedOrders &&
+                effectiveActiveShopId === mainShopId;
 
-              // Show Mark Found button if any order from this shop is still active
-              const isBatchShopping = hasAnyOrderActive;
+              let isBatchShopping = false;
+              if (isSameCustomerSameShop) {
+                // For same-customer, same-shop combined orders, show button if ANY order is shopping/accepted
+                const allSameCustomerSameShopOrders = [
+                  order,
+                  ...(order.combinedOrders || []),
+                ].filter(
+                  (o) =>
+                    (o.shop?.id || o.shop_id) === mainShopId &&
+                    getCustomerId(o) === mainCustomerId
+                );
+                isBatchShopping = allSameCustomerSameShopOrders.some(
+                  (o) => o.status === "accepted" || o.status === "shopping"
+                );
+              } else {
+                // For different customers or different shops, check if any order from this shop is still active
+                const shopOrders = [
+                  order,
+                  ...(order.combinedOrders || []),
+                ].filter(
+                  (o) => (o.shop?.id || o.shop_id) === effectiveActiveShopId
+                );
+                isBatchShopping = shopOrders.some(
+                  (o) => o.status === "accepted" || o.status === "shopping"
+                );
+              }
 
               return (
                 <div key={item.id}>
