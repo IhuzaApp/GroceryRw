@@ -1548,17 +1548,37 @@ export default function BatchDetails({
     const isRestaurantUserReel =
       activeOrder?.orderType === "reel" &&
       (activeOrder?.reel?.restaurant_id || activeOrder?.reel?.user_id);
+    
+    // IMPORTANT: Check if the MAIN batch order has combined orders, not just the clicked order
+    // This ensures we correctly identify combined orders even when clicking a specific order card
+    const hasCombinedOrdersInBatch = 
+      (order?.combinedOrders && order.combinedOrders.length > 0) ||
+      (order?.orderIds && order.orderIds.length > 1) ||
+      order?.orderType === "combined";
+    
+    // Also check if the clicked order is part of the main batch's combined orders
+    const isClickedOrderPartOfBatch = targetOrderOverride && hasCombinedOrdersInBatch && (
+      order?.combinedOrders?.some((o: any) => o.id === activeOrder.id) ||
+      order?.orderIds?.includes(activeOrder.id) ||
+      order.id === activeOrder.id
+    );
+    
     const isCombinedOrder =
       activeOrder?.orderType === "combined" ||
-      (activeOrder?.combinedOrders && activeOrder.combinedOrders.length > 0);
+      hasCombinedOrdersInBatch ||
+      isClickedOrderPartOfBatch;
 
     console.log("🟡 [DELIVERY CONFIRMATION] Order type checks:", {
       isRestaurantOrder,
       isRestaurantUserReel,
       isCombinedOrder,
+      hasCombinedOrdersInBatch,
+      isClickedOrderPartOfBatch,
       activeOrderType: activeOrder?.orderType,
-      hasCombinedOrders: !!(activeOrder?.combinedOrders && activeOrder.combinedOrders.length > 0),
-      combinedOrdersCount: activeOrder?.combinedOrders?.length || 0,
+      mainOrderType: order?.orderType,
+      hasCombinedOrders: !!(order?.combinedOrders && order.combinedOrders.length > 0),
+      combinedOrdersCount: order?.combinedOrders?.length || 0,
+      targetOrderOverride: !!targetOrderOverride,
     });
 
     // For restaurant orders, show modal directly without generating invoice
@@ -1573,7 +1593,22 @@ export default function BatchDetails({
       return;
     }
 
-    // For individual orders (not the main batch), show individual delivery confirmation
+    // Check if orders are going to different customers
+    // IMPORTANT: Use the main batch order to check for multiple customers, not the clicked order
+    const allOrdersInBatch = [order, ...(order?.combinedOrders || [])];
+    const customerKeys = new Set<string>();
+    allOrdersInBatch.forEach((o) => {
+      if (!o) return;
+      const customerPhone =
+        (o as any).orderedBy?.phone || o.customerPhone || "unknown";
+      const customerId =
+        (o as any).orderedBy?.id || o.customerId || "unknown";
+      const customerKey = `${customerId}_${customerPhone}`;
+      customerKeys.add(customerKey);
+    });
+    const hasMultipleCustomers = customerKeys.size > 1;
+
+    // For individual orders (not part of a combined batch), show individual delivery confirmation
     if (!isCombinedOrder && targetOrderOverride) {
       console.log("🟢 [DELIVERY CONFIRMATION] Individual order clicked (not combined):", {
         orderId: activeOrder.id,
@@ -1588,21 +1623,8 @@ export default function BatchDetails({
       // Check if this is a specific order being clicked (from delivery route) vs the main batch
       // If targetOrderOverride is provided, it means a specific order card was clicked
       // For combined orders going to different customers, we should only process that specific order
+      // For combined orders going to same customer, we should process all orders together
       const isSpecificOrderClick = !!targetOrderOverride;
-      
-      // Check if orders are going to different customers
-      // IMPORTANT: Use the main batch order to check for multiple customers, not the clicked order
-      const allOrdersInBatch = [order, ...(order?.combinedOrders || [])];
-      const customerKeys = new Set<string>();
-      allOrdersInBatch.forEach((o) => {
-        const customerPhone =
-          (o as any).orderedBy?.phone || o.customerPhone || "unknown";
-        const customerId =
-          (o as any).orderedBy?.id || o.customerId || "unknown";
-        const customerKey = `${customerId}_${customerPhone}`;
-        customerKeys.add(customerKey);
-      });
-      const hasMultipleCustomers = customerKeys.size > 1;
 
       console.log("🟡 [DELIVERY CONFIRMATION] Combined order check:", {
         isSpecificOrderClick,
