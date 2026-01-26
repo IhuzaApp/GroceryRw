@@ -274,7 +274,15 @@ export default async function handler(
 
     // Validate required fields
     if (!orderId || !momoCode || !privateKey || orderAmount === undefined) {
-      return res.status(400).json({ error: "Missing required fields" });
+      return res.status(400).json({ 
+        error: "Missing required fields",
+        details: {
+          orderId: !!orderId,
+          momoCode: !!momoCode,
+          privateKey: !!privateKey,
+          orderAmount: orderAmount !== undefined
+        }
+      });
     }
 
     // Format order amount to ensure consistent handling
@@ -340,12 +348,29 @@ export default async function handler(
           combinedOrdersResponse.Orders.length > 0
         ) {
           allOrdersInBatch = combinedOrdersResponse.Orders;
+          
+          // Verify that the order being paid for exists in the batch
+          const orderExistsInBatch = allOrdersInBatch.some(order => order.id === orderId);
+          if (!orderExistsInBatch) {
+            return res.status(400).json({ 
+              error: `Order ${orderId} not found in combined orders batch with combined_order_id ${orderData.combined_order_id}` 
+            });
+          }
+          
           const storedTotalSum = allOrdersInBatch.reduce(
             (sum, order) => sum + parseFloat(order.total),
             0
           );
 
-          batchTotal = formattedOrderAmount;
+          // For same-shop combined orders, formattedOrderAmount is the batch total
+          // For different-shop combined orders, formattedOrderAmount is the specific order amount
+          // We'll use formattedOrderAmount for same-shop, but calculate actual batch total for reference
+          if (isSameShopCombined) {
+            batchTotal = formattedOrderAmount; // Frontend sends batch total for same-shop
+          } else {
+            // For different-shop, batchTotal is sum of all orders (for reference only, not used in calculations)
+            batchTotal = storedTotalSum;
+          }
         }
       } else {
       }
@@ -575,8 +600,9 @@ export default async function handler(
     // or if no refund was needed
 
     // Calculate the new reserved balance after deducting the full original amount
-    // For combined orders, use the batch total; otherwise use the individual order amount
-    const originalAmount = hasCombinedOrders
+    // For same-shop combined orders, use the batch total; for different-shop combined orders,
+    // use the specific order amount; otherwise use the individual order amount
+    const originalAmount = hasCombinedOrders && isSameShopCombined
       ? batchTotal
       : originalOrderTotal || formattedOrderAmount;
 
@@ -611,8 +637,44 @@ export default async function handler(
 
       // 4. Add shopper earnings (after platform fee deduction) to available balance
       newAvailable = parseFloat(wallet.available_balance) + shopperEarnings;
+    } else if (hasCombinedOrders && !isSameShopCombined) {
+      // DIFFERENT SHOP COMBINED ORDERS: Process payment for specific order only
+      // Find the specific order being paid for
+      const currentOrder = allOrdersInBatch.find(order => order.id === orderId);
+      
+      if (!currentOrder) {
+        return res.status(404).json({ error: "Order not found in combined orders batch" });
+      }
+
+      // For different-shop combined orders, only deduct the specific order amount
+      // Use originalOrderTotal if provided (for refund calculation), otherwise use formattedOrderAmount
+      const orderOriginalTotal = originalOrderTotal || parseFloat(currentOrder.total);
+      
+      // Deduct the original order total from reserved balance
+      // (The found items amount is already accounted for in formattedOrderAmount)
+      newReserved = currentReserved - orderOriginalTotal;
+      
+      // Calculate fees for this specific order only
+      const serviceFee = parseFloat(currentOrder.service_fee || "0");
+      const deliveryFee = parseFloat(currentOrder.delivery_fee || "0");
+      const orderFees = serviceFee + deliveryFee;
+      
+      // Fetch delivery commission percentage and calculate platform fee
+      const systemConfigResponse = await hasuraClient.request(
+        GET_SYSTEM_CONFIG_FOR_FEES
+      );
+      const deliveryCommissionPercentage = parseFloat(
+        systemConfigResponse?.System_configuratioins?.[0]
+          ?.deliveryCommissionPercentage || "20"
+      );
+      
+      const platformFee = (orderFees * deliveryCommissionPercentage) / 100;
+      const shopperEarnings = orderFees - platformFee;
+      
+      // Add shopper earnings (after platform fee deduction) to available balance
+      newAvailable = parseFloat(wallet.available_balance) + shopperEarnings;
     } else {
-      // NORMAL ORDERS: Use existing logic
+      // SINGLE ORDERS: Use existing logic
       newReserved = currentReserved - originalAmount;
     }
 
@@ -688,20 +750,31 @@ export default async function handler(
       // Skipping wallet transaction creation for reel order to avoid foreign key constraint issues
     }
 
-    // Calculate fees added for same-shop combined orders
+    // Calculate fees added to available balance
     let feesAddedToAvailable = 0;
     if (isSameShopCombined && hasCombinedOrders) {
+      // For same-shop combined orders, sum fees from all orders in batch
       allOrdersInBatch.forEach((order: any) => {
         const serviceFee = parseFloat(order.service_fee || "0");
         const deliveryFee = parseFloat(order.delivery_fee || "0");
         feesAddedToAvailable += serviceFee + deliveryFee;
       });
+    } else if (hasCombinedOrders && !isSameShopCombined) {
+      // For different-shop combined orders, only calculate fees for the specific order being paid for
+      const currentOrder = allOrdersInBatch.find(order => order.id === orderId);
+      if (currentOrder) {
+        const serviceFee = parseFloat(currentOrder.service_fee || "0");
+        const deliveryFee = parseFloat(currentOrder.delivery_fee || "0");
+        feesAddedToAvailable = serviceFee + deliveryFee;
+      }
     }
 
     const responseData = {
       success: true,
       message: isSameShopCombined
         ? "Same-shop combined orders payment processed successfully"
+        : hasCombinedOrders && !isSameShopCombined
+        ? "Different-shop combined order payment processed successfully"
         : hasCombinedOrders
         ? "Combined orders payment processed successfully"
         : "Payment processed successfully",
@@ -709,11 +782,12 @@ export default async function handler(
         orderId,
         amount: formattedOrderAmount,
         originalTotal: originalOrderTotal,
-        batchTotal: hasCombinedOrders ? batchTotal : undefined,
+        batchTotal: hasCombinedOrders && isSameShopCombined ? batchTotal : undefined,
         combinedOrdersCount: hasCombinedOrders
           ? allOrdersInBatch.length
           : undefined,
         isSameShopCombined: isSameShopCombined,
+        isDifferentShopCombined: hasCombinedOrders && !isSameShopCombined,
         timestamp: new Date().toISOString(),
       },
       walletUpdate: {
@@ -723,6 +797,8 @@ export default async function handler(
         newAvailableBalance: newAvailable,
         deductedAmount: isSameShopCombined
           ? formattedOrderAmount
+          : hasCombinedOrders && !isSameShopCombined
+          ? originalOrderTotal || formattedOrderAmount
           : originalAmount,
         feesAddedToAvailable: feesAddedToAvailable,
       },

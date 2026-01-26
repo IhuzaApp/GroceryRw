@@ -818,7 +818,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                                         )}
                                       </p>
                                     )}
-                                    {invoiceData.deliveryPlaceDetails.floor && (
+                                    {invoiceData.deliveryPlaceDetails && invoiceData.deliveryPlaceDetails.floor && (
                                       <p>
                                         <span className="font-semibold">
                                           Floor:
@@ -826,19 +826,15 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                                         {invoiceData.deliveryPlaceDetails.floor}
                                       </p>
                                     )}
-                                    {invoiceData.deliveryPlaceDetails
-                                      .doorNumber && (
+                                    {invoiceData.deliveryPlaceDetails?.doorNumber && (
                                       <p>
                                         <span className="font-semibold">
                                           Door:
                                         </span>{" "}
-                                        {
-                                          invoiceData.deliveryPlaceDetails
-                                            .doorNumber
-                                        }
+                                        {invoiceData.deliveryPlaceDetails.doorNumber}
                                       </p>
                                     )}
-                                    {invoiceData.deliveryPlaceDetails
+                                    {invoiceData?.deliveryPlaceDetails
                                       .buildingName && (
                                       <p>
                                         <span className="font-semibold">
@@ -850,7 +846,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                                         }
                                       </p>
                                     )}
-                                    {invoiceData.deliveryPlaceDetails
+                                    {invoiceData?.deliveryPlaceDetails
                                       .apartmentNumber && (
                                       <p>
                                         <span className="font-semibold">
@@ -862,7 +858,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                                         }
                                       </p>
                                     )}
-                                    {invoiceData.deliveryPlaceDetails
+                                    {invoiceData?.deliveryPlaceDetails
                                       .landmark && (
                                       <p>
                                         <span className="font-semibold">
@@ -874,7 +870,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                                         }
                                       </p>
                                     )}
-                                    {invoiceData.deliveryPlaceDetails
+                                    {invoiceData?.deliveryPlaceDetails
                                       .instructions && (
                                       <p>
                                         <span className="font-semibold">
@@ -894,13 +890,13 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                         </div>
                       )}
                       <p className="mt-2">
-                        {(invoiceData?.deliveryStreet ||
+                        {invoiceData?.deliveryStreet ||
                           invoiceData?.deliveryAddress ||
-                          "Address not available")}
+                          "Address not available"}
                         {invoiceData?.deliveryCity &&
-                          `, ${invoiceData.deliveryCity}`}
+                          `, ${invoiceData?.deliveryCity}`}
                         {invoiceData?.deliveryPostalCode &&
-                          `, ${invoiceData.deliveryPostalCode}`}
+                          `, ${invoiceData?.deliveryPostalCode}`}
                       </p>
                     </div>
                   </div>
