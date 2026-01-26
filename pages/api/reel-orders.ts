@@ -42,6 +42,7 @@ const CREATE_REEL_ORDER = gql`
         delivery_address_id: $delivery_address_id
         shopper_id: null
         status: "PENDING"
+        found: false
       }
     ) {
       id
