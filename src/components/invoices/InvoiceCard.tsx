@@ -87,12 +87,12 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     <div
       className={`mb-6 rounded-2xl border ${
         theme === "dark"
-          ? "border-gray-700 bg-gray-800/50"
-          : "border-gray-200 bg-white shadow-sm"
+          ? "border-gray-50"
+          : "bg-white shadow-sm"
       } transition-all duration-200 hover:shadow-md`}
     >
       {/* Header */}
-      <div className="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
+      <div className="border-b border-gray-200 px-6 py-4 ">
         <div className="flex items-center justify-between">
           <div>
             <h3
