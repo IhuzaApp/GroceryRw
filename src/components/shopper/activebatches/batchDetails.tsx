@@ -281,87 +281,31 @@ export default function BatchDetails({
 
     const checkForPendingInvoiceProof = async () => {
       try {
-        console.log("🔍 Checking for orders needing invoice proof...");
 
         // Check main order
         if (order.status === "on_the_way") {
           const hasInvoice = await checkOrderHasInvoice(order.id);
           if (!hasInvoice) {
-            console.log("📄 MAIN ORDER needs invoice proof:", {
-              OrderID: order.OrderID,
-              id: order.id,
-              status: order.status,
-              orderType: order.orderType || "regular",
-              hasInvoice: false,
-              paymentStatus: "on_the_way (ready for delivery)",
-            });
             setInvoiceProofTargetOrder(order);
-            console.log(
-              "🎯 Setting invoice proof target to MAIN ORDER:",
-              order.OrderID
-            );
             setShowInvoiceProofModal(true);
             return;
-          } else {
-            console.log("✅ MAIN ORDER already has invoice:", {
-              OrderID: order.OrderID,
-              id: order.id,
-              status: order.status,
-            });
           }
         }
 
         // Check combined orders
         if (order.combinedOrders && order.combinedOrders.length > 0) {
-          console.log(
-            `🔍 Checking ${order.combinedOrders.length} combined orders...`
-          );
-
           for (const combinedOrder of order.combinedOrders) {
             if (combinedOrder.status === "on_the_way") {
               const hasInvoice = await checkOrderHasInvoice(combinedOrder.id);
               if (!hasInvoice) {
-                console.log("📄 COMBINED ORDER needs invoice proof:", {
-                  OrderID: combinedOrder.OrderID,
-                  id: combinedOrder.id,
-                  status: combinedOrder.status,
-                  orderType: combinedOrder.orderType || "regular",
-                  shopName: combinedOrder.Shop?.name || "Unknown Shop",
-                  shopId: combinedOrder.Shop?.id || "Unknown",
-                  hasInvoice: false,
-                  paymentStatus: "on_the_way (ready for delivery)",
-                  mainOrderId: order.id,
-                  mainOrderStatus: order.status,
-                });
                 setInvoiceProofTargetOrder(combinedOrder);
-                console.log(
-                  "🎯 Setting invoice proof target to COMBINED ORDER:",
-                  combinedOrder.OrderID
-                );
                 setShowInvoiceProofModal(true);
                 return;
-              } else {
-                console.log("✅ COMBINED ORDER already has invoice:", {
-                  OrderID: combinedOrder.OrderID,
-                  id: combinedOrder.id,
-                  status: combinedOrder.status,
-                  shopName: combinedOrder.Shop?.name || "Unknown Shop",
-                });
               }
-            } else {
-              console.log("⏭️ COMBINED ORDER not ready for invoice proof:", {
-                OrderID: combinedOrder.OrderID,
-                id: combinedOrder.id,
-                status: combinedOrder.status,
-                shopName: combinedOrder.Shop?.name || "Unknown Shop",
-              });
             }
           }
         }
 
-        console.log(
-          "✅ All orders in batch have invoices or are not ready for delivery"
-        );
       } catch (error) {
         console.error("❌ Error checking for pending invoice proof:", error);
       }
@@ -1404,11 +1348,6 @@ export default function BatchDetails({
 
   // Handle individual order delivery confirmation (for delivery route section)
   const handleIndividualDeliveryConfirmation = (targetOrder: any) => {
-    console.log("🟣 [INDIVIDUAL DELIVERY] Processing individual order:", {
-      orderId: targetOrder.id,
-      orderNumber: targetOrder.OrderID || targetOrder.id.slice(-8),
-      customer: targetOrder.orderedBy?.name || targetOrder.user?.name,
-    });
 
     // Show delivery confirmation modal for individual order
     // This is similar to combined order handling but for single orders
@@ -1450,7 +1389,6 @@ export default function BatchDetails({
       isRestaurantOrder: false,
     };
 
-    console.log("🟣 [INDIVIDUAL DELIVERY] Setting invoice data with orderType: regular");
 
     setInvoiceData(combinedInvoiceData);
     setShowInvoiceModal(true);
@@ -1536,13 +1474,6 @@ export default function BatchDetails({
     const activeOrder = targetOrderOverride || order;
     if (!activeOrder?.id) return;
 
-    console.log("🔵 [DELIVERY CONFIRMATION] Card clicked:", {
-      clickedOrderId: activeOrder.id,
-      clickedOrderNumber: activeOrder.OrderID || activeOrder.id.slice(-8),
-      clickedCustomer: activeOrder.orderedBy?.name || activeOrder.user?.name || "Unknown",
-      isTargetOrderOverride: !!targetOrderOverride,
-      mainOrderId: order?.id,
-    });
 
     const isRestaurantOrder = activeOrder?.orderType === "restaurant";
     const isRestaurantUserReel =
@@ -1568,18 +1499,6 @@ export default function BatchDetails({
       hasCombinedOrdersInBatch ||
       isClickedOrderPartOfBatch;
 
-    console.log("🟡 [DELIVERY CONFIRMATION] Order type checks:", {
-      isRestaurantOrder,
-      isRestaurantUserReel,
-      isCombinedOrder,
-      hasCombinedOrdersInBatch,
-      isClickedOrderPartOfBatch,
-      activeOrderType: activeOrder?.orderType,
-      mainOrderType: order?.orderType,
-      hasCombinedOrders: !!(order?.combinedOrders && order.combinedOrders.length > 0),
-      combinedOrdersCount: order?.combinedOrders?.length || 0,
-      targetOrderOverride: !!targetOrderOverride,
-    });
 
     // For restaurant orders, show modal directly without generating invoice
     if (isRestaurantOrder) {
@@ -1610,10 +1529,6 @@ export default function BatchDetails({
 
     // For individual orders (not part of a combined batch), show individual delivery confirmation
     if (!isCombinedOrder && targetOrderOverride) {
-      console.log("🟢 [DELIVERY CONFIRMATION] Individual order clicked (not combined):", {
-        orderId: activeOrder.id,
-        orderNumber: activeOrder.OrderID || activeOrder.id.slice(-8),
-      });
       handleIndividualDeliveryConfirmation(activeOrder);
       return;
     }
@@ -1626,24 +1541,10 @@ export default function BatchDetails({
       // For combined orders going to same customer, we should process all orders together
       const isSpecificOrderClick = !!targetOrderOverride;
 
-      console.log("🟡 [DELIVERY CONFIRMATION] Combined order check:", {
-        isSpecificOrderClick,
-        hasMultipleCustomers,
-        totalOrdersInBatch: allOrdersInBatch.length,
-        customerKeys: Array.from(customerKeys),
-        clickedOrderId: activeOrder.id,
-        clickedOrderCustomer: activeOrder.orderedBy?.name || activeOrder.user?.name,
-      });
 
       // If a specific order was clicked AND orders go to different customers,
       // only process that specific order (not all combined orders)
       if (isSpecificOrderClick && hasMultipleCustomers) {
-        console.log("🟢 [DELIVERY CONFIRMATION] Processing SINGLE order (different customers):", {
-          orderId: activeOrder.id,
-          orderNumber: activeOrder.OrderID || activeOrder.id.slice(-8),
-          customer: activeOrder.orderedBy?.name || activeOrder.user?.name,
-          orderType: "combined", // Keep as "combined" but with flag to update only this order
-        });
 
         // Process only the clicked order - treat it as a combined order going to different customers
         // We set orderType to "combined" but will pass updateOnlyThisOrder flag to API
@@ -1680,11 +1581,6 @@ export default function BatchDetails({
           isRestaurantOrder: false,
         };
 
-        console.log("🟢 [DELIVERY CONFIRMATION] Set invoice data with orderType: combined (different customers):", {
-          orderId: mockInvoiceData.orderId,
-          orderType: mockInvoiceData.orderType,
-          customer: mockInvoiceData.customer,
-        });
 
         setInvoiceData(mockInvoiceData);
         setShowInvoiceModal(true);
@@ -1705,13 +1601,6 @@ export default function BatchDetails({
         ) || []),
       ];
 
-      console.log("🟠 [DELIVERY CONFIRMATION] Processing ALL orders (same customer or main batch):", {
-        orderType: hasMultipleCustomers ? "combined" : "combined_customer",
-        hasMultipleCustomers,
-        allOrderIds,
-        allOrderNumbers,
-        isSpecificOrderClick,
-      });
 
       const combinedInvoiceData = {
         id: `combined_${order.id}_${Date.now()}`,
@@ -1915,7 +1804,6 @@ export default function BatchDetails({
             if (invoiceResult.success && invoiceResult.invoice) {
               // Mark invoice proof as uploaded for this order
               setUploadedProofs((prev) => ({ ...prev, [orderId]: true }));
-              console.log(`✅ Invoice proof uploaded for order ${orderId}`);
             }
           } catch (singleOrderError) {
             console.error(
