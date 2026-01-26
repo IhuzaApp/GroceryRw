@@ -180,11 +180,20 @@ export default function ShopperSidebar() {
         <svg
           viewBox="0 0 24 24"
           fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-          <polyline points="9,22 9,12 15,12 15,22" />
+          <path
+            d="M22 12.2039V13.725C22 17.6258 22 19.5763 20.8284 20.7881C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.7881C2 19.5763 2 17.6258 2 13.725V12.2039C2 9.91549 2 8.77128 2.5192 7.82274C3.0384 6.87421 3.98695 6.28551 5.88403 5.10813L7.88403 3.86687C9.88939 2.62229 10.8921 2 12 2C13.1079 2 14.1106 2.62229 16.116 3.86687L18.116 5.10812C20.0131 6.28551 20.9616 6.87421 21.4808 7.82274"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <path
+            d="M15 18H9"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
         </svg>
       ),
       condition:
@@ -202,12 +211,31 @@ export default function ShopperSidebar() {
         <svg
           viewBox="0 0 24 24"
           fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          <path d="M9 12l2 2 4-4" />
-          <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c1.5 0 2.91.37 4.15 1.02" />
-          <path d="M16 3.13a4 4 0 011.45 1.45" />
+          <path
+            d="M7.5 18C8.32843 18 9 18.6716 9 19.5C9 20.3284 8.32843 21 7.5 21C6.67157 21 6 20.3284 6 19.5C6 18.6716 6.67157 18 7.5 18Z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+          <path
+            d="M16.5 18.0001C17.3284 18.0001 18 18.6716 18 19.5001C18 20.3285 17.3284 21.0001 16.5 21.0001C15.6716 21.0001 15 20.3285 15 19.5001C15 18.6716 15.6716 18.0001 16.5 18.0001Z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+          <path
+            d="M11 10.8L12.1429 12L15 9"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M2 3L2.26121 3.09184C3.5628 3.54945 4.2136 3.77826 4.58584 4.32298C4.95808 4.86771 4.95808 5.59126 4.95808 7.03836V9.76C4.95808 12.7016 5.02132 13.6723 5.88772 14.5862C6.75412 15.5 8.14857 15.5 10.9375 15.5H12M16.2404 15.5C17.8014 15.5 18.5819 15.5 19.1336 15.0504C19.6853 14.6008 19.8429 13.8364 20.158 12.3075L20.6578 9.88275C21.0049 8.14369 21.1784 7.27417 20.7345 6.69708C20.2906 6.12 18.7738 6.12 17.0888 6.12H11.0235M4.95808 6.12H7"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
         </svg>
       ),
     },
@@ -219,10 +247,26 @@ export default function ShopperSidebar() {
           <svg
             viewBox="0 0 24 24"
             fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            <path
+              d="M8 10.5H16"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+            <path
+              d="M8 14H13.5"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+            <path
+              d="M17 3.33782C15.5291 2.48697 13.8214 2 12 2C6.47715 2 2 6.47715 2 12C2 13.5997 2.37562 15.1116 3.04346 16.4525C3.22094 16.8088 3.28001 17.2161 3.17712 17.6006L2.58151 19.8267C2.32295 20.793 3.20701 21.677 4.17335 21.4185L6.39939 20.8229C6.78393 20.72 7.19121 20.7791 7.54753 20.9565C8.88837 21.6244 10.4003 22 12 22C17.5228 22 22 17.5228 22 12C22 10.1786 21.513 8.47087 20.6622 7"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
           </svg>
           {unreadMessageCount > 0 && (
             <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
@@ -239,14 +283,36 @@ export default function ShopperSidebar() {
         <svg
           viewBox="0 0 24 24"
           fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-          <polyline points="14,2 14,8 20,8" />
-          <line x1="16" y1="13" x2="8" y2="13" />
-          <line x1="16" y1="17" x2="8" y2="17" />
-          <polyline points="10,9 9,9 8,9" />
+          <path
+            d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M14 2V8H20"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M16 13H8"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M16 17H8"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       ),
     },
@@ -712,48 +778,146 @@ export default function ShopperSidebar() {
             : "border-t border-gray-200 bg-white/95 backdrop-blur-lg"
         }`}
       >
-        <div className="mx-auto flex max-w-md justify-around px-1 py-1">
-          {navigationItems.map((item) => (
-            <Link
-              key={item.path}
-              href={item.path}
-              passHref
-              onClick={item.onClick || handleNavigation(item.path)}
-            >
-              <div
-                className={`relative flex items-center justify-center rounded-xl px-2 py-2 transition-all duration-300 ${
-                  theme === "dark"
-                    ? "text-gray-400 hover:bg-gray-800/50 hover:text-white"
-                    : "text-gray-500 hover:bg-gray-100/50 hover:text-gray-900"
-                }`}
-              >
-                {/* Active indicator dot */}
-                {isActive(item.path) && item.condition && (
-                  <div
-                    className={`absolute -top-0.5 left-1/2 h-1.5 w-1.5 -translate-x-1/2 transform rounded-full shadow-sm ${
-                      theme === "dark" ? "bg-emerald-400" : "bg-emerald-500"
-                    }`}
-                  ></div>
+        <div className="mx-auto flex max-w-md items-center justify-around px-2 py-3">
+          {/* Get home item and other items separately */}
+          {(() => {
+            const homeItem = navigationItems.find((item) => item.path === "/");
+            const otherItems = navigationItems.filter((item) => item.path !== "/");
+            const homeIsActive =
+              isActive("/") &&
+              !isActive("/Plasa/active-batches") &&
+              !isActive("/Plasa/Earnings") &&
+              !isActive("/Plasa/Settings") &&
+              !isActive("/Plasa/ShopperProfile") &&
+              !isActive("/Plasa/invoices") &&
+              !isActive("/Plasa/chat");
+
+            return (
+              <>
+                {/* Render items before home */}
+                {otherItems.slice(0, 2).map((item) => (
+                  <Link
+                    key={item.path}
+                    href={item.path}
+                    passHref
+                    onClick={item.onClick || handleNavigation(item.path)}
+                  >
+                    <div
+                      className={`relative flex items-center justify-center rounded-xl px-3 py-2 transition-all duration-300 ${
+                        theme === "dark"
+                          ? "text-gray-400 hover:bg-gray-800/50 hover:text-white"
+                          : "text-gray-500 hover:bg-gray-100/50 hover:text-gray-900"
+                      }`}
+                    >
+                      {/* Active indicator dot */}
+                      {isActive(item.path) && (
+                        <div
+                          className={`absolute -top-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 transform rounded-full shadow-sm ${
+                            theme === "dark"
+                              ? "bg-emerald-400"
+                              : "bg-emerald-500"
+                          }`}
+                        ></div>
+                      )}
+
+                      {/* Icon */}
+                      <div className="flex items-center justify-center">
+                        {React.cloneElement(item.icon, {
+                          className: `h-7 w-7 transition-all duration-300 ${
+                            isActive(item.path)
+                              ? theme === "dark"
+                                ? "text-emerald-400 scale-110"
+                                : "text-emerald-500 scale-110"
+                              : theme === "dark"
+                              ? "text-gray-400"
+                              : "text-gray-500"
+                          }`,
+                          strokeWidth: "1.5",
+                        })}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+
+                {/* Central Home Button */}
+                {homeItem && (
+                  <div className="z-50 -mt-12">
+                    <Link href="/" passHref onClick={handleNavigation("/")}>
+                      <div
+                        className={`flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 shadow-lg transition-all duration-300 ${
+                          homeIsActive
+                            ? theme === "dark"
+                              ? "border-emerald-400 bg-emerald-500/20 text-emerald-400"
+                              : "border-emerald-500 bg-white text-emerald-500 dark:bg-gray-800"
+                            : theme === "dark"
+                            ? "border-gray-600 bg-gray-800 text-gray-400"
+                            : "border-gray-300 bg-white text-gray-500 dark:bg-gray-800"
+                        }`}
+                      >
+                        {React.cloneElement(homeItem.icon, {
+                          className: `h-7 w-7 transition-all duration-300 ${
+                            homeIsActive
+                              ? theme === "dark"
+                                ? "text-emerald-400"
+                                : "text-emerald-500"
+                              : theme === "dark"
+                              ? "text-gray-400"
+                              : "text-gray-500"
+                          }`,
+                          strokeWidth: "1.5",
+                        })}
+                      </div>
+                    </Link>
+                  </div>
                 )}
 
-                {/* Icon */}
-                <div className="p-2">
-                  {React.cloneElement(item.icon, {
-                    className: `h-5 w-5 transition-all duration-300 ${
-                      isActive(item.path) && item.condition
-                        ? theme === "dark"
-                          ? "text-emerald-400 scale-110"
-                          : "text-emerald-500 scale-110"
-                        : theme === "dark"
-                        ? "text-gray-400"
-                        : "text-gray-500"
-                    }`,
-                    strokeWidth: "2.5",
-                  })}
-                </div>
-              </div>
-            </Link>
-          ))}
+                {/* Render items after home */}
+                {otherItems.slice(2).map((item) => (
+                  <Link
+                    key={item.path}
+                    href={item.path}
+                    passHref
+                    onClick={item.onClick || handleNavigation(item.path)}
+                  >
+                    <div
+                      className={`relative flex items-center justify-center rounded-xl px-3 py-2 transition-all duration-300 ${
+                        theme === "dark"
+                          ? "text-gray-400 hover:bg-gray-800/50 hover:text-white"
+                          : "text-gray-500 hover:bg-gray-100/50 hover:text-gray-900"
+                      }`}
+                    >
+                      {/* Active indicator dot */}
+                      {isActive(item.path) && (
+                        <div
+                          className={`absolute -top-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 transform rounded-full shadow-sm ${
+                            theme === "dark"
+                              ? "bg-emerald-400"
+                              : "bg-emerald-500"
+                          }`}
+                        ></div>
+                      )}
+
+                      {/* Icon */}
+                      <div className="flex items-center justify-center">
+                        {React.cloneElement(item.icon, {
+                          className: `h-7 w-7 transition-all duration-300 ${
+                            isActive(item.path)
+                              ? theme === "dark"
+                                ? "text-emerald-400 scale-110"
+                                : "text-emerald-500 scale-110"
+                              : theme === "dark"
+                              ? "text-gray-400"
+                              : "text-gray-500"
+                          }`,
+                          strokeWidth: "1.5",
+                        })}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </>
+            );
+          })()}
         </div>
 
         {/* More Menu */}
