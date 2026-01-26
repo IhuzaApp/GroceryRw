@@ -311,10 +311,10 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       setConfirmingDelivery(true);
       setForceOpen(true);
 
-      // For combined orders (both "combined" and "combined_customer"), update all orders in the group
+      // For combined_customer orders (same customer), update all orders in the group
+      // For combined orders (different customers/routes), update only the current order
       const orderIdsToUpdate =
-        (invoiceData.orderType === "combined" ||
-          invoiceData.orderType === "combined_customer") &&
+        invoiceData.orderType === "combined_customer" &&
         invoiceData.combinedOrderIds &&
         invoiceData.combinedOrderIds.length > 0
           ? invoiceData.combinedOrderIds
