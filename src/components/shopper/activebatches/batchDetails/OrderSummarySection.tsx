@@ -287,14 +287,13 @@ export default function OrderSummarySection({
 
                   // Same-shop: batch total when any order is shopping, batch original otherwise.
                   // Different-shop: active order found total / original subtotal.
-                  const itemsTotal =
-                    hasSameShopCombinedOrders
-                      ? anyOrderShopping
-                        ? calculateBatchTotal()
-                        : calculateOriginalBatchSubtotal()
-                      : activeOrder?.status === "shopping"
-                      ? calculateFoundItemsTotal()
-                      : calculateOriginalSubtotal();
+                  const itemsTotal = hasSameShopCombinedOrders
+                    ? anyOrderShopping
+                      ? calculateBatchTotal()
+                      : calculateOriginalBatchSubtotal()
+                    : activeOrder?.status === "shopping"
+                    ? calculateFoundItemsTotal()
+                    : calculateOriginalSubtotal();
 
                   const discount = activeOrder?.discount || 0;
                   const finalTotal = itemsTotal - discount;
@@ -355,10 +354,22 @@ export default function OrderSummarySection({
                       <p className="text-sm text-blue-900 dark:text-blue-100">
                         <strong>Note:</strong> The total reflects only the value
                         of found items. Service fee (
-                        {formatCurrency(parseFloat(getActiveOrder?.serviceFee || order.serviceFee || "0"))})
-                        and delivery fee (
-                        {formatCurrency(parseFloat(getActiveOrder?.deliveryFee || order.deliveryFee || "0"))})
-                        were already added to your wallet as earnings when you
+                        {formatCurrency(
+                          parseFloat(
+                            getActiveOrder?.serviceFee ||
+                              order.serviceFee ||
+                              "0"
+                          )
+                        )}
+                        ) and delivery fee (
+                        {formatCurrency(
+                          parseFloat(
+                            getActiveOrder?.deliveryFee ||
+                              order.deliveryFee ||
+                              "0"
+                          )
+                        )}
+                        ) were already added to your wallet as earnings when you
                         started shopping.
                       </p>
                     </div>

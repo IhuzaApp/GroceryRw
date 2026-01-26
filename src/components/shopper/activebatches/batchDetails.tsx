@@ -190,7 +190,8 @@ export default function BatchDetails({
   const [invoiceLoading, setInvoiceLoading] = useState(false);
   const [showInvoiceProofModal, setShowInvoiceProofModal] = useState(false);
   const [showInvoiceProofLoading, setShowInvoiceProofLoading] = useState(false);
-  const [invoiceProofTargetOrder, setInvoiceProofTargetOrder] = useState<any>(null);
+  const [invoiceProofTargetOrder, setInvoiceProofTargetOrder] =
+    useState<any>(null);
   const [uploadedProofs, setUploadedProofs] = useState<Record<string, boolean>>(
     {}
   );
@@ -258,11 +259,25 @@ export default function BatchDetails({
       order?.Order_Items?.filter((item: any) => item.shopId === activeShopId) ||
       []
     );
-  }, [order, order?.Order_Items, order?.combinedOrders, isMultiShop, activeShopId, hasSameShopCombinedOrders]);
+  }, [
+    order,
+    order?.Order_Items,
+    order?.combinedOrders,
+    isMultiShop,
+    activeShopId,
+    hasSameShopCombinedOrders,
+  ]);
 
   // Check for orders that need invoice proof upload
   useEffect(() => {
-    if (!order || showInvoiceProofModal || showInvoiceProofLoading || showPaymentModal || paymentLoading) return;
+    if (
+      !order ||
+      showInvoiceProofModal ||
+      showInvoiceProofLoading ||
+      showPaymentModal ||
+      paymentLoading
+    )
+      return;
 
     const checkForPendingInvoiceProof = async () => {
       try {
@@ -276,26 +291,31 @@ export default function BatchDetails({
               OrderID: order.OrderID,
               id: order.id,
               status: order.status,
-              orderType: order.orderType || 'regular',
+              orderType: order.orderType || "regular",
               hasInvoice: false,
-              paymentStatus: 'on_the_way (ready for delivery)'
+              paymentStatus: "on_the_way (ready for delivery)",
             });
             setInvoiceProofTargetOrder(order);
-            console.log("🎯 Setting invoice proof target to MAIN ORDER:", order.OrderID);
+            console.log(
+              "🎯 Setting invoice proof target to MAIN ORDER:",
+              order.OrderID
+            );
             setShowInvoiceProofModal(true);
             return;
           } else {
             console.log("✅ MAIN ORDER already has invoice:", {
               OrderID: order.OrderID,
               id: order.id,
-              status: order.status
+              status: order.status,
             });
           }
         }
 
         // Check combined orders
         if (order.combinedOrders && order.combinedOrders.length > 0) {
-          console.log(`🔍 Checking ${order.combinedOrders.length} combined orders...`);
+          console.log(
+            `🔍 Checking ${order.combinedOrders.length} combined orders...`
+          );
 
           for (const combinedOrder of order.combinedOrders) {
             if (combinedOrder.status === "on_the_way") {
@@ -305,16 +325,19 @@ export default function BatchDetails({
                   OrderID: combinedOrder.OrderID,
                   id: combinedOrder.id,
                   status: combinedOrder.status,
-                  orderType: combinedOrder.orderType || 'regular',
-                  shopName: combinedOrder.Shop?.name || 'Unknown Shop',
-                  shopId: combinedOrder.Shop?.id || 'Unknown',
+                  orderType: combinedOrder.orderType || "regular",
+                  shopName: combinedOrder.Shop?.name || "Unknown Shop",
+                  shopId: combinedOrder.Shop?.id || "Unknown",
                   hasInvoice: false,
-                  paymentStatus: 'on_the_way (ready for delivery)',
+                  paymentStatus: "on_the_way (ready for delivery)",
                   mainOrderId: order.id,
-                  mainOrderStatus: order.status
+                  mainOrderStatus: order.status,
                 });
                 setInvoiceProofTargetOrder(combinedOrder);
-                console.log("🎯 Setting invoice proof target to COMBINED ORDER:", combinedOrder.OrderID);
+                console.log(
+                  "🎯 Setting invoice proof target to COMBINED ORDER:",
+                  combinedOrder.OrderID
+                );
                 setShowInvoiceProofModal(true);
                 return;
               } else {
@@ -322,7 +345,7 @@ export default function BatchDetails({
                   OrderID: combinedOrder.OrderID,
                   id: combinedOrder.id,
                   status: combinedOrder.status,
-                  shopName: combinedOrder.Shop?.name || 'Unknown Shop'
+                  shopName: combinedOrder.Shop?.name || "Unknown Shop",
                 });
               }
             } else {
@@ -330,13 +353,15 @@ export default function BatchDetails({
                 OrderID: combinedOrder.OrderID,
                 id: combinedOrder.id,
                 status: combinedOrder.status,
-                shopName: combinedOrder.Shop?.name || 'Unknown Shop'
+                shopName: combinedOrder.Shop?.name || "Unknown Shop",
               });
             }
           }
         }
 
-        console.log("✅ All orders in batch have invoices or are not ready for delivery");
+        console.log(
+          "✅ All orders in batch have invoices or are not ready for delivery"
+        );
       } catch (error) {
         console.error("❌ Error checking for pending invoice proof:", error);
       }
@@ -345,7 +370,13 @@ export default function BatchDetails({
     // Small delay to ensure component is fully loaded
     const timeoutId = setTimeout(checkForPendingInvoiceProof, 1000);
     return () => clearTimeout(timeoutId);
-  }, [order, showInvoiceProofModal, showInvoiceProofLoading, showPaymentModal, paymentLoading]);
+  }, [
+    order,
+    showInvoiceProofModal,
+    showInvoiceProofLoading,
+    showPaymentModal,
+    paymentLoading,
+  ]);
 
   // Get the currently active order object (main or combined)
   const getActiveOrder = useMemo(() => {
@@ -364,7 +395,13 @@ export default function BatchDetails({
       (co) => co.shop?.id === activeShopId
     );
     return activeCombinedOrder || order;
-  }, [order, order?.combinedOrders, isMultiShop, activeShopId, hasSameShopCombinedOrders]);
+  }, [
+    order,
+    order?.combinedOrders,
+    isMultiShop,
+    activeShopId,
+    hasSameShopCombinedOrders,
+  ]);
 
   const currentStep = useMemo(() => {
     if (!order) return 0;
@@ -742,7 +779,9 @@ export default function BatchDetails({
   // Function to check if an order has an invoice
   const checkOrderHasInvoice = async (orderId: string): Promise<boolean> => {
     try {
-      const response = await fetch(`/api/invoices/check-existence?orderId=${orderId}`);
+      const response = await fetch(
+        `/api/invoices/check-existence?orderId=${orderId}`
+      );
       if (response.ok) {
         const data = await response.json();
         return data.hasInvoice || false;
@@ -759,7 +798,7 @@ export default function BatchDetails({
   // Generate a 5-digit OTP with first 2 digits based on OrderID
   const generateOtp = (orderId: number) => {
     // Get last 2 digits of OrderID (ensures it's always 2 digits)
-    const orderIdDigits = (orderId % 100).toString().padStart(2, '0');
+    const orderIdDigits = (orderId % 100).toString().padStart(2, "0");
 
     // Generate 3 random digits
     const randomDigits = Math.floor(100 + Math.random() * 900).toString();
@@ -835,7 +874,8 @@ export default function BatchDetails({
 
     // Get the target order for payment (main order or specific combined order)
     const targetOrderForPayment = paymentTargetOrderId
-      ? order.combinedOrders?.find(co => co.id === paymentTargetOrderId) || order
+      ? order.combinedOrders?.find((co) => co.id === paymentTargetOrderId) ||
+        order
       : order;
     // Payment debug info calculated
     try {
@@ -901,15 +941,20 @@ export default function BatchDetails({
     try {
       // Get the target order for payment (main order or specific combined order)
       const targetOrderForPayment = paymentTargetOrderId
-        ? order.combinedOrders?.find(co => co.id === paymentTargetOrderId) || order
+        ? order.combinedOrders?.find((co) => co.id === paymentTargetOrderId) ||
+          order
         : order;
 
       // Verify OTP format (first 2 digits must match OrderID)
-      const expectedOrderIdDigits = (targetOrderForPayment.OrderID % 100).toString().padStart(2, '0');
+      const expectedOrderIdDigits = ((targetOrderForPayment.OrderID as unknown as number) % 100)
+        .toString()
+        .padStart(2, "0");
       const enteredOrderIdDigits = otp.substring(0, 2);
 
       if (enteredOrderIdDigits !== expectedOrderIdDigits) {
-        throw new Error("Invalid OTP format. Please check your OTP and try again.");
+        throw new Error(
+          "Invalid OTP format. Please check your OTP and try again."
+        );
       }
 
       // Verify complete OTP
@@ -940,7 +985,8 @@ export default function BatchDetails({
             amount: orderAmount,
             currency: systemConfig?.currency || "RWF",
             payerNumber: momoCode,
-            externalId: targetOrderForPayment.id || `SHOPPER-PAYMENT-${Date.now()}`,
+            externalId:
+              targetOrderForPayment.id || `SHOPPER-PAYMENT-${Date.now()}`,
             payerMessage: "Payment for Shopper Items",
             payeeNote: "Shopper payment confirmation",
           }),
@@ -1026,7 +1072,6 @@ export default function BatchDetails({
       let paymentSuccess = false;
       let walletUpdated = false;
       try {
-
         const hasCombinedOrders =
           order?.combinedOrders && order.combinedOrders.length > 0;
 
@@ -1036,21 +1081,20 @@ export default function BatchDetails({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-          orderId: targetOrderForPayment.id,
-          momoCode,
-          privateKey,
-          orderAmount: orderAmount,
-          originalOrderTotal: originalOrderTotal,
-          orderType: targetOrderForPayment.orderType || "regular",
-          momoReferenceId: momoReferenceId,
-          momoSuccess: momoPaymentSuccess,
-          isSameShopCombined: hasSameShopCombinedOrders, // batch payment & invoice for same-shop only
-          combinedOrders: hasCombinedOrders
-            ? order.combinedOrders
-            : undefined,
-        }),
+            orderId: targetOrderForPayment.id,
+            momoCode,
+            privateKey,
+            orderAmount: orderAmount,
+            originalOrderTotal: originalOrderTotal,
+            orderType: targetOrderForPayment.orderType || "regular",
+            momoReferenceId: momoReferenceId,
+            momoSuccess: momoPaymentSuccess,
+            isSameShopCombined: hasSameShopCombinedOrders, // batch payment & invoice for same-shop only
+            combinedOrders: hasCombinedOrders
+              ? order.combinedOrders
+              : undefined,
+          }),
         });
-
 
         if (!response.ok) {
           const errorData = await response.json();
@@ -1402,7 +1446,9 @@ export default function BatchDetails({
   };
 
   // Handle combined customer delivery confirmation - opens modal for multiple orders to same customer
-  const handleCombinedCustomerDeliveryConfirmation = async (customerOrders: any[]) => {
+  const handleCombinedCustomerDeliveryConfirmation = async (
+    customerOrders: any[]
+  ) => {
     if (!customerOrders || customerOrders.length === 0) return;
 
     try {
@@ -1410,21 +1456,29 @@ export default function BatchDetails({
       setShowInvoiceModal(true);
 
       // Prepare invoice data for all orders in the customer group
-      const allOrderIds = customerOrders.map(o => o.id);
-      const allOrderNumbers = customerOrders.map(o => o.OrderID || o.id.slice(-8));
+      const allOrderIds = customerOrders.map((o) => o.id);
+      const allOrderNumbers = customerOrders.map(
+        (o) => o.OrderID || o.id.slice(-8)
+      );
 
       // Generate combined invoice data
       const combinedInvoiceData = {
         id: allOrderIds[0], // Use first order ID as primary
-        invoiceNumber: `COMBINED-${allOrderNumbers.join('-')}`,
+        invoiceNumber: `COMBINED-${allOrderNumbers.join("-")}`,
         orderId: allOrderIds[0],
-        orderNumber: allOrderNumbers.join(' + '),
-        customer: customerOrders[0].orderedBy?.name || customerOrders[0].customerName || "Customer",
+        orderNumber: allOrderNumbers.join(" + "),
+        customer:
+          customerOrders[0].orderedBy?.name ||
+          customerOrders[0].customerName ||
+          "Customer",
         customerEmail: customerOrders[0].orderedBy?.email || "",
-        customerPhone: customerOrders[0].orderedBy?.phone || customerOrders[0].customerPhone,
-        shop: customerOrders.map(o => o.shop?.name || o.shopName).join(', '),
+        customerPhone:
+          customerOrders[0].orderedBy?.phone || customerOrders[0].customerPhone,
+        shop: customerOrders.map((o) => o.shop?.name || o.shopName).join(", "),
         shopAddress: customerOrders[0].shop?.address || "",
-        deliveryAddress: customerOrders[0].address?.street || customerOrders[0].customerAddress,
+        deliveryAddress:
+          customerOrders[0].address?.street ||
+          customerOrders[0].customerAddress,
         deliveryStreet: customerOrders[0].address?.street,
         deliveryCity: customerOrders[0].address?.city,
         deliveryPostalCode: customerOrders[0].address?.postal_code,
@@ -1433,10 +1487,22 @@ export default function BatchDetails({
         dateCompleted: new Date().toISOString(),
         status: "delivered",
         items: [], // Will be populated if needed
-        subtotal: customerOrders.reduce((sum, o) => sum + parseFloat(o.subtotal?.toString() || "0"), 0),
-        serviceFee: customerOrders.reduce((sum, o) => sum + parseFloat(o.serviceFee?.toString() || "0"), 0),
-        deliveryFee: customerOrders.reduce((sum, o) => sum + parseFloat(o.deliveryFee?.toString() || "0"), 0),
-        total: customerOrders.reduce((sum, o) => sum + parseFloat(o.total?.toString() || "0"), 0),
+        subtotal: customerOrders.reduce(
+          (sum, o) => sum + parseFloat(o.subtotal?.toString() || "0"),
+          0
+        ),
+        serviceFee: customerOrders.reduce(
+          (sum, o) => sum + parseFloat(o.serviceFee?.toString() || "0"),
+          0
+        ),
+        deliveryFee: customerOrders.reduce(
+          (sum, o) => sum + parseFloat(o.deliveryFee?.toString() || "0"),
+          0
+        ),
+        total: customerOrders.reduce(
+          (sum, o) => sum + parseFloat(o.total?.toString() || "0"),
+          0
+        ),
         isReelOrder: false,
         isRestaurantOrder: false,
         orderType: "combined_customer",
@@ -1617,7 +1683,10 @@ export default function BatchDetails({
 
           if (invoiceResult.success && invoiceResult.invoice) {
             // Mark invoice proof as uploaded for this order
-            setUploadedProofs((prev) => ({ ...prev, [invoiceProofTargetOrder.id]: true }));
+            setUploadedProofs((prev) => ({
+              ...prev,
+              [invoiceProofTargetOrder.id]: true,
+            }));
 
             // Update the specific order status to "on_the_way"
             await onUpdateStatus(invoiceProofTargetOrder.id, "on_the_way");
@@ -1647,7 +1716,8 @@ export default function BatchDetails({
                 header="Proof Uploaded Successfully"
                 closable
               >
-                ✅ Invoice proof uploaded for Order #{invoiceProofTargetOrder.OrderID}
+                ✅ Invoice proof uploaded for Order #
+                {invoiceProofTargetOrder.OrderID}
                 <br />✅ Order moved to On The Way for delivery
               </Notification>,
               { placement: "topEnd", duration: 5000 }
@@ -1795,13 +1865,12 @@ export default function BatchDetails({
 
         // Update local state for this specific order
         if (order) {
-          const updatedMain = order.id === targetId
-            ? { ...order, status: "on_the_way" as string }
-            : order;
+          const updatedMain =
+            order.id === targetId
+              ? { ...order, status: "on_the_way" as string }
+              : order;
           const updatedCombined = (order.combinedOrders || []).map((o) =>
-            o.id === targetId
-              ? { ...o, status: "on_the_way" as string }
-              : o
+            o.id === targetId ? { ...o, status: "on_the_way" as string } : o
           );
 
           setOrder({
@@ -1898,7 +1967,12 @@ export default function BatchDetails({
       !isRestaurantOrder &&
       !isRestaurantUserReel
     ) {
-      console.log("💰 Setting payment target for order:", idToUpdate, "status:", newStatus);
+      console.log(
+        "💰 Setting payment target for order:",
+        idToUpdate,
+        "status:",
+        newStatus
+      );
       setPaymentTargetOrderId(idToUpdate);
       handleShowPaymentModal();
       return;
@@ -2124,7 +2198,8 @@ export default function BatchDetails({
     let effectiveTargetId = targetOrderId ?? undefined;
     if (!effectiveTargetId && hasSameShopCombinedOrders && activeShopId) {
       const s = String(activeShopId);
-      if (order.id === s || String(order.OrderID) === s) effectiveTargetId = order.id;
+      if (order.id === s || String(order.OrderID) === s)
+        effectiveTargetId = order.id;
       else {
         const co = order.combinedOrders?.find(
           (o: any) => o.id === s || String(o.OrderID) === s
@@ -2261,7 +2336,9 @@ export default function BatchDetails({
     }
     (order.combinedOrders || []).forEach((co: any) => {
       (co.Order_Items || []).forEach((i: any) => {
-        total += (typeof i.price === "string" ? parseFloat(i.price) : i.price) * (i.quantity || 0);
+        total +=
+          (typeof i.price === "string" ? parseFloat(i.price) : i.price) *
+          (i.quantity || 0);
       });
     });
     return total;
@@ -2269,15 +2346,18 @@ export default function BatchDetails({
 
   /** Amount to charge: batch total for same-shop combined, else active/target order found total */
   const getPaymentOrderAmount = () => {
-    const hasCombined = order?.combinedOrders && order.combinedOrders.length > 0;
+    const hasCombined =
+      order?.combinedOrders && order.combinedOrders.length > 0;
     if (hasCombined && hasSameShopCombinedOrders) return calculateBatchTotal();
     return calculateFoundItemsTotal();
   };
 
   /** Original total for refund calc: batch original for same-shop, else target order original */
   const getOriginalOrderTotalForPayment = () => {
-    const hasCombined = order?.combinedOrders && order.combinedOrders.length > 0;
-    if (hasCombined && hasSameShopCombinedOrders) return calculateOriginalBatchSubtotal();
+    const hasCombined =
+      order?.combinedOrders && order.combinedOrders.length > 0;
+    if (hasCombined && hasSameShopCombinedOrders)
+      return calculateOriginalBatchSubtotal();
     return calculateOriginalSubtotal(paymentTargetOrderId || undefined);
   };
 
@@ -2434,7 +2514,8 @@ export default function BatchDetails({
           });
         } else {
           const relevantItems = activeOrder.Order_Items || [];
-          hasFoundItems = relevantItems.some((item: any) => item.found) || false;
+          hasFoundItems =
+            relevantItems.some((item: any) => item.found) || false;
         }
 
         return (
@@ -3039,9 +3120,13 @@ export default function BatchDetails({
           deliveryFee={getBatchFee("deliveryFee")}
           paymentLoading={paymentLoading}
           externalId={paymentTargetOrderId || order?.id}
-          orderId={paymentTargetOrderId
-            ? order.combinedOrders?.find(co => co.id === paymentTargetOrderId)?.OrderID || order?.OrderID
-            : order?.OrderID}
+          orderId={
+            paymentTargetOrderId
+              ? order.combinedOrders?.find(
+                  (co) => co.id === paymentTargetOrderId
+                )?.OrderID || order?.OrderID
+              : order?.OrderID
+          }
           otp={otp}
           setOtp={setOtp}
           otpLoading={otpVerifyLoading}
@@ -3233,7 +3318,9 @@ export default function BatchDetails({
                   calculateFoundItemsTotal={calculateFoundItemsTotal}
                   calculateOriginalSubtotal={calculateOriginalSubtotal}
                   calculateBatchTotal={calculateBatchTotal}
-                  calculateOriginalBatchSubtotal={calculateOriginalBatchSubtotal}
+                  calculateOriginalBatchSubtotal={
+                    calculateOriginalBatchSubtotal
+                  }
                   hasCombinedOrders={
                     !!(order?.combinedOrders && order.combinedOrders.length > 0)
                   }
@@ -3296,7 +3383,9 @@ export default function BatchDetails({
           uploadedProofs={uploadedProofs}
           getActionButton={getActionButton}
           onUpdateStatus={handleUpdateStatus}
-          onCombinedDeliveryConfirmation={handleCombinedCustomerDeliveryConfirmation}
+          onCombinedDeliveryConfirmation={
+            handleCombinedCustomerDeliveryConfirmation
+          }
           getActiveOrder={() => getActiveOrder}
         />
       </div>

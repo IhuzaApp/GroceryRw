@@ -116,7 +116,7 @@ export default function DeliveryRouteSection({
                       {index + 1}
                     </span>
                     <div>
-                      <h3 className="font-bold text-gray-900 dark:text-white text-sm sm:text-base">
+                      <h3 className="text-sm font-bold text-gray-900 dark:text-white sm:text-base">
                         {customer.name}
                         {customer.phone && (
                           <span className="ml-2 text-xs font-normal text-slate-500">
@@ -450,7 +450,9 @@ export default function DeliveryRouteSection({
                             >
                               {/* No individual button - bottom button handles unified delivery */}
                               <div className="flex items-center justify-between">
-                                <span className="text-xs text-slate-500 sm:text-sm">Ready for delivery</span>
+                                <span className="text-xs text-slate-500 sm:text-sm">
+                                  Ready for delivery
+                                </span>
                                 <span className="text-xs font-semibold text-green-600 dark:text-green-400 sm:text-sm">
                                   #{o.OrderID || o.id.slice(-8)}
                                 </span>

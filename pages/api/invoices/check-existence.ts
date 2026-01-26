@@ -33,16 +33,19 @@ export default async function handler(
       orderId: orderId,
     });
 
-    const invoice = data.Invoices && data.Invoices.length > 0 ? data.Invoices[0] : null;
+    const invoice =
+      data.Invoices && data.Invoices.length > 0 ? data.Invoices[0] : null;
 
     return res.status(200).json({
       hasInvoice: !!invoice,
-      invoice: invoice ? {
-        id: invoice.id,
-        invoiceNumber: invoice.invoice_number,
-        status: invoice.status,
-        createdAt: invoice.created_at,
-      } : null,
+      invoice: invoice
+        ? {
+            id: invoice.id,
+            invoiceNumber: invoice.invoice_number,
+            status: invoice.status,
+            createdAt: invoice.created_at,
+          }
+        : null,
     });
   } catch (error) {
     console.error("Error checking invoice existence:", error);

@@ -42,8 +42,7 @@ export default function BottomActionButton({
     if (!o) return;
     const customerPhone =
       (o as any).orderedBy?.phone || o.customerPhone || "unknown";
-    const customerId =
-      (o as any).orderedBy?.id || o.customerId || "unknown";
+    const customerId = (o as any).orderedBy?.id || o.customerId || "unknown";
     const customerKey = `${customerId}_${customerPhone}`;
 
     if (!ordersByCustomer.has(customerKey))
@@ -56,7 +55,7 @@ export default function BottomActionButton({
     ([customerKey, orders]) => {
       // Only consider groups with more than 1 order for unified delivery
       if (orders.length <= 1) return false;
-      
+
       return orders.every((o) => {
         const hasInvoice =
           (o as any).Invoice?.length > 0 ||
@@ -76,14 +75,14 @@ export default function BottomActionButton({
   const actionOrder = getActiveOrder
     ? getActiveOrder()
     : activeShopId === order?.shop?.id
-      ? order
-      : order?.combinedOrders?.find((o) => o.shop?.id === activeShopId);
+    ? order
+    : order?.combinedOrders?.find((o) => o.shop?.id === activeShopId);
 
   const defaultButton = getActionButton(actionOrder);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[9999] border-t border-gray-200 bg-white p-3 pb-safe shadow-lg dark:border-gray-700 dark:bg-gray-900 sm:hidden">
-        {readyCustomerGroup ? (
+    <div className="pb-safe fixed bottom-0 left-0 right-0 z-[9999] border-t border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-900 sm:hidden">
+      {readyCustomerGroup ? (
         // Show unified delivery confirmation button for all orders in this customer group
         <Button
           appearance="primary"

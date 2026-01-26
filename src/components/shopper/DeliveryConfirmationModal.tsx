@@ -48,7 +48,12 @@ interface DeliveryConfirmationModalProps {
   onClose: () => void;
   invoiceData: InvoiceData | null;
   loading: boolean;
-  orderType?: "regular" | "reel" | "restaurant" | "combined" | "combined_customer";
+  orderType?:
+    | "regular"
+    | "reel"
+    | "restaurant"
+    | "combined"
+    | "combined_customer";
 }
 
 const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
@@ -142,11 +147,12 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       setPinError(null);
 
       // For combined customer deliveries, verify PIN for ALL orders
-      const orderIdsToVerify = orderType === "combined_customer" &&
+      const orderIdsToVerify =
+        orderType === "combined_customer" &&
         invoiceData.combinedOrderIds &&
         invoiceData.combinedOrderIds.length > 0
-        ? invoiceData.combinedOrderIds
-        : [invoiceData.orderId];
+          ? invoiceData.combinedOrderIds
+          : [invoiceData.orderId];
 
       // For combined_customer, use the API endpoint that validates all orders have the same PIN
       if (orderType === "combined_customer" && orderIdsToVerify.length > 1) {
@@ -175,7 +181,8 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
           if (newAttempts >= 2) {
             setPinError(
-              data.error || "PIN verification failed twice. Please take a photo for proof of delivery."
+              data.error ||
+                "PIN verification failed twice. Please take a photo for proof of delivery."
             );
             setTimeout(() => {
               setCurrentVerificationStep("photo");
@@ -183,7 +190,8 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
             }, 2000);
           } else {
             setPinError(
-              data.error || `Incorrect PIN. ${2 - newAttempts} attempt(s) remaining.`
+              data.error ||
+                `Incorrect PIN. ${2 - newAttempts} attempt(s) remaining.`
             );
             setPinInput("");
           }
@@ -637,7 +645,9 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                   }`}
                 >
                   {orderType === "combined_customer"
-                    ? `${invoiceData.combinedOrderNumbers?.length || 1} Orders: ${invoiceData.orderNumber}`
+                    ? `${
+                        invoiceData.combinedOrderNumbers?.length || 1
+                      } Orders: ${invoiceData.orderNumber}`
                     : `Order #${invoiceData.orderNumber}`}
                 </p>
               </div>
@@ -818,20 +828,29 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                                         )}
                                       </p>
                                     )}
-                                    {invoiceData.deliveryPlaceDetails && invoiceData.deliveryPlaceDetails.floor && (
-                                      <p>
-                                        <span className="font-semibold">
-                                          Floor:
-                                        </span>{" "}
-                                        {invoiceData.deliveryPlaceDetails.floor}
-                                      </p>
-                                    )}
-                                    {invoiceData.deliveryPlaceDetails?.doorNumber && (
+                                    {invoiceData.deliveryPlaceDetails &&
+                                      invoiceData.deliveryPlaceDetails
+                                        .floor && (
+                                        <p>
+                                          <span className="font-semibold">
+                                            Floor:
+                                          </span>{" "}
+                                          {
+                                            invoiceData.deliveryPlaceDetails
+                                              .floor
+                                          }
+                                        </p>
+                                      )}
+                                    {invoiceData.deliveryPlaceDetails
+                                      ?.doorNumber && (
                                       <p>
                                         <span className="font-semibold">
                                           Door:
                                         </span>{" "}
-                                        {invoiceData.deliveryPlaceDetails.doorNumber}
+                                        {
+                                          invoiceData.deliveryPlaceDetails
+                                            .doorNumber
+                                        }
                                       </p>
                                     )}
                                     {invoiceData?.deliveryPlaceDetails
@@ -1326,7 +1345,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
           {/* Fixed PIN Button for Mobile - Only shown during PIN verification */}
           {currentVerificationStep === "pin" && !photoUploaded && (
-            <div className="fixed bottom-0 left-0 right-0 z-[10000] border-t border-gray-200 bg-white p-3 pb-safe shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:hidden">
+            <div className="pb-safe fixed bottom-0 left-0 right-0 z-[10000] border-t border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:hidden">
               <button
                 onClick={handleVerifyPin}
                 disabled={verifyingPin || pinInput.length !== 2}
