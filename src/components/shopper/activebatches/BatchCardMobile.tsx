@@ -189,7 +189,10 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
   // Format expected delivery time with countdown
   const formatExpectedDeliveryTime = () => {
     if (!order.deliveryTime) {
-      return { text: "N/A", color: "text-gray-600" };
+      return {
+        text: "N/A",
+        color: theme === "dark" ? "text-gray-400" : "text-gray-600",
+      };
     }
 
     const countdown = getDeliveryCountdown(order.deliveryTime);
@@ -197,7 +200,10 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
 
     if (countdown.isOverdue) {
       const overdueText = `Delayed by ${formatOverdueTime(countdown.totalMinutes)}`;
-      return { text: overdueText, color: "text-red-600" };
+      return {
+        text: overdueText,
+        color: theme === "dark" ? "text-red-400" : "text-red-600",
+      };
     }
 
     // Format the delivery time
@@ -208,11 +214,12 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
     });
 
     // Determine color based on remaining time
-    let colorClass = "text-green-600"; // Default: green (plenty of time)
-    
+    let colorClass =
+      theme === "dark" ? "text-green-400" : "text-green-600"; // Default: green (plenty of time)
+
     if (countdown.totalMinutes <= 30) {
       // Yellow when getting close (30 minutes or less)
-      colorClass = "text-yellow-600";
+      colorClass = theme === "dark" ? "text-yellow-400" : "text-yellow-600";
     }
 
     // Add countdown
@@ -233,8 +240,10 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
 
   return (
     <div
-      className={`relative rounded-2xl bg-white p-4 shadow-sm ${
-        theme === "dark" ? "bg-gray-800" : "bg-white"
+      className={`relative rounded-2xl p-4 transition-colors duration-200 ${
+        theme === "dark"
+          ? "bg-gray-800 shadow-lg shadow-gray-900/50"
+          : "bg-white shadow-sm"
       }`}
     >
       {/* Ellipsis Menu Button - Top Right */}
@@ -265,9 +274,9 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
         {/* Dropdown Menu */}
         {showMenu && (
           <div
-            className={`absolute right-0 top-10 z-50 min-w-[180px] rounded-lg border shadow-lg ${
+            className={`absolute right-0 top-10 z-50 min-w-[180px] rounded-lg border shadow-lg transition-colors ${
               theme === "dark"
-                ? "border-gray-700 bg-gray-800"
+                ? "border-gray-700 bg-gray-800 shadow-gray-900/50"
                 : "border-gray-200 bg-white"
             }`}
           >
@@ -366,17 +375,7 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
           >
             Expected delivery time
           </p>
-          <p
-            className={`text-sm font-medium ${
-              theme === "dark" 
-                ? deliveryTimeInfo.color === "text-red-600"
-                  ? "text-red-400"
-                  : deliveryTimeInfo.color === "text-yellow-600"
-                  ? "text-yellow-400"
-                  : "text-green-400"
-                : deliveryTimeInfo.color
-            }`}
-          >
+          <p className={`text-sm font-medium ${deliveryTimeInfo.color}`}>
             {deliveryTimeInfo.text}
           </p>
         </div>
@@ -386,7 +385,13 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
       <div className="flex items-center justify-between gap-3">
         {/* Status Badge/Label */}
         <div className="flex-1">
-          <span className="inline-flex items-center rounded-full bg-green-100 px-3 py-1.5 text-sm font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
+          <span
+            className={`inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium ${
+              theme === "dark"
+                ? "bg-green-900/30 text-green-300"
+                : "bg-green-100 text-green-800"
+            }`}
+          >
             {getStatusLabel(order.status)}
           </span>
         </div>
@@ -394,11 +399,11 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
         {/* Detail Arrow Button - Navigate to order details */}
         <Link href={`/Plasa/active-batches/batch/${order.id}`}>
           <button
-            className={`flex h-10 w-10 items-center justify-center rounded-full ${
+            className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
               theme === "dark"
-                ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                : "bg-white text-gray-600 hover:bg-gray-50 shadow-sm"
-            } transition-colors`}
+                ? "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-gray-100"
+                : "bg-white text-gray-600 hover:bg-gray-50 shadow-sm border border-gray-200"
+            }`}
           >
             <svg
               className="h-5 w-5"
