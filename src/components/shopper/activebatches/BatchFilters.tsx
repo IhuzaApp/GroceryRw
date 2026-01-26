@@ -3,6 +3,8 @@ import { useTheme } from "../../../context/ThemeContext";
 
 interface BatchFiltersProps {
   onFilterChange?: (filters: FilterState) => void;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 export interface FilterState {
@@ -13,7 +15,7 @@ export interface FilterState {
   search?: string;
 }
 
-export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
+export function BatchFilters({ onFilterChange, onRefresh, isRefreshing = false }: BatchFiltersProps) {
   const { theme } = useTheme();
   const [filters, setFilters] = useState<FilterState>({});
   const [showOrderTypeDropdown, setShowOrderTypeDropdown] = useState(false);
@@ -793,34 +795,63 @@ export function BatchFilters({ onFilterChange }: BatchFiltersProps) {
         </button>
       </div>
 
-      {/* Right side - Search (Full width on mobile) */}
-      <div className="relative w-full flex-1 sm:min-w-[200px] sm:max-w-md">
-        <input
-          type="text"
-          placeholder="Search..."
-          value={filters.search || ""}
-          onChange={(e) => updateFilter("search", e.target.value)}
-          className={`w-full rounded-lg border px-4 py-2 pl-10 text-sm transition-colors ${
-            theme === "dark"
-              ? "border-gray-600 bg-gray-800 text-gray-200 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              : "border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          }`}
-        />
-        <svg
-          className={`absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${
-            theme === "dark" ? "text-gray-400" : "text-gray-500"
-          }`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+      {/* Right side - Search and Refresh (Full width on mobile) */}
+      <div className="flex w-full flex-1 items-center gap-2 sm:min-w-[200px] sm:max-w-md">
+        <div className="relative flex-1">
+          <input
+            type="text"
+            placeholder="Search..."
+            value={filters.search || ""}
+            onChange={(e) => updateFilter("search", e.target.value)}
+            className={`w-full rounded-lg border px-4 py-2 pl-10 text-sm transition-colors ${
+              theme === "dark"
+                ? "border-gray-600 bg-gray-800 text-gray-200 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                : "border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            }`}
           />
-        </svg>
+          <svg
+            className={`absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${
+              theme === "dark" ? "text-gray-400" : "text-gray-500"
+            }`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+        </div>
+        {onRefresh && (
+          <button
+            onClick={onRefresh}
+            disabled={isRefreshing}
+            className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-all duration-200 ${
+              theme === "dark"
+                ? "border-gray-600 bg-gray-800 text-gray-200 hover:bg-gray-700 active:bg-gray-600"
+                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 active:bg-gray-100"
+            } ${isRefreshing ? "opacity-50 cursor-not-allowed" : ""}`}
+            title="Refresh active batches"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
+        )}
       </div>
     </div>
   );

@@ -53,6 +53,8 @@ interface ResponsiveBatchViewProps {
 export function ResponsiveBatchView({
   orders,
   isLoading = false,
+  onRefresh,
+  isRefreshing = false,
 }: ResponsiveBatchViewProps) {
   const { theme } = useTheme();
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -145,7 +147,11 @@ export function ResponsiveBatchView({
   return (
     <div>
       {/* Filters - Show on both desktop and mobile */}
-      <BatchFilters onFilterChange={handleFilterChange} />
+      <BatchFilters 
+        onFilterChange={handleFilterChange} 
+        onRefresh={onRefresh}
+        isRefreshing={isRefreshing}
+      />
 
       {/* Loading Skeletons */}
       {isLoading && (

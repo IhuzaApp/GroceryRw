@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { Button, Panel, Badge, Loader, toaster, Message } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
@@ -95,6 +95,7 @@ export default function ActiveBatches({
   const fetchedRef = useRef(false);
   const { theme } = useTheme();
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     const checkIfMobile = () => {
@@ -118,33 +119,29 @@ export default function ActiveBatches({
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch orders client-side - always fetch when component mounts or role changes
-  useEffect(() => {
+  // Refetch function that can be called manually or automatically
+  const refetchActiveBatches = useCallback(async (showLoading = true) => {
     // Skip if not a shopper
     if (role !== "shopper") {
       setIsLoading(false);
       return;
     }
 
-    // Always start with loading state
-    setIsLoading(true);
+    if (showLoading) {
+      setIsLoading(true);
+    } else {
+      setIsRefreshing(true);
+    }
     setError(null);
     setFetchSuccess(false);
-
-    // Always fetch fresh data when component mounts or role changes
-    // Reset the fetch flag to allow fresh data fetching
-    fetchedRef.current = false;
-
-    // Set flag to prevent multiple fetches
-    fetchedRef.current = true;
 
     const controller = new AbortController();
     const signal = controller.signal;
 
     async function fetchActiveBatches() {
-      // Add minimum loading time to ensure skeleton is visible
+      // Add minimum loading time to ensure skeleton is visible (only for initial load)
       const startTime = Date.now();
-      const minLoadingTime = 800; // 800ms minimum loading time
+      const minLoadingTime = showLoading ? 800 : 0; // No minimum for refresh
 
       try {
         const response = await fetch("/api/shopper/activeBatches", {
@@ -197,22 +194,46 @@ export default function ActiveBatches({
           { placement: "topEnd" }
         );
       } finally {
-        // Ensure minimum loading time has passed
+        // Ensure minimum loading time has passed (only for initial load)
         const elapsedTime = Date.now() - startTime;
         const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
 
         setTimeout(() => {
           setIsLoading(false);
+          setIsRefreshing(false);
         }, remainingTime);
       }
     }
 
-    fetchActiveBatches();
+    await fetchActiveBatches();
 
     return () => {
       controller.abort();
     };
   }, [role]);
+
+  // Fetch orders client-side - always fetch when component mounts or role changes
+  useEffect(() => {
+    refetchActiveBatches(true);
+  }, [role]);
+
+  // Listen for order acceptance events to refetch data
+  useEffect(() => {
+    const handleOrderAccepted = () => {
+      console.log("🔄 Order accepted, refetching active batches...");
+      // Use a small delay to ensure the database has been updated
+      setTimeout(() => {
+        refetchActiveBatches(false);
+      }, 500);
+    };
+
+    // Listen for custom event
+    window.addEventListener("order-accepted", handleOrderAccepted as EventListener);
+
+    return () => {
+      window.removeEventListener("order-accepted", handleOrderAccepted as EventListener);
+    };
+  }, [refetchActiveBatches]);
 
   // Calculate countdown for delivery time
   const getDeliveryCountdown = (deliveryTime: string) => {
@@ -238,7 +259,7 @@ export default function ActiveBatches({
       {/* Main Content */}
       <main className="mx-auto w-full max-w-[1920px] px-3 py-3 sm:px-6 sm:py-6">
         {/* Page Title - Desktop Only */}
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4">
           <p
             className={`text-xl font-bold sm:text-2xl ${
               theme === "dark" ? "text-gray-100" : "text-gray-900"
@@ -246,22 +267,6 @@ export default function ActiveBatches({
           >
             Active Batches
           </p>
-          <button
-            className={`rounded-full p-2 transition-colors ${
-              theme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-200"
-            }`}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="h-5 w-5"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="M21 21l-4.35-4.35" />
-            </svg>
-          </button>
         </div>
 
         {/* Display a warning when user doesn't have the shopper role */}
@@ -310,7 +315,12 @@ export default function ActiveBatches({
 
         {/* Show orders or loading skeletons */}
         {(isLoading || (fetchSuccess && activeOrders.length > 0)) && (
-          <ResponsiveBatchView orders={activeOrders} isLoading={isLoading} />
+          <ResponsiveBatchView 
+            orders={activeOrders} 
+            isLoading={isLoading}
+            onRefresh={() => refetchActiveBatches(false)}
+            isRefreshing={isRefreshing}
+          />
         )}
 
         {/* Show "No Active Orders" when fetch is successful but no data */}
