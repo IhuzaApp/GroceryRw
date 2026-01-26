@@ -748,7 +748,7 @@ export default function ShopperProfileComponent() {
             </div>
 
             {/* ONBOARDING Section */}
-            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-lg">
               <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-700">
                 ONBOARDING
               </h2>
@@ -757,14 +757,16 @@ export default function ShopperProfileComponent() {
                   <label className="mb-1.5 block text-sm font-medium text-gray-700">
                     Starts on
                   </label>
-                  <DatePicker
-                    value={onboardingDate}
-                    onChange={(date) => setOnboardingDate(date)}
-                    format="dd.MM.yyyy"
-                    style={{ width: "100%" }}
-                    placeholder="Select date"
-                    oneTap
-                  />
+                  <div className="[&_.rs-picker-toggle]:rounded-xl [&_.rs-picker-toggle]:border-2 [&_.rs-picker-toggle]:border-gray-300 [&_.rs-picker-toggle]:bg-white [&_.rs-picker-toggle]:px-4 [&_.rs-picker-toggle]:py-3 [&_.rs-picker-toggle]:text-sm [&_.rs-picker-toggle]:transition-all [&_.rs-picker-toggle]:hover:border-green-400 [&_.rs-picker-toggle:focus-within]:border-green-500 [&_.rs-picker-toggle:focus-within]:ring-2 [&_.rs-picker-toggle:focus-within]:ring-green-500">
+                    <DatePicker
+                      value={onboardingDate}
+                      onChange={(date) => setOnboardingDate(date)}
+                      format="dd.MM.yyyy"
+                      style={{ width: "100%" }}
+                      placeholder="Select date"
+                      oneTap
+                    />
+                  </div>
                 </div>
                 <div>
                   <div className="mb-2 flex items-center justify-between">
@@ -788,30 +790,6 @@ export default function ShopperProfileComponent() {
                   <button className="text-sm font-medium text-green-600 transition-colors hover:text-green-700 hover:underline">
                     View Answers
                   </button>
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">
-                    Onboarding Scripts
-                  </label>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3">
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-700">
-                            Shopper Scheduler
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {onboardingProgress}%
-                          </span>
-                        </div>
-                      </div>
-                      <Toggle
-                        checked={onboardingProgress > 0}
-                        onChange={() => {}}
-                        className="ml-4"
-                      />
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
