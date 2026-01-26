@@ -2841,6 +2841,241 @@ export default function BatchDetails({
     checkInvoiceProof();
   }, [order?.id, order?.status, order?.combinedOrders?.length]);
 
+  // Refetch order data function - reuses the same transformation logic as the initial fetch
+  const refetchOrderData = async () => {
+    if (!order?.id) return;
+
+    try {
+      setOrderDetailsLoading(true);
+      const response = await fetch(`/api/shopper/orderDetails?id=${order.id}`);
+      const data = await response.json();
+
+      if (data.order) {
+        // Use the same transformation logic as the initial fetch
+        const transformOrderItems = (
+          items: any[],
+          shopId?: string,
+          orderId?: string
+        ) => {
+          return (
+            items?.map((item: any) => {
+              // Handle both data formats: flattened (from orderDetails API) and nested (from combined orders API)
+              const isNestedFormat =
+                item.product && item.product.ProductName;
+
+              let productId,
+                productName,
+                productImage,
+                finalPrice,
+                measurementUnit,
+                productNameData;
+
+              if (isNestedFormat) {
+                // Nested format from combined orders API
+                productId = item.product?.id || item.id;
+                productName =
+                  item.product?.ProductName?.name || "Unknown Product";
+                productImage =
+                  item.product?.ProductName?.image ||
+                  item.product?.image ||
+                  "/images/groceryPlaceholder.png";
+                finalPrice =
+                  item.product?.final_price ||
+                  item.price?.toString() ||
+                  "0";
+                measurementUnit = item.product?.measurement_unit || "item";
+                productNameData = {
+                  id: item.product?.ProductName?.id || item.id,
+                  name:
+                    item.product?.ProductName?.name || "Unknown Product",
+                  description: item.product?.ProductName?.description || "",
+                  barcode: item.product?.ProductName?.barcode || "",
+                  sku: item.product?.ProductName?.sku || "",
+                  image:
+                    item.product?.ProductName?.image ||
+                    item.product?.image ||
+                    "/images/groceryPlaceholder.png",
+                  create_at:
+                    item.product?.ProductName?.create_at ||
+                    new Date().toISOString(),
+                };
+              } else {
+                // Flattened format from orderDetails API
+                productId = item.product?.id || item.id;
+                productName = item.product?.name || item.name;
+                productImage =
+                  item.product?.image ||
+                  item.productImage ||
+                  "/images/groceryPlaceholder.png";
+                finalPrice =
+                  item.product?.final_price ||
+                  item.price?.toString() ||
+                  "0";
+                measurementUnit =
+                  item.product?.measurement_unit ||
+                  item.measurement_unit ||
+                  "item";
+
+                productNameData = item.product?.ProductName
+                  ? {
+                      id: item.product.ProductName.id,
+                      name: item.product.ProductName.name,
+                      description:
+                        item.product.ProductName.description || "",
+                      barcode: item.product.ProductName.barcode || "",
+                      sku: item.product.ProductName.sku || "",
+                      image:
+                        item.product.ProductName.image ||
+                        item.productImage ||
+                        "/images/groceryPlaceholder.png",
+                      create_at:
+                        item.product.ProductName.create_at ||
+                        new Date().toISOString(),
+                    }
+                  : {
+                      id: item.id,
+                      name: item.name,
+                      description: "",
+                      barcode: item.barcode || "",
+                      sku: item.sku || "",
+                      image:
+                        item.productImage ||
+                        "/images/groceryPlaceholder.png",
+                      create_at: new Date().toISOString(),
+                    };
+              }
+
+              const transformedItem = {
+                id: item.id,
+                quantity: item.quantity,
+                price: item.price,
+                shopId: shopId,
+                orderId: orderId,
+                product: {
+                  id: productId,
+                  name: productName,
+                  image: productImage,
+                  final_price: finalPrice,
+                  measurement_unit: measurementUnit,
+                  barcode: productNameData.barcode,
+                  sku: productNameData.sku,
+                  ProductName: productNameData,
+                },
+              };
+
+              return transformedItem;
+            }) || []
+          );
+        };
+
+        let allItems = transformOrderItems(
+          data.order.items || [],
+          data.order.shop?.id,
+          data.order.id
+        );
+
+        // Handle combined orders
+        if (
+          data.order.combinedOrders &&
+          data.order.combinedOrders.length > 0
+        ) {
+          const mainShopId = data.order.shop?.id;
+          const sameShopOrders = data.order.combinedOrders.filter(
+            (subOrder: any) => subOrder.shop?.id === mainShopId
+          );
+          const differentShopOrders = data.order.combinedOrders.filter(
+            (subOrder: any) => subOrder.shop?.id !== mainShopId
+          );
+
+          sameShopOrders.forEach((subOrder: any) => {
+            if (subOrder.items && subOrder.id !== data.order.id) {
+              const subItems = transformOrderItems(
+                subOrder.items,
+                subOrder.shop?.id,
+                subOrder.id
+              );
+              subOrder.Order_Items = subItems;
+            }
+          });
+
+          differentShopOrders.forEach((subOrder: any) => {
+            if (subOrder.items && subOrder.id !== data.order.id) {
+              const subItems = transformOrderItems(
+                subOrder.items,
+                subOrder.shop?.id,
+                subOrder.id
+              );
+              subOrder.Order_Items = subItems;
+              allItems = [...allItems, ...subItems];
+            }
+          });
+        }
+
+        const transformedOrder = {
+          ...data.order,
+          Order_Items: allItems,
+          combinedOrders: data.order.combinedOrders,
+        };
+
+        setOrder(transformedOrder);
+        if (!activeShopId && data.order.shop?.id) {
+          setActiveShopId(data.order.shop.id);
+        }
+        setErrorState(null);
+      }
+    } catch (error) {
+      console.error("Error refetching order data:", error);
+      setErrorState("Failed to refresh order data");
+    } finally {
+      setOrderDetailsLoading(false);
+      setItemsLoading(false);
+    }
+  };
+
+  // Listen for order acceptance events to refetch data
+  useEffect(() => {
+    const handleOrderAccepted = (event: CustomEvent) => {
+      const { orderId } = event.detail;
+      const currentOrderId = order?.id;
+      const currentCombinedOrders = order?.combinedOrders || [];
+      
+      // Refetch if this order or any combined order was accepted
+      if (
+        currentOrderId === orderId ||
+        currentCombinedOrders.some((o: any) => o?.id === orderId)
+      ) {
+        console.log("🔄 Order accepted, refetching batch data...", { orderId });
+        // Use a small delay to ensure the database has been updated
+        setTimeout(() => {
+          refetchOrderData();
+        }, 500);
+      }
+    };
+
+    // Listen for custom event
+    window.addEventListener("order-accepted", handleOrderAccepted as EventListener);
+
+    return () => {
+      window.removeEventListener("order-accepted", handleOrderAccepted as EventListener);
+    };
+  }, [order?.id, order?.combinedOrders]);
+
+  // Also listen for router events (when navigating back to the page after accepting)
+  useEffect(() => {
+    const handleRouteChange = () => {
+      if (order?.id) {
+        console.log("🔄 Route changed, refetching batch data...");
+        refetchOrderData();
+      }
+    };
+
+    router.events?.on("routeChangeComplete", handleRouteChange);
+
+    return () => {
+      router.events?.off("routeChangeComplete", handleRouteChange);
+    };
+  }, [router, order?.id]);
+
   // Fetch complete order data when component mounts
   useEffect(() => {
     if (order?.id) {
