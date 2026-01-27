@@ -128,14 +128,6 @@ export default function UserRestaurantOrderDetails({
     }
   }, [order.status, order.created_at]);
 
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   const handleSubmitRating = async (
     ratings: {
@@ -246,7 +238,7 @@ export default function UserRestaurantOrderDetails({
   ];
 
   return (
-    <div className="space-y-6">
+    <div className={`${isMobile ? 'space-y-0' : 'space-y-6'}`}>
       {/* Header - Only show on desktop */}
       {!isMobile && (
         <div className="flex items-center justify-between">
@@ -271,7 +263,7 @@ export default function UserRestaurantOrderDetails({
 
       {/* Restaurant Information */}
       {order.Restaurant && (
-        <Panel className="border border-gray-200 dark:border-gray-700">
+        <Panel className={`border border-gray-200 dark:border-gray-700 ${isMobile ? '!mx-0 !rounded-none border-x-0' : ''}`}>
           <div className="flex items-center gap-4">
             <div className="flex-grow">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -291,7 +283,7 @@ export default function UserRestaurantOrderDetails({
       )}
 
       {/* Order Status */}
-      <Panel className="border border-gray-200 dark:border-gray-700">
+      <Panel className={`border border-gray-200 dark:border-gray-700 ${isMobile ? '!mx-0 !rounded-none border-x-0' : ''}`}>
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             Order Status
@@ -478,9 +470,9 @@ export default function UserRestaurantOrderDetails({
       </Panel>
 
       {/* Delivery & Plaser Information */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className={`grid grid-cols-1 ${isMobile ? 'gap-0' : 'gap-6'} lg:grid-cols-2`}>
         {/* Delivery Information */}
-        <Panel className="border border-gray-200 dark:border-gray-700">
+        <Panel className={`border border-gray-200 dark:border-gray-700 ${isMobile ? '!mx-0 !rounded-none border-x-0' : ''}`}>
           <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
             Delivery Information
           </h3>
@@ -662,7 +654,7 @@ export default function UserRestaurantOrderDetails({
       </div>
 
       {/* Order Items */}
-      <Panel className="border border-gray-200 dark:border-gray-700">
+      <Panel className={`border border-gray-200 dark:border-gray-700 ${isMobile ? '!mx-0 !rounded-none border-x-0' : ''}`}>
         <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
           Order Items ({order.itemsCount} dishes)
         </h3>
@@ -728,7 +720,7 @@ export default function UserRestaurantOrderDetails({
       </Panel>
 
       {/* Order Summary */}
-      <Panel className="border border-gray-200 dark:border-gray-700">
+      <Panel className={`border border-gray-200 dark:border-gray-700 ${isMobile ? '!mx-0 !rounded-none border-x-0' : ''}`}>
         <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
           Order Summary
         </h3>
@@ -786,7 +778,7 @@ export default function UserRestaurantOrderDetails({
 
       {/* Rating Section */}
       {order.status === "DELIVERED" && (
-        <Panel className="border border-gray-200 dark:border-gray-700">
+        <Panel className={`border border-gray-200 dark:border-gray-700 ${isMobile ? '!mx-0 !rounded-none border-x-0' : ''}`}>
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -925,6 +917,32 @@ export default function UserRestaurantOrderDetails({
           }
           .rs-rate {
             font-size: 2.5rem !important;
+          }
+        }
+        /* Mobile-specific styles for restaurant order details */
+        @media (max-width: 767px) {
+          /* Ensure panels are full width with no margins */
+          .rs-panel {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+          }
+          /* Add subtle border between panels instead of spacing */
+          .rs-panel + .rs-panel {
+            border-top: 1px solid rgba(229, 231, 235, 0.5) !important;
+            margin-top: 0 !important;
+          }
+          .dark .rs-panel + .rs-panel {
+            border-top-color: rgba(55, 65, 81, 0.5) !important;
+          }
+          /* Ensure panel body has proper internal padding */
+          .rs-panel-body {
+            padding: 1rem !important;
+          }
+          /* Remove top border from first panel */
+          .rs-panel:first-child {
+            border-top: none !important;
           }
         }
       `}</style>
