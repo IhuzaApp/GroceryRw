@@ -56,9 +56,17 @@ export default function NotificationCenter() {
   const { isInitialized, hasPermission } = useFCMNotifications();
 
   // Fetch active orders to filter out notifications for already-assigned orders
+  // Only for shoppers - regular users don't need this
   useEffect(() => {
     const fetchActiveOrders = async () => {
       if (!session?.user?.id) return;
+
+      // Only fetch active orders for shoppers
+      const role = (session.user as any)?.role;
+      const isShopper = role === "shopper";
+      if (!isShopper) {
+        return;
+      }
 
       try {
         const response = await fetch("/api/shopper/activeOrders");
@@ -167,9 +175,19 @@ export default function NotificationCenter() {
       const history = JSON.parse(
         localStorage.getItem("fcm_notification_history") || "[]"
       );
-      // Filter out notifications for orders that are already assigned to this shopper
-      // This prevents showing notifications for orders the shopper has already accepted
-      const filteredHistory = history.filter((n: NotificationItem) => {
+
+      // Check user role to filter notifications
+      const role = (session?.user as any)?.role;
+      const isShopper = role === "shopper";
+
+      // Filter notifications based on user role
+      let filteredHistory = history.filter((n: NotificationItem) => {
+        // Regular users (non-shoppers): ONLY show chat_message notifications
+        if (!isShopper) {
+          return n.type === "chat_message";
+        }
+
+        // Shoppers: show all notification types, but filter out already-assigned orders
         // If notification has an orderId, check if it's in assignedOrderIds
         if (n.orderId && assignedOrderIds.size > 0) {
           // For combined orders, check if any order in the group is assigned

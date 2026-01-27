@@ -14,6 +14,7 @@ import {
 } from "./shared/SharedComponents";
 import { useAddress } from "../../../hooks/useAddress";
 import AddressBubble from "./AddressBubble";
+import NotificationCenter from "../../shopper/NotificationCenter";
 
 interface MobileUserDashboardProps {
   initialData: Data;
@@ -270,7 +271,7 @@ export default function MobileUserDashboard({
       <div className="p-0">
         {/* Mobile Header with Background */}
         <div
-          className="relative mb-6 h-40 overflow-hidden rounded-b-3xl"
+          className="relative mb-6 h-48 overflow-hidden rounded-b-3xl"
           style={{
             marginTop: "-44px",
             marginLeft: "-16px",
@@ -289,9 +290,19 @@ export default function MobileUserDashboard({
           </div>
 
           {/* Header Content - Address Bubble and Search Input */}
-          <div className="relative z-10 flex h-full flex-col items-center justify-center px-4">
-            {/* Address Bubble */}
-            <AddressBubble />
+          <div className="relative z-10 flex h-full flex-col items-center justify-center px-4 pt-8">
+            {/* Top Bar with Notification Bell and Address */}
+            <div className="mb-2 flex w-full max-w-sm items-center justify-between gap-2">
+              {/* Address Bubble */}
+              <div className="flex-1">
+                <AddressBubble />
+              </div>
+
+              {/* Notification Bell (FCM-backed) */}
+              <div className="flex-shrink-0">
+                <NotificationCenter />
+              </div>
+            </div>
 
             {/* Search Input */}
             <div className="w-full max-w-sm">
@@ -548,8 +559,13 @@ export default function MobileUserDashboard({
                 </div>
               </div>
 
-              {/* Right side - Icon-only Sort and Nearby buttons */}
+              {/* Right side - Notification Bell, Nearby, and Filter buttons */}
               <div className="flex flex-shrink-0 items-center gap-2">
+                {/* Notification Bell (FCM-backed) */}
+                <div className="flex items-center">
+                  <NotificationCenter />
+                </div>
+
                 {/* Nearby Button */}
                 <button
                   onClick={handleNearbyClick}
