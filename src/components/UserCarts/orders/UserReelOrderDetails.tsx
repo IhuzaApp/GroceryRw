@@ -116,6 +116,50 @@ export default function UserReelOrderDetails({
     }
   };
 
+  const getFriendlyStatus = (status: string) => {
+    const normalized = (status || "").toLowerCase();
+
+    if (
+      normalized === "waiting_for_confirmation" ||
+      normalized === "pending"
+    ) {
+      return {
+        label: "Waiting to be accepted",
+        description: "Your order is waiting for a shopper to accept it",
+      };
+    }
+
+    if (normalized === "accepted" || normalized === "confirmed") {
+      return {
+        label: "Accepted",
+        description: "A shopper has accepted your order and is preparing it",
+      };
+    }
+
+    if (
+      normalized === "on_the_way" ||
+      normalized === "out_for_delivery" ||
+      normalized === "ready"
+    ) {
+      return {
+        label: "Picked and on the way",
+        description: "Your order has been picked up and is on the way",
+      };
+    }
+
+    if (normalized === "delivered") {
+      return {
+        label: "Delivered to you",
+        description: "Order completed successfully",
+      };
+    }
+
+    return {
+      label: "Ongoing",
+      description: "Your order is being processed",
+    };
+  };
+
   return (
     <>
       {/* Order Tracking Header - Only show on desktop */}
@@ -232,26 +276,21 @@ export default function UserReelOrderDetails({
                   </div>
                 </div>
               ) : (
-                <div className="text-center">
-                  <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {order.status === "on_the_way"
-                      ? "On the Way"
-                      : order.status === "packing"
-                      ? "Packing"
-                      : order.status === "shopping"
-                      ? "Shopping"
-                      : "Pending Assignment"}
-                  </div>
-                  <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    {order.status === "on_the_way"
-                      ? "Heading to your location"
-                      : order.status === "packing"
-                      ? "Preparing for delivery"
-                      : order.status === "shopping"
-                      ? "Picking your items"
-                      : "Waiting for assignment"}
-                  </div>
-                </div>
+                (() => {
+                  const { label, description } = getFriendlyStatus(
+                    order.status
+                  );
+                  return (
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {label}
+                      </div>
+                      <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        {description}
+                      </div>
+                    </div>
+                  );
+                })()
               )}
             </div>
           ) : (
@@ -263,19 +302,21 @@ export default function UserReelOrderDetails({
                 vertical={false}
               >
                 <Steps.Item
-                  title="Awaiting Assignment"
-                  description="Waiting for assignment"
-                />
-                <Steps.Item title="Shopping" description="Picking your items" />
-                <Steps.Item
-                  title="Packing"
-                  description="Preparing for delivery"
+                  title="Waiting to be accepted"
+                  description="Order placed"
                 />
                 <Steps.Item
-                  title="On the way"
-                  description="Heading to your location"
+                  title="Accepted"
+                  description="Shopper accepted your order"
                 />
-                <Steps.Item title="Delivered" description="Enjoy your order!" />
+                <Steps.Item
+                  title="Picked & on the way"
+                  description="On the way for delivery"
+                />
+                <Steps.Item
+                  title="Delivered to you"
+                  description="Order completed"
+                />
               </Steps>
 
               {/* Delivery Proof Image for Desktop */}
