@@ -41,7 +41,7 @@ export default function RootLayout({
               : "px-4 pb-20 pt-6 md:pb-0"
           }`}
           style={
-            isReelsPage
+            isReelsPage || isMessagesPage
               ? {
                   margin: 0,
                   padding: 0,
@@ -57,14 +57,14 @@ export default function RootLayout({
           <div
             className="[&_*]:text-inherit"
             style={
-              isReelsPage || isPlasBusinessPage
+              isReelsPage || isPlasBusinessPage || isMessagesPage
                 ? { height: "100%", width: "100%" }
                 : {}
             }
           >
             {children}
           </div>
-          {!isChatPage && !isReelsPage && <BottomBar />}
+          {!isChatPage && !isReelsPage && !isMessagesPage && <BottomBar />}
         </main>
         {/* AI Chat - Available on all pages except chat pages */}
         {!isChatPage && !isMessagesPage && <AIChatProvider />}

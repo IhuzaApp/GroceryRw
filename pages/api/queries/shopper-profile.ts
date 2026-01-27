@@ -76,11 +76,15 @@ export default async function handler(
       return res.status(500).json({ message: "Internal server error" });
     }
 
+    // Allow fetching by user_id query param or default to session user
+    const { user_id } = req.query;
+    const targetUserId = user_id || session.user.id;
+
     type ShopperProfileResponse = { shoppers: any[] };
     const { shoppers } = await hasuraClient.request<ShopperProfileResponse>(
       GET_SHOPPER_PROFILE,
       {
-        user_id: session.user.id,
+        user_id: targetUserId,
       }
     );
 

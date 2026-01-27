@@ -574,7 +574,7 @@ function MessagesPage() {
   if (loading) {
     return (
       <RootLayout>
-        <div className="flex h-[calc(100vh-200px)] items-center justify-center">
+        <div className="flex h-screen w-full items-center justify-center bg-white dark:bg-gray-900">
           <div className="flex flex-col items-center gap-4">
             <div className="relative">
               <img
@@ -604,7 +604,7 @@ function MessagesPage() {
   if (status !== "authenticated") {
     return (
       <RootLayout>
-        <div className="flex h-[calc(100vh-200px)] items-center justify-center">
+        <div className="flex h-screen w-full items-center justify-center bg-white dark:bg-gray-900">
           <div className="text-center">
             <div className="mb-4 text-6xl">⚠️</div>
             <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
@@ -626,42 +626,44 @@ function MessagesPage() {
   if (conversations.length === 0) {
     return (
       <RootLayout>
-        <div className="mx-auto max-w-7xl p-4">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Messages
-            </h1>
-            <p className="text-gray-500 dark:text-gray-400">
-              Your conversations with shoppers
-            </p>
-          </div>
-          <Panel
-            className="text-center"
-            style={{
-              background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
-            }}
-          >
-            <Placeholder.Graph
-              style={{ height: 200 }}
-              active
-              className="mb-4"
-            />
-            <Placeholder.Paragraph rows={2} />
-            <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-              No conversations yet
-            </h3>
-            <p className="text-gray-500 dark:text-gray-400">
-              You'll see your chat conversations with shoppers here once you
-              place orders.
-            </p>
-            <div className="mt-4">
-              <Link href="/CurrentPendingOrders" passHref>
-                <Button appearance="primary" color="green">
-                  View Your Orders
-                </Button>
-              </Link>
+        <div className="flex h-screen w-full items-center justify-center bg-white p-8 dark:bg-gray-900">
+          <div className="mx-auto w-full max-w-2xl">
+            <div className="mb-6 text-center">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                Messages
+              </h1>
+              <p className="mt-2 text-gray-500 dark:text-gray-400">
+                Your conversations with shoppers
+              </p>
             </div>
-          </Panel>
+            <Panel
+              className="text-center"
+              style={{
+                background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
+              }}
+            >
+              <Placeholder.Graph
+                style={{ height: 200 }}
+                active
+                className="mb-4"
+              />
+              <Placeholder.Paragraph rows={2} />
+              <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+                No conversations yet
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400">
+                You'll see your chat conversations with shoppers here once you
+                place orders.
+              </p>
+              <div className="mt-4">
+                <Link href="/CurrentPendingOrders" passHref>
+                  <Button appearance="primary" color="green">
+                    View Your Orders
+                  </Button>
+                </Link>
+              </div>
+            </Panel>
+          </div>
         </div>
       </RootLayout>
     );
@@ -672,16 +674,14 @@ function MessagesPage() {
     return (
       <AuthGuard requireAuth={true}>
         <RootLayout>
-          <div className="h-[calc(100vh-160px)] md:ml-16 md:h-[calc(100vh-100px)]">
-            <div className="max-w-8xl container mx-auto h-full">
-              <DesktopMessagePage
-                conversations={conversations}
-                orders={orders}
-                loading={loading}
-                onConversationSelect={handleConversationSelect}
-                selectedOrderId={selectedOrderId}
-              />
-            </div>
+          <div className="h-screen w-full overflow-hidden bg-white dark:bg-gray-900">
+            <DesktopMessagePage
+              conversations={conversations}
+              orders={orders}
+              loading={loading}
+              onConversationSelect={handleConversationSelect}
+              selectedOrderId={selectedOrderId}
+            />
           </div>
         </RootLayout>
       </AuthGuard>
@@ -692,7 +692,7 @@ function MessagesPage() {
   return (
     <AuthGuard requireAuth={true}>
       <RootLayout>
-        <div className="fixed inset-0 md:relative md:inset-auto">
+        <div className="h-screen w-full overflow-hidden bg-white dark:bg-gray-900">
           <MobileMessagePage
             conversations={conversations}
             orders={orders}
@@ -708,21 +708,21 @@ function MessagesPage() {
             isDrawerOpen={isDrawerOpen}
             onCloseDrawer={() => setIsDrawerOpen(false)}
           />
+          {/* Customer Chat Drawer for Mobile */}
+          {selectedOrder && selectedOrder.shopper && (
+            <CustomerChatDrawer
+              orderId={selectedOrder.id}
+              shopper={{
+                id: selectedOrder.shopper.id,
+                name: selectedOrder.shopper.name,
+                avatar: selectedOrder.shopper.avatar,
+                phone: selectedOrder.shopper.phone,
+              }}
+              isOpen={isDrawerOpen}
+              onClose={() => setIsDrawerOpen(false)}
+            />
+          )}
         </div>
-        {/* Customer Chat Drawer for Mobile */}
-        {selectedOrder && selectedOrder.shopper && (
-          <CustomerChatDrawer
-            orderId={selectedOrder.id}
-            shopper={{
-              id: selectedOrder.shopper.id,
-              name: selectedOrder.shopper.name,
-              avatar: selectedOrder.shopper.avatar,
-              phone: selectedOrder.shopper.phone,
-            }}
-            isOpen={isDrawerOpen}
-            onClose={() => setIsDrawerOpen(false)}
-          />
-        )}
       </RootLayout>
     </AuthGuard>
   );
