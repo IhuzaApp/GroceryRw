@@ -1,8 +1,9 @@
 import React, { useEffect } from "react";
 import Image from "next/image";
-import { Input, InputGroup, Button, Panel, Steps, Message } from "rsuite";
+import { Input, InputGroup, Button, Panel, Steps, toaster } from "rsuite";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/router";
 import { formatCurrency } from "../../../lib/formatCurrency";
 import EstimatedDeliveryTime from "./EstimatedDeliveryTime";
 import { useTheme } from "../../../context/ThemeContext";
@@ -17,21 +18,17 @@ function formatOrderID(id?: string | number): string {
 interface UserOrderDetailsProps {
   order: any;
   isMobile?: boolean;
-  combinedOrders?: any[];
 }
 export default function UserOrderDetails({
   order,
   isMobile = false,
-  combinedOrders: propCombinedOrders,
 }: UserOrderDetailsProps) {
+  const router = useRouter();
   const { theme } = useTheme();
   const [feedbackModal, setFeedbackModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [hasExistingRating, setHasExistingRating] = useState(false);
-  const [combinedOrders, setCombinedOrders] = useState<any[]>(
-    propCombinedOrders || []
-  );
 
   // Check for existing rating
   useEffect(() => {
@@ -54,49 +51,17 @@ export default function UserOrderDetails({
     }
   }, [order?.id]);
 
-  // Update combinedOrders when prop changes or fetch if not provided
-  useEffect(() => {
-    const fetchCombinedOrders = async () => {
-      // If combinedOrders prop is provided and not empty, use it
-      if (propCombinedOrders && propCombinedOrders.length > 0) {
-        setCombinedOrders(propCombinedOrders);
-        return;
-      }
 
-      if (!order) {
-        setCombinedOrders([]);
-        return;
-      }
+  // Get shopper details from order.Shoppers
+  const shopper = order.Shoppers?.shopper;
+  const shopperPhone = shopper?.phone_number || order.Shoppers?.phone;
+  const shopperName = shopper?.full_name || order.Shoppers?.name || "Plaser";
+  const shopperProfilePhoto = shopper?.profile_photo || order.Shoppers?.profile_picture;
+  const hasShopper = order.Shoppers && (shopper || order.shopper_id);
 
-      if (!order?.combinedOrderId) {
-        setCombinedOrders([order]);
-        return;
-      }
-
-      // Only fetch if prop wasn't provided
-      try {
-        const response = await fetch(
-          `/api/queries/combined-orders?combined_order_id=${order.combinedOrderId}`
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setCombinedOrders(data.orders || [order]);
-        } else {
-          console.error("Failed to fetch combined orders:", response.status);
-          setCombinedOrders([order]);
-        }
-      } catch (error) {
-        console.error("Error fetching combined orders:", error);
-        setCombinedOrders([order]);
-      }
-    };
-
-    fetchCombinedOrders();
-  }, [order, order?.combinedOrderId, propCombinedOrders]);
-
-  const getStatusStep = (status: string, assignedTo: any) => {
+  const getStatusStep = (status: string, hasShopper: boolean) => {
     // If no Plaser is assigned yet
-    if (!assignedTo) {
+    if (!hasShopper) {
       return 0;
     }
     // Step indices shifted by +1 due to the new initial step
@@ -112,6 +77,78 @@ export default function UserOrderDetails({
       default:
         return 1;
     }
+  };
+
+  // Safely calculate total for an array of order items
+  const getOrderItemsTotal = (orderItems: any[] | undefined | null): number => {
+    if (!Array.isArray(orderItems)) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("[UserOrderDetails] getOrderItemsTotal called with non-array:", orderItems);
+      }
+      return 0;
+    }
+
+    const total = orderItems.reduce((sum: number, item: any, index: number) => {
+      if (!item) {
+        if (process.env.NODE_ENV === "development") {
+          console.log("[UserOrderDetails] Skipping falsy item at index", index, item);
+        }
+        return sum;
+      }
+
+      const product = item.product;
+      if (!product) {
+        if (process.env.NODE_ENV === "development") {
+          console.log("[UserOrderDetails] Item without product at index", index, item);
+        }
+        return sum;
+      }
+
+      const rawPrice =
+        product.final_price ??
+        item.price ??
+        product.price ??
+        "0";
+      const price = parseFloat(String(rawPrice));
+
+      const quantity =
+        typeof item.quantity === "number"
+          ? item.quantity
+          : parseFloat(String(item.quantity ?? "0")) || 0;
+
+      if (process.env.NODE_ENV === "development") {
+        console.log("[UserOrderDetails] Item calc", {
+          index,
+          productId: product.id,
+          rawPrice,
+          price,
+          quantity,
+          lineTotal: price * quantity,
+        });
+      }
+
+      if (Number.isNaN(price) || Number.isNaN(quantity)) {
+        if (process.env.NODE_ENV === "development") {
+          console.log("[UserOrderDetails] Skipping NaN price/quantity for item at index", index, {
+            rawPrice,
+            price,
+            quantity,
+          });
+        }
+        return sum;
+      }
+
+      return sum + price * quantity;
+    }, 0);
+
+    if (process.env.NODE_ENV === "development") {
+      console.log("[UserOrderDetails] getOrderItemsTotal result:", {
+        count: orderItems.length,
+        total,
+      });
+    }
+
+    return total;
   };
 
   const handleFeedbackSubmit = async (
@@ -134,7 +171,7 @@ export default function UserOrderDetails({
         },
         body: JSON.stringify({
           order_id: order.id,
-          shopper_id: order.assignedTo.id,
+          shopper_id: order.Shoppers?.id || order.shopper_id,
           rating: ratings.rating.toString(),
           review: comment,
           delivery_experience: ratings.delivery_experience.toString(),
@@ -151,7 +188,10 @@ export default function UserOrderDetails({
       // Close modal and update state
       setFeedbackModal(false);
       setHasExistingRating(true);
-      Message.success("Thank you for your feedback!");
+      toaster.push("Thank you for your feedback!", {
+        placement: "topCenter",
+        duration: 4000,
+      });
     } catch (error) {
       setSubmitError(
         error instanceof Error ? error.message : "Failed to submit feedback"
@@ -181,19 +221,7 @@ export default function UserOrderDetails({
             </svg>
           </Link>
           <h1 className="text-2xl font-bold">
-            {order?.combinedOrderId && combinedOrders.length > 1 ? (
-              <>
-                Orders{" "}
-                {combinedOrders.map((ord: any, idx: number) => (
-                  <span key={ord.id}>
-                    #{formatOrderID(ord.OrderID)}
-                    {idx < combinedOrders.length - 1 ? " & " : ""}
-                  </span>
-                ))}
-              </>
-            ) : (
-              <>Order #{formatOrderID(order.OrderID)}</>
-            )}
+            Order #{formatOrderID(order.OrderID)}
           </h1>
           <span className="ml-2 text-gray-500">Placed on {order.placedAt}</span>
         </div>
@@ -232,15 +260,15 @@ export default function UserOrderDetails({
                     </div>
                   )}
                 </div>
-              ) : order.assignedTo || order.shopper_id ? (
+              ) : hasShopper ? (
                 // Show shopper details when assigned (regardless of status) - Mobile enhanced view
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-blue-100 dark:bg-blue-900/30">
-                      {order.assignedTo?.profile_photo ? (
+                      {shopperProfilePhoto ? (
                         <Image
-                          src={order.assignedTo.profile_photo}
-                          alt={order.assignedTo.name || "Plaser"}
+                          src={shopperProfilePhoto}
+                          alt={shopperName}
                           width={64}
                           height={64}
                           className="h-full w-full object-cover"
@@ -263,39 +291,18 @@ export default function UserOrderDetails({
                     </div>
                     <div className="flex-1">
                       <div className="text-base font-semibold text-gray-900 dark:text-white">
-                        {order.assignedTo?.name || "Shopper Assigned"}
+                        {shopperName}
                       </div>
-                      {order.assignedTo?.phone && (
+                      {shopperPhone && (
                         <div className="mt-0.5 text-sm text-gray-600 dark:text-gray-400">
-                          {order.assignedTo.phone}
+                          {shopperPhone}
                         </div>
                       )}
-                      {order.assignedTo?.rating !== undefined &&
-                        order.assignedTo?.rating !== null && (
-                          <div className="mt-1 flex items-center gap-1">
-                            <svg
-                              className="h-4 w-4 text-yellow-400"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                              {Number(order.assignedTo.rating).toFixed(1)}
-                            </span>
-                            {order.assignedTo.orders_aggregate?.aggregate
-                              ?.count !== undefined && (
-                              <span className="text-xs text-gray-500 dark:text-gray-400">
-                                •{" "}
-                                {
-                                  order.assignedTo.orders_aggregate.aggregate
-                                    .count
-                                }{" "}
-                                orders
-                              </span>
-                            )}
-                          </div>
-                        )}
+                      {order.Shoppers?.email && (
+                        <div className="mt-0.5 text-sm text-gray-600 dark:text-gray-400">
+                          {order.Shoppers.email}
+                        </div>
+                      )}
                     </div>
                   </div>
                   {order.status !== "delivered" && (
@@ -304,6 +311,11 @@ export default function UserOrderDetails({
                         appearance="primary"
                         block
                         className="bg-green-500 text-white"
+                        onClick={() => {
+                          if (shopperPhone) {
+                            window.location.href = `tel:${shopperPhone}`;
+                          }
+                        }}
                       >
                         <svg
                           viewBox="0 0 24 24"
@@ -320,6 +332,11 @@ export default function UserOrderDetails({
                         appearance="ghost"
                         block
                         className="border border-gray-300 dark:border-gray-600"
+                        onClick={() => {
+                          if (order?.id) {
+                            router.push(`/Messages?orderId=${order.id}`);
+                          }
+                        }}
                       >
                         <svg
                           viewBox="0 0 24 24"
@@ -362,7 +379,7 @@ export default function UserOrderDetails({
             // Desktop: Full steps display
             <div className="custom-steps-wrapper">
               <Steps
-                current={getStatusStep(order.status, order.assignedTo)}
+                current={getStatusStep(order.status, hasShopper)}
                 className="custom-steps"
                 vertical={false}
               >
@@ -474,122 +491,94 @@ export default function UserOrderDetails({
           <Panel shaded bordered className="mb-6">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-bold">Order Details</h2>
-              {combinedOrders.length > 1 && (
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {combinedOrders.length} shops •{" "}
-                  {combinedOrders.reduce(
-                    (sum: number, ord: any) =>
-                      sum + (ord.Order_Items?.length || 0),
-                    0
-                  )}{" "}
-                  items
-                </span>
-              )}
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {order.Order_Items?.length || 0} items
+              </span>
             </div>
             <div className="space-y-6">
-              {combinedOrders.map((ord: any, orderIndex: number) => (
-                <div
-                  key={ord.id || orderIndex}
-                  className={
-                    orderIndex > 0
-                      ? "border-t border-gray-200 pt-6 dark:border-gray-700"
-                      : ""
-                  }
-                >
-                  {/* Shop Header for Combined Orders */}
-                  {combinedOrders.length > 1 && (
-                    <div className="mb-4 flex items-center gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-800/50">
-                      {ord.shop?.image && (
+              <div>
+                {/* Shop Header (single order) */}
+                {order.shop && (
+                  <div className="mb-4 flex items-center gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-800/50">
+                    {order.shop.image && (
+                      <Image
+                        src={order.shop.image}
+                        alt={order.shop.name}
+                        width={48}
+                        height={48}
+                        className="rounded-lg object-cover"
+                      />
+                    )}
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                        {order.shop.name}
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Order #{formatOrderID(order.OrderID)} •{" "}
+                        {order.Order_Items?.length || 0} items
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Subtotal
+                      </p>
+                      <p className="font-bold text-gray-900 dark:text-white">
+                        {formatCurrency(getOrderItemsTotal(order.Order_Items))}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Order Items */}
+                <div className="space-y-4">
+                  {order.Order_Items?.map((item: any, index: number) => (
+                    <div
+                      key={item.id || index}
+                      className="flex items-center gap-4 border-b pb-4 last:border-0"
+                    >
+                      <div className="h-16 w-16 flex-shrink-0">
                         <Image
-                          src={ord.shop.image}
-                          alt={ord.shop.name}
-                          width={48}
-                          height={48}
-                          className="rounded-lg object-cover"
+                          src={
+                            (item.product?.ProductName?.image ||
+                              item.product?.image) ??
+                            "/images/groceryPlaceholder.png"
+                          }
+                          alt={item.product?.ProductName?.name || "Product"}
+                          width={60}
+                          height={60}
+                          className="rounded-md"
                         />
-                      )}
-                      <div className="flex-1">
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                          {ord.shop?.name || "Unknown Shop"}
-                        </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Order #{formatOrderID(ord.OrderID)} •{" "}
-                          {ord.Order_Items?.length || 0} items
-                        </p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Subtotal
-                        </p>
-                        <p className="font-bold text-gray-900 dark:text-white">
-                          {formatCurrency(
-                            ord.Order_Items?.reduce(
-                              (sum: number, item: any) => {
-                                return (
-                                  sum +
-                                  parseFloat(item.product.final_price) *
-                                    item.quantity
-                                );
-                              },
-                              0
-                            ) || 0
+                      <div className="flex-grow">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-medium">
+                            {item.product?.ProductName?.name || "Product"}
+                          </h3>
+                          {order.shop?.name && (
+                            <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                              {order.shop.name}
+                            </span>
                           )}
-                        </p>
+                        </div>
+                        <div className="mt-1 flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                          <span>
+                            {item.quantity} ×{" "}
+                            {formatCurrency(
+                              parseFloat(item.product?.final_price || "0")
+                            )}
+                          </span>
+                          <span className="font-bold">
+                            {formatCurrency(
+                              parseFloat(item.product?.final_price || "0") *
+                                item.quantity
+                            )}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  )}
-
-                  {/* Order Items */}
-                  <div className="space-y-4">
-                    {ord.Order_Items?.map((item: any, index: number) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-4 border-b pb-4 last:border-0"
-                      >
-                        <div className="h-16 w-16 flex-shrink-0">
-                          <Image
-                            src={
-                              (item.product.ProductName?.image ||
-                                item.product.image) ??
-                              "/images/groceryPlaceholder.png"
-                            }
-                            alt={item.product.ProductName?.name || "Product"}
-                            width={60}
-                            height={60}
-                            className="rounded-md"
-                          />
-                        </div>
-                        <div className="flex-grow">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-medium">
-                              {item.product.ProductName?.name || "Product"}
-                            </h3>
-                            {ord.shop?.name && (
-                              <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                                {ord.shop.name}
-                              </span>
-                            )}
-                          </div>
-                          <div className="mt-1 flex justify-between text-sm text-gray-600 dark:text-gray-400">
-                            <span>
-                              {item.quantity} ×{" "}
-                              {formatCurrency(
-                                parseFloat(item.product.final_price)
-                              )}
-                            </span>
-                            <span className="font-bold">
-                              {formatCurrency(
-                                parseFloat(item.product.final_price) *
-                                  item.quantity
-                              )}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    )) ?? null}
-                  </div>
+                  )) ?? null}
                 </div>
-              ))}
+              </div>
             </div>
 
             <div className="mt-6 border-t pt-4">
@@ -599,96 +588,32 @@ export default function UserOrderDetails({
                   Subtotal
                 </span>
                 <span className="font-medium">
-                  {formatCurrency(
-                    combinedOrders.reduce((orderSum: number, ord: any) => {
-                      return (
-                        orderSum +
-                        (ord.Order_Items?.reduce((sum: number, item: any) => {
-                          return (
-                            sum +
-                            parseFloat(item.product.final_price) * item.quantity
-                          );
-                        }, 0) || 0)
-                      );
-                    }, 0)
-                  )}
+                  {formatCurrency(getOrderItemsTotal(order.Order_Items))}
                 </span>
               </div>
 
-              {/* Service Fee with breakdown for combined orders */}
+              {/* Service Fee */}
               <div className="mb-2">
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">
                     Service Fee
-                    {combinedOrders.length > 1 && (
-                      <span className="ml-1 text-xs text-gray-500">
-                        ({combinedOrders.length} shops)
-                      </span>
-                    )}
                   </span>
                   <span className="font-medium">
-                    {formatCurrency(
-                      combinedOrders.reduce(
-                        (sum: number, ord: any) =>
-                          sum + (Number(ord.serviceFee) || 0),
-                        0
-                      )
-                    )}
+                    {formatCurrency(Number(order.serviceFee) || 0)}
                   </span>
                 </div>
-                {combinedOrders.length > 1 && (
-                  <div className="ml-4 mt-1 space-y-1">
-                    {combinedOrders.map((ord: any, idx: number) => (
-                      <div
-                        key={ord.id || idx}
-                        className="flex justify-between text-xs text-gray-500 dark:text-gray-400"
-                      >
-                        <span>• {ord.shop?.name || `Shop ${idx + 1}`}</span>
-                        <span>
-                          {formatCurrency(Number(ord.serviceFee) || 0)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
 
-              {/* Delivery Fee with breakdown for combined orders */}
+              {/* Delivery Fee */}
               <div className="mb-2">
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">
                     Delivery Fee
-                    {combinedOrders.length > 1 && (
-                      <span className="ml-1 text-xs text-gray-500">
-                        ({combinedOrders.length} shops)
-                      </span>
-                    )}
                   </span>
                   <span className="font-medium">
-                    {formatCurrency(
-                      combinedOrders.reduce(
-                        (sum: number, ord: any) =>
-                          sum + (Number(ord.deliveryFee) || 0),
-                        0
-                      )
-                    )}
+                    {formatCurrency(Number(order.deliveryFee) || 0)}
                   </span>
                 </div>
-                {combinedOrders.length > 1 && (
-                  <div className="ml-4 mt-1 space-y-1">
-                    {combinedOrders.map((ord: any, idx: number) => (
-                      <div
-                        key={ord.id || idx}
-                        className="flex justify-between text-xs text-gray-500 dark:text-gray-400"
-                      >
-                        <span>• {ord.shop?.name || `Shop ${idx + 1}`}</span>
-                        <span>
-                          {formatCurrency(Number(ord.deliveryFee) || 0)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
 
               {/* Total */}
@@ -696,21 +621,9 @@ export default function UserOrderDetails({
                 <span>Total</span>
                 <span>
                   {formatCurrency(
-                    combinedOrders.reduce((orderSum: number, ord: any) => {
-                      const itemsTotal =
-                        ord.Order_Items?.reduce((sum: number, item: any) => {
-                          return (
-                            sum +
-                            parseFloat(item.product.final_price) * item.quantity
-                          );
-                        }, 0) || 0;
-                      return (
-                        orderSum +
-                        itemsTotal +
-                        (Number(ord.serviceFee) || 0) +
-                        (Number(ord.deliveryFee) || 0)
-                      );
-                    }, 0)
+                    getOrderItemsTotal(order.Order_Items) +
+                      (Number(order.serviceFee) || 0) +
+                      (Number(order.deliveryFee) || 0)
                   )}
                 </span>
               </div>
@@ -789,16 +702,16 @@ export default function UserOrderDetails({
               </p>
             </div>
 
-            {order.assignedTo || order.shopper_id ? (
+            {hasShopper ? (
               <div className="p-4">
                 {/* Profile Icon and Info Row */}
                 <div className="flex items-center gap-3">
                   {/* Profile Icon */}
                   <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-400 to-green-600 ring-2 ring-green-100 dark:ring-green-900/30">
-                    {order.assignedTo?.profile_photo ? (
+                    {shopperProfilePhoto ? (
                       <Image
-                        src={order.assignedTo.profile_photo}
-                        alt={order.assignedTo?.name || "Plaser"}
+                        src={shopperProfilePhoto}
+                        alt={shopperName}
                         width={56}
                         height={56}
                         className="h-full w-full object-cover"
@@ -820,17 +733,17 @@ export default function UserOrderDetails({
                     )}
                   </div>
 
-                  {/* Name, Phone, Rating, Orders - Horizontal Layout */}
+                  {/* Name, Phone, Email - Horizontal Layout */}
                   <div className="flex flex-1 flex-col gap-1.5">
                     {/* Name */}
                     <h3 className="text-base font-bold text-gray-900 dark:text-white">
-                      {order.assignedTo?.name || "Plaser Assigned"}
+                      {shopperName}
                     </h3>
 
-                    {/* Phone, Rating, Orders in a row */}
+                    {/* Phone, Email in a row */}
                     <div className="flex flex-wrap items-center gap-3">
                       {/* Phone */}
-                      {order.assignedTo?.phone && (
+                      {shopperPhone && (
                         <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
                           <svg
                             className="h-3.5 w-3.5 shrink-0"
@@ -845,45 +758,13 @@ export default function UserOrderDetails({
                               d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
                             />
                           </svg>
-                          <span className="text-xs">
-                            {order.assignedTo.phone}
-                          </span>
+                          <span className="text-xs">{shopperPhone}</span>
                         </div>
                       )}
 
-                      {/* Rating */}
-                      {order.assignedTo?.rating !== undefined &&
-                        order.assignedTo?.rating !== null && (
-                          <div className="flex items-center gap-1">
-                            <div className="flex items-center gap-0.5">
-                              {[...Array(5)].map((_: any, i: number) => (
-                                <svg
-                                  key={i}
-                                  className={`h-3 w-3 ${
-                                    i <
-                                    Math.floor(
-                                      Number(order.assignedTo.rating) || 0
-                                    )
-                                      ? "fill-yellow-400 text-yellow-400"
-                                      : "fill-gray-300 text-gray-300 dark:fill-gray-600 dark:text-gray-600"
-                                  }`}
-                                  viewBox="0 0 20 20"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                              ))}
-                            </div>
-                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                              {Number(order.assignedTo.rating).toFixed(1)}
-                            </span>
-                          </div>
-                        )}
-
-                      {/* Orders Count */}
-                      {order.assignedTo?.orders_aggregate?.aggregate?.count !==
-                        undefined && (
-                        <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+                      {/* Email */}
+                      {order.Shoppers?.email && (
+                        <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
                           <svg
                             className="h-3.5 w-3.5 shrink-0"
                             fill="none"
@@ -894,13 +775,10 @@ export default function UserOrderDetails({
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth={2}
-                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                             />
                           </svg>
-                          <span className="text-xs">
-                            {order.assignedTo.orders_aggregate.aggregate.count}{" "}
-                            orders
-                          </span>
+                          <span className="text-xs">{order.Shoppers.email}</span>
                         </div>
                       )}
                     </div>
@@ -911,15 +789,13 @@ export default function UserOrderDetails({
                 <div className="mt-4 flex gap-2">
                   <button
                     onClick={() => {
-                      if (order.assignedTo?.phone) {
-                        window.location.href = `tel:${order.assignedTo.phone}`;
+                      if (shopperPhone) {
+                        window.location.href = `tel:${shopperPhone}`;
                       }
                     }}
-                    disabled={
-                      order.status === "delivered" || !order.assignedTo?.phone
-                    }
+                    disabled={order.status === "delivered" || !shopperPhone}
                     className={`flex flex-1 items-center justify-center gap-1.5 !rounded-md px-3 py-2 text-xs font-semibold !text-white shadow-md transition-all duration-200 ${
-                      order.status === "delivered" || !order.assignedTo?.phone
+                      order.status === "delivered" || !shopperPhone
                         ? "cursor-not-allowed bg-gray-400 opacity-50"
                         : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-[0.98]"
                     }`}
@@ -937,6 +813,11 @@ export default function UserOrderDetails({
                   </button>
                   <button
                     disabled={order.status === "delivered"}
+                    onClick={() => {
+                      if (order?.id && order.status !== "delivered") {
+                        router.push(`/Messages?orderId=${order.id}`);
+                      }
+                    }}
                     className={`flex flex-1 items-center justify-center gap-1.5 !rounded-md border-2 px-3 py-2 text-xs font-semibold transition-all duration-200 ${
                       order.status === "delivered"
                         ? "cursor-not-allowed border-gray-300 bg-gray-50 text-gray-400 opacity-50 dark:border-gray-700 dark:bg-gray-800"
@@ -956,105 +837,95 @@ export default function UserOrderDetails({
                   </button>
                 </div>
 
-                {/* Recent Reviews Section */}
-                {order.assignedTo?.recentReviews &&
-                  order.assignedTo.recentReviews.length > 0 && (
-                    <div className="mt-8 w-full border-t border-gray-200 pt-6 dark:border-gray-700">
-                      <div className="mb-5 flex items-center justify-between">
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                          Recent Reviews
-                        </h3>
-                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                          {order.assignedTo.recentReviews.length} review
-                          {order.assignedTo.recentReviews.length !== 1
-                            ? "s"
-                            : ""}
-                        </span>
-                      </div>
-                      <div
-                        className="max-h-[280px] space-y-3 overflow-y-auto pr-2"
-                        style={{
-                          scrollbarWidth: "thin",
-                          scrollbarColor: "#cbd5e1 #f1f5f9",
-                        }}
-                      >
-                        {order.assignedTo.recentReviews.map((review: any) => (
-                          <div
-                            key={review.id}
-                            className="group rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-green-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-600"
-                          >
-                            <div className="mb-3 flex items-start justify-between gap-3">
-                              <div className="flex items-center gap-3">
-                                <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-100 to-green-200 ring-2 ring-green-50 dark:from-green-900/30 dark:to-green-800/30 dark:ring-green-900/20">
-                                  {review.User?.profile_picture ? (
-                                    <Image
-                                      src={review.User.profile_picture}
-                                      alt={review.User.name || "Customer"}
-                                      width={32}
-                                      height={32}
-                                      className="h-full w-full object-cover"
-                                    />
-                                  ) : (
-                                    <svg
-                                      className="h-5 w-5 text-green-600 dark:text-green-400"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                                      />
-                                    </svg>
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <p className="text-sm font-semibold text-gray-400 dark:text-gray-400">
-                                    {review.User?.name || "Anonymous Customer"}
-                                  </p>
-                                  {review.reviewed_at && (
-                                    <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-400">
-                                      {new Date(
-                                        review.reviewed_at
-                                      ).toLocaleDateString("en-US", {
-                                        month: "long",
-                                        day: "numeric",
-                                        year: "numeric",
-                                      })}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex shrink-0 items-center gap-0.5 rounded-lg bg-yellow-50 px-2 py-1 dark:bg-yellow-900/20">
-                                {[...Array(5)].map((_, i) => (
-                                  <svg
-                                    key={i}
-                                    className={`h-4 w-4 transition-all ${
-                                      i < (review.rating || 0)
-                                        ? "fill-yellow-400 text-yellow-400"
-                                        : "fill-gray-200 text-gray-200 dark:fill-gray-700 dark:text-gray-700"
-                                    }`}
-                                    viewBox="0 0 20 20"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                  >
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                  </svg>
-                                ))}
-                                <span className="ml-1.5 text-xs font-semibold text-yellow-700 dark:text-yellow-400">
-                                  {review.rating || 0}
-                                </span>
-                              </div>
-                            </div>
-                            <p className="text-left text-sm leading-relaxed text-black dark:text-white">
-                              {review.review}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
+                {/* Ratings Section - Show ratings from order.Shoppers.Ratings if available */}
+                {order.Shoppers?.Ratings && order.Shoppers.Ratings.length > 0 && (
+                  <div className="mt-8 w-full border-t border-gray-200 pt-6 dark:border-gray-700">
+                    <div className="mb-5 flex items-center justify-between">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                        Ratings & Reviews
+                      </h3>
+                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        {order.Shoppers.Ratings.length} review
+                        {order.Shoppers.Ratings.length !== 1 ? "s" : ""}
+                      </span>
                     </div>
-                  )}
+                    <div
+                      className="max-h-[280px] space-y-3 overflow-y-auto pr-2"
+                      style={{
+                        scrollbarWidth: "thin",
+                        scrollbarColor: "#cbd5e1 #f1f5f9",
+                      }}
+                    >
+                      {order.Shoppers.Ratings.map((rating: any) => (
+                        <div
+                          key={rating.id}
+                          className="group rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-green-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-600"
+                        >
+                          <div className="mb-3 flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              {rating.reviewed_at && (
+                                <p className="text-xs text-gray-400 dark:text-gray-400">
+                                  {new Date(
+                                    rating.reviewed_at
+                                  ).toLocaleDateString("en-US", {
+                                    month: "long",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  })}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex shrink-0 items-center gap-0.5 rounded-lg bg-yellow-50 px-2 py-1 dark:bg-yellow-900/20">
+                              {[...Array(5)].map((_, i) => (
+                                <svg
+                                  key={i}
+                                  className={`h-4 w-4 transition-all ${
+                                    i < Number(rating.rating || 0)
+                                      ? "fill-yellow-400 text-yellow-400"
+                                      : "fill-gray-200 text-gray-200 dark:fill-gray-700 dark:text-gray-700"
+                                  }`}
+                                  viewBox="0 0 20 20"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                              ))}
+                              <span className="ml-1.5 text-xs font-semibold text-yellow-700 dark:text-yellow-400">
+                                {Number(rating.rating || 0).toFixed(1)}
+                              </span>
+                            </div>
+                          </div>
+                          {rating.review && (
+                            <p className="text-left text-sm leading-relaxed text-black dark:text-white">
+                              {rating.review}
+                            </p>
+                          )}
+                          {(rating.packaging_quality ||
+                            rating.delivery_experience ||
+                            rating.professionalism) && (
+                            <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                              {rating.packaging_quality && (
+                                <span className="rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                                  Packaging: {Number(rating.packaging_quality).toFixed(1)}
+                                </span>
+                              )}
+                              {rating.delivery_experience && (
+                                <span className="rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                                  Delivery: {Number(rating.delivery_experience).toFixed(1)}
+                                </span>
+                              )}
+                              {rating.professionalism && (
+                                <span className="rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                                  Professionalism: {Number(rating.professionalism).toFixed(1)}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="p-6 text-center">

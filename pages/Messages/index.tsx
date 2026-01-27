@@ -112,6 +112,18 @@ function MessagesPage() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  // Handle orderId query parameter to auto-select conversation (no auto-creation)
+  useEffect(() => {
+    const { orderId } = router.query;
+    if (orderId && typeof orderId === "string") {
+      setSelectedOrderId(orderId);
+      // If mobile, navigate to the specific order chat page that handles creation safely
+      if (isMobile) {
+        router.push(`/Messages/${orderId}`);
+      }
+    }
+  }, [router.query, isMobile]);
+
   // Fetch conversations and their associated orders
   useEffect(() => {
     // Only fetch if user is authenticated
