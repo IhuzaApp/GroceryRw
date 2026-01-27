@@ -496,7 +496,7 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
         >
           {/* Category Tabs */}
           <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm dark:border-gray-700 dark:bg-transparent sm:bg-white sm:dark:bg-gray-800">
-            <div className="flex gap-2 overflow-x-auto px-4 py-3.5 scrollbar-hide sm:space-x-1 sm:py-3">
+            <div className="scrollbar-hide flex gap-2 overflow-x-auto px-4 py-3.5 sm:space-x-1 sm:py-3">
               {categories.map((category) => {
                 const isPromo = category.startsWith("Promo: ");
                 const promoType = isPromo
@@ -511,7 +511,7 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
                       selectedCategory === category
                         ? isPromo
                           ? getPromoButtonStyle(promoType, true)
-                          : "bg-gradient-to-r from-green-500 to-emerald-500 !text-white shadow-lg shadow-green-500/30 scale-105"
+                          : "scale-105 bg-gradient-to-r from-green-500 to-emerald-500 !text-white shadow-lg shadow-green-500/30"
                         : isPromo
                         ? getPromoButtonStyle(promoType, false)
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"

@@ -119,10 +119,7 @@ export default function UserReelOrderDetails({
   const getFriendlyStatus = (status: string) => {
     const normalized = (status || "").toLowerCase();
 
-    if (
-      normalized === "waiting_for_confirmation" ||
-      normalized === "pending"
-    ) {
+    if (normalized === "waiting_for_confirmation" || normalized === "pending") {
       return {
         label: "Waiting to be accepted",
         description: "Your order is waiting for a shopper to accept it",

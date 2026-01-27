@@ -51,12 +51,12 @@ export default function UserOrderDetails({
     }
   }, [order?.id]);
 
-
   // Get shopper details from order.Shoppers
   const shopper = order.Shoppers?.shopper;
   const shopperPhone = shopper?.phone_number || order.Shoppers?.phone;
   const shopperName = shopper?.full_name || order.Shoppers?.name || "Plaser";
-  const shopperProfilePhoto = shopper?.profile_photo || order.Shoppers?.profile_picture;
+  const shopperProfilePhoto =
+    shopper?.profile_photo || order.Shoppers?.profile_picture;
   const hasShopper = order.Shoppers && (shopper || order.shopper_id);
 
   const getStatusStep = (status: string, hasShopper: boolean) => {
@@ -83,7 +83,10 @@ export default function UserOrderDetails({
   const getOrderItemsTotal = (orderItems: any[] | undefined | null): number => {
     if (!Array.isArray(orderItems)) {
       if (process.env.NODE_ENV === "development") {
-        console.log("[UserOrderDetails] getOrderItemsTotal called with non-array:", orderItems);
+        console.log(
+          "[UserOrderDetails] getOrderItemsTotal called with non-array:",
+          orderItems
+        );
       }
       return 0;
     }
@@ -91,7 +94,11 @@ export default function UserOrderDetails({
     const total = orderItems.reduce((sum: number, item: any, index: number) => {
       if (!item) {
         if (process.env.NODE_ENV === "development") {
-          console.log("[UserOrderDetails] Skipping falsy item at index", index, item);
+          console.log(
+            "[UserOrderDetails] Skipping falsy item at index",
+            index,
+            item
+          );
         }
         return sum;
       }
@@ -99,16 +106,17 @@ export default function UserOrderDetails({
       const product = item.product;
       if (!product) {
         if (process.env.NODE_ENV === "development") {
-          console.log("[UserOrderDetails] Item without product at index", index, item);
+          console.log(
+            "[UserOrderDetails] Item without product at index",
+            index,
+            item
+          );
         }
         return sum;
       }
 
       const rawPrice =
-        product.final_price ??
-        item.price ??
-        product.price ??
-        "0";
+        product.final_price ?? item.price ?? product.price ?? "0";
       const price = parseFloat(String(rawPrice));
 
       const quantity =
@@ -129,11 +137,15 @@ export default function UserOrderDetails({
 
       if (Number.isNaN(price) || Number.isNaN(quantity)) {
         if (process.env.NODE_ENV === "development") {
-          console.log("[UserOrderDetails] Skipping NaN price/quantity for item at index", index, {
-            rawPrice,
-            price,
-            quantity,
-          });
+          console.log(
+            "[UserOrderDetails] Skipping NaN price/quantity for item at index",
+            index,
+            {
+              rawPrice,
+              price,
+              quantity,
+            }
+          );
         }
         return sum;
       }
@@ -755,7 +767,9 @@ export default function UserOrderDetails({
                               d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                             />
                           </svg>
-                          <span className="text-xs">{order.Shoppers.email}</span>
+                          <span className="text-xs">
+                            {order.Shoppers.email}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -883,17 +897,22 @@ export default function UserOrderDetails({
                             <div className="mt-2 flex flex-wrap gap-2 text-xs">
                               {rating.packaging_quality && (
                                 <span className="rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
-                                  Packaging: {Number(rating.packaging_quality).toFixed(1)}
+                                  Packaging:{" "}
+                                  {Number(rating.packaging_quality).toFixed(1)}
                                 </span>
                               )}
                               {rating.delivery_experience && (
                                 <span className="rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
-                                  Delivery: {Number(rating.delivery_experience).toFixed(1)}
+                                  Delivery:{" "}
+                                  {Number(rating.delivery_experience).toFixed(
+                                    1
+                                  )}
                                 </span>
                               )}
                               {rating.professionalism && (
                                 <span className="rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
-                                  Professionalism: {Number(rating.professionalism).toFixed(1)}
+                                  Professionalism:{" "}
+                                  {Number(rating.professionalism).toFixed(1)}
                                 </span>
                               )}
                             </div>

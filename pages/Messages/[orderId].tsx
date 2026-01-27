@@ -67,10 +67,10 @@ function formatMessageDate(timestamp: any) {
 // Helper to format time only (for messages)
 function formatMessageTime(timestamp: any) {
   if (!timestamp) return "";
-  
+
   const date =
     timestamp instanceof Timestamp ? timestamp.toDate() : new Date(timestamp);
-  
+
   return date.toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
@@ -106,9 +106,11 @@ function getDateLabel(timestamp: any): string {
 }
 
 // Helper to group messages by date
-function groupMessagesByDate(messages: Message[]): Array<{ date: string; messages: Message[] }> {
+function groupMessagesByDate(
+  messages: Message[]
+): Array<{ date: string; messages: Message[] }> {
   const groups: Record<string, Message[]> = {};
-  
+
   messages.forEach((message) => {
     const dateLabel = getDateLabel(message.timestamp);
     if (!groups[dateLabel]) {
@@ -116,7 +118,7 @@ function groupMessagesByDate(messages: Message[]): Array<{ date: string; message
     }
     groups[dateLabel].push(message);
   });
-  
+
   return Object.entries(groups).map(([date, msgs]) => ({
     date,
     messages: msgs,
@@ -254,11 +256,14 @@ function ChatPage() {
               data.order.assignedTo?.id || data.order.shopper_id;
             if (shopperId) {
               const employeeId = data.order.assignedTo?.shopper?.Employment_id;
-              const fullName = data.order.assignedTo?.shopper?.full_name || 
-                data.order.assignedTo?.name || 
+              const fullName =
+                data.order.assignedTo?.shopper?.full_name ||
+                data.order.assignedTo?.name ||
                 "Shopper";
-              const displayName = employeeId ? `00${employeeId} ${fullName}` : fullName;
-              
+              const displayName = employeeId
+                ? `00${employeeId} ${fullName}`
+                : fullName;
+
               setShopper({
                 id: shopperId,
                 name: displayName,
@@ -598,7 +603,9 @@ function ChatPage() {
                           message={message}
                           isCurrentUser={message.senderId === session?.user?.id}
                           senderName={
-                            message.senderType === "shopper" ? shopper.name : "You"
+                            message.senderType === "shopper"
+                              ? shopper.name
+                              : "You"
                           }
                         />
                       ))}
@@ -783,7 +790,7 @@ function ChatPage() {
                               circle
                               size="md"
                             />
-                            <div className="flex-1 min-w-0">
+                            <div className="min-w-0 flex-1">
                               {shopper.employeeId && (
                                 <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900/20 dark:text-green-400">
                                   00{shopper.employeeId}

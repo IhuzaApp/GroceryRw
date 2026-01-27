@@ -97,9 +97,11 @@ function getDateLabel(timestamp: any): string {
 }
 
 // Helper to group messages by date
-function groupMessagesByDate(messages: any[]): Array<{ date: string; messages: any[] }> {
+function groupMessagesByDate(
+  messages: any[]
+): Array<{ date: string; messages: any[] }> {
   const groups: Record<string, any[]> = {};
-  
+
   messages.forEach((message) => {
     const dateLabel = getDateLabel(message.timestamp);
     if (!groups[dateLabel]) {
@@ -107,7 +109,7 @@ function groupMessagesByDate(messages: any[]): Array<{ date: string; messages: a
     }
     groups[dateLabel].push(message);
   });
-  
+
   return Object.entries(groups).map(([date, msgs]) => ({
     date,
     messages: msgs,
@@ -231,28 +233,36 @@ export default function DesktopMessagePage({
                 unreadCount: 0,
               });
             }
-            
+
             // Fetch shopper details from Firestore users collection
             if (conversationData.shopperId) {
               try {
                 const shopperRef = doc(db, "users", conversationData.shopperId);
                 const shopperDoc = await getDoc(shopperRef);
-                
+
                 if (shopperDoc.exists()) {
                   const shopperData = shopperDoc.data();
-                  
+
                   // Fetch additional shopper profile from API
                   try {
-                    const response = await fetch(`/api/queries/shopper-profile?user_id=${conversationData.shopperId}`);
+                    const response = await fetch(
+                      `/api/queries/shopper-profile?user_id=${conversationData.shopperId}`
+                    );
                     if (response.ok) {
                       const profileData = await response.json();
                     }
                   } catch (apiError) {
-                    console.error("Error fetching shopper profile from API:", apiError);
+                    console.error(
+                      "Error fetching shopper profile from API:",
+                      apiError
+                    );
                   }
                 }
               } catch (shopperError) {
-                console.error("Error fetching shopper from Firebase:", shopperError);
+                console.error(
+                  "Error fetching shopper from Firebase:",
+                  shopperError
+                );
               }
             }
           }
@@ -400,7 +410,7 @@ export default function DesktopMessagePage({
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="group flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-md transition-all hover:shadow-lg hover:scale-105 active:scale-95"
+              className="group flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-md transition-all hover:scale-105 hover:shadow-lg active:scale-95"
             >
               <svg
                 className="h-5 w-5 text-white transition-transform group-hover:scale-110"
@@ -437,26 +447,26 @@ export default function DesktopMessagePage({
         {/* Search Bar */}
         <div className="flex-shrink-0 px-4 pb-4">
           <div className="relative">
-              <input
-                type="text"
+            <input
+              type="text"
               placeholder="Search conversations..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full rounded-xl bg-gray-100 px-4 py-3 pl-11 text-sm text-gray-900 placeholder-gray-500 transition-all focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:bg-gray-600"
-              />
-              <svg
+            />
+            <svg
               className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
           </div>
         </div>
 
@@ -470,7 +480,7 @@ export default function DesktopMessagePage({
               <div className="flex flex-col items-center gap-3">
                 <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-green-600 dark:border-gray-700 dark:border-t-green-500"></div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                Loading...
+                  Loading...
                 </p>
               </div>
             </div>
@@ -489,12 +499,15 @@ export default function DesktopMessagePage({
           ) : (
             filteredConversations.map((conversation, index) => {
               const order = orders[conversation.orderId] || {};
-              
+
               const employeeId = order?.assignedTo?.shopper?.Employment_id;
-              const fullName = order?.assignedTo?.shopper?.full_name ||
-                order?.assignedTo?.name || 
+              const fullName =
+                order?.assignedTo?.shopper?.full_name ||
+                order?.assignedTo?.name ||
                 "Shopper";
-              const contactName = employeeId ? `00${employeeId} ${fullName}` : fullName;
+              const contactName = employeeId
+                ? `00${employeeId} ${fullName}`
+                : fullName;
               const contactAvatar =
                 order?.assignedTo?.shopper?.profile_photo ||
                 order?.assignedTo?.profile_picture ||
@@ -503,50 +516,50 @@ export default function DesktopMessagePage({
 
               return (
                 <React.Fragment key={conversation.id}>
-                <div
-                  onClick={() => handleConversationClick(conversation)}
+                  <div
+                    onClick={() => handleConversationClick(conversation)}
                     className={`group relative cursor-pointer px-4 py-3.5 transition-all ${
-                    isSelected
+                      isSelected
                         ? "bg-green-50 dark:bg-green-900/20"
                         : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                  }`}
-                >
+                    }`}
+                  >
                     {isSelected && (
                       <div className="absolute left-0 top-0 h-full w-1 bg-green-600 dark:bg-green-500"></div>
                     )}
                     <div className="flex items-start gap-3">
-                  <div className="relative flex-shrink-0">
+                      <div className="relative flex-shrink-0">
                         <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-500 to-emerald-500 shadow-sm">
-                      {contactAvatar &&
-                      contactAvatar !== "/images/ProfileImage.png" ? (
-                        <img
-                          src={contactAvatar}
-                          alt={contactName}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <svg
+                          {contactAvatar &&
+                          contactAvatar !== "/images/ProfileImage.png" ? (
+                            <img
+                              src={contactAvatar}
+                              alt={contactName}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <svg
                               className="h-6 w-6 text-white"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                          />
-                        </svg>
-                      )}
-                    </div>
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                              />
+                            </svg>
+                          )}
+                        </div>
                         {conversation.unreadCount > 0 && (
                           <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-600 text-xs font-bold text-white shadow-lg">
                             {conversation.unreadCount}
                           </div>
                         )}
-                  </div>
-                  <div className="min-w-0 flex-1">
+                      </div>
+                      <div className="min-w-0 flex-1">
                         <div className="flex items-baseline justify-between gap-2">
                           <h3
                             className={`truncate text-sm font-semibold ${
@@ -555,12 +568,12 @@ export default function DesktopMessagePage({
                                 : "text-gray-900 dark:text-white"
                             }`}
                           >
-                        {contactName}
-                      </h3>
+                            {contactName}
+                          </h3>
                           <span className="flex-shrink-0 text-xs text-gray-500 dark:text-gray-400">
-                          {formatTime(conversation.lastMessageTime)}
-                        </span>
-                      </div>
+                            {formatTime(conversation.lastMessageTime)}
+                          </span>
+                        </div>
                         <p
                           className={`mt-1 truncate text-xs ${
                             conversation.unreadCount > 0
@@ -568,10 +581,10 @@ export default function DesktopMessagePage({
                               : "text-gray-500 dark:text-gray-400"
                           }`}
                         >
-                      {conversation.lastMessage || "No messages yet"}
-                    </p>
-                  </div>
-                </div>
+                          {conversation.lastMessage || "No messages yet"}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                   {index < filteredConversations.length - 1 && (
                     <div className="mx-4 h-px bg-gray-100 dark:bg-gray-700/50"></div>
@@ -622,7 +635,7 @@ export default function DesktopMessagePage({
                   )}
                 </div>
                 <div>
-                  <h2 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <h2 className="flex items-center gap-2 text-base font-semibold text-gray-900 dark:text-white">
                     {selectedOrder.assignedTo?.shopper?.Employment_id && (
                       <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
                         00{selectedOrder.assignedTo.shopper.Employment_id}
@@ -635,9 +648,9 @@ export default function DesktopMessagePage({
                   <div className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400">
                     <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-green-500"></span>
                     Active now
+                  </div>
                 </div>
               </div>
-                </div>
               <div className="flex items-center gap-2">
                 <button className="rounded-xl p-2.5 text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white">
                   <svg
@@ -704,7 +717,7 @@ export default function DesktopMessagePage({
                         </span>
                         <div className="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
                       </div>
-                      
+
                       {/* Messages for this date */}
                       {group.messages.map((message, index) => {
                         const isCurrentUser =
@@ -712,140 +725,145 @@ export default function DesktopMessagePage({
 
                         return (
                           <React.Fragment key={message.id}>
-                        <div
-                          className={`flex items-end gap-2.5 ${
-                            isCurrentUser ? "flex-row-reverse" : "flex-row"
-                          }`}
-                        >
-                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-500 to-emerald-500 shadow-md">
-                            {isCurrentUser ? (
-                              session?.user?.image ? (
-                                <img
-                                  src={session.user.image}
-                                  alt={session?.user?.name || "You"}
-                                  className="h-full w-full object-cover"
-                                />
-                              ) : (
-                                <svg
-                                  className="h-4 w-4 text-white"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                                  />
-                                </svg>
-                              )
-                            ) : selectedOrder.assignedTo?.shopper?.profile_photo ||
-                              selectedOrder.assignedTo?.profile_picture ? (
-                              <img
-                                src={
-                                  selectedOrder.assignedTo?.shopper?.profile_photo ||
-                                  selectedOrder.assignedTo?.profile_picture
-                                }
-                                alt={
-                                  selectedOrder.assignedTo?.shopper?.full_name ||
-                                  selectedOrder.assignedTo?.name ||
-                                  "Shopper"
-                                }
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <svg
-                                className="h-4 w-4 text-white"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                                />
-                              </svg>
-                            )}
-                          </div>
-                          <div
-                            className={`flex max-w-md flex-col ${
-                              isCurrentUser ? "items-end" : "items-start"
-                            }`}
-                          >
                             <div
-                              className={`rounded-2xl px-4 py-3 shadow-sm ${
-                                isCurrentUser
-                                  ? "rounded-br-md bg-gradient-to-br from-green-600 to-green-700 text-white"
-                                  : "rounded-bl-md bg-white text-gray-900 dark:bg-gray-700 dark:text-white"
-                              }`}
-                            >
-                              {message.product ? (
-                                <div className="flex gap-3">
-                                  <img
-                                    src={message.product.image}
-                                    alt={message.product.name}
-                                    className="h-16 w-16 rounded-lg object-cover"
-                                  />
-                                  <div>
-                                    <p
-                                      className={`text-sm font-medium ${
-                                        isCurrentUser
-                                          ? "text-white"
-                                          : "text-gray-900 dark:text-white"
-                                      }`}
-                                    >
-                                      {message.product.name}
-                                    </p>
-                                    <p
-                                      className={`mt-1 text-sm font-semibold ${
-                                        isCurrentUser
-                                          ? "text-white"
-                                          : "text-green-500"
-                                      }`}
-                                    >
-                                      Rp{" "}
-                                      {message.product.price.toLocaleString()}
-                                    </p>
-                                  </div>
-                                </div>
-                              ) : (
-                                <p className="text-sm leading-relaxed">
-                                  {message.text || message.message || ""}
-                                </p>
-                              )}
-                            </div>
-                            <div
-                              className={`mt-1.5 flex items-center gap-1.5 px-2 ${
+                              className={`flex items-end gap-2.5 ${
                                 isCurrentUser ? "flex-row-reverse" : "flex-row"
                               }`}
                             >
-                              <span className="text-xs text-gray-500 dark:text-gray-400">
-                                {formatTime(message.timestamp)}
-                              </span>
-                              {isCurrentUser && (
-                                <svg
-                                  className="h-4 w-4 text-green-600 dark:text-green-400"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2.5}
-                                    d="M5 13l4 4L19 7"
+                              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-green-500 to-emerald-500 shadow-md">
+                                {isCurrentUser ? (
+                                  session?.user?.image ? (
+                                    <img
+                                      src={session.user.image}
+                                      alt={session?.user?.name || "You"}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <svg
+                                      className="h-4 w-4 text-white"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                      />
+                                    </svg>
+                                  )
+                                ) : selectedOrder.assignedTo?.shopper
+                                    ?.profile_photo ||
+                                  selectedOrder.assignedTo?.profile_picture ? (
+                                  <img
+                                    src={
+                                      selectedOrder.assignedTo?.shopper
+                                        ?.profile_photo ||
+                                      selectedOrder.assignedTo?.profile_picture
+                                    }
+                                    alt={
+                                      selectedOrder.assignedTo?.shopper
+                                        ?.full_name ||
+                                      selectedOrder.assignedTo?.name ||
+                                      "Shopper"
+                                    }
+                                    className="h-full w-full object-cover"
                                   />
-                                </svg>
-                              )}
+                                ) : (
+                                  <svg
+                                    className="h-4 w-4 text-white"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                    />
+                                  </svg>
+                                )}
+                              </div>
+                              <div
+                                className={`flex max-w-md flex-col ${
+                                  isCurrentUser ? "items-end" : "items-start"
+                                }`}
+                              >
+                                <div
+                                  className={`rounded-2xl px-4 py-3 shadow-sm ${
+                                    isCurrentUser
+                                      ? "rounded-br-md bg-gradient-to-br from-green-600 to-green-700 text-white"
+                                      : "rounded-bl-md bg-white text-gray-900 dark:bg-gray-700 dark:text-white"
+                                  }`}
+                                >
+                                  {message.product ? (
+                                    <div className="flex gap-3">
+                                      <img
+                                        src={message.product.image}
+                                        alt={message.product.name}
+                                        className="h-16 w-16 rounded-lg object-cover"
+                                      />
+                                      <div>
+                                        <p
+                                          className={`text-sm font-medium ${
+                                            isCurrentUser
+                                              ? "text-white"
+                                              : "text-gray-900 dark:text-white"
+                                          }`}
+                                        >
+                                          {message.product.name}
+                                        </p>
+                                        <p
+                                          className={`mt-1 text-sm font-semibold ${
+                                            isCurrentUser
+                                              ? "text-white"
+                                              : "text-green-500"
+                                          }`}
+                                        >
+                                          Rp{" "}
+                                          {message.product.price.toLocaleString()}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <p className="text-sm leading-relaxed">
+                                      {message.text || message.message || ""}
+                                    </p>
+                                  )}
+                                </div>
+                                <div
+                                  className={`mt-1.5 flex items-center gap-1.5 px-2 ${
+                                    isCurrentUser
+                                      ? "flex-row-reverse"
+                                      : "flex-row"
+                                  }`}
+                                >
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    {formatTime(message.timestamp)}
+                                  </span>
+                                  {isCurrentUser && (
+                                    <svg
+                                      className="h-4 w-4 text-green-600 dark:text-green-400"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2.5}
+                                        d="M5 13l4 4L19 7"
+                                      />
+                                    </svg>
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        </div>
-                      </React.Fragment>
-                    );
-                  })}
+                          </React.Fragment>
+                        );
+                      })}
                     </div>
                   ))}
                   <div ref={messagesEndRef} />
@@ -919,7 +937,7 @@ export default function DesktopMessagePage({
                 <button
                   type="submit"
                   disabled={isSending || !newMessage.trim()}
-                  className="flex-shrink-0 rounded-full bg-gradient-to-br from-green-600 to-green-700 p-3 text-white shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:focus:ring-offset-gray-800"
+                  className="flex-shrink-0 rounded-full bg-gradient-to-br from-green-600 to-green-700 p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:focus:ring-offset-gray-800"
                   aria-label="Send message"
                 >
                   {isSending ? (
@@ -983,7 +1001,8 @@ export default function DesktopMessagePage({
                 Select a conversation
               </h3>
               <p className="mt-2 max-w-xs text-sm text-gray-500 dark:text-gray-400">
-                Choose a chat from the list to start messaging and view order details
+                Choose a chat from the list to start messaging and view order
+                details
               </p>
             </div>
           </div>
@@ -1026,29 +1045,36 @@ export default function DesktopMessagePage({
                       {selectedOrder.shop?.name || "Store"}
                     </h3>
                     <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                      Order #{formatOrderID(selectedOrder.OrderID || selectedOrder.id)}
+                      Order #
+                      {formatOrderID(selectedOrder.OrderID || selectedOrder.id)}
                     </p>
                   </div>
                 </div>
-                
+
                 {/* Divider */}
                 <div className="my-4 h-px bg-gray-100 dark:bg-gray-700"></div>
-                
+
                 {/* Status Badge */}
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Status</span>
-                  <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${
-                    selectedOrder.status === "completed"
-                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                      : selectedOrder.status === "in_progress"
-                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                      : selectedOrder.status === "pending"
-                      ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-                      : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400"
-                  }`}>
+                  <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                    Status
+                  </span>
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                      selectedOrder.status === "completed"
+                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                        : selectedOrder.status === "in_progress"
+                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                        : selectedOrder.status === "pending"
+                        ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                        : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400"
+                    }`}
+                  >
                     <span className="inline-block h-2 w-2 rounded-full bg-current"></span>
-                    {selectedOrder.status && typeof selectedOrder.status === 'string'
-                      ? selectedOrder.status.charAt(0).toUpperCase() + selectedOrder.status.slice(1)
+                    {selectedOrder.status &&
+                    typeof selectedOrder.status === "string"
+                      ? selectedOrder.status.charAt(0).toUpperCase() +
+                        selectedOrder.status.slice(1)
                       : "Pending"}
                   </span>
                 </div>
@@ -1061,7 +1087,7 @@ export default function DesktopMessagePage({
                     Shopper Details
                   </h4>
                 </div>
-                
+
                 {selectedOrder.assignedTo && (
                   <div className="space-y-4">
                     {/* Shopper Profile */}
@@ -1071,7 +1097,8 @@ export default function DesktopMessagePage({
                         selectedOrder.assignedTo?.profile_picture ? (
                           <img
                             src={
-                              selectedOrder.assignedTo?.shopper?.profile_photo ||
+                              selectedOrder.assignedTo?.shopper
+                                ?.profile_photo ||
                               selectedOrder.assignedTo?.profile_picture
                             }
                             alt="Shopper"
@@ -1093,7 +1120,7 @@ export default function DesktopMessagePage({
                           </svg>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           {selectedOrder.assignedTo?.shopper?.Employment_id && (
                             <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900/20 dark:text-green-400">
@@ -1162,44 +1189,46 @@ export default function DesktopMessagePage({
                   </button>
                 </div>
                 <div className="space-y-2.5">
-                  {selectedOrder.items?.slice(0, 3).map((item: any, index: number) => (
-                    <div
-                      key={index}
-                      className="group flex items-center gap-3 rounded-xl bg-gray-50 p-3 transition-all hover:bg-gray-100 dark:bg-gray-700/50 dark:hover:bg-gray-700"
-                    >
-                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
-                        {item.image ? (
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <svg
-                            className="h-6 w-6 text-green-600 dark:text-green-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                  {selectedOrder.items
+                    ?.slice(0, 3)
+                    .map((item: any, index: number) => (
+                      <div
+                        key={index}
+                        className="group flex items-center gap-3 rounded-xl bg-gray-50 p-3 transition-all hover:bg-gray-100 dark:bg-gray-700/50 dark:hover:bg-gray-700"
+                      >
+                        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
+                          {item.image ? (
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="h-full w-full object-cover"
                             />
-                          </svg>
-                        )}
+                          ) : (
+                            <svg
+                              className="h-6 w-6 text-green-600 dark:text-green-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-xs font-semibold text-gray-900 dark:text-white">
+                            {item.name || "Product"}
+                          </p>
+                          <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            Qty: {item.quantity || 1}
+                          </p>
+                        </div>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-semibold text-gray-900 dark:text-white">
-                          {item.name || "Product"}
-                        </p>
-                        <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                          Qty: {item.quantity || 1}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </div>
 
@@ -1242,7 +1271,7 @@ export default function DesktopMessagePage({
                       </p>
                     </div>
                   </div>
-                  
+
                   {selectedOrder.shop?.address && (
                     <div className="flex items-start gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-700/50">
                       <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20">
@@ -1296,7 +1325,9 @@ export default function DesktopMessagePage({
                 No order selected
               </h3>
               <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                Select a conversation to view<br />order details and information
+                Select a conversation to view
+                <br />
+                order details and information
               </p>
             </div>
           </div>

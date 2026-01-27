@@ -11,11 +11,7 @@ import { logger } from "../../../src/utils/logger";
 // Uses aggregate count for accurate likes count
 const GET_ALL_REELS = gql`
   query GetAllReels($limit: Int, $offset: Int) {
-    Reels(
-      order_by: { created_on: desc }
-      limit: $limit
-      offset: $offset
-    ) {
+    Reels(order_by: { created_on: desc }, limit: $limit, offset: $offset) {
       id
       category
       created_on
@@ -60,10 +56,7 @@ const GET_ALL_REELS = gql`
           count
         }
       }
-      Reels_comments(
-        order_by: { created_on: desc }
-        limit: 20
-      ) {
+      Reels_comments(order_by: { created_on: desc }, limit: 20) {
         user_id
         text
         reel_id
@@ -137,10 +130,7 @@ const GET_REELS_BY_USER = gql`
           count
         }
       }
-      Reels_comments(
-        order_by: { created_on: desc }
-        limit: 20
-      ) {
+      Reels_comments(order_by: { created_on: desc }, limit: 20) {
         user_id
         text
         reel_id
@@ -214,10 +204,7 @@ const GET_REELS_BY_RESTAURANT = gql`
           count
         }
       }
-      Reels_comments(
-        order_by: { created_on: desc }
-        limit: 20
-      ) {
+      Reels_comments(order_by: { created_on: desc }, limit: 20) {
         user_id
         text
         reel_id
@@ -479,10 +466,7 @@ async function handleGetReels(req: NextApiRequest, res: NextApiResponse) {
         gql`
           query GetUserLikes($user_id: uuid!, $reel_ids: [uuid!]!) {
             reel_likes(
-              where: {
-                user_id: { _eq: $user_id }
-                reel_id: { _in: $reel_ids }
-              }
+              where: { user_id: { _eq: $user_id }, reel_id: { _in: $reel_ids } }
             ) {
               reel_id
             }
@@ -548,28 +532,28 @@ async function handleGetReels(req: NextApiRequest, res: NextApiResponse) {
     }
 
     logger.info(`Found ${reels.length} reels`, "ReelsAPI");
-    
+
     // Calculate user preferences based on their like history
     const typeCounts: { [type: string]: number } = {};
     let totalLikes = 0;
-    
+
     Object.values(userLikeHistory).forEach((like) => {
       const type = like.type;
       typeCounts[type] = (typeCounts[type] || 0) + 1;
       totalLikes++;
     });
-    
+
     const preferences: { [type: string]: number } = {};
     if (totalLikes > 0) {
       Object.keys(typeCounts).forEach((type) => {
         preferences[type] = typeCounts[type] / totalLikes;
       });
     }
-    
-    res.status(200).json({ 
-      reels, 
+
+    res.status(200).json({
+      reels,
       hasMore: reels.length === limitValue,
-      userPreferences: preferences // Include preferences for frontend
+      userPreferences: preferences, // Include preferences for frontend
     });
   } catch (error) {
     logger.error("Error fetching reels", "ReelsAPI", error);

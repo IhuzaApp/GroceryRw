@@ -251,7 +251,10 @@ export default async function handler(
 
     const enrichedOrder = {
       id: restaurantOrder.id,
-      OrderID: restaurantOrder.OrderID || restaurantOrder.order_number || restaurantOrder.id,
+      OrderID:
+        restaurantOrder.OrderID ||
+        restaurantOrder.order_number ||
+        restaurantOrder.id,
       user_id: restaurantOrder.user_id,
       status: restaurantOrder.status,
       created_at: restaurantOrder.created_at,

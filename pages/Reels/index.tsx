@@ -487,7 +487,6 @@ const randomizeReelsWithPriority = (
   ];
 };
 
-
 // Cache configuration
 const CACHE_KEY = "reels_cache";
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
@@ -704,23 +703,25 @@ export default function FoodReelsApp() {
     const userHasLiked = dbReel.isLiked || false;
 
     // Convert comments - handle case where Reels_comments might be undefined
-    const commentsList: Comment[] = (dbReel.Reels_comments || []).map((comment) => ({
-      id: comment.id,
-      user: {
-        name: comment.User?.name || "Plas Reel Agent",
-        avatar:
-          comment.User?.profile_picture ||
-          "/placeholder.svg?height=32&width=32",
-        verified:
-          comment.User?.role === "admin" ||
-          comment.User?.role === "verified" ||
-          false,
-      },
-      text: comment.text,
-      timestamp: formatTimestamp(comment.created_on),
-      likes: parseInt(comment.likes || "0"),
-      isLiked: comment.isLiked,
-    }));
+    const commentsList: Comment[] = (dbReel.Reels_comments || []).map(
+      (comment) => ({
+        id: comment.id,
+        user: {
+          name: comment.User?.name || "Plas Reel Agent",
+          avatar:
+            comment.User?.profile_picture ||
+            "/placeholder.svg?height=32&width=32",
+          verified:
+            comment.User?.role === "admin" ||
+            comment.User?.role === "verified" ||
+            false,
+        },
+        text: comment.text,
+        timestamp: formatTimestamp(comment.created_on),
+        likes: parseInt(comment.likes || "0"),
+        isLiked: comment.isLiked,
+      })
+    );
 
     // Get coordinates from Restaurant or Shops
     let shopLat = 0;
@@ -759,7 +760,9 @@ export default function FoodReelsApp() {
         category: dbReel.category,
       },
       stats: {
-        likes: dbReel.reel_likes_aggregate?.aggregate?.count || parseInt(dbReel.likes || "0"), // Use aggregate count for accurate likes
+        likes:
+          dbReel.reel_likes_aggregate?.aggregate?.count ||
+          parseInt(dbReel.likes || "0"), // Use aggregate count for accurate likes
         comments: (dbReel.Reels_comments || []).length,
       },
       isLiked: userHasLiked, // Use actual user like status
@@ -1019,11 +1022,12 @@ export default function FoodReelsApp() {
 
         // Get user preferences from API or calculate from current batch
         let userPreferences: Map<string, number> | undefined;
-        if (data.userPreferences && Object.keys(data.userPreferences).length > 0) {
+        if (
+          data.userPreferences &&
+          Object.keys(data.userPreferences).length > 0
+        ) {
           // Use preferences from API (based on user's full like history)
-          userPreferences = new Map(
-            Object.entries(data.userPreferences)
-          );
+          userPreferences = new Map(Object.entries(data.userPreferences));
         } else {
           // Fallback: calculate from current batch
           userPreferences = calculateUserPreferences(convertedPosts);
@@ -1085,11 +1089,12 @@ export default function FoodReelsApp() {
 
       // Get user preferences from API or calculate from current batch
       let userPreferences: Map<string, number> | undefined;
-      if (data.userPreferences && Object.keys(data.userPreferences).length > 0) {
+      if (
+        data.userPreferences &&
+        Object.keys(data.userPreferences).length > 0
+      ) {
         // Use preferences from API (based on user's full like history)
-        userPreferences = new Map(
-          Object.entries(data.userPreferences)
-        );
+        userPreferences = new Map(Object.entries(data.userPreferences));
       } else {
         // Fallback: calculate from current batch
         userPreferences = calculateUserPreferences(convertedPosts);
@@ -1451,9 +1456,12 @@ export default function FoodReelsApp() {
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             console.error("Error toggling like:", response.status, errorData);
-            
+
             // If user already liked (400 error), revert the UI change
-            if (response.status === 400 && errorData.error?.includes("already liked")) {
+            if (
+              response.status === 400 &&
+              errorData.error?.includes("already liked")
+            ) {
               setPosts(
                 posts.map((post: FoodPost) =>
                   post.id === postId
