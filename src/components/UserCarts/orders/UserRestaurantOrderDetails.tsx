@@ -185,30 +185,29 @@ export default function UserRestaurantOrderDetails({
   };
 
   const getOrderStatus = () => {
-    switch (order.status) {
+    const status = (order.status || "").toUpperCase();
+    switch (status) {
       case "WAITING_FOR_CONFIRMATION":
-        return "Waiting for Confirmation";
       case "PENDING":
-        return "Order Placed";
+        return "Waiting to be accepted";
       case "CONFIRMED":
-        return "Confirmed";
       case "READY":
-        return "Ready";
+        return "Accepted";
       case "OUT_FOR_DELIVERY":
-        return "Out for Delivery";
+        return "Picked and on the way";
       case "DELIVERED":
-        return "Delivered";
+        return "Delivered to you";
       default:
-        return "Unknown";
+        return "Ongoing";
     }
   };
 
   const getOrderStatusColor = () => {
-    switch (order.status) {
+    const status = (order.status || "").toUpperCase();
+    switch (status) {
       case "WAITING_FOR_CONFIRMATION":
-        return "warning";
       case "PENDING":
-        return "processing";
+        return "warning";
       case "CONFIRMED":
       case "READY":
         return "info";
@@ -222,30 +221,28 @@ export default function UserRestaurantOrderDetails({
   };
 
   const getCurrentStep = () => {
-    switch (order.status) {
+    const status = (order.status || "").toUpperCase();
+    switch (status) {
       case "WAITING_FOR_CONFIRMATION":
-        return 0;
       case "PENDING":
-        return 1;
+        return 0;
       case "CONFIRMED":
-        return 2;
       case "READY":
-        return 3;
+        return 1;
       case "OUT_FOR_DELIVERY":
-        return 4;
+        return 2;
       case "DELIVERED":
-        return 5;
+        return 3;
       default:
         return 0;
     }
   };
 
   const steps = [
-    "Order Placed",
-    "Confirmed",
-    "Ready",
-    "Out for Delivery",
-    "Delivered",
+    "Waiting to be accepted",
+    "Accepted",
+    "Picked and on the way",
+    "Delivered to you",
   ];
 
   return (
