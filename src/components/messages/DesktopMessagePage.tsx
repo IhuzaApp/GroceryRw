@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 import {
   collection,
   query,
@@ -220,11 +221,16 @@ export default function DesktopMessagePage({
           if (!querySnapshot.empty) {
             const conversationDoc = querySnapshot.docs[0];
             const conversationData = conversationDoc.data();
-            
-            console.log("📊 Conversation Data:", conversationData);
-            console.log("👤 Shopper ID:", conversationData.shopperId);
-            
+
             setConversationId(conversationDoc.id);
+
+            // Immediately mark conversation as read if it has unread messages
+            if (conversationData.unreadCount > 0) {
+              const convRef = doc(db, "chat_conversations", conversationDoc.id);
+              await updateDoc(convRef, {
+                unreadCount: 0,
+              });
+            }
             
             // Fetch shopper details from Firestore users collection
             if (conversationData.shopperId) {
@@ -234,14 +240,12 @@ export default function DesktopMessagePage({
                 
                 if (shopperDoc.exists()) {
                   const shopperData = shopperDoc.data();
-                  console.log("🧑‍💼 Shopper Data from Firebase:", shopperData);
                   
                   // Fetch additional shopper profile from API
                   try {
                     const response = await fetch(`/api/queries/shopper-profile?user_id=${conversationData.shopperId}`);
                     if (response.ok) {
                       const profileData = await response.json();
-                      console.log("📸 Shopper Profile from API:", profileData);
                     }
                   } catch (apiError) {
                     console.error("Error fetching shopper profile from API:", apiError);
@@ -289,25 +293,32 @@ export default function DesktopMessagePage({
 
         setMessages(messagesList);
 
-        // Mark messages as read if they were sent to the current user
-        messagesList.forEach(async (message) => {
-          if (message.senderType === "shopper" && !message.read) {
-            const messageRef = doc(
-              db,
-              "chat_conversations",
-              conversationId,
-              "messages",
-              message.id
-            );
-            await updateDoc(messageRef, { read: true });
+        // Mark all unread messages as read
+        const unreadMessages = messagesList.filter(
+          (message) => message.senderType === "shopper" && !message.read
+        );
 
-            // Update unread count in conversation
+        if (unreadMessages.length > 0) {
+          // Mark messages as read (async operation)
+          (async () => {
+            for (const message of unreadMessages) {
+              const messageRef = doc(
+                db,
+                "chat_conversations",
+                conversationId,
+                "messages",
+                message.id
+              );
+              await updateDoc(messageRef, { read: true });
+            }
+
+            // Update conversation unread count to 0
             const convRef = doc(db, "chat_conversations", conversationId);
             await updateDoc(convRef, {
               unreadCount: 0,
             });
-          }
-        });
+          })();
+        }
 
         // Scroll to bottom
         setTimeout(() => {
@@ -386,9 +397,29 @@ export default function DesktopMessagePage({
       <div className="flex h-full w-80 flex-shrink-0 flex-col bg-white dark:bg-gray-800">
         {/* Header */}
         <div className="flex flex-shrink-0 items-center justify-between px-6 py-5">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-            Messages
-          </h1>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/"
+              className="group flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-md transition-all hover:shadow-lg hover:scale-105 active:scale-95"
+            >
+              <svg
+                className="h-5 w-5 text-white transition-transform group-hover:scale-110"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth={2.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                />
+              </svg>
+            </Link>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+              Messages
+            </h1>
+          </div>
           <button className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300">
             <svg
               width="20"
@@ -458,14 +489,6 @@ export default function DesktopMessagePage({
           ) : (
             filteredConversations.map((conversation, index) => {
               const order = orders[conversation.orderId] || {};
-              
-              // Debug logging
-              if (index === 0) {
-                console.log("🔍 First Conversation:", conversation);
-                console.log("📦 First Order:", order);
-                console.log("👤 Assigned To (Shoppers):", order?.assignedTo);
-                console.log("👤 Shopper Data:", order?.assignedTo?.shopper);
-              }
               
               const employeeId = order?.assignedTo?.shopper?.Employment_id;
               const fullName = order?.assignedTo?.shopper?.full_name ||
