@@ -1,11 +1,12 @@
 import React, { useEffect } from "react";
 import Image from "next/image";
-import { Input, InputGroup, Button, Panel, Steps, Message } from "rsuite";
+import { Input, InputGroup, Button, Panel, Steps } from "rsuite";
 import Link from "next/link";
 import { useState } from "react";
 import { formatCurrency } from "../../../lib/formatCurrency";
 import EstimatedDeliveryTime from "./EstimatedDeliveryTime";
 import { useTheme } from "../../../context/ThemeContext";
+import FeedbackModal from "./FeedbackModal";
 
 // Helper to pad order IDs to at least 4 digits
 function formatOrderID(id?: string | number): string {
@@ -106,7 +107,6 @@ export default function UserReelOrderDetails({
       // Close modal and update state
       setFeedbackModal(false);
       setHasExistingRating(true);
-      Message.success("Thank you for your feedback!");
     } catch (error) {
       setSubmitError(
         error instanceof Error ? error.message : "Failed to submit feedback"
