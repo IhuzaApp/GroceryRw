@@ -67,6 +67,52 @@ function isSameDay(timestamp1: any, timestamp2: any): boolean {
   );
 }
 
+// Helper to get date label for grouping
+function getDateLabel(timestamp: any): string {
+  if (!timestamp) return "";
+
+  const date =
+    timestamp instanceof Timestamp ? timestamp.toDate() : new Date(timestamp);
+
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const isToday = date.toDateString() === today.toDateString();
+  const isYesterday = date.toDateString() === yesterday.toDateString();
+
+  if (isToday) {
+    return "Today";
+  } else if (isYesterday) {
+    return "Yesterday";
+  } else {
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  }
+}
+
+// Helper to group messages by date
+function groupMessagesByDate(messages: any[]): Array<{ date: string; messages: any[] }> {
+  const groups: Record<string, any[]> = {};
+  
+  messages.forEach((message) => {
+    const dateLabel = getDateLabel(message.timestamp);
+    if (!groups[dateLabel]) {
+      groups[dateLabel] = [];
+    }
+    groups[dateLabel].push(message);
+  });
+  
+  return Object.entries(groups).map(([date, msgs]) => ({
+    date,
+    messages: msgs,
+  }));
+}
+
 // Helper to format order ID
 function formatOrderID(id?: string | number): string {
   if (!id) return "0000";
@@ -625,25 +671,24 @@ export default function DesktopMessagePage({
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {messages.map((message, index) => {
-                    const isCurrentUser =
-                      message.senderId === session?.user?.id;
-                    const prevMessage = index > 0 ? messages[index - 1] : null;
-                    const showDateSeparator =
-                      !prevMessage ||
-                      !isSameDay(message.timestamp, prevMessage.timestamp);
+                  {groupMessagesByDate(messages).map((group, groupIndex) => (
+                    <div key={groupIndex} className="space-y-4">
+                      {/* Date Separator */}
+                      <div className="flex items-center gap-4 py-2">
+                        <div className="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
+                        <span className="rounded-full bg-gray-200 px-3 py-1 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                          {group.date}
+                        </span>
+                        <div className="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
+                      </div>
+                      
+                      {/* Messages for this date */}
+                      {group.messages.map((message, index) => {
+                        const isCurrentUser =
+                          message.senderId === session?.user?.id;
 
-                    return (
-                      <React.Fragment key={message.id}>
-                        {showDateSeparator && (
-                          <div className="flex items-center gap-4 py-2">
-                            <div className="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              {formatDate(message.timestamp)}
-                            </span>
-                            <div className="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
-                          </div>
-                        )}
+                        return (
+                          <React.Fragment key={message.id}>
                         <div
                           className={`flex items-end gap-2.5 ${
                             isCurrentUser ? "flex-row-reverse" : "flex-row"
@@ -778,6 +823,8 @@ export default function DesktopMessagePage({
                       </React.Fragment>
                     );
                   })}
+                    </div>
+                  ))}
                   <div ref={messagesEndRef} />
                 </div>
               )}

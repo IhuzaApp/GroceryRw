@@ -64,6 +64,65 @@ function formatMessageDate(timestamp: any) {
   }
 }
 
+// Helper to format time only (for messages)
+function formatMessageTime(timestamp: any) {
+  if (!timestamp) return "";
+  
+  const date =
+    timestamp instanceof Timestamp ? timestamp.toDate() : new Date(timestamp);
+  
+  return date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+// Helper to get date label for grouping
+function getDateLabel(timestamp: any): string {
+  if (!timestamp) return "";
+
+  const date =
+    timestamp instanceof Timestamp ? timestamp.toDate() : new Date(timestamp);
+
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const isToday = date.toDateString() === today.toDateString();
+  const isYesterday = date.toDateString() === yesterday.toDateString();
+
+  if (isToday) {
+    return "Today";
+  } else if (isYesterday) {
+    return "Yesterday";
+  } else {
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  }
+}
+
+// Helper to group messages by date
+function groupMessagesByDate(messages: Message[]): Array<{ date: string; messages: Message[] }> {
+  const groups: Record<string, Message[]> = {};
+  
+  messages.forEach((message) => {
+    const dateLabel = getDateLabel(message.timestamp);
+    if (!groups[dateLabel]) {
+      groups[dateLabel] = [];
+    }
+    groups[dateLabel].push(message);
+  });
+  
+  return Object.entries(groups).map(([date, msgs]) => ({
+    date,
+    messages: msgs,
+  }));
+}
+
 // Helper to format order ID
 function formatOrderID(id?: string | number): string {
   const s = id != null ? id.toString() : "0";
@@ -81,6 +140,21 @@ interface Message {
   timestamp: any;
   read: boolean;
 }
+
+// Date separator component
+const DateSeparator: React.FC<{ date: string }> = ({ date }) => {
+  return (
+    <div className="my-4 flex items-center justify-center">
+      <div className="flex items-center gap-3">
+        <div className="h-px w-12 bg-gray-300 dark:bg-gray-600"></div>
+        <span className="rounded-full bg-gray-200 px-3 py-1 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+          {date}
+        </span>
+        <div className="h-px w-12 bg-gray-300 dark:bg-gray-600"></div>
+      </div>
+    </div>
+  );
+};
 
 // Message component
 interface MessageProps {
@@ -112,11 +186,16 @@ const Message: React.FC<MessageProps> = ({
           <div className="mb-1 flex gap-2 text-xs font-medium text-gray-600 dark:text-gray-300">
             {senderName}{" "}
             <span className="text-xs text-gray-500 dark:text-gray-400">
-              {formatMessageDate(message.timestamp)}
+              {formatMessageTime(message.timestamp)}
             </span>
           </div>
         )}
         <div className="whitespace-pre-wrap text-sm">{messageContent}</div>
+        {isCurrentUser && (
+          <div className="mt-1 text-right text-xs text-gray-500 dark:text-gray-400">
+            {formatMessageTime(message.timestamp)}
+          </div>
+        )}
       </div>
       {isCurrentUser && <Avatar color="green" circle size="xs" />}
     </div>
@@ -494,15 +573,20 @@ function ChatPage() {
                     </div>
                   </div>
                 ) : (
-                  messages.map((message) => (
-                    <Message
-                      key={message.id}
-                      message={message}
-                      isCurrentUser={message.senderId === session?.user?.id}
-                      senderName={
-                        message.senderType === "shopper" ? shopper.name : "You"
-                      }
-                    />
+                  groupMessagesByDate(messages).map((group, groupIndex) => (
+                    <div key={groupIndex}>
+                      <DateSeparator date={group.date} />
+                      {group.messages.map((message) => (
+                        <Message
+                          key={message.id}
+                          message={message}
+                          isCurrentUser={message.senderId === session?.user?.id}
+                          senderName={
+                            message.senderType === "shopper" ? shopper.name : "You"
+                          }
+                        />
+                      ))}
+                    </div>
                   ))
                 )}
                 <div ref={messagesEndRef} />
