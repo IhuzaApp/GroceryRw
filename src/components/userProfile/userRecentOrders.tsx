@@ -227,61 +227,21 @@ export default function UserRecentOrders({
     );
   });
 
-  // Group orders by combined_order_id
+  // Treat every order as an individual group (no combined orders)
   const groupOrders = (orders: Order[]): OrderGroup[] => {
-    const grouped: { [key: string]: Order[] } = {};
-    const singles: Order[] = [];
-
-    orders.forEach((order) => {
-      if (order.combined_order_id) {
-        if (!grouped[order.combined_order_id]) {
-          grouped[order.combined_order_id] = [];
-        }
-        grouped[order.combined_order_id].push(order);
-      } else {
-        singles.push(order);
-      }
-    });
-
-    // Convert grouped orders to OrderGroup format
-    const groupedOrders: OrderGroup[] = Object.entries(grouped).map(
-      ([combinedId, groupOrders]) => {
-        const totalAmount = groupOrders.reduce((sum, o) => sum + o.total, 0);
-        const earliestDate = groupOrders.reduce((earliest, o) =>
-          new Date(o.created_at) < new Date(earliest.created_at) ? o : earliest
-        ).created_at;
-        // Combined order status is "delivered" only if ALL orders are delivered
-        const allDelivered = groupOrders.every((o) => o.status === "delivered");
-        return {
-          id: combinedId,
-          is_combined: true,
-          orders: groupOrders.sort(
-            (a, b) =>
-              new Date(b.created_at).getTime() -
-              new Date(a.created_at).getTime()
-          ),
-          total: totalAmount,
-          created_at: earliestDate,
-          status: allDelivered ? "delivered" : "pending",
-        };
-      }
-    );
-
-    // Add single orders
-    const singleOrders: OrderGroup[] = singles.map((order) => ({
-      id: order.id,
-      is_combined: false,
-      orders: [order],
-      total: order.total,
-      created_at: order.created_at,
-      status: order.status,
-    }));
-
-    // Combine and sort by date (newest first)
-    return [...groupedOrders, ...singleOrders].sort(
-      (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
+    return orders
+      .map((order) => ({
+        id: order.id,
+        is_combined: false,
+        orders: [order],
+        total: order.total,
+        created_at: order.created_at,
+        status: order.status,
+      }))
+      .sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
   };
 
   const orderGroups = groupOrders(filteredOrders);
@@ -392,136 +352,17 @@ export default function UserRecentOrders({
         <p className="text-gray-600 dark:text-gray-400">No orders found.</p>
       ) : (
         visibleOrderGroups.map((group: OrderGroup) =>
-          group.is_combined ? (
-            // Combined Orders Group - Simple Card Design
-            <Link
-              key={group.id}
-              href={`/CurrentPendingOrders/viewOrderDetails/${group.orders[0]?.id}`}
-              className={`group block overflow-hidden border-b border-gray-200 bg-white p-4 transition-all duration-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-800/80 md:rounded-xl md:border md:shadow-sm md:hover:border-green-200 md:hover:shadow-lg ${
-                isPendingOrdersPage ? "mb-4 md:mb-5" : "mb-2 md:mb-3"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                {/* Group Image - Overlapping shop images */}
-                <div className="relative flex-shrink-0">
-                  {group.orders.slice(0, 3).map((order, idx) => (
-                    <div
-                      key={order.id}
-                      className="absolute"
-                      style={{
-                        left: `${idx * 14}px`,
-                        zIndex: 3 - idx,
-                      }}
-                    >
-                      {(order.shop as any)?.logo || order.shop?.image ? (
-                        <img
-                          src={(order.shop as any)?.logo || order.shop.image}
-                          alt={order.shop.name}
-                          className="h-12 w-12 rounded-full border-2 border-white object-cover shadow-md dark:border-gray-800 md:h-10 md:w-10"
-                          onError={(e) => {
-                            e.currentTarget.src =
-                              "/images/shop-placeholder.jpg";
-                          }}
-                        />
-                      ) : (
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg border-2 border-white bg-gradient-to-br from-green-100 to-emerald-100 shadow-md dark:border-gray-800 dark:from-green-900/50 dark:to-emerald-900/50 md:h-10 md:w-10">
-                          <svg
-                            className="h-6 w-6 text-green-600 dark:text-green-400 md:h-5 md:w-5"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                          >
-                            <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                  {/* Spacer to account for overlapping images */}
-                  <div
-                    className="h-12 md:h-10"
-                    style={{
-                      width: `${Math.min(group.orders.length, 3) * 14 + 34}px`,
-                    }}
-                  ></div>
-                </div>
-
-                {/* Order Details - Left Column */}
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-bold text-gray-900 dark:text-white">
-                    {group.orders.length === 1
-                      ? group.orders[0]?.shop?.name || "Unknown Shop"
-                      : group.orders.length === 2
-                      ? `${group.orders[0]?.shop?.name} & ${group.orders[1]?.shop?.name}`
-                      : `${group.orders[0]?.shop?.name} & ${
-                          group.orders.length - 1
-                        } others`}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {group.orders.reduce(
-                      (sum, o) => sum + (o.unitsCount || 0),
-                      0
-                    )}{" "}
-                    units • {group.orders.length}{" "}
-                    {group.orders.length === 1 ? "store" : "stores"}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    ID{" "}
-                    {group.orders.map((o, idx) => (
-                      <span key={o.id}>
-                        #{formatOrderID(o?.OrderID)}
-                        {idx < group.orders.length - 1 ? " & " : ""}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* PIN Display for Combined Orders */}
-                {group.orders[0]?.pin && (
-                  <div className="flex flex-col items-center justify-center gap-0.5 rounded-lg border-2 border-dashed border-green-400 bg-gradient-to-br from-green-50 to-green-100 px-2.5 py-1 dark:border-green-600 dark:from-green-900/30 dark:to-green-800/20">
-                    <span className="text-[9px] font-bold uppercase tracking-wide text-green-600 dark:text-green-400">
-                      PIN
-                    </span>
-                    <span className="text-lg font-black leading-none tracking-wider text-green-700 dark:text-green-300">
-                      {group.orders[0].pin}
-                    </span>
-                  </div>
-                )}
-
-                {/* Time and Price - Right Column */}
-                <div className="flex flex-col items-end gap-0.5 text-right">
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {timeAgo(group.created_at)}
-                  </div>
-                  <div className="text-sm font-bold text-gray-900 dark:text-white">
-                    {formatCurrency(group.total)}
-                  </div>
-                </div>
-              </div>
-
-              {/* Delivery Time */}
-              {group.orders[0]?.delivery_time && (
-                <div className="mt-3 flex items-center justify-between border-t border-green-100 pt-2 dark:border-green-800/30">
-                  <span className="text-xs text-gray-600 dark:text-gray-400">
-                    Expected Delivery:
-                  </span>
-                  <EstimatedDelivery
-                    deliveryTime={group.orders[0].delivery_time}
-                    status={group.status}
-                  />
-                </div>
-              )}
-            </Link>
-          ) : (
+          group.is_combined ? null : (
             // Single Order (Original Display)
             group.orders.map((order: Order) => (
               <Link
                 key={order.id}
                 href={`/CurrentPendingOrders/viewOrderDetails/${order.id}`}
-                className={`group block overflow-hidden border-b border-gray-200 bg-white p-4 transition-all duration-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-800/80 md:rounded-lg md:border md:p-3 md:shadow-sm md:hover:border-green-200 md:hover:shadow-lg ${
+                className={`group block overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-md transition-all duration-300 hover:border-green-200 hover:bg-gray-50 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 dark:shadow-md dark:hover:border-green-500 dark:hover:bg-gray-800/80 dark:hover:shadow-2xl ${
                   isPendingOrdersPage ? "mb-4 md:mb-4" : "mb-2 md:mb-2"
                 }`}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 md:gap-4">
                   {/* Shop Image */}
                   {order.shop && (
                     <div className="flex-shrink-0">
@@ -552,40 +393,89 @@ export default function UserRecentOrders({
 
                   {/* Order Details - Left Column */}
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-bold text-gray-900 dark:text-white">
-                      {order.orderType === "reel" && order.reel
-                        ? order.reel.title
-                        : order?.shop?.name || "Unknown Shop"}
+                    <div className="flex items-center gap-2">
+                      <div className="truncate text-sm font-semibold text-gray-900 dark:text-white">
+                        {order.orderType === "reel" && order.reel
+                          ? order.reel.title
+                          : order?.shop?.name || "Unknown Shop"}
+                      </div>
+                      {order.orderType === "reel" && (
+                        <span className="inline-flex items-center justify-center rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                          <svg
+                            className="mr-1 h-3 w-3"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <circle cx="12" cy="12" r="3" />
+                            <rect
+                              x="3"
+                              y="3"
+                              width="7"
+                              height="7"
+                              rx="1.5"
+                              ry="1.5"
+                            />
+                            <rect
+                              x="14"
+                              y="3"
+                              width="7"
+                              height="7"
+                              rx="1.5"
+                              ry="1.5"
+                            />
+                            <rect
+                              x="3"
+                              y="14"
+                              width="7"
+                              height="7"
+                              rx="1.5"
+                              ry="1.5"
+                            />
+                            <rect
+                              x="14"
+                              y="14"
+                              width="7"
+                              height="7"
+                              rx="1.5"
+                              ry="1.5"
+                            />
+                          </svg>
+                          Reel
+                        </span>
+                      )}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {order.unitsCount || 0}{" "}
-                      {order.unitsCount === 1 ? "unit" : "units"}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      ID #{formatOrderID(order?.OrderID)}
+                    <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                      <span>
+                        {order.unitsCount || 0}{" "}
+                        {order.unitsCount === 1 ? "unit" : "units"}
+                      </span>
+                      <span className="hidden text-gray-300 dark:text-gray-600 md:inline">
+                        •
+                      </span>
+                      <span className="font-mono text-[11px] md:text-xs">
+                        ID #{formatOrderID(order?.OrderID)}
+                      </span>
                     </div>
                   </div>
 
-                  {/* PIN Display */}
-                  {order?.pin && (
-                    <div className="flex flex-col items-center justify-center gap-0.5 rounded-lg border-2 border-dashed border-green-400 bg-gradient-to-br from-green-50 to-green-100 px-2.5 py-1 dark:border-green-600 dark:from-green-900/30 dark:to-green-800/20">
-                      <span className="text-[9px] font-bold uppercase tracking-wide text-green-600 dark:text-green-400">
-                        PIN
-                      </span>
-                      <span className="text-lg font-black leading-none tracking-wider text-green-700 dark:text-green-300">
-                        {order.pin}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Time and Price - Right Column */}
-                  <div className="flex flex-col items-end gap-0.5 text-right">
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                  {/* Time, Total & PIN - Right Column */}
+                  <div className="flex flex-col items-end gap-1 text-right">
+                    <div className="text-[11px] text-gray-500 dark:text-gray-400">
                       {timeAgo(order?.created_at)}
                     </div>
                     <div className="text-sm font-bold text-gray-900 dark:text-white">
                       {formatCurrency(order.total)}
                     </div>
+                    {order?.pin && (
+                      <div className="mt-0.5 inline-flex items-center gap-1 rounded-full border border-dashed border-green-400 bg-green-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-600 dark:border-green-600 dark:bg-green-900/20 dark:text-green-400">
+                        <span>PIN</span>
+                        <span className="font-mono text-xs leading-none">
+                          {order.pin}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 

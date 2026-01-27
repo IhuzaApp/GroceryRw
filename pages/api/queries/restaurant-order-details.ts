@@ -11,6 +11,7 @@ const GET_RESTAURANT_ORDER_DETAILS = gql`
   query GetRestaurantOrderDetails($order_id: uuid!) {
     restaurant_orders(where: { id: { _eq: $order_id } }) {
       id
+      order_number
       OrderID
       user_id
       status
@@ -94,7 +95,8 @@ const GET_RESTAURANT_ORDER_DETAILS = gql`
 interface RestaurantOrderDetailsResponse {
   restaurant_orders: Array<{
     id: string;
-    OrderID: string;
+    order_number: string;
+    OrderID: string | null;
     user_id: string;
     status: string;
     created_at: string;
@@ -249,7 +251,7 @@ export default async function handler(
 
     const enrichedOrder = {
       id: restaurantOrder.id,
-      OrderID: restaurantOrder.OrderID || restaurantOrder.id,
+      OrderID: restaurantOrder.OrderID || restaurantOrder.order_number || restaurantOrder.id,
       user_id: restaurantOrder.user_id,
       status: restaurantOrder.status,
       created_at: restaurantOrder.created_at,
