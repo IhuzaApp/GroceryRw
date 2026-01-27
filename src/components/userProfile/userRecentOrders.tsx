@@ -397,7 +397,9 @@ export default function UserRecentOrders({
             <Link
               key={group.id}
               href={`/CurrentPendingOrders/viewOrderDetails/${group.orders[0]?.id}`}
-              className="group mb-2 block overflow-hidden border-b border-green-200 bg-gradient-to-r from-green-50/80 to-emerald-50/80 p-4 transition-all duration-300 hover:from-green-50 hover:to-emerald-50 dark:border-green-800 dark:from-green-900/20 dark:to-emerald-900/20 dark:hover:from-green-900/30 dark:hover:to-emerald-900/30 md:mb-3 md:rounded-xl md:border-2 md:shadow-md md:hover:shadow-xl"
+              className={`group block overflow-hidden border-b border-gray-200 bg-white p-4 transition-all duration-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-800/80 md:rounded-xl md:border md:shadow-sm md:hover:border-green-200 md:hover:shadow-lg ${
+                isPendingOrdersPage ? "mb-4 md:mb-5" : "mb-2 md:mb-3"
+              }`}
             >
               <div className="flex items-center gap-3">
                 {/* Group Image - Overlapping shop images */}
@@ -411,11 +413,11 @@ export default function UserRecentOrders({
                         zIndex: 3 - idx,
                       }}
                     >
-                      {order.shop?.image ? (
+                      {(order.shop as any)?.logo || order.shop?.image ? (
                         <img
-                          src={order.shop.image}
+                          src={(order.shop as any)?.logo || order.shop.image}
                           alt={order.shop.name}
-                          className="h-12 w-12 rounded-lg border-2 border-white object-cover shadow-md dark:border-gray-800 md:h-10 md:w-10"
+                          className="h-12 w-12 rounded-full border-2 border-white object-cover shadow-md dark:border-gray-800 md:h-10 md:w-10"
                           onError={(e) => {
                             e.currentTarget.src =
                               "/images/shop-placeholder.jpg";
@@ -515,17 +517,19 @@ export default function UserRecentOrders({
               <Link
                 key={order.id}
                 href={`/CurrentPendingOrders/viewOrderDetails/${order.id}`}
-                className="group mb-2 block overflow-hidden border-b border-gray-200 bg-white p-4 transition-all duration-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-800/80 md:mb-2 md:rounded-lg md:border md:p-3 md:shadow-sm md:hover:border-green-200 md:hover:shadow-lg"
+                className={`group block overflow-hidden border-b border-gray-200 bg-white p-4 transition-all duration-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-800/80 md:rounded-lg md:border md:p-3 md:shadow-sm md:hover:border-green-200 md:hover:shadow-lg ${
+                  isPendingOrdersPage ? "mb-4 md:mb-4" : "mb-2 md:mb-2"
+                }`}
               >
                 <div className="flex items-center gap-3">
                   {/* Shop Image */}
                   {order.shop && (
                     <div className="flex-shrink-0">
-                      {order.shop.image ? (
+                      {(order.shop as any)?.logo || order.shop?.image ? (
                         <img
-                          src={order.shop.image}
+                          src={(order.shop as any)?.logo || order.shop.image}
                           alt={order.shop.name}
-                          className="h-12 w-12 rounded-lg object-cover md:h-10 md:w-10"
+                          className="h-12 w-12 rounded-full object-cover md:h-10 md:w-10"
                           onError={(e) => {
                             // Fallback to placeholder if image fails
                             e.currentTarget.src =
