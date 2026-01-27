@@ -174,13 +174,23 @@ function ChatPage() {
             const shopperId =
               data.order.assignedTo?.id || data.order.shopper_id;
             if (shopperId) {
+              const employeeId = data.order.assignedTo?.shopper?.Employment_id;
+              const fullName = data.order.assignedTo?.shopper?.full_name || 
+                data.order.assignedTo?.name || 
+                "Shopper";
+              const displayName = employeeId ? `00${employeeId} ${fullName}` : fullName;
+              
               setShopper({
                 id: shopperId,
-                name: data.order.assignedTo?.name || "Shopper",
+                name: displayName,
+                fullName: fullName,
+                employeeId: employeeId,
                 avatar:
+                  data.order.assignedTo?.shopper?.profile_photo ||
                   data.order.assignedTo?.profile_picture ||
                   "/images/ProfileImage.png",
                 phone: data.order.assignedTo?.phone,
+                email: data.order.assignedTo?.email,
               });
 
               // Get or create conversation immediately if we have shopper ID
@@ -662,19 +672,67 @@ function ChatPage() {
                     </div>
                     {shopper && (
                       <div>
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                          Shopper
+                        <h3 className="mb-3 text-sm font-medium text-gray-500 dark:text-gray-400">
+                          Shopper Details
                         </h3>
-                        <div className="mt-1 flex items-center gap-2">
-                          <Avatar
-                            src={shopper.avatar}
-                            alt={shopper.name}
-                            circle
-                            size="sm"
-                          />
-                          <span className="text-gray-900 dark:text-white">
-                            {shopper.name}
-                          </span>
+                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800">
+                          <div className="flex items-start gap-3">
+                            <Avatar
+                              src={shopper.avatar}
+                              alt={shopper.name}
+                              circle
+                              size="md"
+                            />
+                            <div className="flex-1 min-w-0">
+                              {shopper.employeeId && (
+                                <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900/20 dark:text-green-400">
+                                  00{shopper.employeeId}
+                                </span>
+                              )}
+                              <h4 className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                                {shopper.fullName || shopper.name}
+                              </h4>
+                              {shopper.email && (
+                                <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                                  {shopper.email}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="mt-3 flex gap-2">
+                            <button className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-green-50 px-3 py-2 text-xs font-medium text-green-700 transition-all hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30">
+                              <svg
+                                className="h-3.5 w-3.5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                                />
+                              </svg>
+                              Contact
+                            </button>
+                            <button className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700 transition-all hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30">
+                              <svg
+                                className="h-3.5 w-3.5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                />
+                              </svg>
+                              Report
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}

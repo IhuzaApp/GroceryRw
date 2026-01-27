@@ -70,6 +70,14 @@ const GET_ORDER_DETAILS = gql`
         email
         phone
         profile_picture
+        shopper {
+          id
+          full_name
+          profile_photo
+          phone_number
+          address
+          Employment_id
+        }
         Ratings {
           created_at
           customer_id
@@ -213,6 +221,14 @@ export default async function handler(
           email: string;
           phone: string;
           profile_picture: string | null;
+          shopper: {
+            id: string;
+            full_name: string;
+            profile_photo: string | null;
+            phone_number: string | null;
+            address: string | null;
+            Employment_id: string | null;
+          } | null;
           Ratings: Array<{
             created_at: string;
             customer_id: string;
@@ -420,9 +436,12 @@ export default async function handler(
 
     res.status(200).json({ order: formattedOrder });
   } catch (error) {
+    console.error("❌ Order Details API Error:", error);
+    console.error("❌ Error details:", error instanceof Error ? error.message : "Unknown error");
     res.status(500).json({
       error: "Failed to fetch order details",
       details: error instanceof Error ? error.message : "Unknown error",
+      fullError: JSON.stringify(error, null, 2),
     });
   }
 }
