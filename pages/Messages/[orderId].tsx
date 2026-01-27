@@ -312,7 +312,16 @@ function ChatPage() {
       if (!querySnapshot.empty) {
         // Conversation exists
         const conversationDoc = querySnapshot.docs[0];
+        const conversationData = conversationDoc.data();
         setConversationId(conversationDoc.id);
+
+        // Immediately mark conversation as read if it has unread messages
+        if (conversationData.unreadCount > 0) {
+          const convRef = doc(db, "chat_conversations", conversationDoc.id);
+          await updateDoc(convRef, {
+            unreadCount: 0,
+          });
+        }
       } else {
         // Create new conversation
         const newConversation = {
@@ -376,25 +385,32 @@ function ChatPage() {
 
         setMessages(messagesList);
 
-        // Mark messages as read if they were sent to the current user
-        messagesList.forEach(async (message) => {
-          if (message.senderType === "shopper" && !message.read) {
-            const messageRef = doc(
-              db,
-              "chat_conversations",
-              conversationId,
-              "messages",
-              message.id
-            );
-            await updateDoc(messageRef, { read: true });
+        // Mark all unread messages as read
+        const unreadMessages = messagesList.filter(
+          (message) => message.senderType === "shopper" && !message.read
+        );
 
-            // Update unread count in conversation
+        if (unreadMessages.length > 0) {
+          // Mark messages as read (async operation)
+          (async () => {
+            for (const message of unreadMessages) {
+              const messageRef = doc(
+                db,
+                "chat_conversations",
+                conversationId,
+                "messages",
+                message.id
+              );
+              await updateDoc(messageRef, { read: true });
+            }
+
+            // Update conversation unread count to 0
             const convRef = doc(db, "chat_conversations", conversationId);
             await updateDoc(convRef, {
               unreadCount: 0,
             });
-          }
-        });
+          })();
+        }
 
         // Scroll to bottom after messages load
         setTimeout(scrollToBottom, 100);

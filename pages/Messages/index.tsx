@@ -117,10 +117,6 @@ function MessagesPage() {
     // Only fetch if user is authenticated
     if (status === "authenticated" && session?.user?.id) {
       const userId = session.user.id;
-      console.log(
-        "🔍 [User Messages] Fetching conversations for user:",
-        userId
-      );
 
       const fetchConversationsAndOrders = async () => {
         try {
@@ -136,48 +132,14 @@ function MessagesPage() {
             // Note: We might need to also query for shopperId, but for now let's focus on customerId
           );
 
-          console.log("🔍 [User Messages] Query setup:", {
-            collection: "chat_conversations",
-            filter: "customerId == " + userId,
-          });
-
-          // Temporary: Check ALL conversations in Firebase
-          const allConversationsRef = collection(db, "chat_conversations");
-          const allConversationsQuery = query(allConversationsRef);
-          const allConversationsSnapshot = await getDocs(allConversationsQuery);
-          console.log(
-            "🔍 [User Messages] ALL conversations in Firebase:",
-            allConversationsSnapshot.docs.map((doc) => ({
-              id: doc.id,
-              data: doc.data(),
-            }))
-          );
-
           // Set up real-time listener for conversations
           const unsubscribe = onSnapshot(
             q,
             async (snapshot) => {
-              console.log(
-                "🔍 [User Messages] Conversations snapshot received, count:",
-                snapshot.docs.length
-              );
-              console.log(
-                "🔍 [User Messages] Snapshot docs:",
-                snapshot.docs.map((doc) => ({
-                  id: doc.id,
-                  data: doc.data(),
-                }))
-              );
-
               // Check if any conversations have the current user as customerId
               const userConversations = snapshot.docs.filter(
                 (doc) => doc.data().customerId === userId
               );
-              console.log(
-                "🔍 [User Messages] Conversations for current user:",
-                userConversations.length
-              );
-              console.log("🔍 [User Messages] User ID being searched:", userId);
 
               // Get conversations and sort them in memory instead
               let conversationList = snapshot.docs.map((doc) => ({
@@ -190,24 +152,6 @@ function MessagesPage() {
                     : doc.data().lastMessageTime,
               })) as Conversation[];
 
-              console.log(
-                "🔍 [User Messages] Processed conversations:",
-                conversationList
-              );
-
-              // Log detailed conversation info
-              conversationList.forEach((conv, index) => {
-                console.log(`🔍 [User Messages] Conversation ${index + 1}:`, {
-                  id: conv.id,
-                  orderId: conv.orderId,
-                  customerId: conv.customerId,
-                  shopperId: conv.shopperId,
-                  lastMessage: conv.lastMessage,
-                  lastMessageTime: conv.lastMessageTime,
-                  unreadCount: conv.unreadCount,
-                });
-              });
-
               // Sort conversations by lastMessageTime in memory
               conversationList.sort((a, b) => {
                 const timeA = a.lastMessageTime
@@ -218,32 +162,6 @@ function MessagesPage() {
                   : 0;
                 return timeB - timeA; // descending order (newest first)
               });
-
-              console.log(
-                "🔍 [User Messages] Sorted conversations:",
-                conversationList
-              );
-
-              // Check if the specific conversation from shopper side exists
-              const shopperConversationId = "9pHJiDPXzspA7V6P5Mrp";
-              const foundConversation = conversationList.find(
-                (conv) => conv.id === shopperConversationId
-              );
-              if (foundConversation) {
-                console.log(
-                  "🔍 [User Messages] ✅ Found shopper conversation:",
-                  foundConversation
-                );
-              } else {
-                console.log(
-                  "🔍 [User Messages] ❌ Shopper conversation NOT found. Looking for ID:",
-                  shopperConversationId
-                );
-                console.log(
-                  "🔍 [User Messages] Available conversation IDs:",
-                  conversationList.map((conv) => conv.id)
-                );
-              }
 
               setConversations(conversationList);
 
@@ -472,12 +390,6 @@ function MessagesPage() {
               : doc.data().timestamp,
         })) as Message[];
 
-        console.log(
-          "🔍 [Messages] Received messages:",
-          messagesList.length,
-          "messages"
-        );
-        console.log("🔍 [Messages] Messages data:", messagesList);
         setMessages(messagesList);
 
         // Mark messages as read if they were sent to the current user
@@ -524,14 +436,6 @@ function MessagesPage() {
     try {
       setIsSending(true);
 
-      console.log("🔍 [User Messages] Sending message:", {
-        conversationId,
-        text: newMessage.trim(),
-        senderId: session.user.id,
-        senderType: "customer",
-        recipientId: selectedOrder.shopper.id,
-      });
-
       // Add new message to Firestore
       const messagesRef = collection(
         db,
@@ -549,8 +453,6 @@ function MessagesPage() {
         timestamp: serverTimestamp(),
         read: false,
       });
-
-      console.log("🔍 [User Messages] Message sent successfully");
 
       // Update conversation with last message
       const convRef = doc(db, "chat_conversations", conversationId);
