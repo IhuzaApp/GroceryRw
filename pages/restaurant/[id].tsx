@@ -58,21 +58,30 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isMobile, setIsMobile] = useState<boolean>(false);
 
   // Debug: Log dishes data
   // console.log('Restaurant dishes:', dishes);
+
+  // Check if mobile and handle scroll detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Scroll detection for sticky header (mobile only)
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
-      const isMobile = window.innerWidth < 768; // md breakpoint
       setIsScrolled(scrollTop > 100 && isMobile);
     };
 
     // Check on mount and resize
     const handleResize = () => {
-      const isMobile = window.innerWidth < 768;
       if (!isMobile) {
         setIsScrolled(false);
       }
@@ -88,7 +97,7 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("resize", handleResize);
     };
-  }, []);
+  }, [isMobile]);
 
   // Search handler
   const handleSearch = (query: string) => {
@@ -410,7 +419,7 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
 
   return (
     <RootLayout>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-20">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-16">
         {/* Sticky Header */}
         {isScrolled && (
           <div
@@ -472,9 +481,18 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
 
         {/* Main Content */}
         <div
-          className={`relative z-0 -mt-2 rounded-t-3xl bg-white transition-all duration-300 dark:bg-gray-800 ${
+          className={`relative z-0 -mt-2 transition-all duration-300 dark:bg-transparent ${
             isScrolled ? "pt-16" : ""
-          }`}
+          } sm:rounded-t-3xl`}
+          style={
+            isMobile
+              ? {
+                  marginLeft: "-16px",
+                  marginRight: "-16px",
+                  width: "calc(100% + 32px)",
+                }
+              : {}
+          }
         >
           {/* Category Tabs */}
           <div className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">

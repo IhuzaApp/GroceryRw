@@ -180,11 +180,11 @@ export const RestaurantMenuItems: React.FC<RestaurantMenuItemsProps> = ({
                   <h3 className="font-semibold text-gray-900 dark:text-white">
                     {dish.name}
                   </h3>
-                  <p className="mt-1 line-clamp-2 text-sm text-gray-600 dark:text-gray-400">
+                  <p className="mt-1 hidden line-clamp-2 text-sm text-gray-600 dark:text-gray-400 sm:block">
                     {dish.description}
                   </p>
                   {dish.ingredients && (
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+                    <p className="mt-1 hidden text-xs text-gray-500 dark:text-gray-500 sm:block">
                       Ingredients: {renderIngredients(dish.ingredients)}
                     </p>
                   )}

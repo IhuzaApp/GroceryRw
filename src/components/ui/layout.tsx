@@ -25,6 +25,9 @@ export default function RootLayout({
   const isPlasBusinessPage =
     router.pathname === "/plasBusiness" ||
     router.pathname.startsWith("/plasBusiness/");
+  // Check if current page is the order details page (mobile full width)
+  const isOrderDetailsPage =
+    router.pathname.startsWith("/CurrentPendingOrders/viewOrderDetails/");
 
   return (
     <ThemeProvider>
@@ -32,11 +35,16 @@ export default function RootLayout({
         {!isChatPage &&
           !isReelsPage &&
           !isMessagesPage &&
-          !isPlasBusinessPage && <HeaderLayout />}
+          !isPlasBusinessPage &&
+          !isOrderDetailsPage && <HeaderLayout />}
         {/* Main content */}
         <main
           className={`text-gray-900 transition-colors duration-200 dark:text-white ${
-            isChatPage || isReelsPage || isMessagesPage || isPlasBusinessPage
+            isChatPage ||
+            isReelsPage ||
+            isMessagesPage ||
+            isPlasBusinessPage ||
+            isOrderDetailsPage
               ? ""
               : "px-4 pb-20 pt-6 md:pb-0"
           }`}
@@ -53,21 +61,32 @@ export default function RootLayout({
               : {}
           }
         >
-          {!isChatPage && !isReelsPage && !isMessagesPage && <SideBar />}
+          {!isChatPage &&
+            !isReelsPage &&
+            !isMessagesPage &&
+            !isOrderDetailsPage && <SideBar />}
           <div
             className="[&_*]:text-inherit"
             style={
-              isReelsPage || isPlasBusinessPage || isMessagesPage
+              isReelsPage ||
+              isPlasBusinessPage ||
+              isMessagesPage ||
+              isOrderDetailsPage
                 ? { height: "100%", width: "100%" }
                 : {}
             }
           >
             {children}
           </div>
-          {!isChatPage && !isReelsPage && !isMessagesPage && <BottomBar />}
+          {!isChatPage &&
+            !isReelsPage &&
+            !isMessagesPage &&
+            !isOrderDetailsPage && <BottomBar />}
         </main>
         {/* AI Chat - Available on all pages except chat pages */}
-        {!isChatPage && !isMessagesPage && <AIChatProvider />}
+        {!isChatPage && !isMessagesPage && !isOrderDetailsPage && (
+          <AIChatProvider />
+        )}
       </div>
     </ThemeProvider>
   );

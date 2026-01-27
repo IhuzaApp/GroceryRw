@@ -204,7 +204,7 @@ const MobileOrderDetails = ({
   };
 
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen" style={{ margin: 0, padding: 0, width: '100%' }}>
       {/* Mobile Header with Image */}
       <div
         className="relative h-36 w-full sm:hidden"
@@ -290,7 +290,7 @@ const MobileOrderDetails = ({
       </div>
 
       {/* Mobile Content */}
-      <div className="py-6">
+      <div className={orderType === "restaurant" ? "w-full" : "py-6"} style={orderType === "restaurant" ? { margin: 0, padding: 0, width: '100%' } : {}}>
         {/* Order PIN Card - Compact Display */}
         {order?.pin && (
           <div className="mb-4 px-4">
@@ -614,9 +614,9 @@ function ViewOrderDetailsPage() {
         {/* Mobile-specific styles for full-width layout */}
         <style jsx global>{`
           @media (max-width: 767px) {
-            /* Remove padding from Panel body on mobile for full-width */
+            /* Panel body padding - allow internal padding for content */
             .mobile-full-width .rs-panel-body {
-              padding: 0 !important;
+              padding: 1rem !important;
             }
 
             /* Remove padding from scroll view on mobile */
@@ -634,6 +634,8 @@ function ViewOrderDetailsPage() {
               box-shadow: none !important;
               border-left: none !important;
               border-right: none !important;
+              width: 100% !important;
+              max-width: 100% !important;
             }
 
             /* Remove border radius from panel body and scroll view */
@@ -642,26 +644,26 @@ function ViewOrderDetailsPage() {
               border-radius: 0 !important;
             }
 
-            /* Add internal padding to content inside panels for readability */
-            .mobile-full-width .rs-panel-body > div {
-              padding-left: 1rem !important;
-              padding-right: 1rem !important;
-            }
-
-            /* Ensure proper spacing for first and last elements */
-            .mobile-full-width .rs-panel-body > div:first-child {
-              padding-top: 1rem !important;
-            }
-
-            .mobile-full-width .rs-panel-body > div:last-child {
-              padding-bottom: 1rem !important;
-            }
-
             /* Remove shadows from panel containers */
             .mobile-full-width .rs-panel,
             .mobile-full-width .rs-panel-body,
             .mobile-full-width .rs-scroll-view {
               box-shadow: none !important;
+            }
+
+            /* Restaurant order details - ensure panels are connected with borders */
+            .mobile-full-width .rs-panel + .rs-panel {
+              border-top: 1px solid rgba(229, 231, 235, 0.5) !important;
+              margin-top: 0 !important;
+            }
+
+            .dark .mobile-full-width .rs-panel + .rs-panel {
+              border-top-color: rgba(55, 65, 81, 0.5) !important;
+            }
+
+            /* Ensure panel body has proper padding for restaurant orders */
+            .mobile-full-width .rs-panel-body {
+              padding: 1rem !important;
             }
           }
         `}</style>
