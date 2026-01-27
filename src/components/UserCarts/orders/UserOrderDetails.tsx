@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import Image from "next/image";
-import { Input, InputGroup, Button, Panel, Steps, toaster } from "rsuite";
+import { Input, InputGroup, Button, Panel, Steps } from "rsuite";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/router";
@@ -188,10 +188,6 @@ export default function UserOrderDetails({
       // Close modal and update state
       setFeedbackModal(false);
       setHasExistingRating(true);
-      toaster.push("Thank you for your feedback!", {
-        placement: "topCenter",
-        duration: 4000,
-      });
     } catch (error) {
       setSubmitError(
         error instanceof Error ? error.message : "Failed to submit feedback"
@@ -401,25 +397,6 @@ export default function UserOrderDetails({
                   description="Enjoy your groceries!"
                 />
               </Steps>
-
-              {/* Delivery Proof Image for Desktop */}
-              {order.status === "delivered" && order.deliveryPhotoUrl && (
-                <div className="mt-6">
-                  <h3 className="mb-3 text-base font-semibold text-gray-900 dark:text-white">
-                    Delivery Proof
-                  </h3>
-                  <div className="relative mx-auto max-w-md overflow-hidden rounded-lg border-2 border-gray-200 dark:border-gray-700">
-                    <Image
-                      src={order.deliveryPhotoUrl}
-                      alt="Delivery proof"
-                      width={448}
-                      height={448}
-                      className="h-auto w-full object-cover"
-                      unoptimized
-                    />
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>
@@ -965,6 +942,22 @@ export default function UserOrderDetails({
                 <p className="font-medium">
                   2.5 miles away • Arriving in ~15 minutes
                 </p>
+              </div>
+            </Panel>
+          )}
+
+          {order.status === "delivered" && order.deliveryPhotoUrl && (
+            <Panel shaded bordered className="mt-6">
+              <h2 className="mb-4 text-xl font-bold">Delivery Proof</h2>
+              <div className="relative mx-auto overflow-hidden rounded-lg border-2 border-gray-200 dark:border-gray-700">
+                <Image
+                  src={order.deliveryPhotoUrl}
+                  alt="Delivery proof"
+                  width={448}
+                  height={448}
+                  className="h-auto w-full object-cover"
+                  unoptimized
+                />
               </div>
             </Panel>
           )}
