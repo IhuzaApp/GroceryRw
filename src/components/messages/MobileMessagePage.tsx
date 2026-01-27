@@ -96,11 +96,16 @@ export default function MobileMessagePage({
       if (searchQuery) {
         const order = orders[conversation.orderId];
         const employeeId = order?.assignedTo?.shopper?.Employment_id;
-        const fullName = order?.assignedTo?.shopper?.full_name ||
+        const fullName =
+          order?.assignedTo?.shopper?.full_name ||
           order?.assignedTo?.name ||
           order?.shopper?.name ||
           "Shopper";
-        const contactName = (employeeId ? `00${employeeId} ${fullName}` : fullName)?.toLowerCase() || "";
+        const contactName =
+          (employeeId
+            ? `00${employeeId} ${fullName}`
+            : fullName
+          )?.toLowerCase() || "";
         const orderNumber = formatOrderID(
           order?.OrderID || conversation.orderId
         ).toLowerCase();
@@ -264,11 +269,14 @@ export default function MobileMessagePage({
             {filteredConversations.map((conversation) => {
               const order = orders[conversation.orderId] || {};
               const employeeId = order?.assignedTo?.shopper?.Employment_id;
-              const fullName = order?.assignedTo?.shopper?.full_name ||
+              const fullName =
+                order?.assignedTo?.shopper?.full_name ||
                 order?.assignedTo?.name ||
                 order?.shopper?.name ||
                 "Shopper";
-              const contactName = employeeId ? `00${employeeId} ${fullName}` : fullName;
+              const contactName = employeeId
+                ? `00${employeeId} ${fullName}`
+                : fullName;
               const contactAvatar =
                 order?.assignedTo?.shopper?.profile_photo ||
                 order?.assignedTo?.profile_picture ||

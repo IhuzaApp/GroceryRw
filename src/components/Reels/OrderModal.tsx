@@ -1,7 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, ShoppingCart, Package, MessageSquare, Tag, CreditCard, CheckCircle } from "lucide-react";
+import {
+  X,
+  ShoppingCart,
+  Package,
+  MessageSquare,
+  Tag,
+  CreditCard,
+  CheckCircle,
+} from "lucide-react";
 import toast from "react-hot-toast";
 import { formatCurrency } from "../../lib/formatCurrency";
 import Cookies from "js-cookie";
@@ -89,7 +97,9 @@ export default function OrderModal({
   const [useDefaultPayment, setUseDefaultPayment] = useState(true);
   const [manualPhoneNumber, setManualPhoneNumber] = useState("");
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
-  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
+    null
+  );
   const [loadingAddresses, setLoadingAddresses] = useState(false);
 
   // Check if mobile on mount and resize
@@ -97,7 +107,7 @@ export default function OrderModal({
     const checkIfMobile = () => {
       setIsMobile(window.innerWidth < 640);
     };
-    
+
     checkIfMobile();
     window.addEventListener("resize", checkIfMobile);
     return () => window.removeEventListener("resize", checkIfMobile);
@@ -133,10 +143,10 @@ export default function OrderModal({
         setLoadingAddresses(true);
         const response = await fetch("/api/queries/addresses");
         const data = await response.json();
-        
+
         if (data.addresses) {
           setSavedAddresses(data.addresses);
-          
+
           // Set default address if available
           const defaultAddr = data.addresses.find((a: any) => a.is_default);
           if (defaultAddr) {
@@ -243,17 +253,16 @@ export default function OrderModal({
   // Use selected address first, then fallback to cookie
   let distanceKm = 0;
   let userAlt = 0;
-  
-  if (selectedAddress && selectedAddress.latitude && selectedAddress.longitude) {
+
+  if (
+    selectedAddress &&
+    selectedAddress.latitude &&
+    selectedAddress.longitude
+  ) {
     const userLat = parseFloat(selectedAddress.latitude.toString());
     const userLng = parseFloat(selectedAddress.longitude.toString());
     userAlt = parseFloat((selectedAddress.altitude || "0").toString());
-    distanceKm = getDistanceFromLatLonInKm(
-      userLat,
-      userLng,
-      shopLat,
-      shopLng
-    );
+    distanceKm = getDistanceFromLatLonInKm(userLat, userLng, shopLat, shopLng);
   } else {
     // Fallback to cookie
     const cookie = Cookies.get("delivery_address");
@@ -295,7 +304,7 @@ export default function OrderModal({
   let deliveryFee = finalDistanceFee;
   let deliveryFeeDiscount = 0;
   const originalDeliveryFee = finalDistanceFee;
-  
+
   if (subtotal > 30000) {
     deliveryFeeDiscount = finalDistanceFee * 0.5; // 50% discount
     deliveryFee = finalDistanceFee * 0.5; // Final delivery fee after discount
@@ -350,10 +359,10 @@ export default function OrderModal({
       const shoppingTime = systemConfig
         ? parseInt(systemConfig.shoppingTime)
         : 0;
-      
+
       // Get user altitude from selected address
-      const userAltFromAddress = selectedAddress?.altitude 
-        ? parseFloat(selectedAddress.altitude.toString()) 
+      const userAltFromAddress = selectedAddress?.altitude
+        ? parseFloat(selectedAddress.altitude.toString())
         : 0;
       const altKm = (shopAlt - userAltFromAddress) / 1000;
       const distance3D = Math.sqrt(distanceKm * distanceKm + altKm * altKm);
@@ -510,8 +519,16 @@ export default function OrderModal({
             {selectedPaymentMethod.type === "refund"
               ? "Using Refund Balance"
               : selectedPaymentMethod.type === "momo"
-              ? `MTN MoMo ${selectedPaymentMethod.number ? `•••• ${selectedPaymentMethod.number.slice(-3)}` : ""}`
-              : `Card ${selectedPaymentMethod.number ? `•••• ${selectedPaymentMethod.number.slice(-4)}` : ""}`}
+              ? `MTN MoMo ${
+                  selectedPaymentMethod.number
+                    ? `•••• ${selectedPaymentMethod.number.slice(-3)}`
+                    : ""
+                }`
+              : `Card ${
+                  selectedPaymentMethod.number
+                    ? `•••• ${selectedPaymentMethod.number.slice(-4)}`
+                    : ""
+                }`}
           </span>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             {selectedPaymentMethod.type === "refund"
@@ -533,7 +550,7 @@ export default function OrderModal({
 
   return (
     <div
-      className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/50 backdrop-blur-sm p-0 sm:items-center sm:p-4"
+      className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       onClick={onClose}
       style={{
         position: "fixed",
@@ -546,12 +563,12 @@ export default function OrderModal({
       }}
     >
       <div
-        className="w-full max-w-[550px] flex flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-gray-800 sm:rounded-2xl sm:max-h-[90vh]"
+        className="flex w-full max-w-[550px] flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-gray-800 sm:max-h-[90vh] sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
-        style={{ 
+        style={{
           height: isMobile ? "calc(100vh - 5vh)" : "auto",
           maxHeight: isMobile ? "calc(100vh - 5vh)" : "90vh",
-          marginBottom: 0 
+          marginBottom: 0,
         }}
       >
         {/* Header */}
@@ -761,7 +778,7 @@ export default function OrderModal({
                   </label>
                   {loadingAddresses ? (
                     <div
-                      className={`flex items-center justify-center rounded-xl border-2 py-3 px-4 ${
+                      className={`flex items-center justify-center rounded-xl border-2 px-4 py-3 ${
                         theme === "dark"
                           ? "border-gray-600 bg-gray-700"
                           : "border-gray-300 bg-white"
@@ -791,8 +808,10 @@ export default function OrderModal({
                   ) : (
                     <select
                       value={selectedAddressId || ""}
-                      onChange={(e) => handleAddressChange(e.target.value || null)}
-                      className={`w-full rounded-xl border-2 py-3 px-4 transition-all focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                      onChange={(e) =>
+                        handleAddressChange(e.target.value || null)
+                      }
+                      className={`w-full rounded-xl border-2 px-4 py-3 transition-all focus:outline-none focus:ring-2 focus:ring-green-500 ${
                         theme === "dark"
                           ? "border-gray-600 bg-gray-700 text-gray-100 focus:border-green-500"
                           : "border-gray-300 bg-white text-gray-900 focus:border-green-500"
@@ -813,7 +832,8 @@ export default function OrderModal({
                       }`}
                     >
                       {selectedAddress.street}, {selectedAddress.city}
-                      {selectedAddress.postal_code && `, ${selectedAddress.postal_code}`}
+                      {selectedAddress.postal_code &&
+                        `, ${selectedAddress.postal_code}`}
                     </p>
                   )}
                 </div>
@@ -831,7 +851,7 @@ export default function OrderModal({
                     value={comments}
                     onChange={(e) => setComments(e.target.value)}
                     rows={4}
-                    className={`w-full rounded-xl border-2 py-3 px-4 transition-all focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                    className={`w-full rounded-xl border-2 px-4 py-3 transition-all focus:outline-none focus:ring-2 focus:ring-green-500 ${
                       theme === "dark"
                         ? "border-gray-600 bg-gray-700 text-gray-100 placeholder-gray-400 focus:border-green-500"
                         : "border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-green-500"
@@ -934,7 +954,9 @@ export default function OrderModal({
                         <div className="flex items-center gap-2">
                           <span
                             className={`font-medium ${
-                              theme === "dark" ? "text-gray-100" : "text-gray-800"
+                              theme === "dark"
+                                ? "text-gray-100"
+                                : "text-gray-800"
                             }`}
                           >
                             Use Default Payment Method
@@ -943,12 +965,18 @@ export default function OrderModal({
                         {defaultPaymentMethod && (
                           <p
                             className={`mt-1 text-xs ${
-                              theme === "dark" ? "text-gray-400" : "text-gray-600"
+                              theme === "dark"
+                                ? "text-gray-400"
+                                : "text-gray-600"
                             }`}
                           >
                             {defaultPaymentMethod.type === "momo"
-                              ? `MTN MoMo •••• ${defaultPaymentMethod.number?.slice(-3)}`
-                              : `Card •••• ${defaultPaymentMethod.number?.slice(-4)}`}
+                              ? `MTN MoMo •••• ${defaultPaymentMethod.number?.slice(
+                                  -3
+                                )}`
+                              : `Card •••• ${defaultPaymentMethod.number?.slice(
+                                  -4
+                                )}`}
                           </p>
                         )}
                       </div>
@@ -977,7 +1005,9 @@ export default function OrderModal({
                         <div className="flex items-center gap-2">
                           <span
                             className={`font-medium ${
-                              theme === "dark" ? "text-gray-100" : "text-gray-800"
+                              theme === "dark"
+                                ? "text-gray-100"
+                                : "text-gray-800"
                             }`}
                           >
                             Enter Phone Number Manually
@@ -991,7 +1021,9 @@ export default function OrderModal({
                               >
                                 <svg
                                   className={`h-5 w-5 ${
-                                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                                    theme === "dark"
+                                      ? "text-gray-400"
+                                      : "text-gray-500"
                                   }`}
                                   fill="none"
                                   stroke="currentColor"
@@ -1008,7 +1040,9 @@ export default function OrderModal({
                               <input
                                 type="tel"
                                 value={manualPhoneNumber}
-                                onChange={(e) => setManualPhoneNumber(e.target.value)}
+                                onChange={(e) =>
+                                  setManualPhoneNumber(e.target.value)
+                                }
                                 placeholder="Enter phone number"
                                 className={`w-full rounded-xl border-2 py-3 pl-10 pr-4 transition-all focus:outline-none focus:ring-2 focus:ring-green-500 ${
                                   theme === "dark"
@@ -1118,14 +1152,18 @@ export default function OrderModal({
                       <div className="flex items-center justify-between py-2">
                         <span
                           className={
-                            theme === "dark" ? "text-green-400" : "text-green-600"
+                            theme === "dark"
+                              ? "text-green-400"
+                              : "text-green-600"
                           }
                         >
                           Discount
                         </span>
                         <span
                           className={`font-medium ${
-                            theme === "dark" ? "text-green-400" : "text-green-600"
+                            theme === "dark"
+                              ? "text-green-400"
+                              : "text-green-600"
                           }`}
                         >
                           -{formatCurrency(discount)}
@@ -1137,14 +1175,18 @@ export default function OrderModal({
                         <div className="flex items-center justify-between py-2">
                           <span
                             className={`${
-                              theme === "dark" ? "text-gray-300" : "text-gray-600"
+                              theme === "dark"
+                                ? "text-gray-300"
+                                : "text-gray-600"
                             }`}
                           >
                             Delivery Fee (Original)
                           </span>
                           <span
                             className={`font-medium line-through ${
-                              theme === "dark" ? "text-gray-500" : "text-gray-400"
+                              theme === "dark"
+                                ? "text-gray-500"
+                                : "text-gray-400"
                             }`}
                           >
                             {formatCurrency(originalDeliveryFee)}
@@ -1170,7 +1212,9 @@ export default function OrderModal({
                         {subtotal > 30000 && (
                           <span
                             className={`ml-2 text-xs ${
-                              theme === "dark" ? "text-green-400" : "text-green-600"
+                              theme === "dark"
+                                ? "text-green-400"
+                                : "text-green-600"
                             }`}
                           >
                             (50% off)

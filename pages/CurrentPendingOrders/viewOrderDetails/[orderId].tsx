@@ -204,7 +204,10 @@ const MobileOrderDetails = ({
   };
 
   return (
-    <div className="min-h-screen" style={{ margin: 0, padding: 0, width: '100%' }}>
+    <div
+      className="min-h-screen"
+      style={{ margin: 0, padding: 0, width: "100%" }}
+    >
       {/* Mobile Header with Image */}
       <div
         className="relative h-36 w-full sm:hidden"
@@ -290,7 +293,14 @@ const MobileOrderDetails = ({
       </div>
 
       {/* Mobile Content */}
-      <div className={orderType === "restaurant" ? "w-full" : "py-6"} style={orderType === "restaurant" ? { margin: 0, padding: 0, width: '100%' } : {}}>
+      <div
+        className={orderType === "restaurant" ? "w-full" : "py-6"}
+        style={
+          orderType === "restaurant"
+            ? { margin: 0, padding: 0, width: "100%" }
+            : {}
+        }
+      >
         {/* Order PIN Card - Compact Display */}
         {order?.pin && (
           <div className="mb-4 px-4">

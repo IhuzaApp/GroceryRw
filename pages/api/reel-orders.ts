@@ -103,7 +103,7 @@ export default async function handler(
 
     // Generate PIN (same way as checkoutCard.tsx - 2-digit, 00-99)
     const orderPin = generateOrderPin();
-    
+
     // Create reel order (pin field not in schema, but we generate it for response)
     const orderRes = await hasuraClient.request<{
       insert_reel_orders_one: { id: string; OrderID: string };

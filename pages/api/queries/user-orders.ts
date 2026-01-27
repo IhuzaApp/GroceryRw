@@ -246,15 +246,15 @@ export default async function handler(
     // Fetch shop data if we have any shop IDs
     const shopsData = shopIds.length
       ? await hasuraClient.request<{
-      Shops: Array<{
-        id: string;
-        name: string;
-        address: string;
-        image: string;
-        logo: string;
-        category_id: string;
-      }>;
-      }>(GET_SHOPS_BY_IDS, { ids: shopIds })
+          Shops: Array<{
+            id: string;
+            name: string;
+            address: string;
+            image: string;
+            logo: string;
+            category_id: string;
+          }>;
+        }>(GET_SHOPS_BY_IDS, { ids: shopIds })
       : { Shops: [] };
 
     const shopMap = new Map(shopsData.Shops.map((s) => [s.id, s]));

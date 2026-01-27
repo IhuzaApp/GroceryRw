@@ -26,8 +26,9 @@ export default function RootLayout({
     router.pathname === "/plasBusiness" ||
     router.pathname.startsWith("/plasBusiness/");
   // Check if current page is the order details page (mobile full width)
-  const isOrderDetailsPage =
-    router.pathname.startsWith("/CurrentPendingOrders/viewOrderDetails/");
+  const isOrderDetailsPage = router.pathname.startsWith(
+    "/CurrentPendingOrders/viewOrderDetails/"
+  );
 
   return (
     <ThemeProvider>

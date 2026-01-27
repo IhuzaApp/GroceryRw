@@ -437,7 +437,10 @@ export default async function handler(
     res.status(200).json({ order: formattedOrder });
   } catch (error) {
     console.error("❌ Order Details API Error:", error);
-    console.error("❌ Error details:", error instanceof Error ? error.message : "Unknown error");
+    console.error(
+      "❌ Error details:",
+      error instanceof Error ? error.message : "Unknown error"
+    );
     res.status(500).json({
       error: "Failed to fetch order details",
       details: error instanceof Error ? error.message : "Unknown error",
