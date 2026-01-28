@@ -511,12 +511,19 @@ export const getServerSideProps: GetServerSideProps<
               id
               quantity
               price
-              restaurant_dishes {
+              restaurant_menu {
                 id
-                name
-                description
-                image
                 price
+                ProductNames {
+                  name
+                  description
+                  image
+                }
+                dishes {
+                  name
+                  description
+                  image
+                }
               }
             }
             shopper {
