@@ -39,10 +39,7 @@ const LightningIcon = () => (
 );
 
 const CakeIcon = () => (
-  <svg
-    className="h-7 w-7 sm:h-5 sm:w-5"
-    viewBox="0 0 24 24"
-  >
+  <svg className="h-7 w-7 sm:h-5 sm:w-5" viewBox="0 0 24 24">
     <rect
       x="4"
       y="11"
@@ -75,10 +72,7 @@ const CakeIcon = () => (
 );
 
 const BreakfastIcon = () => (
-  <svg
-    className="h-7 w-7 sm:h-5 sm:w-5"
-    viewBox="0 0 24 24"
-  >
+  <svg className="h-7 w-7 sm:h-5 sm:w-5" viewBox="0 0 24 24">
     <circle cx="9" cy="10" r="5.2" fill="#fef9c3" />
     <circle cx="9" cy="10" r="2.2" fill="#facc15" />
     <path
@@ -99,10 +93,7 @@ const BreakfastIcon = () => (
 );
 
 const DonutIcon = () => (
-  <svg
-    className="h-7 w-7 sm:h-5 sm:w-5"
-    viewBox="0 0 24 24"
-  >
+  <svg className="h-7 w-7 sm:h-5 sm:w-5" viewBox="0 0 24 24">
     <circle cx="12" cy="12" r="8" fill="#f9a8d4" />
     <circle cx="12" cy="12" r="3" fill="#fef9c3" />
     <circle cx="9.5" cy="9.5" r="0.6" fill="#ec4899" />
@@ -119,10 +110,7 @@ const DonutIcon = () => (
 );
 
 const SaladIcon = () => (
-  <svg
-    className="h-7 w-7 sm:h-5 sm:w-5"
-    viewBox="0 0 24 24"
-  >
+  <svg className="h-7 w-7 sm:h-5 sm:w-5" viewBox="0 0 24 24">
     <path
       d="M4 11a7 7 0 0 1 13-3"
       fill="#bbf7d0"
@@ -146,10 +134,7 @@ const SaladIcon = () => (
 );
 
 const LunchIcon = () => (
-  <svg
-    className="h-7 w-7 sm:h-5 sm:w-5"
-    viewBox="0 0 24 24"
-  >
+  <svg className="h-7 w-7 sm:h-5 sm:w-5" viewBox="0 0 24 24">
     <rect x="3" y="11" width="18" height="4" rx="1.5" fill="#38bdf8" />
     <rect x="5" y="15" width="14" height="4" rx="1.5" fill="#0f172a" />
     <path
@@ -172,10 +157,7 @@ const LunchIcon = () => (
 );
 
 const MeatIcon = () => (
-  <svg
-    className="h-7 w-7 sm:h-5 sm:w-5"
-    viewBox="0 0 24 24"
-  >
+  <svg className="h-7 w-7 sm:h-5 sm:w-5" viewBox="0 0 24 24">
     <path
       d="M5 5c3-3 8-3 11 0s3 8 0 11-8 3-11 0-3-8 0-11Z"
       fill="#f97373"
@@ -238,10 +220,10 @@ const ExploreMoodStrip: React.FC<ExploreMoodStripProps> = ({
 }) => {
   return (
     <section
-      className={`mt-4 sm:mt-8 lg:mt-10 rounded-2xl p-4 shadow-sm sm:p-6 ${
+      className={`mt-4 rounded-2xl p-4 shadow-sm sm:mt-8 sm:p-6 lg:mt-10 ${
         isDark
           ? "border border-gray-800 bg-gray-900/70"
-          : "bg-white border border-slate-100"
+          : "border border-slate-100 bg-white"
       }`}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -262,34 +244,34 @@ const ExploreMoodStrip: React.FC<ExploreMoodStripProps> = ({
           </p>
         </div>
         <div className="flex-1">
-          <div className="flex gap-3 overflow-x-auto pb-1 sm:justify-end sm:overflow-visible sm:pb-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {moods.map((chip) => {
-            const isActive = activeCategory === chip.apiCategory;
-            const baseClasses =
-              "flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-medium transition";
+          <div className="flex gap-3 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:justify-end sm:overflow-visible sm:pb-0 [&::-webkit-scrollbar]:hidden">
+            {moods.map((chip) => {
+              const isActive = activeCategory === chip.apiCategory;
+              const baseClasses =
+                "flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-medium transition";
 
-            const colorClasses = isActive
-              ? isDark
-                ? "border-emerald-500 bg-emerald-900/40 text-emerald-300"
-                : "border-emerald-500 bg-emerald-50 text-emerald-700"
-              : isDark
-              ? "border-gray-700 bg-gray-900 text-slate-200 hover:border-emerald-400 hover:bg-emerald-950/60"
-              : "border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-300 hover:bg-emerald-50/60";
+              const colorClasses = isActive
+                ? isDark
+                  ? "border-emerald-500 bg-emerald-900/40 text-emerald-300"
+                  : "border-emerald-500 bg-emerald-50 text-emerald-700"
+                : isDark
+                ? "border-gray-700 bg-gray-900 text-slate-200 hover:border-emerald-400 hover:bg-emerald-950/60"
+                : "border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-300 hover:bg-emerald-50/60";
 
-            return (
-              <button
-                key={chip.id}
-                type="button"
-                onClick={() => onSelectCategory(chip.apiCategory)}
-                className={`${baseClasses} ${colorClasses}`}
-              >
-                <span className="flex items-center justify-center">
-                  {chip.icon}
-                </span>
-                <span>{chip.label}</span>
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={chip.id}
+                  type="button"
+                  onClick={() => onSelectCategory(chip.apiCategory)}
+                  className={`${baseClasses} ${colorClasses}`}
+                >
+                  <span className="flex items-center justify-center">
+                    {chip.icon}
+                  </span>
+                  <span>{chip.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -298,4 +280,3 @@ const ExploreMoodStrip: React.FC<ExploreMoodStripProps> = ({
 };
 
 export default ExploreMoodStrip;
-

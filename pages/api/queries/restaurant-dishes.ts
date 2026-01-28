@@ -3,84 +3,88 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
 const GET_RESTAURANT_DISHES = gql`
- query GetRestaurantDishes($restaurant_id: uuid!) {
-  restaurant_menu(where: {restaurant_id: {_eq: $restaurant_id}}, order_by: {dishes: {name: asc}, ProductNames: {name: asc}}) {
-    id
-    price
-    discount
-    quantity
-    restaurant_id
-    is_active
-    SKU
-    created_at
-    updated_at
-    promo
-    promo_type
-    preparingTime
-    dish_id
-    dishes {
-      category
+  query GetRestaurantDishes($restaurant_id: uuid!) {
+    restaurant_menu(
+      where: { restaurant_id: { _eq: $restaurant_id } }
+      order_by: { dishes: { name: asc }, ProductNames: { name: asc } }
+    ) {
+      id
+      price
+      discount
+      quantity
+      restaurant_id
+      is_active
+      SKU
       created_at
-      description
-      id
-      image
-      ingredients
-      name
-      update_at
-    }
-    product_id
-    ProductNames {
-      barcode
-      create_at
-      description
-      id
-      image
-      name
-      sku
+      updated_at
+      promo
+      promo_type
+      preparingTime
+      dish_id
+      dishes {
+        category
+        created_at
+        description
+        id
+        image
+        ingredients
+        name
+        update_at
+      }
+      product_id
+      ProductNames {
+        barcode
+        create_at
+        description
+        id
+        image
+        name
+        sku
+      }
     }
   }
-}
-
 `;
 
 const GET_ALL_RESTAURANT_DISHES = gql`
-query GetAllRestaurantDishes {
-  restaurant_menu(order_by: {ProductNames: {name: asc}, dishes: {name: asc}}) {
-    id
-    price
-    discount
-    quantity
-    restaurant_id
-    is_active
-    SKU
-    created_at
-    updated_at
-    promo
-    promo_type
-    preparingTime
-    dish_id
-    product_id
-    dishes {
-      category
+  query GetAllRestaurantDishes {
+    restaurant_menu(
+      order_by: { ProductNames: { name: asc }, dishes: { name: asc } }
+    ) {
+      id
+      price
+      discount
+      quantity
+      restaurant_id
+      is_active
+      SKU
       created_at
-      description
-      id
-      image
-      ingredients
-      name
-      update_at
-    }
-    ProductNames {
-      barcode
-      create_at
-      description
-      id
-      image
-      name
-      sku
+      updated_at
+      promo
+      promo_type
+      preparingTime
+      dish_id
+      product_id
+      dishes {
+        category
+        created_at
+        description
+        id
+        image
+        ingredients
+        name
+        update_at
+      }
+      ProductNames {
+        barcode
+        create_at
+        description
+        id
+        image
+        name
+        sku
+      }
     }
   }
-}
 `;
 
 // Raw response shape from Hasura (restaurant_menu + related tables)

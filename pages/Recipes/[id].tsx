@@ -76,9 +76,7 @@ export default function RecipeDetailPage() {
         ) : error ? (
           <div
             className={`rounded-lg p-4 ${
-              isDark
-                ? "bg-red-950/60 text-red-200"
-                : "bg-red-50 text-red-800"
+              isDark ? "bg-red-950/60 text-red-200" : "bg-red-50 text-red-800"
             }`}
           >
             <h3 className="mb-2 font-medium">Error</h3>

@@ -10,4 +10,3 @@ export interface MealDetail {
   // For dynamic ingredient and measure properties
   [key: string]: string | null;
 }
-

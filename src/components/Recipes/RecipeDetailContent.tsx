@@ -132,8 +132,8 @@ const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
               }`}
             >
               Fluffy and flavorful {meal.strMeal.toLowerCase()} made with simple
-              pantry ingredients. Perfect for busy weeknights or weekend
-              treats, this recipe is easy to follow and always a crowd-pleaser.
+              pantry ingredients. Perfect for busy weeknights or weekend treats,
+              this recipe is easy to follow and always a crowd-pleaser.
             </p>
 
             {/* Video tutorial (desktop within card) */}
@@ -158,11 +158,7 @@ const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
                     </div>
                   </div>
                   <div className="text-xs sm:text-sm">
-                    <p
-                      className={
-                        isDark ? "text-slate-200" : "text-slate-700"
-                      }
-                    >
+                    <p className={isDark ? "text-slate-200" : "text-slate-700"}>
                       Watch a quick step-by-step walkthrough for this recipe.
                       See the texture, timing, and pan movement so it is easier
                       to follow along while you cook.
@@ -245,9 +241,7 @@ const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
               onClick={() => setIngredientsOpen((v) => !v)}
             >
               <h2 className="text-sm font-semibold sm:text-base">Summary</h2>
-              <span className="md:hidden">
-                {ingredientsOpen ? "−" : "+"}
-              </span>
+              <span className="md:hidden">{ingredientsOpen ? "−" : "+"}</span>
             </button>
             <div
               className={`mt-3 grid grid-cols-2 gap-3 ${
@@ -287,9 +281,7 @@ const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
               <h2 className="text-sm font-semibold sm:text-base">
                 Ingredients
               </h2>
-              <span className="md:hidden">
-                {ingredientsOpen ? "−" : "+"}
-              </span>
+              <span className="md:hidden">{ingredientsOpen ? "−" : "+"}</span>
             </button>
             <ul
               className={`mt-3 space-y-2 text-xs sm:text-sm ${
@@ -328,9 +320,7 @@ const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
           onClick={() => setInstructionsOpen((v) => !v)}
         >
           <h2 className="text-sm font-semibold sm:text-base">Instructions</h2>
-          <span className="md:hidden">
-            {instructionsOpen ? "−" : "+"}
-          </span>
+          <span className="md:hidden">{instructionsOpen ? "−" : "+"}</span>
         </button>
         <ol
           className={`mt-3 space-y-3 text-xs sm:text-sm ${
@@ -398,4 +388,3 @@ const RecipeDetailContent: React.FC<RecipeDetailContentProps> = ({
 };
 
 export default RecipeDetailContent;
-
