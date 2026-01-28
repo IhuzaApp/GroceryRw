@@ -110,11 +110,32 @@ const ShopCard: React.FC<ShopCardProps> = ({
       // For stores, use the image directly (it's already a base64 or full URL)
       return shop.image;
     }
+    if (isRestaurant) {
+      const img = shop.image?.toLowerCase() ?? "";
+      const looksLikePlaceholder =
+        !img ||
+        img === "profile.png" ||
+        img.includes("placeholder") ||
+        img.includes("grocery");
+
+      // If restaurant has no real image or uses a generic placeholder, use restaurant illustration
+      if (looksLikePlaceholder) {
+        return "/assets/images/restaurantImage.webp";
+      }
+
+      return getShopImageUrl(shop.image);
+    }
+
     return getShopImageUrl(shop.image);
   };
 
   // Get placeholder image
   const getPlaceholderImage = () => {
+    // Restaurants should use the restaurant illustration, not supermarket
+    if (isRestaurant) {
+      return "/assets/images/restaurantImage.webp";
+    }
+
     if (isStore) {
       return "/images/store-placeholder.jpg";
     }
@@ -126,6 +147,17 @@ const ShopCard: React.FC<ShopCardProps> = ({
   const hasRating = dynamics.rating > 0 && dynamics.ratingCount > 0;
   const ratingValue = hasRating ? dynamics.rating.toFixed(1) : "New";
   const ratingCount = hasRating ? dynamics.ratingCount.toString() : "0";
+
+  // Debug: log restaurant cards to verify images (e.g. "Star Bulks")
+  if (isRestaurant) {
+    // eslint-disable-next-line no-console
+    console.log("[ShopCard] Restaurant rendered:", {
+      id: shop.id,
+      name: shop.name,
+      image: shop.image,
+      isStore,
+    });
+  }
 
   return (
     <Link
