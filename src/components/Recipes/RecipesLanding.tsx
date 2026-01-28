@@ -142,79 +142,77 @@ const RecipesLanding: React.FC = () => {
   };
 
   return (
-      <div
-        className={`pb-16 pt-0 md:pt-10 transition-colors duration-200`}
-      >
-        {/* Mobile header + search (hero is hidden on mobile) */}
-        <div className="md:hidden">
+    <div className={`pb-16 pt-0 transition-colors duration-200 md:pt-10`}>
+      {/* Mobile header + search (hero is hidden on mobile) */}
+      <div className="md:hidden">
+        <div
+          className="relative mb-6 h-48 overflow-hidden rounded-b-3xl"
+          style={{
+            marginTop: "-44px",
+            marginLeft: "-16px",
+            marginRight: "-16px",
+          }}
+        >
+          {/* Background Image */}
           <div
-            className="relative mb-6 h-48 overflow-hidden rounded-b-3xl"
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{
-              marginTop: "-44px",
-              marginLeft: "-16px",
-              marginRight: "-16px",
+              backgroundImage:
+                'url("https://images.pexels.com/photos/4109084/pexels-photo-4109084.jpeg?auto=compress&cs=tinysrgb&w=1200")',
             }}
           >
-            {/* Background Image */}
-            <div
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-              style={{
-                backgroundImage:
-                  'url("https://images.pexels.com/photos/4109084/pexels-photo-4109084.jpeg?auto=compress&cs=tinysrgb&w=1200")',
-              }}
-            >
-              <div className="absolute inset-0 bg-black/40" />
-            </div>
+            <div className="absolute inset-0 bg-black/40" />
+          </div>
 
-            {/* Header content */}
-            <div className="relative z-10 flex h-full flex-col justify-center px-4 pt-6">
-              <h1
-                className="text-2xl font-semibold text-white"
-                style={{ color: "#ffffff" }}
+          {/* Header content */}
+          <div className="relative z-10 flex h-full flex-col justify-center px-4 pt-6">
+            <h1
+              className="text-2xl font-semibold text-white"
+              style={{ color: "#ffffff" }}
+            >
+              Easy Home Cooking
+            </h1>
+            <p
+              className="mt-1 text-sm text-white/80"
+              style={{ color: "rgba(255,255,255,0.9)" }}
+            >
+              Over 200+ recipes you can cook at home.
+            </p>
+            <div className="mt-4 flex items-center gap-2">
+              <Input
+                value={searchTerm}
+                onChange={setSearchTerm}
+                placeholder="Search for recipes (e.g., Pasta, Chicken)"
+                onKeyPress={handleKeyPress}
+                size="lg"
+                className="w-full flex-1 !rounded-2xl !bg-white/95 !text-gray-900 placeholder:!text-gray-500"
+              />
+              <Button
+                appearance="primary"
+                color="green"
+                onClick={handleSearch}
+                size="lg"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full !p-0"
               >
-                Easy Home Cooking
-              </h1>
-              <p
-                className="mt-1 text-sm text-white/80"
-                style={{ color: "rgba(255,255,255,0.9)" }}
-              >
-                Over 200+ recipes you can cook at home.
-              </p>
-              <div className="mt-4 flex items-center gap-2">
-                <Input
-                  value={searchTerm}
-                  onChange={setSearchTerm}
-                  placeholder="Search for recipes (e.g., Pasta, Chicken)"
-                  onKeyPress={handleKeyPress}
-                  size="lg"
-                  className="w-full flex-1 !rounded-2xl !bg-white/95 !text-gray-900 placeholder:!text-gray-500"
-                />
-                <Button
-                  appearance="primary"
-                  color="green"
-                  onClick={handleSearch}
-                  size="lg"
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full !p-0"
+                <svg
+                  className="h-5 w-5 text-white"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
                 >
-                  <svg
-                    className="h-5 w-5 text-white"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M21 21l-4.35-4.35M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </Button>
-              </div>
+                  <path
+                    d="M21 21l-4.35-4.35M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </Button>
             </div>
           </div>
         </div>
+      </div>
 
       <div className="mx-auto max-w-7xl px-4 lg:px-6 2xl:max-w-[1700px]">
         {/* Hero */}
@@ -308,9 +306,7 @@ const RecipesLanding: React.FC = () => {
                   isDark ? "bg-gray-900 text-slate-200" : "bg-white"
                 }`}
               >
-                <h3 className="mb-1 text-lg font-semibold">
-                  No recipes found
-                </h3>
+                <h3 className="mb-1 text-lg font-semibold">No recipes found</h3>
                 <p
                   className={`text-sm ${
                     isDark ? "text-slate-400" : "text-slate-500"
@@ -328,4 +324,3 @@ const RecipesLanding: React.FC = () => {
 };
 
 export default RecipesLanding;
-

@@ -1,1 +1,903 @@
-if(!self.define){let e,s={};const n=(n,i)=>(n=new URL(n+".js",i).href,s[n]||new Promise(s=>{if("document"in self){const e=document.createElement("script");e.src=n,e.onload=s,document.head.appendChild(e)}else e=n,importScripts(n),s()}).then(()=>{let e=s[n];if(!e)throw new Error(`Module ${n} didn’t register its module`);return e}));self.define=(i,a)=>{const c=e||("document"in self?document.currentScript.src:"")||location.href;if(s[c])return;let t={};const r=e=>n(e,c),o={module:{uri:c},exports:t,require:r};s[c]=Promise.all(i.map(e=>o[e]||r(e))).then(e=>(a(...e),t))}}define(["./workbox-1bb06f5e"],function(e){"use strict";importScripts(),self.skipWaiting(),e.clientsClaim(),e.precacheAndRoute([{url:"/_next/app-build-manifest.json",revision:"434af078512000203212119bf342c673"},{url:"/_next/static/DG0u7n0Azhoem8ZIh0FC3/_buildManifest.js",revision:"d2b98daac579e7877999275c95d32d70"},{url:"/_next/static/DG0u7n0Azhoem8ZIh0FC3/_ssgManifest.js",revision:"b6652df95db52feb4daf4eca35380933"},{url:"/_next/static/chunks/0b7b90cd.b5852e5e503d071d.js",revision:"b5852e5e503d071d"},{url:"/_next/static/chunks/1135-ce79dd2f0df85560.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/138-57dd817f94cc8997.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/1425-998d07bd28a9a6e0.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/1525-9cee807715309dd8.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/1595-079a9e388fd0c393.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/1664-0b52d50e5e92b856.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/1881-b5351a8a384c813d.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/219-28928ad7e76979bc.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/2250-b370537dc5dda402.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/2354-4503302548a1cb75.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/2424.28bd45c463cdb936.js",revision:"28bd45c463cdb936"},{url:"/_next/static/chunks/2553-b36d2b4cdf4d6bff.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/2695.85890ef6d1e7e04d.js",revision:"85890ef6d1e7e04d"},{url:"/_next/static/chunks/2754-b5369f13d4e785b5.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/3043-6a6fa566d9469bc4.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/3050-de8c49e23d2b4cad.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/3136-2e9c5a7e6ab52738.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/3745-c09a4ffc354f4c20.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/3807-2d8429a39d148d0a.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/3875-a750c77bc4058cc5.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/3892-25f262600c86391c.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/4033.6706deb523fc976f.js",revision:"6706deb523fc976f"},{url:"/_next/static/chunks/4082-88f8f233fb823436.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/4266.adc7605ee3d4fd0c.js",revision:"adc7605ee3d4fd0c"},{url:"/_next/static/chunks/4714-d20c3a20529099f5.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/5164-27278289f8dcb2f5.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/5182-1dcfd165ae5619e3.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/5245-8eacdf0bea726a7e.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/5424-28e6b628e1a44c21.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/5628-fcad494b820baf44.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/5640-fe509baf993f0b9f.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/5675-dca624ccf4bebb90.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/5701-266b4f6c81d9d2b7.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/5784-cfd0f09ead9f612f.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/6235-08014ca8283137e9.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/6284-9adfb54724ba2a1c.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/635-c6ef367614df2012.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/6461-0e4b772d987fe4cf.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/6745-4be230941dac559c.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/674a26a7-70e83d0604cf15bb.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/6874-319c134509018ad8.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/707-ac3a38ce6c02daaa.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/7257-ae0d6ceeda987976.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/72a30a16.3a55d8630eb8efbc.js",revision:"3a55d8630eb8efbc"},{url:"/_next/static/chunks/7775-9e03d7747e8040a3.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/8098-295f02bdfcf2e862.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/8117-df7138f41d53cd81.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/8172-33244d8fea6c9e46.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/8222-21b47daa3eb4b061.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/8491.50aa819a988d2e56.js",revision:"50aa819a988d2e56"},{url:"/_next/static/chunks/863-924579fced4c89bc.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/894-07bafddd21521046.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/8972-0586e662bfefb4f1.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/9194-b15239efaa9019cb.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/9290-780450bae40fd86b.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/9695-69cac41148d39716.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/9771-1539e180e28b5bef.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/9829-4436782c0141bd58.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/ad7f724d.faaaae9526063da4.js",revision:"faaaae9526063da4"},{url:"/_next/static/chunks/e78312c5-2f48df182ac23060.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/fd9d1056-d2fc5e3717adf4eb.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/framework-ee634fceade4acd0.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/main-6c2f17db14d3d2cc.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/main-app-7d1fb5de9f54ff1e.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/Auth/Login-39bf172c2c5d8647.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/Auth/Register-91cefe8e4b828293.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/Cart-eb7336642d1fab70.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/CurrentPendingOrders-c0c1f49d8fb0e842.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/CurrentPendingOrders/viewOrderDetails/%5BorderId%5D-b5d874a618bcb215.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/Messages-867ed23aeb09cb07.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/Messages/%5BorderId%5D-6ef4c8131bbd67c6.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/Myprofile-3bdafc51637aa1a7.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/Myprofile/become-shopper-902de1f14b3049c0.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/Plasa/Earnings-fc09842a570d548b.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/Plasa/Settings-0e21ff80e637b33a.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/Plasa/ShopperProfile-2b32223d3f5b34fd.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/Plasa/active-batches-17d4cb7488fa29dc.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/Plasa/active-batches/batch/%5Bid%5D-fa82aa97efb89c58.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/Plasa/chat-300a1e27235dcf9d.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/Plasa/chat/%5BorderId%5D-1f3dca3488ed9b71.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/Plasa/invoices-9d87c2b234ef8fac.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/Plasa/invoices/%5Bid%5D-2c6c07f92bd4677a.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/Plasa/orders/%5Bid%5D-620a58d007f0c50e.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/Recipes-24d694ca06aa3e96.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/Recipes/%5Bid%5D-bbdcf0f54f935076.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/Reels-37c7e9a0c0489de5.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/_app-f635a8598f2bac54.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/_error-8008506205ce3edf.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/about-3043d62f3a344a24.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/combined-checkout-0bc224231ae6f6cb.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/contact-b9492968e60ca6f7.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/contracts/%5Bid%5D-e108ada12dc24890.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/dev/logs-b02c7d0615865b0c.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/index-e9a53602166abe86.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/life-at-plas-aadbc96d338df847.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/plasBusiness-dcf5f39209a3487f.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/plasBusiness/BusinessChats-a67ec70801bca553.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/plasBusiness/quote-details-modal-457141918d732055.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/plasBusiness/store/%5BstoreId%5D-4e6ce12769ed1b4d.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/restaurant/%5Bid%5D-588aaa3b80a9ecee.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/shopper/batch/%5BorderId%5D/details-1d43e34dd4c5093d.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/shops-1cb6a4ecbc1cdd8d.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/shops/%5Bid%5D-3b8eaee9d30afab8.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/stores/%5Bid%5D-b2d8f20080b2b008.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/pages/stores/%5Bid%5D/checkout-7da0f42ddc64cef2.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/chunks/polyfills-c67a75d1b6f99dc8.js",revision:"837c0df77fd5009c9e46d446188ecfd0"},{url:"/_next/static/chunks/webpack-8c40c8cfc1c9a2c7.js",revision:"DG0u7n0Azhoem8ZIh0FC3"},{url:"/_next/static/css/498005394bb023ff.css",revision:"498005394bb023ff"},{url:"/_next/static/css/5742516f9157e1df.css",revision:"5742516f9157e1df"},{url:"/_next/static/css/fc1c9daac70c093b.css",revision:"fc1c9daac70c093b"},{url:"/_next/static/media/layers-2x.9859cd12.png",revision:"9859cd12"},{url:"/_next/static/media/layers.ef6db872.png",revision:"ef6db872"},{url:"/_next/static/media/marker-icon.d577052a.png",revision:"d577052a"},{url:"/app-icon.png",revision:"e160019ffb8bbdd8cfaeba1f2ff03c7e"},{url:"/assets/Videos/coverr-shopping-for-fresh-fruits-1080p.mp4",revision:"02e1856ffe45b7bc9f445b27e43bd90f"},{url:"/assets/icons/Butchery.png",revision:"dc8d368bf62c4f17e4a10cc784db07db"},{url:"/assets/icons/bakery.png",revision:"ec7093da4af18d9a2ea40b2ddc3e6812"},{url:"/assets/icons/drinks.png",revision:"b16adaf988964af5a4c455fa98b47489"},{url:"/assets/icons/fruits.png",revision:"987e65a832170c9f03f3169181e0809a"},{url:"/assets/icons/hygien.png",revision:"d921cbd9d7470024b190343d8a6af097"},{url:"/assets/icons/pets.png",revision:"529c9e6c552d82239a42b6e616ad257b"},{url:"/assets/icons/shop.png",revision:"62299e7f6ca1c6be1c77c849eab9a39b"},{url:"/assets/icons/shopIcon.png",revision:"dddb5700034f7bdf5f5e02c5b066e239"},{url:"/assets/icons/snacks.png",revision:"e0f15da77bef891daf54ea62c3bff116"},{url:"/assets/icons/vegitables.png",revision:"30b1ee1ffe80437d9a192e5e80c18992"},{url:"/assets/images/Bakery.webp",revision:"c4257cc36f4c7a90cc6003d910c41426"},{url:"/assets/images/Butcher.webp",revision:"943dfb33e0d0bcbffef54b2fa3905573"},{url:"/assets/images/OrganicShop.jpg",revision:"e1e57a6715e36e21e54c6fc57b72e9e7"},{url:"/assets/images/backeryImage.jpg",revision:"b31765b2eafd30f2f7490bf30ab2014d"},{url:"/assets/images/becomePatern.jpg",revision:"e8a29d45091f6c94054ea3c88360c99c"},{url:"/assets/images/carreer.jpg",revision:"3762205f2c860eaa7c3d27e489e30ec7"},{url:"/assets/images/chip.png",revision:"04b96cc01a3486a195b5c932e82eca12"},{url:"/assets/images/delicatessen.jpeg",revision:"54d354d3de5ceb996e24b6efc9764ef6"},{url:"/assets/images/mobileheaderbg.jpg",revision:"e3eff87ef204326894255ca6cfeca053"},{url:"/assets/images/profile.jpg",revision:"8ad924455c396fb81c6ac55fcdab41c0"},{url:"/assets/images/publicMarket.jpg",revision:"c99f0890a2abf84353b67e4e469cbad9"},{url:"/assets/images/restaurantImage.webp",revision:"7c4ab24a6071be51595af609368a4bd7"},{url:"/assets/images/shopping.jpg",revision:"bc3ce59176e588e6439608bcbb5a06e9"},{url:"/assets/images/shopsImage.jpg",revision:"cd7d8de97282a47bec0d5d2d8e125240"},{url:"/assets/images/superMarkets.jpg",revision:"8fd14e0ba308c44767dadc78dadf78e0"},{url:"/assets/logos/PlasIcon.png",revision:"cd1dedf5ea161ccd4ad0be76ac99a91a"},{url:"/assets/logos/PlasLogo.svg",revision:"45249efd5eacaa9440cb3d7c8433240d"},{url:"/assets/logos/PlasLogoPNG.png",revision:"b57c84d411af7da0f4edfe488dcc062c"},{url:"/assets/sounds/newMessage.mp3",revision:"93e16838ba935995b13e6bdb05ebf93e"},{url:"/favicon.ico",revision:"c30c7d42707a47a3f4591831641e50dc"},{url:"/firebase-messaging-sw.js",revision:"fe91a535cc05693e6b3a4179f689d226"},{url:"/icon-128x128.png",revision:"810cf2910bbafb7dfb8b96e1ff73985a"},{url:"/icon-144x144.png",revision:"7970bce73b1f1b6a26c149df6f684467"},{url:"/icon-152x152.png",revision:"72a2fb327947435227fe720c46c96fc6"},{url:"/icon-192x192.png",revision:"be057baac45dbe078b8612ae2573d379"},{url:"/icon-384x384.png",revision:"6c656838f652fafa5c946d62040b842e"},{url:"/icon-512x512.png",revision:"43920cdd683277f0de811acee700b551"},{url:"/icon-72x72.png",revision:"1e0da8531c01e03cf2605f6a3b268c2c"},{url:"/icon-96x96.png",revision:"20154f98e9cf50b296cddc306bd30a22"},{url:"/images/ProfileImage.png",revision:"ffe613ad8991b9ce590c536ece85b592"},{url:"/images/groceryPlaceholder.png",revision:"36e3d1f5f0368395a225126f89ec975a"},{url:"/images/mainPageIcons/brand.png",revision:"38b4fdd5aace290881c0ee7d873f9805"},{url:"/images/mainPageIcons/burger.png",revision:"1350558ce7e911f4e2f64f0c3c4e4860"},{url:"/images/mainPageIcons/delivery-man.png",revision:"c918d7153661797b6bfb3cacbc787244"},{url:"/images/mainPageIcons/fast-shipping.png",revision:"156ea63cfa898bfda2c74d7d4d991518"},{url:"/images/mainPageIcons/first-aid-kit.png",revision:"4d01bb2e5807b55ae517972feb7e3ca7"},{url:"/images/mainPageIcons/groceries.png",revision:"22fb56c0dc3497d7fa80dd0122d6f94e"},{url:"/images/mainPageIcons/payment-terminal.png",revision:"6b4121580613d50d61e7f22730132b22"},{url:"/images/mainPageIcons/pet-shop.png",revision:"3af69b56356a6fc0f805bcdf8879567e"},{url:"/images/mainPageIcons/restaurant.png",revision:"90ec8327eb7c43d355268284df1a88b7"},{url:"/images/mainPageIcons/tomato.png",revision:"db574ede31f8cd438ccb7f80ccb6f172"},{url:"/images/restaurantDish.png",revision:"e96890a391bdef237d559d48b41db9f5"},{url:"/images/shop-placeholder.jpg",revision:"be733cb690aae457158b1c33a061e360"},{url:"/images/userProfile.png",revision:"1ce10035f8560c8a2cbc4e2db0ea7b1c"},{url:"/manifest.json",revision:"57fc33553c69e34175ea6d65d7202675"},{url:"/notifySound.mp3",revision:"8b27319049898514ea8031ce3a3f63ac"},{url:"/placeholder.svg",revision:"243098b109a59a642ae8465d67d4b24a"},{url:"/vercel.svg",revision:"4b4f1876502eb6721764637fe5c41702"}],{ignoreURLParametersMatching:[]}),e.cleanupOutdatedCaches(),e.registerRoute("/",new e.NetworkFirst({cacheName:"start-url",plugins:[{cacheWillUpdate:async({request:e,response:s,event:n,state:i})=>s&&"opaqueredirect"===s.type?new Response(s.body,{status:200,statusText:"OK",headers:s.headers}):s}]}),"GET"),e.registerRoute(/^https:\/\/fonts\.googleapis\.com\/.*/i,new e.CacheFirst({cacheName:"google-fonts",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:31536e3})]}),"GET"),e.registerRoute(/^https:\/\/fonts\.gstatic\.com\/.*/i,new e.CacheFirst({cacheName:"google-fonts-static",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:31536e3})]}),"GET"),e.registerRoute(/\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,new e.StaleWhileRevalidate({cacheName:"static-font-assets",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:604800})]}),"GET"),e.registerRoute(/\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,new e.StaleWhileRevalidate({cacheName:"static-image-assets",plugins:[new e.ExpirationPlugin({maxEntries:64,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\/_next\/image\?url=.+$/i,new e.StaleWhileRevalidate({cacheName:"next-image",plugins:[new e.ExpirationPlugin({maxEntries:64,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:mp3|wav|ogg)$/i,new e.CacheFirst({cacheName:"static-audio-assets",plugins:[new e.RangeRequestsPlugin,new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:mp4)$/i,new e.CacheFirst({cacheName:"static-video-assets",plugins:[new e.RangeRequestsPlugin,new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:js)$/i,new e.StaleWhileRevalidate({cacheName:"static-js-assets",plugins:[new e.ExpirationPlugin({maxEntries:48,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:css|less)$/i,new e.StaleWhileRevalidate({cacheName:"static-style-assets",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/^https:\/\/.*\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,new e.StaleWhileRevalidate({cacheName:"google-fonts-webfonts",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:604800})]}),"GET"),e.registerRoute(/^https:\/\/fonts\.googleapis\.com\/.*/i,new e.StaleWhileRevalidate({cacheName:"google-fonts-stylesheets",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:604800})]}),"GET"),e.registerRoute(/\/_next\/data\/.+\/.+\.json$/i,new e.StaleWhileRevalidate({cacheName:"next-data",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:json|xml|csv)$/i,new e.NetworkFirst({cacheName:"static-data-assets",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/^https:\/\/.*\.(?:js|css|mjs)$/i,new e.StaleWhileRevalidate({cacheName:"external-js-css-assets",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET")});
+if (!self.define) {
+  let e,
+    s = {};
+  const n = (n, i) => (
+    (n = new URL(n + ".js", i).href),
+    s[n] ||
+      new Promise((s) => {
+        if ("document" in self) {
+          const e = document.createElement("script");
+          (e.src = n), (e.onload = s), document.head.appendChild(e);
+        } else (e = n), importScripts(n), s();
+      }).then(() => {
+        let e = s[n];
+        if (!e) throw new Error(`Module ${n} didn’t register its module`);
+        return e;
+      })
+  );
+  self.define = (i, a) => {
+    const c =
+      e ||
+      ("document" in self ? document.currentScript.src : "") ||
+      location.href;
+    if (s[c]) return;
+    let t = {};
+    const r = (e) => n(e, c),
+      o = { module: { uri: c }, exports: t, require: r };
+    s[c] = Promise.all(i.map((e) => o[e] || r(e))).then((e) => (a(...e), t));
+  };
+}
+define(["./workbox-1bb06f5e"], function (e) {
+  "use strict";
+  importScripts(),
+    self.skipWaiting(),
+    e.clientsClaim(),
+    e.precacheAndRoute(
+      [
+        {
+          url: "/_next/app-build-manifest.json",
+          revision: "434af078512000203212119bf342c673",
+        },
+        {
+          url: "/_next/static/DG0u7n0Azhoem8ZIh0FC3/_buildManifest.js",
+          revision: "d2b98daac579e7877999275c95d32d70",
+        },
+        {
+          url: "/_next/static/DG0u7n0Azhoem8ZIh0FC3/_ssgManifest.js",
+          revision: "b6652df95db52feb4daf4eca35380933",
+        },
+        {
+          url: "/_next/static/chunks/0b7b90cd.b5852e5e503d071d.js",
+          revision: "b5852e5e503d071d",
+        },
+        {
+          url: "/_next/static/chunks/1135-ce79dd2f0df85560.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/138-57dd817f94cc8997.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/1425-998d07bd28a9a6e0.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/1525-9cee807715309dd8.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/1595-079a9e388fd0c393.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/1664-0b52d50e5e92b856.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/1881-b5351a8a384c813d.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/219-28928ad7e76979bc.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/2250-b370537dc5dda402.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/2354-4503302548a1cb75.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/2424.28bd45c463cdb936.js",
+          revision: "28bd45c463cdb936",
+        },
+        {
+          url: "/_next/static/chunks/2553-b36d2b4cdf4d6bff.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/2695.85890ef6d1e7e04d.js",
+          revision: "85890ef6d1e7e04d",
+        },
+        {
+          url: "/_next/static/chunks/2754-b5369f13d4e785b5.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/3043-6a6fa566d9469bc4.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/3050-de8c49e23d2b4cad.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/3136-2e9c5a7e6ab52738.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/3745-c09a4ffc354f4c20.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/3807-2d8429a39d148d0a.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/3875-a750c77bc4058cc5.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/3892-25f262600c86391c.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/4033.6706deb523fc976f.js",
+          revision: "6706deb523fc976f",
+        },
+        {
+          url: "/_next/static/chunks/4082-88f8f233fb823436.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/4266.adc7605ee3d4fd0c.js",
+          revision: "adc7605ee3d4fd0c",
+        },
+        {
+          url: "/_next/static/chunks/4714-d20c3a20529099f5.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/5164-27278289f8dcb2f5.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/5182-1dcfd165ae5619e3.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/5245-8eacdf0bea726a7e.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/5424-28e6b628e1a44c21.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/5628-fcad494b820baf44.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/5640-fe509baf993f0b9f.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/5675-dca624ccf4bebb90.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/5701-266b4f6c81d9d2b7.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/5784-cfd0f09ead9f612f.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/6235-08014ca8283137e9.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/6284-9adfb54724ba2a1c.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/635-c6ef367614df2012.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/6461-0e4b772d987fe4cf.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/6745-4be230941dac559c.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/674a26a7-70e83d0604cf15bb.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/6874-319c134509018ad8.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/707-ac3a38ce6c02daaa.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/7257-ae0d6ceeda987976.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/72a30a16.3a55d8630eb8efbc.js",
+          revision: "3a55d8630eb8efbc",
+        },
+        {
+          url: "/_next/static/chunks/7775-9e03d7747e8040a3.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/8098-295f02bdfcf2e862.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/8117-df7138f41d53cd81.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/8172-33244d8fea6c9e46.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/8222-21b47daa3eb4b061.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/8491.50aa819a988d2e56.js",
+          revision: "50aa819a988d2e56",
+        },
+        {
+          url: "/_next/static/chunks/863-924579fced4c89bc.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/894-07bafddd21521046.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/8972-0586e662bfefb4f1.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/9194-b15239efaa9019cb.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/9290-780450bae40fd86b.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/9695-69cac41148d39716.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/9771-1539e180e28b5bef.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/9829-4436782c0141bd58.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/ad7f724d.faaaae9526063da4.js",
+          revision: "faaaae9526063da4",
+        },
+        {
+          url: "/_next/static/chunks/e78312c5-2f48df182ac23060.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/fd9d1056-d2fc5e3717adf4eb.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/framework-ee634fceade4acd0.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/main-6c2f17db14d3d2cc.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/main-app-7d1fb5de9f54ff1e.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/Auth/Login-39bf172c2c5d8647.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/Auth/Register-91cefe8e4b828293.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/Cart-eb7336642d1fab70.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/CurrentPendingOrders-c0c1f49d8fb0e842.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/CurrentPendingOrders/viewOrderDetails/%5BorderId%5D-b5d874a618bcb215.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/Messages-867ed23aeb09cb07.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/Messages/%5BorderId%5D-6ef4c8131bbd67c6.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/Myprofile-3bdafc51637aa1a7.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/Myprofile/become-shopper-902de1f14b3049c0.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/Plasa/Earnings-fc09842a570d548b.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/Plasa/Settings-0e21ff80e637b33a.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/Plasa/ShopperProfile-2b32223d3f5b34fd.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/Plasa/active-batches-17d4cb7488fa29dc.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/Plasa/active-batches/batch/%5Bid%5D-fa82aa97efb89c58.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/Plasa/chat-300a1e27235dcf9d.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/Plasa/chat/%5BorderId%5D-1f3dca3488ed9b71.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/Plasa/invoices-9d87c2b234ef8fac.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/Plasa/invoices/%5Bid%5D-2c6c07f92bd4677a.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/Plasa/orders/%5Bid%5D-620a58d007f0c50e.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/Recipes-24d694ca06aa3e96.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/Recipes/%5Bid%5D-bbdcf0f54f935076.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/Reels-37c7e9a0c0489de5.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/_app-f635a8598f2bac54.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/_error-8008506205ce3edf.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/about-3043d62f3a344a24.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/combined-checkout-0bc224231ae6f6cb.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/contact-b9492968e60ca6f7.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/contracts/%5Bid%5D-e108ada12dc24890.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/dev/logs-b02c7d0615865b0c.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/index-e9a53602166abe86.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/life-at-plas-aadbc96d338df847.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/plasBusiness-dcf5f39209a3487f.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/plasBusiness/BusinessChats-a67ec70801bca553.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/plasBusiness/quote-details-modal-457141918d732055.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/plasBusiness/store/%5BstoreId%5D-4e6ce12769ed1b4d.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/restaurant/%5Bid%5D-588aaa3b80a9ecee.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/shopper/batch/%5BorderId%5D/details-1d43e34dd4c5093d.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/shops-1cb6a4ecbc1cdd8d.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/shops/%5Bid%5D-3b8eaee9d30afab8.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/stores/%5Bid%5D-b2d8f20080b2b008.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/pages/stores/%5Bid%5D/checkout-7da0f42ddc64cef2.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/chunks/polyfills-c67a75d1b6f99dc8.js",
+          revision: "837c0df77fd5009c9e46d446188ecfd0",
+        },
+        {
+          url: "/_next/static/chunks/webpack-8c40c8cfc1c9a2c7.js",
+          revision: "DG0u7n0Azhoem8ZIh0FC3",
+        },
+        {
+          url: "/_next/static/css/498005394bb023ff.css",
+          revision: "498005394bb023ff",
+        },
+        {
+          url: "/_next/static/css/5742516f9157e1df.css",
+          revision: "5742516f9157e1df",
+        },
+        {
+          url: "/_next/static/css/fc1c9daac70c093b.css",
+          revision: "fc1c9daac70c093b",
+        },
+        {
+          url: "/_next/static/media/layers-2x.9859cd12.png",
+          revision: "9859cd12",
+        },
+        {
+          url: "/_next/static/media/layers.ef6db872.png",
+          revision: "ef6db872",
+        },
+        {
+          url: "/_next/static/media/marker-icon.d577052a.png",
+          revision: "d577052a",
+        },
+        { url: "/app-icon.png", revision: "e160019ffb8bbdd8cfaeba1f2ff03c7e" },
+        {
+          url: "/assets/Videos/coverr-shopping-for-fresh-fruits-1080p.mp4",
+          revision: "02e1856ffe45b7bc9f445b27e43bd90f",
+        },
+        {
+          url: "/assets/icons/Butchery.png",
+          revision: "dc8d368bf62c4f17e4a10cc784db07db",
+        },
+        {
+          url: "/assets/icons/bakery.png",
+          revision: "ec7093da4af18d9a2ea40b2ddc3e6812",
+        },
+        {
+          url: "/assets/icons/drinks.png",
+          revision: "b16adaf988964af5a4c455fa98b47489",
+        },
+        {
+          url: "/assets/icons/fruits.png",
+          revision: "987e65a832170c9f03f3169181e0809a",
+        },
+        {
+          url: "/assets/icons/hygien.png",
+          revision: "d921cbd9d7470024b190343d8a6af097",
+        },
+        {
+          url: "/assets/icons/pets.png",
+          revision: "529c9e6c552d82239a42b6e616ad257b",
+        },
+        {
+          url: "/assets/icons/shop.png",
+          revision: "62299e7f6ca1c6be1c77c849eab9a39b",
+        },
+        {
+          url: "/assets/icons/shopIcon.png",
+          revision: "dddb5700034f7bdf5f5e02c5b066e239",
+        },
+        {
+          url: "/assets/icons/snacks.png",
+          revision: "e0f15da77bef891daf54ea62c3bff116",
+        },
+        {
+          url: "/assets/icons/vegitables.png",
+          revision: "30b1ee1ffe80437d9a192e5e80c18992",
+        },
+        {
+          url: "/assets/images/Bakery.webp",
+          revision: "c4257cc36f4c7a90cc6003d910c41426",
+        },
+        {
+          url: "/assets/images/Butcher.webp",
+          revision: "943dfb33e0d0bcbffef54b2fa3905573",
+        },
+        {
+          url: "/assets/images/OrganicShop.jpg",
+          revision: "e1e57a6715e36e21e54c6fc57b72e9e7",
+        },
+        {
+          url: "/assets/images/backeryImage.jpg",
+          revision: "b31765b2eafd30f2f7490bf30ab2014d",
+        },
+        {
+          url: "/assets/images/becomePatern.jpg",
+          revision: "e8a29d45091f6c94054ea3c88360c99c",
+        },
+        {
+          url: "/assets/images/carreer.jpg",
+          revision: "3762205f2c860eaa7c3d27e489e30ec7",
+        },
+        {
+          url: "/assets/images/chip.png",
+          revision: "04b96cc01a3486a195b5c932e82eca12",
+        },
+        {
+          url: "/assets/images/delicatessen.jpeg",
+          revision: "54d354d3de5ceb996e24b6efc9764ef6",
+        },
+        {
+          url: "/assets/images/mobileheaderbg.jpg",
+          revision: "e3eff87ef204326894255ca6cfeca053",
+        },
+        {
+          url: "/assets/images/profile.jpg",
+          revision: "8ad924455c396fb81c6ac55fcdab41c0",
+        },
+        {
+          url: "/assets/images/publicMarket.jpg",
+          revision: "c99f0890a2abf84353b67e4e469cbad9",
+        },
+        {
+          url: "/assets/images/restaurantImage.webp",
+          revision: "7c4ab24a6071be51595af609368a4bd7",
+        },
+        {
+          url: "/assets/images/shopping.jpg",
+          revision: "bc3ce59176e588e6439608bcbb5a06e9",
+        },
+        {
+          url: "/assets/images/shopsImage.jpg",
+          revision: "cd7d8de97282a47bec0d5d2d8e125240",
+        },
+        {
+          url: "/assets/images/superMarkets.jpg",
+          revision: "8fd14e0ba308c44767dadc78dadf78e0",
+        },
+        {
+          url: "/assets/logos/PlasIcon.png",
+          revision: "cd1dedf5ea161ccd4ad0be76ac99a91a",
+        },
+        {
+          url: "/assets/logos/PlasLogo.svg",
+          revision: "45249efd5eacaa9440cb3d7c8433240d",
+        },
+        {
+          url: "/assets/logos/PlasLogoPNG.png",
+          revision: "b57c84d411af7da0f4edfe488dcc062c",
+        },
+        {
+          url: "/assets/sounds/newMessage.mp3",
+          revision: "93e16838ba935995b13e6bdb05ebf93e",
+        },
+        { url: "/favicon.ico", revision: "c30c7d42707a47a3f4591831641e50dc" },
+        {
+          url: "/firebase-messaging-sw.js",
+          revision: "fe91a535cc05693e6b3a4179f689d226",
+        },
+        {
+          url: "/icon-128x128.png",
+          revision: "810cf2910bbafb7dfb8b96e1ff73985a",
+        },
+        {
+          url: "/icon-144x144.png",
+          revision: "7970bce73b1f1b6a26c149df6f684467",
+        },
+        {
+          url: "/icon-152x152.png",
+          revision: "72a2fb327947435227fe720c46c96fc6",
+        },
+        {
+          url: "/icon-192x192.png",
+          revision: "be057baac45dbe078b8612ae2573d379",
+        },
+        {
+          url: "/icon-384x384.png",
+          revision: "6c656838f652fafa5c946d62040b842e",
+        },
+        {
+          url: "/icon-512x512.png",
+          revision: "43920cdd683277f0de811acee700b551",
+        },
+        {
+          url: "/icon-72x72.png",
+          revision: "1e0da8531c01e03cf2605f6a3b268c2c",
+        },
+        {
+          url: "/icon-96x96.png",
+          revision: "20154f98e9cf50b296cddc306bd30a22",
+        },
+        {
+          url: "/images/ProfileImage.png",
+          revision: "ffe613ad8991b9ce590c536ece85b592",
+        },
+        {
+          url: "/images/groceryPlaceholder.png",
+          revision: "36e3d1f5f0368395a225126f89ec975a",
+        },
+        {
+          url: "/images/mainPageIcons/brand.png",
+          revision: "38b4fdd5aace290881c0ee7d873f9805",
+        },
+        {
+          url: "/images/mainPageIcons/burger.png",
+          revision: "1350558ce7e911f4e2f64f0c3c4e4860",
+        },
+        {
+          url: "/images/mainPageIcons/delivery-man.png",
+          revision: "c918d7153661797b6bfb3cacbc787244",
+        },
+        {
+          url: "/images/mainPageIcons/fast-shipping.png",
+          revision: "156ea63cfa898bfda2c74d7d4d991518",
+        },
+        {
+          url: "/images/mainPageIcons/first-aid-kit.png",
+          revision: "4d01bb2e5807b55ae517972feb7e3ca7",
+        },
+        {
+          url: "/images/mainPageIcons/groceries.png",
+          revision: "22fb56c0dc3497d7fa80dd0122d6f94e",
+        },
+        {
+          url: "/images/mainPageIcons/payment-terminal.png",
+          revision: "6b4121580613d50d61e7f22730132b22",
+        },
+        {
+          url: "/images/mainPageIcons/pet-shop.png",
+          revision: "3af69b56356a6fc0f805bcdf8879567e",
+        },
+        {
+          url: "/images/mainPageIcons/restaurant.png",
+          revision: "90ec8327eb7c43d355268284df1a88b7",
+        },
+        {
+          url: "/images/mainPageIcons/tomato.png",
+          revision: "db574ede31f8cd438ccb7f80ccb6f172",
+        },
+        {
+          url: "/images/restaurantDish.png",
+          revision: "e96890a391bdef237d559d48b41db9f5",
+        },
+        {
+          url: "/images/shop-placeholder.jpg",
+          revision: "be733cb690aae457158b1c33a061e360",
+        },
+        {
+          url: "/images/userProfile.png",
+          revision: "1ce10035f8560c8a2cbc4e2db0ea7b1c",
+        },
+        { url: "/manifest.json", revision: "57fc33553c69e34175ea6d65d7202675" },
+        {
+          url: "/notifySound.mp3",
+          revision: "8b27319049898514ea8031ce3a3f63ac",
+        },
+        {
+          url: "/placeholder.svg",
+          revision: "243098b109a59a642ae8465d67d4b24a",
+        },
+        { url: "/vercel.svg", revision: "4b4f1876502eb6721764637fe5c41702" },
+      ],
+      { ignoreURLParametersMatching: [] }
+    ),
+    e.cleanupOutdatedCaches(),
+    e.registerRoute(
+      "/",
+      new e.NetworkFirst({
+        cacheName: "start-url",
+        plugins: [
+          {
+            cacheWillUpdate: async ({
+              request: e,
+              response: s,
+              event: n,
+              state: i,
+            }) =>
+              s && "opaqueredirect" === s.type
+                ? new Response(s.body, {
+                    status: 200,
+                    statusText: "OK",
+                    headers: s.headers,
+                  })
+                : s,
+          },
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /^https:\/\/fonts\.googleapis\.com\/.*/i,
+      new e.CacheFirst({
+        cacheName: "google-fonts",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 4, maxAgeSeconds: 31536e3 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /^https:\/\/fonts\.gstatic\.com\/.*/i,
+      new e.CacheFirst({
+        cacheName: "google-fonts-static",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 4, maxAgeSeconds: 31536e3 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,
+      new e.StaleWhileRevalidate({
+        cacheName: "static-font-assets",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 4, maxAgeSeconds: 604800 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,
+      new e.StaleWhileRevalidate({
+        cacheName: "static-image-assets",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 86400 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /\/_next\/image\?url=.+$/i,
+      new e.StaleWhileRevalidate({
+        cacheName: "next-image",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 86400 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /\.(?:mp3|wav|ogg)$/i,
+      new e.CacheFirst({
+        cacheName: "static-audio-assets",
+        plugins: [
+          new e.RangeRequestsPlugin(),
+          new e.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /\.(?:mp4)$/i,
+      new e.CacheFirst({
+        cacheName: "static-video-assets",
+        plugins: [
+          new e.RangeRequestsPlugin(),
+          new e.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /\.(?:js)$/i,
+      new e.StaleWhileRevalidate({
+        cacheName: "static-js-assets",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 48, maxAgeSeconds: 86400 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /\.(?:css|less)$/i,
+      new e.StaleWhileRevalidate({
+        cacheName: "static-style-assets",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /^https:\/\/.*\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,
+      new e.StaleWhileRevalidate({
+        cacheName: "google-fonts-webfonts",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 4, maxAgeSeconds: 604800 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /^https:\/\/fonts\.googleapis\.com\/.*/i,
+      new e.StaleWhileRevalidate({
+        cacheName: "google-fonts-stylesheets",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 4, maxAgeSeconds: 604800 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /\/_next\/data\/.+\/.+\.json$/i,
+      new e.StaleWhileRevalidate({
+        cacheName: "next-data",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /\.(?:json|xml|csv)$/i,
+      new e.NetworkFirst({
+        cacheName: "static-data-assets",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
+        ],
+      }),
+      "GET"
+    ),
+    e.registerRoute(
+      /^https:\/\/.*\.(?:js|css|mjs)$/i,
+      new e.StaleWhileRevalidate({
+        cacheName: "external-js-css-assets",
+        plugins: [
+          new e.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
+        ],
+      }),
+      "GET"
+    );
+});

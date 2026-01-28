@@ -86,8 +86,8 @@ const RecipesHero: React.FC<RecipesHeroProps> = ({
         </div>
       </div>
 
-      <div className="pointer-events-none mt-10 w-full lg:pointer-events-auto lg:mt-0 lg:flex-1 lg:flex lg:items-center">
-        <div className="relative w-full h-64 lg:h-72">
+      <div className="pointer-events-none mt-10 w-full lg:pointer-events-auto lg:mt-0 lg:flex lg:flex-1 lg:items-center">
+        <div className="relative h-64 w-full lg:h-72">
           <div className="absolute inset-0 -translate-y-6 translate-x-6 rounded-3xl bg-gradient-to-tr from-emerald-400/40 via-rose-400/30 to-amber-300/40 blur-3xl" />
           <div className="relative h-full overflow-hidden rounded-3xl border border-white/10 bg-slate-900/40 shadow-2xl shadow-black/50">
             <img
@@ -103,4 +103,3 @@ const RecipesHero: React.FC<RecipesHeroProps> = ({
 };
 
 export default RecipesHero;
-
