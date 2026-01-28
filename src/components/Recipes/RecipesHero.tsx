@@ -50,7 +50,13 @@ const RecipesHero: React.FC<RecipesHeroProps> = ({
           from around the world and tailored for everyday meals.
         </p>
         <div className="flex flex-wrap items-center gap-3">
-          <button className="rounded-full bg-emerald-400 px-6 py-3 text-sm font-semibold !text-white shadow-lg shadow-emerald-500/40 transition hover:bg-emerald-300">
+          <button
+            type="button"
+            disabled
+            aria-disabled="true"
+            className="cursor-not-allowed rounded-full bg-emerald-500/40 px-6 py-3 text-sm font-semibold text-white/70 opacity-70"
+            title="Coming soon"
+          >
             Join us
           </button>
           <span
