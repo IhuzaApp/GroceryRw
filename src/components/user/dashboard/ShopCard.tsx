@@ -97,6 +97,45 @@ const ShopCard: React.FC<ShopCardProps> = ({
   // Determine if this is a store
   const isStore = (shop as any).is_store === true;
 
+  const lowerName = (shop.name || "").toLowerCase();
+  const lowerCategoryName = ((shop as any).category_name || "").toLowerCase();
+
+  // Return a specific placeholder image for known categories; otherwise undefined
+  const getCategoryPlaceholderImage = (): string | undefined => {
+    if (
+      lowerCategoryName.includes("public market") ||
+      lowerName.includes("public market")
+    ) {
+      return "/assets/images/publicMarket.jpg";
+    }
+    if (
+      lowerCategoryName.includes("Super Market") ||
+
+      lowerName.includes("Super Market")
+    ) {
+      return "/assets/images/superMarkets.jpg";
+    }
+    if (
+      lowerCategoryName.includes("liquor") ||
+      lowerName.includes("liquor")
+    ) {
+      return "/assets/images/Liquor.jpg";
+    }
+    if (lowerName.includes("butcher")) {
+      return "/assets/images/Butcher.webp";
+    }
+    if (lowerName.includes("organic")) {
+      return "/assets/images/OrganicShop.jpg";
+    }
+    if (lowerName.includes("bakery") || lowerName.includes("bakeries")) {
+      return "/assets/images/backeryImage.jpg";
+    }
+    if (isRestaurant) {
+      return "/assets/images/restaurantImage.webp";
+    }
+    return undefined;
+  };
+
   // Determine navigation path
   const getNavigationPath = () => {
     if (isRestaurant) return `/restaurant/${shop.id}`;
@@ -110,20 +149,23 @@ const ShopCard: React.FC<ShopCardProps> = ({
       // For stores, use the image directly (it's already a base64 or full URL)
       return shop.image;
     }
-    if (isRestaurant) {
-      const img = shop.image?.toLowerCase() ?? "";
-      const looksLikePlaceholder =
-        !img ||
-        img === "profile.png" ||
-        img.includes("placeholder") ||
-        img.includes("grocery");
+    // If we can infer a category-specific image, always use it (e.g. Liquor, Bakery, Butcher, Organic, Restaurant)
+    const categoryImg = getCategoryPlaceholderImage();
+    if (categoryImg) {
+      return categoryImg;
+    }
 
-      // If restaurant has no real image or uses a generic placeholder, use restaurant illustration
-      if (looksLikePlaceholder) {
-        return "/assets/images/restaurantImage.webp";
-      }
+    const img = shop.image?.toLowerCase() ?? "";
+    const looksLikePlaceholder =
+      !img ||
+      img === "profile.png" ||
+      img.includes("placeholder") ||
+      img.includes("grocery") ||
+      img.includes("publicmarket") ||
+      img.includes("shopping");
 
-      return getShopImageUrl(shop.image);
+    if (looksLikePlaceholder || !shop.image) {
+      return "/images/shop-placeholder.jpg";
     }
 
     return getShopImageUrl(shop.image);
@@ -131,15 +173,11 @@ const ShopCard: React.FC<ShopCardProps> = ({
 
   // Get placeholder image
   const getPlaceholderImage = () => {
-    // Restaurants should use the restaurant illustration, not supermarket
-    if (isRestaurant) {
-      return "/assets/images/restaurantImage.webp";
-    }
-
     if (isStore) {
       return "/images/store-placeholder.jpg";
     }
-    return "/images/shop-placeholder.jpg";
+    const categoryImg = getCategoryPlaceholderImage();
+    return categoryImg || "/images/shop-placeholder.jpg";
   };
 
   // Format rating from dynamics (real data from database)
@@ -148,16 +186,15 @@ const ShopCard: React.FC<ShopCardProps> = ({
   const ratingValue = hasRating ? dynamics.rating.toFixed(1) : "New";
   const ratingCount = hasRating ? dynamics.ratingCount.toString() : "0";
 
-  // Debug: log restaurant cards to verify images (e.g. "Star Bulks")
-  if (isRestaurant) {
-    // eslint-disable-next-line no-console
-    console.log("[ShopCard] Restaurant rendered:", {
-      id: shop.id,
-      name: shop.name,
-      image: shop.image,
-      isStore,
-    });
-  }
+  // Debug: log key info for visual checks (can be removed later)
+  // eslint-disable-next-line no-console
+  console.log("[ShopCard] Rendered:", {
+    id: shop.id,
+    name: shop.name,
+    image: shop.image,
+    isStore,
+    isRestaurant,
+  });
 
   return (
     <Link
