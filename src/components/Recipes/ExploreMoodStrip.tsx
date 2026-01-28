@@ -238,13 +238,13 @@ const ExploreMoodStrip: React.FC<ExploreMoodStripProps> = ({
 }) => {
   return (
     <section
-      className={`mt-10 rounded-2xl p-4 shadow-sm sm:p-6 ${
+      className={`mt-4 sm:mt-8 lg:mt-10 rounded-2xl p-4 shadow-sm sm:p-6 ${
         isDark
           ? "border border-gray-800 bg-gray-900/70"
           : "bg-white border border-slate-100"
       }`}
     >
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2
             className={`text-base font-semibold sm:text-lg ${
@@ -261,7 +261,8 @@ const ExploreMoodStrip: React.FC<ExploreMoodStripProps> = ({
             Find the perfect dish for any craving.
           </p>
         </div>
-        <div className="flex flex-1 flex-wrap justify-center gap-3 lg:justify-end">
+        <div className="flex-1">
+          <div className="flex gap-3 overflow-x-auto pb-1 sm:justify-end sm:overflow-visible sm:pb-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {moods.map((chip) => {
             const isActive = activeCategory === chip.apiCategory;
             const baseClasses =
@@ -289,6 +290,7 @@ const ExploreMoodStrip: React.FC<ExploreMoodStripProps> = ({
               </button>
             );
           })}
+          </div>
         </div>
       </div>
     </section>

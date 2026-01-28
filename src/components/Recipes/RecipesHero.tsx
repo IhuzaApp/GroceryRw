@@ -20,7 +20,7 @@ const RecipesHero: React.FC<RecipesHeroProps> = ({
 
   return (
     <section
-      className={`relative overflow-hidden rounded-3xl px-6 py-10 lg:flex lg:items-stretch lg:gap-10 lg:px-10 lg:py-14 ${
+      className={`relative hidden overflow-hidden rounded-3xl px-6 py-10 md:block lg:flex lg:items-stretch lg:gap-10 lg:px-10 lg:py-14 ${
         isDark
           ? "bg-gradient-to-r from-slate-900 via-slate-950 to-black"
           : "bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900"
