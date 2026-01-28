@@ -186,16 +186,6 @@ const ShopCard: React.FC<ShopCardProps> = ({
   const ratingValue = hasRating ? dynamics.rating.toFixed(1) : "New";
   const ratingCount = hasRating ? dynamics.ratingCount.toString() : "0";
 
-  // Debug: log key info for visual checks (can be removed later)
-  // eslint-disable-next-line no-console
-  console.log("[ShopCard] Rendered:", {
-    id: shop.id,
-    name: shop.name,
-    image: shop.image,
-    isStore,
-    isRestaurant,
-  });
-
   return (
     <Link
       href={getNavigationPath()}
