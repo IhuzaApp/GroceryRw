@@ -15,7 +15,7 @@ interface ExploreMoodStripProps {
 
 const LightningIcon = () => (
   <svg
-    className="h-5 w-5"
+    className="h-7 w-7 sm:h-5 sm:w-5"
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
@@ -40,7 +40,7 @@ const LightningIcon = () => (
 
 const CakeIcon = () => (
   <svg
-    className="h-5 w-5"
+    className="h-7 w-7 sm:h-5 sm:w-5"
     viewBox="0 0 24 24"
   >
     <rect
@@ -76,7 +76,7 @@ const CakeIcon = () => (
 
 const BreakfastIcon = () => (
   <svg
-    className="h-5 w-5"
+    className="h-7 w-7 sm:h-5 sm:w-5"
     viewBox="0 0 24 24"
   >
     <circle cx="9" cy="10" r="5.2" fill="#fef9c3" />
@@ -100,7 +100,7 @@ const BreakfastIcon = () => (
 
 const DonutIcon = () => (
   <svg
-    className="h-5 w-5"
+    className="h-7 w-7 sm:h-5 sm:w-5"
     viewBox="0 0 24 24"
   >
     <circle cx="12" cy="12" r="8" fill="#f9a8d4" />
@@ -120,7 +120,7 @@ const DonutIcon = () => (
 
 const SaladIcon = () => (
   <svg
-    className="h-5 w-5"
+    className="h-7 w-7 sm:h-5 sm:w-5"
     viewBox="0 0 24 24"
   >
     <path
@@ -147,7 +147,7 @@ const SaladIcon = () => (
 
 const LunchIcon = () => (
   <svg
-    className="h-5 w-5"
+    className="h-7 w-7 sm:h-5 sm:w-5"
     viewBox="0 0 24 24"
   >
     <rect x="3" y="11" width="18" height="4" rx="1.5" fill="#38bdf8" />
@@ -173,7 +173,7 @@ const LunchIcon = () => (
 
 const MeatIcon = () => (
   <svg
-    className="h-5 w-5"
+    className="h-7 w-7 sm:h-5 sm:w-5"
     viewBox="0 0 24 24"
   >
     <path
