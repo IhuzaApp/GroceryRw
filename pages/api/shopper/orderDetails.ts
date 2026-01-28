@@ -375,24 +375,23 @@ const GET_RESTAURANT_ORDER_DETAILS = gql`
         dish_id
         order_id
         created_at
-        restaurant_dishes {
+        restaurant_menu {
           id
-          name
-          description
-          image
           price
-          SKU
-          category
-          created_at
-          discount
-          ingredients
-          is_active
           preparingTime
-          promo
-          promo_type
-          quantity
-          restaurant_id
-          updated_at
+          is_active
+          ProductNames {
+            name
+            description
+            image
+          }
+          dishes {
+            name
+            description
+            image
+            ingredients
+            category
+          }
         }
       }
       shopper {
@@ -628,10 +627,17 @@ const GET_RELATED_RESTAURANT_ORDERS = gql`
         id
         quantity
         price
-        restaurant_dishes {
-          name
-          image
+        restaurant_menu {
+          id
           price
+          ProductNames {
+            name
+            image
+          }
+          dishes {
+            name
+            image
+          }
         }
       }
     }
@@ -976,17 +982,23 @@ export default async function handler(
 
       // Format dish items
       const formattedDishItems = orderData.restaurant_order_items.map(
-        (dishOrder: any) => ({
-          id: dishOrder.id,
-          name: dishOrder.restaurant_dishes?.name || "Unknown Dish",
-          quantity: dishOrder.quantity,
-          price: parseFloat(dishOrder.price) || 0,
-          description: dishOrder.restaurant_dishes?.description || null,
-          image: dishOrder.restaurant_dishes?.image || null,
-          category: dishOrder.restaurant_dishes?.category || null,
-          ingredients: dishOrder.restaurant_dishes?.ingredients || null,
-          preparingTime: dishOrder.restaurant_dishes?.preparingTime || null,
-        })
+        (dishOrder: any) => {
+          const menu = dishOrder.restaurant_menu;
+          const product = menu?.ProductNames || null;
+          const dish = menu?.dishes || null;
+
+          return {
+            id: dishOrder.id,
+            name: product?.name || dish?.name || "Unknown Dish",
+            quantity: dishOrder.quantity,
+            price: parseFloat(dishOrder.price) || 0,
+            description: product?.description || dish?.description || null,
+            image: product?.image || dish?.image || null,
+            category: dish?.category || null,
+            ingredients: dish?.ingredients || null,
+            preparingTime: menu?.preparingTime || null,
+          };
+        }
       );
 
       // Calculate subtotal from dish orders
@@ -1177,13 +1189,19 @@ export default async function handler(
           const processedRestaurant = relatedRestaurant.restaurant_orders.map(
             (order: any) => {
               const items =
-                order.restaurant_order_items?.map((item: any) => ({
-                  id: item.id,
-                  name: item.restaurant_dishes?.name || "Dish",
-                  quantity: item.quantity,
-                  price: parseFloat(item.price) || 0,
-                  productImage: item.restaurant_dishes?.image || null,
-                })) || [];
+                order.restaurant_order_items?.map((item: any) => {
+                  const menu = item.restaurant_menu;
+                  const product = menu?.ProductNames || null;
+                  const dish = menu?.dishes || null;
+
+                  return {
+                    id: item.id,
+                    name: product?.name || dish?.name || "Dish",
+                    quantity: item.quantity,
+                    price: parseFloat(item.price) || 0,
+                    productImage: product?.image || dish?.image || null,
+                  };
+                }) || [];
 
               return {
                 id: order.id,

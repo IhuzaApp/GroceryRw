@@ -135,12 +135,19 @@ const GET_RESTAURANT_ORDER_DETAILS_FOR_INVOICE = gql`
         id
         quantity
         price
-        restaurant_dishes {
+        restaurant_menu {
           id
-          name
-          description
-          image
           price
+          ProductNames {
+            name
+            description
+            image
+          }
+          dishes {
+            name
+            description
+            image
+          }
         }
       }
       shopper_id
@@ -302,13 +309,20 @@ interface RestaurantOrderDetails {
       id: string;
       quantity: number;
       price: string;
-      restaurant_dishes: {
+      restaurant_menu: {
         id: string;
-        name: string;
-        description: string;
-        image?: string;
         price: string;
-      };
+        ProductNames: {
+          name: string;
+          description: string | null;
+          image?: string | null;
+        } | null;
+        dishes: {
+          name: string;
+          description: string | null;
+          image?: string | null;
+        } | null;
+      } | null;
     }>;
     shopper_id: string;
   } | null;
@@ -495,15 +509,24 @@ export default async function handler(
       shopAddress = order.Restaurant.location;
 
       // Create invoice items for restaurant orders
-      invoiceItems = dishOrders.map((dishOrder: any) => ({
-        id: dishOrder.id,
-        name: dishOrder.restaurant_dishes.name,
-        quantity: dishOrder.quantity,
-        unit_price: parseFloat(dishOrder.price),
-        total: parseFloat(dishOrder.price) * dishOrder.quantity,
-        unit: "dish",
-        description: dishOrder.restaurant_dishes.description,
-      }));
+      invoiceItems = dishOrders.map((dishOrder: any) => {
+        const menu = dishOrder.restaurant_menu;
+        const product = menu?.ProductNames || null;
+        const dish = menu?.dishes || null;
+
+        const name = product?.name || dish?.name || "Dish";
+        const description = product?.description || dish?.description || "";
+
+        return {
+          id: dishOrder.id,
+          name,
+          quantity: dishOrder.quantity,
+          unit_price: parseFloat(dishOrder.price),
+          total: parseFloat(dishOrder.price) * dishOrder.quantity,
+          unit: "dish",
+          description,
+        };
+      });
     } else {
       // For regular orders, use the order items
       const items = order.Order_Items;
@@ -563,12 +586,11 @@ export default async function handler(
     let walletTransactionAmount: number | null = null;
     if (!isReelOrder && !isRestaurantOrder) {
       try {
-        const walletTransactionResult = await hasuraClient.request(
-          GET_WALLET_TRANSACTION_AMOUNT,
-          {
-            orderId: orderId,
-          }
-        );
+        const walletTransactionResult = await hasuraClient.request<{
+          Wallet_Transactions: { amount: string }[];
+        }>(GET_WALLET_TRANSACTION_AMOUNT, {
+          orderId: orderId,
+        });
 
         if (
           walletTransactionResult.Wallet_Transactions &&

@@ -293,15 +293,20 @@ export default async function handler(
               street: string;
               city: string;
             };
-            restaurant_dishe_orders: Array<{
+            restaurant_order_items: Array<{
               id: string;
               quantity: number;
               price: string;
-              restaurant_dishes: {
+              restaurant_menu: {
                 id: string;
-                name: string;
-                description: string;
-              };
+                price: string;
+                ProductNames: {
+                  name: string;
+                } | null;
+                dishes: {
+                  name: string;
+                } | null;
+              } | null;
             }>;
           }>;
         }>(GET_AVAILABLE_RESTAURANT_ORDERS),

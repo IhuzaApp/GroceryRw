@@ -32,16 +32,23 @@ const GET_RESTAURANT_ORDER_DETAILS = gql`
         id
         order_id
         created_at
-        restaurant_dishes {
+        restaurant_menu {
           id
-          name
-          description
           price
-          image
           preparingTime
-          ingredients
-          category
           is_active
+          ProductNames {
+            name
+            description
+            image
+          }
+          dishes {
+            name
+            description
+            image
+            ingredients
+            category
+          }
         }
       }
       combined_order_id
@@ -116,17 +123,24 @@ interface RestaurantOrderDetailsResponse {
       id: string;
       order_id: string;
       created_at: string;
-      restaurant_dishes: {
+      restaurant_menu: {
         id: string;
-        name: string;
-        description: string;
         price: string;
-        image: string;
-        preparingTime: string;
-        ingredients: string;
-        category: string;
+        preparingTime: string | null;
         is_active: boolean;
-      };
+        ProductNames: {
+          name: string;
+          description: string | null;
+          image: string | null;
+        } | null;
+        dishes: {
+          name: string;
+          description: string | null;
+          image: string | null;
+          ingredients: string | null;
+          category: string | null;
+        } | null;
+      } | null;
     }>;
     combined_order_id: string | null;
     delivery_address_id: string;
@@ -288,10 +302,31 @@ export default async function handler(
       Restaurant: restaurantOrder.Restaurant,
       // Include dish orders with dish details
       restaurant_order_items: restaurantOrder.restaurant_order_items.map(
-        (item) => ({
-          ...item,
-          dish: item.restaurant_dishes,
-        })
+        (item) => {
+          const menu = item.restaurant_menu;
+          const product = menu?.ProductNames || null;
+          const dishBase = menu?.dishes || null;
+
+          const dish = menu
+            ? {
+                id: menu.id,
+                name: product?.name || dishBase?.name || "Unnamed Dish",
+                description:
+                  product?.description || dishBase?.description || "",
+                price: menu.price,
+                image: product?.image || dishBase?.image || null,
+                preparingTime: menu.preparingTime || "",
+                ingredients: dishBase?.ingredients || null,
+                category: dishBase?.category || null,
+                is_active: menu.is_active,
+              }
+            : null;
+
+          return {
+            ...item,
+            dish,
+          };
+        }
       ),
     };
 
