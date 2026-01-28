@@ -30,6 +30,12 @@ export default function RecipeDetailPage() {
     { name: string; measure: string }[]
   >([]);
 
+  // Mobile collapsible sections
+  const [metaOpen, setMetaOpen] = useState(false);
+  const [ingredientsOpen, setIngredientsOpen] = useState(false);
+  const [instructionsOpen, setInstructionsOpen] = useState(false);
+  const [videoOpen, setVideoOpen] = useState(false);
+
   useEffect(() => {
     const fetchRecipeDetails = async () => {
       if (!id) return;
@@ -152,6 +158,19 @@ export default function RecipeDetailPage() {
               </Link>
             </div>
 
+            {/* Mobile header with recipe name */}
+            <div className="mb-4 md:hidden">
+              <h1 className="text-xl font-semibold">{meal.strMeal}</h1>
+              <p
+                className={`mt-1 text-sm ${
+                  isDark ? "text-slate-300" : "text-slate-600"
+                }`}
+              >
+                Detailed steps, ingredients, and video walkthrough for this
+                recipe.
+              </p>
+            </div>
+
             {/* Main layout: left details + right meta/ingredients */}
             <div className="grid gap-6 lg:grid-cols-2">
               {/* Left: hero card */}
@@ -210,21 +229,14 @@ export default function RecipeDetailPage() {
                     crowd-pleaser.
                   </p>
 
-                  {/* Video tutorial (if available) */}
+                  {/* Video tutorial (desktop within card) */}
                   {meal.strYoutube && (
-                    <div className="mt-4">
+                    <div className="mt-4 hidden md:block">
                       <h2 className="text-sm font-semibold sm:text-base">
                         Video tutorial
                       </h2>
-                      <div
-                        className={`mt-2 flex flex-col items-stretch gap-3 rounded-3xl border p-3 sm:flex-row sm:p-4 ${
-                          isDark
-                            ? "border-slate-800 bg-slate-900/70"
-                            : "border-slate-100 bg-white"
-                        }`}
-                      >
-                        {/* Small square-ish video on the left */}
-                        <div className="overflow-hidden rounded-2xl bg-black/60 sm:w-40 sm:flex-shrink-0">
+                      <div className="mt-2 flex items-stretch gap-3">
+                        <div className="overflow-hidden rounded-2xl bg-black/60 w-40 flex-shrink-0">
                           <div className="aspect-square">
                             <iframe
                               width="200"
@@ -240,8 +252,6 @@ export default function RecipeDetailPage() {
                             ></iframe>
                           </div>
                         </div>
-
-                        {/* Description on the right */}
                         <div className="text-xs sm:text-sm">
                           <p
                             className={
@@ -289,35 +299,53 @@ export default function RecipeDetailPage() {
               <section className="space-y-4">
                 {/* Time / meta row */}
                 <div
-                  className={`grid grid-cols-2 gap-3 rounded-3xl border p-4 text-xs sm:grid-cols-4 sm:text-sm ${
+                  className={`rounded-3xl border p-4 text-xs sm:text-sm ${
                     isDark
                       ? "border-slate-800 bg-slate-900/70"
                       : "border-slate-100 bg-white"
                   }`}
                 >
-                  <div>
-                    <p className="text-[11px] uppercase tracking-wide text-slate-400">
-                      Prep
-                    </p>
-                    <p className="mt-1 font-semibold">10 min</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] uppercase tracking-wide text-slate-400">
-                      Cook
-                    </p>
-                    <p className="mt-1 font-semibold">20 min</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] uppercase tracking-wide text-slate-400">
-                      Serves
-                    </p>
-                    <p className="mt-1 font-semibold">4 people</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] uppercase tracking-wide text-slate-400">
-                      Difficulty
-                    </p>
-                    <p className="mt-1 font-semibold">Easy</p>
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-between text-left"
+                    onClick={() => setMetaOpen((v) => !v)}
+                  >
+                    <h2 className="text-sm font-semibold sm:text-base">
+                      Overview
+                    </h2>
+                    <span className="md:hidden">
+                      {metaOpen ? "−" : "+"}
+                    </span>
+                  </button>
+                  <div
+                    className={`mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4 ${
+                      metaOpen ? "block" : "hidden md:block"
+                    }`}
+                  >
+                    <div>
+                      <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                        Prep
+                      </p>
+                      <p className="mt-1 font-semibold">10 min</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                        Cook
+                      </p>
+                      <p className="mt-1 font-semibold">20 min</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                        Serves
+                      </p>
+                      <p className="mt-1 font-semibold">4 people</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                        Difficulty
+                      </p>
+                      <p className="mt-1 font-semibold">Easy</p>
+                    </div>
                   </div>
                 </div>
 
@@ -329,19 +357,39 @@ export default function RecipeDetailPage() {
                       : "border-slate-100 bg-white"
                   }`}
                 >
-                  <div>
-                    <p className="text-[11px] uppercase tracking-wide text-slate-400">
-                      Ingredients
-                    </p>
-                    <p className="mt-1 text-lg font-semibold">
-                      {ingredients.length}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] uppercase tracking-wide text-slate-400">
-                      Equipment
-                    </p>
-                    <p className="mt-1 text-lg font-semibold">Basic kitchen</p>
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-between text-left"
+                    onClick={() => setIngredientsOpen((v) => !v)}
+                  >
+                    <h2 className="text-sm font-semibold sm:text-base">
+                      Summary
+                    </h2>
+                    <span className="md:hidden">
+                      {ingredientsOpen ? "−" : "+"}
+                    </span>
+                  </button>
+                  <div
+                    className={`mt-3 grid grid-cols-2 gap-3 ${
+                      ingredientsOpen ? "block" : "hidden md:block"
+                    }`}
+                  >
+                    <div>
+                      <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                        Ingredients
+                      </p>
+                      <p className="mt-1 text-lg font-semibold">
+                        {ingredients.length}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                        Equipment
+                      </p>
+                      <p className="mt-1 text-lg font-semibold">
+                        Basic kitchen
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -353,13 +401,22 @@ export default function RecipeDetailPage() {
                       : "border-slate-100 bg-white"
                   }`}
                 >
-                  <h2 className="text-sm font-semibold sm:text-base">
-                    Ingredients
-                  </h2>
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-between text-left"
+                    onClick={() => setIngredientsOpen((v) => !v)}
+                  >
+                    <h2 className="text-sm font-semibold sm:text-base">
+                      Ingredients
+                    </h2>
+                    <span className="md:hidden">
+                      {ingredientsOpen ? "−" : "+"}
+                    </span>
+                  </button>
                   <ul
                     className={`mt-3 space-y-2 text-xs sm:text-sm ${
                       isDark ? "text-slate-200" : "text-slate-700"
-                    }`}
+                    } ${ingredientsOpen ? "block" : "hidden md:block"}`}
                   >
                     {ingredients.map((item, index) => (
                       <li
@@ -388,13 +445,22 @@ export default function RecipeDetailPage() {
                   : "border-slate-100 bg-white"
               }`}
             >
-              <h2 className="text-sm font-semibold sm:text-base">
-                Instructions
-              </h2>
+              <button
+                type="button"
+                className="flex w-full items-center justify-between text-left"
+                onClick={() => setInstructionsOpen((v) => !v)}
+              >
+                <h2 className="text-sm font-semibold sm:text-base">
+                  Instructions
+                </h2>
+                <span className="md:hidden">
+                  {instructionsOpen ? "−" : "+"}
+                </span>
+              </button>
               <ol
                 className={`mt-3 space-y-3 text-xs sm:text-sm ${
                   isDark ? "text-slate-200" : "text-slate-700"
-                }`}
+                } ${instructionsOpen ? "block" : "hidden md:block"}`}
               >
                 {formatInstructions(meal.strInstructions).map((step, index) => (
                   <li key={index} className="flex gap-3">
@@ -406,6 +472,54 @@ export default function RecipeDetailPage() {
                 ))}
               </ol>
             </div>
+
+            {/* Mobile-only video section at bottom */}
+            {meal.strYoutube && (
+              <div
+                className={`mt-4 rounded-3xl border p-4 md:hidden ${
+                  isDark
+                    ? "border-slate-800 bg-slate-900/70"
+                    : "border-slate-100 bg-white"
+                }`}
+              >
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between text-left"
+                  onClick={() => setVideoOpen((v) => !v)}
+                >
+                  <h2 className="text-sm font-semibold sm:text-base">
+                    Video tutorial
+                  </h2>
+                  <span>{videoOpen ? "−" : "+"}</span>
+                </button>
+                {videoOpen && (
+                  <div className="mt-3">
+                    <div className="aspect-video overflow-hidden rounded-2xl">
+                      <iframe
+                        width="560"
+                        height="315"
+                        src={`https://www.youtube.com/embed/${getYoutubeVideoId(
+                          meal.strYoutube
+                        )}`}
+                        title="YouTube video player"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="h-full w-full"
+                      ></iframe>
+                    </div>
+                    <p
+                      className={`mt-2 text-xs ${
+                        isDark ? "text-slate-200" : "text-slate-700"
+                      }`}
+                    >
+                      Watch the full walkthrough for timing, textures and
+                      plating tips while you cook.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ) : null}
       </div>
