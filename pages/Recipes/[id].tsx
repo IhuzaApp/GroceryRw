@@ -152,10 +152,8 @@ export default function RecipeDetailPage() {
               </Link>
             </div>
 
-            {/* Main layout */}
-            <div
-              className={`grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1.2fr)]`}
-            >
+            {/* Main layout: left details + right meta/ingredients */}
+            <div className="grid gap-6 lg:grid-cols-2">
               {/* Left: hero card */}
               <section
                 className={`flex flex-col overflow-hidden rounded-3xl border ${
@@ -287,7 +285,7 @@ export default function RecipeDetailPage() {
                 </div>
               </section>
 
-              {/* Right: stats, ingredients, instructions */}
+              {/* Right: stats, ingredients */}
               <section className="space-y-4">
                 {/* Time / meta row */}
                 <div
@@ -379,36 +377,34 @@ export default function RecipeDetailPage() {
                   </ul>
                 </div>
 
-                {/* Instructions */}
-                <div
-                  className={`rounded-3xl border p-4 ${
-                    isDark
-                      ? "border-slate-800 bg-slate-900/70"
-                      : "border-slate-100 bg-white"
-                  }`}
-                >
-                  <h2 className="text-sm font-semibold sm:text-base">
-                    Instructions
-                  </h2>
-                  <ol
-                    className={`mt-3 space-y-3 text-xs sm:text-sm ${
-                      isDark ? "text-slate-200" : "text-slate-700"
-                    }`}
-                  >
-                    {formatInstructions(meal.strInstructions).map(
-                      (step, index) => (
-                        <li key={index} className="flex gap-3">
-                          <span className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500 text-xs font-semibold text-white">
-                            {index + 1}
-                          </span>
-                          <p>{step}</p>
-                        </li>
-                      )
-                    )}
-                  </ol>
-                </div>
-
               </section>
+            </div>
+
+            {/* Instructions full-width below */}
+            <div
+              className={`mt-6 rounded-3xl border p-4 ${
+                isDark
+                  ? "border-slate-800 bg-slate-900/70"
+                  : "border-slate-100 bg-white"
+              }`}
+            >
+              <h2 className="text-sm font-semibold sm:text-base">
+                Instructions
+              </h2>
+              <ol
+                className={`mt-3 space-y-3 text-xs sm:text-sm ${
+                  isDark ? "text-slate-200" : "text-slate-700"
+                }`}
+              >
+                {formatInstructions(meal.strInstructions).map((step, index) => (
+                  <li key={index} className="flex gap-3">
+                    <span className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500 text-xs font-semibold text-white">
+                      {index + 1}
+                    </span>
+                    <p>{step}</p>
+                  </li>
+                ))}
+              </ol>
             </div>
           </div>
         ) : null}
