@@ -477,10 +477,6 @@ export default function UserPaymentCards({
 
           <div className="flex items-center justify-between">
             <div>
-              <p className="mb-1 text-xs opacity-80">Status</p>
-              <p className="font-medium">PENDING</p>
-            </div>
-            <div>
               <p className="mb-1 text-xs opacity-80">Last Updated</p>
               <p className="font-medium">Today</p>
             </div>
