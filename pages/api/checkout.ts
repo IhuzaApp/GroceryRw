@@ -71,15 +71,18 @@ function generateOrderPin(): string {
     .padStart(2, "0");
 }
 
+// Customer = owner of delivery address (OrderedBy); same pattern as Cart/reel-orders
 const GET_ADDRESS_AND_USER = gql`
-  query GetAddressAndUser($address_id: uuid!, $user_id: uuid!) {
+  query GetAddressAndUser($address_id: uuid!) {
     Addresses_by_pk(id: $address_id) {
       street
       city
       postal_code
-    }
-    User_by_pk(id: $user_id) {
-      phone
+      User {
+        name
+        email
+        phone
+      }
     }
   }
 `;
@@ -320,19 +323,24 @@ export default async function handler(
     const storeName = cart.Shop?.name;
     let customerAddress: string | undefined;
     let customerPhone: string | undefined;
+    let customerName: string | undefined;
     try {
       const aux = await hasuraClient.request<{
-        Addresses_by_pk: { street: string; city: string; postal_code: string } | null;
-        User_by_pk: { phone: string | null } | null;
+        Addresses_by_pk: {
+          street: string;
+          city: string;
+          postal_code: string;
+          User: { name: string | null; email: string | null; phone: string | null } | null;
+        } | null;
       }>(GET_ADDRESS_AND_USER, {
         address_id: delivery_address_id,
-        user_id,
       });
       if (aux.Addresses_by_pk) {
         const a = aux.Addresses_by_pk;
         customerAddress = [a.street, a.city, a.postal_code].filter(Boolean).join(", ");
+        customerName = a.User?.name ?? undefined;
+        customerPhone = a.User?.phone ?? undefined;
       }
-      customerPhone = aux.User_by_pk?.phone ?? undefined;
     } catch (_) {
       // non-blocking
     }
@@ -345,6 +353,7 @@ export default async function handler(
       orderType: "regular",
       storeName,
       units,
+      customerName,
       customerPhone,
       customerAddress,
       deliveryTime: delivery_time,
