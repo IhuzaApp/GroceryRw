@@ -18,23 +18,20 @@ export default function AddMoneyModal({
 }: AddMoneyModalProps) {
   const { t } = useLanguage();
   const [amount, setAmount] = useState<string>("");
-  const [phoneNumber, setPhoneNumber] = useState<string>("");
+  const [cardNumber, setCardNumber] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
   // Predefined amount options
   const quickAmounts = [5000, 10000, 20000, 50000, 100000];
 
-  // Format phone number input (Rwanda format: 0781234567)
-  const formatPhoneNumberInput = (value: string) => {
-    const cleaned = value.replace(/\D/g, "");
-    // Limit to 10 digits for Rwanda phone numbers
-    return cleaned.slice(0, 10);
+  // Format card number input (digits only, max 16, space every 4 digits)
+  const formatCardNumberInput = (value: string) => {
+    const cleaned = value.replace(/\D/g, "").slice(0, 16);
+    return cleaned.replace(/(\d{4})(?=\d)/g, "$1 ").trim();
   };
 
-  // Handle phone number input
-  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhoneNumberInput(e.target.value);
-    setPhoneNumber(formatted);
+  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCardNumber(formatCardNumberInput(e.target.value));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -93,7 +90,7 @@ export default function AddMoneyModal({
 
       toast.success(data.message || "Money added successfully!");
       setAmount("");
-      setPhoneNumber("");
+      setCardNumber("");
       onSuccess();
       onClose();
     } catch (error: any) {
@@ -260,7 +257,7 @@ export default function AddMoneyModal({
             </button>
             <button
               type="submit"
-              disabled={loading || !amount || !phoneNumber}
+              disabled={loading || !amount || !cardNumber}
               className="flex-1 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-3 font-semibold !text-white shadow-md transition-all hover:scale-105 hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
