@@ -81,8 +81,7 @@ export default function RootLayout({
           </div>
           {!isChatPage &&
             !isReelsPage &&
-            !isMessagesPage &&
-            !isOrderDetailsPage && <BottomBar />}
+            !isMessagesPage && <BottomBar />}
         </main>
         {/* AI Chat - Available on all pages except chat pages */}
         {!isChatPage && !isMessagesPage && !isOrderDetailsPage && (

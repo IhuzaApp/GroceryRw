@@ -213,14 +213,13 @@ const MobileOrderDetails = ({
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen pb-20 md:pb-0"
       style={{ margin: 0, padding: 0, width: "100%" }}
     >
-      {/* Mobile Header with Image */}
+      {/* Mobile Header with Image - aligned with safe top, full-bleed */}
       <div
-        className="relative h-36 w-full sm:hidden"
+        className="relative h-40 w-full pt-4 sm:hidden"
         style={{
-          marginTop: "-44px",
           marginLeft: "-16px",
           marginRight: "-16px",
           width: "calc(100% + 32px)",
@@ -238,10 +237,10 @@ const MobileOrderDetails = ({
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/70" />
 
-        {/* Back Button */}
+        {/* Back Button - 36px from viewport (header full-bleed extends 16px off-screen) */}
         <Link
           href="/CurrentPendingOrders"
-          className="absolute left-4 top-7 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/30"
+          className="absolute left-9 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/30"
         >
           <svg
             viewBox="0 0 24 24"
@@ -255,7 +254,7 @@ const MobileOrderDetails = ({
         </Link>
 
         {/* Order ID Badge */}
-        <div className="absolute right-4 top-7 z-20">
+        <div className="absolute right-5 top-4 z-20">
           <span className="inline-flex items-center rounded-full bg-white/20 px-4 py-2 text-sm font-semibold !text-white shadow-lg backdrop-blur-md">
             {combinedOrders.length > 1 ? (
               <>
@@ -272,8 +271,8 @@ const MobileOrderDetails = ({
           </span>
         </div>
 
-        {/* Header Content */}
-        <div className="absolute bottom-0 left-0 right-0 z-10 p-4">
+        {/* Header Content - 36px horizontal from viewport */}
+        <div className="absolute bottom-0 left-0 right-0 z-10 px-9 pb-5 pt-2">
           <h1 className="text-2xl font-bold !text-white">
             {combinedOrders.length > 1 ? "Orders Details" : "Order Details"}
           </h1>

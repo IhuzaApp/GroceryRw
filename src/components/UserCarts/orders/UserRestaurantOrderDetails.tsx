@@ -483,11 +483,11 @@ export default function UserRestaurantOrderDetails({
 
         {/* Contact Support or existing ticket */}
         {supportTicket ? (
-          <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
-            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+          <div className="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 dark:border-red-800 dark:bg-red-900/30">
+            <p className="text-sm font-semibold text-red-800 dark:text-red-200">
               Ticket #{supportTicket.ticket_num}
             </p>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
+            <p className="text-xs text-red-700 dark:text-red-300">
               Status: <span className="capitalize">{supportTicket.status}</span>
             </p>
           </div>
