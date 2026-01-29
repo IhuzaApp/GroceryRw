@@ -84,11 +84,17 @@ const GET_USER_ORDERS = gql`
       delivery_time
       combined_order_id
       restaurant_id
+      pin
       Restaurant {
         id
         name
         location
         logo
+      }
+      restaurant_order_items_aggregate {
+        aggregate {
+          count
+        }
       }
     }
   }
@@ -179,11 +185,15 @@ interface OrdersResponse {
     delivery_time: string;
     combined_order_id: string | null;
     restaurant_id: string;
+    pin?: string | null;
     Restaurant: {
       id: string;
       name: string;
       location: string;
       logo: string | null;
+    } | null;
+    restaurant_order_items_aggregate?: {
+      aggregate: { count: number } | null;
     } | null;
   }>;
 }
@@ -346,6 +356,8 @@ export default async function handler(
       const baseTotal = parseFloat(ro.total || "0");
       const deliveryFee = parseFloat(ro.delivery_fee || "0");
       const grandTotal = baseTotal + deliveryFee;
+      const itemsCount =
+        ro.restaurant_order_items_aggregate?.aggregate?.count ?? 0;
 
       return {
         orderType: "restaurant" as const,
@@ -355,7 +367,7 @@ export default async function handler(
         status: ro.status,
         created_at: ro.created_at,
         delivery_time: ro.delivery_time,
-        pin: "",
+        pin: ro.pin ?? "",
         combined_order_id: ro.combined_order_id,
         total: grandTotal,
         shop_id: ro.restaurant_id,
@@ -371,10 +383,10 @@ export default async function handler(
               category_id: "",
             }
           : null,
-        itemsCount: 1,
-        unitsCount: 0,
+        itemsCount: itemsCount || 1,
+        unitsCount: itemsCount,
         reel: null,
-        quantity: 0,
+        quantity: itemsCount,
         discount: 0,
         voucher_code: null,
       };
