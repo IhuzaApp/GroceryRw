@@ -64,9 +64,7 @@ export async function notifyNewReviewToSlack(payload: NewReviewPayload) {
     },
     {
       type: "context",
-      elements: [
-        { type: "mrkdwn", text: `🕒 ${new Date().toLocaleString()}` },
-      ],
+      elements: [{ type: "mrkdwn", text: `🕒 ${new Date().toLocaleString()}` }],
     },
   ];
 
@@ -112,9 +110,7 @@ export interface DelayedOrderPayload {
  * Send a "delayed order / needs immediate attention" notification to Slack.
  * Called when an order has ≤2 minutes until it is late (or is already late).
  */
-export async function notifyDelayedOrderToSlack(
-  payload: DelayedOrderPayload
-) {
+export async function notifyDelayedOrderToSlack(payload: DelayedOrderPayload) {
   if (!SLACK_GENERAL_WEBHOOK) {
     console.error("SLACK_GENERAL_WEBHOOK is not configured");
     return;
@@ -144,8 +140,7 @@ export async function notifyDelayedOrderToSlack(
   if (isPending) {
     statusLine = "Has been delayed and not yet assigned.";
   } else if (isAssigned) {
-    statusLine =
-      "Has been accepted and the shopper hasn't delivered it yet.";
+    statusLine = "Has been accepted and the shopper hasn't delivered it yet.";
   } else {
     statusLine = `Status: ${payload.status}.`;
   }
@@ -192,9 +187,7 @@ export async function notifyDelayedOrderToSlack(
     },
     {
       type: "context",
-      elements: [
-        { type: "mrkdwn", text: `🕒 ${new Date().toLocaleString()}` },
-      ],
+      elements: [{ type: "mrkdwn", text: `🕒 ${new Date().toLocaleString()}` }],
     },
   ];
 

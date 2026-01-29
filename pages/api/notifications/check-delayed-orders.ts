@@ -10,11 +10,17 @@ const GET_ORDER_BY_ID = gql`
       OrderID
       status
       delivery_time
-      Shop { name }
-      orderedBy { phone }
+      Shop {
+        name
+      }
+      orderedBy {
+        phone
+      }
       Shoppers {
         phone
-        shopper { phone_number }
+        shopper {
+          phone_number
+        }
       }
     }
   }
@@ -27,12 +33,18 @@ const GET_REEL_ORDER_BY_ID = gql`
       OrderID
       status
       delivery_time
-      Reel { title }
-      User { phone }
+      Reel {
+        title
+      }
+      User {
+        phone
+      }
       Shoppers {
         name
         phone
-        shopper { phone_number }
+        shopper {
+          phone_number
+        }
       }
     }
   }
@@ -45,7 +57,9 @@ const GET_RESTAURANT_ORDER_BY_ID = gql`
       OrderID
       status
       delivery_time
-      Restaurant { name }
+      Restaurant {
+        name
+      }
       orderedBy {
         email
         id
@@ -118,7 +132,8 @@ export default async function handler(
       if (!o) {
         return res.status(404).json({ error: "Order not found" });
       }
-      orderNumber = o.OrderID != null ? String(o.OrderID).padStart(4, "0") : "—";
+      orderNumber =
+        o.OrderID != null ? String(o.OrderID).padStart(4, "0") : "—";
       status = o.status;
       customerPhone = o.orderedBy?.phone ?? undefined;
       shopperPhone =
@@ -142,7 +157,8 @@ export default async function handler(
       if (!o) {
         return res.status(404).json({ error: "Reel order not found" });
       }
-      orderNumber = o.OrderID != null ? String(o.OrderID).padStart(4, "0") : "—";
+      orderNumber =
+        o.OrderID != null ? String(o.OrderID).padStart(4, "0") : "—";
       status = o.status;
       customerPhone = o.User?.phone ?? undefined;
       shopperPhone =
@@ -176,11 +192,14 @@ export default async function handler(
       if (!o) {
         return res.status(404).json({ error: "Restaurant order not found" });
       }
-      orderNumber = o.OrderID != null ? String(o.OrderID).padStart(4, "0") : "—";
+      orderNumber =
+        o.OrderID != null ? String(o.OrderID).padStart(4, "0") : "—";
       status = o.status;
       customerPhone = o.orderedBy?.phone ?? undefined;
       shopperPhone =
-        o.shopper?.shopper?.phone_number ?? o.shopper?.shopper?.phone ?? undefined;
+        o.shopper?.shopper?.phone_number ??
+        o.shopper?.shopper?.phone ??
+        undefined;
       storeName = o.Restaurant?.name ?? undefined;
     } else {
       return res.status(400).json({ error: "Invalid orderType" });

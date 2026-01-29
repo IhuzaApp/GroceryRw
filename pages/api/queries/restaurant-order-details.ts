@@ -324,9 +324,11 @@ export default async function handler(
     };
     const message = err?.message ?? "Unknown error";
     const graphqlErrors = err?.response?.errors;
-    const detail =
-      graphqlErrors?.length ?
-        graphqlErrors.map((e) => e?.message ?? "").filter(Boolean).join("; ")
+    const detail = graphqlErrors?.length
+      ? graphqlErrors
+          .map((e) => e?.message ?? "")
+          .filter(Boolean)
+          .join("; ")
       : message;
     logger.error(
       "Error fetching restaurant order details",

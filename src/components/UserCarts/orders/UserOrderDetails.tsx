@@ -392,7 +392,8 @@ export default function UserOrderDetails({
                 Ticket #{supportTicket.ticket_num}
               </p>
               <p className="text-xs text-red-700 dark:text-red-300">
-                Status: <span className="capitalize">{supportTicket.status}</span>
+                Status:{" "}
+                <span className="capitalize">{supportTicket.status}</span>
               </p>
             </div>
           ) : (

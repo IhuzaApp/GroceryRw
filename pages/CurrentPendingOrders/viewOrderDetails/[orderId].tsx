@@ -204,7 +204,8 @@ const MobileOrderDetails = ({
 
   // Get image source - restaurant orders use dedicated asset; then shop, reel, default
   const getHeaderImage = () => {
-    if (orderType === "restaurant") return "/assets/images/restaurantImage.webp";
+    if (orderType === "restaurant")
+      return "/assets/images/restaurantImage.webp";
     if (order?.shop?.image) return order.shop.image;
     if (order?.reel?.thumbnail) return order.reel.thumbnail;
     if (order?.restaurant?.image) return order.restaurant.image;
@@ -456,7 +457,9 @@ function ViewOrderDetailsPage() {
       orderObj?.OrderID != null ? orderObj.OrderID : orderObj?.id;
     try {
       const res = await fetch(
-        `/api/queries/ticket-by-order?orderId=${encodeURIComponent(orderObj.id)}&orderDisplayId=${encodeURIComponent(String(orderDisplayId))}`
+        `/api/queries/ticket-by-order?orderId=${encodeURIComponent(
+          orderObj.id
+        )}&orderDisplayId=${encodeURIComponent(String(orderDisplayId))}`
       );
       if (res.ok) {
         const data = await res.json();
@@ -484,23 +487,53 @@ function ViewOrderDetailsPage() {
         setLoading(true);
         setError(null);
 
-        const apis: Array<{ type: "regular" | "reel" | "restaurant"; url: string }> =
+        const apis: Array<{
+          type: "regular" | "reel" | "restaurant";
+          url: string;
+        }> =
           typeHint === "restaurant"
             ? [
-                { type: "restaurant", url: `/api/queries/restaurant-order-details?id=${orderId}` },
-                { type: "regular", url: `/api/queries/orderDetails?id=${orderId}` },
-                { type: "reel", url: `/api/queries/reel-order-details?id=${orderId}` },
+                {
+                  type: "restaurant",
+                  url: `/api/queries/restaurant-order-details?id=${orderId}`,
+                },
+                {
+                  type: "regular",
+                  url: `/api/queries/orderDetails?id=${orderId}`,
+                },
+                {
+                  type: "reel",
+                  url: `/api/queries/reel-order-details?id=${orderId}`,
+                },
               ]
             : typeHint === "reel"
             ? [
-                { type: "reel", url: `/api/queries/reel-order-details?id=${orderId}` },
-                { type: "regular", url: `/api/queries/orderDetails?id=${orderId}` },
-                { type: "restaurant", url: `/api/queries/restaurant-order-details?id=${orderId}` },
+                {
+                  type: "reel",
+                  url: `/api/queries/reel-order-details?id=${orderId}`,
+                },
+                {
+                  type: "regular",
+                  url: `/api/queries/orderDetails?id=${orderId}`,
+                },
+                {
+                  type: "restaurant",
+                  url: `/api/queries/restaurant-order-details?id=${orderId}`,
+                },
               ]
             : [
-                { type: "regular", url: `/api/queries/orderDetails?id=${orderId}` },
-                { type: "reel", url: `/api/queries/reel-order-details?id=${orderId}` },
-                { type: "restaurant", url: `/api/queries/restaurant-order-details?id=${orderId}` },
+                {
+                  type: "regular",
+                  url: `/api/queries/orderDetails?id=${orderId}`,
+                },
+                {
+                  type: "reel",
+                  url: `/api/queries/reel-order-details?id=${orderId}`,
+                },
+                {
+                  type: "restaurant",
+                  url: `/api/queries/restaurant-order-details?id=${orderId}`,
+                },
               ];
 
         for (const { type, url } of apis) {

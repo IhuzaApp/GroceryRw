@@ -662,7 +662,10 @@ export default function BottomBar() {
                     </g>
                   </svg>
                   {marketplaceNotificationCount > 0 && (
-                    <span className="absolute -right-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-lg dark:bg-red-600" aria-label={`${marketplaceNotificationCount} marketplace notifications`}>
+                    <span
+                      className="absolute -right-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-lg dark:bg-red-600"
+                      aria-label={`${marketplaceNotificationCount} marketplace notifications`}
+                    >
                       {marketplaceNotificationCount > 9
                         ? "9+"
                         : marketplaceNotificationCount}
@@ -756,7 +759,10 @@ export default function BottomBar() {
                   </g>
                 </svg>
                 {pendingOrdersCount > 0 && (
-                  <span className="absolute -right-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white dark:bg-red-600" aria-label={`${pendingOrdersCount} pending orders`}>
+                  <span
+                    className="absolute -right-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white dark:bg-red-600"
+                    aria-label={`${pendingOrdersCount} pending orders`}
+                  >
                     {pendingOrdersCount > 9 ? "9+" : pendingOrdersCount}
                   </span>
                 )}
