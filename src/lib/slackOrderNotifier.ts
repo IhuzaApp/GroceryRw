@@ -1,6 +1,11 @@
 const SLACK_ORDERS_WEBHOOK = process.env.SLACK_ORDERS_WEBHOOK;
 
-export type SlackOrderType = "regular" | "reel" | "business" | "restaurant" | "combined";
+export type SlackOrderType =
+  | "regular"
+  | "reel"
+  | "business"
+  | "restaurant"
+  | "combined";
 
 /** Line item for card-style Slack message (optional) */
 export interface SlackOrderItem {
@@ -63,8 +68,7 @@ export async function notifyNewOrderToSlack(order: SlackOrderPayload) {
   const orderTypeLabel = order.orderType
     ? ORDER_TYPE_LABELS[order.orderType]
     : "Order";
-  const customerDisplay =
-    order.customerName ?? order.customerPhone ?? "—";
+  const customerDisplay = order.customerName ?? order.customerPhone ?? "—";
   const placedAt = new Date().toLocaleTimeString();
   const storeDisplay = order.storeName ?? "—";
   const unitsDisplay = order.units != null ? String(order.units) : "—";
@@ -74,8 +78,7 @@ export async function notifyNewOrderToSlack(order: SlackOrderPayload) {
     order.items && order.items.length > 0
       ? order.items
           .map(
-            (i) =>
-              `• ${i.name} ×${i.qty} — *$${(i.price * i.qty).toFixed(2)}*`
+            (i) => `• ${i.name} ×${i.qty} — *$${(i.price * i.qty).toFixed(2)}*`
           )
           .join("\n")
       : `• Order — ×${unitsDisplay} — *$${formattedTotal}*`;
@@ -112,7 +115,12 @@ export async function notifyNewOrderToSlack(order: SlackOrderPayload) {
     {
       type: "section",
       fields: [
-        { type: "mrkdwn", text: `*📞 Customer phone (call for urgency)*\n${order.customerPhone ?? "—"}` },
+        {
+          type: "mrkdwn",
+          text: `*📞 Customer phone (call for urgency)*\n${
+            order.customerPhone ?? "—"
+          }`,
+        },
       ],
     },
     { type: "divider" },
@@ -133,9 +141,7 @@ export async function notifyNewOrderToSlack(order: SlackOrderPayload) {
     },
     {
       type: "context",
-      elements: [
-        { type: "mrkdwn", text: `🕒 ${new Date().toLocaleString()}` },
-      ],
+      elements: [{ type: "mrkdwn", text: `🕒 ${new Date().toLocaleString()}` }],
     },
   ];
 

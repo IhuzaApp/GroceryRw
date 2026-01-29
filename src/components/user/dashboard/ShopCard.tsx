@@ -110,15 +110,11 @@ const ShopCard: React.FC<ShopCardProps> = ({
     }
     if (
       lowerCategoryName.includes("Super Market") ||
-
       lowerName.includes("Super Market")
     ) {
       return "/assets/images/superMarkets.jpg";
     }
-    if (
-      lowerCategoryName.includes("liquor") ||
-      lowerName.includes("liquor")
-    ) {
+    if (lowerCategoryName.includes("liquor") || lowerName.includes("liquor")) {
       return "/assets/images/Liquor.jpg";
     }
     if (lowerName.includes("butcher")) {

@@ -108,10 +108,7 @@ const MobileShopCard: React.FC<MobileShopCardProps> = ({
     ) {
       return "/assets/images/publicMarket.jpg";
     }
-    if (
-      lowerCategoryName.includes("liquor") ||
-      lowerName.includes("liquor")
-    ) {
+    if (lowerCategoryName.includes("liquor") || lowerName.includes("liquor")) {
       return "/assets/images/Liquor.jpg";
     }
     if (lowerName.includes("butcher")) {

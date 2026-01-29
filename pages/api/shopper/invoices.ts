@@ -455,7 +455,11 @@ export default async function handler(
       );
     }
 
-    logger.error("Error fetching shopper invoices", "ShopperInvoicesAPI", error);
+    logger.error(
+      "Error fetching shopper invoices",
+      "ShopperInvoicesAPI",
+      error
+    );
 
     await logErrorToSlack("ShopperInvoicesAPI", error, {
       shopperId,

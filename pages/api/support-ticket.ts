@@ -56,14 +56,8 @@ export default async function handler(
 
   try {
     const body = req.body as Body;
-    const {
-      orderId,
-      orderDisplayId,
-      orderType,
-      storeName,
-      status,
-      message,
-    } = body;
+    const { orderId, orderDisplayId, orderType, storeName, status, message } =
+      body;
 
     if (!orderId || !orderType || typeof message !== "string") {
       return res.status(400).json({
@@ -78,7 +72,10 @@ export default async function handler(
     let ticketNum: number | undefined;
     if (hasuraClient) {
       const result = await hasuraClient.request<{
-        insert_tickets: { affected_rows: number; returning: Array<{ ticket_num: number }> };
+        insert_tickets: {
+          affected_rows: number;
+          returning: Array<{ ticket_num: number }>;
+        };
       }>(ADD_TICKET_REQUEST, {
         priority: "critical",
         status: "open",

@@ -47,8 +47,7 @@ export async function sendSupportTicketToSlack(ticket: SupportTicketPayload) {
     ? `${ticket.userName}${ticket.userEmail ? ` (${ticket.userEmail})` : ""}`
     : ticket.userEmail ?? "—";
   const phoneDisplay = ticket.userPhone ?? "—";
-  const ticketDisplay =
-    ticket.ticketNum != null ? `#${ticket.ticketNum}` : "—";
+  const ticketDisplay = ticket.ticketNum != null ? `#${ticket.ticketNum}` : "—";
 
   const blocks: any[] = [
     {
@@ -82,7 +81,10 @@ export async function sendSupportTicketToSlack(ticket: SupportTicketPayload) {
     {
       type: "section",
       fields: [
-        { type: "mrkdwn", text: `*📞 Customer phone (call for urgency)*\n${phoneDisplay}` },
+        {
+          type: "mrkdwn",
+          text: `*📞 Customer phone (call for urgency)*\n${phoneDisplay}`,
+        },
       ],
     },
     { type: "divider" },
@@ -96,9 +98,7 @@ export async function sendSupportTicketToSlack(ticket: SupportTicketPayload) {
     { type: "divider" },
     {
       type: "context",
-      elements: [
-        { type: "mrkdwn", text: `🕒 ${new Date().toISOString()}` },
-      ],
+      elements: [{ type: "mrkdwn", text: `🕒 ${new Date().toISOString()}` }],
     },
   ];
 

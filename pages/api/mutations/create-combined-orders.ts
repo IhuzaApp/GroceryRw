@@ -244,7 +244,12 @@ export default async function handler(
               final_price: string;
             };
           }>;
-          Shop: { id: string; name: string; latitude: string; longitude: string } | null;
+          Shop: {
+            id: string;
+            name: string;
+            latitude: string;
+            longitude: string;
+          } | null;
         }>;
       }>(GET_CART_WITH_ITEMS, { user_id, shop_id: store_id });
 
@@ -352,7 +357,11 @@ export default async function handler(
     let customerPhone = "";
     try {
       const addrRes = await hasuraClient.request<{
-        Addresses_by_pk: { street: string; city: string; postal_code: string } | null;
+        Addresses_by_pk: {
+          street: string;
+          city: string;
+          postal_code: string;
+        } | null;
         User_by_pk: { phone: string | null } | null;
       }>(GET_ADDRESS_AND_USER, {
         address_id: delivery_address_id,
@@ -360,7 +369,9 @@ export default async function handler(
       });
       if (addrRes.Addresses_by_pk) {
         const a = addrRes.Addresses_by_pk;
-        customerAddress = [a.street, a.city, a.postal_code].filter(Boolean).join(", ");
+        customerAddress = [a.street, a.city, a.postal_code]
+          .filter(Boolean)
+          .join(", ");
       }
       if (addrRes.User_by_pk?.phone) customerPhone = addrRes.User_by_pk.phone;
     } catch (_) {

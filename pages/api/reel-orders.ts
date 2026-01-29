@@ -151,14 +151,20 @@ export default async function handler(
           street: string;
           city: string;
           postal_code: string;
-          User: { name: string | null; email: string | null; phone: string | null } | null;
+          User: {
+            name: string | null;
+            email: string | null;
+            phone: string | null;
+          } | null;
         } | null;
       }>(GET_ADDRESS_AND_USER, {
         address_id: delivery_address_id,
       });
       if (addrRes.Addresses_by_pk) {
         const a = addrRes.Addresses_by_pk;
-        customerAddress = [a.street, a.city, a.postal_code].filter(Boolean).join(", ");
+        customerAddress = [a.street, a.city, a.postal_code]
+          .filter(Boolean)
+          .join(", ");
         customerName = a.User?.name ?? undefined;
         customerPhone = a.User?.phone ?? undefined;
       }

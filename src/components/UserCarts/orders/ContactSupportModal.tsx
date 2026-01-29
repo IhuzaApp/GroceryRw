@@ -201,10 +201,14 @@ export default function ContactSupportModal({
               Order details (included in this ticket)
             </p>
             <div className="grid gap-2 text-sm sm:grid-cols-2">
-              <p className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>
+              <p
+                className={theme === "dark" ? "text-gray-400" : "text-gray-600"}
+              >
                 <span className="font-medium">Order ID:</span> #{orderDisplayId}
               </p>
-              <p className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>
+              <p
+                className={theme === "dark" ? "text-gray-400" : "text-gray-600"}
+              >
                 <span className="font-medium">Type:</span>{" "}
                 {orderType === "reel"
                   ? "Reel"
@@ -212,10 +216,14 @@ export default function ContactSupportModal({
                   ? "Restaurant"
                   : "Regular"}
               </p>
-              <p className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>
+              <p
+                className={theme === "dark" ? "text-gray-400" : "text-gray-600"}
+              >
                 <span className="font-medium">Store / Shop:</span> {storeName}
               </p>
-              <p className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>
+              <p
+                className={theme === "dark" ? "text-gray-400" : "text-gray-600"}
+              >
                 <span className="font-medium">Status:</span> {status}
               </p>
             </div>
@@ -240,7 +248,9 @@ export default function ContactSupportModal({
                 theme === "dark"
                   ? "border-2 border-gray-700/50 bg-gray-900/40 text-white placeholder-gray-500/70 focus:border-gray-600 focus:bg-gray-900/60"
                   : "border-2 border-gray-200 bg-gray-50/80 text-gray-900 placeholder-gray-400 focus:border-gray-300 focus:bg-white"
-              } ${colors.border} ${colors.focus} focus:ring-2 focus:ring-offset-0`}
+              } ${colors.border} ${
+                colors.focus
+              } focus:ring-2 focus:ring-offset-0`}
             />
           </div>
         </div>
@@ -256,7 +266,7 @@ export default function ContactSupportModal({
           <button
             onClick={handleClose}
             disabled={submitting}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3 font-semibold !text-white shadow-lg transition-all duration-200 hover:from-blue-700 hover:to-blue-800 hover:shadow-blue-500/25 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3 font-semibold !text-white shadow-lg transition-all duration-200 hover:from-blue-700 hover:to-blue-800 hover:shadow-blue-500/25 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             style={{ color: "white" }}
             type="button"
           >
@@ -265,13 +275,16 @@ export default function ContactSupportModal({
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-green-700 px-6 py-3 font-semibold !text-white shadow-lg transition-all duration-200 hover:from-green-700 hover:to-green-800 hover:shadow-green-500/25 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:w-auto"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-green-700 px-6 py-3 font-semibold !text-white shadow-lg transition-all duration-200 hover:from-green-700 hover:to-green-800 hover:shadow-green-500/25 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             style={{ color: "white" }}
             type="button"
           >
             {submitting ? (
               <span className="flex items-center justify-center !text-white">
-                <svg className="mr-2 h-4 w-4 shrink-0 text-white" viewBox="0 0 24 24">
+                <svg
+                  className="mr-2 h-4 w-4 shrink-0 text-white"
+                  viewBox="0 0 24 24"
+                >
                   <circle
                     className="opacity-25"
                     cx="12"

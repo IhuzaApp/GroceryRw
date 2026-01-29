@@ -47,7 +47,10 @@ export async function logErrorToSlack(
       type: "section",
       fields: [
         { type: "mrkdwn", text: `*Location*\n\`${where}\`` },
-        { type: "mrkdwn", text: `*Environment*\n\`${process.env.NODE_ENV || "unknown"}\`` },
+        {
+          type: "mrkdwn",
+          text: `*Environment*\n\`${process.env.NODE_ENV || "unknown"}\``,
+        },
       ],
     },
     { type: "divider" },
@@ -114,4 +117,3 @@ export async function logErrorToSlack(
     console.error("Failed to send error to Slack", sendError);
   }
 }
-

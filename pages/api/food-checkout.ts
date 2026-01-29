@@ -255,7 +255,11 @@ export default async function handler(
     try {
       const aux = await hasuraClient.request<{
         Restaurants_by_pk: { name: string } | null;
-        Addresses_by_pk: { street: string; city: string; postal_code: string } | null;
+        Addresses_by_pk: {
+          street: string;
+          city: string;
+          postal_code: string;
+        } | null;
         User_by_pk: { phone: string | null } | null;
       }>(GET_RESTAURANT_ADDRESS_USER, {
         restaurant_id,
@@ -265,7 +269,9 @@ export default async function handler(
       storeName = aux.Restaurants_by_pk?.name;
       if (aux.Addresses_by_pk) {
         const a = aux.Addresses_by_pk;
-        customerAddress = [a.street, a.city, a.postal_code].filter(Boolean).join(", ");
+        customerAddress = [a.street, a.city, a.postal_code]
+          .filter(Boolean)
+          .join(", ");
       }
       customerPhone = aux.User_by_pk?.phone ?? undefined;
     } catch (_) {
