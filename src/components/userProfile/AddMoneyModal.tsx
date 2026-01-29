@@ -87,7 +87,7 @@ export default function AddMoneyModal({
       />
 
       {/* Modal: bottom sheet on mobile, centered on desktop */}
-      <div className="relative z-10 w-full max-h-[90vh] overflow-y-auto rounded-t-2xl border border-gray-200 bg-white p-6 pb-8 shadow-2xl dark:border-gray-700 dark:bg-gray-800 sm:max-w-md sm:rounded-2xl sm:max-h-[85vh]">
+      <div className="relative z-10 max-h-[90vh] w-full overflow-y-auto rounded-t-2xl border border-gray-200 bg-white p-6 pb-8 shadow-2xl dark:border-gray-700 dark:bg-gray-800 sm:max-h-[85vh] sm:max-w-md sm:rounded-2xl">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>

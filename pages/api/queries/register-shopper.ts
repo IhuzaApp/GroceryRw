@@ -407,11 +407,10 @@ export default async function handler(
         });
       } catch (updateError: any) {
         console.error("Error updating existing shopper:", updateError);
-        await logErrorToSlack(
-          "RegisterShopperAPI:updateShopper",
-          updateError,
-          { user_id, shopper_id: existingShopper.id }
-        );
+        await logErrorToSlack("RegisterShopperAPI:updateShopper", updateError, {
+          user_id,
+          shopper_id: existingShopper.id,
+        });
         return res.status(500).json({
           error: "Failed to update shopper application",
           message: updateError.message,
@@ -476,14 +475,15 @@ export default async function handler(
             (guarantorPhone && guarantorPhone.trim()) ||
             (guarantorRelationship && guarantorRelationship.trim())
           ),
-          proof_of_residency: !!(
-            proofOfResidency && proofOfResidency.trim()
-          ),
+          proof_of_residency: !!(proofOfResidency && proofOfResidency.trim()),
           signature: !!(signature && signature.trim()),
         },
       });
     } catch (notifyErr: any) {
-      console.error("Failed to notify Slack of new shopper registration:", notifyErr);
+      console.error(
+        "Failed to notify Slack of new shopper registration:",
+        notifyErr
+      );
       await logErrorToSlack(
         "RegisterShopperAPI:newShopperSlackNotify",
         notifyErr,

@@ -7,9 +7,15 @@ interface HideBottomBarContextType {
   setHideBottomBar: (hide: boolean) => void;
 }
 
-const HideBottomBarContext = createContext<HideBottomBarContextType | undefined>(undefined);
+const HideBottomBarContext = createContext<
+  HideBottomBarContextType | undefined
+>(undefined);
 
-export function HideBottomBarProvider({ children }: { children: React.ReactNode }) {
+export function HideBottomBarProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [hideBottomBar, setHideBottomBar] = useState(false);
   return (
     <HideBottomBarContext.Provider value={{ hideBottomBar, setHideBottomBar }}>

@@ -189,8 +189,14 @@ export default async function handler(
         account_type: account_type as "personal" | "business",
         business_name: (business_name?.trim() || "") as string,
         contact_name: session.user.name ?? undefined,
-        email: (business_email?.trim() || session.user.email || "").trim() || "—",
-        phone: (business_phone?.trim() || (session.user as any).phone || "").trim() || "—",
+        email:
+          (business_email?.trim() || session.user.email || "").trim() || "—",
+        phone:
+          (
+            business_phone?.trim() ||
+            (session.user as any).phone ||
+            ""
+          ).trim() || "—",
         business_location: business_location?.trim() || undefined,
         provided: {
           business_name: !!(business_name && business_name.trim()),

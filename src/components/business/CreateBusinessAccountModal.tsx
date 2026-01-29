@@ -23,8 +23,12 @@ export default function CreateBusinessAccountModal({
   const [accountType, setAccountType] = useState<
     "personal" | "business" | null
   >(null);
-  const personalFormSubmitRef = useRef<(() => void | Promise<void>) | null>(null);
-  const businessFormSubmitRef = useRef<(() => void | Promise<void>) | null>(null);
+  const personalFormSubmitRef = useRef<(() => void | Promise<void>) | null>(
+    null
+  );
+  const businessFormSubmitRef = useRef<(() => void | Promise<void>) | null>(
+    null
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
@@ -285,7 +289,10 @@ export default function CreateBusinessAccountModal({
                       } finally {
                         setIsSubmitting(false);
                       }
-                    } else if (step === "business" && businessFormSubmitRef.current) {
+                    } else if (
+                      step === "business" &&
+                      businessFormSubmitRef.current
+                    ) {
                       setIsSubmitting(true);
                       try {
                         await businessFormSubmitRef.current();

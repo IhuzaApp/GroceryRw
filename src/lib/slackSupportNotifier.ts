@@ -278,7 +278,9 @@ export async function sendNewBusinessAccountRegistrationToSlack(
   }
 
   const accountLabel =
-    payload.account_type === "personal" ? "Personal account" : "Business account";
+    payload.account_type === "personal"
+      ? "Personal account"
+      : "Business account";
   const nameDisplay = payload.contact_name
     ? `${payload.business_name} (Contact: ${payload.contact_name})`
     : payload.business_name;

@@ -239,7 +239,10 @@ export default async function handler(
           });
           lastMarketplaceNotifyAt.set(userId, Date.now());
         } catch (fcmErr: any) {
-          console.warn("Marketplace FCM notify failed:", fcmErr?.message || fcmErr);
+          console.warn(
+            "Marketplace FCM notify failed:",
+            fcmErr?.message || fcmErr
+          );
         }
       }
     }
