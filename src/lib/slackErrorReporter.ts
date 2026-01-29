@@ -38,70 +38,67 @@ export async function logErrorToSlack(
   const blocks: any[] = [
     {
       type: "header",
-      text: { type: "plain_text", text: "🚨 Server Error" },
-    },
-    {
-      type: "section",
       text: {
-        type: "mrkdwn",
-        text: `:rotating_light: *Error in \`${where}\`*`,
+        type: "plain_text",
+        text: "🚨 Server Error",
       },
     },
     {
       type: "section",
       fields: [
-        {
-          type: "mrkdwn",
-          text: `*Message:*\n\`${err.message}\``,
-        },
-        {
-          type: "mrkdwn",
-          text: `*Env:*\n\`${process.env.NODE_ENV || "unknown"}\``,
-        },
+        { type: "mrkdwn", text: `*Location*\n\`${where}\`` },
+        { type: "mrkdwn", text: `*Environment*\n\`${process.env.NODE_ENV || "unknown"}\`` },
       ],
     },
     { type: "divider" },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Message*\n\`${err.message}\``,
+      },
+    },
+    ...(trimmedExtra
+      ? [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text:
+                "*Context*\n```" +
+                JSON.stringify(trimmedExtra, null, 2).slice(0, 1200) +
+                "```",
+            },
+          },
+        ]
+      : []),
+    ...(err.stack
+      ? [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text:
+                "*Stack (top)*\n```" +
+                String(err.stack)
+                  .split("\n")
+                  .slice(0, 10)
+                  .join("\n")
+                  .slice(0, 1200) +
+                "```",
+            },
+          },
+        ]
+      : []),
+    { type: "divider" },
+    {
+      type: "context",
+      elements: [
+        { type: "mrkdwn", text: `🕒 ${new Date().toISOString()}` },
+        { type: "mrkdwn", text: `🧩 Service: ${where}` },
+      ],
+    },
   ];
-
-  if (trimmedExtra) {
-    blocks.push({
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text:
-          "*Context:*\n```" +
-          JSON.stringify(trimmedExtra, null, 2).slice(0, 1800) +
-          "```",
-      },
-    });
-  }
-
-  if (err.stack) {
-    blocks.push({
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text:
-          "*Stack:*\n```" +
-          String(err.stack)
-            .split("\n")
-            .slice(0, 15)
-            .join("\n")
-            .slice(0, 1800) +
-          "```",
-      },
-    });
-  }
-
-  blocks.push({
-    type: "context",
-    elements: [
-      {
-        type: "mrkdwn",
-        text: `🕒 ${new Date().toISOString()}`,
-      },
-    ],
-  });
 
   try {
     await fetch(SLACK_ERRORS_WEBHOOK, {

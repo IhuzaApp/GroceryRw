@@ -35,7 +35,7 @@ export interface SlackOrderPayload {
 const ORDER_TYPE_LABELS: Record<SlackOrderType, string> = {
   regular: "🛒 Regular",
   reel: "🎬 Reel",
-  business: "🏪 Business",
+  business: "📦 Business",
   restaurant: "🍽️ Restaurant",
   combined: "📦 Combined",
 };
@@ -73,7 +73,7 @@ export async function notifyNewOrderToSlack(order: SlackOrderPayload) {
       ? order.items
           .map(
             (i) =>
-              `• ${i.name} ×${i.qty} — *$${(i.price * i.qty).toFixed(2)}*`
+              `• ${i.name} ×${i.qty} — *${(i.price * i.qty).toFixed(2)}*`
           )
           .join("\n")
       : `• ${order.storeName ?? "Order"} — ×${order.units ?? "—"} — *$${formattedTotal}*`;
@@ -83,7 +83,7 @@ export async function notifyNewOrderToSlack(order: SlackOrderPayload) {
       type: "header",
       text: {
         type: "plain_text",
-        text: `🛒 New Order · ${orderTypeLabel}`,
+        text: `New Order · ${orderTypeLabel}`,
       },
     },
     {
