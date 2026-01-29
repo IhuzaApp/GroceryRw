@@ -9,16 +9,11 @@ export default function AIChatProvider() {
   const { data: session } = useSession();
   const { isGuest } = useAuth();
 
-  // Don't show AI chat for logged-out users or guests
-  if (!session?.user || isGuest) {
-    return null;
-  }
-
   const toggleChat = () => {
     setIsOpen((prev) => !prev);
   };
 
-  // Close chat on escape key
+  // Close chat on escape key (hook must run unconditionally)
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen) {
@@ -29,6 +24,11 @@ export default function AIChatProvider() {
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen]);
+
+  // Don't show AI chat for logged-out users or guests (after all hooks)
+  if (!session?.user || isGuest) {
+    return null;
+  }
 
   return (
     <>
