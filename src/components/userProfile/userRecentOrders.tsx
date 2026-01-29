@@ -324,7 +324,7 @@ export default function UserRecentOrders({
     <>
       <div className="mb-4">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+          <h3 className="text-base font-bold text-gray-900 dark:text-white md:text-lg">
             Orders
           </h3>
           {onRefresh && (
@@ -458,7 +458,7 @@ export default function UserRecentOrders({
                     {/* Order Details - Left Column */}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <div className="truncate text-sm font-semibold text-gray-900 dark:text-white">
+                        <div className="truncate text-xs font-semibold text-gray-900 dark:text-white md:text-sm">
                           {order.orderType === "reel" && order.reel
                             ? order.reel.title
                             : order?.shop?.name || "Unknown Shop"}
@@ -510,7 +510,7 @@ export default function UserRecentOrders({
                           </span>
                         )}
                       </div>
-                      <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                      <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[10px] text-gray-500 dark:text-gray-400 md:text-xs">
                         <span>
                           {order.unitsCount || 0}{" "}
                           {order.unitsCount === 1 ? "unit" : "units"}
@@ -526,10 +526,10 @@ export default function UserRecentOrders({
 
                     {/* Time, Total & PIN - Right Column */}
                     <div className="flex flex-col items-end gap-1 text-right">
-                      <div className="text-[11px] text-gray-500 dark:text-gray-400">
+                      <div className="text-[10px] text-gray-500 dark:text-gray-400 md:text-[11px]">
                         {timeAgo(order?.created_at)}
                       </div>
-                      <div className="text-sm font-bold text-gray-900 dark:text-white">
+                      <div className="text-xs font-bold text-gray-900 dark:text-white md:text-sm">
                         {formatCurrency(order.total)}
                       </div>
                       {order?.pin && (
@@ -546,7 +546,7 @@ export default function UserRecentOrders({
                   {/* Delivery Time */}
                   {order?.delivery_time && (
                     <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-2 dark:border-gray-700">
-                      <span className="text-xs text-gray-600 dark:text-gray-400">
+                      <span className="text-[10px] text-gray-600 dark:text-gray-400 md:text-xs">
                         Expected Delivery:
                       </span>
                       <EstimatedDelivery

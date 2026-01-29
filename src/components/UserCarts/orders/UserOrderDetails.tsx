@@ -89,84 +89,24 @@ export default function UserOrderDetails({
 
   // Safely calculate total for an array of order items
   const getOrderItemsTotal = (orderItems: any[] | undefined | null): number => {
-    if (!Array.isArray(orderItems)) {
-      if (process.env.NODE_ENV === "development") {
-        console.log(
-          "[UserOrderDetails] getOrderItemsTotal called with non-array:",
-          orderItems
-        );
-      }
-      return 0;
-    }
+    if (!Array.isArray(orderItems)) return 0;
 
-    const total = orderItems.reduce((sum: number, item: any, index: number) => {
-      if (!item) {
-        if (process.env.NODE_ENV === "development") {
-          console.log(
-            "[UserOrderDetails] Skipping falsy item at index",
-            index,
-            item
-          );
-        }
-        return sum;
-      }
-
+    const total = orderItems.reduce((sum: number, item: any) => {
+      if (!item) return sum;
       const product = item.product;
-      if (!product) {
-        if (process.env.NODE_ENV === "development") {
-          console.log(
-            "[UserOrderDetails] Item without product at index",
-            index,
-            item
-          );
-        }
-        return sum;
-      }
+      if (!product) return sum;
 
       const rawPrice =
         product.final_price ?? item.price ?? product.price ?? "0";
       const price = parseFloat(String(rawPrice));
-
       const quantity =
         typeof item.quantity === "number"
           ? item.quantity
           : parseFloat(String(item.quantity ?? "0")) || 0;
 
-      if (process.env.NODE_ENV === "development") {
-        console.log("[UserOrderDetails] Item calc", {
-          index,
-          productId: product.id,
-          rawPrice,
-          price,
-          quantity,
-          lineTotal: price * quantity,
-        });
-      }
-
-      if (Number.isNaN(price) || Number.isNaN(quantity)) {
-        if (process.env.NODE_ENV === "development") {
-          console.log(
-            "[UserOrderDetails] Skipping NaN price/quantity for item at index",
-            index,
-            {
-              rawPrice,
-              price,
-              quantity,
-            }
-          );
-        }
-        return sum;
-      }
-
+      if (Number.isNaN(price) || Number.isNaN(quantity)) return sum;
       return sum + price * quantity;
     }, 0);
-
-    if (process.env.NODE_ENV === "development") {
-      console.log("[UserOrderDetails] getOrderItemsTotal result:", {
-        count: orderItems.length,
-        total,
-      });
-    }
 
     return total;
   };

@@ -275,14 +275,14 @@ export default function UserRestaurantOrderDetails({
         >
           <div className="flex items-center gap-4">
             <div className="flex-grow">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white md:text-xl">
                 {order.Restaurant.name}
               </h2>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-xs text-gray-600 dark:text-gray-400 md:text-sm">
                 {order.Restaurant.location}
               </p>
               {order.Restaurant.phone && (
-                <p className="text-sm text-gray-500 dark:text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-gray-500 md:text-sm">
                   📞 {order.Restaurant.phone}
                 </p>
               )}
@@ -298,7 +298,7 @@ export default function UserRestaurantOrderDetails({
         }`}
       >
         <div className="mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white md:text-lg">
             Order Status
           </h3>
           <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
@@ -395,7 +395,7 @@ export default function UserRestaurantOrderDetails({
               </div>
               <div className="flex-grow">
                 <span
-                  className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium md:px-3 md:py-1 md:text-sm ${
                     order.status === "WAITING_FOR_CONFIRMATION"
                       ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300"
                       : order.status === "PENDING"
@@ -417,7 +417,7 @@ export default function UserRestaurantOrderDetails({
             </div>
 
             {/* Status Description */}
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="text-xs text-gray-600 dark:text-gray-400 md:text-sm">
               {order.status === "WAITING_FOR_CONFIRMATION" &&
                 "Restaurant is reviewing your order"}
               {order.status === "PENDING" &&
@@ -435,7 +435,7 @@ export default function UserRestaurantOrderDetails({
             {/* Delivery Proof Image for Mobile */}
             {order.status === "DELIVERED" && order.delivery_photo_url && (
               <div className="mt-4">
-                <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                <p className="mb-2 text-xs font-medium text-gray-700 dark:text-gray-300 md:text-sm">
                   Delivery Proof
                 </p>
                 <div className="relative mx-auto max-w-[280px] overflow-hidden rounded-lg border-2 border-gray-200 dark:border-gray-700">
@@ -525,17 +525,17 @@ export default function UserRestaurantOrderDetails({
             isMobile ? "!mx-0 !rounded-none border-x-0" : ""
           }`}
         >
-          <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-white md:text-lg">
             Delivery Information
           </h3>
           {order.Address && (
             <div className="space-y-2">
-              <p className="text-gray-900 dark:text-white">
+              <p className="text-sm text-gray-900 dark:text-white md:text-base">
                 <strong>Address:</strong> {order.Address.street},{" "}
                 {order.Address.city} {order.Address.postal_code}
               </p>
               {order.delivery_notes && (
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-xs text-gray-600 dark:text-gray-400 md:text-sm">
                   <strong>Notes:</strong> {order.delivery_notes}
                 </p>
               )}
@@ -553,7 +553,7 @@ export default function UserRestaurantOrderDetails({
 
         {/* Assigned Plaser Details */}
         <Panel className="border border-gray-200 dark:border-gray-700">
-          <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-white md:text-lg">
             Assigned Plaser
           </h3>
           {order.Plaser_id ? (
@@ -577,13 +577,13 @@ export default function UserRestaurantOrderDetails({
                   </div>
                 </div>
                 <div className="flex-grow">
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white md:text-lg">
                     Plaser Assigned
                   </h4>
-                  <p className="text-gray-600 dark:text-gray-400">
+                  <p className="text-xs text-gray-600 dark:text-gray-400 md:text-sm">
                     Your order has been assigned to a Plaser
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-gray-500 md:text-sm">
                     Plaser ID: {order.Plaser_id.slice(-8)}
                   </p>
                 </div>
@@ -711,7 +711,7 @@ export default function UserRestaurantOrderDetails({
           isMobile ? "!mx-0 !rounded-none border-x-0" : ""
         }`}
       >
-        <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+        <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-white md:text-lg">
           Order Items ({order.itemsCount} dishes)
         </h3>
         <div className="space-y-4">
@@ -736,16 +736,16 @@ export default function UserRestaurantOrderDetails({
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   {/* Left side - Dish info */}
                   <div className="min-w-0 flex-grow">
-                    <h4 className="text-sm font-medium text-gray-900 dark:text-white sm:text-base">
+                    <h4 className="text-xs font-medium text-gray-900 dark:text-white sm:text-sm md:text-base">
                       {item.dish?.name || "Unknown Dish"}
                     </h4>
                     {item.dish?.description && (
-                      <p className="mt-1 line-clamp-2 text-xs text-gray-600 dark:text-gray-400 sm:text-sm">
+                      <p className="mt-1 line-clamp-2 text-[10px] text-gray-600 dark:text-gray-400 sm:text-xs md:text-sm">
                         {item.dish.description}
                       </p>
                     )}
                     {item.dish?.preparingTime && (
-                      <p className="mt-1 text-xs text-green-600 dark:text-green-400">
+                      <p className="mt-1 text-[10px] text-green-600 dark:text-green-400 sm:text-xs">
                         ⏱️ Prep time: {item.dish.preparingTime}
                       </p>
                     )}
@@ -754,14 +754,14 @@ export default function UserRestaurantOrderDetails({
                   {/* Right side - Quantity and price */}
                   <div className="mt-2 flex items-center justify-between sm:mt-0 sm:flex-col sm:items-end sm:gap-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 sm:text-sm">
+                      <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 sm:text-xs md:text-sm">
                         Qty:
                       </span>
-                      <span className="text-sm font-medium text-gray-900 dark:text-white sm:text-base">
+                      <span className="text-xs font-medium text-gray-900 dark:text-white sm:text-sm md:text-base">
                         {item.quantity}
                       </span>
                     </div>
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
+                    <p className="text-xs font-semibold text-gray-900 dark:text-white sm:text-sm md:text-base">
                       {formatCurrency(
                         parseFloat(item.dish?.price || item.price) *
                           parseInt(item.quantity)
@@ -781,23 +781,23 @@ export default function UserRestaurantOrderDetails({
           isMobile ? "!mx-0 !rounded-none border-x-0" : ""
         }`}
       >
-        <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+        <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-white md:text-lg">
           Order Summary
         </h3>
         <div className="space-y-2">
-          <div className="flex justify-between">
+          <div className="flex justify-between text-xs md:text-sm">
             <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
             <span className="text-gray-900 dark:text-white">
               {formatCurrency(order.subtotal || 0)}
             </span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between text-xs md:text-sm">
             <span className="text-gray-600 dark:text-gray-400">Tax (18%):</span>
             <span className="text-gray-900 dark:text-white">
               {formatCurrency(order.tax || 0)}
             </span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between text-xs md:text-sm">
             <span className="text-gray-600 dark:text-gray-400">
               Delivery Fee:
             </span>
@@ -806,7 +806,7 @@ export default function UserRestaurantOrderDetails({
             </span>
           </div>
           {order.discount > 0 && (
-            <div className="flex justify-between">
+            <div className="flex justify-between text-xs md:text-sm">
               <span className="text-gray-600 dark:text-gray-400">
                 Discount:
               </span>
@@ -816,7 +816,7 @@ export default function UserRestaurantOrderDetails({
             </div>
           )}
           {order.voucher_code && (
-            <div className="flex justify-between">
+            <div className="flex justify-between text-xs md:text-sm">
               <span className="text-gray-600 dark:text-gray-400">Voucher:</span>
               <span className="text-gray-900 dark:text-white">
                 {order.voucher_code}
@@ -825,10 +825,10 @@ export default function UserRestaurantOrderDetails({
           )}
           <div className="border-t border-gray-200 pt-2 dark:border-gray-700">
             <div className="flex justify-between">
-              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+              <span className="text-base font-semibold text-gray-900 dark:text-white md:text-lg">
                 Total:
               </span>
-              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+              <span className="text-base font-semibold text-gray-900 dark:text-white md:text-lg">
                 {formatCurrency(order.total)}
               </span>
             </div>
@@ -845,10 +845,10 @@ export default function UserRestaurantOrderDetails({
         >
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white md:text-lg">
                 Rate Your Experience
               </h3>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-xs text-gray-600 dark:text-gray-400 md:text-sm">
                 Help us improve by rating your order
               </p>
             </div>
