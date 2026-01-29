@@ -30,11 +30,11 @@ const CREATE_PERSONAL_WALLET = gql`
   }
 `;
 
-// GraphQL mutation to update personal wallet balance
+// GraphQL mutation to update personal wallet balance (pk is user_id)
 const UPDATE_PERSONAL_WALLET_BALANCE = gql`
-  mutation UpdatePersonalWalletBalance($wallet_id: uuid!, $balance: String!) {
+  mutation UpdatePersonalWalletBalance($user_id: uuid!, $balance: String!) {
     update_personalWallet_by_pk(
-      pk_columns: { id: $wallet_id }
+      pk_columns: { user_id: $user_id }
       _set: { balance: $balance, updated_at: "now()" }
     ) {
       id
@@ -48,7 +48,6 @@ const UPDATE_PERSONAL_WALLET_BALANCE = gql`
 interface AddMoneyRequest {
   amount: number;
   description?: string;
-  phone_number?: string;
 }
 
 export default async function handler(
@@ -67,18 +66,11 @@ export default async function handler(
     }
 
     const user_id = session.user.id;
-    const { amount, description, phone_number }: AddMoneyRequest = req.body;
+    const { amount, description }: AddMoneyRequest = req.body;
 
     // Validate amount
     if (!amount || amount <= 0) {
       return res.status(400).json({ error: "Invalid amount" });
-    }
-
-    // Validate phone number (Rwanda format: 9-10 digits)
-    if (!phone_number || phone_number.length < 9 || phone_number.length > 10) {
-      return res
-        .status(400)
-        .json({ error: "Valid phone number is required (9-10 digits)" });
     }
 
     if (!hasuraClient) {
@@ -127,7 +119,7 @@ export default async function handler(
         updated_at: string;
       };
     }>(UPDATE_PERSONAL_WALLET_BALANCE, {
-      wallet_id: wallet.id,
+      user_id,
       balance: newBalanceString,
     });
 

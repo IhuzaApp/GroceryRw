@@ -80,6 +80,8 @@ export default function MobileProfile({
   const { role, toggleRole, logout } = useAuth();
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("");
+  // Keep visited tab content mounted to avoid refetching when switching tabs
+  const [visitedTabs, setVisitedTabs] = useState<Set<string>>(new Set());
 
   // Reset tab if user tries to access referrals but is registered and pending
   useEffect(() => {
@@ -93,8 +95,9 @@ export default function MobileProfile({
     }
   }, [activeTab, referralStatus, loadingReferral]);
 
-  // Handle navigation to different sections
+  // Handle navigation: add tab to visited so we keep content mounted (cached, no refetch on switch)
   const handleNavigation = (section: string) => {
+    setVisitedTabs((prev) => new Set([...prev, section]));
     setActiveTab(section);
   };
 
@@ -204,26 +207,50 @@ export default function MobileProfile({
           </div>
         </div>
 
-        {/* Full-page content */}
+        {/* Full-page content: render visited tabs but hide inactive ones to avoid refetch */}
         <div className="relative z-10 -mt-4">
           <div className="py-4">
-            {activeTab === "account" && <UserAccount />}
-            {activeTab === "orders" && (
-              <UserRecentOrders
-                filter="all"
-                orders={userOrders}
-                loading={ordersLoading}
-                onRefresh={refreshOrders}
-              />
+            {visitedTabs.has("account") && (
+              <div className={activeTab !== "account" ? "hidden" : ""}>
+                <UserAccount />
+              </div>
             )}
-            {activeTab === "addresses" && <UserAddress />}
-            {activeTab === "payment" && <UserPayment />}
-            {activeTab === "preferences" && <UserPreference />}
-            {activeTab === "referrals" &&
+            {visitedTabs.has("orders") && (
+              <div className={activeTab !== "orders" ? "hidden" : ""}>
+                <UserRecentOrders
+                  filter="all"
+                  orders={userOrders}
+                  loading={ordersLoading}
+                  onRefresh={refreshOrders}
+                />
+              </div>
+            )}
+            {visitedTabs.has("addresses") && (
+              <div className={activeTab !== "addresses" ? "hidden" : ""}>
+                <UserAddress />
+              </div>
+            )}
+            {visitedTabs.has("payment") && (
+              <div className={activeTab !== "payment" ? "hidden" : ""}>
+                <UserPayment />
+              </div>
+            )}
+            {visitedTabs.has("preferences") && (
+              <div className={activeTab !== "preferences" ? "hidden" : ""}>
+                <UserPreference />
+              </div>
+            )}
+            {visitedTabs.has("referrals") &&
               (referralStatus?.approved || !referralStatus?.registered) && (
-                <UserReferral />
+                <div className={activeTab !== "referrals" ? "hidden" : ""}>
+                  <UserReferral />
+                </div>
               )}
-            {activeTab === "wallet" && <UserPaymentCards />}
+            {visitedTabs.has("wallet") && (
+              <div className={activeTab !== "wallet" ? "hidden" : ""}>
+                <UserPaymentCards />
+              </div>
+            )}
           </div>
         </div>
       </div>
