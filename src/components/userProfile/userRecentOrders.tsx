@@ -98,8 +98,36 @@ function timeAgo(timestamp: string): string {
   return `${years} year${years !== 1 ? "s" : ""} ago`;
 }
 
+const DELAYED_NOTIFIED_STORAGE_KEY = "plasa_delayed_notified_ids";
+const DELAYED_NOTIFIED_MAX_IDS = 50;
+
+function getDelayedNotifiedIds(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const raw = localStorage.getItem(DELAYED_NOTIFIED_STORAGE_KEY);
+    const arr = raw ? (JSON.parse(raw) as string[]) : [];
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function markDelayedNotified(orderId: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const set = getDelayedNotifiedIds();
+    set.add(orderId);
+    const arr = Array.from(set);
+    const trimmed = arr.length > DELAYED_NOTIFIED_MAX_IDS ? arr.slice(-DELAYED_NOTIFIED_MAX_IDS) : arr;
+    localStorage.setItem(DELAYED_NOTIFIED_STORAGE_KEY, JSON.stringify(trimmed));
+  } catch {
+    // ignore
+  }
+}
+
 // Helper to display estimated delivery time with real-time countdown.
 // When ≤2 minutes remain (or already late), triggers one Slack delayed-order notification.
+// Skips orders already notified (stored in localStorage) so refresh/refetch doesn't re-alert.
 function EstimatedDelivery({
   deliveryTime,
   status,
@@ -124,6 +152,11 @@ function EstimatedDelivery({
   // Trigger delayed-order Slack notification when countdown hits ≤2 min or is late (once per order)
   useEffect(() => {
     if (!deliveryTime || status === "delivered" || !orderId) return;
+    const alreadyNotified = getDelayedNotifiedIds().has(orderId);
+    if (alreadyNotified) {
+      notifiedRef.current = true;
+      return;
+    }
     const est = new Date(deliveryTime).getTime();
     const diffMs = est - currentTime;
     const minutesRemaining = diffMs / 60000;
@@ -138,7 +171,14 @@ function EstimatedDelivery({
           orderType,
           minutesRemaining: Math.round(minutesRemaining * 10) / 10,
         }),
-      }).catch((err) => console.error("Delayed order notification failed", err));
+      })
+        .then((res) => {
+          if (res.ok) markDelayedNotified(orderId);
+        })
+        .catch((err) => {
+          notifiedRef.current = false;
+          console.error("Delayed order notification failed", err);
+        });
     }
   }, [deliveryTime, status, orderId, orderType, currentTime]);
 
