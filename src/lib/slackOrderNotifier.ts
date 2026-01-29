@@ -2,6 +2,13 @@ const SLACK_ORDERS_WEBHOOK = process.env.SLACK_ORDERS_WEBHOOK;
 
 export type SlackOrderType = "regular" | "reel" | "business" | "restaurant" | "combined";
 
+/** Line item for card-style Slack message (optional) */
+export interface SlackOrderItem {
+  name: string;
+  qty: number;
+  price: number;
+}
+
 export interface SlackOrderPayload {
   id: string;
   total: number | string;
@@ -13,25 +20,29 @@ export interface SlackOrderPayload {
   storeName?: string;
   /** Number of units/items ordered */
   units?: number | string;
+  /** Customer name (optional; falls back to phone) */
+  customerName?: string;
   /** Customer phone */
   customerPhone?: string;
   /** Customer delivery address */
   customerAddress?: string;
   /** Expected delivery time (e.g. ISO string or readable string) */
   deliveryTime?: string;
+  /** Line items for card (optional; if missing, shows store/units summary) */
+  items?: SlackOrderItem[];
 }
 
 const ORDER_TYPE_LABELS: Record<SlackOrderType, string> = {
-  regular: "🛒 Regular order",
-  reel: "🎬 Reel order",
-  business: "🏪 Business order",
-  restaurant: "🍽️ Restaurant order",
-  combined: "📦 Combined order",
+  regular: "🛒 Regular",
+  reel: "🎬 Reel",
+  business: "🏪 Business",
+  restaurant: "🍽️ Restaurant",
+  combined: "📦 Combined",
 };
 
 /**
  * Send a "new order" notification to the orders Slack channel.
- * Uses SLACK_ORDERS_WEBHOOK with a rich block layout.
+ * Uses SLACK_ORDERS_WEBHOOK with a card-style block layout.
  */
 export async function notifyNewOrderToSlack(order: SlackOrderPayload) {
   if (!SLACK_ORDERS_WEBHOOK) {
@@ -49,57 +60,65 @@ export async function notifyNewOrderToSlack(order: SlackOrderPayload) {
     : "0.00";
 
   const displayOrderId = order.orderID ?? order.id;
-  const storeName = order.storeName ?? "—";
-  const units = order.units != null ? String(order.units) : "—";
-  const customerPhone = order.customerPhone ?? "—";
-  const customerAddress = order.customerAddress ?? "—";
-  const deliveryTime = order.deliveryTime
-    ? new Date(order.deliveryTime).toLocaleString()
-    : "—";
-
   const orderTypeLabel = order.orderType
     ? ORDER_TYPE_LABELS[order.orderType]
-    : "🛒 New order";
+    : "Order";
+  const customerDisplay =
+    order.customerName ?? order.customerPhone ?? "—";
+  const placedAt = new Date().toLocaleTimeString();
+
+  // Items section: use line items if provided, else one summary line
+  const itemsText =
+    order.items && order.items.length > 0
+      ? order.items
+          .map(
+            (i) =>
+              `• ${i.name} ×${i.qty} — *$${(i.price * i.qty).toFixed(2)}*`
+          )
+          .join("\n")
+      : `• ${order.storeName ?? "Order"} — ×${order.units ?? "—"} — *$${formattedTotal}*`;
 
   const blocks = [
     {
       type: "header",
-      text: { type: "plain_text", text: "🛒 New Order Created" },
+      text: {
+        type: "plain_text",
+        text: `🛒 New Order · ${orderTypeLabel}`,
+      },
     },
     {
       type: "section",
       fields: [
-        { type: "mrkdwn", text: `*Type*\n${orderTypeLabel}` },
         { type: "mrkdwn", text: `*Order ID*\n\`${displayOrderId}\`` },
-        { type: "mrkdwn", text: `*Total*\n$${formattedTotal}` },
+        { type: "mrkdwn", text: `*Status*\nPENDING` },
       ],
     },
     {
       type: "section",
       fields: [
-        { type: "mrkdwn", text: `*Supermarket*\n${storeName}` },
-        { type: "mrkdwn", text: `*Units*\n${units}` },
+        { type: "mrkdwn", text: `*Customer*\n${customerDisplay}` },
+        { type: "mrkdwn", text: `*Placed at*\n${placedAt}` },
       ],
     },
-    {
-      type: "section",
-      fields: [
-        { type: "mrkdwn", text: `*Customer phone*\n${customerPhone}` },
-        { type: "mrkdwn", text: `*Delivery time*\n${deliveryTime}` },
-      ],
-    },
+    { type: "divider" },
     {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `*Address*\n${customerAddress}`,
+        text: `*Items*\n${itemsText}`,
       },
     },
     { type: "divider" },
     {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Total*\n💵 *$${formattedTotal}*`,
+      },
+    },
+    {
       type: "context",
       elements: [
-        { type: "mrkdwn", text: `📦 Status: *PENDING*` },
         { type: "mrkdwn", text: `🕒 ${new Date().toLocaleString()}` },
       ],
     },
