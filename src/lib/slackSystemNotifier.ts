@@ -1,0 +1,213 @@
+const SLACK_GENERAL_WEBHOOK = process.env.SLACK_GENERAL_WEBHOOK;
+
+export interface NewReviewPayload {
+  /** Order number for display (e.g. OrderID) */
+  orderNumber: string;
+  /** Overall rating (1–5) */
+  overallRating: number;
+  /** Shopper/Plaser name */
+  shopperName?: string;
+  /** Supermarket / store / shop name */
+  storeName?: string;
+  /** Customer comment (optional) */
+  comment?: string;
+}
+
+/**
+ * Send a "new review added" notification to Slack using SLACK_GENERAL_WEBHOOK.
+ * Called after a customer submits feedback for an order.
+ */
+export async function notifyNewReviewToSlack(payload: NewReviewPayload) {
+  if (!SLACK_GENERAL_WEBHOOK) {
+    console.error("SLACK_GENERAL_WEBHOOK is not configured");
+    return;
+  }
+
+  const orderDisplay = payload.orderNumber ?? "—";
+  const ratingDisplay = String(payload.overallRating);
+  const shopperDisplay = payload.shopperName ?? "—";
+  const storeDisplay = payload.storeName ?? "—";
+  const commentDisplay =
+    payload.comment && payload.comment.trim()
+      ? payload.comment.trim().slice(0, 1000)
+      : "_No comment_";
+
+  const blocks: any[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "⭐ New Review Added",
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Order #*\n\`${orderDisplay}\`` },
+        { type: "mrkdwn", text: `*Overall rating*\n${ratingDisplay}/5` },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Shopper*\n${shopperDisplay}` },
+        { type: "mrkdwn", text: `*Supermarket*\n${storeDisplay}` },
+      ],
+    },
+    { type: "divider" },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Comment*\n${commentDisplay}`,
+      },
+    },
+    {
+      type: "context",
+      elements: [
+        { type: "mrkdwn", text: `🕒 ${new Date().toLocaleString()}` },
+      ],
+    },
+  ];
+
+  try {
+    await fetch(SLACK_GENERAL_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: `New review for order #${orderDisplay} — ${ratingDisplay}/5`,
+        blocks,
+      }),
+    });
+  } catch (error) {
+    console.error("Failed to send review notification to Slack", error);
+  }
+}
+
+// --- Delayed order (system) notification ---
+
+export type DelayedOrderStatus =
+  | "PENDING"
+  | "accepted"
+  | "shopping"
+  | "on_the_way"
+  | string;
+
+export interface DelayedOrderPayload {
+  /** Order number for display (e.g. OrderID) */
+  orderNumber: string;
+  /** Order status */
+  status: DelayedOrderStatus;
+  /** Minutes until delivery_time (negative = already late) */
+  minutesRemaining: number;
+  /** Customer phone */
+  customerPhone?: string;
+  /** Shopper phone (when assigned) */
+  shopperPhone?: string;
+  /** Supermarket / store name */
+  storeName?: string;
+}
+
+/**
+ * Send a "delayed order / needs immediate attention" notification to Slack.
+ * Called when an order has ≤2 minutes until it is late (or is already late).
+ */
+export async function notifyDelayedOrderToSlack(
+  payload: DelayedOrderPayload
+) {
+  if (!SLACK_GENERAL_WEBHOOK) {
+    console.error("SLACK_GENERAL_WEBHOOK is not configured");
+    return;
+  }
+
+  const orderDisplay = payload.orderNumber ?? "—";
+  const storeDisplay = payload.storeName ?? "—";
+  const customerPhone = payload.customerPhone ?? "—";
+  const shopperPhone = payload.shopperPhone ?? "—";
+  const status = (payload.status || "").toLowerCase();
+  const isPending = status === "pending";
+  const isAssigned =
+    status === "accepted" ||
+    status === "shopping" ||
+    status === "on_the_way" ||
+    status === "packing";
+
+  const minutes = payload.minutesRemaining;
+  const expiryText =
+    minutes < 0
+      ? "Already late"
+      : minutes <= 1
+      ? "Will expire in 1 minute"
+      : `Will expire in ${Math.round(minutes)} minutes`;
+
+  let statusLine: string;
+  if (isPending) {
+    statusLine = "Has been delayed and not yet assigned.";
+  } else if (isAssigned) {
+    statusLine =
+      "Has been accepted and the shopper hasn't delivered it yet.";
+  } else {
+    statusLine = `Status: ${payload.status}.`;
+  }
+
+  const blocks: any[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "⚠️ Order Late / Needs Immediate Attention",
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Order #*\n\`${orderDisplay}\`` },
+        { type: "mrkdwn", text: `*Supermarket*\n${storeDisplay}` },
+      ],
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Status:* ${statusLine}`,
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*📞 Customer phone*\n${customerPhone}` },
+        {
+          type: "mrkdwn",
+          text: `*📞 Shopper phone*\n${shopperPhone}`,
+        },
+      ],
+    },
+    { type: "divider" },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Needs immediate attention.* ${expiryText}.`,
+      },
+    },
+    {
+      type: "context",
+      elements: [
+        { type: "mrkdwn", text: `🕒 ${new Date().toLocaleString()}` },
+      ],
+    },
+  ];
+
+  try {
+    await fetch(SLACK_GENERAL_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: `Order #${orderDisplay} is late or at risk — ${expiryText}`,
+        blocks,
+      }),
+    });
+  } catch (error) {
+    console.error("Failed to send delayed order notification to Slack", error);
+  }
+}

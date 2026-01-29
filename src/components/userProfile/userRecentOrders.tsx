@@ -98,24 +98,49 @@ function timeAgo(timestamp: string): string {
   return `${years} year${years !== 1 ? "s" : ""} ago`;
 }
 
-// Helper to display estimated delivery time with real-time countdown
+// Helper to display estimated delivery time with real-time countdown.
+// When ≤2 minutes remain (or already late), triggers one Slack delayed-order notification.
 function EstimatedDelivery({
   deliveryTime,
   status,
+  orderId,
+  orderType = "regular",
 }: {
   deliveryTime: string;
   status: string;
+  orderId?: string;
+  orderType?: "regular" | "reel" | "restaurant";
 }) {
   const [currentTime, setCurrentTime] = useState(Date.now());
+  const notifiedRef = React.useRef(false);
 
   useEffect(() => {
-    // Update every second
     const interval = setInterval(() => {
       setCurrentTime(Date.now());
     }, 1000);
-
     return () => clearInterval(interval);
   }, []);
+
+  // Trigger delayed-order Slack notification when countdown hits ≤2 min or is late (once per order)
+  useEffect(() => {
+    if (!deliveryTime || status === "delivered" || !orderId) return;
+    const est = new Date(deliveryTime).getTime();
+    const diffMs = est - currentTime;
+    const minutesRemaining = diffMs / 60000;
+    const shouldNotify = minutesRemaining <= 2;
+    if (shouldNotify && !notifiedRef.current) {
+      notifiedRef.current = true;
+      fetch("/api/notifications/check-delayed-orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId,
+          orderType,
+          minutesRemaining: Math.round(minutesRemaining * 10) / 10,
+        }),
+      }).catch((err) => console.error("Delayed order notification failed", err));
+    }
+  }, [deliveryTime, status, orderId, orderType, currentTime]);
 
   if (!deliveryTime) return null;
   if (status === "delivered") {
@@ -126,14 +151,12 @@ function EstimatedDelivery({
   const diffMs = est.getTime() - currentTime;
   const isLate = diffMs <= 0;
 
-  // Calculate time difference
   const absMs = Math.abs(diffMs);
   const days = Math.floor(absMs / (1000 * 60 * 60 * 24));
   const hours = Math.floor((absMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const mins = Math.floor((absMs % (1000 * 60 * 60)) / (1000 * 60));
   const secs = Math.floor((absMs % (1000 * 60)) / 1000);
 
-  // Format countdown
   let countdownText: string;
   if (days > 0) {
     countdownText = `${isLate ? "-" : "+"}${days}d ${String(hours).padStart(
@@ -489,6 +512,8 @@ export default function UserRecentOrders({
                       <EstimatedDelivery
                         deliveryTime={order.delivery_time}
                         status={order.status}
+                        orderId={order.id}
+                        orderType={order.orderType}
                       />
                     </div>
                   )}
