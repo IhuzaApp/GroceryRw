@@ -35,16 +35,20 @@ function timeAgo(timestamp: string): string {
   return `${years} year${years !== 1 ? "s" : ""} ago`;
 }
 
+export type SupportTicketInfo = { ticket_num: number; status: string } | null;
+
 interface UserRestaurantOrderDetailsProps {
   order: any;
   isMobile?: boolean;
   onContactSupport?: () => void;
+  supportTicket?: SupportTicketInfo;
 }
 
 export default function UserRestaurantOrderDetails({
   order,
   isMobile = false,
   onContactSupport,
+  supportTicket,
 }: UserRestaurantOrderDetailsProps) {
   const { theme } = useTheme();
   const [feedbackModal, setFeedbackModal] = useState(false);
@@ -477,8 +481,17 @@ export default function UserRestaurantOrderDetails({
           )}
         </div>
 
-        {/* Contact Support */}
-        {onContactSupport && (
+        {/* Contact Support or existing ticket */}
+        {supportTicket ? (
+          <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+              Ticket #{supportTicket.ticket_num}
+            </p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              Status: <span className="capitalize">{supportTicket.status}</span>
+            </p>
+          </div>
+        ) : onContactSupport ? (
           <div className="mt-4 flex justify-end border-t border-gray-200 pt-4 dark:border-gray-700">
             <Button
               appearance="primary"
@@ -497,7 +510,7 @@ export default function UserRestaurantOrderDetails({
               Contact Support
             </Button>
           </div>
-        )}
+        ) : null}
       </Panel>
 
       {/* Delivery & Plaser Information */}

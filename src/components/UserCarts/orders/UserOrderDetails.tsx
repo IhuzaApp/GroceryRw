@@ -15,17 +15,21 @@ function formatOrderID(id?: string | number): string {
   return s.length >= 4 ? s : s.padStart(4, "0");
 }
 
+export type SupportTicketInfo = { ticket_num: number; status: string } | null;
+
 interface UserOrderDetailsProps {
   order: any;
   isMobile?: boolean;
   combinedOrders?: any[];
   onContactSupport?: () => void;
+  supportTicket?: SupportTicketInfo;
 }
 export default function UserOrderDetails({
   order,
   isMobile = false,
   combinedOrders,
   onContactSupport,
+  supportTicket,
 }: UserOrderDetailsProps) {
   const router = useRouter();
   const { theme } = useTheme();
@@ -442,6 +446,15 @@ export default function UserOrderDetails({
               </svg>
               Feedback
             </button>
+          ) : supportTicket ? (
+            <div className="flex w-full flex-col gap-1 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50 sm:w-auto">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                Ticket #{supportTicket.ticket_num}
+              </p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                Status: <span className="capitalize">{supportTicket.status}</span>
+              </p>
+            </div>
           ) : (
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
               <button

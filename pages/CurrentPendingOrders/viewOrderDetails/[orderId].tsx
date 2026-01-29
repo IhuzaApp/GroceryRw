@@ -182,17 +182,22 @@ function getOrderStatusInfo(order: any) {
   }
 }
 
+// Support ticket info shown when order already has a ticket
+export type SupportTicketInfo = { ticket_num: number; status: string } | null;
+
 // Mobile Component - Clean, minimal design
 const MobileOrderDetails = ({
   order,
   orderType,
   combinedOrders,
   onContactSupport,
+  supportTicket,
 }: {
   order: any;
   orderType: "regular" | "reel" | "restaurant" | null;
   combinedOrders: any[];
   onContactSupport?: () => void;
+  supportTicket?: SupportTicketInfo;
 }) => {
   const { theme } = useTheme();
   const router = useRouter();
@@ -360,12 +365,14 @@ const MobileOrderDetails = ({
               order={order}
               isMobile={true}
               onContactSupport={onContactSupport}
+              supportTicket={supportTicket}
             />
           ) : orderType === "restaurant" ? (
             <UserRestaurantOrderDetails
               order={order}
               isMobile={true}
               onContactSupport={onContactSupport}
+              supportTicket={supportTicket}
             />
           ) : (
             <UserOrderDetails
@@ -373,6 +380,7 @@ const MobileOrderDetails = ({
               isMobile={true}
               combinedOrders={combinedOrders}
               onContactSupport={onContactSupport}
+              supportTicket={supportTicket}
             />
           )}
         </div>
@@ -387,11 +395,13 @@ const DesktopOrderDetails = ({
   orderType,
   combinedOrders,
   onContactSupport,
+  supportTicket,
 }: {
   order: any;
   orderType: "regular" | "reel" | "restaurant" | null;
   combinedOrders: any[];
   onContactSupport?: () => void;
+  supportTicket?: SupportTicketInfo;
 }) => {
   return (
     <div className="min-h-screen md:ml-16">
@@ -402,17 +412,20 @@ const DesktopOrderDetails = ({
             <UserReelOrderDetails
               order={order}
               onContactSupport={onContactSupport}
+              supportTicket={supportTicket}
             />
           ) : orderType === "restaurant" ? (
             <UserRestaurantOrderDetails
               order={order}
               onContactSupport={onContactSupport}
+              supportTicket={supportTicket}
             />
           ) : (
             <UserOrderDetails
               order={order}
               combinedOrders={combinedOrders}
               onContactSupport={onContactSupport}
+              supportTicket={supportTicket}
             />
           )}
         </div>
@@ -432,6 +445,35 @@ function ViewOrderDetailsPage() {
   >(null);
   const [combinedOrders, setCombinedOrders] = useState<any[]>([]);
   const [showSupportModal, setShowSupportModal] = useState(false);
+  const [supportTicket, setSupportTicket] = useState<{
+    ticket_num: number;
+    status: string;
+  } | null>(null);
+
+  // Fetch support ticket for this order (subject = "Order issue #orderRef")
+  const fetchSupportTicket = React.useCallback(async (orderObj: any) => {
+    if (!orderObj?.id) return;
+    const orderDisplayId =
+      orderObj?.OrderID != null ? orderObj.OrderID : orderObj?.id;
+    try {
+      const res = await fetch(
+        `/api/queries/ticket-by-order?orderId=${encodeURIComponent(orderObj.id)}&orderDisplayId=${encodeURIComponent(String(orderDisplayId))}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.ticket) {
+          setSupportTicket({
+            ticket_num: data.ticket.ticket_num,
+            status: data.ticket.status,
+          });
+          return;
+        }
+      }
+      setSupportTicket(null);
+    } catch (e) {
+      setSupportTicket(null);
+    }
+  }, []);
 
   useEffect(() => {
     if (!orderId || !router.isReady) return;
@@ -504,6 +546,11 @@ function ViewOrderDetailsPage() {
     }
     fetchDetails();
   }, [orderId]);
+
+  // Fetch support ticket when order is loaded
+  useEffect(() => {
+    if (order) fetchSupportTicket(order);
+  }, [order, fetchSupportTicket]);
 
   // Fetch combined orders if this is a combined order
   useEffect(() => {
@@ -634,7 +681,10 @@ function ViewOrderDetailsPage() {
             order={order}
             orderType={orderType}
             combinedOrders={combinedOrders}
-            onContactSupport={() => setShowSupportModal(true)}
+            onContactSupport={
+              supportTicket ? undefined : () => setShowSupportModal(true)
+            }
+            supportTicket={supportTicket}
           />
         </div>
 
@@ -644,7 +694,10 @@ function ViewOrderDetailsPage() {
             order={order}
             orderType={orderType}
             combinedOrders={combinedOrders}
-            onContactSupport={() => setShowSupportModal(true)}
+            onContactSupport={
+              supportTicket ? undefined : () => setShowSupportModal(true)
+            }
+            supportTicket={supportTicket}
           />
         </div>
 
@@ -653,6 +706,7 @@ function ViewOrderDetailsPage() {
           onClose={() => setShowSupportModal(false)}
           order={order}
           orderType={orderType ?? "regular"}
+          onSuccess={() => fetchSupportTicket(order)}
         />
 
         {/* Mobile-specific styles for full-width layout */}
