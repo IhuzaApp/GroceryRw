@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { GraphQLClient, gql } from "graphql-request";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
+import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 
 const HASURA_URL = process.env.HASURA_GRAPHQL_URL!;
 const HASURA_SECRET = process.env.HASURA_GRAPHQL_ADMIN_SECRET!;
@@ -35,6 +36,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  let userId: string | null = null;
+
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -46,6 +49,7 @@ export default async function handler(
     }
 
     const user_id = session.user.id;
+    userId = user_id;
 
     const response = await hasuraClient.request<PersonalWalletResponse>(
       GET_PERSONAL_WALLET,
@@ -59,6 +63,10 @@ export default async function handler(
     return res.status(200).json({ wallet });
   } catch (error) {
     console.error("Error fetching personal wallet balance:", error);
+    await logErrorToSlack("PersonalWalletBalanceAPI", error, {
+      userId,
+      method: req.method,
+    });
     return res.status(500).json({
       error:
         error instanceof Error ? error.message : "An unexpected error occurred",

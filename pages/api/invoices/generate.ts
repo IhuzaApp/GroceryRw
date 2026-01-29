@@ -8,6 +8,7 @@ import {
   calculateTaxAmount,
   calculateSubtotalFromTotal,
 } from "../../../src/lib/getTaxRate";
+import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 
 // GraphQL query to get regular order details for invoice
 const GET_ORDER_DETAILS_FOR_INVOICE = gql`
@@ -432,6 +433,11 @@ export default async function handler(
       }
     } catch (error) {
       console.error("Error fetching order details for invoice:", error);
+      await logErrorToSlack("GenerateInvoiceAPI:getOrderDetails", error, {
+        orderId,
+        orderType,
+        userId: session.user.id,
+      });
       return res.status(500).json({
         error: "Failed to fetch order details",
         details: error instanceof Error ? error.message : String(error),
@@ -667,6 +673,11 @@ export default async function handler(
       );
     } catch (error) {
       console.error("Failed to save invoice to database:", error);
+      await logErrorToSlack("GenerateInvoiceAPI:saveInvoice", error, {
+        orderId,
+        orderType,
+        userId: session.user.id,
+      });
       return res.status(500).json({
         error: "Failed to save invoice to database",
         details: error instanceof Error ? error.message : String(error),
@@ -729,6 +740,11 @@ export default async function handler(
       dbRecord: saveResult.insert_Invoices.returning[0] || null,
     });
   } catch (error) {
+    await logErrorToSlack("GenerateInvoiceAPI", error, {
+      method: req.method,
+      orderId: (req.body as any)?.orderId,
+      orderType: (req.body as any)?.orderType,
+    });
     return res.status(500).json({
       error:
         error instanceof Error ? error.message : "An unexpected error occurred",

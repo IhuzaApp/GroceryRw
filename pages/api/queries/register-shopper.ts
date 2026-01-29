@@ -3,6 +3,7 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../api/auth/[...nextauth]";
+import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 
 const REGISTER_SHOPPER = gql`
   mutation RegisterShopper(
@@ -239,6 +240,9 @@ export default async function handler(
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  let userId: string | null = null;
+  let requestDataSize: number | undefined;
+
   try {
     // Verify the user is authenticated
     const session = (await getServerSession(
@@ -260,7 +264,7 @@ export default async function handler(
     }
 
     // Log the request data size for debugging
-    const requestDataSize = JSON.stringify(req.body).length;
+    requestDataSize = JSON.stringify(req.body).length;
     console.log(
       `Received shopper registration request, data size: ${(
         requestDataSize / 1024
@@ -293,6 +297,7 @@ export default async function handler(
       collection_comment,
       needCollection,
     } = req.body as RegisterShopperInput;
+    userId = user_id;
 
     // Validate required fields
     if (
@@ -452,6 +457,12 @@ export default async function handler(
       message: error.message,
       stack: error.stack,
       response: error.response?.errors,
+    });
+
+    await logErrorToSlack("RegisterShopperAPI", error, {
+      userId,
+      method: req.method,
+      requestDataSize,
     });
 
     // Return a more detailed error message

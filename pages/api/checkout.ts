@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "./auth/[...nextauth]";
 import { hasuraClient } from "../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { notifyNewOrderToSlack } from "../../src/lib/slackOrderNotifier";
 
 interface CartItem {
   product_id: string;
@@ -65,6 +66,22 @@ function generateOrderPin(): string {
     .padStart(2, "0");
 }
 
+const GET_SHOP_ADDRESS_USER = gql`
+  query GetShopAddressUser($shop_id: uuid!, $address_id: uuid!, $user_id: uuid!) {
+    Shops_by_pk(id: $shop_id) {
+      name
+    }
+    Addresses_by_pk(id: $address_id) {
+      street
+      city
+      postal_code
+    }
+    User_by_pk(id: $user_id) {
+      phone
+    }
+  }
+`;
+
 // Create a new order
 const CREATE_ORDER = gql`
   mutation CreateOrder(
@@ -99,6 +116,7 @@ const CREATE_ORDER = gql`
       }
     ) {
       id
+      OrderID
       pin
     }
   }
@@ -239,7 +257,7 @@ export default async function handler(
     }
     const orderPin = generateOrderPin();
     const orderRes = await hasuraClient.request<{
-      insert_Orders_one: { id: string; pin: string };
+      insert_Orders_one: { id: string; OrderID?: string; pin: string };
     }>(CREATE_ORDER, {
       user_id,
       shop_id,
@@ -288,6 +306,49 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
     await hasuraClient.request(DELETE_CART, { cart_id: cart.id });
+
+    const orderTotal =
+      actualTotal +
+      parseFloat(service_fee || "0") +
+      parseFloat(delivery_fee || "0");
+    const units = items.reduce((sum, i) => sum + i.quantity, 0);
+    const orderID = orderRes.insert_Orders_one.OrderID;
+
+    let storeName: string | undefined;
+    let customerAddress: string | undefined;
+    let customerPhone: string | undefined;
+    try {
+      const aux = await hasuraClient.request<{
+        Shops_by_pk: { name: string } | null;
+        Addresses_by_pk: { street: string; city: string; postal_code: string } | null;
+        User_by_pk: { phone: string | null } | null;
+      }>(GET_SHOP_ADDRESS_USER, {
+        shop_id,
+        address_id: delivery_address_id,
+        user_id,
+      });
+      storeName = aux.Shops_by_pk?.name;
+      if (aux.Addresses_by_pk) {
+        const a = aux.Addresses_by_pk;
+        customerAddress = [a.street, a.city, a.postal_code].filter(Boolean).join(", ");
+      }
+      customerPhone = aux.User_by_pk?.phone ?? undefined;
+    } catch (_) {
+      // non-blocking
+    }
+
+    // Send Slack notification for new order (fire-and-forget)
+    void notifyNewOrderToSlack({
+      id: orderId,
+      orderID: orderID ?? orderId,
+      total: orderTotal,
+      orderType: "regular",
+      storeName,
+      units,
+      customerPhone,
+      customerAddress,
+      deliveryTime: delivery_time,
+    });
 
     // 9. Respond with new order ID and PIN
     return res.status(201).json({

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "./auth/[...nextauth]";
 import { hasuraClient } from "../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { notifyNewOrderToSlack } from "../../src/lib/slackOrderNotifier";
 
 // Generate a random 2-digit PIN (00-99)
 function generateOrderPin(): string {
@@ -52,6 +53,27 @@ const CREATE_FOOD_ORDER = gql`
         delivery_time
         pin
       }
+    }
+  }
+`;
+
+// Fetch restaurant name, delivery address, and customer phone for Slack
+const GET_RESTAURANT_ADDRESS_USER = gql`
+  query GetRestaurantAddressUser(
+    $restaurant_id: uuid!
+    $address_id: uuid!
+    $user_id: uuid!
+  ) {
+    Restaurants_by_pk(id: $restaurant_id) {
+      name
+    }
+    Addresses_by_pk(id: $address_id) {
+      street
+      city
+      postal_code
+    }
+    User_by_pk(id: $user_id) {
+      phone
     }
   }
 `;
@@ -225,6 +247,42 @@ export default async function handler(
     if (totalDishesAdded !== items.length) {
       console.error("Not all dishes were added to the order");
     }
+
+    // Slack notification: fetch restaurant name, address, phone (non-blocking)
+    let storeName: string | undefined;
+    let customerAddress: string | undefined;
+    let customerPhone: string | undefined;
+    try {
+      const aux = await hasuraClient.request<{
+        Restaurants_by_pk: { name: string } | null;
+        Addresses_by_pk: { street: string; city: string; postal_code: string } | null;
+        User_by_pk: { phone: string | null } | null;
+      }>(GET_RESTAURANT_ADDRESS_USER, {
+        restaurant_id,
+        address_id: delivery_address_id,
+        user_id: session.user.id,
+      });
+      storeName = aux.Restaurants_by_pk?.name;
+      if (aux.Addresses_by_pk) {
+        const a = aux.Addresses_by_pk;
+        customerAddress = [a.street, a.city, a.postal_code].filter(Boolean).join(", ");
+      }
+      customerPhone = aux.User_by_pk?.phone ?? undefined;
+    } catch (_) {
+      // non-blocking
+    }
+
+    void notifyNewOrderToSlack({
+      id: orderId,
+      orderID: createdOrder.OrderID ?? orderId,
+      total: totalAmount,
+      orderType: "restaurant",
+      storeName,
+      units: totalDishesAdded,
+      customerPhone,
+      customerAddress,
+      deliveryTime: createdOrder.delivery_time,
+    });
 
     // Return success response with PIN
     return res.status(200).json({

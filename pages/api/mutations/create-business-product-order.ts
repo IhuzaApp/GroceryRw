@@ -3,6 +3,18 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { notifyNewOrderToSlack } from "../../../src/lib/slackOrderNotifier";
+
+const GET_STORE_AND_USER = gql`
+  query GetStoreAndUser($store_id: uuid!, $user_id: uuid!) {
+    business_stores_by_pk(id: $store_id) {
+      name
+    }
+    User_by_pk(id: $user_id) {
+      phone
+    }
+  }
+`;
 
 const CREATE_BUSINESS_PRODUCT_ORDER = gql`
   mutation CreateBusinessProductOrder(
@@ -152,11 +164,42 @@ export default async function handler(
       return res.status(500).json({ error: "Failed to create order" });
     }
 
-    return res.status(200).json({
-      success: true,
-      orderId: result.insert_businessProductOrders.returning[0]?.id,
-      affected_rows: result.insert_businessProductOrders.affected_rows,
-    });
+  const createdOrder = result.insert_businessProductOrders.returning[0];
+  const orderId = createdOrder?.id;
+
+  let storeName: string | undefined;
+  let customerPhone: string | undefined;
+  if (orderId && ordered_by) {
+    try {
+      const storeUser = await hasuraClient.request<{
+        business_stores_by_pk: { name: string } | null;
+        User_by_pk: { phone: string | null } | null;
+      }>(GET_STORE_AND_USER, { store_id, user_id: ordered_by });
+      storeName = storeUser.business_stores_by_pk?.name;
+      customerPhone = storeUser.User_by_pk?.phone ?? undefined;
+    } catch (_) {
+      // non-blocking
+    }
+  }
+
+  // Fire-and-forget Slack notification for new business order
+  void notifyNewOrderToSlack({
+    id: orderId ?? "",
+    orderID: orderId,
+    total: total,
+    orderType: "business",
+    storeName,
+    units,
+    customerPhone,
+    customerAddress: deliveryAddress || undefined,
+    deliveryTime: timeRangeValue || delivered_time,
+  });
+
+  return res.status(200).json({
+    success: true,
+    orderId: createdOrder?.id,
+    affected_rows: result.insert_businessProductOrders.affected_rows,
+  });
   } catch (error: any) {
     console.error("Error creating business product order:", error);
     return res.status(500).json({

@@ -8,6 +8,7 @@ import {
   isShopperOnline,
   logOfferSkip,
 } from "../../../src/lib/redisClient";
+import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 
 // ============================================================================
 // SYSTEM DESIGN: Dispatch with Exclusive Offers + Nearby Assignment
@@ -1761,6 +1762,11 @@ export default async function handler(
     logger.error("Error in smart assignment", "SmartAssignmentAPI", {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
+    });
+
+    await logErrorToSlack("SmartAssignmentAPI", error, {
+      method: req.method,
+      userId: (req.body as any)?.user_id,
     });
 
     return res.status(500).json({

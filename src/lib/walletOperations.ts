@@ -1,6 +1,7 @@
 import { hasuraClient } from "./hasuraClient";
 import { gql } from "graphql-request";
 import type { NextApiRequest } from "next";
+import { logErrorToSlack } from "./slackErrorReporter";
 
 // GraphQL query to get regular order details with fees
 const GET_ORDER_DETAILS = gql`
@@ -178,13 +179,25 @@ export async function handleShoppingOperation(
       );
 
       if (!commissionResponse.ok) {
-        console.error(
-          "Failed to add commission revenue:",
-          await commissionResponse.text()
+        const body = await commissionResponse.text();
+        console.error("Failed to add commission revenue:", body);
+        await logErrorToSlack(
+          "WalletOperations:handleShoppingOperation:addCommissionRevenue",
+          new Error("Failed to add commission revenue"),
+          {
+            orderId,
+            status: commissionResponse.status,
+            body,
+          }
         );
       }
     } catch (commissionError) {
       console.error("Error adding commission revenue:", commissionError);
+      await logErrorToSlack(
+        "WalletOperations:handleShoppingOperation:addCommissionRevenue",
+        commissionError,
+        { orderId }
+      );
     }
   }
 
@@ -310,13 +323,25 @@ export async function handleDeliveredOperation(
       );
 
       if (!plasaFeeResponse.ok) {
-        console.error(
-          "Failed to add plasa fee revenue:",
-          await plasaFeeResponse.text()
+        const body = await plasaFeeResponse.text();
+        console.error("Failed to add plasa fee revenue:", body);
+        await logErrorToSlack(
+          "WalletOperations:handleDeliveredOperation:addPlasaFeeRevenue",
+          new Error("Failed to add plasa fee revenue"),
+          {
+            orderId,
+            status: plasaFeeResponse.status,
+            body,
+          }
         );
       }
     } catch (plasaFeeError) {
       console.error("Error adding plasa fee revenue:", plasaFeeError);
+      await logErrorToSlack(
+        "WalletOperations:handleDeliveredOperation:addPlasaFeeRevenue",
+        plasaFeeError,
+        { orderId }
+      );
     }
   }
 
@@ -400,6 +425,11 @@ export async function processWalletOperation(
   req?: NextApiRequest
 ) {
   if (!hasuraClient) {
+    await logErrorToSlack(
+      "WalletOperations:processWalletOperation",
+      new Error("Hasura client is not initialized"),
+      { userId: userId, orderId, operation, isReelOrder, isRestaurantOrder }
+    );
     throw new Error("Hasura client is not initialized");
   }
 

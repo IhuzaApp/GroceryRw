@@ -4,6 +4,7 @@ import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { logger } from "../../../src/utils/logger";
+import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 
 // GraphQL query to fetch shopper invoices
 const GET_SHOPPER_INVOICES = gql`
@@ -188,6 +189,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  let shopperId: string | null = null;
+
   if (req.method !== "GET") {
     res.setHeader("Allow", ["GET"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
@@ -217,7 +220,8 @@ export default async function handler(
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const shopperId = session.user.id;
+    const shopperIdLocal = session.user.id;
+    shopperId = shopperIdLocal;
     const page = parseInt(req.query.page as string) || 1;
     const limit = 10; // Items per page
     const offset = (page - 1) * limit;
@@ -317,7 +321,7 @@ export default async function handler(
         };
       };
     }>(GET_SHOPPER_INVOICES, {
-      shopper_id: shopperId,
+      shopper_id: shopperIdLocal,
       limit,
       offset,
     });
@@ -451,11 +455,12 @@ export default async function handler(
       );
     }
 
-    logger.error(
-      "Error fetching shopper invoices",
-      "ShopperInvoicesAPI",
-      error
-    );
+    logger.error("Error fetching shopper invoices", "ShopperInvoicesAPI", error);
+
+    await logErrorToSlack("ShopperInvoicesAPI", error, {
+      shopperId,
+      method: req.method,
+    });
     return res.status(500).json({
       error:
         error instanceof Error ? error.message : "Failed to fetch invoices",
