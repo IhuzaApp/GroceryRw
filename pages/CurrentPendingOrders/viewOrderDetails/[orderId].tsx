@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import UserOrderDetails from "@components/UserCarts/orders/UserOrderDetails";
 import UserReelOrderDetails from "@components/UserCarts/orders/UserReelOrderDetails";
 import UserRestaurantOrderDetails from "@components/UserCarts/orders/UserRestaurantOrderDetails";
+import ContactSupportModal from "@components/UserCarts/orders/ContactSupportModal";
 import { Button } from "rsuite";
 import Link from "next/link";
 import { AuthGuard } from "@components/AuthGuard";
@@ -186,10 +187,12 @@ const MobileOrderDetails = ({
   order,
   orderType,
   combinedOrders,
+  onContactSupport,
 }: {
   order: any;
   orderType: "regular" | "reel" | "restaurant" | null;
   combinedOrders: any[];
+  onContactSupport?: () => void;
 }) => {
   const { theme } = useTheme();
   const router = useRouter();
@@ -353,14 +356,23 @@ const MobileOrderDetails = ({
         {/* Order Details Component - Full width on mobile */}
         <div className="mobile-full-width ">
           {orderType === "reel" ? (
-            <UserReelOrderDetails order={order} isMobile={true} />
+            <UserReelOrderDetails
+              order={order}
+              isMobile={true}
+              onContactSupport={onContactSupport}
+            />
           ) : orderType === "restaurant" ? (
-            <UserRestaurantOrderDetails order={order} isMobile={true} />
+            <UserRestaurantOrderDetails
+              order={order}
+              isMobile={true}
+              onContactSupport={onContactSupport}
+            />
           ) : (
             <UserOrderDetails
               order={order}
               isMobile={true}
               combinedOrders={combinedOrders}
+              onContactSupport={onContactSupport}
             />
           )}
         </div>
@@ -374,10 +386,12 @@ const DesktopOrderDetails = ({
   order,
   orderType,
   combinedOrders,
+  onContactSupport,
 }: {
   order: any;
   orderType: "regular" | "reel" | "restaurant" | null;
   combinedOrders: any[];
+  onContactSupport?: () => void;
 }) => {
   return (
     <div className="min-h-screen md:ml-16">
@@ -385,11 +399,21 @@ const DesktopOrderDetails = ({
       <div className="container mx-auto px-8 py-8">
         <div className="rounded-2xl  shadow-sm ">
           {orderType === "reel" ? (
-            <UserReelOrderDetails order={order} />
+            <UserReelOrderDetails
+              order={order}
+              onContactSupport={onContactSupport}
+            />
           ) : orderType === "restaurant" ? (
-            <UserRestaurantOrderDetails order={order} />
+            <UserRestaurantOrderDetails
+              order={order}
+              onContactSupport={onContactSupport}
+            />
           ) : (
-            <UserOrderDetails order={order} combinedOrders={combinedOrders} />
+            <UserOrderDetails
+              order={order}
+              combinedOrders={combinedOrders}
+              onContactSupport={onContactSupport}
+            />
           )}
         </div>
       </div>
@@ -407,6 +431,7 @@ function ViewOrderDetailsPage() {
     "regular" | "reel" | "restaurant" | null
   >(null);
   const [combinedOrders, setCombinedOrders] = useState<any[]>([]);
+  const [showSupportModal, setShowSupportModal] = useState(false);
 
   useEffect(() => {
     if (!orderId || !router.isReady) return;
@@ -609,6 +634,7 @@ function ViewOrderDetailsPage() {
             order={order}
             orderType={orderType}
             combinedOrders={combinedOrders}
+            onContactSupport={() => setShowSupportModal(true)}
           />
         </div>
 
@@ -618,8 +644,16 @@ function ViewOrderDetailsPage() {
             order={order}
             orderType={orderType}
             combinedOrders={combinedOrders}
+            onContactSupport={() => setShowSupportModal(true)}
           />
         </div>
+
+        <ContactSupportModal
+          open={showSupportModal}
+          onClose={() => setShowSupportModal(false)}
+          order={order}
+          orderType={orderType ?? "regular"}
+        />
 
         {/* Mobile-specific styles for full-width layout */}
         <style jsx global>{`

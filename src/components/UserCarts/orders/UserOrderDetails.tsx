@@ -18,10 +18,14 @@ function formatOrderID(id?: string | number): string {
 interface UserOrderDetailsProps {
   order: any;
   isMobile?: boolean;
+  combinedOrders?: any[];
+  onContactSupport?: () => void;
 }
 export default function UserOrderDetails({
   order,
   isMobile = false,
+  combinedOrders,
+  onContactSupport,
 }: UserOrderDetailsProps) {
   const router = useRouter();
   const { theme } = useTheme();
@@ -440,7 +444,11 @@ export default function UserOrderDetails({
             </button>
           ) : (
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-              <button className="group flex items-center justify-center gap-2 !rounded-md bg-gradient-to-r from-green-500 to-green-600 px-4 py-2.5 text-sm font-semibold !text-white shadow-md transition-all duration-200 hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-[0.98]">
+              <button
+                type="button"
+                onClick={onContactSupport}
+                className="group flex items-center justify-center gap-2 !rounded-md bg-gradient-to-r from-green-500 to-green-600 px-4 py-2.5 text-sm font-semibold !text-white shadow-md transition-all duration-200 hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-[0.98]"
+              >
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"

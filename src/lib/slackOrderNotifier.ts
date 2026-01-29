@@ -109,6 +109,12 @@ export async function notifyNewOrderToSlack(order: SlackOrderPayload) {
         { type: "mrkdwn", text: `*Placed at*\n${placedAt}` },
       ],
     },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*📞 Customer phone (call for urgency)*\n${order.customerPhone ?? "—"}` },
+      ],
+    },
     { type: "divider" },
     {
       type: "section",
