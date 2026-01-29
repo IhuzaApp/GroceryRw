@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { sendNewBusinessAccountRegistrationToSlack } from "../../../src/lib/slackSupportNotifier";
 
 const CREATE_BUSINESS_ACCOUNT = gql`
   mutation CreateBusinessAccount(
@@ -182,6 +183,31 @@ export default async function handler(
     }
 
     const createdAccount = result.insert_business_accounts.returning[0];
+
+    try {
+      await sendNewBusinessAccountRegistrationToSlack({
+        account_type: account_type as "personal" | "business",
+        business_name: (business_name?.trim() || "") as string,
+        contact_name: session.user.name ?? undefined,
+        email: (business_email?.trim() || session.user.email || "").trim() || "—",
+        phone: (business_phone?.trim() || (session.user as any).phone || "").trim() || "—",
+        business_location: business_location?.trim() || undefined,
+        provided: {
+          business_name: !!(business_name && business_name.trim()),
+          business_email: !!(business_email && business_email.trim()),
+          business_phone: !!(business_phone && business_phone.trim()),
+          business_location: !!(business_location && business_location.trim()),
+          rdb_certificate: !!(rdb_certificate && rdb_certificate.trim()),
+          id_image: !!(id_image && id_image.trim()),
+          face_image: !!(face_image && face_image.trim()),
+        },
+      });
+    } catch (notifyErr: any) {
+      console.warn(
+        "Failed to notify Slack of new business account registration:",
+        notifyErr?.message || notifyErr
+      );
+    }
 
     return res.status(200).json({
       success: true,

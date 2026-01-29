@@ -129,11 +129,6 @@ export default function PersonalBusinessForm({
     faceImage,
     idImage,
     businessLocation,
-    businessDescription,
-    defaultAddress,
-    userDetails,
-    session,
-    user,
     onSuccess,
   ]);
 

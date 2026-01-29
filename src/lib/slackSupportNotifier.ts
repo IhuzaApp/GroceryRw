@@ -226,3 +226,124 @@ export async function sendNewShopperRegistrationToSlack(
     throw error;
   }
 }
+
+// --- New business account registration (waiting for review) ---
+
+export interface NewBusinessAccountRegistrationPayload {
+  account_type: "personal" | "business";
+  /** Business or trading name */
+  business_name: string;
+  /** Contact person name (e.g. session user name) */
+  contact_name?: string;
+  email: string;
+  phone: string;
+  business_location?: string;
+  /** What was provided (for "everything shared" checklist) */
+  provided: {
+    business_name: boolean;
+    business_email: boolean;
+    business_phone: boolean;
+    business_location: boolean;
+    rdb_certificate: boolean;
+    id_image: boolean;
+    face_image: boolean;
+  };
+}
+
+function formatBusinessProvided(
+  p: NewBusinessAccountRegistrationPayload["provided"]
+): string {
+  const y = (v: boolean) => (v ? "✅" : "❌");
+  return [
+    `• Business name: ${y(p.business_name)}`,
+    `• Email: ${y(p.business_email)}`,
+    `• Phone: ${y(p.business_phone)}`,
+    `• Business location: ${y(p.business_location)}`,
+    `• RDB certificate: ${y(p.rdb_certificate)}`,
+    `• ID image: ${y(p.id_image)}`,
+    `• Face photo: ${y(p.face_image)}`,
+  ].join("\n");
+}
+
+/**
+ * Notify Slack that a new business account has been registered and is waiting for review.
+ * Shows account type, name (personal/business), email, phone, location, and what was shared.
+ */
+export async function sendNewBusinessAccountRegistrationToSlack(
+  payload: NewBusinessAccountRegistrationPayload
+) {
+  if (!SLACK_SUPPORT_WEBHOOK) {
+    console.error("SLACK_SUPPORT_WEBHOOK is not configured");
+    return;
+  }
+
+  const accountLabel =
+    payload.account_type === "personal" ? "Personal account" : "Business account";
+  const nameDisplay = payload.contact_name
+    ? `${payload.business_name} (Contact: ${payload.contact_name})`
+    : payload.business_name;
+  const locationDisplay = payload.business_location?.trim() || "—";
+  const providedText = formatBusinessProvided(payload.provided);
+
+  const blocks: any[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "🏢 New business account registered – waiting for review",
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Account type*\n${accountLabel}` },
+        { type: "mrkdwn", text: `*Name*\n${nameDisplay}` },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Email*\n${payload.email || "—"}` },
+        { type: "mrkdwn", text: `*Phone*\n${payload.phone || "—"}` },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        {
+          type: "mrkdwn",
+          text: `*Business location*\n${locationDisplay}`,
+        },
+      ],
+    },
+    { type: "divider" },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Everything shared*\n${providedText}`,
+      },
+    },
+    {
+      type: "context",
+      elements: [{ type: "mrkdwn", text: `🕒 ${new Date().toISOString()}` }],
+    },
+  ];
+
+  try {
+    await fetch(SLACK_SUPPORT_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: `New business account: ${payload.business_name} (${accountLabel}) – waiting for review`,
+        blocks,
+      }),
+    });
+  } catch (error) {
+    console.error(
+      "Failed to send new business account registration to Slack",
+      error
+    );
+    throw error;
+  }
+}

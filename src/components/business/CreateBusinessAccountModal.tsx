@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { X, Check } from "lucide-react";
 import PersonalBusinessForm from "./PersonalBusinessForm";
 import BusinessAccountForm from "./BusinessAccountForm";
@@ -23,12 +23,8 @@ export default function CreateBusinessAccountModal({
   const [accountType, setAccountType] = useState<
     "personal" | "business" | null
   >(null);
-  const [personalFormSubmit, setPersonalFormSubmit] = useState<
-    (() => void) | null
-  >(null);
-  const [businessFormSubmit, setBusinessFormSubmit] = useState<
-    (() => void) | null
-  >(null);
+  const personalFormSubmitRef = useRef<(() => void | Promise<void>) | null>(null);
+  const businessFormSubmitRef = useRef<(() => void | Promise<void>) | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
@@ -46,6 +42,8 @@ export default function CreateBusinessAccountModal({
 
   const handleBack = () => {
     if (step === "personal" || step === "business") {
+      personalFormSubmitRef.current = null;
+      businessFormSubmitRef.current = null;
       setStep("description");
       setAccountType(null);
       setAcceptedTerms(false);
@@ -53,6 +51,8 @@ export default function CreateBusinessAccountModal({
   };
 
   const handleAccountCreated = () => {
+    personalFormSubmitRef.current = null;
+    businessFormSubmitRef.current = null;
     if (onAccountCreated) {
       onAccountCreated();
     }
@@ -233,7 +233,9 @@ export default function CreateBusinessAccountModal({
                 <PersonalBusinessForm
                   onBack={handleBack}
                   onSuccess={handleAccountCreated}
-                  onSubmitRef={setPersonalFormSubmit}
+                  onSubmitRef={(fn) => {
+                    personalFormSubmitRef.current = fn;
+                  }}
                 />
               )}
 
@@ -241,7 +243,9 @@ export default function CreateBusinessAccountModal({
                 <BusinessAccountForm
                   onBack={handleBack}
                   onSuccess={handleAccountCreated}
-                  onSubmitRef={setBusinessFormSubmit}
+                  onSubmitRef={(fn) => {
+                    businessFormSubmitRef.current = fn;
+                  }}
                 />
               )}
             </div>
@@ -274,17 +278,17 @@ export default function CreateBusinessAccountModal({
                 <button
                   type="button"
                   onClick={async () => {
-                    if (step === "personal" && personalFormSubmit) {
+                    if (step === "personal" && personalFormSubmitRef.current) {
                       setIsSubmitting(true);
                       try {
-                        await personalFormSubmit();
+                        await personalFormSubmitRef.current();
                       } finally {
                         setIsSubmitting(false);
                       }
-                    } else if (step === "business" && businessFormSubmit) {
+                    } else if (step === "business" && businessFormSubmitRef.current) {
                       setIsSubmitting(true);
                       try {
-                        await businessFormSubmit();
+                        await businessFormSubmitRef.current();
                       } finally {
                         setIsSubmitting(false);
                       }
