@@ -47,13 +47,13 @@ export default function SideBar() {
 
     const fetchPendingOrders = async () => {
       try {
-        const response = await authenticatedFetch("/api/queries/orders");
+        // user-orders returns Orders + reel_orders + restaurant_orders (same as CurrentPendingOrders)
+        const response = await authenticatedFetch("/api/queries/user-orders");
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
 
-        // Check if data and data.orders exist before filtering
         if (!data || !data.orders) {
           console.warn("No orders data received from API");
           return;
@@ -90,7 +90,13 @@ export default function SideBar() {
       try {
         const response = await fetch("/api/queries/marketplace-notifications");
         const data = await response.json();
-        setMarketplaceNotificationCount(data.totalCount || 0);
+        // Use only marketplace-specific counts (RFQ responses, new RFQs, business orders).
+        // Exclude incompleteOrdersCount so we don't duplicate the Orders icon badge.
+        const marketplaceOnly =
+          (data.rfqResponsesCount || 0) +
+          (data.newRFQsCount || 0) +
+          (data.newBusinessOrdersCount || 0);
+        setMarketplaceNotificationCount(marketplaceOnly);
       } catch (error) {
         console.error("Error fetching marketplace notifications:", error);
       }

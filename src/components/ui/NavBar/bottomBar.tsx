@@ -8,6 +8,7 @@ import { Input, Modal, Button, Loader } from "rsuite";
 import { useSession } from "next-auth/react";
 import { useAuth } from "../../../context/AuthContext";
 import { useAuth as useAuthHook } from "../../../hooks/useAuth";
+import { authenticatedFetch } from "../../../lib/authenticatedFetch";
 import { Briefcase } from "lucide-react";
 import GuestUpgradeModal from "../GuestUpgradeModal";
 
@@ -138,6 +139,7 @@ export default function BottomBar() {
   const { t } = useLanguage();
   const { data: session } = useSession();
   const moreRef = useRef<HTMLDivElement>(null);
+  const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
   const [marketplaceNotificationCount, setMarketplaceNotificationCount] =
     useState(0);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -186,7 +188,35 @@ export default function BottomBar() {
     };
   }, [moreOpen]);
 
-  // Fetch marketplace notifications (RFQ responses + incomplete orders)
+  // Fetch pending orders count (Orders + reel + restaurant, not delivered) — same as sidebar
+  useEffect(() => {
+    if (!session?.user?.id) {
+      setPendingOrdersCount(0);
+      return;
+    }
+
+    const fetchPendingOrders = async () => {
+      try {
+        const response = await authenticatedFetch("/api/queries/user-orders");
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!data?.orders) return;
+        const pending = data.orders.filter(
+          (order: any) => order.status !== "delivered"
+        );
+        setPendingOrdersCount(pending.length);
+      } catch (error) {
+        console.error("Error fetching pending orders:", error);
+        setPendingOrdersCount(0);
+      }
+    };
+
+    fetchPendingOrders();
+    const interval = setInterval(fetchPendingOrders, 60000);
+    return () => clearInterval(interval);
+  }, [session?.user?.id]);
+
+  // Fetch marketplace notifications (RFQ + new RFQs + business orders only — same as sidebar)
   useEffect(() => {
     if (!session?.user?.id) {
       setMarketplaceNotificationCount(0);
@@ -197,16 +227,18 @@ export default function BottomBar() {
       try {
         const response = await fetch("/api/queries/marketplace-notifications");
         const data = await response.json();
-        setMarketplaceNotificationCount(data.totalCount || 0);
+        const marketplaceOnly =
+          (data.rfqResponsesCount || 0) +
+          (data.newRFQsCount || 0) +
+          (data.newBusinessOrdersCount || 0);
+        setMarketplaceNotificationCount(marketplaceOnly);
       } catch (error) {
         console.error("Error fetching marketplace notifications:", error);
       }
     };
 
     fetchMarketplaceNotifications();
-    // Refresh every 30 seconds
     const interval = setInterval(fetchMarketplaceNotifications, 30000);
-
     return () => clearInterval(interval);
   }, [session?.user?.id]);
 
@@ -583,7 +615,7 @@ export default function BottomBar() {
             <NavItem
               href="/plasBusiness"
               icon={
-                <div className="relative">
+                <div className="relative inline-block">
                   <svg
                     width="30px"
                     height="30px"
@@ -630,7 +662,7 @@ export default function BottomBar() {
                     </g>
                   </svg>
                   {marketplaceNotificationCount > 0 && (
-                    <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-lg">
+                    <span className="absolute -right-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-lg dark:bg-red-600" aria-label={`${marketplaceNotificationCount} marketplace notifications`}>
                       {marketplaceNotificationCount > 9
                         ? "9+"
                         : marketplaceNotificationCount}
@@ -683,45 +715,52 @@ export default function BottomBar() {
           <NavItem
             href="/CurrentPendingOrders"
             icon={
-              <svg
-                width="30px"
-                height="30px"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                <g
-                  id="SVGRepo_tracerCarrier"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                ></g>
-                <g id="SVGRepo_iconCarrier">
-                  <path
-                    d="M7.5 18C8.32843 18 9 18.6716 9 19.5C9 20.3284 8.32843 21 7.5 21C6.67157 21 6 20.3284 6 19.5C6 18.6716 6.67157 18 7.5 18Z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                  ></path>
-                  <path
-                    d="M16.5 18.0001C17.3284 18.0001 18 18.6716 18 19.5001C18 20.3285 17.3284 21.0001 16.5 21.0001C15.6716 21.0001 15 20.3285 15 19.5001C15 18.6716 15.6716 18.0001 16.5 18.0001Z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                  ></path>
-                  <path
-                    d="M11 10.8L12.1429 12L15 9"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
+              <div className="relative inline-block">
+                <svg
+                  width="30px"
+                  height="30px"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                  <g
+                    id="SVGRepo_tracerCarrier"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                  ></path>
-                  <path
-                    d="M2 3L2.26121 3.09184C3.5628 3.54945 4.2136 3.77826 4.58584 4.32298C4.95808 4.86771 4.95808 5.59126 4.95808 7.03836V9.76C4.95808 12.7016 5.02132 13.6723 5.88772 14.5862C6.75412 15.5 8.14857 15.5 10.9375 15.5H12M16.2404 15.5C17.8014 15.5 18.5819 15.5 19.1336 15.0504C19.6853 14.6008 19.8429 13.8364 20.158 12.3075L20.6578 9.88275C21.0049 8.14369 21.1784 7.27417 20.7345 6.69708C20.2906 6.12 18.7738 6.12 17.0888 6.12H11.0235M4.95808 6.12H7"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  ></path>
-                </g>
-              </svg>
+                  ></g>
+                  <g id="SVGRepo_iconCarrier">
+                    <path
+                      d="M7.5 18C8.32843 18 9 18.6716 9 19.5C9 20.3284 8.32843 21 7.5 21C6.67157 21 6 20.3284 6 19.5C6 18.6716 6.67157 18 7.5 18Z"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    ></path>
+                    <path
+                      d="M16.5 18.0001C17.3284 18.0001 18 18.6716 18 19.5001C18 20.3285 17.3284 21.0001 16.5 21.0001C15.6716 21.0001 15 20.3285 15 19.5001C15 18.6716 15.6716 18.0001 16.5 18.0001Z"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    ></path>
+                    <path
+                      d="M11 10.8L12.1429 12L15 9"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    ></path>
+                    <path
+                      d="M2 3L2.26121 3.09184C3.5628 3.54945 4.2136 3.77826 4.58584 4.32298C4.95808 4.86771 4.95808 5.59126 4.95808 7.03836V9.76C4.95808 12.7016 5.02132 13.6723 5.88772 14.5862C6.75412 15.5 8.14857 15.5 10.9375 15.5H12M16.2404 15.5C17.8014 15.5 18.5819 15.5 19.1336 15.0504C19.6853 14.6008 19.8429 13.8364 20.158 12.3075L20.6578 9.88275C21.0049 8.14369 21.1784 7.27417 20.7345 6.69708C20.2906 6.12 18.7738 6.12 17.0888 6.12H11.0235M4.95808 6.12H7"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    ></path>
+                  </g>
+                </svg>
+                {pendingOrdersCount > 0 && (
+                  <span className="absolute -right-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white dark:bg-red-600" aria-label={`${pendingOrdersCount} pending orders`}>
+                    {pendingOrdersCount > 9 ? "9+" : pendingOrdersCount}
+                  </span>
+                )}
+              </div>
             }
             label="My Orders"
           />
