@@ -7,11 +7,11 @@ import type { Session } from "next-auth";
 import { logger } from "../../../src/utils/logger";
 
 // Fetch restaurant order details with all related data
+// Schema: restaurant_order_items -> restaurant_dishes -> dishes (nested)
 const GET_RESTAURANT_ORDER_DETAILS = gql`
   query GetRestaurantOrderDetails($order_id: uuid!) {
     restaurant_orders(where: { id: { _eq: $order_id } }) {
       id
-      order_number
       OrderID
       user_id
       status
@@ -32,22 +32,19 @@ const GET_RESTAURANT_ORDER_DETAILS = gql`
         id
         order_id
         created_at
-        restaurant_menu {
+        restaurant_dishes {
           id
           price
           preparingTime
           is_active
-          ProductNames {
-            name
-            description
-            image
-          }
           dishes {
             name
-            description
-            image
             ingredients
+            image
             category
+            description
+            id
+            created_at
           }
         }
       }
@@ -58,12 +55,10 @@ const GET_RESTAURANT_ORDER_DETAILS = gql`
       orderedBy {
         created_at
         email
-        gender
         id
         is_active
         name
         phone
-        role
         updated_at
       }
       Address {
@@ -102,8 +97,7 @@ const GET_RESTAURANT_ORDER_DETAILS = gql`
 interface RestaurantOrderDetailsResponse {
   restaurant_orders: Array<{
     id: string;
-    order_number: string;
-    OrderID: string | null;
+    OrderID: number | null;
     user_id: string;
     status: string;
     created_at: string;
@@ -112,9 +106,9 @@ interface RestaurantOrderDetailsResponse {
     restaurant_id: string;
     shopper_id: string | null;
     delivery_time: string;
-    delivery_notes: string;
-    discount: string;
-    voucher_code: string;
+    delivery_notes: string | null;
+    discount: string | null;
+    voucher_code: string | null;
     found: boolean;
     restaurant_order_items: Array<{
       quantity: string;
@@ -123,38 +117,33 @@ interface RestaurantOrderDetailsResponse {
       id: string;
       order_id: string;
       created_at: string;
-      restaurant_menu: {
+      restaurant_dishes: {
         id: string;
         price: string;
         preparingTime: string | null;
         is_active: boolean;
-        ProductNames: {
-          name: string;
-          description: string | null;
-          image: string | null;
-        } | null;
         dishes: {
-          name: string;
-          description: string | null;
+          name: string | null;
+          ingredients: unknown;
           image: string | null;
-          ingredients: string | null;
           category: string | null;
+          description: string | null;
+          id: string;
+          created_at: string;
         } | null;
       } | null;
     }>;
     combined_order_id: string | null;
     delivery_address_id: string;
     delivery_photo_url: string | null;
-    updated_at: string;
+    updated_at: string | null;
     orderedBy: {
       created_at: string;
       email: string;
-      gender: string;
       id: string;
       is_active: boolean;
       name: string;
       phone: string;
-      role: string;
       updated_at: string;
     };
     Address: {
@@ -164,7 +153,7 @@ interface RestaurantOrderDetailsResponse {
       is_default: boolean;
       latitude: string;
       longitude: string;
-      postal_code: string;
+      postal_code: string | null;
       street: string;
       updated_at: string;
       user_id: string;
@@ -176,7 +165,7 @@ interface RestaurantOrderDetailsResponse {
       id: string;
       lat: string;
       location: string;
-      logo: string;
+      logo: string | null;
       long: string;
       name: string;
       phone: string;
@@ -266,9 +255,9 @@ export default async function handler(
     const enrichedOrder = {
       id: restaurantOrder.id,
       OrderID:
-        restaurantOrder.OrderID ||
-        restaurantOrder.order_number ||
-        restaurantOrder.id,
+        restaurantOrder.OrderID != null
+          ? String(restaurantOrder.OrderID)
+          : restaurantOrder.id,
       user_id: restaurantOrder.user_id,
       status: restaurantOrder.status,
       created_at: restaurantOrder.created_at,
@@ -300,25 +289,22 @@ export default async function handler(
       orderedBy: restaurantOrder.orderedBy,
       Address: restaurantOrder.Address,
       Restaurant: restaurantOrder.Restaurant,
-      // Include dish orders with dish details
+      // Include dish orders with dish details (restaurant_dishes -> dishes)
       restaurant_order_items: restaurantOrder.restaurant_order_items.map(
         (item) => {
-          const menu = item.restaurant_menu;
-          const product = menu?.ProductNames || null;
-          const dishBase = menu?.dishes || null;
-
-          const dish = menu
+          const rd = item.restaurant_dishes;
+          const d = rd?.dishes ?? null;
+          const dish = rd
             ? {
-                id: menu.id,
-                name: product?.name || dishBase?.name || "Unnamed Dish",
-                description:
-                  product?.description || dishBase?.description || "",
-                price: menu.price,
-                image: product?.image || dishBase?.image || null,
-                preparingTime: menu.preparingTime || "",
-                ingredients: dishBase?.ingredients || null,
-                category: dishBase?.category || null,
-                is_active: menu.is_active,
+                id: rd.id,
+                name: d?.name ?? "Unnamed Dish",
+                description: d?.description ?? "",
+                price: rd.price,
+                image: d?.image ?? null,
+                preparingTime: rd.preparingTime ?? "",
+                ingredients: d?.ingredients ?? null,
+                category: d?.category ?? null,
+                is_active: rd.is_active,
               }
             : null;
 
@@ -331,12 +317,25 @@ export default async function handler(
     };
 
     res.status(200).json({ order: enrichedOrder });
-  } catch (error) {
+  } catch (error: unknown) {
+    const err = error as {
+      message?: string;
+      response?: { errors?: Array<{ message?: string }> };
+    };
+    const message = err?.message ?? "Unknown error";
+    const graphqlErrors = err?.response?.errors;
+    const detail =
+      graphqlErrors?.length ?
+        graphqlErrors.map((e) => e?.message ?? "").filter(Boolean).join("; ")
+      : message;
     logger.error(
       "Error fetching restaurant order details",
       "RestaurantOrderDetailsAPI",
-      error
+      { error, detail, graphqlErrors }
     );
-    res.status(500).json({ error: "Failed to fetch restaurant order details" });
+    res.status(500).json({
+      error: "Failed to fetch restaurant order details",
+      detail,
+    });
   }
 }

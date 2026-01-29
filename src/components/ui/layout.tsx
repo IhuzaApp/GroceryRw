@@ -33,20 +33,26 @@ export default function RootLayout({
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-white text-gray-900 transition-colors duration-200 dark:bg-gray-900 dark:text-white">
-        {!isChatPage &&
-          !isReelsPage &&
-          !isMessagesPage &&
-          !isPlasBusinessPage &&
-          !isOrderDetailsPage && <HeaderLayout />}
+        {/* Top navbar: hide on order details (mobile), show on desktop */}
+        {!isChatPage && !isReelsPage && !isMessagesPage && !isPlasBusinessPage && (
+          isOrderDetailsPage ? (
+            <div className="hidden md:block">
+              <HeaderLayout />
+            </div>
+          ) : (
+            <HeaderLayout />
+          )
+        )}
         {/* Main content */}
         <main
           className={`text-gray-900 transition-colors duration-200 dark:text-white ${
             isChatPage ||
             isReelsPage ||
             isMessagesPage ||
-            isPlasBusinessPage ||
-            isOrderDetailsPage
+            isPlasBusinessPage
               ? ""
+              : isOrderDetailsPage
+              ? "pb-20 md:pt-16 md:pb-0"
               : "px-4 pb-20 pt-6 md:pb-0"
           }`}
           style={
@@ -62,10 +68,8 @@ export default function RootLayout({
               : {}
           }
         >
-          {!isChatPage &&
-            !isReelsPage &&
-            !isMessagesPage &&
-            !isOrderDetailsPage && <SideBar />}
+          {/* Sidebar: hide on order details (mobile), show on desktop (SideBar has hidden md:block) */}
+          {!isChatPage && !isReelsPage && !isMessagesPage && <SideBar />}
           <div
             className="[&_*]:text-inherit"
             style={

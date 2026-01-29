@@ -421,7 +421,7 @@ export default function UserRecentOrders({
               group.orders.map((order: Order) => (
                 <Link
                   key={order.id}
-                  href={`/CurrentPendingOrders/viewOrderDetails/${order.id}`}
+                  href={`/CurrentPendingOrders/viewOrderDetails/${order.id}${order.orderType ? `?type=${order.orderType}` : ""}`}
                   className={`group block overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-md transition-all duration-300 hover:border-green-200 hover:bg-gray-50 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 dark:shadow-md dark:hover:border-green-500 dark:hover:bg-gray-800/80 dark:hover:shadow-2xl ${
                     isPendingOrdersPage ? "mb-4 md:mb-4" : "mb-2 md:mb-2"
                   }`}

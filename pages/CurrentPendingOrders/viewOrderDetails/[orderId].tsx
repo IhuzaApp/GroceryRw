@@ -202,12 +202,12 @@ const MobileOrderDetails = ({
   const { theme } = useTheme();
   const router = useRouter();
 
-  // Get image source - prioritize shop image, then reel image, then default
+  // Get image source - restaurant orders use dedicated asset; then shop, reel, default
   const getHeaderImage = () => {
+    if (orderType === "restaurant") return "/assets/images/restaurantImage.webp";
     if (order?.shop?.image) return order.shop.image;
     if (order?.reel?.thumbnail) return order.reel.thumbnail;
     if (order?.restaurant?.image) return order.restaurant.image;
-    // Fallback to existing generic shop placeholder
     return "/images/shop-placeholder.jpg";
   };
 
@@ -477,63 +477,56 @@ function ViewOrderDetailsPage() {
   useEffect(() => {
     if (!orderId || !router.isReady) return;
 
+    const typeHint = (router.query.type as string) || "regular";
+
     async function fetchDetails() {
       try {
         setLoading(true);
         setError(null);
 
-        // Try to fetch as regular order first
-        let res = await fetch(`/api/queries/orderDetails?id=${orderId}`);
+        const apis: Array<{ type: "regular" | "reel" | "restaurant"; url: string }> =
+          typeHint === "restaurant"
+            ? [
+                { type: "restaurant", url: `/api/queries/restaurant-order-details?id=${orderId}` },
+                { type: "regular", url: `/api/queries/orderDetails?id=${orderId}` },
+                { type: "reel", url: `/api/queries/reel-order-details?id=${orderId}` },
+              ]
+            : typeHint === "reel"
+            ? [
+                { type: "reel", url: `/api/queries/reel-order-details?id=${orderId}` },
+                { type: "regular", url: `/api/queries/orderDetails?id=${orderId}` },
+                { type: "restaurant", url: `/api/queries/restaurant-order-details?id=${orderId}` },
+              ]
+            : [
+                { type: "regular", url: `/api/queries/orderDetails?id=${orderId}` },
+                { type: "reel", url: `/api/queries/reel-order-details?id=${orderId}` },
+                { type: "restaurant", url: `/api/queries/restaurant-order-details?id=${orderId}` },
+              ];
 
-        if (res.ok) {
-          const data = await res.json();
-          if (data.order) {
-            setOrder(data.order);
-            setOrderType("regular");
-            return;
+        for (const { type, url } of apis) {
+          const res = await fetch(url);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.order) {
+              setOrder(data.order);
+              setOrderType(type);
+              return;
+            }
           }
-        } else if (res.status === 404) {
-          // Silently handle 404 for regular orders - this is expected for reel orders
-        }
-
-        // If not found as regular order, try as reel order
-        res = await fetch(`/api/queries/reel-order-details?id=${orderId}`);
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data.order) {
-            setOrder(data.order);
-            setOrderType("reel");
-            return;
-          }
-        } else if (res.status === 404) {
-          // Silently handle 404 for reel orders - this is expected for restaurant orders
-        }
-
-        // If not found as reel order, try as restaurant order
-        res = await fetch(
-          `/api/queries/restaurant-order-details?id=${orderId}`
-        );
-
-        if (!res.ok) {
-          if (res.status === 404) {
+          if (res.status === 404) continue;
+          // Non-404 error: for restaurant we throw with detail; for others try next
+          if (type === "restaurant") {
+            const errorData = await res.json().catch(() => ({}));
+            const detail = errorData.detail ? `: ${errorData.detail}` : "";
             throw new Error(
-              "Order not found. Please check the order ID and try again."
+              (errorData.error || "Failed to fetch order details") + detail
             );
           }
-          const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.error || "Failed to fetch order details");
         }
 
-        const data = await res.json();
-
-        // Validate that we have the necessary data
-        if (!data.order) {
-          throw new Error("Order data is missing");
-        }
-
-        setOrder(data.order);
-        setOrderType("restaurant");
+        throw new Error(
+          "Order not found. Please check the order ID and try again."
+        );
       } catch (err) {
         console.error("Error fetching order details:", err);
         setError(
@@ -544,7 +537,7 @@ function ViewOrderDetailsPage() {
       }
     }
     fetchDetails();
-  }, [orderId]);
+  }, [orderId, router.isReady, router.query.type]);
 
   // Fetch support ticket when order is loaded
   useEffect(() => {
