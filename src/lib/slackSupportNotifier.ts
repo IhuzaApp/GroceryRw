@@ -19,6 +19,8 @@ export interface SupportTicketPayload {
   userName?: string;
   /** Customer phone (for support to call for urgency) */
   userPhone?: string;
+  /** Ticket number from DB (shown in Slack instead of internal ID) */
+  ticketNum?: number;
 }
 
 const ORDER_TYPE_LABELS: Record<SupportTicketPayload["orderType"], string> = {
@@ -45,6 +47,8 @@ export async function sendSupportTicketToSlack(ticket: SupportTicketPayload) {
     ? `${ticket.userName}${ticket.userEmail ? ` (${ticket.userEmail})` : ""}`
     : ticket.userEmail ?? "—";
   const phoneDisplay = ticket.userPhone ?? "—";
+  const ticketDisplay =
+    ticket.ticketNum != null ? `#${ticket.ticketNum}` : "—";
 
   const blocks: any[] = [
     {
@@ -57,22 +61,22 @@ export async function sendSupportTicketToSlack(ticket: SupportTicketPayload) {
     {
       type: "section",
       fields: [
-        { type: "mrkdwn", text: `*Order ID*\n\`${displayId}\`` },
+        { type: "mrkdwn", text: `*Ticket #*\n\`${ticketDisplay}\`` },
         { type: "mrkdwn", text: `*Type*\n${orderTypeLabel}` },
       ],
     },
     {
       type: "section",
       fields: [
+        { type: "mrkdwn", text: `*Order ID*\n\`${displayId}\`` },
         { type: "mrkdwn", text: `*Store / Shop*\n${storeDisplay}` },
-        { type: "mrkdwn", text: `*Order Status*\n${statusDisplay}` },
       ],
     },
     {
       type: "section",
       fields: [
+        { type: "mrkdwn", text: `*Order Status*\n${statusDisplay}` },
         { type: "mrkdwn", text: `*From*\n${userDisplay}` },
-        { type: "mrkdwn", text: `*Internal ID*\n\`${ticket.orderId}\`` },
       ],
     },
     {
@@ -103,7 +107,10 @@ export async function sendSupportTicketToSlack(ticket: SupportTicketPayload) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        text: `Support ticket for order #${displayId}`,
+        text:
+          ticket.ticketNum != null
+            ? `Support ticket #${ticket.ticketNum} (Order #${displayId})`
+            : `Support ticket for order #${displayId}`,
         blocks,
       }),
     });

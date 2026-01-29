@@ -2,25 +2,31 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "./auth/[...nextauth]";
 import { sendSupportTicketToSlack } from "../../src/lib/slackSupportNotifier";
+import { logErrorToSlack } from "../../src/lib/slackErrorReporter";
 import { hasuraClient } from "../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
 const ADD_TICKET_REQUEST = gql`
   mutation AddTicketRequest(
-    $priority: String!
-    $status: String!
-    $subject: String!
-    $user_id: uuid!
+    $priority: String = ""
+    $status: String = ""
+    $subject: String = ""
+    $user_id: uuid = ""
+    $category: String = ""
   ) {
-    insert_tickets_one(
-      object: {
+    insert_tickets(
+      objects: {
         priority: $priority
         status: $status
         subject: $subject
         user_id: $user_id
+        category: $category
       }
     ) {
-      id
+      affected_rows
+      returning {
+        ticket_num
+      }
     }
   }
 `;
@@ -68,7 +74,22 @@ export default async function handler(
     const displayId = orderDisplayId ?? orderId;
     const subject = `Order issue #${displayId}`;
 
-    // 1. Send ticket to Slack (SLACK_SUPPORT_WEBHOOK)
+    // 1. Insert ticket in DB first so we get ticket_num for Slack
+    let ticketNum: number | undefined;
+    if (hasuraClient) {
+      const result = await hasuraClient.request<{
+        insert_tickets: { affected_rows: number; returning: Array<{ ticket_num: number }> };
+      }>(ADD_TICKET_REQUEST, {
+        priority: "critical",
+        status: "open",
+        subject,
+        user_id: session.user.id,
+        category: "Customer",
+      });
+      ticketNum = result?.insert_tickets?.returning?.[0]?.ticket_num;
+    }
+
+    // 2. Send ticket to Slack (SLACK_SUPPORT_WEBHOOK) with ticket number instead of internal ID
     await sendSupportTicketToSlack({
       orderId,
       orderDisplayId: displayId,
@@ -79,21 +100,18 @@ export default async function handler(
       userEmail: session.user?.email ?? undefined,
       userName: session.user?.name ?? undefined,
       userPhone: (session.user as any)?.phone ?? undefined,
+      ticketNum,
     });
-
-    // 2. Insert ticket in DB (category = orderIssues implied by subject; priority = critical)
-    if (hasuraClient) {
-      await hasuraClient.request(ADD_TICKET_REQUEST, {
-        priority: "critical",
-        status: "open",
-        subject,
-        user_id: session.user.id,
-      });
-    }
 
     return res.status(200).json({ success: true });
   } catch (err) {
     console.error("Support ticket error:", err);
+    const body = req.body as Body | undefined;
+    await logErrorToSlack("api/support-ticket", err, {
+      orderId: body?.orderId,
+      orderDisplayId: body?.orderDisplayId,
+      userId: (session as any)?.user?.id,
+    });
     return res.status(500).json({
       error: "Failed to submit support ticket",
     });
