@@ -80,6 +80,7 @@ export default function SideBar() {
   }, [session?.user?.id]);
 
   // Fetch marketplace notifications (RFQ responses + incomplete orders)
+  // Uses fcmClient (via useFCMNotifications) to receive fcm-marketplace-update; API uses fcmService to send
   useEffect(() => {
     if (!session?.user?.id) {
       setMarketplaceNotificationCount(0);
@@ -106,7 +107,13 @@ export default function SideBar() {
     // Refresh every 30 seconds
     const interval = setInterval(fetchMarketplaceNotifications, 30000);
 
-    return () => clearInterval(interval);
+    const onMarketplaceUpdate = () => fetchMarketplaceNotifications();
+    window.addEventListener("fcm-marketplace-update", onMarketplaceUpdate);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("fcm-marketplace-update", onMarketplaceUpdate);
+    };
   }, [session?.user?.id]);
 
   return (

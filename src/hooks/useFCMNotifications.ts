@@ -97,9 +97,13 @@ export const useFCMNotifications = (): FCMNotificationHook => {
           const role = (session.user as any)?.role;
           const isShopper = role === "shopper";
 
-          // For regular users (non-shoppers): ONLY save and dispatch chat_message notifications
+          // For regular users (non-shoppers): save and dispatch chat_message and marketplace_update
           // For shoppers: save and dispatch all notification types
-          if (!isShopper && type !== "chat_message") {
+          if (
+            !isShopper &&
+            type !== "chat_message" &&
+            type !== "marketplace_update"
+          ) {
             // Regular users should not receive batch/order notifications
             return;
           }
@@ -240,6 +244,31 @@ export const useFCMNotifications = (): FCMNotificationHook => {
                   });
                 });
               }
+              break;
+
+            case "marketplace_update":
+              // Marketplace updates (RFQ, business orders) – trigger refetch of counts
+              window.dispatchEvent(
+                new CustomEvent("fcm-marketplace-update", {
+                  detail: {
+                    totalCount: data.totalCount
+                      ? parseInt(data.totalCount, 10)
+                      : 0,
+                    rfqResponsesCount: data.rfqResponsesCount
+                      ? parseInt(data.rfqResponsesCount, 10)
+                      : 0,
+                    newRFQsCount: data.newRFQsCount
+                      ? parseInt(data.newRFQsCount, 10)
+                      : 0,
+                    newBusinessOrdersCount: data.newBusinessOrdersCount
+                      ? parseInt(data.newBusinessOrdersCount, 10)
+                      : 0,
+                    incompleteOrdersCount: data.incompleteOrdersCount
+                      ? parseInt(data.incompleteOrdersCount, 10)
+                      : 0,
+                  },
+                })
+              );
               break;
 
             case "chat_message":
