@@ -59,14 +59,15 @@ export default function SideBar() {
           return;
         }
 
-        const pendingOrders = data.orders.filter(
-          (order: any) => order.status === "pending"
+        const pending = data.orders.filter(
+          (order: any) => order.status !== "delivered"
         );
-        setPendingOrders(pendingOrders);
+        setPendingOrders(pending);
+        setPendingOrdersCount(pending.length);
       } catch (error) {
         console.error("Error fetching pending orders:", error);
-        // Set empty array on error to prevent undefined errors
         setPendingOrders([]);
+        setPendingOrdersCount(0);
       }
     };
 
@@ -187,10 +188,11 @@ export default function SideBar() {
           {/* Orders - Show for all signed in users including guests */}
           {session?.user && (
             <Link
-              className="relative rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
+              className="relative isolate rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
               href={"/CurrentPendingOrders"}
               passHref
             >
+              <span className="relative inline-block">
               <svg
                 width="30px"
                 height="30px"
@@ -231,10 +233,11 @@ export default function SideBar() {
                 </g>
               </svg>
               {pendingOrdersCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white dark:bg-red-600">
+                <span className="absolute -right-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white dark:bg-red-600" aria-label={`${pendingOrdersCount} pending orders`}>
                   {pendingOrdersCount > 9 ? "9+" : pendingOrdersCount}
                 </span>
               )}
+              </span>
             </Link>
           )}
 
@@ -329,11 +332,12 @@ export default function SideBar() {
           {/* Business - Only show for full users (not guests) */}
           {session?.user && !isGuest && (
             <Link
-              className="relative rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
+              className="relative isolate rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
               href={"/plasBusiness"}
               passHref
               title="Business Marketplace"
             >
+              <span className="relative inline-block">
               <svg
                 width="30px"
                 height="30px"
@@ -379,12 +383,13 @@ export default function SideBar() {
                 </g>
               </svg>
               {marketplaceNotificationCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-lg">
+                <span className="absolute -right-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-lg" aria-label={`${marketplaceNotificationCount} marketplace notifications`}>
                   {marketplaceNotificationCount > 9
                     ? "9+"
                     : marketplaceNotificationCount}
                 </span>
               )}
+              </span>
             </Link>
           )}
 
