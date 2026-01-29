@@ -119,3 +119,110 @@ export async function sendSupportTicketToSlack(ticket: SupportTicketPayload) {
     throw error;
   }
 }
+
+// --- New shopper registration (waiting for review) ---
+
+export interface NewShopperRegistrationPayload {
+  full_name: string;
+  phone_number: string;
+  address?: string;
+  transport_mode: string;
+  /** Optional docs / extras provided */
+  provided: {
+    profile_photo: boolean;
+    national_id_photos: boolean;
+    driving_license: boolean;
+    police_clearance: boolean;
+    guarantor: boolean;
+    proof_of_residency: boolean;
+    signature: boolean;
+  };
+}
+
+const TRANSPORT_LABELS: Record<string, string> = {
+  car: "Car",
+  motorcycle: "Motorcycle",
+  bicycle: "Bicycle",
+  on_foot: "On foot",
+};
+
+function formatProvided(p: NewShopperRegistrationPayload["provided"]): string {
+  const y = (v: boolean) => (v ? "✅" : "❌");
+  return [
+    `• Profile photo: ${y(p.profile_photo)}`,
+    `• National ID photos: ${y(p.national_id_photos)}`,
+    `• Driving license: ${y(p.driving_license)}`,
+    `• Police clearance: ${y(p.police_clearance)}`,
+    `• Guarantor: ${y(p.guarantor)}`,
+    `• Proof of residency: ${y(p.proof_of_residency)}`,
+    `• Signature: ${y(p.signature)}`,
+  ].join("\n");
+}
+
+/**
+ * Notify Slack that a new shopper has registered and is waiting for review.
+ * Shows name, phone, address, transport, and whether they provided all optional docs.
+ */
+export async function sendNewShopperRegistrationToSlack(
+  payload: NewShopperRegistrationPayload
+) {
+  if (!SLACK_SUPPORT_WEBHOOK) {
+    console.error("SLACK_SUPPORT_WEBHOOK is not configured");
+    return;
+  }
+
+  const transportDisplay =
+    TRANSPORT_LABELS[payload.transport_mode] ?? payload.transport_mode;
+  const addressDisplay = payload.address?.trim() || "—";
+  const providedText = formatProvided(payload.provided);
+
+  const blocks: any[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "🛒 New shopper registered – waiting for review",
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Name*\n${payload.full_name}` },
+        { type: "mrkdwn", text: `*Phone*\n${payload.phone_number}` },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Address*\n${addressDisplay}` },
+        { type: "mrkdwn", text: `*Transportation*\n${transportDisplay}` },
+      ],
+    },
+    { type: "divider" },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Provided everything*\n${providedText}`,
+      },
+    },
+    {
+      type: "context",
+      elements: [{ type: "mrkdwn", text: `🕒 ${new Date().toISOString()}` }],
+    },
+  ];
+
+  try {
+    await fetch(SLACK_SUPPORT_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: `New shopper: ${payload.full_name} – waiting for review`,
+        blocks,
+      }),
+    });
+  } catch (error) {
+    console.error("Failed to send new shopper registration to Slack", error);
+    throw error;
+  }
+}
