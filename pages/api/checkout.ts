@@ -18,13 +18,14 @@ interface CartItem {
 interface Cart {
   id: string;
   Cart_Items: CartItem[];
+  Shop?: { id: string; name: string } | null;
 }
 
 interface CartResponse {
   Carts: Cart[];
 }
 
-// Fetch active cart with its items
+// Fetch active cart with its items (Shop name same source as Cart page: Shops table)
 const GET_CART_WITH_ITEMS = gql`
   query GetCartWithItems($user_id: uuid!, $shop_id: uuid!) {
     Carts(
@@ -44,6 +45,10 @@ const GET_CART_WITH_ITEMS = gql`
           price
           final_price
         }
+      }
+      Shop {
+        id
+        name
       }
     }
   }
@@ -66,11 +71,8 @@ function generateOrderPin(): string {
     .padStart(2, "0");
 }
 
-const GET_SHOP_ADDRESS_USER = gql`
-  query GetShopAddressUser($shop_id: uuid!, $address_id: uuid!, $user_id: uuid!) {
-    Shops_by_pk(id: $shop_id) {
-      name
-    }
+const GET_ADDRESS_AND_USER = gql`
+  query GetAddressAndUser($address_id: uuid!, $user_id: uuid!) {
     Addresses_by_pk(id: $address_id) {
       street
       city
@@ -314,20 +316,18 @@ export default async function handler(
     const units = items.reduce((sum, i) => sum + i.quantity, 0);
     const orderID = orderRes.insert_Orders_one.OrderID;
 
-    let storeName: string | undefined;
+    // Shop name from cart (same source as Cart page: Carts.Shop from Shops table)
+    const storeName = cart.Shop?.name;
     let customerAddress: string | undefined;
     let customerPhone: string | undefined;
     try {
       const aux = await hasuraClient.request<{
-        Shops_by_pk: { name: string } | null;
         Addresses_by_pk: { street: string; city: string; postal_code: string } | null;
         User_by_pk: { phone: string | null } | null;
-      }>(GET_SHOP_ADDRESS_USER, {
-        shop_id,
+      }>(GET_ADDRESS_AND_USER, {
         address_id: delivery_address_id,
         user_id,
       });
-      storeName = aux.Shops_by_pk?.name;
       if (aux.Addresses_by_pk) {
         const a = aux.Addresses_by_pk;
         customerAddress = [a.street, a.city, a.postal_code].filter(Boolean).join(", ");

@@ -66,6 +66,8 @@ export async function notifyNewOrderToSlack(order: SlackOrderPayload) {
   const customerDisplay =
     order.customerName ?? order.customerPhone ?? "—";
   const placedAt = new Date().toLocaleTimeString();
+  const storeDisplay = order.storeName ?? "—";
+  const unitsDisplay = order.units != null ? String(order.units) : "—";
 
   // Items section: use line items if provided, else one summary line
   const itemsText =
@@ -73,17 +75,17 @@ export async function notifyNewOrderToSlack(order: SlackOrderPayload) {
       ? order.items
           .map(
             (i) =>
-              `• ${i.name} ×${i.qty} — *${(i.price * i.qty).toFixed(2)}*`
+              `• ${i.name} ×${i.qty} — *$${(i.price * i.qty).toFixed(2)}*`
           )
           .join("\n")
-      : `• ${order.storeName ?? "Order"} — ×${order.units ?? "—"} — *$${formattedTotal}*`;
+      : `• Order — ×${unitsDisplay} — *$${formattedTotal}*`;
 
   const blocks = [
     {
       type: "header",
       text: {
         type: "plain_text",
-        text: `New Order · ${orderTypeLabel}`,
+        text: `🛒 New Order · ${orderTypeLabel}`,
       },
     },
     {
@@ -91,6 +93,13 @@ export async function notifyNewOrderToSlack(order: SlackOrderPayload) {
       fields: [
         { type: "mrkdwn", text: `*Order ID*\n\`${displayOrderId}\`` },
         { type: "mrkdwn", text: `*Status*\nPENDING` },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Supermarket*\n${storeDisplay}` },
+        { type: "mrkdwn", text: `*Units*\n${unitsDisplay}` },
       ],
     },
     {
