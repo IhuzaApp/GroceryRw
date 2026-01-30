@@ -33,6 +33,7 @@ import {
   Star,
   AlertCircle,
   Package as PackageIcon,
+  Plus,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../../utils/formatCurrency";
@@ -60,6 +61,7 @@ interface ExpandedSectionModalProps {
   onSubmitQuote?: (rfq: any) => void;
   onViewQuote?: (rfq: any) => void;
   onViewContract?: (contractId: string) => void; // Callback to view contract details
+  onCreateStore?: () => void; // Callback to open create store modal
 }
 
 export function ExpandedSectionModal({
@@ -75,6 +77,7 @@ export function ExpandedSectionModal({
   onSubmitQuote,
   onViewQuote,
   onViewContract,
+  onCreateStore,
 }: ExpandedSectionModalProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -2512,12 +2515,23 @@ export function ExpandedSectionModal({
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 active:scale-95 dark:text-gray-300 dark:hover:bg-gray-700"
-          >
-            <X className="h-6 w-6" />
-          </button>
+          <div className="flex items-center gap-2">
+            {sectionId === "stores" && onCreateStore && (
+              <button
+                onClick={onCreateStore}
+                className="flex items-center gap-1.5 rounded-lg bg-green-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-green-600 active:scale-95 dark:bg-green-600 dark:hover:bg-green-700"
+              >
+                <Plus className="h-4 w-4" />
+                Create store
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 active:scale-95 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
         </div>
 
         {/* Search and Filter Bar */}

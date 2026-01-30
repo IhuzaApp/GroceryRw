@@ -319,10 +319,10 @@ export function CreateStoreForm({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-800">
+    <div className="fixed inset-0 z-[10000] flex items-end md:items-center justify-center bg-black/50 md:bg-black/50 md:p-4">
+      <div className="flex h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-gray-800 md:h-auto md:max-h-[90vh] md:rounded-2xl">
         {/* Header */}
-        <div className="sticky top-0 z-10 border-b border-gray-200 bg-white px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
+        <div className="flex-shrink-0 border-b border-gray-200 bg-white px-4 py-4 dark:border-gray-700 dark:bg-gray-800 md:px-6">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -344,7 +344,7 @@ export function CreateStoreForm({
         {/* Form Content */}
         <form
           onSubmit={handleSubmit}
-          className="max-h-[60vh] overflow-y-auto p-6"
+          className="min-h-0 flex-1 overflow-y-auto p-4 md:max-h-[60vh] md:p-6"
         >
           <div className="space-y-6">
             {/* Store Name */}
@@ -602,7 +602,7 @@ export function CreateStoreForm({
         </form>
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t border-gray-200 p-6 dark:border-gray-700">
+        <div className="flex flex-shrink-0 items-center justify-between border-t border-gray-200 p-4 dark:border-gray-700 md:p-6">
           <button
             type="button"
             onClick={onClose}
