@@ -6,12 +6,18 @@ import { authOptions } from "../auth/[...nextauth]";
 import type { Session } from "next-auth";
 import { logger } from "../../../src/utils/logger";
 
-// Fetch regular orders and reel orders for a specific user
+// Default and max limits for pagination
+const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 100;
+
+// Fetch regular orders and reel orders for a specific user with pagination
 const GET_USER_ORDERS = gql`
-  query GetUserOrders($user_id: uuid!) {
+  query GetUserOrders($user_id: uuid!, $limit: Int!, $offset: Int!) {
     Orders(
       where: { user_id: { _eq: $user_id } }
       order_by: { created_at: desc }
+      limit: $limit
+      offset: $offset
     ) {
       id
       OrderID
@@ -38,6 +44,8 @@ const GET_USER_ORDERS = gql`
     reel_orders(
       where: { user_id: { _eq: $user_id } }
       order_by: { created_at: desc }
+      limit: $limit
+      offset: $offset
     ) {
       id
       OrderID
@@ -73,6 +81,8 @@ const GET_USER_ORDERS = gql`
     restaurant_orders(
       where: { user_id: { _eq: $user_id } }
       order_by: { created_at: desc }
+      limit: $limit
+      offset: $offset
     ) {
       id
       OrderID
@@ -95,6 +105,22 @@ const GET_USER_ORDERS = gql`
         aggregate {
           count
         }
+      }
+    }
+    # Get total counts for pagination metadata
+    Orders_aggregate(where: { user_id: { _eq: $user_id } }) {
+      aggregate {
+        count
+      }
+    }
+    reel_orders_aggregate(where: { user_id: { _eq: $user_id } }) {
+      aggregate {
+        count
+      }
+    }
+    restaurant_orders_aggregate(where: { user_id: { _eq: $user_id } }) {
+      aggregate {
+        count
       }
     }
   }
@@ -148,10 +174,6 @@ interface OrdersResponse {
     service_fee: string;
     delivery_fee: string;
     delivery_time: string;
-    // reel_orders table does not have a pin column
-    // we keep a local pin field in the enriched object for consistency
-    // but it's not coming from Hasura
-    // pin: string | null;
     quantity: string;
     discount: string | null;
     voucher_code: string | null;
@@ -196,6 +218,15 @@ interface OrdersResponse {
       aggregate: { count: number } | null;
     } | null;
   }>;
+  Orders_aggregate: {
+    aggregate: { count: number } | null;
+  };
+  reel_orders_aggregate: {
+    aggregate: { count: number } | null;
+  };
+  restaurant_orders_aggregate: {
+    aggregate: { count: number } | null;
+  };
 }
 
 export default async function handler(
@@ -224,13 +255,30 @@ export default async function handler(
       return res.status(400).json({ error: "User ID not found in session" });
     }
 
-    // Fetch orders for this specific user only
+    // Parse pagination params from query string
+    const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
+    const limit = Math.min(
+      MAX_LIMIT,
+      Math.max(1, parseInt(req.query.limit as string, 10) || DEFAULT_LIMIT)
+    );
+    const offset = (page - 1) * limit;
+
+    // Fetch orders for this specific user only with pagination
     const data = await hasuraClient.request<OrdersResponse>(GET_USER_ORDERS, {
       user_id: userId,
+      limit,
+      offset,
     });
     const orders = data.Orders;
     const reelOrders = data.reel_orders || [];
     const restaurantOrders = data.restaurant_orders || [];
+
+    // Get total counts for pagination
+    const totalOrders = data.Orders_aggregate?.aggregate?.count || 0;
+    const totalReelOrders = data.reel_orders_aggregate?.aggregate?.count || 0;
+    const totalRestaurantOrders =
+      data.restaurant_orders_aggregate?.aggregate?.count || 0;
+    const totalCount = totalOrders + totalReelOrders + totalRestaurantOrders;
 
     // If no orders of any type, return empty array
     if (
@@ -402,7 +450,27 @@ export default async function handler(
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
-    res.status(200).json({ orders: allEnriched });
+    // Calculate pagination metadata
+    const currentPageCount = allEnriched.length;
+    const hasMore =
+      orders.length === limit ||
+      reelOrders.length === limit ||
+      restaurantOrders.length === limit;
+
+    res.status(200).json({
+      orders: allEnriched,
+      pagination: {
+        page,
+        limit,
+        offset,
+        totalCount,
+        totalOrders,
+        totalReelOrders,
+        totalRestaurantOrders,
+        currentPageCount,
+        hasMore,
+      },
+    });
   } catch (error) {
     logger.error("Error fetching user orders", "UserOrdersAPI", error);
     res.status(500).json({ error: "Failed to fetch user orders" });

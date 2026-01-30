@@ -349,3 +349,103 @@ export async function sendNewBusinessAccountRegistrationToSlack(
     throw error;
   }
 }
+
+// --- Rejected business account – contact support / re-evaluation request ---
+
+export interface RejectedAccountSupportPayload {
+  /** User's message (e.g. "I believe this is a mistake because...") */
+  message: string;
+  /** Priority: low, medium, high */
+  priority: "low" | "medium" | "high";
+  /** User email (from session or business account) */
+  userEmail?: string;
+  /** User / contact name */
+  userName?: string;
+  /** User ID (internal) */
+  userId?: string;
+  /** Business account ID if available */
+  businessAccountId?: string;
+}
+
+const PRIORITY_LABELS: Record<RejectedAccountSupportPayload["priority"], string> = {
+  low: "🟢 Low",
+  medium: "🟡 Medium",
+  high: "🔴 High",
+};
+
+/**
+ * Notify Slack when a user with a rejected business account submits a contact-support / re-evaluation request.
+ */
+export async function sendRejectedAccountSupportRequestToSlack(
+  payload: RejectedAccountSupportPayload
+) {
+  if (!SLACK_SUPPORT_WEBHOOK) {
+    console.error("SLACK_SUPPORT_WEBHOOK is not configured");
+    return;
+  }
+
+  const priorityLabel = PRIORITY_LABELS[payload.priority];
+  const userDisplay = payload.userName
+    ? `${payload.userName}${payload.userEmail ? ` (${payload.userEmail})` : ""}`
+    : payload.userEmail ?? "—";
+  const ownerNameDisplay = payload.userName ?? "—";
+  const businessIdDisplay = payload.businessAccountId ?? "—";
+
+  const blocks: any[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "🚫 Rejected account – contact support / re-evaluation request",
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Priority*\n${priorityLabel}` },
+        { type: "mrkdwn", text: `*From*\n${userDisplay}` },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Account owner*\n${ownerNameDisplay}` },
+        { type: "mrkdwn", text: `*Business account ID*\n\`${businessIdDisplay}\`` },
+      ],
+    },
+    { type: "divider" },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Message*\n${payload.message || "_No message provided._"}`,
+      },
+    },
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: `User ID: \`${payload.userId ?? "—"}\` · 🕒 ${new Date().toISOString()}`,
+        },
+      ],
+    },
+  ];
+
+  try {
+    await fetch(SLACK_SUPPORT_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: `Rejected account support request (${priorityLabel}) from ${ownerNameDisplay}`,
+        blocks,
+      }),
+    });
+  } catch (error) {
+    console.error(
+      "Failed to send rejected account support request to Slack",
+      error
+    );
+    throw error;
+  }
+}

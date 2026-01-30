@@ -139,7 +139,12 @@ export function MobilePlasBusinessPage({
     }
     // Show rejected message when account has been disabled
     if (businessAccount?.status === "rejected") {
-      return <RejectedAccountMessage compact />;
+      return (
+        <RejectedAccountMessage
+          compact
+          businessAccountId={businessAccount?.id}
+        />
+      );
     }
     // Show dashboard only when status is approved
     return (

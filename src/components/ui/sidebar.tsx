@@ -48,7 +48,8 @@ export default function SideBar() {
     const fetchPendingOrders = async () => {
       try {
         // user-orders returns Orders + reel_orders + restaurant_orders (same as CurrentPendingOrders)
-        const response = await authenticatedFetch("/api/queries/user-orders");
+        // Use limit=50 for sidebar badge - most users won't have more than 50 pending orders
+        const response = await authenticatedFetch("/api/queries/user-orders?limit=50");
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

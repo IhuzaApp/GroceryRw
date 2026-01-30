@@ -210,7 +210,7 @@ export default function PlasBusinessPage() {
       <RootLayout>
         <div className="min-h-screen via-white to-gray-100 dark:from-gray-900 md:ml-16">
           <div className="max-w-8xl container mx-auto">
-            <RejectedAccountMessage />
+            <RejectedAccountMessage businessAccountId={businessAccount?.id} />
           </div>
         </div>
       </RootLayout>

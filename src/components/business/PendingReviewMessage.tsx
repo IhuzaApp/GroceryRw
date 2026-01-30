@@ -1,6 +1,8 @@
 "use client";
 
-import { AlertTriangle, Clock, Mail, MessageCircle } from "lucide-react";
+import { useState } from "react";
+import { AlertTriangle, Clock, Mail, MessageCircle, Send } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface PendingReviewMessageProps {
   /** Compact layout for mobile / small screens */
@@ -12,6 +14,8 @@ interface PendingReviewMessageProps {
 interface RejectedAccountMessageProps {
   /** Compact layout for mobile / small screens */
   compact?: boolean;
+  /** Business account ID to include in support request (optional) */
+  businessAccountId?: string | null;
 }
 
 export function PendingReviewMessage({
@@ -79,7 +83,47 @@ export function PendingReviewMessage({
   );
 }
 
-export function RejectedAccountMessage({ compact = false }: RejectedAccountMessageProps) {
+export function RejectedAccountMessage({
+  compact = false,
+  businessAccountId,
+}: RejectedAccountMessageProps) {
+  const [showForm, setShowForm] = useState(false);
+  const [message, setMessage] = useState("");
+  const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!message.trim()) {
+      toast.error("Please enter a message.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/support/rejected-account-support", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: message.trim(),
+          priority,
+          ...(businessAccountId && { businessAccountId }),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(data.error || "Failed to send request.");
+        return;
+      }
+      toast.success(data.message || "Request sent to support.");
+      setMessage("");
+      setShowForm(false);
+    } catch {
+      toast.error("Failed to send request.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div
       className={`flex flex-col items-center justify-center ${
@@ -109,7 +153,7 @@ export function RejectedAccountMessage({ compact = false }: RejectedAccountMessa
         </p>
         <div
           className={`flex items-center justify-center gap-2 rounded-lg bg-amber-50 px-4 py-3 dark:bg-amber-900/20 ${
-            compact ? "mb-4 py-2" : "mb-6 py-3"
+            compact ? "mb-4 py-2" : "mb-4 py-3"
           }`}
         >
           <MessageCircle className="h-5 w-5 flex-shrink-0 text-amber-600 dark:text-amber-400" />
@@ -118,6 +162,77 @@ export function RejectedAccountMessage({ compact = false }: RejectedAccountMessa
             to be re-evaluated.
           </span>
         </div>
+
+        {!showForm ? (
+          <div className="mt-4 flex justify-center">
+            <button
+              type="button"
+              onClick={() => setShowForm(true)}
+              className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Contact support
+            </button>
+          </div>
+        ) : (
+          <form
+            onSubmit={handleSubmit}
+            className={`mt-4 space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-700/50 ${
+              compact ? "p-3" : ""
+            }`}
+          >
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Message
+            </label>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Explain why you believe this is a mistake or ask for re-evaluation..."
+              rows={4}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
+              disabled={submitting}
+            />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Priority
+            </label>
+            <select
+              value={priority}
+              onChange={(e) =>
+                setPriority(e.target.value as "low" | "medium" | "high")
+              }
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              disabled={submitting}
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+            <div className="flex gap-2 pt-1">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+              >
+                {submitting ? (
+                  "Sending..."
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    Send to support
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                disabled={submitting}
+                className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );
