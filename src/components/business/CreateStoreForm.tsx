@@ -4,11 +4,11 @@ import { useState } from "react";
 import {
   X,
   MapPin,
-  FileText,
-  Upload,
   Store,
   Send,
   Image as ImageIcon,
+  Link,
+  Upload,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { RichTextEditor } from "../ui/RichTextEditor";
@@ -38,6 +38,8 @@ export function CreateStoreForm({
     latitude: "",
     longitude: "",
     image: null,
+    imageUrl: "",
+    imageSource: "upload",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,8 +58,8 @@ export function CreateStoreForm({
       setFormData((prev) => ({
         ...prev,
         image: file,
+        imageUrl: "",
       }));
-      // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -66,10 +68,40 @@ export function CreateStoreForm({
     }
   };
 
+  const handleImageUrlChange = (url: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      imageUrl: url.trim(),
+      image: null,
+    }));
+    setImagePreview(url.trim() ? url.trim() : null);
+  };
+
+  const setImageSource = (source: ImageSource) => {
+    setFormData((prev) => ({
+      ...prev,
+      imageSource: source,
+      image: source === "url" ? null : prev.image,
+      imageUrl: source === "upload" ? "" : prev.imageUrl,
+    }));
+    if (source === "url") {
+      setImagePreview(formData.imageUrl.trim() || null);
+    } else {
+      if (formData.image) {
+        const reader = new FileReader();
+        reader.onloadend = () => setImagePreview(reader.result as string);
+        reader.readAsDataURL(formData.image);
+      } else {
+        setImagePreview(null);
+      }
+    }
+  };
+
   const removeImage = () => {
     setFormData((prev) => ({
       ...prev,
       image: null,
+      imageUrl: "",
     }));
     setImagePreview(null);
   };
@@ -127,15 +159,19 @@ export function CreateStoreForm({
         return;
       }
 
-      // Convert image to base64 if provided
-      let imageBase64 = "";
-      if (formData.image) {
+      // Image: base64 (upload) or URL string
+      let imageValue = "";
+      if (formData.imageSource === "upload" && formData.image) {
         try {
-          imageBase64 = await convertFileToBase64(formData.image);
+          imageValue = await convertFileToBase64(formData.image);
         } catch (error) {
           console.error("Error converting image to base64:", error);
           toast.error("Failed to process image");
+          setIsSubmitting(false);
+          return;
         }
+      } else if (formData.imageSource === "url" && formData.imageUrl.trim()) {
+        imageValue = formData.imageUrl.trim();
       }
 
       // Call the API
@@ -149,7 +185,7 @@ export function CreateStoreForm({
           description: formData.description.trim() || "",
           latitude: formData.latitude.trim(),
           longitude: formData.longitude.trim(),
-          image: imageBase64,
+          image: imageValue,
         }),
       });
 
@@ -173,6 +209,8 @@ export function CreateStoreForm({
         latitude: "",
         longitude: "",
         image: null,
+        imageUrl: "",
+        imageSource: "upload",
       });
       setImagePreview(null);
 
@@ -297,6 +335,33 @@ export function CreateStoreForm({
               <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Store Image
               </label>
+              {/* Upload vs URL toggle */}
+              <div className="mb-3 flex gap-2 rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-600 dark:bg-gray-700/50">
+                <button
+                  type="button"
+                  onClick={() => setImageSource("upload")}
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    formData.imageSource === "upload"
+                      ? "bg-white text-green-600 shadow dark:bg-gray-800 dark:text-green-400"
+                      : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+                  }`}
+                >
+                  <Upload className="h-4 w-4" />
+                  Upload image
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setImageSource("url")}
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    formData.imageSource === "url"
+                      ? "bg-white text-green-600 shadow dark:bg-gray-800 dark:text-green-400"
+                      : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+                  }`}
+                >
+                  <Link className="h-4 w-4" />
+                  Use URL
+                </button>
+              </div>
               <div className="rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-6 transition-all duration-200 hover:border-green-400 hover:bg-green-50/30 dark:border-gray-600 dark:bg-gray-700/50 dark:hover:border-green-500">
                 {imagePreview ? (
                   <div className="space-y-3">
@@ -305,6 +370,7 @@ export function CreateStoreForm({
                         src={imagePreview}
                         alt="Store preview"
                         className="h-full w-full object-cover"
+                        onError={() => setImagePreview(null)}
                       />
                     </div>
                     <button
@@ -315,6 +381,19 @@ export function CreateStoreForm({
                       <X className="h-4 w-4" />
                       Remove Image
                     </button>
+                  </div>
+                ) : formData.imageSource === "url" ? (
+                  <div className="space-y-2">
+                    <input
+                      type="url"
+                      value={formData.imageUrl}
+                      onChange={(e) => handleImageUrlChange(e.target.value)}
+                      placeholder="https://example.com/store-image.jpg"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-500 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Enter a direct link to an image (JPG, PNG, WEBP, etc.)
+                    </p>
                   </div>
                 ) : (
                   <>
