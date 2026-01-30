@@ -319,7 +319,7 @@ export function CreateStoreForm({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-end md:items-center justify-center bg-black/50 md:bg-black/50 md:p-4">
+    <div className="fixed inset-0 z-[10002] flex items-end md:items-center justify-center bg-black/50 md:bg-black/50 md:p-4">
       <div className="flex h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-gray-800 md:h-auto md:max-h-[90vh] md:rounded-2xl">
         {/* Header */}
         <div className="flex-shrink-0 border-b border-gray-200 bg-white px-4 py-4 dark:border-gray-700 dark:bg-gray-800 md:px-6">

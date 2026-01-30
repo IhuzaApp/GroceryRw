@@ -248,9 +248,6 @@ export async function notifyNewStoreCreatedToSlack(
       ? `Lat: ${lat}, Lng: ${lng}\n<https://www.google.com/maps?q=${encodeURIComponent(lat + "," + lng)}|View on Google Maps>`
       : "—";
   const businessDisplay = payload.businessName?.trim() ?? "—";
-  const isImageUrl =
-    payload.imageUrl &&
-    (payload.imageUrl.startsWith("http://") || payload.imageUrl.startsWith("https://"));
 
   const blocks: any[] = [
     {
