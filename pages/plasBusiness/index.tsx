@@ -36,12 +36,16 @@ import { StoresSection } from "../../src/components/business/StoresSection";
 import BusinessChatDrawer from "../../src/components/business/BusinessChatDrawer";
 import { MobilePlasBusinessPage } from "../../src/components/business/mobile/MobilePlasBusinessPage";
 import { ContractDetailDrawer } from "../../src/components/business/ContractDetailDrawer";
+import {
+  PendingReviewMessage,
+  RejectedAccountMessage,
+} from "../../src/components/business/PendingReviewMessage";
 import toast from "react-hot-toast";
 
 // Data moved to individual components
 
 export default function PlasBusinessPage() {
-  const { role, isLoggedIn, authReady } = useAuth();
+  const { role, isLoggedIn, authReady, user } = useAuth();
   const router = useRouter();
   const [selectedQuote, setSelectedQuote] = useState<any>(null);
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
@@ -183,6 +187,37 @@ export default function PlasBusinessPage() {
     );
   }
 
+  // Show pending review message instead of dashboard when account is under review
+  if (businessAccount?.status === "pending_review") {
+    const contactEmail =
+      businessAccount?.accountType === "personal"
+        ? user?.email
+        : businessAccount?.businessEmail;
+    return (
+      <RootLayout>
+        <div className="min-h-screen via-white to-gray-100 dark:from-gray-900 md:ml-16">
+          <div className="max-w-8xl container mx-auto">
+            <PendingReviewMessage contactEmail={contactEmail} />
+          </div>
+        </div>
+      </RootLayout>
+    );
+  }
+
+  // Show rejected message when account has been disabled
+  if (businessAccount?.status === "rejected") {
+    return (
+      <RootLayout>
+        <div className="min-h-screen via-white to-gray-100 dark:from-gray-900 md:ml-16">
+          <div className="max-w-8xl container mx-auto">
+            <RejectedAccountMessage />
+          </div>
+        </div>
+      </RootLayout>
+    );
+  }
+
+  // Show dashboard only when status is approved
   return (
     <RootLayout>
       <div className="min-h-screen via-white to-gray-100 dark:from-gray-900 md:ml-16">
