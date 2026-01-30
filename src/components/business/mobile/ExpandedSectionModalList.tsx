@@ -211,19 +211,11 @@ export function ExpandedSectionModalList({
               ))}
             {sectionId === "quotes" &&
               filteredItems.map((quote: any) => (
-                <QuoteCard
-                  key={quote.id}
-                  quote={quote}
-                  onView={onItemClick}
-                />
+                <QuoteCard key={quote.id} quote={quote} onView={onItemClick} />
               ))}
             {sectionId === "orders" &&
               filteredItems.map((order: any) => (
-                <OrderCard
-                  key={order.id}
-                  order={order}
-                  onView={onItemClick}
-                />
+                <OrderCard key={order.id} order={order} onView={onItemClick} />
               ))}
             {sectionId === "services" &&
               filteredItems.map((service: any) => (
@@ -235,11 +227,7 @@ export function ExpandedSectionModalList({
               ))}
             {sectionId === "stores" &&
               filteredItems.map((store: any) => (
-                <StoreCard
-                  key={store.id}
-                  store={store}
-                  onView={onItemClick}
-                />
+                <StoreCard key={store.id} store={store} onView={onItemClick} />
               ))}
             {sectionId === "contracts" &&
               filteredItems.map((contract: any) => (

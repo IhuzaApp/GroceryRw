@@ -44,7 +44,8 @@ export function CreateStoreForm({
   onSubmit,
 }: CreateStoreFormProps) {
   const { isLoaded: isGoogleMapsLoaded } = useGoogleMap();
-  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
+  const autocompleteServiceRef =
+    useRef<google.maps.places.AutocompleteService | null>(null);
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
 
   const [formData, setFormData] = useState<StoreFormData>({
@@ -61,12 +62,15 @@ export function CreateStoreForm({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [addressSuggestions, setAddressSuggestions] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [addressSuggestions, setAddressSuggestions] = useState<
+    google.maps.places.AutocompletePrediction[]
+  >([]);
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
 
   useEffect(() => {
     if (isGoogleMapsLoaded && typeof google !== "undefined") {
-      autocompleteServiceRef.current = new google.maps.places.AutocompleteService();
+      autocompleteServiceRef.current =
+        new google.maps.places.AutocompleteService();
       geocoderRef.current = new google.maps.Geocoder();
     }
   }, [isGoogleMapsLoaded]);
@@ -193,7 +197,9 @@ export function CreateStoreForm({
     }
   };
 
-  const handleAddressSelect = (suggestion: google.maps.places.AutocompletePrediction) => {
+  const handleAddressSelect = (
+    suggestion: google.maps.places.AutocompletePrediction
+  ) => {
     setFormData((prev) => ({ ...prev, addressSearch: suggestion.description }));
     setShowAddressSuggestions(false);
     setAddressSuggestions([]);
@@ -228,7 +234,8 @@ export function CreateStoreForm({
   };
 
   const coordinatesLocked =
-    formData.locationSource === "current" || formData.locationSource === "address";
+    formData.locationSource === "current" ||
+    formData.locationSource === "address";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -319,7 +326,7 @@ export function CreateStoreForm({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[10002] flex items-end md:items-center justify-center bg-black/50 md:bg-black/50 md:p-4">
+    <div className="fixed inset-0 z-[10002] flex items-end justify-center bg-black/50 md:items-center md:bg-black/50 md:p-4">
       <div className="flex h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-gray-800 md:h-auto md:max-h-[90vh] md:rounded-2xl">
         {/* Header */}
         <div className="flex-shrink-0 border-b border-gray-200 bg-white px-4 py-4 dark:border-gray-700 dark:bg-gray-800 md:px-6">
@@ -442,7 +449,10 @@ export function CreateStoreForm({
                     type="text"
                     value={formData.addressSearch ?? ""}
                     onChange={(e) => handleAddressInputChange(e.target.value)}
-                    onFocus={() => addressSuggestions.length > 0 && setShowAddressSuggestions(true)}
+                    onFocus={() =>
+                      addressSuggestions.length > 0 &&
+                      setShowAddressSuggestions(true)
+                    }
                     placeholder="Type street or address..."
                     className="w-full rounded-xl border-2 border-gray-200 bg-white py-3 pl-4 pr-4 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
                   />
@@ -475,10 +485,14 @@ export function CreateStoreForm({
                   <input
                     type="text"
                     value={formData.latitude}
-                    onChange={(e) => handleInputChange("latitude", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("latitude", e.target.value)
+                    }
                     readOnly={coordinatesLocked}
                     className={`w-full rounded-xl border-2 border-gray-200 bg-white py-3 pl-12 pr-4 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500 ${
-                      coordinatesLocked ? "cursor-not-allowed bg-gray-50 dark:bg-gray-800" : ""
+                      coordinatesLocked
+                        ? "cursor-not-allowed bg-gray-50 dark:bg-gray-800"
+                        : ""
                     }`}
                     placeholder="Latitude"
                     required
@@ -489,10 +503,14 @@ export function CreateStoreForm({
                   <input
                     type="text"
                     value={formData.longitude}
-                    onChange={(e) => handleInputChange("longitude", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("longitude", e.target.value)
+                    }
                     readOnly={coordinatesLocked}
                     className={`w-full rounded-xl border-2 border-gray-200 bg-white py-3 pl-12 pr-4 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500 ${
-                      coordinatesLocked ? "cursor-not-allowed bg-gray-50 dark:bg-gray-800" : ""
+                      coordinatesLocked
+                        ? "cursor-not-allowed bg-gray-50 dark:bg-gray-800"
+                        : ""
                     }`}
                     placeholder="Longitude"
                     required
@@ -501,7 +519,11 @@ export function CreateStoreForm({
               </div>
               {coordinatesLocked && (
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  Coordinates set from {formData.locationSource === "current" ? "current location" : "address"}. Switch to &quot;Enter coordinates&quot; to edit.
+                  Coordinates set from{" "}
+                  {formData.locationSource === "current"
+                    ? "current location"
+                    : "address"}
+                  . Switch to &quot;Enter coordinates&quot; to edit.
                 </p>
               )}
             </div>

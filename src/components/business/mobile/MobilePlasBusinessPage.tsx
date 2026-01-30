@@ -133,9 +133,7 @@ export function MobilePlasBusinessPage({
         businessAccount?.accountType === "personal"
           ? user?.email
           : businessAccount?.businessEmail;
-      return (
-        <PendingReviewMessage compact contactEmail={contactEmail} />
-      );
+      return <PendingReviewMessage compact contactEmail={contactEmail} />;
     }
     // Show rejected message when account has been disabled
     if (businessAccount?.status === "rejected") {

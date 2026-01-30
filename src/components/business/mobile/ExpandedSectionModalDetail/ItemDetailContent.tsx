@@ -102,8 +102,7 @@ export function ItemDetailContent({
             <>
               <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-700">
                 <h4 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
-                  {selectedItem.title ||
-                    `RFQ #${selectedItem.id?.slice(0, 8)}`}
+                  {selectedItem.title || `RFQ #${selectedItem.id?.slice(0, 8)}`}
                 </h4>
                 <span
                   className={`inline-block rounded-md px-3 py-1 text-xs font-semibold ${
@@ -170,9 +169,7 @@ export function ItemDetailContent({
                 {selectedItem.business_account?.business_name && (
                   <div className="mb-2 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                     <Building className="h-4 w-4" />
-                    <span>
-                      {selectedItem.business_account.business_name}
-                    </span>
+                    <span>{selectedItem.business_account.business_name}</span>
                   </div>
                 )}
               </div>
@@ -242,13 +239,14 @@ export function ItemDetailContent({
                     Response Deadline
                   </h5>
                   <p className="font-medium text-gray-900 dark:text-white">
-                    {new Date(
-                      selectedItem.response_date
-                    ).toLocaleDateString("en-US", {
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
+                    {new Date(selectedItem.response_date).toLocaleDateString(
+                      "en-US",
+                      {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                      }
+                    )}
                   </p>
                 </div>
               )}
@@ -262,9 +260,7 @@ export function ItemDetailContent({
                       ? "bg-blue-500 hover:bg-blue-600"
                       : "bg-green-500 hover:bg-green-600"
                   } ${
-                    isOpeningQuoteForm
-                      ? "cursor-not-allowed opacity-75"
-                      : ""
+                    isOpeningQuoteForm ? "cursor-not-allowed opacity-75" : ""
                   }`}
                   style={{ color: "#ffffff" }}
                 >
@@ -283,8 +279,7 @@ export function ItemDetailContent({
                   <button
                     onClick={() => {
                       const customerId =
-                        selectedItem.business_account?.id ||
-                        selectedItem.id;
+                        selectedItem.business_account?.id || selectedItem.id;
                       onMessageCustomer(customerId);
                     }}
                     className="w-full rounded-lg bg-purple-500 px-4 py-3 font-semibold text-white transition-colors hover:bg-purple-600"

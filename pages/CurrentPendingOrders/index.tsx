@@ -28,13 +28,13 @@ function CurrentOrdersPage() {
       );
       const data = await res.json();
       const newOrders = data.orders || [];
-      
+
       if (append) {
         setOrders((prev) => [...prev, ...newOrders]);
       } else {
         setOrders(newOrders);
       }
-      
+
       setHasMore(data.pagination?.hasMore ?? newOrders.length === 20);
       setPage(pageNum);
     } catch (error) {
@@ -300,7 +300,7 @@ function CurrentOrdersPage() {
                   loading={loading}
                   onRefresh={() => fetchOrders(1, false)}
                 />
-                
+
                 {/* Load More Button */}
                 {!loading && hasMore && orders.length > 0 && (
                   <div className="mt-6 flex justify-center">

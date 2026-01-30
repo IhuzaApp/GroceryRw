@@ -367,7 +367,10 @@ export interface RejectedAccountSupportPayload {
   businessAccountId?: string;
 }
 
-const PRIORITY_LABELS: Record<RejectedAccountSupportPayload["priority"], string> = {
+const PRIORITY_LABELS: Record<
+  RejectedAccountSupportPayload["priority"],
+  string
+> = {
   low: "🟢 Low",
   medium: "🟡 Medium",
   high: "🔴 High",
@@ -410,7 +413,10 @@ export async function sendRejectedAccountSupportRequestToSlack(
       type: "section",
       fields: [
         { type: "mrkdwn", text: `*Account owner*\n${ownerNameDisplay}` },
-        { type: "mrkdwn", text: `*Business account ID*\n\`${businessIdDisplay}\`` },
+        {
+          type: "mrkdwn",
+          text: `*Business account ID*\n\`${businessIdDisplay}\``,
+        },
       ],
     },
     { type: "divider" },
@@ -426,7 +432,9 @@ export async function sendRejectedAccountSupportRequestToSlack(
       elements: [
         {
           type: "mrkdwn",
-          text: `User ID: \`${payload.userId ?? "—"}\` · 🕒 ${new Date().toISOString()}`,
+          text: `User ID: \`${
+            payload.userId ?? "—"
+          }\` · 🕒 ${new Date().toISOString()}`,
         },
       ],
     },

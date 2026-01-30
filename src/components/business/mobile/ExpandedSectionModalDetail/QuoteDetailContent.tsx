@@ -153,9 +153,19 @@ function downloadAttachment(base64String: string, index: number) {
 const TABS = [
   { id: "overview", label: "Overview", icon: FileText, shortLabel: "Overview" },
   { id: "rfq", label: "RFQ Details", icon: FileText, shortLabel: "RFQ" },
-  { id: "requester", label: "RFQ Requester", icon: Building, shortLabel: "Requester" },
+  {
+    id: "requester",
+    label: "RFQ Requester",
+    icon: Building,
+    shortLabel: "Requester",
+  },
   { id: "quote", label: "My Quote", icon: DollarSign, shortLabel: "Quote" },
-  { id: "terms", label: "Terms & Conditions", icon: FileText, shortLabel: "Terms" },
+  {
+    id: "terms",
+    label: "Terms & Conditions",
+    icon: FileText,
+    shortLabel: "Terms",
+  },
 ];
 
 export function QuoteDetailContent({
@@ -163,10 +173,7 @@ export function QuoteDetailContent({
   quoteActiveTab,
   setQuoteActiveTab,
 }: QuoteDetailContentProps) {
-  const quote = useMemo(
-    () => transformQuote(selectedItem),
-    [selectedItem]
-  );
+  const quote = useMemo(() => transformQuote(selectedItem), [selectedItem]);
 
   return (
     <>
@@ -381,23 +388,25 @@ export function QuoteDetailContent({
                   </h3>
                 </div>
                 <div className="space-y-2.5 p-5">
-                  {quote.attachments.map((attachment: string, index: number) => (
-                    <button
-                      key={index}
-                      onClick={() => downloadAttachment(attachment, index)}
-                      className="flex w-full items-center justify-between rounded-xl border-2 border-gray-200 bg-gray-50 p-4 transition-all duration-200 hover:border-green-300 hover:bg-green-50 active:scale-95 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-700 dark:hover:bg-green-900/20"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                          <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  {quote.attachments.map(
+                    (attachment: string, index: number) => (
+                      <button
+                        key={index}
+                        onClick={() => downloadAttachment(attachment, index)}
+                        className="flex w-full items-center justify-between rounded-xl border-2 border-gray-200 bg-gray-50 p-4 transition-all duration-200 hover:border-green-300 hover:bg-green-50 active:scale-95 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-700 dark:hover:bg-green-900/20"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                            <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <span className="font-medium text-gray-700 dark:text-gray-300">
+                            Attachment {index + 1}
+                          </span>
                         </div>
-                        <span className="font-medium text-gray-700 dark:text-gray-300">
-                          Attachment {index + 1}
-                        </span>
-                      </div>
-                      <Download className="h-5 w-5 flex-shrink-0 text-gray-500 dark:text-gray-400" />
-                    </button>
-                  ))}
+                        <Download className="h-5 w-5 flex-shrink-0 text-gray-500 dark:text-gray-400" />
+                      </button>
+                    )
+                  )}
                 </div>
               </div>
             )}
@@ -453,11 +462,19 @@ export function QuoteDetailContent({
                       </span>
                       <p className="mt-1 text-sm text-gray-900 dark:text-white">
                         {quote.minBudget && quote.maxBudget
-                          ? `${formatCurrencySync(parseFloat(quote.minBudget))} - ${formatCurrencySync(parseFloat(quote.maxBudget))}`
+                          ? `${formatCurrencySync(
+                              parseFloat(quote.minBudget)
+                            )} - ${formatCurrencySync(
+                              parseFloat(quote.maxBudget)
+                            )}`
                           : quote.minBudget
-                          ? `Min: ${formatCurrencySync(parseFloat(quote.minBudget))}`
+                          ? `Min: ${formatCurrencySync(
+                              parseFloat(quote.minBudget)
+                            )}`
                           : quote.maxBudget
-                          ? `Max: ${formatCurrencySync(parseFloat(quote.maxBudget))}`
+                          ? `Max: ${formatCurrencySync(
+                              parseFloat(quote.maxBudget)
+                            )}`
                           : "Not specified"}
                       </p>
                     </div>

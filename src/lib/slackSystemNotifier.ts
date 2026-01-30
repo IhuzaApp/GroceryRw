@@ -239,13 +239,16 @@ export async function notifyNewStoreCreatedToSlack(
   const nameDisplay = payload.storeName?.trim() ?? "—";
   const descRaw = payload.description?.trim() || "";
   const descDisplay = descRaw
-    ? descRaw.replace(/<[^>]*>/g, "").slice(0, 500) + (descRaw.length > 500 ? "…" : "")
+    ? descRaw.replace(/<[^>]*>/g, "").slice(0, 500) +
+      (descRaw.length > 500 ? "…" : "")
     : "_No description_";
   const lat = payload.latitude?.trim() ?? "";
   const lng = payload.longitude?.trim() ?? "";
   const locationDisplay =
     lat && lng
-      ? `Lat: ${lat}, Lng: ${lng}\n<https://www.google.com/maps?q=${encodeURIComponent(lat + "," + lng)}|View on Google Maps>`
+      ? `Lat: ${lat}, Lng: ${lng}\n<https://www.google.com/maps?q=${encodeURIComponent(
+          lat + "," + lng
+        )}|View on Google Maps>`
       : "—";
   const businessDisplay = payload.businessName?.trim() ?? "—";
 

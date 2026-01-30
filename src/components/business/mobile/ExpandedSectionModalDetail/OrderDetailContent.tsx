@@ -176,8 +176,7 @@ export function OrderDetailContent({
                   ? "bg-green-500"
                   : order.status === "pending" || order.status === "Pending"
                   ? "bg-yellow-500"
-                  : order.status === "cancelled" ||
-                    order.status === "Cancelled"
+                  : order.status === "cancelled" || order.status === "Cancelled"
                   ? "bg-red-500"
                   : "bg-blue-500"
               }`}
@@ -263,12 +262,9 @@ export function OrderDetailContent({
                   <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-600">
                     <img
                       src={
-                        item.product.image ||
-                        item.product.ProductName?.image
+                        item.product.image || item.product.ProductName?.image
                       }
-                      alt={
-                        item.product?.ProductName?.name || "Product"
-                      }
+                      alt={item.product?.ProductName?.name || "Product"}
                       className="h-full w-full object-cover"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
@@ -339,9 +335,7 @@ export function OrderDetailContent({
                 Service Fee
               </span>
               <span className="text-sm font-bold text-gray-900 dark:text-white">
-                {formatCurrencySync(
-                  parseFloat(order.service_fee.toString())
-                )}
+                {formatCurrencySync(parseFloat(order.service_fee.toString()))}
               </span>
             </div>
           )}
@@ -365,10 +359,7 @@ export function OrderDetailContent({
               >
                 Total Amount
               </span>
-              <span
-                className="text-2xl font-bold"
-                style={{ color: "#ffffff" }}
-              >
+              <span className="text-2xl font-bold" style={{ color: "#ffffff" }}>
                 {order.value
                   ? formatCurrencySync(parseFloat(order.value.toString()))
                   : formatCurrencySync(0)}

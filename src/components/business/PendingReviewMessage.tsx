@@ -75,7 +75,8 @@ export function PendingReviewMessage({
         >
           <MessageCircle className="h-5 w-5 flex-shrink-0 text-gray-500 dark:text-gray-400" />
           <span className="text-sm text-gray-600 dark:text-gray-300">
-            You&apos;ll get access to your dashboard once your account is approved.
+            You&apos;ll get access to your dashboard once your account is
+            approved.
           </span>
         </div>
       </div>
@@ -158,8 +159,8 @@ export function RejectedAccountMessage({
         >
           <MessageCircle className="h-5 w-5 flex-shrink-0 text-amber-600 dark:text-amber-400" />
           <span className="text-sm text-gray-700 dark:text-gray-200">
-            If you believe this is a mistake, please report back for your account
-            to be re-evaluated.
+            If you believe this is a mistake, please report back for your
+            account to be re-evaluated.
           </span>
         </div>
 
