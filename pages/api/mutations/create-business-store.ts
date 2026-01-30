@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { notifyNewStoreCreatedToSlack } from "../../../src/lib/slackSystemNotifier";
 
 // Single mutation that handles both cases (with or without category_id)
 // Matches the format provided by the user
@@ -269,6 +270,19 @@ export default async function handler(
     }
 
     const createdStore = result.insert_business_stores.returning[0];
+
+    // Notify Slack with store info (fire-and-forget)
+    try {
+      await notifyNewStoreCreatedToSlack({
+        storeName: createdStore.name,
+        description: description ?? undefined,
+        latitude: latitude?.trim(),
+        longitude: longitude?.trim(),
+        businessName: session.user.name ?? undefined,
+      });
+    } catch (notifyErr: any) {
+      console.error("Slack new store notification failed:", notifyErr?.message);
+    }
 
     return res.status(200).json({
       success: true,

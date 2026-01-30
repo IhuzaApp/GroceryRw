@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   X,
   MapPin,
@@ -9,9 +9,13 @@ import {
   Image as ImageIcon,
   Link,
   Upload,
+  Navigation,
+  MapPinned,
+  PenLine,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { RichTextEditor } from "../ui/RichTextEditor";
+import { useGoogleMap } from "../../context/GoogleMapProvider";
 
 interface CreateStoreFormProps {
   isOpen: boolean;
@@ -19,12 +23,19 @@ interface CreateStoreFormProps {
   onSubmit: (storeData: any) => void;
 }
 
+type ImageSource = "upload" | "url";
+type LocationSource = "current" | "address" | "manual";
+
 interface StoreFormData {
   name: string;
   description: string;
   latitude: string;
   longitude: string;
   image: File | null;
+  imageUrl?: string;
+  imageSource?: ImageSource;
+  locationSource?: LocationSource;
+  addressSearch?: string;
 }
 
 export function CreateStoreForm({
@@ -32,6 +43,10 @@ export function CreateStoreForm({
   onClose,
   onSubmit,
 }: CreateStoreFormProps) {
+  const { isLoaded: isGoogleMapsLoaded } = useGoogleMap();
+  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
+  const geocoderRef = useRef<google.maps.Geocoder | null>(null);
+
   const [formData, setFormData] = useState<StoreFormData>({
     name: "",
     description: "",
@@ -40,10 +55,21 @@ export function CreateStoreForm({
     image: null,
     imageUrl: "",
     imageSource: "upload",
+    locationSource: "address",
+    addressSearch: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [addressSuggestions, setAddressSuggestions] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
+
+  useEffect(() => {
+    if (isGoogleMapsLoaded && typeof google !== "undefined") {
+      autocompleteServiceRef.current = new google.maps.places.AutocompleteService();
+      geocoderRef.current = new google.maps.Geocoder();
+    }
+  }, [isGoogleMapsLoaded]);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData((prev) => ({
@@ -125,8 +151,12 @@ export function CreateStoreForm({
       toast.loading("Getting your location...", { id: "location" });
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          handleInputChange("latitude", position.coords.latitude.toString());
-          handleInputChange("longitude", position.coords.longitude.toString());
+          setFormData((prev) => ({
+            ...prev,
+            latitude: position.coords.latitude.toString(),
+            longitude: position.coords.longitude.toString(),
+            locationSource: "current",
+          }));
           toast.success("Location retrieved successfully!", { id: "location" });
         },
         (error) => {
@@ -140,6 +170,65 @@ export function CreateStoreForm({
       toast.error("Geolocation is not supported by your browser.");
     }
   };
+
+  const handleAddressInputChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, addressSearch: value ?? "" }));
+    if (!value.trim()) {
+      setAddressSuggestions([]);
+      setShowAddressSuggestions(false);
+      return;
+    }
+    if (autocompleteServiceRef.current) {
+      autocompleteServiceRef.current.getPlacePredictions(
+        { input: value },
+        (preds, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && preds) {
+            setAddressSuggestions(preds);
+            setShowAddressSuggestions(true);
+          } else {
+            setAddressSuggestions([]);
+          }
+        }
+      );
+    }
+  };
+
+  const handleAddressSelect = (suggestion: google.maps.places.AutocompletePrediction) => {
+    setFormData((prev) => ({ ...prev, addressSearch: suggestion.description }));
+    setShowAddressSuggestions(false);
+    setAddressSuggestions([]);
+    if (geocoderRef.current) {
+      geocoderRef.current.geocode(
+        { address: suggestion.description },
+        (results, status) => {
+          if (status === "OK" && results?.[0]) {
+            const loc = results[0].geometry.location;
+            setFormData((prev) => ({
+              ...prev,
+              latitude: loc.lat().toString(),
+              longitude: loc.lng().toString(),
+              locationSource: "address",
+            }));
+            toast.success("Address coordinates set.");
+          } else {
+            toast.error("Could not get coordinates for this address.");
+          }
+        }
+      );
+    }
+  };
+
+  const setLocationSource = (source: LocationSource) => {
+    setFormData((prev) => ({
+      ...prev,
+      locationSource: source,
+      ...(source === "manual" && { addressSearch: "" }),
+    }));
+    if (source !== "address") setShowAddressSuggestions(false);
+  };
+
+  const coordinatesLocked =
+    formData.locationSource === "current" || formData.locationSource === "address";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -211,8 +300,12 @@ export function CreateStoreForm({
         image: null,
         imageUrl: "",
         imageSource: "upload",
+        locationSource: "address",
+        addressSearch: "",
       });
       setImagePreview(null);
+      setAddressSuggestions([]);
+      setShowAddressSuggestions(false);
 
       onClose();
     } catch (error: any) {
@@ -290,44 +383,127 @@ export function CreateStoreForm({
               <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Store Location <span className="text-red-500">*</span>
               </label>
-              <div className="space-y-3">
+              {/* How to set location */}
+              <div className="mb-3 flex flex-col gap-2 rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-600 dark:bg-gray-700/50 sm:flex-row">
                 <button
                   type="button"
-                  onClick={handleGetCurrentLocation}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-green-300 bg-white px-4 py-2.5 font-medium text-green-600 transition-all duration-200 hover:border-green-500 hover:bg-green-50 dark:border-green-600 dark:bg-gray-700 dark:text-green-400 dark:hover:bg-green-900/20"
+                  onClick={() => setLocationSource("current")}
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    formData.locationSource === "current"
+                      ? "bg-white text-green-600 shadow dark:bg-gray-800 dark:text-green-400"
+                      : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+                  }`}
                 >
-                  <MapPin className="h-4 w-4" />
-                  Use Current Location
+                  <Navigation className="h-4 w-4" />
+                  Current location
                 </button>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="relative">
-                    <MapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
-                    <input
-                      type="text"
-                      value={formData.latitude}
-                      onChange={(e) =>
-                        handleInputChange("latitude", e.target.value)
-                      }
-                      className="w-full rounded-xl border-2 border-gray-200 bg-white py-3 pl-12 pr-4 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
-                      placeholder="Latitude"
-                      required
-                    />
-                  </div>
-                  <div className="relative">
-                    <MapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
-                    <input
-                      type="text"
-                      value={formData.longitude}
-                      onChange={(e) =>
-                        handleInputChange("longitude", e.target.value)
-                      }
-                      className="w-full rounded-xl border-2 border-gray-200 bg-white py-3 pl-12 pr-4 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
-                      placeholder="Longitude"
-                      required
-                    />
-                  </div>
+                <button
+                  type="button"
+                  onClick={() => setLocationSource("address")}
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    formData.locationSource === "address"
+                      ? "bg-white text-green-600 shadow dark:bg-gray-800 dark:text-green-400"
+                      : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+                  }`}
+                >
+                  <MapPinned className="h-4 w-4" />
+                  Search by address
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLocationSource("manual")}
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    formData.locationSource === "manual"
+                      ? "bg-white text-green-600 shadow dark:bg-gray-800 dark:text-green-400"
+                      : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+                  }`}
+                >
+                  <PenLine className="h-4 w-4" />
+                  Enter coordinates
+                </button>
+              </div>
+              {/* Current location: one button */}
+              {formData.locationSource === "current" && (
+                <div className="mb-3">
+                  <button
+                    type="button"
+                    onClick={handleGetCurrentLocation}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-green-300 bg-white px-4 py-2.5 font-medium text-green-600 transition-all duration-200 hover:border-green-500 hover:bg-green-50 dark:border-green-600 dark:bg-gray-700 dark:text-green-400 dark:hover:bg-green-900/20"
+                  >
+                    <MapPin className="h-4 w-4" />
+                    Use current location
+                  </button>
+                </div>
+              )}
+              {/* Address search: input + suggestions (Google Places) */}
+              {formData.locationSource === "address" && (
+                <div className="relative mb-3">
+                  <input
+                    type="text"
+                    value={formData.addressSearch ?? ""}
+                    onChange={(e) => handleAddressInputChange(e.target.value)}
+                    onFocus={() => addressSuggestions.length > 0 && setShowAddressSuggestions(true)}
+                    placeholder="Type street or address..."
+                    className="w-full rounded-xl border-2 border-gray-200 bg-white py-3 pl-4 pr-4 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
+                  />
+                  {!isGoogleMapsLoaded && (
+                    <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+                      Loading maps...
+                    </p>
+                  )}
+                  {showAddressSuggestions && addressSuggestions.length > 0 && (
+                    <ul className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-600 dark:bg-gray-800">
+                      {addressSuggestions.map((s) => (
+                        <li key={s.place_id}>
+                          <button
+                            type="button"
+                            onClick={() => handleAddressSelect(s)}
+                            className="w-full px-4 py-2 text-left text-sm text-gray-900 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700"
+                          >
+                            {s.description}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+              {/* Latitude / Longitude (read-only when set by current or address) */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="relative">
+                  <MapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
+                  <input
+                    type="text"
+                    value={formData.latitude}
+                    onChange={(e) => handleInputChange("latitude", e.target.value)}
+                    readOnly={coordinatesLocked}
+                    className={`w-full rounded-xl border-2 border-gray-200 bg-white py-3 pl-12 pr-4 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500 ${
+                      coordinatesLocked ? "cursor-not-allowed bg-gray-50 dark:bg-gray-800" : ""
+                    }`}
+                    placeholder="Latitude"
+                    required
+                  />
+                </div>
+                <div className="relative">
+                  <MapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
+                  <input
+                    type="text"
+                    value={formData.longitude}
+                    onChange={(e) => handleInputChange("longitude", e.target.value)}
+                    readOnly={coordinatesLocked}
+                    className={`w-full rounded-xl border-2 border-gray-200 bg-white py-3 pl-12 pr-4 text-base font-medium text-gray-900 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500 ${
+                      coordinatesLocked ? "cursor-not-allowed bg-gray-50 dark:bg-gray-800" : ""
+                    }`}
+                    placeholder="Longitude"
+                    required
+                  />
                 </div>
               </div>
+              {coordinatesLocked && (
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Coordinates set from {formData.locationSource === "current" ? "current location" : "address"}. Switch to &quot;Enter coordinates&quot; to edit.
+                </p>
+              )}
             </div>
 
             {/* Store Image */}

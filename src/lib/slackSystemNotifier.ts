@@ -204,3 +204,103 @@ export async function notifyDelayedOrderToSlack(payload: DelayedOrderPayload) {
     console.error("Failed to send delayed order notification to Slack", error);
   }
 }
+
+// --- New store created (system) notification ---
+
+export interface NewStoreCreatedPayload {
+  /** Store name */
+  storeName: string;
+  /** Store description (can be HTML/rich text; will be trimmed for display) */
+  description?: string;
+  /** Latitude */
+  latitude?: string;
+  /** Longitude */
+  longitude?: string;
+  /** Image URL for Slack preview (must be public URL; base64 not supported in Slack image block) */
+  imageUrl?: string;
+  /** True when image was uploaded as base64 (no URL preview possible) */
+  imageProvided?: boolean;
+  /** Business / owner name (optional) */
+  businessName?: string;
+}
+
+/**
+ * Send a "new store created" notification to Slack with store info, description, and location.
+ * Called after a business store is successfully created.
+ */
+export async function notifyNewStoreCreatedToSlack(
+  payload: NewStoreCreatedPayload
+) {
+  if (!SLACK_GENERAL_WEBHOOK) {
+    console.error("SLACK_GENERAL_WEBHOOK is not configured");
+    return;
+  }
+
+  const nameDisplay = payload.storeName?.trim() ?? "—";
+  const descRaw = payload.description?.trim() || "";
+  const descDisplay = descRaw
+    ? descRaw.replace(/<[^>]*>/g, "").slice(0, 500) + (descRaw.length > 500 ? "…" : "")
+    : "_No description_";
+  const lat = payload.latitude?.trim() ?? "";
+  const lng = payload.longitude?.trim() ?? "";
+  const locationDisplay =
+    lat && lng
+      ? `Lat: ${lat}, Lng: ${lng}\n<https://www.google.com/maps?q=${encodeURIComponent(lat + "," + lng)}|View on Google Maps>`
+      : "—";
+  const businessDisplay = payload.businessName?.trim() ?? "—";
+  const isImageUrl =
+    payload.imageUrl &&
+    (payload.imageUrl.startsWith("http://") || payload.imageUrl.startsWith("https://"));
+
+  const blocks: any[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "🏪 New Store Created",
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Store name*\n${nameDisplay}` },
+        { type: "mrkdwn", text: `*Business / owner*\n${businessDisplay}` },
+      ],
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Description*\n${descDisplay}`,
+      },
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Location*\n${locationDisplay}`,
+      },
+    },
+  ];
+
+  blocks.push({
+    type: "context",
+    elements: [{ type: "mrkdwn", text: `🕒 ${new Date().toLocaleString()}` }],
+  });
+
+  try {
+    await fetch(SLACK_GENERAL_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: `New store created: ${nameDisplay}`,
+        blocks,
+      }),
+    });
+  } catch (error) {
+    console.error(
+      "Failed to send new store created notification to Slack",
+      error
+    );
+  }
+}
