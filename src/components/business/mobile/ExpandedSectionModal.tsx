@@ -27,7 +27,10 @@ import {
   Package as PackageIcon,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { QuoteSubmissionForm } from "../QuoteSubmissionForm";
+import { SubmittedQuoteDetails } from "../SubmittedQuoteDetails";
 import { ItemDetailContent } from "./ExpandedSectionModalDetail";
+import { ExpandedSectionModalList } from "./ExpandedSectionModalList";
 import { ExpandedSectionModalListWithOverlays } from "./ExpandedSectionModalListWithOverlays";
 
 interface ExpandedSectionModalProps {
