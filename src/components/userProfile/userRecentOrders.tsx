@@ -42,7 +42,7 @@ type Order = {
   } | null;
   service_fee?: number;
   delivery_fee?: number;
-  orderType?: "regular" | "reel" | "restaurant";
+  orderType?: "regular" | "reel" | "restaurant" | "business";
   reel?: {
     id: string;
     title: string;
@@ -140,7 +140,7 @@ function EstimatedDelivery({
   deliveryTime: string;
   status: string;
   orderId?: string;
-  orderType?: "regular" | "reel" | "restaurant";
+  orderType?: "regular" | "reel" | "restaurant" | "business";
 }) {
   const [currentTime, setCurrentTime] = useState(Date.now());
   const notifiedRef = React.useRef(false);
@@ -468,6 +468,11 @@ export default function UserRecentOrders({
                             ? order.reel.title
                             : order?.shop?.name || "Unknown Shop"}
                         </div>
+                        {order.orderType === "business" && (
+                          <span className="inline-flex items-center justify-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                            Store
+                          </span>
+                        )}
                         {order.orderType === "reel" && (
                           <span className="inline-flex items-center justify-center rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
                             <svg

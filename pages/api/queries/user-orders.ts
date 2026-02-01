@@ -123,6 +123,34 @@ const GET_USER_ORDERS = gql`
         count
       }
     }
+    businessProductOrders(
+      where: { ordered_by: { _eq: $user_id } }
+      order_by: { created_at: desc }
+      limit: $limit
+      offset: $offset
+    ) {
+      id
+      store_id
+      total
+      transportation_fee
+      service_fee
+      status
+      created_at
+      delivered_time
+      timeRange
+      units
+      business_store {
+        id
+        name
+        image
+      }
+      allProducts
+    }
+    businessProductOrders_aggregate(where: { ordered_by: { _eq: $user_id } }) {
+      aggregate {
+        count
+      }
+    }
   }
 `;
 
@@ -227,6 +255,29 @@ interface OrdersResponse {
   restaurant_orders_aggregate: {
     aggregate: { count: number } | null;
   };
+  businessProductOrders: Array<{
+    id: string;
+    store_id: string;
+    total: string;
+    transportation_fee: string;
+    service_fee: string;
+    status: string | null;
+    created_at: string;
+    delivered_time: string | null;
+    timeRange: string | null;
+    units: string;
+    business_store: {
+      id: string;
+      name: string;
+      address: string | null;
+      image: string | null;
+      logo: string | null;
+    } | null;
+    allProducts: any;
+  }>;
+  businessProductOrders_aggregate: {
+    aggregate: { count: number } | null;
+  };
 }
 
 export default async function handler(
@@ -272,19 +323,27 @@ export default async function handler(
     const orders = data.Orders;
     const reelOrders = data.reel_orders || [];
     const restaurantOrders = data.restaurant_orders || [];
+    const businessOrders = data.businessProductOrders || [];
 
     // Get total counts for pagination
     const totalOrders = data.Orders_aggregate?.aggregate?.count || 0;
     const totalReelOrders = data.reel_orders_aggregate?.aggregate?.count || 0;
     const totalRestaurantOrders =
       data.restaurant_orders_aggregate?.aggregate?.count || 0;
-    const totalCount = totalOrders + totalReelOrders + totalRestaurantOrders;
+    const totalBusinessOrders =
+      data.businessProductOrders_aggregate?.aggregate?.count || 0;
+    const totalCount =
+      totalOrders +
+      totalReelOrders +
+      totalRestaurantOrders +
+      totalBusinessOrders;
 
     // If no orders of any type, return empty array
     if (
       (!orders || orders.length === 0) &&
       reelOrders.length === 0 &&
-      restaurantOrders.length === 0
+      restaurantOrders.length === 0 &&
+      businessOrders.length === 0
     ) {
       console.log("📭 No orders found for this user");
       return res.status(200).json({ orders: [] });
@@ -440,11 +499,61 @@ export default async function handler(
       };
     });
 
+    // Enrich business (store) orders into same shape for CurrentPendingOrders
+    const businessEnriched = businessOrders.map((bo) => {
+      const baseTotal = parseFloat(bo.total || "0");
+      const transportFee = parseFloat(bo.transportation_fee || "0");
+      const serviceFee = parseFloat(bo.service_fee || "0");
+      const grandTotal = baseTotal + transportFee + serviceFee;
+      const products = Array.isArray(bo.allProducts) ? bo.allProducts : [];
+      const itemsCount = products.length;
+      const unitsCount = products.reduce(
+        (sum: number, p: any) => sum + (parseInt(p.quantity, 10) || 0),
+        0
+      );
+      const status =
+        (bo.status || "").toLowerCase() === "delivered"
+          ? "delivered"
+          : bo.status || "Pending";
+      const bs = bo.business_store;
+      return {
+        orderType: "business" as const,
+        id: bo.id,
+        OrderID: bo.id.substring(0, 8).toUpperCase(),
+        user_id: null,
+        status,
+        created_at: bo.created_at,
+        delivery_time: bo.delivered_time || bo.created_at,
+        pin: "",
+        combined_order_id: null,
+        total: grandTotal,
+        shop_id: bo.store_id,
+        shopper_id: null,
+        shop: bs
+          ? {
+              id: bs.id,
+              name: bs.name,
+              address: "",
+              image: bs.image || "",
+              logo: (bs as any).logo || "",
+              category_id: "",
+            }
+          : null,
+        itemsCount: itemsCount || 1,
+        unitsCount: unitsCount || 0,
+        reel: null,
+        quantity: unitsCount,
+        discount: 0,
+        voucher_code: null,
+      };
+    });
+
     // Merge and sort all orders by created_at (newest first)
     const allEnriched = [
       ...regularEnriched,
       ...reelEnriched,
       ...restaurantEnriched,
+      ...businessEnriched,
     ].sort(
       (a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -455,7 +564,8 @@ export default async function handler(
     const hasMore =
       orders.length === limit ||
       reelOrders.length === limit ||
-      restaurantOrders.length === limit;
+      restaurantOrders.length === limit ||
+      businessOrders.length === limit;
 
     res.status(200).json({
       orders: allEnriched,
@@ -467,6 +577,7 @@ export default async function handler(
         totalOrders,
         totalReelOrders,
         totalRestaurantOrders,
+        totalBusinessOrders,
         currentPageCount,
         hasMore,
       },

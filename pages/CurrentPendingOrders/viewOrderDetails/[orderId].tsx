@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import UserOrderDetails from "@components/UserCarts/orders/UserOrderDetails";
 import UserReelOrderDetails from "@components/UserCarts/orders/UserReelOrderDetails";
 import UserRestaurantOrderDetails from "@components/UserCarts/orders/UserRestaurantOrderDetails";
+import UserBusinessOrderDetails from "@components/UserCarts/orders/UserBusinessOrderDetails";
 import ContactSupportModal from "@components/UserCarts/orders/ContactSupportModal";
 import { Button } from "rsuite";
 import Link from "next/link";
@@ -194,7 +195,7 @@ const MobileOrderDetails = ({
   supportTicket,
 }: {
   order: any;
-  orderType: "regular" | "reel" | "restaurant" | null;
+  orderType: "regular" | "reel" | "restaurant" | "business" | null;
   combinedOrders: any[];
   onContactSupport?: () => void;
   supportTicket?: SupportTicketInfo;
@@ -374,6 +375,12 @@ const MobileOrderDetails = ({
               onContactSupport={onContactSupport}
               supportTicket={supportTicket}
             />
+          ) : orderType === "business" ? (
+            <UserBusinessOrderDetails
+              order={order}
+              onContactSupport={onContactSupport}
+              supportTicket={supportTicket}
+            />
           ) : (
             <UserOrderDetails
               order={order}
@@ -398,7 +405,7 @@ const DesktopOrderDetails = ({
   supportTicket,
 }: {
   order: any;
-  orderType: "regular" | "reel" | "restaurant" | null;
+  orderType: "regular" | "reel" | "restaurant" | "business" | null;
   combinedOrders: any[];
   onContactSupport?: () => void;
   supportTicket?: SupportTicketInfo;
@@ -416,6 +423,12 @@ const DesktopOrderDetails = ({
             />
           ) : orderType === "restaurant" ? (
             <UserRestaurantOrderDetails
+              order={order}
+              onContactSupport={onContactSupport}
+              supportTicket={supportTicket}
+            />
+          ) : orderType === "business" ? (
+            <UserBusinessOrderDetails
               order={order}
               onContactSupport={onContactSupport}
               supportTicket={supportTicket}
@@ -441,7 +454,7 @@ function ViewOrderDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [orderType, setOrderType] = useState<
-    "regular" | "reel" | "restaurant" | null
+    "regular" | "reel" | "restaurant" | "business" | null
   >(null);
   const [combinedOrders, setCombinedOrders] = useState<any[]>([]);
   const [showSupportModal, setShowSupportModal] = useState(false);
@@ -488,10 +501,29 @@ function ViewOrderDetailsPage() {
         setError(null);
 
         const apis: Array<{
-          type: "regular" | "reel" | "restaurant";
+          type: "regular" | "reel" | "restaurant" | "business";
           url: string;
         }> =
-          typeHint === "restaurant"
+          typeHint === "business"
+            ? [
+                {
+                  type: "business",
+                  url: `/api/queries/business-order-details?id=${orderId}`,
+                },
+                {
+                  type: "regular",
+                  url: `/api/queries/orderDetails?id=${orderId}`,
+                },
+                {
+                  type: "reel",
+                  url: `/api/queries/reel-order-details?id=${orderId}`,
+                },
+                {
+                  type: "restaurant",
+                  url: `/api/queries/restaurant-order-details?id=${orderId}`,
+                },
+              ]
+            : typeHint === "restaurant"
             ? [
                 {
                   type: "restaurant",
@@ -504,6 +536,10 @@ function ViewOrderDetailsPage() {
                 {
                   type: "reel",
                   url: `/api/queries/reel-order-details?id=${orderId}`,
+                },
+                {
+                  type: "business",
+                  url: `/api/queries/business-order-details?id=${orderId}`,
                 },
               ]
             : typeHint === "reel"
@@ -520,6 +556,10 @@ function ViewOrderDetailsPage() {
                   type: "restaurant",
                   url: `/api/queries/restaurant-order-details?id=${orderId}`,
                 },
+                {
+                  type: "business",
+                  url: `/api/queries/business-order-details?id=${orderId}`,
+                },
               ]
             : [
                 {
@@ -533,6 +573,10 @@ function ViewOrderDetailsPage() {
                 {
                   type: "restaurant",
                   url: `/api/queries/restaurant-order-details?id=${orderId}`,
+                },
+                {
+                  type: "business",
+                  url: `/api/queries/business-order-details?id=${orderId}`,
                 },
               ];
 
