@@ -21,6 +21,7 @@ import {
   CheckCircle,
   XCircle,
   Search,
+  Eye,
 } from "lucide-react";
 import RootLayout from "../../../src/components/ui/layout";
 import { useAuth } from "../../../src/context/AuthContext";
@@ -52,7 +53,9 @@ export default function StoreDetailsPage() {
   );
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [statusTab, setStatusTab] = useState<"active" | "pending_disabled">("active");
   const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [productStats, setProductStats] = useState<Record<string, { orders: number; unitsSold: number }>>({});
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [showEditStoreModal, setShowEditStoreModal] = useState(false);
@@ -79,6 +82,25 @@ export default function StoreDetailsPage() {
       fetchStoreDetails();
       fetchProducts();
       fetchBusinessAccount();
+    }
+  }, [storeId, authReady, isLoggedIn]);
+
+  const fetchProductStats = async () => {
+    if (!storeId) return;
+    try {
+      const res = await fetch(`/api/queries/store-product-stats?store_id=${storeId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setProductStats(data.stats || {});
+      }
+    } catch {
+      // Silently fail
+    }
+  };
+
+  useEffect(() => {
+    if (storeId && authReady && isLoggedIn) {
+      fetchProductStats();
     }
   }, [storeId, authReady, isLoggedIn]);
 
@@ -167,16 +189,31 @@ export default function StoreDetailsPage() {
     setFilteredProducts(filtered);
   }, [searchQuery, allProducts]);
 
+  // Filter by status tab: active only, or pending+disabled combined
+  const tabFilteredProducts = statusTab === "active"
+    ? filteredProducts.filter((p) => (p.status || "active").toLowerCase() === "active")
+    : filteredProducts.filter((p) => (p.status || "active").toLowerCase() !== "active");
+
   // Group products by category for display
   const UNCATEGORIZED = "Other";
-  const groupedByCategory = filteredProducts.reduce<
-    Record<string, typeof filteredProducts>
+  const groupedByCategory = tabFilteredProducts.reduce<
+    Record<string, typeof tabFilteredProducts>
   >((acc, product) => {
     const cat = product.category?.trim() || UNCATEGORIZED;
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(product);
     return acc;
   }, {});
+
+  const activeCount = allProducts.filter((p) => (p.status || "active").toLowerCase() === "active").length;
+  const pendingDisabledCount = allProducts.filter((p) => (p.status || "active").toLowerCase() !== "active").length;
+
+  const maxUnitsSold = tabFilteredProducts.length
+    ? Math.max(
+        1,
+        ...tabFilteredProducts.map((p) => productStats[p.id]?.unitsSold || 0)
+      )
+    : 1;
 
   // Order: PRODUCT_CATEGORIES first (only those with products), then any custom categories, then Other
   const knownCategories = PRODUCT_CATEGORIES.filter(
@@ -335,6 +372,7 @@ export default function StoreDetailsPage() {
         setProductImage("");
         setQueryId(null);
         fetchProducts();
+        fetchProductStats();
       } else {
         const errorData = await response.json();
         toast.error(
@@ -430,7 +468,7 @@ export default function StoreDetailsPage() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-16">
         {/* Mobile Header - Full width cover image with circular logo */}
         <div
-          className="relative h-32 w-full sm:hidden"
+          className="relative h-40 w-full sm:hidden"
           style={{
             marginTop: "-44px",
             marginLeft: "-16px",
@@ -454,39 +492,37 @@ export default function StoreDetailsPage() {
           {/* Gradient Overlay for better text readability */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/70" />
 
-          {/* Back Button */}
-          <button
-            onClick={() => router.push("/plasBusiness")}
-            className="absolute left-4 top-7 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/30"
-          >
-            <ArrowLeft className="h-4 w-4 !text-white" />
-          </button>
-
-          {/* Edit Store Button */}
-          <button
-            onClick={() => setShowEditStoreModal(true)}
-            className="absolute right-4 top-7 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/30"
-          >
-            <Edit className="h-4 w-4 !text-white" />
-          </button>
-
-          {/* Store Status Badge */}
-          <div className="absolute right-20 top-7 z-20">
-            <div
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold backdrop-blur-md ${
-                store.is_active
-                  ? "bg-green-500/90 !text-white"
-                  : "bg-red-500/90 !text-white"
-              }`}
-              style={{ color: "#ffffff" }}
+          {/* Top bar: Back button left, Status + Edit right */}
+          <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-4 pb-2 pl-[max(1.25rem,env(safe-area-inset-left,1.25rem))] pr-[max(1.25rem,env(safe-area-inset-right,1.25rem))] pt-[max(3rem,env(safe-area-inset-top,3rem))]">
+            <button
+              onClick={() => router.push("/plasBusiness")}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/30"
             >
-              {store.is_active ? "Active" : "Inactive"}
+              <ArrowLeft className="h-4 w-4 !text-white" />
+            </button>
+            <div className="flex min-w-0 items-center gap-3">
+              <div
+                className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold backdrop-blur-md ${
+                  store.is_active
+                    ? "bg-green-500/90 !text-white"
+                    : "bg-red-500/90 !text-white"
+                }`}
+                style={{ color: "#ffffff" }}
+              >
+                {store.is_active ? "Active" : "Inactive"}
+              </div>
+              <button
+                onClick={() => setShowEditStoreModal(true)}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/30"
+              >
+                <Edit className="h-4 w-4 !text-white" />
+              </button>
             </div>
           </div>
 
-          {/* Store Logo - Circular at bottom left */}
+          {/* Store Logo - Circular at bottom left (positioned below top bar with gap) */}
           {store.image && (
-            <div className="absolute -bottom-4 left-3 z-50">
+            <div className="absolute left-5 top-24 z-50">
               <div className="h-16 w-16 overflow-hidden rounded-full border-4 border-green-500 shadow-lg">
                 <Image
                   src={sanitizeSrc(store.image)}
@@ -500,7 +536,7 @@ export default function StoreDetailsPage() {
           )}
 
           {/* Store Info Overlay - Center */}
-          <div className="absolute bottom-2 left-1/2 z-20 -translate-x-1/2 text-center">
+          <div className="absolute bottom-3 left-1/2 z-20 -translate-x-1/2 text-center">
             {/* Store Name */}
             <h1
               className="mb-1 text-xl font-bold drop-shadow-lg"
@@ -654,7 +690,7 @@ export default function StoreDetailsPage() {
         {/* Spacing for mobile logo */}
         <div className="h-8 sm:hidden"></div>
 
-        <div className="mx-auto max-w-7xl px-2 py-4 sm:px-4 sm:py-6 md:px-6 md:py-8 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-4 sm:py-6 md:px-6 md:py-8 lg:px-8">
           {/* Products Section */}
           <div className="mb-4 space-y-3 sm:mb-6 sm:space-y-4">
             <div className="flex items-center justify-between">
@@ -705,7 +741,7 @@ export default function StoreDetailsPage() {
               <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 transform text-gray-400 sm:h-6 sm:w-6" />
               <input
                 type="text"
-                placeholder="Search products by name, category, description, price..."
+                placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-12 pr-12 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:py-3.5 sm:pl-14 sm:text-base"
@@ -721,22 +757,204 @@ export default function StoreDetailsPage() {
             </div>
           </div>
 
-          {filteredProducts.length === 0 ? (
+          {/* Status Tabs */}
+          <div className="mb-6 flex gap-2 overflow-x-auto border-b border-gray-200 pb-px dark:border-gray-700">
+            <button
+              onClick={() => setStatusTab("active")}
+              className={`flex shrink-0 items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold transition-colors sm:px-5 sm:text-base ${
+                statusTab === "active"
+                  ? "border-green-500 text-green-600 dark:text-green-400"
+                  : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+              }`}
+            >
+              <CheckCircle className="h-4 w-4" />
+              Active
+              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium dark:bg-gray-700">
+                {activeCount}
+              </span>
+            </button>
+            <button
+              onClick={() => setStatusTab("pending_disabled")}
+              className={`flex shrink-0 items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold transition-colors sm:px-5 sm:text-base ${
+                statusTab === "pending_disabled"
+                  ? "border-green-500 text-green-600 dark:text-green-400"
+                  : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+              }`}
+            >
+              <XCircle className="h-4 w-4" />
+              Pending & Disabled
+              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium dark:bg-gray-700">
+                {pendingDisabledCount}
+              </span>
+            </button>
+          </div>
+
+          {tabFilteredProducts.length === 0 ? (
             <div className="py-16 text-center sm:py-20 md:py-24">
               <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 sm:h-24 sm:w-24 md:h-28 md:w-28">
                 <Package className="h-10 w-10 text-gray-400 sm:h-12 sm:w-12 md:h-16 md:w-16" />
               </div>
               <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white sm:text-xl md:text-2xl">
-                {searchQuery ? "No products found" : "No products yet"}
+                {searchQuery
+                  ? "No products found"
+                  : statusTab === "active"
+                  ? "No active products yet"
+                  : "No pending or disabled products"}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 sm:text-base">
                 {searchQuery
                   ? `No products found matching "${searchQuery}"`
-                  : "Add your first product to get started."}
+                  : statusTab === "active"
+                  ? "Add your first product or enable pending products."
+                  : "Products awaiting review or disabled by you appear here."}
               </p>
             </div>
           ) : (
             <>
+              {/* Desktop: Table view */}
+              <div className="hidden overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 lg:block">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/80">
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">
+                        Product
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">
+                        Performance
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">
+                        Category
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">
+                        Status
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">
+                        Price
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                    {tabFilteredProducts.map((product) => {
+                      const stats = productStats[product.id];
+                      const unitsSold = stats?.unitsSold ?? 0;
+                      const orders = stats?.orders ?? 0;
+                      const pct = maxUnitsSold > 0 ? (unitsSold / maxUnitsSold) * 100 : 0;
+                      return (
+                        <tr
+                          key={product.id}
+                          className="group cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                          onClick={() => {
+                            setSelectedProduct(product);
+                            setShowProductModal(true);
+                          }}
+                        >
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                              <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-700">
+                                {product.Image ? (
+                                  <img
+                                    src={product.Image}
+                                    alt={product.name}
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="flex h-full w-full items-center justify-center">
+                                    <Package className="h-5 w-5 text-gray-400" />
+                                  </div>
+                                )}
+                              </div>
+                              <div>
+                                <p className="font-semibold text-gray-900 dark:text-white">
+                                  {product.name}
+                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  / {product.unit}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="min-w-[140px]">
+                              <div className="mb-1 flex items-center justify-between gap-2">
+                                <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                  {unitsSold} sold in {orders} orders
+                                </span>
+                                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                  {maxUnitsSold > 0 ? Math.round(pct) : 0}%
+                                </span>
+                              </div>
+                              <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-600">
+                                <div
+                                  className="h-full rounded-full bg-green-500 dark:bg-green-600 transition-all"
+                                  style={{ width: `${Math.min(100, pct)}%` }}
+                                />
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                              {product.category?.trim() || "Other"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                (product.status || "").toLowerCase() === "active"
+                                  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                                  : (product.status || "").toLowerCase() === "pending"
+                                  ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                                  : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                              }`}
+                            >
+                              {(product.status || "").toLowerCase() === "active" ? (
+                                <CheckCircle className="h-3 w-3" />
+                              ) : (
+                                <XCircle className="h-3 w-3" />
+                              )}
+                              {(product.status || "other").toLowerCase() === "inactive"
+                                ? "Disabled"
+                                : (product.status || "Other").charAt(0).toUpperCase() +
+                                  (product.status || "Other").slice(1).toLowerCase()}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-sm font-semibold text-green-600 dark:text-green-500">
+                              {formatCurrencySync(parseFloat(product.price || "0"))}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                onClick={() => handleEditProduct(product)}
+                                className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-green-600 dark:hover:bg-gray-600 dark:hover:text-green-400"
+                                title="Edit"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setSelectedProduct(product);
+                                  setShowProductModal(true);
+                                }}
+                                className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-600 dark:hover:text-gray-300"
+                                title="View details"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile & tablet: Card grid */}
+              <div className="lg:hidden">
               {categoryOrder.map((categoryName) => (
                 <div
                   key={categoryName}
@@ -749,7 +967,7 @@ export default function StoreDetailsPage() {
                       {groupedByCategory[categoryName]?.length ?? 0}
                     </span>
                   </h3>
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3">
                     {(groupedByCategory[categoryName] ?? []).map((product) => (
                       <div
                         key={product.id}
@@ -974,6 +1192,7 @@ export default function StoreDetailsPage() {
                   </div>
                 </div>
               ))}
+              </div>
             </>
           )}
         </div>
