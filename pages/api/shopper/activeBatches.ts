@@ -60,6 +60,7 @@ const GET_ACTIVE_REEL_ORDERS = gql`
       order_by: { created_at: desc }
     ) {
       id
+      OrderID
       created_at
       status
       service_fee
@@ -466,7 +467,7 @@ export default async function handler(
 
       return {
         id: o.id,
-        OrderID: o.id,
+        OrderID: o.OrderID != null ? o.OrderID : o.id,
         status: o.status,
         createdAt: o.created_at,
         deliveryTime: o.delivery_time || undefined,

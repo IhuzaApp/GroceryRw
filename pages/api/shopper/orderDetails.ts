@@ -224,7 +224,7 @@ const GET_REEL_ORDER_DETAILS = gql`
       delivery_fee
       total
       quantity
-      delivery_notes
+      delivery_note
       Reel {
         id
         title
@@ -375,23 +375,16 @@ const GET_RESTAURANT_ORDER_DETAILS = gql`
         dish_id
         order_id
         created_at
-        restaurant_menu {
+        restaurant_dishes {
           id
           price
           preparingTime
           is_active
-          ProductNames {
-            name
-            description
-            image
-          }
-          dishes {
-            name
-            description
-            image
-            ingredients
-            category
-          }
+          name
+          description
+          image
+          ingredients
+          category
         }
       }
       shopper {
@@ -627,17 +620,11 @@ const GET_RELATED_RESTAURANT_ORDERS = gql`
         id
         quantity
         price
-        restaurant_menu {
+        restaurant_dishes {
           id
           price
-          ProductNames {
-            name
-            image
-          }
-          dishes {
-            name
-            image
-          }
+          name
+          image
         }
       }
     }
@@ -962,8 +949,8 @@ export default async function handler(
           user_id: orderData.Reel?.user_id,
         },
         quantity: quantity,
-        deliveryNote: orderData.delivery_notes,
-        deliveryNotes: orderData.delivery_notes, // Add deliveryNotes for compatibility
+        deliveryNote: orderData.delivery_note,
+        deliveryNotes: orderData.delivery_note, // Add deliveryNotes for compatibility
         customerName: orderData.user?.name,
         customerPhone: orderData.user?.phone,
         user: orderData.user, // Include full user data
@@ -980,23 +967,21 @@ export default async function handler(
       const deliveryFee = parseFloat(orderData.delivery_fee || "0");
       const totalEarnings = deliveryFee; // Restaurant orders don't have service fee
 
-      // Format dish items
+      // Format dish items (schema: restaurant_order_items -> restaurant_dishes)
       const formattedDishItems = orderData.restaurant_order_items.map(
         (dishOrder: any) => {
-          const menu = dishOrder.restaurant_menu;
-          const product = menu?.ProductNames || null;
-          const dish = menu?.dishes || null;
+          const rd = dishOrder.restaurant_dishes;
 
           return {
             id: dishOrder.id,
-            name: product?.name || dish?.name || "Unknown Dish",
+            name: rd?.name || "Unknown Dish",
             quantity: dishOrder.quantity,
             price: parseFloat(dishOrder.price) || 0,
-            description: product?.description || dish?.description || null,
-            image: product?.image || dish?.image || null,
-            category: dish?.category || null,
-            ingredients: dish?.ingredients || null,
-            preparingTime: menu?.preparingTime || null,
+            description: rd?.description || null,
+            image: rd?.image || null,
+            category: rd?.category || null,
+            ingredients: rd?.ingredients ?? null,
+            preparingTime: rd?.preparingTime || null,
           };
         }
       );
@@ -1190,16 +1175,14 @@ export default async function handler(
             (order: any) => {
               const items =
                 order.restaurant_order_items?.map((item: any) => {
-                  const menu = item.restaurant_menu;
-                  const product = menu?.ProductNames || null;
-                  const dish = menu?.dishes || null;
+                  const rd = item.restaurant_dishes;
 
                   return {
                     id: item.id,
-                    name: product?.name || dish?.name || "Dish",
+                    name: rd?.name || "Dish",
                     quantity: item.quantity,
                     price: parseFloat(item.price) || 0,
-                    productImage: product?.image || dish?.image || null,
+                    productImage: rd?.image || null,
                   };
                 }) || [];
 
