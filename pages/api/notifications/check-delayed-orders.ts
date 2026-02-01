@@ -79,7 +79,27 @@ const GET_RESTAURANT_ORDER_BY_ID = gql`
   }
 `;
 
-type OrderType = "regular" | "reel" | "restaurant";
+const GET_BUSINESS_ORDER_BY_ID = gql`
+  query GetBusinessOrderForDelayedNotification($id: uuid!) {
+    businessProductOrders_by_pk(id: $id) {
+      id
+      status
+      delivered_time
+      timeRange
+      business_store {
+        name
+      }
+      orderedBy {
+        phone
+      }
+      shopper {
+        phone
+      }
+    }
+  }
+`;
+
+type OrderType = "regular" | "reel" | "restaurant" | "business";
 
 export default async function handler(
   req: NextApiRequest,
@@ -201,6 +221,28 @@ export default async function handler(
         o.shopper?.shopper?.phone ??
         undefined;
       storeName = o.Restaurant?.name ?? undefined;
+    } else if (orderType === "business") {
+      const data = await hasuraClient.request<{
+        businessProductOrders_by_pk: {
+          id: string;
+          status: string | null;
+          delivered_time: string | null;
+          timeRange: string | null;
+          business_store: { name: string } | null;
+          orderedBy: { phone: string | null } | null;
+          shopper: { phone: string | null } | null;
+        } | null;
+      }>(GET_BUSINESS_ORDER_BY_ID, { id: orderId });
+
+      const o = data?.businessProductOrders_by_pk;
+      if (!o) {
+        return res.status(404).json({ error: "Business order not found" });
+      }
+      orderNumber = o.id ? o.id.substring(0, 8).toUpperCase() : "—";
+      status = o.status ?? "Pending";
+      customerPhone = o.orderedBy?.phone ?? undefined;
+      shopperPhone = o.shopper?.phone ?? undefined;
+      storeName = o.business_store?.name ?? undefined;
     } else {
       return res.status(400).json({ error: "Invalid orderType" });
     }

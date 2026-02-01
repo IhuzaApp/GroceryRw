@@ -301,9 +301,9 @@ const MobileOrderDetails = ({
         </div>
       </div>
 
-      {/* Mobile Content */}
+      {/* Mobile Content - px-4 for consistent side inset so content doesn't touch edges */}
       <div
-        className={orderType === "restaurant" ? "w-full" : "py-6"}
+        className={orderType === "restaurant" ? "w-full" : "px-4 py-6"}
         style={
           orderType === "restaurant"
             ? { margin: 0, padding: 0, width: "100%" }
@@ -312,7 +312,7 @@ const MobileOrderDetails = ({
       >
         {/* Order PIN Card - Compact Display */}
         {order?.pin && (
-          <div className="mb-4 px-4">
+          <div className="mb-4">
             <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-green-500 via-green-600 to-green-700 p-4 shadow-lg">
               {/* Animated background elements */}
               <div className="absolute -right-6 -top-6 h-20 w-20 animate-pulse rounded-full bg-white opacity-10"></div>
@@ -360,7 +360,7 @@ const MobileOrderDetails = ({
         )}
 
         {/* Order Details Component - Full width on mobile */}
-        <div className="mobile-full-width ">
+        <div className="mobile-full-width">
           {orderType === "reel" ? (
             <UserReelOrderDetails
               order={order}
@@ -378,6 +378,7 @@ const MobileOrderDetails = ({
           ) : orderType === "business" ? (
             <UserBusinessOrderDetails
               order={order}
+              isMobile={true}
               onContactSupport={onContactSupport}
               supportTicket={supportTicket}
             />

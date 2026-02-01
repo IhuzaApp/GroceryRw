@@ -20,6 +20,7 @@ const GET_BUSINESS_ORDER = gql`
       delivered_time
       timeRange
       units
+      pin
       deliveryAddress
       comment
       allProducts
@@ -83,6 +84,7 @@ export default async function handler(
         delivered_time: string | null;
         timeRange: string | null;
         units: string;
+        pin?: number | null;
         deliveryAddress: string | null;
         comment: string | null;
         allProducts: any;
@@ -131,6 +133,7 @@ export default async function handler(
       deliveryAddress: row.deliveryAddress,
       comment: row.comment,
       units: row.units,
+      pin: row.pin != null ? String(row.pin) : "",
       shop: bs
         ? {
             id: bs.id,

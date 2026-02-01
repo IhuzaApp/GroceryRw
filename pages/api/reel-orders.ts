@@ -29,8 +29,7 @@ function generateOrderPin(): string {
     .padStart(2, "0");
 }
 
-// Create a reel order
-// Note: pin field is not in reel_orders schema, but we generate it for consistency with other order types
+// Create a reel order (pin is stored so it shows in order list and can be verified by shopper)
 const CREATE_REEL_ORDER = gql`
   mutation CreateReelOrder(
     $user_id: uuid!
@@ -44,6 +43,7 @@ const CREATE_REEL_ORDER = gql`
     $delivery_time: String!
     $delivery_note: String
     $delivery_address_id: uuid!
+    $pin: String!
   ) {
     insert_reel_orders_one(
       object: {
@@ -61,10 +61,12 @@ const CREATE_REEL_ORDER = gql`
         shopper_id: null
         status: "PENDING"
         found: false
+        pin: $pin
       }
     ) {
       id
       OrderID
+      pin
     }
   }
 `;
@@ -122,9 +124,9 @@ export default async function handler(
     // Generate PIN (same way as checkoutCard.tsx - 2-digit, 00-99)
     const orderPin = generateOrderPin();
 
-    // Create reel order (pin field not in schema, but we generate it for response)
+    // Create reel order (pin stored so it shows in order list and can be verified by shopper)
     const orderRes = await hasuraClient.request<{
-      insert_reel_orders_one: { id: string; OrderID: string };
+      insert_reel_orders_one: { id: string; OrderID: string; pin: string };
     }>(CREATE_REEL_ORDER, {
       user_id,
       reel_id,
@@ -137,6 +139,7 @@ export default async function handler(
       delivery_time,
       delivery_note: delivery_note || "",
       delivery_address_id,
+      pin: orderPin,
     });
 
     const orderId = orderRes.insert_reel_orders_one.id;

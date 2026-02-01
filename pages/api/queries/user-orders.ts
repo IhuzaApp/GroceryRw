@@ -60,6 +60,7 @@ const GET_USER_ORDERS = gql`
       discount
       voucher_code
       combined_order_id
+      pin
       reel: Reel {
         id
         title
@@ -139,6 +140,7 @@ const GET_USER_ORDERS = gql`
       delivered_time
       timeRange
       units
+      pin
       business_store {
         id
         name
@@ -206,6 +208,7 @@ interface OrdersResponse {
     discount: string | null;
     voucher_code: string | null;
     combined_order_id: string | null;
+    pin?: string | number | null;
     reel: {
       id: string;
       title: string;
@@ -266,6 +269,7 @@ interface OrdersResponse {
     delivered_time: string | null;
     timeRange: string | null;
     units: string;
+    pin?: number | null;
     business_store: {
       id: string;
       name: string;
@@ -433,7 +437,14 @@ export default async function handler(
         status: r.status,
         created_at: r.created_at,
         delivery_time: r.delivery_time,
-        pin: "",
+        pin:
+          r.pin != null && String(r.pin).trim() !== ""
+            ? String(r.pin)
+            : r.OrderID != null
+              ? String(r.OrderID).padStart(4, "0").slice(-4)
+              : r.id
+                ? r.id.slice(0, 4).toUpperCase()
+                : "",
         combined_order_id: r.combined_order_id,
         total: grandTotal,
         shop_id: reelShopId,
@@ -524,7 +535,7 @@ export default async function handler(
         status,
         created_at: bo.created_at,
         delivery_time: bo.delivered_time || bo.created_at,
-        pin: "",
+        pin: bo.pin != null ? String(bo.pin) : "",
         combined_order_id: null,
         total: grandTotal,
         shop_id: bo.store_id,

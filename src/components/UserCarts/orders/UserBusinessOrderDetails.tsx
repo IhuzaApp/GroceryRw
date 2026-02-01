@@ -27,12 +27,14 @@ export type SupportTicketInfo = { ticket_num: number; status: string } | null;
 
 interface UserBusinessOrderDetailsProps {
   order: any;
+  isMobile?: boolean;
   onContactSupport?: () => void;
   supportTicket?: SupportTicketInfo;
 }
 
 export default function UserBusinessOrderDetails({
   order,
+  isMobile = false,
   onContactSupport,
   supportTicket,
 }: UserBusinessOrderDetailsProps) {
@@ -57,6 +59,27 @@ export default function UserBusinessOrderDetails({
           ← Back to Orders
         </Link>
       </div>
+
+      {/* Pickup PIN - Desktop (mobile shows PIN in parent) */}
+      {!isMobile && order?.pin && (
+        <div className="overflow-hidden rounded-xl bg-gradient-to-br from-green-500 via-green-600 to-green-700 p-4 shadow-lg">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider !text-white">
+                Pickup PIN
+              </p>
+              <p className="mt-0.5 text-[10px] !text-white/90">
+                Show to Plaser
+              </p>
+            </div>
+            <div className="rounded-lg border-2 border-dashed border-white/30 bg-white/10 px-5 py-2">
+              <span className="text-2xl font-black tracking-wider !text-white">
+                {order.pin}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {shop && (
         <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
