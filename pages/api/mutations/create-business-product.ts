@@ -3,12 +3,14 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { PRODUCT_CATEGORIES } from "../../../src/constants/productCategories";
 
 const CREATE_BUSINESS_PRODUCT = gql`
   mutation CreateBusinessProduct(
     $Description: String = ""
     $Image: String = ""
     $Plasbusiness_id: uuid = ""
+    $category: String = ""
     $delveryArea: String = ""
     $maxOrders: String = ""
     $minimumOrders: String = ""
@@ -26,6 +28,7 @@ const CREATE_BUSINESS_PRODUCT = gql`
         Description: $Description
         Image: $Image
         Plasbusiness_id: $Plasbusiness_id
+        category: $category
         delveryArea: $delveryArea
         maxOrders: $maxOrders
         minimumOrders: $minimumOrders
@@ -73,6 +76,7 @@ interface CreateBusinessProductInput {
   image?: string;
   price: string;
   unit?: string;
+  category?: string;
   status?: string;
   query_id?: string;
   minimumOrders?: string;
@@ -113,6 +117,7 @@ export default async function handler(
       image = "",
       price,
       unit = "",
+      category = "",
       status = "active",
       query_id = "",
       minimumOrders: minOrders,
@@ -148,8 +153,19 @@ export default async function handler(
     // Get user_id from session if not provided
     const final_user_id = user_id || session?.user?.id || "";
 
+    const categoryTrimmed =
+      category !== null && category !== undefined
+        ? String(category).trim()
+        : "";
+    const validCategory =
+      categoryTrimmed &&
+      PRODUCT_CATEGORIES.includes(categoryTrimmed as (typeof PRODUCT_CATEGORIES)[number])
+        ? categoryTrimmed
+        : "";
+
     const variables: Record<string, any> = {
       name: typeof name === "string" ? name.trim() : String(name || ""),
+      category: validCategory,
       Description:
         description !== null && description !== undefined
           ? String(description).trim()

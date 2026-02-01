@@ -13,6 +13,7 @@ const GET_BUSINESS_PRODUCTS = gql`
       Image
       price
       unit
+      category
       status
       created_at
       minimumOrders

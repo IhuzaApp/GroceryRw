@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import CameraCapture from "../../ui/CameraCapture";
+import { PRODUCT_CATEGORIES } from "../../../constants/productCategories";
 
 interface ProductEditModalProps {
   product?: any; // If provided, we're editing. If not, we're adding.
@@ -34,6 +35,7 @@ export function ProductEditModal({
     description: product?.Description || product?.description || "",
     price: product?.price || "",
     unit: product?.unit || "",
+    category: product?.category || "",
     minimumOrders: product?.minimumOrders || "0",
     maxOrders: product?.maxOrders || "",
     deliveryArea: product?.delveryArea || product?.deliveryArea || "",
@@ -105,6 +107,7 @@ export function ProductEditModal({
             image: productForm.image,
             price: productForm.price,
             unit: productForm.unit,
+            category: productForm.category || "",
             status: product.status || "active",
             minimumOrders: productForm.minimumOrders || "0",
             maxOrders: productForm.maxOrders || "",
@@ -233,6 +236,27 @@ export function ProductEditModal({
                 className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 placeholder="Enter product description"
               />
+            </div>
+
+            {/* Category */}
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Category
+              </label>
+              <select
+                value={productForm.category}
+                onChange={(e) =>
+                  setProductForm({ ...productForm, category: e.target.value })
+                }
+                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              >
+                <option value="">Select a category (optional)</option>
+                {PRODUCT_CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Price and Unit */}

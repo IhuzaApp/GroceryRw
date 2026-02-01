@@ -21,8 +21,6 @@ import {
   CheckCircle,
   XCircle,
   Search,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import RootLayout from "../../../src/components/ui/layout";
 import { useAuth } from "../../../src/context/AuthContext";
@@ -33,6 +31,7 @@ import { formatCurrencySync } from "../../../src/utils/formatCurrency";
 import { formatOperatingDays } from "../../../src/lib/formatters";
 import { RichTextEditor } from "../../../src/components/ui/RichTextEditor";
 import { CreateStoreForm } from "../../../src/components/business/CreateStoreForm";
+import { PRODUCT_CATEGORIES } from "../../../src/constants/productCategories";
 
 export default function StoreDetailsPage() {
   const router = useRouter();
@@ -40,7 +39,6 @@ export default function StoreDetailsPage() {
   const { isLoggedIn, authReady } = useAuth();
   const { theme } = useTheme();
   const [store, setStore] = useState<any>(null);
-  const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
@@ -54,17 +52,16 @@ export default function StoreDetailsPage() {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [allProducts, setAllProducts] = useState<any[]>([]);
-  const [currentPage, setCurrentPage] = useState<number>(1);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [showEditStoreModal, setShowEditStoreModal] = useState(false);
-  const itemsPerPage = 18;
 
   const [newProduct, setNewProduct] = useState({
     name: "",
     description: "",
     price: "",
     unit: "",
+    category: "",
     minimumOrders: "0",
     maxOrders: "",
     deliveryArea: "",
@@ -128,7 +125,6 @@ export default function StoreDetailsPage() {
         const data = await response.json();
         const fetchedProducts = data.products || [];
         setAllProducts(fetchedProducts);
-        setProducts(fetchedProducts);
       }
     } catch (error) {
       // Silently fail - products are optional
@@ -141,7 +137,6 @@ export default function StoreDetailsPage() {
   useEffect(() => {
     if (!searchQuery.trim()) {
       setFilteredProducts(allProducts);
-      setCurrentPage(1); // Reset to first page when search is cleared
       return;
     }
 
@@ -152,6 +147,7 @@ export default function StoreDetailsPage() {
       const price = (product.price || "").toLowerCase();
       const unit = (product.unit || "").toLowerCase();
       const queryId = (product.query_id || "").toLowerCase();
+      const category = (product.category || "").toLowerCase();
       const deliveryArea = (product.delveryArea || "").toLowerCase();
       const speciality = (product.speciality || "").toLowerCase();
 
@@ -161,25 +157,38 @@ export default function StoreDetailsPage() {
         price.includes(query) ||
         unit.includes(query) ||
         queryId.includes(query) ||
+        category.includes(query) ||
         deliveryArea.includes(query) ||
         speciality.includes(query)
       );
     });
 
     setFilteredProducts(filtered);
-    setCurrentPage(1); // Reset to first page when search changes
   }, [searchQuery, allProducts]);
 
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentProducts = filteredProducts.slice(startIndex, endIndex);
+  // Group products by category for display
+  const UNCATEGORIZED = "Other";
+  const groupedByCategory = filteredProducts.reduce<
+    Record<string, typeof filteredProducts>
+  >((acc, product) => {
+    const cat = product.category?.trim() || UNCATEGORIZED;
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(product);
+    return acc;
+  }, {});
 
-  // Update displayed products based on pagination
-  useEffect(() => {
-    setProducts(currentProducts);
-  }, [currentPage, filteredProducts]);
+  // Order: PRODUCT_CATEGORIES first (only those with products), then any custom categories, then Other
+  const knownCategories = PRODUCT_CATEGORIES.filter(
+    (c) => groupedByCategory[c]?.length
+  );
+  const customCategories = Object.keys(groupedByCategory).filter(
+    (c) => !PRODUCT_CATEGORIES.includes(c as any) && c !== UNCATEGORIZED
+  );
+  const categoryOrder = [
+    ...knownCategories,
+    ...customCategories,
+    ...(groupedByCategory[UNCATEGORIZED]?.length ? [UNCATEGORIZED] : []),
+  ];
 
   const handleAddProduct = async () => {
     setEditingProduct(null);
@@ -217,6 +226,7 @@ export default function StoreDetailsPage() {
       description: product.Description || "",
       price: product.price || "",
       unit: product.unit || "",
+      category: product.category || "",
       minimumOrders: product.minimumOrders || "0",
       maxOrders: product.maxOrders || "",
       deliveryArea: product.delveryArea || "",
@@ -279,6 +289,7 @@ export default function StoreDetailsPage() {
         image: productImage,
         price: newProduct.price,
         unit: newProduct.unit,
+        category: newProduct.category || "",
         status: "active",
         minimumOrders: newProduct.minimumOrders || "0",
         maxOrders: newProduct.maxOrders || "",
@@ -315,6 +326,7 @@ export default function StoreDetailsPage() {
           description: "",
           price: "",
           unit: "",
+          category: "",
           minimumOrders: "0",
           maxOrders: "",
           deliveryArea: "",
@@ -690,7 +702,7 @@ export default function StoreDetailsPage() {
               <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 transform text-gray-400 sm:h-6 sm:w-6" />
               <input
                 type="text"
-                placeholder="Search products by name, description, price, or verification ID..."
+                placeholder="Search products by name, category, description, price..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-12 pr-12 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:py-3.5 sm:pl-14 sm:text-base"
@@ -722,9 +734,20 @@ export default function StoreDetailsPage() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-                {currentProducts.map((product) => {
-                  return (
+              {categoryOrder.map((categoryName) => (
+                <div
+                  key={categoryName}
+                  className="mb-10 first:mt-0 last:mb-0 sm:mb-12"
+                >
+                  <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white sm:mb-5 sm:text-lg">
+                    <Tag className="h-4 w-4 text-green-600 dark:text-green-500 sm:h-5 sm:w-5" />
+                    {categoryName}
+                    <span className="ml-2 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                      {groupedByCategory[categoryName]?.length ?? 0}
+                    </span>
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+                    {(groupedByCategory[categoryName] ?? []).map((product) => (
                     <div
                       key={product.id}
                       className="group relative flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:border-green-400 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-600"
@@ -944,89 +967,11 @@ export default function StoreDetailsPage() {
                         </div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="mt-6 flex flex-col items-center justify-between gap-4 sm:mt-8 sm:flex-row">
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    Showing {startIndex + 1} to{" "}
-                    {Math.min(endIndex, filteredProducts.length)} of{" "}
-                    {filteredProducts.length} products
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {/* Previous Button */}
-                    <button
-                      onClick={() =>
-                        setCurrentPage((prev) => Math.max(1, prev - 1))
-                      }
-                      disabled={currentPage === 1}
-                      className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:px-5 sm:text-base"
-                    >
-                      <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-                      <span className="hidden sm:inline">Previous</span>
-                      <span className="sm:hidden">Prev</span>
-                    </button>
-
-                    {/* Page Numbers */}
-                    <div className="flex items-center gap-1 sm:gap-2">
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                        (page) => {
-                          // Show first page, last page, current page, and pages around current
-                          if (
-                            page === 1 ||
-                            page === totalPages ||
-                            (page >= currentPage - 1 && page <= currentPage + 1)
-                          ) {
-                            return (
-                              <button
-                                key={page}
-                                onClick={() => setCurrentPage(page)}
-                                className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 sm:px-5 sm:text-base ${
-                                  currentPage === page
-                                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
-                                    : "border border-gray-200 bg-white text-gray-700 shadow-sm hover:border-gray-300 hover:bg-gray-50 hover:shadow-md dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                                }`}
-                              >
-                                {page}
-                              </button>
-                            );
-                          } else if (
-                            page === currentPage - 2 ||
-                            page === currentPage + 2
-                          ) {
-                            return (
-                              <span
-                                key={page}
-                                className="px-2 text-gray-500 dark:text-gray-400"
-                              >
-                                ...
-                              </span>
-                            );
-                          }
-                          return null;
-                        }
-                      )}
-                    </div>
-
-                    {/* Next Button */}
-                    <button
-                      onClick={() =>
-                        setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                      }
-                      disabled={currentPage === totalPages}
-                      className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:px-5 sm:text-base"
-                    >
-                      <span className="hidden sm:inline">Next</span>
-                      <span className="sm:hidden">Next</span>
-                      <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
-                    </button>
+                    ))}
                   </div>
                 </div>
-              )}
+              ))}
+
             </>
           )}
         </div>
@@ -1049,6 +994,7 @@ export default function StoreDetailsPage() {
                     description: "",
                     price: "",
                     unit: "",
+                    category: "",
                     minimumOrders: "0",
                     maxOrders: "",
                     deliveryArea: "",
@@ -1125,6 +1071,26 @@ export default function StoreDetailsPage() {
                   rows={8}
                   placeholder="Provide a detailed description of your product. You can use:\n- Bullet points\n- Sub headers\n- Line breaks\n- Bold, italic, underline\n- Any formatting you need"
                 />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Category
+                </label>
+                <select
+                  value={newProduct.category}
+                  onChange={(e) =>
+                    setNewProduct({ ...newProduct, category: e.target.value })
+                  }
+                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
+                >
+                  <option value="">Select a category (optional)</option>
+                  {PRODUCT_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -1296,6 +1262,7 @@ export default function StoreDetailsPage() {
                       description: "",
                       price: "",
                       unit: "",
+                      category: "",
                       minimumOrders: "0",
                       maxOrders: "",
                       deliveryArea: "",
@@ -1339,25 +1306,19 @@ export default function StoreDetailsPage() {
       {/* Product Details Modal */}
       {showProductModal && selectedProduct && (
         <div
-          className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-4"
+          className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center sm:p-4"
           onClick={() => {
             setShowProductModal(false);
             setSelectedProduct(null);
           }}
         >
           <div
-            className="h-full max-h-[90vh] w-full max-w-2xl animate-slide-up overflow-y-auto rounded-t-3xl border-l border-r border-t border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800 sm:h-auto sm:max-h-[85vh] sm:animate-none sm:rounded-2xl sm:border"
+            className="h-full max-h-[90vh] w-full max-w-2xl animate-slide-up overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-gray-800 sm:h-auto sm:max-h-[85vh] sm:animate-none sm:rounded-2xl sm:border sm:border-gray-200 sm:dark:border-gray-700"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div
-              className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-green-500 to-emerald-500 p-4 dark:border-gray-700 sm:p-6"
-              style={{ backgroundColor: "#10b981" }}
-            >
-              <h2
-                className="text-lg font-bold sm:text-xl"
-                style={{ color: "#ffffff" }}
-              >
+            {/* Modal Header - clean, no green bg */}
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-4 dark:border-gray-700 dark:bg-gray-800 sm:px-6">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
                 Product Details
               </h2>
               <button
@@ -1365,21 +1326,18 @@ export default function StoreDetailsPage() {
                   setShowProductModal(false);
                   setSelectedProduct(null);
                 }}
-                className="rounded-lg p-2 transition-colors hover:bg-white/20"
-                style={{ color: "#ffffff" }}
+                className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
               >
-                <X
-                  className="h-5 w-5 sm:h-6 sm:w-6"
-                  style={{ color: "#ffffff" }}
-                />
+                <X className="h-5 w-5 sm:h-6 sm:w-6" />
               </button>
             </div>
 
-            {/* Modal Content */}
-            <div className="space-y-4 p-4 sm:space-y-6 sm:p-6">
+            {/* Modal Content - scrollable */}
+            <div className="overflow-y-auto p-4 sm:p-6" style={{ maxHeight: "calc(85vh - 64px)" }}>
+              <div className="space-y-5">
               {/* Product Image */}
               {selectedProduct.Image && (
-                <div className="relative h-64 w-full overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-700 sm:h-80">
+                <div className="relative h-56 w-full overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-700 sm:h-72">
                   <img
                     src={selectedProduct.Image}
                     alt={selectedProduct.name}
@@ -1389,50 +1347,33 @@ export default function StoreDetailsPage() {
               )}
 
               {/* Product Name and Status */}
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start justify-between gap-3 pt-1">
                 <h3 className="flex-1 text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
                   {selectedProduct.name}
                 </h3>
                 {selectedProduct.status && (
                   <span
-                    className={`flex flex-shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                    className={`flex flex-shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold capitalize ${
                       selectedProduct.status === "active"
-                        ? "bg-green-500"
+                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                         : selectedProduct.status === "inactive"
-                        ? "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-                        : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
+                        ? "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                        : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
                     }`}
-                    style={
-                      selectedProduct.status === "active"
-                        ? { color: "#ffffff" }
-                        : {}
-                    }
                   >
                     {selectedProduct.status === "active" ? (
-                      <CheckCircle
-                        className="h-3.5 w-3.5"
-                        style={{ color: "#ffffff" }}
-                      />
+                      <CheckCircle className="h-3.5 w-3.5" />
                     ) : (
                       <XCircle className="h-3.5 w-3.5" />
                     )}
-                    <span
-                      className="capitalize"
-                      style={
-                        selectedProduct.status === "active"
-                          ? { color: "#ffffff" }
-                          : {}
-                      }
-                    >
-                      {selectedProduct.status}
-                    </span>
+                    {selectedProduct.status}
                   </span>
                 )}
               </div>
 
               {/* Price and Unit */}
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-green-600 dark:text-green-500 sm:text-3xl">
+              <div className="flex items-baseline gap-2 rounded-xl bg-gray-50 px-4 py-3 dark:bg-gray-700/50">
+                <span className="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
                   {formatCurrencySync(parseFloat(selectedProduct.price))}
                 </span>
                 <span className="text-sm text-gray-500 dark:text-gray-400 sm:text-base">
@@ -1442,12 +1383,12 @@ export default function StoreDetailsPage() {
 
               {/* Description */}
               {selectedProduct.Description && (
-                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
-                  <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
+                <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-600 dark:bg-gray-800/50">
+                  <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
                     Description
                   </h4>
                   <div
-                    className="text-sm leading-relaxed text-gray-600 dark:text-gray-400"
+                    className="text-sm leading-relaxed text-gray-700 dark:text-gray-300"
                     dangerouslySetInnerHTML={{
                       __html: selectedProduct.Description,
                     }}
@@ -1457,6 +1398,21 @@ export default function StoreDetailsPage() {
 
               {/* Product Details Grid */}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {/* Category */}
+                {selectedProduct.category && selectedProduct.category.trim() !== "" && (
+                  <div className="flex items-center gap-3 rounded-xl bg-emerald-50 p-3 dark:bg-emerald-900/20">
+                    <Tag className="h-5 w-5 flex-shrink-0 text-emerald-500 dark:text-emerald-400" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                        Category
+                      </p>
+                      <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">
+                        {selectedProduct.category}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Verification ID */}
                 {selectedProduct.query_id && (
                   <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-700/50">
@@ -1545,10 +1501,12 @@ export default function StoreDetailsPage() {
                   setShowProductModal(false);
                   handleEditProduct(selectedProduct);
                 }}
-                className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all hover:from-green-600 hover:to-emerald-600 hover:shadow-xl"
+                className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-green-500 bg-white px-6 py-3 text-base font-semibold text-green-600 transition-all hover:bg-green-50 dark:border-green-600 dark:bg-gray-800 dark:text-green-400 dark:hover:bg-green-900/20"
               >
+                <Edit className="h-4 w-4" />
                 Edit Product
               </button>
+              </div>
             </div>
           </div>
         </div>
