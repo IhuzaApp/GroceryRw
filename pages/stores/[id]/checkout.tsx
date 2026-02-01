@@ -1124,14 +1124,14 @@ export default function StoreCheckoutPage() {
             )}
 
             <div
-              className={`fixed left-0 right-0 z-50 w-full rounded-t-2xl border-x-0 border-t border-b-0 border-gray-200/80 bg-white shadow-2xl transition-[max-height] duration-300 dark:border-gray-700 dark:bg-gray-800 pb-[env(safe-area-inset-bottom)] ${
+              className={`fixed left-0 right-0 z-50 flex w-full flex-col rounded-t-2xl border-x-0 border-t border-b-0 border-gray-200/80 bg-white shadow-2xl transition-[max-height] duration-300 dark:border-gray-700 dark:bg-gray-800 pb-[env(safe-area-inset-bottom)] ${
                 isExpanded ? "max-h-[85vh]" : "max-h-[200px]"
               }`}
               style={{ bottom: 0, overflow: "hidden" }}
             >
               {/* Drag handle */}
               <div
-                className="flex cursor-grab justify-center border-b border-gray-100 py-3 dark:border-gray-700"
+                className="flex shrink-0 cursor-grab justify-center border-b border-gray-100 py-3 dark:border-gray-700"
                 onClick={toggleExpand}
               >
                 <div className="h-1 w-12 rounded-full bg-gray-300 dark:bg-gray-600" />
@@ -1139,7 +1139,7 @@ export default function StoreCheckoutPage() {
 
               {/* Header */}
               <div
-                className="flex items-center justify-between px-5 py-4"
+                className="flex shrink-0 items-center justify-between px-5 py-4"
                 onClick={toggleExpand}
               >
                 <div>
@@ -1162,30 +1162,9 @@ export default function StoreCheckoutPage() {
                 </div>
               </div>
 
-              {/* Checkout button when collapsed */}
-              {!isExpanded && (
-                <div className="px-5 pb-6">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (!canPlaceOrder()) {
-                        toast.error(!userAddress ? "Please set your delivery address" : !selectedPaymentMethod ? "Please select a payment method" : "Please enter a valid phone number");
-                        return;
-                      }
-                      handlePlaceOrder();
-                    }}
-                    disabled={isProcessing || !canPlaceOrder()}
-                    className="w-full rounded-xl bg-emerald-600 py-3.5 text-base font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {isProcessing ? "Processing…" : "Place order"}
-                  </button>
-                </div>
-              )}
-
-              {/* Expanded content */}
+              {/* Expanded content - scrollable middle */}
               <div
-                className={`overflow-y-auto px-5 pb-8 ${isExpanded ? "block" : "hidden"}`}
-                style={{ maxHeight: "calc(85vh - 140px)" }}
+                className={`min-h-0 flex-1 overflow-y-auto px-5 ${isExpanded ? "block" : "hidden"}`}
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="space-y-4 border-b border-gray-100 pb-5 dark:border-gray-700">
@@ -1209,7 +1188,7 @@ export default function StoreCheckoutPage() {
                   </div>
                 </div>
 
-                <div className="space-y-4 py-5">
+                <div className="space-y-4 pb-4 pt-5">
                   <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-700/50">
                     <h4 className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white">
                       <MapPin className="h-4 w-4 text-emerald-500" />
@@ -1395,11 +1374,21 @@ export default function StoreCheckoutPage() {
                     />
                   </div>
                 </div>
+              </div>
 
+              {/* Place order button - always attached at bottom */}
+              <div className="shrink-0 border-t border-gray-100 px-5 py-4 dark:border-gray-700">
                 <button
-                  onClick={(e) => { e.stopPropagation(); handlePlaceOrder(); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!canPlaceOrder()) {
+                      toast.error(!userAddress ? "Please set your delivery address" : !selectedPaymentMethod ? "Please select a payment method" : "Please enter a valid phone number");
+                      return;
+                    }
+                    handlePlaceOrder();
+                  }}
                   disabled={isProcessing || !canPlaceOrder()}
-                  className="w-full rounded-xl bg-emerald-600 py-4 text-base font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full rounded-xl bg-emerald-600 py-3.5 text-base font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isProcessing ? "Processing…" : "Place order"}
                 </button>
