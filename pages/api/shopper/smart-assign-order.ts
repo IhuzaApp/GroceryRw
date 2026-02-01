@@ -51,6 +51,9 @@ const ROUND_CONFIGS: RoundConfig[] = [
 const URGENT_ORDER_AGE_MINUTES = 30;
 const URGENT_MAX_DISTANCE_KM = 10;
 
+// Randomization: pick from top N candidates by priority so regular, reel, restaurant, and business orders get fair exposure
+const TOP_CANDIDATES_FOR_RANDOM = 10;
+
 // GraphQL query to get eligible orders (no active offers, not assigned)
 const GET_ELIGIBLE_ORDERS = gql`
   query GetEligibleOrders {
@@ -1361,15 +1364,22 @@ export default async function handler(
     // Sort by priority (lowest first)
     ordersWithPriority.sort((a, b) => a.priority - b.priority);
 
-    // Get the best order for this shopper
-    const bestOrder = ordersWithPriority[0];
-    console.log("✅ Best order selected for this shopper:", {
-      id: bestOrder.id,
-      type: bestOrder.orderType,
-      distance: bestOrder.distance.toFixed(2) + "km",
-      eta: bestOrder.eta + "min",
-      priority: bestOrder.priority.toFixed(2),
-    });
+    // Randomize among top candidates so restaurant, reel, regular, and business orders get fair exposure
+    const topN = Math.min(TOP_CANDIDATES_FOR_RANDOM, ordersWithPriority.length);
+    const topCandidates = ordersWithPriority.slice(0, topN);
+    const bestOrder =
+      topCandidates[Math.floor(Math.random() * topCandidates.length)];
+
+    console.log(
+      `✅ Best order selected for this shopper (random among top ${topN}):`,
+      {
+        id: bestOrder.id,
+        type: bestOrder.orderType,
+        distance: bestOrder.distance.toFixed(2) + "km",
+        eta: bestOrder.eta + "min",
+        priority: bestOrder.priority.toFixed(2),
+      }
+    );
 
     // ========================================================================
     // STEP 3: Create Exclusive Offer (THIS IS THE LOCK)
