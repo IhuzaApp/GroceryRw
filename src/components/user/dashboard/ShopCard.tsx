@@ -123,6 +123,14 @@ const ShopCard: React.FC<ShopCardProps> = ({
     if (lowerName.includes("organic")) {
       return "/assets/images/OrganicShop.jpg";
     }
+    if (
+      lowerCategoryName.includes("care") ||
+      lowerCategoryName.includes("beauty") ||
+      lowerName.includes("beauty") ||
+      lowerName.includes("cosmetic")
+    ) {
+      return "/assets/images/beauty.avif";
+    }
     if (lowerName.includes("bakery") || lowerName.includes("bakeries")) {
       return "/assets/images/backeryImage.jpg";
     }

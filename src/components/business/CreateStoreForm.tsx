@@ -12,6 +12,8 @@ import {
   Navigation,
   MapPinned,
   PenLine,
+  Clock,
+  Tag,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { RichTextEditor } from "../ui/RichTextEditor";
@@ -26,6 +28,58 @@ interface CreateStoreFormProps {
 type ImageSource = "upload" | "url";
 type LocationSource = "current" | "address" | "manual";
 
+const STORE_DAYS = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+] as const;
+
+const DEFAULT_OPERATING_HOURS: OperatingHoursByDay = Object.fromEntries(
+  STORE_DAYS.map((d) => [d, "9am - 5pm"])
+) as OperatingHoursByDay;
+
+// Time options for operating hours (format: "9am - 5pm")
+const TIME_OPTIONS = [
+  "12am",
+  "1am",
+  "2am",
+  "3am",
+  "4am",
+  "5am",
+  "6am",
+  "7am",
+  "8am",
+  "9am",
+  "10am",
+  "11am",
+  "12pm",
+  "1pm",
+  "2pm",
+  "3pm",
+  "4pm",
+  "5pm",
+  "6pm",
+  "7pm",
+  "8pm",
+  "9pm",
+  "10pm",
+  "11pm",
+];
+
+// operating_hours format: { monday: "9am - 5pm", tuesday: "Closed", ... }
+type OperatingHoursByDay = Record<string, string>;
+
+interface Category {
+  id: string;
+  name: string;
+  description?: string;
+  is_active?: boolean;
+}
+
 interface StoreFormData {
   name: string;
   description: string;
@@ -36,6 +90,8 @@ interface StoreFormData {
   imageSource?: ImageSource;
   locationSource?: LocationSource;
   addressSearch?: string;
+  category_id: string;
+  operating_hours: OperatingHoursByDay;
 }
 
 export function CreateStoreForm({
@@ -48,6 +104,9 @@ export function CreateStoreForm({
     useRef<google.maps.places.AutocompleteService | null>(null);
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
 
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+
   const [formData, setFormData] = useState<StoreFormData>({
     name: "",
     description: "",
@@ -58,6 +117,8 @@ export function CreateStoreForm({
     imageSource: "upload",
     locationSource: "address",
     addressSearch: "",
+    category_id: "",
+    operating_hours: { ...DEFAULT_OPERATING_HOURS },
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -74,6 +135,23 @@ export function CreateStoreForm({
       geocoderRef.current = new google.maps.Geocoder();
     }
   }, [isGoogleMapsLoaded]);
+
+  // Fetch categories when form opens
+  useEffect(() => {
+    if (isOpen) {
+      setCategoriesLoading(true);
+      fetch("/api/queries/categories")
+        .then((res) => res.json())
+        .then((data) => {
+          const cats = data.categories || [];
+          setCategories(
+            Array.isArray(cats) ? cats.filter((c: Category) => c.is_active !== false) : []
+          );
+        })
+        .catch(() => setCategories([]))
+        .finally(() => setCategoriesLoading(false));
+    }
+  }, [isOpen]);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData((prev) => ({
@@ -237,6 +315,26 @@ export function CreateStoreForm({
     formData.locationSource === "current" ||
     formData.locationSource === "address";
 
+  const setOperatingHoursForDay = (day: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      operating_hours: { ...prev.operating_hours, [day]: value },
+    }));
+  };
+
+  const applyHoursToAllDays = () => {
+    const firstDayHours = formData.operating_hours[STORE_DAYS[0]] || "9am - 5pm";
+    const next: OperatingHoursByDay = {};
+    STORE_DAYS.forEach((d) => {
+      next[d] = firstDayHours;
+    });
+    setFormData((prev) => ({
+      ...prev,
+      operating_hours: next,
+    }));
+    toast.success("Hours applied to all days");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -245,6 +343,12 @@ export function CreateStoreForm({
       // Validate required fields
       if (!formData.name.trim()) {
         toast.error("Store name is required");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!formData.category_id.trim()) {
+        toast.error("Store category is required");
         setIsSubmitting(false);
         return;
       }
@@ -282,6 +386,9 @@ export function CreateStoreForm({
           latitude: formData.latitude.trim(),
           longitude: formData.longitude.trim(),
           image: imageValue,
+          category_id: formData.category_id.trim(),
+          operating_hours: formData.operating_hours,
+          address: (formData.addressSearch ?? "").trim(),
         }),
       });
 
@@ -309,6 +416,8 @@ export function CreateStoreForm({
         imageSource: "upload",
         locationSource: "address",
         addressSearch: "",
+        category_id: "",
+        operating_hours: { ...DEFAULT_OPERATING_HOURS },
       });
       setImagePreview(null);
       setAddressSuggestions([]);
@@ -383,6 +492,38 @@ export function CreateStoreForm({
                 rows={6}
                 placeholder="Provide a detailed description of your store..."
               />
+            </div>
+
+            {/* Category */}
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Store Category <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <Tag className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
+                <select
+                  value={formData.category_id}
+                  onChange={(e) =>
+                    handleInputChange("category_id", e.target.value)
+                  }
+                  required
+                  className="w-full appearance-none rounded-xl border-2 border-gray-200 bg-white py-3 pl-12 pr-10 text-base font-medium text-gray-900 transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500"
+                >
+                  <option value="">Select a category</option>
+                  {categoriesLoading ? (
+                    <option disabled>Loading categories...</option>
+                  ) : (
+                    categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))
+                  )}
+                </select>
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  ▼
+                </span>
+              </div>
             </div>
 
             {/* Location */}
@@ -526,6 +667,107 @@ export function CreateStoreForm({
                   . Switch to &quot;Enter coordinates&quot; to edit.
                 </p>
               )}
+            </div>
+
+            {/* Operating Hours */}
+            <div>
+              <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                <Clock className="h-4 w-4" />
+                Operating Hours
+              </label>
+              <div className="rounded-xl border-2 border-gray-200 bg-gray-50/50 dark:border-gray-600 dark:bg-gray-700/30">
+                <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2 dark:border-gray-600">
+                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                    Set hours per day (e.g., 9am - 5pm or Closed)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={applyHoursToAllDays}
+                    className="rounded-lg bg-green-100 px-2 py-1 text-xs font-medium text-green-700 transition-colors hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50"
+                  >
+                    Apply to all
+                  </button>
+                </div>
+                <div className="max-h-48 overflow-y-auto p-3">
+                  {STORE_DAYS.map((day) => (
+                    <div
+                      key={day}
+                      className="mb-2 flex items-center gap-2 last:mb-0"
+                    >
+                      <span className="w-24 shrink-0 capitalize text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {day}
+                      </span>
+                      <select
+                        value={
+                          formData.operating_hours[day] === "Closed"
+                            ? "closed"
+                            : "open"
+                        }
+                        onChange={(e) => {
+                          const isClosed = e.target.value === "closed";
+                          setOperatingHoursForDay(
+                            day,
+                            isClosed ? "Closed" : "9am - 5pm"
+                          );
+                        }}
+                        className="flex-1 rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      >
+                        <option value="open">Open</option>
+                        <option value="closed">Closed</option>
+                      </select>
+                      {formData.operating_hours[day] !== "Closed" && (
+                        <>
+                          <select
+                            value={
+                              formData.operating_hours[day]?.split(" - ")[0] ||
+                              "9am"
+                            }
+                            onChange={(e) => {
+                              const close =
+                                formData.operating_hours[day]?.split(" - ")[1] ||
+                                "5pm";
+                              setOperatingHoursForDay(
+                                day,
+                                `${e.target.value} - ${close}`
+                              );
+                            }}
+                            className="w-20 rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                          >
+                            {TIME_OPTIONS.map((t) => (
+                              <option key={t} value={t}>
+                                {t}
+                              </option>
+                            ))}
+                          </select>
+                          <span className="text-gray-400">-</span>
+                          <select
+                            value={
+                              formData.operating_hours[day]?.split(" - ")[1] ||
+                              "5pm"
+                            }
+                            onChange={(e) => {
+                              const open =
+                                formData.operating_hours[day]?.split(" - ")[0] ||
+                                "9am";
+                              setOperatingHoursForDay(
+                                day,
+                                `${open} - ${e.target.value}`
+                              );
+                            }}
+                            className="w-20 rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                          >
+                            {TIME_OPTIONS.map((t) => (
+                              <option key={t} value={t}>
+                                {t}
+                              </option>
+                            ))}
+                          </select>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Store Image */}

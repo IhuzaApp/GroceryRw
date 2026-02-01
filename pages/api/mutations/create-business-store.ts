@@ -9,8 +9,9 @@ import { notifyNewStoreCreatedToSlack } from "../../../src/lib/slackSystemNotifi
 // Matches the format provided by the user
 const CREATE_BUSINESS_STORE = gql`
   mutation CreateBusinessStore(
+    $address: String = ""
     $business_id: uuid!
-    $category_id: uuid = ""
+    $category_id: uuid
     $description: String = ""
     $image: String = ""
     $latitude: String = ""
@@ -20,6 +21,7 @@ const CREATE_BUSINESS_STORE = gql`
   ) {
     insert_business_stores(
       objects: {
+        address: $address
         business_id: $business_id
         category_id: $category_id
         description: $description
@@ -63,6 +65,7 @@ interface CreateBusinessStoreInput {
   image?: string;
   latitude?: string;
   longitude?: string;
+  address?: string;
   operating_hours?: any;
 }
 
@@ -97,6 +100,7 @@ export default async function handler(
       image,
       latitude,
       longitude,
+      address,
       operating_hours,
     } = req.body as CreateBusinessStoreInput;
 
@@ -238,6 +242,7 @@ export default async function handler(
 
     // Build variables object
     const variables: Record<string, any> = {
+      address: address?.trim() || "",
       business_id,
       name: name.trim(),
       description: description?.trim() || "",
@@ -245,7 +250,7 @@ export default async function handler(
       latitude: latitude.trim(),
       longitude: longitude.trim(),
       operating_hours: operatingHoursJson,
-      category_id: hasValidCategoryId ? category_id.trim() : "",
+      category_id: hasValidCategoryId ? category_id.trim() : null,
     };
 
     // Use single mutation that handles both cases
