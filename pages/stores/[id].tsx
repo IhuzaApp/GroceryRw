@@ -243,7 +243,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         price: product.price,
         unit: product.unit || "",
         measurement_unit: product.unit || "",
-        category: product.category?.trim() || product.speciality?.trim() || "Other",
+        category:
+          product.category?.trim() || product.speciality?.trim() || "Other",
         minimumOrders: product.minimumOrders,
         maxOrders: product.maxOrders,
         delveryArea: product.delveryArea,

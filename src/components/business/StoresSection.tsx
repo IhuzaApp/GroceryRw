@@ -186,7 +186,10 @@ export function StoresSection({
                     <MapPin className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />
                     <span className="line-clamp-1">
                       {store.address ||
-                        `${store.latitude?.substring(0, 8)}, ${store.longitude?.substring(0, 8)}`}
+                        `${store.latitude?.substring(
+                          0,
+                          8
+                        )}, ${store.longitude?.substring(0, 8)}`}
                     </span>
                   </div>
                 )}

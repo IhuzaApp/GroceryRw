@@ -152,7 +152,9 @@ export default async function handler(
         : "";
     const validCategory =
       categoryTrimmed &&
-      PRODUCT_CATEGORIES.includes(categoryTrimmed as (typeof PRODUCT_CATEGORIES)[number])
+      PRODUCT_CATEGORIES.includes(
+        categoryTrimmed as typeof PRODUCT_CATEGORIES[number]
+      )
         ? categoryTrimmed
         : "";
 

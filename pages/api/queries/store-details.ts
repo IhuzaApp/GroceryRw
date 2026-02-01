@@ -120,7 +120,8 @@ export default async function handler(
         price: product.price,
         final_price: product.price,
         unit: product.unit || "",
-        category: product.category?.trim() || product.speciality?.trim() || "Other",
+        category:
+          product.category?.trim() || product.speciality?.trim() || "Other",
         measurement_unit: product.unit || "",
         quantity: 1, // Default quantity for services
         is_active: product.status === "active",

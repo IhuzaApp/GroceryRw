@@ -153,14 +153,18 @@ export default async function handler(
       business_stores: Array<{ id: string }>;
     }>(verifyStoreQuery, { store_id, business_id });
 
-    if (!verifyResult.business_stores || verifyResult.business_stores.length === 0) {
+    if (
+      !verifyResult.business_stores ||
+      verifyResult.business_stores.length === 0
+    ) {
       return res.status(404).json({ error: "Store not found" });
     }
 
     // Build _set object - only include fields that were provided
     const setObj: Record<string, any> = {};
     if (name !== undefined) setObj.name = name.trim();
-    if (description !== undefined) setObj.description = description?.trim() ?? "";
+    if (description !== undefined)
+      setObj.description = description?.trim() ?? "";
     if (address !== undefined) setObj.address = address?.trim() ?? "";
     if (category_id !== undefined) {
       const hasValidCategoryId =
@@ -184,7 +188,10 @@ export default async function handler(
           } catch {
             operatingHoursJson = {};
           }
-        } else if (typeof operating_hours === "object" && operating_hours !== null) {
+        } else if (
+          typeof operating_hours === "object" &&
+          operating_hours !== null
+        ) {
           operatingHoursJson = operating_hours;
         }
       }

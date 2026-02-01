@@ -387,9 +387,11 @@ export function StoreCard({
   store: any;
   onView: (item: any) => void;
 }) {
-  const address = store.address || (store.latitude && store.longitude
-    ? `${store.latitude.substring(0, 8)}, ${store.longitude.substring(0, 8)}`
-    : null);
+  const address =
+    store.address ||
+    (store.latitude && store.longitude
+      ? `${store.latitude.substring(0, 8)}, ${store.longitude.substring(0, 8)}`
+      : null);
   const operatingDays = formatOperatingDays(store.operating_hours);
 
   return (

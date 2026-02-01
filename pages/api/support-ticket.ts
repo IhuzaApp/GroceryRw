@@ -62,7 +62,12 @@ export default async function handler(
   }
 
   const session = (await getServerSession(req, res, authOptions as any)) as {
-    user?: { id?: string; name?: string | null; email?: string | null; phone?: string };
+    user?: {
+      id?: string;
+      name?: string | null;
+      email?: string | null;
+      phone?: string;
+    };
   } | null;
   if (!session?.user?.id) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -148,7 +153,8 @@ export default async function handler(
     const body = req.body as Body | undefined;
     await logErrorToSlack("api/support-ticket", err, {
       orderId: body && "orderId" in body ? body.orderId : undefined,
-      orderDisplayId: body && "orderDisplayId" in body ? body.orderDisplayId : undefined,
+      orderDisplayId:
+        body && "orderDisplayId" in body ? body.orderDisplayId : undefined,
       userId: session?.user?.id,
     });
     return res.status(500).json({

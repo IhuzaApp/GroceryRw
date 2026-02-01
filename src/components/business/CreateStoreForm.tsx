@@ -164,7 +164,9 @@ export function CreateStoreForm({
         .then((data) => {
           const cats = data.categories || [];
           setCategories(
-            Array.isArray(cats) ? cats.filter((c: Category) => c.is_active !== false) : []
+            Array.isArray(cats)
+              ? cats.filter((c: Category) => c.is_active !== false)
+              : []
           );
         })
         .catch(() => setCategories([]))
@@ -175,8 +177,10 @@ export function CreateStoreForm({
   // Populate form when editing
   useEffect(() => {
     if (isOpen && editingStore) {
-      const hours = editingStore.operating_hours || { ...DEFAULT_OPERATING_HOURS };
-      const hasAddress = !!(editingStore.address?.trim());
+      const hours = editingStore.operating_hours || {
+        ...DEFAULT_OPERATING_HOURS,
+      };
+      const hasAddress = !!editingStore.address?.trim();
       const hasCoords = !!(editingStore.latitude && editingStore.longitude);
       setFormData({
         name: editingStore.name || "",
@@ -184,9 +188,15 @@ export function CreateStoreForm({
         latitude: editingStore.latitude || "",
         longitude: editingStore.longitude || "",
         image: null,
-        imageUrl: editingStore.image?.startsWith("http") ? editingStore.image : "",
+        imageUrl: editingStore.image?.startsWith("http")
+          ? editingStore.image
+          : "",
         imageSource: editingStore.image?.startsWith("http") ? "url" : "upload",
-        locationSource: hasAddress ? "address" : hasCoords ? "manual" : "address",
+        locationSource: hasAddress
+          ? "address"
+          : hasCoords
+          ? "manual"
+          : "address",
         addressSearch: editingStore.address || "",
         category_id: editingStore.category_id || "",
         operating_hours: { ...DEFAULT_OPERATING_HOURS, ...hours },
@@ -382,7 +392,8 @@ export function CreateStoreForm({
   };
 
   const applyHoursToAllDays = () => {
-    const firstDayHours = formData.operating_hours[STORE_DAYS[0]] || "9am - 5pm";
+    const firstDayHours =
+      formData.operating_hours[STORE_DAYS[0]] || "9am - 5pm";
     const next: OperatingHoursByDay = {};
     STORE_DAYS.forEach((d) => {
       next[d] = firstDayHours;
@@ -460,7 +471,11 @@ export function CreateStoreForm({
         }
 
         const data = await response.json();
-        const updated = data.store || { ...editingStore, ...formData, id: editingStore.id };
+        const updated = data.store || {
+          ...editingStore,
+          ...formData,
+          id: editingStore.id,
+        };
         onSubmit(updated);
         toast.success("Store updated successfully!");
         onClose();
@@ -787,7 +802,9 @@ export function CreateStoreForm({
                   </button>
                   <div>
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {formData.is_active ? "Store is active" : "Store is disabled"}
+                      {formData.is_active
+                        ? "Store is active"
+                        : "Store is disabled"}
                     </span>
                     {!formData.is_active && (
                       <p className="mt-0.5 text-xs text-amber-600 dark:text-amber-400">
@@ -810,7 +827,8 @@ export function CreateStoreForm({
                             storeId: editingStore.id,
                             storeName: editingStore.name || "Unnamed store",
                             message: "Request to re-enable this store",
-                            businessAccountId: (editingStore as any).business_id,
+                            businessAccountId: (editingStore as any)
+                              .business_id,
                           }),
                         });
                         if (res.ok) {
@@ -819,7 +837,9 @@ export function CreateStoreForm({
                           );
                         } else {
                           const data = await res.json().catch(() => ({}));
-                          throw new Error(data.error || "Failed to send request");
+                          throw new Error(
+                            data.error || "Failed to send request"
+                          );
                         }
                       } catch (err: any) {
                         toast.error(err.message || "Failed to send request");
@@ -876,7 +896,7 @@ export function CreateStoreForm({
                       key={day}
                       className="mb-2 flex items-center gap-2 last:mb-0"
                     >
-                      <span className="w-24 shrink-0 capitalize text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <span className="w-24 shrink-0 text-sm font-medium capitalize text-gray-700 dark:text-gray-300">
                         {day}
                       </span>
                       <select
@@ -906,8 +926,9 @@ export function CreateStoreForm({
                             }
                             onChange={(e) => {
                               const close =
-                                formData.operating_hours[day]?.split(" - ")[1] ||
-                                "5pm";
+                                formData.operating_hours[day]?.split(
+                                  " - "
+                                )[1] || "5pm";
                               setOperatingHoursForDay(
                                 day,
                                 `${e.target.value} - ${close}`
@@ -929,8 +950,9 @@ export function CreateStoreForm({
                             }
                             onChange={(e) => {
                               const open =
-                                formData.operating_hours[day]?.split(" - ")[0] ||
-                                "9am";
+                                formData.operating_hours[day]?.split(
+                                  " - "
+                                )[0] || "9am";
                               setOperatingHoursForDay(
                                 day,
                                 `${open} - ${e.target.value}`

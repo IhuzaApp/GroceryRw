@@ -25,7 +25,10 @@ export function CategorySelect({
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -35,15 +38,19 @@ export function CategorySelect({
 
   const searchLower = search.toLowerCase().trim();
 
-  const filteredGroups = PRODUCT_CATEGORIES_GROUPED.map(({ group, categories }) => {
-    const matching = searchLower
-      ? categories.filter((c) => c.toLowerCase().includes(searchLower))
-      : [...categories];
-    return { group, categories: matching };
-  }).filter((g) => g.categories.length > 0);
+  const filteredGroups = PRODUCT_CATEGORIES_GROUPED.map(
+    ({ group, categories }) => {
+      const matching = searchLower
+        ? categories.filter((c) => c.toLowerCase().includes(searchLower))
+        : [...categories];
+      return { group, categories: matching };
+    }
+  ).filter((g) => g.categories.length > 0);
 
   const selectedLabel = value
-    ? PRODUCT_CATEGORIES_GROUPED.flatMap((g) => g.categories).find((c) => c === value) ?? value
+    ? PRODUCT_CATEGORIES_GROUPED.flatMap((g) => g.categories).find(
+        (c) => c === value
+      ) ?? value
     : null;
 
   return (
@@ -79,7 +86,9 @@ export function CategorySelect({
             </span>
           )}
           <ChevronDown
-            className={`h-5 w-5 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
+            className={`h-5 w-5 text-gray-400 transition-transform ${
+              isOpen ? "rotate-180" : ""
+            }`}
           />
         </div>
       </button>

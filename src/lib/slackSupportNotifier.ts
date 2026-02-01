@@ -410,7 +410,9 @@ export async function sendRequestEnableStoreToSlack(
       fields: [
         {
           type: "mrkdwn",
-          text: `*Business account ID*\n\`${payload.businessAccountId ?? "—"}\``,
+          text: `*Business account ID*\n\`${
+            payload.businessAccountId ?? "—"
+          }\``,
         },
       ],
     },
@@ -419,7 +421,9 @@ export async function sendRequestEnableStoreToSlack(
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `*Message*\n${payload.message?.trim() || "_No additional message._"}`,
+        text: `*Message*\n${
+          payload.message?.trim() || "_No additional message._"
+        }`,
       },
     },
     {
@@ -427,7 +431,9 @@ export async function sendRequestEnableStoreToSlack(
       elements: [
         {
           type: "mrkdwn",
-          text: `User ID: \`${payload.userId ?? "—"}\` · 🕒 ${new Date().toISOString()}`,
+          text: `User ID: \`${
+            payload.userId ?? "—"
+          }\` · 🕒 ${new Date().toISOString()}`,
         },
       ],
     },
