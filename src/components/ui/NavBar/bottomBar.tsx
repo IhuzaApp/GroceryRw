@@ -257,8 +257,12 @@ export default function BottomBar() {
     <>
       {/* Floating Buttons (Ask, Help) */}
 
-      {/* Floating Cart Button (Lifted) */}
-      {router.pathname !== "/Cart" && router.pathname !== "/Reels" && (
+      {/* Floating Cart Button (Lifted) - hidden on store & checkout pages */}
+      {router.pathname !== "/Cart" &&
+        router.pathname !== "/Reels" &&
+        router.pathname !== "/stores/[id]" &&
+        router.pathname !== "/stores/[id]/checkout" &&
+        router.pathname !== "/plasBusiness/store/[storeId]" && (
         <div className="fixed bottom-24 right-4 z-50 md:hidden">
           <Link href="/Cart" passHref>
             <div className="relative flex h-14 w-14 flex-col items-center justify-center rounded-full bg-[#115e59] text-white shadow-lg transition hover:bg-[#115e59]">

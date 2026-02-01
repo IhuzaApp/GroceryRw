@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/router";
 import { useAuth } from "../../hooks/useAuth";
 import AIChatButton from "./AIChatButton";
 import AIChatWindow from "./AIChatWindow";
 
 export default function AIChatProvider() {
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
   const { data: session } = useSession();
   const { isGuest } = useAuth();
+
+  const isStoreOrCheckout =
+    router.pathname === "/stores/[id]" ||
+    router.pathname === "/stores/[id]/checkout" ||
+    router.pathname === "/plasBusiness/store/[storeId]";
 
   const toggleChat = () => {
     setIsOpen((prev) => !prev);
@@ -32,7 +39,10 @@ export default function AIChatProvider() {
 
   return (
     <>
-      <AIChatButton onClick={toggleChat} />
+      <AIChatButton
+        onClick={toggleChat}
+        hideOnMobile={isStoreOrCheckout}
+      />
       <AIChatWindow isOpen={isOpen} onClose={() => setIsOpen(false)} />
     </>
   );
