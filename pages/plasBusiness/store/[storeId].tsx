@@ -1817,7 +1817,7 @@ export default function StoreDetailsPage() {
           }}
         >
           <div
-            className="flex h-full max-h-[92vh] w-full max-w-2xl flex-col animate-slide-up overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-gray-800 sm:h-auto sm:max-h-[88vh] sm:animate-none sm:rounded-2xl sm:border sm:border-gray-200 sm:dark:border-gray-700"
+            className="flex h-full max-h-[92vh] w-full max-w-[100vw] flex-col animate-slide-up overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-gray-800 sm:h-auto sm:max-h-[88vh] sm:max-w-2xl sm:animate-none sm:rounded-2xl sm:border sm:border-gray-200 sm:dark:border-gray-700"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}

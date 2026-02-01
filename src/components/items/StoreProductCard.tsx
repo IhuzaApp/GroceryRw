@@ -21,6 +21,38 @@ export interface OtherDetailsOption {
   values: string[];
 }
 
+/** Color name -> { bg, text } for chips in product details */
+const COLOR_CHIP_STYLES: Record<string, { bg: string; text: string }> = {
+  Blue: { bg: "#2563eb", text: "#fff" },
+  "Light Blue": { bg: "#7dd3fc", text: "#171717" },
+  "Dark Blue": { bg: "#1e3a8a", text: "#fff" },
+  Navy: { bg: "#1e3a5f", text: "#fff" },
+  Red: { bg: "#dc2626", text: "#fff" },
+  Green: { bg: "#16a34a", text: "#fff" },
+  "Light Green": { bg: "#86efac", text: "#171717" },
+  "Dark Green": { bg: "#14532d", text: "#fff" },
+  Yellow: { bg: "#eab308", text: "#171717" },
+  Gold: { bg: "#ca8a04", text: "#fff" },
+  Orange: { bg: "#ea580c", text: "#fff" },
+  Pink: { bg: "#ec4899", text: "#fff" },
+  Rose: { bg: "#e11d48", text: "#fff" },
+  Black: { bg: "#171717", text: "#fff" },
+  White: { bg: "#fafafa", text: "#171717" },
+  Gray: { bg: "#6b7280", text: "#fff" },
+  Silver: { bg: "#a1a1aa", text: "#171717" },
+  Brown: { bg: "#78350f", text: "#fff" },
+  Beige: { bg: "#d4b896", text: "#171717" },
+  Purple: { bg: "#7c3aed", text: "#fff" },
+  Violet: { bg: "#6d28d9", text: "#fff" },
+  Lavender: { bg: "#c4b5fd", text: "#171717" },
+};
+function getColorChipStyle(name: string): { background: string; color: string } | null {
+  const key = Object.keys(COLOR_CHIP_STYLES).find((k) => k.toLowerCase() === name.toLowerCase());
+  if (!key) return null;
+  const s = COLOR_CHIP_STYLES[key];
+  return { background: s.bg, color: s.text };
+}
+
 interface StoreProductCardProps {
   id: string;
   name: string;
@@ -67,14 +99,16 @@ export default function StoreProductCard({
   const [ratingsLoading, setRatingsLoading] = useState(false);
   const { setHideBottomBar } = useHideBottomBar();
 
-  // When opening quantity modal, default each option to first value
+  // When opening quantity modal, default each option (size, color) to first value
   useEffect(() => {
     if (showQuantityModal && options.length > 0) {
       const defaults: Record<string, string> = {};
       options.forEach((opt) => {
         if (opt.values?.length) defaults[opt.key] = opt.values[0];
       });
-      setSelectedDetails((prev) => (Object.keys(prev).length ? prev : defaults));
+      setSelectedDetails(defaults);
+    } else if (!showQuantityModal) {
+      setSelectedDetails({});
     }
   }, [showQuantityModal, options.length]);
 
@@ -264,14 +298,14 @@ export default function StoreProductCard({
         </div>
       </div>
 
-      {/* Product Details Modal - Fits viewport, touches left/right/bottom edges, cart button at bottom, bottom bar hidden */}
+      {/* Product Details Modal - Full width on mobile, enough width on desktop */}
       {showDetailsModal && (
         <div
-          className="fixed inset-0 z-50 flex flex-col bg-black/70 pt-6 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex flex-col bg-black/70 pt-6 backdrop-blur-md sm:items-center sm:justify-center sm:p-4"
           onClick={() => setShowDetailsModal(false)}
         >
           <div
-            className="flex h-[calc(100vh-1.5rem)] w-full flex-col overflow-hidden rounded-t-2xl border-x-0 border-t border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800 sm:mx-auto sm:max-w-md sm:border-x"
+            className="flex h-[calc(100vh-1.5rem)] w-full max-w-[100vw] flex-col overflow-hidden rounded-t-2xl border-x-0 border-t border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800 sm:h-[85vh] sm:max-h-[88vh] sm:max-w-xl sm:rounded-2xl sm:border-x"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -366,6 +400,50 @@ export default function StoreProductCard({
                       {description || "No description available."}
                     </p>
                   </div>
+
+                  {/* Size & Colors (otherDetails) */}
+                  {otherDetails?.options && otherDetails.options.length > 0 && (
+                    <div className="space-y-3">
+                      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400">
+                        Size & Colors
+                      </label>
+                      {otherDetails.options.map(
+                        (opt) =>
+                          opt.values && opt.values.length > 0 && (
+                            <div key={opt.key || opt.label}>
+                              <p className="mb-1.5 text-xs font-medium text-gray-500 dark:text-gray-400">
+                                {opt.label || opt.key}
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {opt.values.map((v) => {
+                                  const isColor = (opt.key || "").toLowerCase() === "color";
+                                  const colorStyle = isColor ? getColorChipStyle(v) : null;
+                                  const isTransparent = isColor && v.toLowerCase() === "transparent";
+                                  const chipClass = colorStyle
+                                    ? "inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium"
+                                    : "inline-flex items-center rounded-full bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-200";
+                                  return (
+                                    <span
+                                      key={v}
+                                      className={chipClass}
+                                      style={
+                                        colorStyle
+                                          ? isTransparent
+                                            ? { border: "2px solid #d4d4d4", background: "#f5f5f5", color: "#171717" }
+                                            : { background: colorStyle.background, color: colorStyle.color }
+                                          : undefined
+                                      }
+                                    >
+                                      {v}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )
+                      )}
+                    </div>
+                  )}
 
                   {/* Ratings & Reviews */}
                   <div className="border-t border-gray-200 pt-4 dark:border-gray-700">
@@ -463,20 +541,25 @@ export default function StoreProductCard({
         </div>
       )}
 
-      {/* Quantity Selection Modal */}
+      {/* Quantity Selection Modal - choose size, color & quantity (store products only) */}
       {showQuantityModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-md">
-          <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800">
+          <div className="w-full max-w-md overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800">
             {/* Modal Header */}
             <div className="relative bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 dark:from-green-900/20 dark:to-emerald-900/20">
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                    Select Quantity
+                    {options.length > 0 ? "Choose size, color & quantity" : "Select quantity"}
                   </h3>
                   <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                     {name}
                   </p>
+                  {options.length > 0 && (
+                    <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                      Pick size and color, then enter quantity.
+                    </p>
+                  )}
                 </div>
                 <button
                   onClick={() => setShowQuantityModal(false)}
@@ -500,12 +583,16 @@ export default function StoreProductCard({
             </div>
 
             <div className="p-6">
-              <div className="mb-6 space-y-4">
+              <div className="mb-6 space-y-5">
+                {/* Size & color (when product has options) */}
                 {options.length > 0 && (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      Size & options
+                    </p>
                     {options.map((opt) => (
                       <div key={opt.key}>
-                        <label className="mb-1.5 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                           {opt.label || opt.key}
                         </label>
                         <div className="flex flex-wrap gap-2">
@@ -533,9 +620,11 @@ export default function StoreProductCard({
                     ))}
                   </div>
                 )}
+
+                {/* Quantity */}
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Enter Quantity
+                    Quantity
                   </label>
                   <div className="relative">
                     <input
