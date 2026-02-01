@@ -318,7 +318,7 @@ export default function StoreDetailsPage() {
         toast.success(
           editingProduct
             ? "Product updated successfully!"
-            : "Product added successfully!"
+            : "Product added! It's pending review and will be visible once enabled."
         );
         setShowAddProductModal(false);
         setEditingProduct(null);

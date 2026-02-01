@@ -4,6 +4,7 @@ import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { PRODUCT_CATEGORIES } from "../../../src/constants/productCategories";
+import { sendNewStoreProductForReviewToSlack } from "../../../src/lib/slackSupportNotifier";
 
 const CREATE_BUSINESS_PRODUCT = gql`
   mutation CreateBusinessProduct(
@@ -118,7 +119,7 @@ export default async function handler(
       price,
       unit = "",
       category = "",
-      status = "active",
+      status,
       query_id = "",
       minimumOrders: minOrders,
       maxOrders,
@@ -175,10 +176,6 @@ export default async function handler(
       Image: image !== null && image !== undefined ? String(image).trim() : "",
       price: priceStr,
       unit: unit !== null && unit !== undefined ? String(unit).trim() : "",
-      status:
-        status !== null && status !== undefined
-          ? String(status).trim()
-          : "active",
       query_id:
         query_id !== null && query_id !== undefined
           ? String(query_id).trim()
@@ -204,13 +201,21 @@ export default async function handler(
     };
 
     // Handle store_id: null for services, or a valid UUID for products
+    const hasStoreId =
+      store_id !== null &&
+      store_id !== undefined &&
+      typeof store_id === "string" &&
+      store_id.trim() !== "";
     if (store_id === null || store_id === undefined) {
       variables.store_id = null;
-    } else if (typeof store_id === "string" && store_id.trim() !== "") {
+    } else if (hasStoreId) {
       variables.store_id = store_id.trim();
     } else {
       variables.store_id = null;
     }
+
+    // Store products start as "pending" for review; services use "active"
+    variables.status = hasStoreId ? "pending" : (status?.trim() || "active");
 
     const result = await hasuraClient.request<{
       insert_PlasBusinessProductsOrSerive: {
@@ -237,6 +242,44 @@ export default async function handler(
 
     const createdProduct =
       result.insert_PlasBusinessProductsOrSerive.returning[0];
+
+    // Notify Slack for review when it's a store product (pending status)
+    if (hasStoreId && createdProduct.status === "pending") {
+      try {
+        const storeIdVal = variables.store_id as string;
+        const storeNameQuery = gql`
+          query GetStoreName($id: uuid!) {
+            business_stores_by_pk(id: $id) {
+              name
+            }
+          }
+        `;
+        const storeResult = await hasuraClient.request<{
+          business_stores_by_pk: { name: string | null } | null;
+        }>(storeNameQuery, { id: storeIdVal });
+        const storeName =
+          storeResult.business_stores_by_pk?.name ?? "Unknown store";
+
+        await sendNewStoreProductForReviewToSlack({
+          productId: createdProduct.id,
+          productName: createdProduct.name,
+          storeId: storeIdVal,
+          storeName,
+          price: createdProduct.price,
+          unit: createdProduct.unit,
+          category: validCategory || undefined,
+          queryId: query_id || undefined,
+          userEmail: session.user?.email ?? undefined,
+          userName: session.user?.name ?? undefined,
+          userPhone: (session.user as { phone?: string })?.phone ?? undefined,
+          userId: session.user?.id,
+          businessAccountId: variables.Plasbusiness_id || undefined,
+        });
+      } catch (slackErr) {
+        console.error("Failed to send product review notification to Slack:", slackErr);
+        // Don't fail the request - product was created successfully
+      }
+    }
 
     return res.status(200).json({
       success: true,

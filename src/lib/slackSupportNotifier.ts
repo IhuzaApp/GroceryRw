@@ -350,6 +350,132 @@ export async function sendNewBusinessAccountRegistrationToSlack(
   }
 }
 
+// --- New store product – pending review (support enables) ---
+
+export interface NewStoreProductForReviewPayload {
+  productId: string;
+  productName: string;
+  storeId: string;
+  storeName: string;
+  price?: string;
+  unit?: string;
+  category?: string;
+  queryId?: string;
+  userEmail?: string;
+  userName?: string;
+  userPhone?: string;
+  userId?: string;
+  businessAccountId?: string;
+}
+
+/**
+ * Notify Slack when a new store product is added and is pending review.
+ * Support can review and enable the product for that shop.
+ */
+export async function sendNewStoreProductForReviewToSlack(
+  payload: NewStoreProductForReviewPayload
+) {
+  if (!SLACK_SUPPORT_WEBHOOK) {
+    console.error("SLACK_SUPPORT_WEBHOOK is not configured");
+    return;
+  }
+
+  const userDisplay = payload.userName
+    ? `${payload.userName}${payload.userEmail ? ` (${payload.userEmail})` : ""}`
+    : payload.userEmail ?? "—";
+  const phoneDisplay = payload.userPhone ?? "—";
+  const priceDisplay =
+    payload.price != null && payload.unit
+      ? `${payload.price} / ${payload.unit}`
+      : payload.price ?? "—";
+  const categoryDisplay = payload.category?.trim() || "—";
+  const queryDisplay = payload.queryId?.trim() || "—";
+
+  const blocks: any[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "📦 New store product – pending review",
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Product*\n${payload.productName}` },
+        { type: "mrkdwn", text: `*Product ID*\n\`${payload.productId}\`` },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Store*\n${payload.storeName}` },
+        { type: "mrkdwn", text: `*Store ID*\n\`${payload.storeId}\`` },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Price*\n${priceDisplay}` },
+        { type: "mrkdwn", text: `*Category*\n${categoryDisplay}` },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Added by*\n${userDisplay}` },
+        {
+          type: "mrkdwn",
+          text: `*📞 Phone*\n${phoneDisplay}`,
+        },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        {
+          type: "mrkdwn",
+          text: `*Verification ID*\n\`${queryDisplay}\``,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Business account ID*\n\`${
+            payload.businessAccountId ?? "—"
+          }\``,
+        },
+      ],
+    },
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: `User ID: \`${
+            payload.userId ?? "—"
+          }\` · 🕒 ${new Date().toISOString()} · _Review and enable this product for the store._`,
+        },
+      ],
+    },
+  ];
+
+  try {
+    await fetch(SLACK_SUPPORT_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: `New product pending review: ${payload.productName} @ ${payload.storeName}`,
+        blocks,
+      }),
+    });
+  } catch (error) {
+    console.error(
+      "Failed to send new store product for review to Slack",
+      error
+    );
+    throw error;
+  }
+}
+
 // --- Request to enable store (store was disabled by owner, support re-enables) ---
 
 export interface RequestEnableStorePayload {
