@@ -52,6 +52,47 @@ const COLORS = [
   "Multi", "Transparent",
 ];
 
+/** Map color label -> { bg hex, text: 'white' | 'black' } for chips. */
+const COLOR_STYLES: Record<string, { bg: string; text: "white" | "black" }> = {
+  Blue: { bg: "#2563eb", text: "white" },
+  "Light Blue": { bg: "#7dd3fc", text: "black" },
+  "Dark Blue": { bg: "#1e3a8a", text: "white" },
+  "Sky Blue": { bg: "#0ea5e9", text: "white" },
+  Navy: { bg: "#1e3a5f", text: "white" },
+  Red: { bg: "#dc2626", text: "white" },
+  Green: { bg: "#16a34a", text: "white" },
+  "Light Green": { bg: "#86efac", text: "black" },
+  "Dark Green": { bg: "#14532d", text: "white" },
+  "Forest Green": { bg: "#166534", text: "white" },
+  Mint: { bg: "#99f6e4", text: "black" },
+  Yellow: { bg: "#eab308", text: "black" },
+  Gold: { bg: "#ca8a04", text: "white" },
+  Orange: { bg: "#ea580c", text: "white" },
+  Pink: { bg: "#ec4899", text: "white" },
+  Rose: { bg: "#e11d48", text: "white" },
+  Black: { bg: "#171717", text: "white" },
+  White: { bg: "#fafafa", text: "black" },
+  Gray: { bg: "#6b7280", text: "white" },
+  Silver: { bg: "#a1a1aa", text: "black" },
+  Charcoal: { bg: "#404040", text: "white" },
+  Brown: { bg: "#78350f", text: "white" },
+  Beige: { bg: "#d4b896", text: "black" },
+  Tan: { bg: "#d2b48c", text: "black" },
+  Cream: { bg: "#fffdd0", text: "black" },
+  Purple: { bg: "#7c3aed", text: "white" },
+  Violet: { bg: "#6d28d9", text: "white" },
+  Lavender: { bg: "#c4b5fd", text: "black" },
+  Multi: { bg: "linear-gradient(135deg,#ec4899,#8b5cf6,#06b6d4)", text: "white" },
+  Transparent: { bg: "transparent", text: "black" },
+};
+
+function getColorStyle(label: string): { background: string; color: string } | null {
+  const key = Object.keys(COLOR_STYLES).find((k) => k.toLowerCase() === label.toLowerCase());
+  if (!key) return null;
+  const s = COLOR_STYLES[key];
+  return { background: s.bg, color: s.text === "white" ? "#fff" : "#171717" };
+}
+
 export default function StoreDetailsPage() {
   const router = useRouter();
   const { storeId } = router.query;
@@ -1769,19 +1810,20 @@ export default function StoreDetailsPage() {
       {/* Product Details Modal */}
       {showProductModal && selectedProduct && (
         <div
-          className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center sm:p-4"
+          className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-4"
           onClick={() => {
             setShowProductModal(false);
             setSelectedProduct(null);
           }}
         >
           <div
-            className="h-full max-h-[90vh] w-full max-w-2xl animate-slide-up overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-gray-800 sm:h-auto sm:max-h-[85vh] sm:animate-none sm:rounded-2xl sm:border sm:border-gray-200 sm:dark:border-gray-700"
+            className="flex h-full max-h-[92vh] w-full max-w-2xl flex-col animate-slide-up overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-gray-800 sm:h-auto sm:max-h-[88vh] sm:animate-none sm:rounded-2xl sm:border sm:border-gray-200 sm:dark:border-gray-700"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header - clean, no green bg */}
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-4 dark:border-gray-700 dark:bg-gray-800 sm:px-6">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
+            {/* Modal Header */}
+            <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800 sm:px-6">
+              <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white sm:text-xl">
+                <Package className="h-5 w-5 text-green-600 dark:text-green-400" />
                 Product Details
               </h2>
               <button
@@ -1796,21 +1838,22 @@ export default function StoreDetailsPage() {
             </div>
 
             {/* Modal Content - scrollable */}
-            <div
-              className="overflow-y-auto p-4 sm:p-6"
-              style={{ maxHeight: "calc(85vh - 64px)" }}
-            >
-              <div className="space-y-5">
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <div className="space-y-6 p-4 sm:p-6">
                 {/* Product Image */}
-                {selectedProduct.Image && (
-                  <div className="relative h-56 w-full overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-700 sm:h-72">
+                <div className="overflow-hidden rounded-2xl bg-gray-100 dark:bg-gray-700">
+                  {selectedProduct.Image ? (
                     <img
                       src={selectedProduct.Image}
                       alt={selectedProduct.name}
-                      className="h-full w-full object-cover"
+                      className="aspect-[4/3] w-full object-cover sm:aspect-video"
                     />
-                  </div>
-                )}
+                  ) : (
+                    <div className="flex aspect-[4/3] w-full items-center justify-center sm:aspect-video">
+                      <Package className="h-16 w-16 text-gray-400 dark:text-gray-500" />
+                    </div>
+                  )}
+                </div>
 
                 {/* Product Name and Status */}
                 <div className="flex items-start justify-between gap-3 pt-1">
@@ -1837,43 +1880,117 @@ export default function StoreDetailsPage() {
                   )}
                 </div>
 
-                {/* Price and Unit */}
-                <div className="flex items-baseline gap-2 rounded-xl bg-gray-50 px-4 py-3 dark:bg-gray-700/50">
-                  <span className="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
-                    {formatCurrencySync(parseFloat(selectedProduct.price))}
-                  </span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400 sm:text-base">
-                    / {selectedProduct.unit}
-                  </span>
+                {/* Price */}
+                <div className="rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 px-5 py-4 dark:from-green-900/20 dark:to-emerald-900/20">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-green-600 dark:text-green-400">
+                    Price
+                  </p>
+                  <p className="mt-1 flex items-baseline gap-2">
+                    <span className="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
+                      {formatCurrencySync(parseFloat(selectedProduct.price || "0"))}
+                    </span>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                      per {selectedProduct.unit}
+                    </span>
+                  </p>
                 </div>
 
+                <div className="border-t border-gray-200 dark:border-gray-600" />
                 {/* Description */}
-                {selectedProduct.Description && (
-                  <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-600 dark:bg-gray-800/50">
-                    <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                      Description
-                    </h4>
-                    <div
-                      className="text-sm leading-relaxed text-gray-700 dark:text-gray-300"
-                      dangerouslySetInnerHTML={{
-                        __html: selectedProduct.Description,
-                      }}
-                    />
+                <section className="pt-1">
+                  <h4 className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                    <Eye className="h-4 w-4" />
+                    Description
+                  </h4>
+                  <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
+                    {selectedProduct.Description &&
+                    String(selectedProduct.Description).trim() !== "" ? (
+                      <div
+                        className="text-sm leading-relaxed text-gray-700 dark:text-gray-300"
+                        dangerouslySetInnerHTML={{
+                          __html: selectedProduct.Description,
+                        }}
+                      />
+                    ) : (
+                      <p className="text-sm italic text-gray-500 dark:text-gray-400">
+                        No description added.
+                      </p>
+                    )}
                   </div>
-                )}
+                </section>
 
-                {/* Product Details Grid */}
+                {/* Product options (sizes & colors) */}
+                {selectedProduct.otherDetails?.options &&
+                  selectedProduct.otherDetails.options.length > 0 && (
+                    <>
+                      <div className="border-t border-gray-200 dark:border-gray-600" />
+                      <section className="pt-1">
+                        <h4 className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                          <Tag className="h-4 w-4" />
+                          Options (customers choose when ordering)
+                        </h4>
+                        <div className="space-y-3">
+                          {selectedProduct.otherDetails.options.map(
+                            (opt: { key: string; label: string; values: string[] }, idx: number) =>
+                              opt.values && opt.values.length > 0 ? (
+                                <div
+                                  key={opt.key || idx}
+                                  className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50"
+                                >
+                                <p className="mb-2 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
+                                  {opt.label || opt.key}
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                  {opt.values.map((v: string) => {
+                                    const isColor = (opt.key || "").toLowerCase() === "color";
+                                    const colorStyle = isColor ? getColorStyle(v) : null;
+                                    const isTransparent = isColor && v.toLowerCase() === "transparent";
+                                    const chipClass = colorStyle
+                                      ? "inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium"
+                                      : "inline-flex items-center rounded-full bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-200";
+                                    return (
+                                      <span
+                                        key={v}
+                                        className={chipClass}
+                                        style={
+                                          colorStyle
+                                            ? isTransparent
+                                              ? { border: "2px solid #d4d4d4", background: "#f5f5f5", color: "#171717" }
+                                              : { background: colorStyle.background, color: colorStyle.color }
+                                            : undefined
+                                        }
+                                      >
+                                        {v}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                              ) : null
+                            )}
+                          </div>
+                        </section>
+                    </>
+                  )}
+
+                <div className="border-t border-gray-200 dark:border-gray-600" />
+                {/* Details */}
+                <section className="pt-1">
+                  <h4 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                    <Package className="h-4 w-4" />
+                    Details
+                  </h4>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {/* Category */}
                   {selectedProduct.category &&
                     selectedProduct.category.trim() !== "" && (
-                      <div className="flex items-center gap-3 rounded-xl bg-emerald-50 p-3 dark:bg-emerald-900/20">
+                      <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/50">
                         <Tag className="h-5 w-5 flex-shrink-0 text-emerald-500 dark:text-emerald-400" />
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                             Category
                           </p>
-                          <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white">
                             {selectedProduct.category}
                           </p>
                         </div>
@@ -1882,13 +1999,13 @@ export default function StoreDetailsPage() {
 
                   {/* Verification ID */}
                   {selectedProduct.query_id && (
-                    <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-700/50">
-                      <Tag className="h-5 w-5 flex-shrink-0 text-gray-400" />
+                    <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/50">
+                      <Tag className="h-5 w-5 flex-shrink-0 text-gray-500 dark:text-gray-400" />
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                           Verification ID
                         </p>
-                        <p className="truncate font-mono text-sm font-bold text-gray-900 dark:text-gray-100">
+                        <p className="truncate font-mono text-sm font-bold text-gray-900 dark:text-white">
                           {selectedProduct.query_id}
                         </p>
                       </div>
@@ -1896,33 +2013,31 @@ export default function StoreDetailsPage() {
                   )}
 
                   {/* Minimum Orders */}
-                  {selectedProduct.minimumOrders &&
-                    parseFloat(selectedProduct.minimumOrders) > 0 && (
-                      <div className="flex items-center gap-3 rounded-xl bg-blue-50 p-3 dark:bg-blue-900/20">
+                  {selectedProduct.minimumOrders != null &&
+                    String(selectedProduct.minimumOrders).trim() !== "" && (
+                      <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/50">
                         <ShoppingCart className="h-5 w-5 flex-shrink-0 text-blue-500 dark:text-blue-400" />
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium text-blue-600 dark:text-blue-400">
-                            Min. Order
+                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                            Min. order
                           </p>
-                          <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">
-                            {selectedProduct.minimumOrders}{" "}
-                            {selectedProduct.unit}
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                            {selectedProduct.minimumOrders} {selectedProduct.unit}
                           </p>
                         </div>
                       </div>
                     )}
 
                   {/* Maximum Orders */}
-                  {selectedProduct.maxOrders &&
-                    selectedProduct.maxOrders.trim() !== "" &&
-                    parseFloat(selectedProduct.maxOrders) > 0 && (
-                      <div className="flex items-center gap-3 rounded-xl bg-purple-50 p-3 dark:bg-purple-900/20">
+                  {selectedProduct.maxOrders != null &&
+                    selectedProduct.maxOrders.trim() !== "" && (
+                      <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/50">
                         <ShoppingCart className="h-5 w-5 flex-shrink-0 text-purple-500 dark:text-purple-400" />
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium text-purple-600 dark:text-purple-400">
-                            Max. Order
+                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                            Max. order
                           </p>
-                          <p className="text-sm font-semibold text-purple-900 dark:text-purple-200">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white">
                             {selectedProduct.maxOrders} {selectedProduct.unit}
                           </p>
                         </div>
@@ -1932,13 +2047,13 @@ export default function StoreDetailsPage() {
                   {/* Delivery Area */}
                   {selectedProduct.delveryArea &&
                     selectedProduct.delveryArea.trim() !== "" && (
-                      <div className="flex items-center gap-3 rounded-xl bg-orange-50 p-3 dark:bg-orange-900/20">
-                        <Truck className="h-5 w-5 flex-shrink-0 text-orange-500 dark:text-orange-400" />
+                      <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-600 dark:bg-gray-800/50 sm:col-span-2">
+                        <MapPin className="h-5 w-5 flex-shrink-0 text-orange-500 dark:text-orange-400" />
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-medium text-orange-600 dark:text-orange-400">
                             Delivery Area
                           </p>
-                          <p className="line-clamp-1 text-sm font-semibold text-orange-900 dark:text-orange-200">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white">
                             {selectedProduct.delveryArea}
                           </p>
                         </div>
@@ -1948,20 +2063,22 @@ export default function StoreDetailsPage() {
                   {/* Speciality */}
                   {selectedProduct.speciality &&
                     selectedProduct.speciality.trim() !== "" && (
-                      <div className="flex items-center gap-3 rounded-xl bg-indigo-50 p-3 dark:bg-indigo-900/20">
+                      <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/50 sm:col-span-2">
                         <Tag className="h-5 w-5 flex-shrink-0 text-indigo-500 dark:text-indigo-400" />
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400">
                             Speciality
                           </p>
-                          <p className="line-clamp-1 text-sm font-semibold text-indigo-900 dark:text-indigo-200">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white">
                             {selectedProduct.speciality}
                           </p>
                         </div>
                       </div>
                     )}
                 </div>
+                </section>
 
+                <div className="border-t border-gray-200 dark:border-gray-600" />
                 {/* Edit Button */}
                 <button
                   onClick={(e) => {
@@ -1969,9 +2086,9 @@ export default function StoreDetailsPage() {
                     setShowProductModal(false);
                     handleEditProduct(selectedProduct);
                   }}
-                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-green-500 bg-white px-6 py-3 text-base font-semibold text-green-600 transition-all hover:bg-green-50 dark:border-green-600 dark:bg-gray-800 dark:text-green-400 dark:hover:bg-green-900/20"
+                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-3.5 text-base font-semibold text-white shadow-lg shadow-green-500/25 transition-all hover:from-green-600 hover:to-emerald-600 hover:shadow-green-500/30 active:scale-[0.98]"
                 >
-                  <Edit className="h-4 w-4" />
+                  <Edit className="h-5 w-5" />
                   Edit Product
                 </button>
               </div>
