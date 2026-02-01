@@ -5,6 +5,12 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { notifyNewOrderToSlack } from "../../../src/lib/slackOrderNotifier";
 
+function generateOrderPin(): string {
+  return Math.floor(Math.random() * 100)
+    .toString()
+    .padStart(2, "0");
+}
+
 const GET_STORE_AND_USER = gql`
   query GetStoreAndUser($store_id: uuid!, $user_id: uuid!) {
     business_stores_by_pk(id: $store_id) {
@@ -33,6 +39,7 @@ const CREATE_BUSINESS_PRODUCT_ORDER = gql`
     $ordered_by: uuid
     $status: String
     $shopper_id: uuid
+    $pin: String!
   ) {
     insert_businessProductOrders(
       objects: {
@@ -51,6 +58,7 @@ const CREATE_BUSINESS_PRODUCT_ORDER = gql`
         ordered_by: $ordered_by
         status: $status
         shopper_id: $shopper_id
+        pin: $pin
       }
     ) {
       affected_rows
@@ -146,6 +154,7 @@ export default async function handler(
       timeRange: timeRangeValue,
       status: status || "Pending",
       shopper_id: null, // Explicitly set shopper_id to null as per requirement
+      pin: generateOrderPin(),
     };
 
     // Only add ordered_by if it's provided
