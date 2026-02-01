@@ -106,8 +106,10 @@ export default async function handler(
       return res.status(404).json({ error: "Store not found" });
     }
 
-    // Transform products to match FreshMarkPage format
-    const transformedProducts = productsData.PlasBusinessProductsOrSerive.map(
+    // Transform products to match FreshMarkPage format (active only)
+    const transformedProducts = productsData.PlasBusinessProductsOrSerive
+      .filter((p) => p.status === "active")
+      .map(
       (product) => ({
         id: product.id,
         name: product.name,

@@ -51,6 +51,7 @@ interface Product {
   unit: string;
   measurement_unit?: string;
   category?: string;
+  status?: string;
 }
 
 interface SelectedProduct {
@@ -90,6 +91,11 @@ function getDistanceFromLatLonInKm(
 
 const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
   const router = useRouter();
+  // Only show products with status "active"
+  const activeProducts = useMemo(
+    () => products.filter((p) => p.status === "active" || !p.status),
+    [products]
+  );
   const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>(
     []
   );
@@ -161,7 +167,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
   };
 
   const filteredProducts = useMemo(() => {
-    let filtered = products;
+    let filtered = activeProducts;
 
     // Filter by category
     if (activeCategory !== "all") {
@@ -178,14 +184,14 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
     }
 
     return filtered;
-  }, [products, activeCategory, searchQuery]);
+  }, [activeProducts, activeCategory, searchQuery]);
 
   const categories = useMemo(() => {
     const cats = Array.from(
-      new Set(products.map((p) => p.category || "Other"))
+      new Set(activeProducts.map((p) => p.category || "Other"))
     ).filter(Boolean);
     return ["all", ...cats.sort((a, b) => a.localeCompare(b))];
-  }, [products]);
+  }, [activeProducts]);
 
   const groupedByCategory = useMemo(() => {
     const groups: Record<string, typeof filteredProducts> = {};
@@ -430,8 +436,8 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
               <div className="flex items-center gap-1">
                 <Package className="h-3 w-3" />
                 <span>
-                  {products.length}{" "}
-                  {products.length === 1 ? "Product" : "Products"}
+                  {activeProducts.length}{" "}
+                  {activeProducts.length === 1 ? "Product" : "Products"}
                 </span>
               </div>
             </div>
@@ -554,8 +560,8 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                     <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 backdrop-blur-md sm:gap-2 sm:px-3 sm:py-1.5">
                       <Package className="h-3 w-3 !text-white sm:h-3.5 sm:w-3.5" />
                       <span className="text-xs font-medium !text-white sm:text-sm">
-                        {products.length}{" "}
-                        {products.length === 1 ? "Product" : "Products"}
+                        {activeProducts.length}{" "}
+                        {activeProducts.length === 1 ? "Product" : "Products"}
                       </span>
                     </div>
                   </div>

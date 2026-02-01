@@ -234,8 +234,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     };
 
     // Transform products
-    const products = productsData.PlasBusinessProductsOrSerive.map(
-      (product) => ({
+    const products = productsData.PlasBusinessProductsOrSerive
+      .filter((p) => p.status === "active")
+      .map((product) => ({
         id: product.id,
         name: product.name,
         description: product.Description || "",
@@ -248,8 +249,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         minimumOrders: product.minimumOrders,
         maxOrders: product.maxOrders,
         delveryArea: product.delveryArea,
-      })
-    );
+        status: product.status,
+      }));
 
     return {
       props: {
