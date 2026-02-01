@@ -322,6 +322,7 @@ export const sendNewOrderNotification = async (
     orderCount?: number; // Number of stores in combined order
     storeNames?: string; // Comma-separated store names
     displayOrderId?: string; // Human-readable order number (e.g. OrderID)
+    OrderID?: number | string; // Numeric order ID for notification card fallback
     combinedOrderId?: string; // combined_order_id (UUID)
     orderIds?: string[]; // order IDs in combined order group
   }
@@ -369,6 +370,9 @@ export const sendNewOrderNotification = async (
         timestamp: Date.now().toString(),
         ...(orderData.displayOrderId && {
           displayOrderId: orderData.displayOrderId,
+        }),
+        ...(orderData.OrderID != null && {
+          OrderID: String(orderData.OrderID),
         }),
         // Combined order specific data
         ...(orderData.isCombinedOrder && {

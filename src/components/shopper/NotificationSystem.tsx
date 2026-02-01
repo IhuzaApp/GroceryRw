@@ -57,6 +57,49 @@ const formatStoreList = (raw: string): string => {
   return `${unique.slice(0, -1).join(", ")} and ${unique[unique.length - 1]}`;
 };
 
+/** Fetch ordered item names for the notification card (regular / reel / restaurant). */
+async function fetchOrderItemNames(
+  orderId: string,
+  orderType: "regular" | "reel" | "restaurant" | undefined
+): Promise<string[]> {
+  const type = orderType || "regular";
+  const url =
+    type === "reel"
+      ? `/api/queries/reel-order-details?id=${orderId}`
+      : type === "restaurant"
+        ? `/api/queries/restaurant-order-details?id=${orderId}`
+        : `/api/queries/orderDetails?id=${orderId}`;
+  const resp = await fetch(url);
+  if (!resp.ok) return [];
+  const data = await resp.json();
+  const order = data?.order;
+  if (!order) return [];
+
+  if (type === "reel") {
+    const name = order.reel?.Product;
+    return typeof name === "string" && name.trim() ? [name.trim()] : [];
+  }
+  if (type === "restaurant") {
+    const items = order.restaurant_order_items ?? [];
+    return items
+      .map(
+        (item: { restaurant_dishes?: { dishes?: { name?: string | null } | null } | null }) =>
+          item.restaurant_dishes?.dishes?.name ?? null
+      )
+      .filter(Boolean)
+      .map((s: string) => s.trim());
+  }
+  // regular: Order_Items with product.ProductName.name
+  const items = order.Order_Items ?? [];
+  return items
+    .map(
+      (item: { product?: { ProductName?: { name?: string | null } | null } | null }) =>
+        item.product?.ProductName?.name ?? null
+    )
+    .filter(Boolean)
+    .map((s: string) => s.trim());
+}
+
 interface BatchAssignment {
   shopperId: string;
   orderId: string;
@@ -106,6 +149,17 @@ export default function NotificationSystem({
   const [decliningOrders, setDecliningOrders] = useState<Set<string>>(
     new Set()
   ); // Track orders being declined
+  const [itemsExpanded, setItemsExpanded] = useState(false);
+  const [orderItemNames, setOrderItemNames] = useState<string[] | null>(null);
+  const [orderItemsLoading, setOrderItemsLoading] = useState(false);
+
+  // Reset items state when selected order changes
+  useEffect(() => {
+    if (selectedOrder) {
+      setItemsExpanded(false);
+      setOrderItemNames(null);
+    }
+  }, [selectedOrder?.id]);
 
   // Helper to fetch active order count
   const fetchActiveOrderCount = async () => {
@@ -1543,12 +1597,19 @@ export default function NotificationSystem({
             // Older cached offers may not have OrderID saved yet — fetch once (best effort)
             if (!offer?.order?.OrderID && offer?.order?.id) {
               try {
-                const resp = await fetch(
-                  `/api/queries/orderDetails?id=${offer.order.id}`
-                );
+                const orderType = offer?.order?.orderType || "regular";
+                const orderDetailsUrl =
+                  orderType === "reel"
+                    ? `/api/queries/reel-order-details?id=${offer.order.id}`
+                    : orderType === "restaurant"
+                      ? `/api/queries/restaurant-order-details?id=${offer.order.id}`
+                      : orderType === "business"
+                        ? `/api/queries/business-order-details?id=${offer.order.id}`
+                        : `/api/queries/orderDetails?id=${offer.order.id}`;
+                const resp = await fetch(orderDetailsUrl);
                 if (resp.ok) {
                   const details = await resp.json();
-                  if (details?.order?.OrderID) {
+                  if (details?.order?.OrderID != null) {
                     offer.order.OrderID = details.order.OrderID;
                     localStorage.setItem("active_offer", JSON.stringify(offer));
                   }
@@ -1721,7 +1782,7 @@ export default function NotificationSystem({
                       </span>
                     </div>
                   </div>
-                  {/* Shop Name */}
+                  {/* Shop Name & Offer Type */}
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       Shop
@@ -1729,6 +1790,25 @@ export default function NotificationSystem({
                     <p className="text-base font-bold text-gray-900 dark:text-gray-100">
                       {formatStoreList(selectedOrder.shopName)}
                     </p>
+                    {selectedOrder.orderType && (
+                      <span
+                        className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
+                          selectedOrder.orderType === "reel"
+                            ? theme === "dark"
+                              ? "bg-purple-500/30 text-purple-300"
+                              : "bg-purple-100 text-purple-700"
+                            : selectedOrder.orderType === "restaurant"
+                              ? theme === "dark"
+                                ? "bg-amber-500/30 text-amber-300"
+                                : "bg-amber-100 text-amber-700"
+                              : theme === "dark"
+                                ? "bg-blue-500/30 text-blue-300"
+                                : "bg-blue-100 text-blue-700"
+                        }`}
+                      >
+                        {selectedOrder.orderType}
+                      </span>
+                    )}
                   </div>
                 </div>
                 {/* Directions Button */}
@@ -1809,9 +1889,47 @@ export default function NotificationSystem({
 
               {/* Order Details */}
               <div className="mb-5 space-y-3">
-                {/* Items and Earnings */}
+                {/* Items (expandable) and Earnings */}
                 <div className="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3 dark:bg-gray-700">
-                  <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const next = !itemsExpanded;
+                      setItemsExpanded(next);
+                      if (
+                        next &&
+                        orderItemNames === null &&
+                        !orderItemsLoading
+                      ) {
+                        setOrderItemsLoading(true);
+                        try {
+                          const names = await fetchOrderItemNames(
+                            selectedOrder.id,
+                            selectedOrder.orderType
+                          );
+                          setOrderItemNames(names);
+                        } catch {
+                          setOrderItemNames([]);
+                        } finally {
+                          setOrderItemsLoading(false);
+                        }
+                      }
+                    }}
+                    className="flex flex-1 cursor-pointer items-center space-x-2 text-left outline-none focus:ring-0"
+                  >
+                    <svg
+                      className={`h-5 w-5 flex-shrink-0 text-gray-600 dark:text-gray-300 transition-transform ${itemsExpanded ? "rotate-90" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
                     <svg
                       className="h-5 w-5 text-gray-600 dark:text-gray-300"
                       fill="none"
@@ -1826,9 +1944,9 @@ export default function NotificationSystem({
                       />
                     </svg>
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {selectedOrder.itemsCount || 0} Items
+                      {selectedOrder.itemsCount ?? 0} Items
                     </span>
-                  </div>
+                  </button>
                   <div className="flex items-center space-x-2">
                     <svg
                       className="h-5 w-5 text-green-600 dark:text-green-400"
@@ -1848,6 +1966,26 @@ export default function NotificationSystem({
                     </span>
                   </div>
                 </div>
+                {/* Expanded: ordered item names as bullet list */}
+                {itemsExpanded && (
+                  <div className="rounded-lg border border-gray-200 bg-gray-50/80 px-4 py-3 dark:border-gray-600 dark:bg-gray-700/80">
+                    {orderItemsLoading ? (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Loading items…
+                      </p>
+                    ) : orderItemNames && orderItemNames.length > 0 ? (
+                      <ul className="list-inside list-disc space-y-1 text-sm text-gray-700 dark:text-gray-300">
+                        {orderItemNames.map((name, i) => (
+                          <li key={i}>{name}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        No item names available
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}

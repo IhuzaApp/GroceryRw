@@ -110,6 +110,7 @@ const GET_ELIGIBLE_REEL_ORDERS = gql`
       limit: 50
     ) {
       id
+      OrderID
       created_at
       service_fee
       delivery_fee
@@ -535,6 +536,8 @@ function formatOrderForResponse(
   return {
     id: order.id,
     OrderID: order.OrderID ?? null,
+    displayOrderId:
+      order.OrderID != null ? String(order.OrderID) : null,
     shopName:
       order.Shop?.name ||
       order.Reel?.title ||
@@ -1730,6 +1733,7 @@ export default async function handler(
             // Action-based system: no expiry. Omit to use server default (or ignore).
             expiresInMs: undefined,
             displayOrderId: responseOrder.displayOrderId,
+            OrderID: responseOrder.OrderID,
             isCombinedOrder: responseOrder.isCombinedOrder,
             orderCount: responseOrder.orderCount,
             storeNames: responseOrder.storeNames,
