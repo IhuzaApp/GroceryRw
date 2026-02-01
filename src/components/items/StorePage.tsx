@@ -654,7 +654,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                         {groupedByCategory[cat]?.length ?? 0}
                       </span>
                     </h3>
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                       {(groupedByCategory[cat] ?? []).map((product) => (
                         <StoreProductCard
                           key={product.id}
@@ -673,7 +673,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 {filteredProducts.map((product) => (
                   <StoreProductCard
                     key={product.id}
