@@ -32,6 +32,7 @@ import CameraCapture from "../../../src/components/ui/CameraCapture";
 import { formatCurrencySync } from "../../../src/utils/formatCurrency";
 import { formatOperatingDays } from "../../../src/lib/formatters";
 import { RichTextEditor } from "../../../src/components/ui/RichTextEditor";
+import { CreateStoreForm } from "../../../src/components/business/CreateStoreForm";
 
 export default function StoreDetailsPage() {
   const router = useRouter();
@@ -56,6 +57,7 @@ export default function StoreDetailsPage() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [showProductModal, setShowProductModal] = useState(false);
+  const [showEditStoreModal, setShowEditStoreModal] = useState(false);
   const itemsPerPage = 18;
 
   const [newProduct, setNewProduct] = useState({
@@ -447,8 +449,16 @@ export default function StoreDetailsPage() {
             <ArrowLeft className="h-4 w-4 !text-white" />
           </button>
 
+          {/* Edit Store Button */}
+          <button
+            onClick={() => setShowEditStoreModal(true)}
+            className="absolute right-4 top-7 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/30"
+          >
+            <Edit className="h-4 w-4 !text-white" />
+          </button>
+
           {/* Store Status Badge */}
-          <div className="absolute right-4 top-7 z-20">
+          <div className="absolute right-20 top-7 z-20">
             <div
               className={`rounded-full px-3 py-1.5 text-xs font-semibold backdrop-blur-md ${
                 store.is_active
@@ -521,6 +531,15 @@ export default function StoreDetailsPage() {
               className="absolute left-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-white dark:bg-gray-800/90 dark:text-white dark:hover:bg-gray-800"
             >
               <ArrowLeft className="h-5 w-5" />
+            </button>
+
+            {/* Edit Store Button */}
+            <button
+              onClick={() => setShowEditStoreModal(true)}
+              className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-white dark:bg-gray-800/90 dark:text-white dark:hover:bg-gray-800"
+              title="Edit store"
+            >
+              <Edit className="h-5 w-5" />
             </button>
 
             {/* Store Info Overlay */}
@@ -1534,6 +1553,19 @@ export default function StoreDetailsPage() {
           </div>
         </div>
       )}
+
+      {/* Edit Store Modal */}
+      <CreateStoreForm
+        isOpen={showEditStoreModal}
+        onClose={() => setShowEditStoreModal(false)}
+        onSubmit={(updatedStore) => {
+          setStore((prev: any) =>
+            prev && updatedStore ? { ...prev, ...updatedStore } : prev
+          );
+          setShowEditStoreModal(false);
+        }}
+        editingStore={store}
+      />
     </RootLayout>
   );
 }

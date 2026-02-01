@@ -350,6 +350,104 @@ export async function sendNewBusinessAccountRegistrationToSlack(
   }
 }
 
+// --- Request to enable store (store was disabled by owner, support re-enables) ---
+
+export interface RequestEnableStorePayload {
+  storeId: string;
+  storeName: string;
+  /** Optional message from the owner */
+  message?: string;
+  userEmail?: string;
+  userName?: string;
+  userPhone?: string;
+  userId?: string;
+  businessAccountId?: string;
+}
+
+/**
+ * Notify Slack when a store owner requests to re-enable their disabled store.
+ */
+export async function sendRequestEnableStoreToSlack(
+  payload: RequestEnableStorePayload
+) {
+  if (!SLACK_SUPPORT_WEBHOOK) {
+    console.error("SLACK_SUPPORT_WEBHOOK is not configured");
+    return;
+  }
+
+  const userDisplay = payload.userName
+    ? `${payload.userName}${payload.userEmail ? ` (${payload.userEmail})` : ""}`
+    : payload.userEmail ?? "—";
+  const phoneDisplay = payload.userPhone ?? "—";
+
+  const blocks: any[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "🏪 Request to enable store",
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Store*\n${payload.storeName}` },
+        { type: "mrkdwn", text: `*Store ID*\n\`${payload.storeId}\`` },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Requested by*\n${userDisplay}` },
+        {
+          type: "mrkdwn",
+          text: `*📞 Phone*\n${phoneDisplay}`,
+        },
+      ],
+    },
+    {
+      type: "section",
+      fields: [
+        {
+          type: "mrkdwn",
+          text: `*Business account ID*\n\`${payload.businessAccountId ?? "—"}\``,
+        },
+      ],
+    },
+    { type: "divider" },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Message*\n${payload.message?.trim() || "_No additional message._"}`,
+      },
+    },
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: `User ID: \`${payload.userId ?? "—"}\` · 🕒 ${new Date().toISOString()}`,
+        },
+      ],
+    },
+  ];
+
+  try {
+    await fetch(SLACK_SUPPORT_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: `Request to enable store: ${payload.storeName}`,
+        blocks,
+      }),
+    });
+  } catch (error) {
+    console.error("Failed to send request enable store to Slack", error);
+    throw error;
+  }
+}
+
 // --- Rejected business account – contact support / re-evaluation request ---
 
 export interface RejectedAccountSupportPayload {

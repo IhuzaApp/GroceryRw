@@ -14,6 +14,7 @@ import {
   PenLine,
   Clock,
   Tag,
+  MessageSquare,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { RichTextEditor } from "../ui/RichTextEditor";
@@ -23,6 +24,19 @@ interface CreateStoreFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (storeData: any) => void;
+  /** When provided, form works in edit mode for this store */
+  editingStore?: {
+    id: string;
+    name?: string;
+    description?: string;
+    address?: string;
+    category_id?: string;
+    image?: string;
+    is_active?: boolean;
+    latitude?: string;
+    longitude?: string;
+    operating_hours?: Record<string, string>;
+  } | null;
 }
 
 type ImageSource = "upload" | "url";
@@ -92,13 +106,16 @@ interface StoreFormData {
   addressSearch?: string;
   category_id: string;
   operating_hours: OperatingHoursByDay;
+  is_active: boolean;
 }
 
 export function CreateStoreForm({
   isOpen,
   onClose,
   onSubmit,
+  editingStore,
 }: CreateStoreFormProps) {
+  const isEditMode = !!editingStore?.id;
   const { isLoaded: isGoogleMapsLoaded } = useGoogleMap();
   const autocompleteServiceRef =
     useRef<google.maps.places.AutocompleteService | null>(null);
@@ -119,6 +136,7 @@ export function CreateStoreForm({
     addressSearch: "",
     category_id: "",
     operating_hours: { ...DEFAULT_OPERATING_HOURS },
+    is_active: true,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -127,6 +145,7 @@ export function CreateStoreForm({
     google.maps.places.AutocompletePrediction[]
   >([]);
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
+  const [isRequestingEnable, setIsRequestingEnable] = useState(false);
 
   useEffect(() => {
     if (isGoogleMapsLoaded && typeof google !== "undefined") {
@@ -152,6 +171,46 @@ export function CreateStoreForm({
         .finally(() => setCategoriesLoading(false));
     }
   }, [isOpen]);
+
+  // Populate form when editing
+  useEffect(() => {
+    if (isOpen && editingStore) {
+      const hours = editingStore.operating_hours || { ...DEFAULT_OPERATING_HOURS };
+      const hasAddress = !!(editingStore.address?.trim());
+      const hasCoords = !!(editingStore.latitude && editingStore.longitude);
+      setFormData({
+        name: editingStore.name || "",
+        description: editingStore.description || "",
+        latitude: editingStore.latitude || "",
+        longitude: editingStore.longitude || "",
+        image: null,
+        imageUrl: editingStore.image?.startsWith("http") ? editingStore.image : "",
+        imageSource: editingStore.image?.startsWith("http") ? "url" : "upload",
+        locationSource: hasAddress ? "address" : hasCoords ? "manual" : "address",
+        addressSearch: editingStore.address || "",
+        category_id: editingStore.category_id || "",
+        operating_hours: { ...DEFAULT_OPERATING_HOURS, ...hours },
+        is_active: editingStore.is_active ?? true,
+      });
+      setImagePreview(editingStore.image || null);
+    } else if (isOpen && !editingStore) {
+      setFormData({
+        name: "",
+        description: "",
+        latitude: "",
+        longitude: "",
+        image: null,
+        imageUrl: "",
+        imageSource: "upload",
+        locationSource: "address",
+        addressSearch: "",
+        category_id: "",
+        operating_hours: { ...DEFAULT_OPERATING_HOURS },
+        is_active: true,
+      });
+      setImagePreview(null);
+    }
+  }, [isOpen, editingStore]);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData((prev) => ({
@@ -193,7 +252,7 @@ export function CreateStoreForm({
       imageUrl: source === "upload" ? "" : prev.imageUrl,
     }));
     if (source === "url") {
-      setImagePreview(formData.imageUrl.trim() || null);
+      setImagePreview(formData.imageUrl?.trim() || null);
     } else {
       if (formData.image) {
         const reader = new FileReader();
@@ -370,60 +429,86 @@ export function CreateStoreForm({
           setIsSubmitting(false);
           return;
         }
-      } else if (formData.imageSource === "url" && formData.imageUrl.trim()) {
+      } else if (formData.imageSource === "url" && formData.imageUrl?.trim()) {
         imageValue = formData.imageUrl.trim();
+      } else if (isEditMode && editingStore?.image && !imageValue) {
+        imageValue = editingStore.image;
       }
 
-      // Call the API
-      const response = await fetch("/api/mutations/create-business-store", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          description: formData.description.trim() || "",
-          latitude: formData.latitude.trim(),
-          longitude: formData.longitude.trim(),
-          image: imageValue,
-          category_id: formData.category_id.trim(),
-          operating_hours: formData.operating_hours,
-          address: (formData.addressSearch ?? "").trim(),
-        }),
-      });
+      if (isEditMode && editingStore?.id) {
+        // Update store
+        const response = await fetch("/api/mutations/update-business-store", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            store_id: editingStore.id,
+            name: formData.name.trim(),
+            description: formData.description.trim() || "",
+            latitude: formData.latitude.trim(),
+            longitude: formData.longitude.trim(),
+            image: imageValue,
+            category_id: formData.category_id.trim(),
+            operating_hours: formData.operating_hours,
+            address: (formData.addressSearch ?? "").trim(),
+            is_active: formData.is_active,
+          }),
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create store");
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to update store");
+        }
+
+        const data = await response.json();
+        const updated = data.store || { ...editingStore, ...formData, id: editingStore.id };
+        onSubmit(updated);
+        toast.success("Store updated successfully!");
+        onClose();
+      } else {
+        // Create store
+        const response = await fetch("/api/mutations/create-business-store", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: formData.name.trim(),
+            description: formData.description.trim() || "",
+            latitude: formData.latitude.trim(),
+            longitude: formData.longitude.trim(),
+            image: imageValue,
+            category_id: formData.category_id.trim(),
+            operating_hours: formData.operating_hours,
+            address: (formData.addressSearch ?? "").trim(),
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to create store");
+        }
+
+        const data = await response.json();
+        onSubmit(data.store || formData);
+        toast.success("Store created successfully!");
+
+        setFormData({
+          name: "",
+          description: "",
+          latitude: "",
+          longitude: "",
+          image: null,
+          imageUrl: "",
+          imageSource: "upload",
+          locationSource: "address",
+          addressSearch: "",
+          category_id: "",
+          operating_hours: { ...DEFAULT_OPERATING_HOURS },
+          is_active: true,
+        });
+        setImagePreview(null);
+        setAddressSuggestions([]);
+        setShowAddressSuggestions(false);
+        onClose();
       }
-
-      const data = await response.json();
-
-      // Call the onSubmit callback
-      onSubmit(data.store || formData);
-
-      // Show success message
-      toast.success("Store created successfully!");
-
-      // Reset form
-      setFormData({
-        name: "",
-        description: "",
-        latitude: "",
-        longitude: "",
-        image: null,
-        imageUrl: "",
-        imageSource: "upload",
-        locationSource: "address",
-        addressSearch: "",
-        category_id: "",
-        operating_hours: { ...DEFAULT_OPERATING_HOURS },
-      });
-      setImagePreview(null);
-      setAddressSuggestions([]);
-      setShowAddressSuggestions(false);
-
-      onClose();
     } catch (error: any) {
       console.error("Error creating store:", error);
       toast.error(error.message || "Failed to create store. Please try again.");
@@ -442,10 +527,12 @@ export function CreateStoreForm({
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Create Store
+                {isEditMode ? "Edit Store" : "Create Store"}
               </h2>
               <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                Add a new store to your business
+                {isEditMode
+                  ? "Update your store details"
+                  : "Add a new store to your business"}
               </p>
             </div>
             <button
@@ -669,6 +756,101 @@ export function CreateStoreForm({
               )}
             </div>
 
+            {/* Store Status (Edit mode only) - Owners can disable but not enable; support handles re-enabling */}
+            {isEditMode && (
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Store Status
+                </label>
+                <div className="flex items-center gap-3 rounded-xl border-2 border-gray-200 bg-gray-50/50 p-4 dark:border-gray-600 dark:bg-gray-700/30">
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={formData.is_active}
+                    onClick={() => {
+                      if (formData.is_active) {
+                        handleInputChange("is_active", false);
+                      }
+                    }}
+                    disabled={!formData.is_active}
+                    className={`relative inline-flex h-8 w-14 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+                      formData.is_active
+                        ? "cursor-pointer bg-green-500"
+                        : "cursor-not-allowed bg-gray-300 opacity-60"
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-7 w-7 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        formData.is_active ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                  <div>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {formData.is_active ? "Store is active" : "Store is disabled"}
+                    </span>
+                    {!formData.is_active && (
+                      <p className="mt-0.5 text-xs text-amber-600 dark:text-amber-400">
+                        Contact support to re-enable your store
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {!formData.is_active && editingStore?.id && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setIsRequestingEnable(true);
+                      try {
+                        const res = await fetch("/api/support-ticket", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            requestType: "enable_store",
+                            storeId: editingStore.id,
+                            storeName: editingStore.name || "Unnamed store",
+                            message: "Request to re-enable this store",
+                            businessAccountId: (editingStore as any).business_id,
+                          }),
+                        });
+                        if (res.ok) {
+                          toast.success(
+                            "Your request has been sent to support. They will contact you soon."
+                          );
+                        } else {
+                          const data = await res.json().catch(() => ({}));
+                          throw new Error(data.error || "Failed to send request");
+                        }
+                      } catch (err: any) {
+                        toast.error(err.message || "Failed to send request");
+                      } finally {
+                        setIsRequestingEnable(false);
+                      }
+                    }}
+                    disabled={isRequestingEnable}
+                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-green-500 bg-green-50 px-4 py-2.5 text-sm font-semibold text-green-700 transition-colors hover:bg-green-100 disabled:opacity-50 dark:border-green-600 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50"
+                  >
+                    {isRequestingEnable ? (
+                      <>
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-green-600 border-t-transparent" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <MessageSquare className="h-4 w-4" />
+                        Request to enable store
+                      </>
+                    )}
+                  </button>
+                )}
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {formData.is_active
+                    ? "Disabling hides your store from customers. Only support can re-enable it."
+                    : "Disabled stores won&apos;t appear to customers"}
+                </p>
+              </div>
+            )}
+
             {/* Operating Hours */}
             <div>
               <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -889,7 +1071,7 @@ export function CreateStoreForm({
             ) : (
               <>
                 <Send className="h-4 w-4" />
-                Create Store
+                {isEditMode ? "Save Changes" : "Create Store"}
               </>
             )}
           </button>
