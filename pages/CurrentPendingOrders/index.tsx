@@ -1,10 +1,57 @@
 import RootLayout from "@components/ui/layout";
 import UserRecentOrders from "@components/userProfile/userRecentOrders";
 import Link from "next/link";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
 import { AuthGuard } from "../../src/components/AuthGuard";
+
+const ORDERS_CACHE_KEY = "plasa_current_pending_orders";
+const CACHE_MAX_AGE_MS = 30 * 60 * 1000; // 30 minutes
+
+function getOrdersFromCache(): {
+  orders: any[];
+  hasMore: boolean;
+  page: number;
+} | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(ORDERS_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as {
+      orders: any[];
+      hasMore: boolean;
+      page: number;
+      timestamp: number;
+    };
+    if (!Array.isArray(parsed.orders)) return null;
+    if (Date.now() - (parsed.timestamp || 0) > CACHE_MAX_AGE_MS) return null;
+    return {
+      orders: parsed.orders,
+      hasMore: parsed.hasMore ?? false,
+      page: parsed.page ?? 1,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function setOrdersCache(orders: any[], hasMore: boolean, page: number) {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(
+      ORDERS_CACHE_KEY,
+      JSON.stringify({
+        orders,
+        hasMore,
+        page,
+        timestamp: Date.now(),
+      })
+    );
+  } catch {
+    // ignore
+  }
+}
 
 function CurrentOrdersPage() {
   const [filter, setFilter] = useState("pending");
@@ -13,6 +60,7 @@ function CurrentOrdersPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const initialMountDone = useRef(false);
   const { data: session } = useSession();
 
   const fetchOrders = useCallback(async (pageNum = 1, append = false) => {
@@ -22,7 +70,6 @@ function CurrentOrdersPage() {
       setLoadingMore(true);
     }
     try {
-      // Use the new user-orders endpoint with pagination
       const res = await authenticatedFetch(
         `/api/queries/user-orders?page=${pageNum}&limit=20`
       );
@@ -30,13 +77,19 @@ function CurrentOrdersPage() {
       const newOrders = data.orders || [];
 
       if (append) {
-        setOrders((prev) => [...prev, ...newOrders]);
+        setOrders((prev) => {
+          const next = [...prev, ...newOrders];
+          setOrdersCache(next, data.pagination?.hasMore ?? newOrders.length === 20, pageNum);
+          return next;
+        });
+        setHasMore(data.pagination?.hasMore ?? newOrders.length === 20);
+        setPage(pageNum);
       } else {
         setOrders(newOrders);
+        setHasMore(data.pagination?.hasMore ?? newOrders.length === 20);
+        setPage(pageNum);
+        setOrdersCache(newOrders, data.pagination?.hasMore ?? newOrders.length === 20, pageNum);
       }
-
-      setHasMore(data.pagination?.hasMore ?? newOrders.length === 20);
-      setPage(pageNum);
     } catch (error) {
       console.error("Error fetching orders:", error);
     } finally {
@@ -51,7 +104,19 @@ function CurrentOrdersPage() {
     }
   }, [fetchOrders, page, loadingMore, hasMore]);
 
+  // Only fetch on first mount if no valid cache; when switching back, restore from cache (no refetch)
   useEffect(() => {
+    if (initialMountDone.current) return;
+    initialMountDone.current = true;
+
+    const cached = getOrdersFromCache();
+    if (cached && cached.orders.length >= 0) {
+      setOrders(cached.orders);
+      setHasMore(cached.hasMore);
+      setPage(cached.page);
+      setLoading(false);
+      return;
+    }
     fetchOrders(1, false);
   }, [fetchOrders]);
 
