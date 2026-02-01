@@ -5,10 +5,8 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { notifyNewOrderToSlack } from "../../../src/lib/slackOrderNotifier";
 
-function generateOrderPin(): string {
-  return Math.floor(Math.random() * 100)
-    .toString()
-    .padStart(2, "0");
+function generateOrderPin(): number {
+  return Math.floor(Math.random() * 100);
 }
 
 const GET_STORE_AND_USER = gql`
@@ -39,7 +37,7 @@ const CREATE_BUSINESS_PRODUCT_ORDER = gql`
     $ordered_by: uuid
     $status: String
     $shopper_id: uuid
-    $pin: String!
+    $pin: Int!
   ) {
     insert_businessProductOrders(
       objects: {
@@ -120,6 +118,7 @@ export default async function handler(
       timeRange,
       ordered_by,
       status,
+      await_momo_payment,
     } = req.body;
 
     if (!store_id || !allProducts || !total) {
@@ -191,18 +190,20 @@ export default async function handler(
       }
     }
 
-    // Fire-and-forget Slack notification for new business order
-    void notifyNewOrderToSlack({
-      id: orderId ?? "",
-      orderID: orderId,
-      total: total,
-      orderType: "business",
-      storeName,
-      units,
-      customerPhone,
-      customerAddress: deliveryAddress || undefined,
-      deliveryTime: timeRangeValue || delivered_time,
-    });
+    // Defer Slack notification for MoMo orders until payment is confirmed
+    if (!await_momo_payment) {
+      void notifyNewOrderToSlack({
+        id: orderId ?? "",
+        orderID: orderId,
+        total: total,
+        orderType: "business",
+        storeName,
+        units,
+        customerPhone,
+        customerAddress: deliveryAddress || undefined,
+        deliveryTime: timeRangeValue || delivered_time,
+      });
+    }
 
     return res.status(200).json({
       success: true,

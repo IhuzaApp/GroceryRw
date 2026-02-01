@@ -41,6 +41,7 @@ export default async function handler(
     }
 
     let walletDeducted = false;
+    let momoReferenceId: string | undefined;
 
     if (walletAmt > 0) {
       const deductRes = await fetch(
@@ -83,7 +84,7 @@ export default async function handler(
         }
       );
 
-      const momoData = await momoRes.json();
+      const momoData = (await momoRes.json()) as { referenceId?: string; error?: string };
 
       if (!momoRes.ok) {
         if (walletDeducted) {
@@ -107,12 +108,14 @@ export default async function handler(
           details: momoData,
         });
       }
+      momoReferenceId = momoData.referenceId;
     }
 
     return res.status(200).json({
       success: true,
       walletAmount: walletAmt,
       momoAmount: momoAmt,
+      referenceId: momoReferenceId,
       message:
         momoAmt > 0
           ? "Wallet charged. Approve the MoMo prompt on your phone to complete payment."

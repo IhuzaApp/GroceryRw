@@ -118,9 +118,31 @@ export default function StoreCheckoutPage() {
     name?: string;
   } | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [serviceFeeConfig, setServiceFeeConfig] = useState<{ rate?: number; fixed?: number } | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
+  }, []);
+
+  // Fetch system config for service fee
+  useEffect(() => {
+    fetch("/api/queries/system-configuration")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.config?.serviceFee != null) {
+          const raw = parseFloat(String(data.config.serviceFee));
+          if (isNaN(raw)) return;
+          // If < 1: decimal (0.05 = 5%). If 1-100: percentage (5 = 5%). If > 100: fixed amount.
+          if (raw < 1) {
+            setServiceFeeConfig({ rate: raw });
+          } else if (raw <= 100) {
+            setServiceFeeConfig({ rate: raw / 100 });
+          } else {
+            setServiceFeeConfig({ fixed: raw });
+          }
+        }
+      })
+      .catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -310,10 +332,21 @@ export default function StoreCheckoutPage() {
 
   useEffect(() => {
     if (!checkoutData) return;
-    const serviceFeeCalc = Math.ceil(checkoutData.total * 0.05);
+    let serviceFeeCalc = 0;
+    if (serviceFeeConfig) {
+      if (serviceFeeConfig.fixed != null) {
+        serviceFeeCalc = serviceFeeConfig.fixed;
+      } else if (serviceFeeConfig.rate != null) {
+        serviceFeeCalc = Math.ceil(checkoutData.total * serviceFeeConfig.rate);
+      }
+    }
+    // Fallback to 5% when config not yet loaded or missing
+    if (!serviceFeeConfig) {
+      serviceFeeCalc = Math.ceil(checkoutData.total * 0.05);
+    }
     setServiceFee(serviceFeeCalc);
     setTotalAmount(checkoutData.total + transportationFee + serviceFeeCalc);
-  }, [checkoutData, transportationFee]);
+  }, [checkoutData, transportationFee, serviceFeeConfig]);
 
   const handleSelectAddressFromList = (address: SavedAddress) => {
     const addr = {
@@ -518,6 +551,9 @@ export default function StoreCheckoutPage() {
         return;
       }
 
+      const needsMomoConfirmation =
+        isWalletWithMomoRemainder || (selectedPaymentMethod?.type === "momo" && totalAmount > 0);
+
       const orderRes = await fetch("/api/mutations/create-business-product-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -539,6 +575,7 @@ export default function StoreCheckoutPage() {
           status: "Pending",
           payment_method: paymentMethodString,
           payment_method_id: selectedPaymentMethod.id || null,
+          await_momo_payment: needsMomoConfirmation,
         }),
       });
 
@@ -551,11 +588,18 @@ export default function StoreCheckoutPage() {
       const orderId = orderData.orderId;
 
       if (orderId) {
-        await processPaymentAfterOrder(orderId);
+        const paymentResult = await processPaymentAfterOrder(orderId);
+        if (needsMomoConfirmation && paymentResult?.referenceId) {
+          localStorage.removeItem("storeCheckoutData");
+          router.push(
+            `/stores/${checkoutData.storeId}/payment-pending?orderId=${orderId}&referenceId=${paymentResult.referenceId}`
+          );
+          return;
+        }
       }
 
       toast.success(
-        isWalletWithMomoRemainder || (selectedPaymentMethod?.type === "momo" && totalAmount > 0)
+        needsMomoConfirmation
           ? "Order placed! Approve the MoMo prompt on your phone to complete payment."
           : "Order placed successfully!"
       );
@@ -925,7 +969,9 @@ export default function StoreCheckoutPage() {
                     <span className="font-medium text-gray-900 dark:text-white">{formatCurrencySync(transportationFee)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">Service fee (5%)</span>
+                    <span className="text-gray-500 dark:text-gray-400">
+                      Service fee{serviceFeeConfig?.rate != null ? ` (${(serviceFeeConfig.rate * 100).toFixed(0)}%)` : serviceFeeConfig?.fixed != null ? "" : " (5%)"}
+                    </span>
                     <span className="font-medium text-gray-900 dark:text-white">{formatCurrencySync(serviceFee)}</span>
                   </div>
                 </div>
@@ -1145,7 +1191,10 @@ export default function StoreCheckoutPage() {
                     { label: "Subtotal", value: formatCurrencySync(checkoutData.total) },
                     { label: "Units", value: totalItems },
                     { label: "Transportation", value: formatCurrencySync(transportationFee) },
-                    { label: "Service fee (5%)", value: formatCurrencySync(serviceFee) },
+                    {
+                      label: `Service fee${serviceFeeConfig?.rate != null ? ` (${(serviceFeeConfig.rate * 100).toFixed(0)}%)` : serviceFeeConfig?.fixed != null ? "" : " (5%)"}`,
+                      value: formatCurrencySync(serviceFee),
+                    },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex justify-between text-sm">
                       <span className="text-gray-500 dark:text-gray-400">{label}</span>
