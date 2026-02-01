@@ -8,6 +8,8 @@ import { AuthGuard } from "../../src/components/AuthGuard";
 
 const ORDERS_CACHE_KEY = "plasa_current_pending_orders";
 const CACHE_MAX_AGE_MS = 30 * 60 * 1000; // 30 minutes
+// Bump when cache shape changes (e.g. we started including shop image/logo); old cache is ignored
+const CACHE_VERSION = 2;
 
 function getOrdersFromCache(): {
   orders: any[];
@@ -23,9 +25,11 @@ function getOrdersFromCache(): {
       hasMore: boolean;
       page: number;
       timestamp: number;
+      cacheVersion?: number;
     };
     if (!Array.isArray(parsed.orders)) return null;
     if (Date.now() - (parsed.timestamp || 0) > CACHE_MAX_AGE_MS) return null;
+    if ((parsed.cacheVersion ?? 1) !== CACHE_VERSION) return null;
     return {
       orders: parsed.orders,
       hasMore: parsed.hasMore ?? false,
@@ -36,12 +40,22 @@ function getOrdersFromCache(): {
   }
 }
 
-// Trim big fields so cache fits in sessionStorage (~5MB) and doesn't trigger refetch on back
+// Trim only very large fields so cache fits; keep shop image/logo so list shows them on restore
 function trimOrderForCache(o: any): any {
   return {
     ...o,
-    shop: o.shop ? { id: o.shop.id, name: o.shop.name, image: "", logo: "" } : null,
-    reel: o.reel ? { id: o.reel.id, title: o.reel.title } : o.reel,
+    shop: o.shop
+      ? {
+          id: o.shop.id,
+          name: o.shop.name,
+          image: o.shop.image ?? "",
+          logo: (o.shop as any)?.logo ?? "",
+        }
+      : null,
+    reel: o.reel
+      ? { id: o.reel.id, title: o.reel.title, video_url: undefined }
+      : o.reel,
+    allProducts: undefined, // strip large payload on business orders
   };
 }
 
@@ -56,6 +70,7 @@ function setOrdersCache(orders: any[], hasMore: boolean, page: number) {
         hasMore,
         page,
         timestamp: Date.now(),
+        cacheVersion: CACHE_VERSION,
       })
     );
   } catch (e) {
@@ -73,12 +88,25 @@ function setOrdersCache(orders: any[], hasMore: boolean, page: number) {
         itemsCount: o.itemsCount,
         unitsCount: o.unitsCount,
         combined_order_id: o.combined_order_id,
-        shop: o.shop ? { id: o.shop.id, name: o.shop.name } : null,
+        shop: o.shop
+          ? {
+              id: o.shop.id,
+              name: o.shop.name,
+              image: o.shop.image ?? "",
+              logo: (o.shop as any)?.logo ?? "",
+            }
+          : null,
         reel: o.reel ? { id: o.reel.id, title: o.reel.title } : o.reel,
       }));
       sessionStorage.setItem(
         ORDERS_CACHE_KEY,
-        JSON.stringify({ orders: slim, hasMore, page, timestamp: Date.now() })
+        JSON.stringify({
+          orders: slim,
+          hasMore,
+          page,
+          timestamp: Date.now(),
+          cacheVersion: CACHE_VERSION,
+        })
       );
     } catch {
       // ignore
@@ -108,6 +136,28 @@ function CurrentOrdersPage() {
       );
       const data = await res.json();
       const newOrders = data.orders || [];
+
+      // Debug: log order info to trace why images may not show
+      if (process.env.NODE_ENV === "development" && newOrders.length > 0) {
+        console.log("[CurrentPendingOrders] Orders from API", {
+          count: newOrders.length,
+          page: pageNum,
+          sample: newOrders.slice(0, 3).map((o: any) => ({
+            id: o.id,
+            OrderID: o.OrderID,
+            orderType: o.orderType,
+            shop: o.shop
+              ? {
+                  id: o.shop.id,
+                  name: o.shop.name,
+                  image: o.shop.image ?? "(empty)",
+                  logo: (o.shop as any)?.logo ?? "(none)",
+                }
+              : null,
+            reel: o.reel ? { id: o.reel.id, title: o.reel.title } : null,
+          })),
+        });
+      }
 
       if (append) {
         setOrders((prev) => {
@@ -144,6 +194,17 @@ function CurrentOrdersPage() {
 
     const cached = getOrdersFromCache();
     if (cached && cached.orders.length >= 0) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("[CurrentPendingOrders] Using orders from cache", {
+          count: cached.orders.length,
+          sample: cached.orders.slice(0, 2).map((o: any) => ({
+            id: o.id,
+            orderType: o.orderType,
+            shopImage: o.shop?.image ? "(present)" : "(empty)",
+            shopLogo: (o.shop as any)?.logo ? "(present)" : "(none)",
+          })),
+        });
+      }
       setOrders(cached.orders);
       setHasMore(cached.hasMore);
       setPage(cached.page);
