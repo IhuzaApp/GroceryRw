@@ -1,8 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { formatCurrencySync } from "../../utils/formatCurrency";
-import { Plus, Edit, Trash2, X } from "lucide-react";
+import { Plus, Edit, Trash2, X, Star } from "lucide-react";
 import toast from "react-hot-toast";
+import { useSession } from "next-auth/react";
 import { useHideBottomBar } from "../../context/HideBottomBarContext";
+
+interface ProductRating {
+  id: string;
+  comment: string | null;
+  created_at: string;
+  feedback: string | null;
+  ratings: string | null;
+  user_id: string;
+  Users?: { id: string; name: string | null; email: string | null } | null;
+}
 
 interface StoreProductCardProps {
   id: string;
@@ -41,6 +52,8 @@ export default function StoreProductCard({
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
   const [imageError, setImageError] = useState(false);
+  const [ratings, setRatings] = useState<ProductRating[]>([]);
+  const [ratingsLoading, setRatingsLoading] = useState(false);
   const { setHideBottomBar } = useHideBottomBar();
 
   useEffect(() => {
@@ -56,6 +69,28 @@ export default function StoreProductCard({
       document.body.classList.remove("hide-bottom-bar");
     };
   }, [showDetailsModal, showQuantityModal, setHideBottomBar]);
+
+  useEffect(() => {
+    if (!showDetailsModal || !id) return;
+    setRatingsLoading(true);
+    fetch(`/api/queries/product-ratings?productId=${id}`)
+      .then((res) => res.json())
+      .then((data) => setRatings(data.ratings || []))
+      .catch(() => setRatings([]))
+      .finally(() => setRatingsLoading(false));
+  }, [showDetailsModal, id]);
+
+  const formatDate = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch {
+      return "";
+    }
+  };
 
   const handleAdd = () => {
     onAdd({
@@ -296,16 +331,63 @@ export default function StoreProductCard({
                     </div>
                   )}
 
-                  {description && (
-                    <div>
-                      <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                        Description
-                      </label>
-                      <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
-                        {description}
+                  {/* Description - Always shown for users to read */}
+                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-800/50">
+                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                      Description
+                    </label>
+                    <p className="mt-2 min-h-[2.5rem] text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+                      {description || "No description available."}
+                    </p>
+                  </div>
+
+                  {/* Ratings & Reviews */}
+                  <div className="border-t border-gray-200 pt-4 dark:border-gray-700">
+                    <h4 className="mb-3 flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white">
+                      <Star className="h-4 w-4 text-amber-500" />
+                      Reviews {ratings.length > 0 && `(${ratings.length})`}
+                    </h4>
+                    {ratingsLoading ? (
+                      <p className="py-4 text-center text-sm text-gray-500">Loading reviews...</p>
+                    ) : ratings.length === 0 ? (
+                      <p className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                        No reviews yet. Be the first to review!
                       </p>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="space-y-3 max-h-40 overflow-y-auto">
+                        {ratings.map((r) => (
+                          <div
+                            key={r.id}
+                            className="rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-600 dark:bg-gray-800/50"
+                          >
+                            <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+                              <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                                {r.Users?.name || "Anonymous"}
+                              </span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                {formatDate(r.created_at)}
+                              </span>
+                            </div>
+                            <div className="mb-1 flex text-amber-500">
+                              {[1, 2, 3, 4, 5].map((i) => (
+                                <Star
+                                  key={i}
+                                  className={`h-3.5 w-3.5 ${
+                                    i <= (parseFloat(r.ratings || "0") || 0) ? "fill-amber-500" : "fill-gray-200 dark:fill-gray-600"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            {(r.comment || r.feedback) && (
+                              <p className="text-sm text-gray-700 dark:text-gray-300">
+                                {r.comment || r.feedback}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
