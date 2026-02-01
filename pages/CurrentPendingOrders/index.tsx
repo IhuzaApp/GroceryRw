@@ -36,20 +36,53 @@ function getOrdersFromCache(): {
   }
 }
 
+// Trim big fields so cache fits in sessionStorage (~5MB) and doesn't trigger refetch on back
+function trimOrderForCache(o: any): any {
+  return {
+    ...o,
+    shop: o.shop ? { id: o.shop.id, name: o.shop.name, image: "", logo: "" } : null,
+    reel: o.reel ? { id: o.reel.id, title: o.reel.title } : o.reel,
+  };
+}
+
 function setOrdersCache(orders: any[], hasMore: boolean, page: number) {
   if (typeof window === "undefined") return;
   try {
+    const trimmed = orders.map(trimOrderForCache);
     sessionStorage.setItem(
       ORDERS_CACHE_KEY,
       JSON.stringify({
-        orders,
+        orders: trimmed,
         hasMore,
         page,
         timestamp: Date.now(),
       })
     );
-  } catch {
-    // ignore
+  } catch (e) {
+    // QuotaExceededError: try storing even slimmer (names only)
+    try {
+      const slim = orders.map((o: any) => ({
+        id: o.id,
+        OrderID: o.OrderID,
+        status: o.status,
+        created_at: o.created_at,
+        delivery_time: o.delivery_time,
+        pin: o.pin,
+        total: o.total,
+        orderType: o.orderType,
+        itemsCount: o.itemsCount,
+        unitsCount: o.unitsCount,
+        combined_order_id: o.combined_order_id,
+        shop: o.shop ? { id: o.shop.id, name: o.shop.name } : null,
+        reel: o.reel ? { id: o.reel.id, title: o.reel.title } : o.reel,
+      }));
+      sessionStorage.setItem(
+        ORDERS_CACHE_KEY,
+        JSON.stringify({ orders: slim, hasMore, page, timestamp: Date.now() })
+      );
+    } catch {
+      // ignore
+    }
   }
 }
 

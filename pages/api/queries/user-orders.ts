@@ -317,6 +317,7 @@ export default async function handler(
       Math.max(1, parseInt(req.query.limit as string, 10) || DEFAULT_LIMIT)
     );
     const offset = (page - 1) * limit;
+    const minimal = req.query.minimal === "1" || req.query.minimal === "true";
 
     // Fetch orders for this specific user only with pagination
     const data = await hasuraClient.request<OrdersResponse>(GET_USER_ORDERS, {
@@ -560,7 +561,7 @@ export default async function handler(
     });
 
     // Merge and sort all orders by created_at (newest first)
-    const allEnriched = [
+    let allEnriched = [
       ...regularEnriched,
       ...reelEnriched,
       ...restaurantEnriched,
@@ -570,8 +571,23 @@ export default async function handler(
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
+    // For sidebar/badge: return minimal payload to stay under 4MB and respond quickly
+    const ordersToSend = minimal
+      ? (allEnriched as any[]).map((o: any) => ({
+          id: o.id,
+          OrderID: o.OrderID,
+          status: o.status,
+          created_at: o.created_at,
+          orderType: o.orderType,
+          total: o.total,
+          itemsCount: o.itemsCount ?? 0,
+          unitsCount: o.unitsCount ?? 0,
+          shop: o.shop ? { id: o.shop.id, name: o.shop.name } : null,
+        }))
+      : allEnriched;
+
     // Calculate pagination metadata
-    const currentPageCount = allEnriched.length;
+    const currentPageCount = ordersToSend.length;
     const hasMore =
       orders.length === limit ||
       reelOrders.length === limit ||
@@ -579,7 +595,7 @@ export default async function handler(
       businessOrders.length === limit;
 
     res.status(200).json({
-      orders: allEnriched,
+      orders: ordersToSend,
       pagination: {
         page,
         limit,

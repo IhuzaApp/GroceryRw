@@ -199,7 +199,7 @@ export default function BottomBar() {
       try {
         // Use limit=50 for navbar badge - most users won't have more than 50 pending orders
         const response = await authenticatedFetch(
-          "/api/queries/user-orders?limit=50"
+          "/api/queries/user-orders?limit=50&minimal=1"
         );
         if (!response.ok) return;
         const data = await response.json();
