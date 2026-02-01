@@ -780,9 +780,9 @@ export default function StoreCheckoutPage() {
                 </h2>
               </div>
               <div className="space-y-2.5">
-                {checkoutData.products.map((product) => (
+                {checkoutData.products.map((product, idx) => (
                   <div
-                    key={product.id}
+                    key={`${product.id}-${JSON.stringify(product.selectedDetails ?? {})}-${idx}`}
                     className="flex items-center gap-3 rounded-xl bg-gray-50/80 p-3 dark:bg-gray-700/50"
                   >
                     <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-600">
@@ -807,6 +807,15 @@ export default function StoreCheckoutPage() {
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         {product.quantity} × {formatCurrencySync(parseFloat(product.price))} / {product.unit}
                       </p>
+                      {product.selectedDetails &&
+                        typeof product.selectedDetails === "object" &&
+                        Object.keys(product.selectedDetails).length > 0 && (
+                          <p className="mt-0.5 text-xs font-medium text-gray-600 dark:text-gray-300">
+                            {Object.entries(product.selectedDetails)
+                              .map(([k, v]) => `${k}: ${v}`)
+                              .join(" · ")}
+                          </p>
+                        )}
                     </div>
                     <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
                       {formatCurrencySync(parseFloat(product.price) * product.quantity)}
@@ -827,9 +836,9 @@ export default function StoreCheckoutPage() {
                   Order items
                 </h2>
                 <div className="space-y-3">
-                  {checkoutData.products.map((product) => (
+                  {checkoutData.products.map((product, idx) => (
                     <div
-                      key={product.id}
+                      key={`${product.id}-${JSON.stringify(product.selectedDetails ?? {})}-${idx}`}
                       className="flex items-center gap-4 rounded-xl bg-gray-50/80 py-3 pl-3 pr-4 dark:bg-gray-700/40"
                     >
                       <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-600 lg:h-16 lg:w-16">
@@ -854,6 +863,15 @@ export default function StoreCheckoutPage() {
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                           {product.quantity} × {formatCurrencySync(parseFloat(product.price))} / {product.unit}
                         </p>
+                        {product.selectedDetails &&
+                          typeof product.selectedDetails === "object" &&
+                          Object.keys(product.selectedDetails).length > 0 && (
+                            <p className="mt-1 text-xs font-medium text-gray-600 dark:text-gray-300">
+                              {Object.entries(product.selectedDetails)
+                                .map(([k, v]) => `${k}: ${v}`)
+                                .join(" · ")}
+                            </p>
+                          )}
                       </div>
                       <p className="font-semibold text-emerald-600 dark:text-emerald-400">
                         {formatCurrencySync(parseFloat(product.price) * product.quantity)}
