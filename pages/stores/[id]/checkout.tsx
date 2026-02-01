@@ -680,9 +680,9 @@ export default function StoreCheckoutPage() {
   return (
     <RootLayout>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-16">
-        {/* Mobile Header - Store hero with logo */}
+        {/* Mobile Header - Full width, touch top/left/right, plasBusiness-style */}
         {isMounted && storeDetails && (
-          <div className="relative h-44 w-full overflow-hidden sm:hidden">
+          <div className="relative h-40 w-full overflow-hidden sm:hidden">
             {/* Store Cover Image */}
             <Image
               src={sanitizeSrc(storeDetails?.image)}
@@ -691,24 +691,24 @@ export default function StoreCheckoutPage() {
               className="object-cover"
               priority
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/70" />
 
-            {/* Top bar with safe area */}
-            <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 pt-[max(1rem,env(safe-area-inset-top))]">
+            {/* Top bar: Back button left, Checkout badge right */}
+            <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between pl-[max(1.25rem,env(safe-area-inset-left,1.25rem))] pr-[max(1.25rem,env(safe-area-inset-right,1.25rem))] pt-[max(3rem,env(safe-area-inset-top,3rem))]">
               <button
                 onClick={() => router.back()}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/30"
               >
-                <ArrowLeft className="h-5 w-5 text-gray-800" />
+                <ArrowLeft className="h-4 w-4 !text-white" />
               </button>
               <span className="rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-gray-800 backdrop-blur-sm">
                 Checkout
               </span>
             </div>
 
-            {/* Store info at bottom */}
-            <div className="absolute inset-x-0 bottom-0 z-20 flex items-end gap-4 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-              <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl border-2 border-white/80 shadow-xl ring-2 ring-black/10">
+            {/* Store Logo - Circular at bottom left */}
+            <div className="absolute left-5 top-24 z-50">
+              <div className="h-16 w-16 overflow-hidden rounded-full border-4 border-green-500 shadow-lg">
                 <Image
                   src={sanitizeSrc(storeDetails?.image)}
                   alt={checkoutData.storeName}
@@ -717,20 +717,22 @@ export default function StoreCheckoutPage() {
                   className="h-full w-full object-cover"
                 />
               </div>
-              <div className="min-w-0 flex-1 pb-0.5">
-                <h1 className="truncate text-lg font-bold text-white drop-shadow-md">
-                  {checkoutData.storeName}
-                </h1>
-                <p className="text-sm text-white/90">{totalItems} items</p>
-              </div>
+            </div>
+
+            {/* Store Info - Center bottom */}
+            <div className="absolute bottom-3 left-1/2 z-20 -translate-x-1/2 text-center">
+              <h1 className="mb-1 text-xl font-bold text-white drop-shadow-lg">
+                {checkoutData.storeName}
+              </h1>
+              <p className="text-sm text-white/90">{totalItems} items</p>
             </div>
           </div>
         )}
 
-        {/* Desktop Header */}
+        {/* Content - Full width on mobile, no side gaps */}
         <div
-          className="container mx-auto px-4 pb-24 pt-6 md:pb-6 lg:px-6 lg:py-8"
-          style={{ marginTop: storeDetails && isMounted ? "24px" : "0" }}
+          className="w-full px-0 pb-24 pt-4 md:container md:mx-auto md:px-4 md:pb-6 lg:px-6 lg:py-8"
+          style={{ marginTop: storeDetails && isMounted ? "0" : "0" }}
         >
           {/* Back Button - Desktop */}
           <button
@@ -762,9 +764,9 @@ export default function StoreCheckoutPage() {
             </div>
           </div>
 
-          {/* Products List - Mobile Only */}
-          <div className="mb-4 px-1 md:hidden">
-            <div className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+          {/* Products List - Mobile Only - Full width, no side gaps */}
+          <div className="mb-4 md:hidden">
+            <div className="rounded-none border-x-0 border-t border-b border-gray-200/80 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/30">
                   <ShoppingBag className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
@@ -1122,10 +1124,10 @@ export default function StoreCheckoutPage() {
             )}
 
             <div
-              className={`fixed left-0 right-0 z-50 mx-4 w-[calc(100%-2rem)] rounded-t-2xl border border-b-0 border-gray-200/80 bg-white shadow-2xl transition-[max-height] duration-300 dark:border-gray-700 dark:bg-gray-800 ${
+              className={`fixed left-0 right-0 z-50 w-full rounded-t-2xl border-x-0 border-t border-b-0 border-gray-200/80 bg-white shadow-2xl transition-[max-height] duration-300 dark:border-gray-700 dark:bg-gray-800 pb-[env(safe-area-inset-bottom)] ${
                 isExpanded ? "max-h-[85vh]" : "max-h-[200px]"
               }`}
-              style={{ bottom: "max(4rem, env(safe-area-inset-bottom, 4rem))", overflow: "hidden" }}
+              style={{ bottom: 0, overflow: "hidden" }}
             >
               {/* Drag handle */}
               <div

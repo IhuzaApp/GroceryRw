@@ -35,6 +35,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const isPlasBusinessPage =
     router.pathname === "/plasBusiness" ||
     router.pathname.startsWith("/plasBusiness/");
+  const isStoresPage =
+    router.pathname.startsWith("/stores/");
   const isOrderDetailsPage = router.pathname.startsWith(
     "/CurrentPendingOrders/viewOrderDetails/"
   );
@@ -46,6 +48,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         !isReelsPage &&
         !isMessagesPage &&
         !isPlasBusinessPage &&
+        !isStoresPage &&
         (isOrderDetailsPage ? (
           <div className="hidden md:block">
             <HeaderLayout />
@@ -53,10 +56,16 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         ) : (
           <HeaderLayout />
         ))}
+      {/* Stores (checkout, store page): show header on desktop only, full-bleed on mobile */}
+      {isStoresPage && (
+        <div className="hidden md:block">
+          <HeaderLayout />
+        </div>
+      )}
       {/* Main content */}
       <main
         className={`text-gray-900 transition-colors duration-200 dark:text-white ${
-          isChatPage || isReelsPage || isMessagesPage || isPlasBusinessPage
+          isChatPage || isReelsPage || isMessagesPage || isPlasBusinessPage || isStoresPage
             ? ""
             : isOrderDetailsPage
             ? "pb-20 md:pb-0 md:pt-16"
@@ -82,6 +91,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           style={
             isReelsPage ||
             isPlasBusinessPage ||
+            isStoresPage ||
             isMessagesPage ||
             isOrderDetailsPage
               ? { height: "100%", width: "100%" }
@@ -90,7 +100,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         >
           {children}
         </div>
-        {!isChatPage && !isReelsPage && !isMessagesPage && !hideBottomBar && (
+        {!isChatPage && !isReelsPage && !isMessagesPage && !isStoresPage && !hideBottomBar && (
           <BottomBar />
         )}
       </main>
