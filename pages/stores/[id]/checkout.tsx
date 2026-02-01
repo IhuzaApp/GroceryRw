@@ -110,6 +110,8 @@ export default function StoreCheckoutPage() {
   const [showPaymentDropdown, setShowPaymentDropdown] = useState(false);
   const [selectedPaymentValue, setSelectedPaymentValue] = useState<string | null>(null);
   const [oneTimePhoneNumber, setOneTimePhoneNumber] = useState("");
+  const [payRemainderWithMomo, setPayRemainderWithMomo] = useState(false);
+  const [momoPhoneForRemainder, setMomoPhoneForRemainder] = useState("");
   const [isExpanded, setIsExpanded] = useState(true); // Auto-expand on mobile by default
   const [storeDetails, setStoreDetails] = useState<{
     image?: string;
@@ -356,6 +358,8 @@ export default function StoreCheckoutPage() {
     if (value === "wallet") {
       setSelectedPaymentMethod({ type: "refund" });
       setOneTimePhoneNumber("");
+      setPayRemainderWithMomo(false);
+      setMomoPhoneForRemainder("");
     } else if (value === "one-time-phone") {
       setSelectedPaymentMethod({ type: "momo", number: oneTimePhoneNumber });
     } else {
@@ -377,6 +381,14 @@ export default function StoreCheckoutPage() {
   };
 
   const canUseWallet = walletBalance >= totalAmount;
+  const remainderAmount = Math.max(0, totalAmount - walletBalance);
+  const isWalletWithMomoRemainder =
+    selectedPaymentValue === "wallet" &&
+    !canUseWallet &&
+    payRemainderWithMomo &&
+    remainderAmount > 0;
+  const isValidMomoRemainderPhone =
+    momoPhoneForRemainder.replace(/\D/g, "").length >= 10;
   const isOneTimePhoneSelected = selectedPaymentValue === "one-time-phone";
   const isValidOneTimePhone =
     oneTimePhoneNumber.replace(/\D/g, "").length >= 10;
@@ -384,7 +396,67 @@ export default function StoreCheckoutPage() {
   const canPlaceOrder = () => {
     if (!userAddress || !selectedPaymentMethod) return false;
     if (isOneTimePhoneSelected && !isValidOneTimePhone) return false;
+    if (isWalletWithMomoRemainder && !isValidMomoRemainderPhone) return false;
+    if (selectedPaymentValue === "wallet" && !canUseWallet && !payRemainderWithMomo)
+      return false;
     return true;
+  };
+
+  const processPaymentAfterOrder = async (orderId: string) => {
+    if (isWalletWithMomoRemainder) {
+      const res = await fetch("/api/store-checkout/process-split-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          walletAmount: walletBalance,
+          momoAmount: remainderAmount,
+          momoPhone: momoPhoneForRemainder,
+          orderId,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Payment failed");
+      return data;
+    }
+
+    if (selectedPaymentValue === "wallet" && canUseWallet) {
+      const res = await fetch("/api/user/deduct-from-wallet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: totalAmount }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Wallet deduction failed");
+      return data;
+    }
+
+    if (selectedPaymentMethod?.type === "card") {
+      return { success: true };
+    }
+
+    if (
+      selectedPaymentMethod?.type === "momo" &&
+      (oneTimePhoneNumber || selectedPaymentMethod?.number)
+    ) {
+      const phone = oneTimePhoneNumber || selectedPaymentMethod?.number || "";
+      const res = await fetch("/api/momo/request-to-pay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: totalAmount,
+          currency: "RWF",
+          payerNumber: phone,
+          externalId: orderId,
+          payerMessage: "Payment for your order",
+          payeeNote: "Thank you for your order",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "MoMo payment failed");
+      return data;
+    }
+
+    return { success: true };
   };
 
   const handlePlaceOrder = async () => {
@@ -403,10 +475,19 @@ export default function StoreCheckoutPage() {
       return;
     }
 
+    if (isWalletWithMomoRemainder && !isValidMomoRemainderPhone) {
+      toast.error("Please enter a valid MoMo phone number for the remainder");
+      return;
+    }
+
+    if (selectedPaymentValue === "wallet" && !canUseWallet && !payRemainderWithMomo) {
+      toast.error("Please enable 'Pay remainder via MoMo' or choose another payment method");
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
-      // Prepare products as JSONB (without image field)
       const productsJsonb = checkoutData.products.map((p) => ({
         id: p.id,
         name: p.name,
@@ -416,16 +497,14 @@ export default function StoreCheckoutPage() {
         measurement_type: p.measurement_unit || p.unit,
       }));
 
-      // Calculate units (total quantity of all items)
       const totalUnits = checkoutData.products.reduce(
         (sum, p) => sum + p.quantity,
         0
       );
 
-      // Determine payment method string for API
       let paymentMethodString = "mobile_money";
       if (selectedPaymentMethod.type === "refund") {
-        paymentMethodString = "wallet";
+        paymentMethodString = isWalletWithMomoRemainder ? "wallet_and_momo" : "wallet";
       } else if (selectedPaymentMethod.type === "card") {
         paymentMethodString = "card";
       } else if (selectedPaymentMethod.type === "momo") {
@@ -439,41 +518,49 @@ export default function StoreCheckoutPage() {
         return;
       }
 
-      const response = await fetch(
-        "/api/mutations/create-business-product-order",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            store_id: checkoutData.storeId,
-            allProducts: productsJsonb,
-            total: totalAmount.toString(),
-            transportation_fee: transportationFee.toString(),
-            service_fee: serviceFee.toString(),
-            units: totalUnits.toString(),
-            latitude: userAddress.latitude || "",
-            longitude: userAddress.longitude || "",
-            deliveryAddress: addressInput || "Current Location",
-            comment: comment || "",
-            delivered_time:
-              deliveredTime || new Date(Date.now() + 60 * 60000).toISOString(), // Default: 1 hour from now
-            timeRange: timeRange || "Within 1-2 hours",
-            ordered_by: userId,
-            status: "Pending",
-            payment_method: paymentMethodString,
-            payment_method_id: selectedPaymentMethod.id || null,
-          }),
-        }
-      );
+      const orderRes = await fetch("/api/mutations/create-business-product-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          store_id: checkoutData.storeId,
+          allProducts: productsJsonb,
+          total: totalAmount.toString(),
+          transportation_fee: transportationFee.toString(),
+          service_fee: serviceFee.toString(),
+          units: totalUnits.toString(),
+          latitude: userAddress.latitude || "",
+          longitude: userAddress.longitude || "",
+          deliveryAddress: addressInput || "Current Location",
+          comment: comment || "",
+          delivered_time:
+            deliveredTime || new Date(Date.now() + 60 * 60000).toISOString(),
+          timeRange: timeRange || "Within 1-2 hours",
+          ordered_by: userId,
+          status: "Pending",
+          payment_method: paymentMethodString,
+          payment_method_id: selectedPaymentMethod.id || null,
+        }),
+      });
 
-      if (response.ok) {
-        toast.success("Order placed successfully!");
-        localStorage.removeItem("storeCheckoutData");
-        router.push(`/stores/${checkoutData.storeId}?orderSuccess=true`);
-      } else {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to place order");
+      if (!orderRes.ok) {
+        const err = await orderRes.json();
+        throw new Error(err.message || "Failed to create order");
       }
+
+      const orderData = await orderRes.json();
+      const orderId = orderData.orderId;
+
+      if (orderId) {
+        await processPaymentAfterOrder(orderId);
+      }
+
+      toast.success(
+        isWalletWithMomoRemainder || (selectedPaymentMethod?.type === "momo" && totalAmount > 0)
+          ? "Order placed! Approve the MoMo prompt on your phone to complete payment."
+          : "Order placed successfully!"
+      );
+      localStorage.removeItem("storeCheckoutData");
+      router.push(`/stores/${checkoutData.storeId}?orderSuccess=true`);
     } catch (error: any) {
       console.error("Error placing order:", error);
       toast.error(error.message || "Failed to place order");
@@ -506,7 +593,11 @@ export default function StoreCheckoutPage() {
     const badge = badges[selectedPaymentMethod?.type || "momo"] || badges.card;
     let detail = "";
     if (selectedPaymentMethod?.type === "refund") {
-      detail = `${formatCurrencySync(walletBalance)} available`;
+      if (isWalletWithMomoRemainder) {
+        detail = `${formatCurrencySync(walletBalance)} + ${formatCurrencySync(remainderAmount)} MoMo`;
+      } else {
+        detail = `${formatCurrencySync(walletBalance)} available`;
+      }
     } else if (isOneTimePhoneSelected) {
       detail = oneTimePhoneNumber ? `•••• ${oneTimePhoneNumber.slice(-4)}` : "Enter phone number";
     } else {
@@ -872,18 +963,22 @@ export default function StoreCheckoutPage() {
                         <div className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800">
                           <button
                             type="button"
-                            onClick={() => canUseWallet && handlePaymentMethodChange("wallet")}
-                            disabled={!canUseWallet}
-                            className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm ${
-                              !canUseWallet ? "cursor-not-allowed opacity-60" : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                            } ${selectedPaymentValue === "wallet" ? "bg-emerald-50 dark:bg-emerald-900/20" : ""}`}
+                            onClick={() => handlePaymentMethodChange("wallet")}
+                            className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                              selectedPaymentValue === "wallet" ? "bg-emerald-50 dark:bg-emerald-900/20" : ""
+                            }`}
                           >
                             <Wallet className="h-4 w-4 text-violet-500" />
                             <div>
                               <p className="font-medium">Personal wallet</p>
                               <p className="text-xs text-gray-500">
                                 {formatCurrencySync(walletBalance)} available
-                                {!canUseWallet && <span className="text-amber-600"> (insufficient)</span>}
+                                {!canUseWallet && remainderAmount > 0 && (
+                                  <span className="text-amber-600">
+                                    {" "}
+                                    — pay {formatCurrencySync(remainderAmount)} via MoMo
+                                  </span>
+                                )}
                               </p>
                             </div>
                           </button>
@@ -932,6 +1027,30 @@ export default function StoreCheckoutPage() {
                       onChange={(e) => handleOneTimePhoneChange(e.target.value)}
                       className="mt-3 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     />
+                  )}
+                  {selectedPaymentValue === "wallet" && !canUseWallet && remainderAmount > 0 && (
+                    <div className="mt-4 space-y-3 rounded-xl border border-amber-200 bg-amber-50/50 p-4 dark:border-amber-800 dark:bg-amber-900/10">
+                      <label className="flex cursor-pointer items-start gap-3">
+                        <input
+                          type="checkbox"
+                          checked={payRemainderWithMomo}
+                          onChange={(e) => setPayRemainderWithMomo(e.target.checked)}
+                          className="mt-1 h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                        />
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          Pay remainder {formatCurrencySync(remainderAmount)} via MoMo
+                        </span>
+                      </label>
+                      {payRemainderWithMomo && (
+                        <input
+                          type="tel"
+                          placeholder="MoMo phone e.g. 0781234567"
+                          value={momoPhoneForRemainder}
+                          onChange={(e) => setMomoPhoneForRemainder(e.target.value)}
+                          className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                        />
+                      )}
+                    </div>
                   )}
                 </div>
 
@@ -1129,15 +1248,17 @@ export default function StoreCheckoutPage() {
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                canUseWallet && handlePaymentMethodChange("wallet");
+                                handlePaymentMethodChange("wallet");
                               }}
-                              disabled={!canUseWallet}
-                              className={`flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm ${
-                                !canUseWallet ? "opacity-60" : ""
-                              }`}
+                              className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm"
                             >
                               <Wallet className="h-4 w-4 text-violet-500" />
-                              <span>Personal wallet ({formatCurrencySync(walletBalance)})</span>
+                              <span>
+                                Personal wallet ({formatCurrencySync(walletBalance)})
+                                {!canUseWallet && remainderAmount > 0 && (
+                                  <span className="text-amber-600"> + MoMo</span>
+                                )}
+                              </span>
                             </button>
                             {savedPaymentMethods.map((method) => {
                               const isMomo = method.method.toLowerCase().includes("momo");
@@ -1183,6 +1304,29 @@ export default function StoreCheckoutPage() {
                         onClick={(e) => e.stopPropagation()}
                         className="mt-2 w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                       />
+                    )}
+                    {selectedPaymentValue === "wallet" && !canUseWallet && remainderAmount > 0 && (
+                      <div className="mt-3 space-y-2 rounded-lg border border-amber-200 bg-amber-50/50 p-3 dark:border-amber-800 dark:bg-amber-900/10">
+                        <label className="flex cursor-pointer items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            checked={payRemainderWithMomo}
+                            onChange={(e) => setPayRemainderWithMomo(e.target.checked)}
+                            className="h-4 w-4 rounded border-gray-300 text-emerald-600"
+                          />
+                          <span className="text-sm font-medium">Pay {formatCurrencySync(remainderAmount)} via MoMo</span>
+                        </label>
+                        {payRemainderWithMomo && (
+                          <input
+                            type="tel"
+                            placeholder="MoMo phone e.g. 0781234567"
+                            value={momoPhoneForRemainder}
+                            onChange={(e) => setMomoPhoneForRemainder(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                          />
+                        )}
+                      </div>
                     )}
                   </div>
 
