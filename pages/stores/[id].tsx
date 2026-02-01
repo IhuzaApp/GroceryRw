@@ -69,6 +69,7 @@ interface ProductsResponse {
     delveryArea: string;
     query_id: string;
     speciality: string;
+    category: string;
   }>;
 }
 
@@ -177,6 +178,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         delveryArea
         query_id
         speciality
+        category
       }
     }
   `;
@@ -241,7 +243,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         price: product.price,
         unit: product.unit || "",
         measurement_unit: product.unit || "",
-        category: product.speciality || "General",
+        category: product.category?.trim() || product.speciality?.trim() || "Other",
         minimumOrders: product.minimumOrders,
         maxOrders: product.maxOrders,
         delveryArea: product.delveryArea,

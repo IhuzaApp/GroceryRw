@@ -37,6 +37,7 @@ const GET_STORE_PRODUCTS = gql`
       delveryArea
       query_id
       speciality
+      category
     }
   }
 `;
@@ -71,6 +72,7 @@ interface ProductsResponse {
     delveryArea: string;
     query_id: string;
     speciality: string;
+    category: string;
   }>;
 }
 
@@ -118,7 +120,7 @@ export default async function handler(
         price: product.price,
         final_price: product.price,
         unit: product.unit || "",
-        category: product.speciality || "General",
+        category: product.category?.trim() || product.speciality?.trim() || "Other",
         measurement_unit: product.unit || "",
         quantity: 1, // Default quantity for services
         is_active: product.status === "active",

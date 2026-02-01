@@ -166,7 +166,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
     // Filter by category
     if (activeCategory !== "all") {
       filtered = filtered.filter(
-        (p) => (p.category || "General") === activeCategory
+        (p) => (p.category || "Other") === activeCategory
       );
     }
 
@@ -182,10 +182,25 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
 
   const categories = useMemo(() => {
     const cats = Array.from(
-      new Set(products.map((p) => p.category || "General"))
-    );
-    return ["all", ...cats];
+      new Set(products.map((p) => p.category || "Other"))
+    ).filter(Boolean);
+    return ["all", ...cats.sort((a, b) => a.localeCompare(b))];
   }, [products]);
+
+  const groupedByCategory = useMemo(() => {
+    const groups: Record<string, typeof filteredProducts> = {};
+    for (const p of filteredProducts) {
+      const cat = p.category || "Other";
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(p);
+    }
+    return groups;
+  }, [filteredProducts]);
+
+  const categoryOrder = useMemo(() => {
+    const cats = Object.keys(groupedByCategory);
+    return cats.sort((a, b) => a.localeCompare(b));
+  }, [groupedByCategory]);
 
   const totalPrice = useMemo(() => {
     return selectedProducts.reduce(
@@ -602,7 +617,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                       : "bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:shadow-md dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                   }`}
                 >
-                  {category === "all" ? "All Products" : category}
+                  {category === "all" ? "All" : category}
                 </button>
               ))}
             </div>
@@ -621,6 +636,35 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                     ? `No products match "${searchQuery}"`
                     : "This store doesn't have any products yet"}
                 </p>
+              </div>
+            ) : activeCategory === "all" ? (
+              <div className="space-y-10">
+                {categoryOrder.map((cat) => (
+                  <div key={cat}>
+                    <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white sm:text-lg">
+                      <Package className="h-4 w-4 text-green-600 dark:text-green-500 sm:h-5 sm:w-5" />
+                      {cat}
+                      <span className="ml-2 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                        {groupedByCategory[cat]?.length ?? 0}
+                      </span>
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                      {(groupedByCategory[cat] ?? []).map((product) => (
+                        <StoreProductCard
+                          key={product.id}
+                          id={product.id}
+                          name={product.name}
+                          image={product.image}
+                          price={product.price}
+                          unit={product.unit}
+                          measurement_unit={product.measurement_unit}
+                          description={product.description}
+                          onAdd={handleAddProduct}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
