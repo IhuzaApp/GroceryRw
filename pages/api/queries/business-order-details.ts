@@ -24,6 +24,7 @@ const GET_BUSINESS_ORDER = gql`
       deliveryAddress
       comment
       allProducts
+      shopper_id
       business_store {
         id
         name
@@ -32,6 +33,13 @@ const GET_BUSINESS_ORDER = gql`
       orderedBy {
         id
         name
+        phone
+        email
+      }
+      shopper {
+        id
+        name
+        profile_picture
         phone
         email
       }
@@ -45,6 +53,24 @@ const GET_BUSINESS_PRODUCTS_BY_IDS = gql`
       id
       Image
       name
+    }
+  }
+`;
+
+const GET_SHOPPER_RATINGS = gql`
+  query GetShopperRatings($shopper_id: uuid!) {
+    Ratings(
+      where: { shopper_id: { _eq: $shopper_id } }
+      order_by: { reviewed_at: desc_nulls_last }
+      limit: 10
+    ) {
+      id
+      rating
+      review
+      reviewed_at
+      packaging_quality
+      delivery_experience
+      professionalism
     }
   }
 `;
@@ -98,6 +124,7 @@ export default async function handler(
         deliveryAddress: string | null;
         comment: string | null;
         allProducts: any;
+        shopper_id?: string | null;
         business_store: {
           id: string;
           name: string;
@@ -106,6 +133,13 @@ export default async function handler(
         orderedBy: {
           id: string;
           name: string;
+          phone: string | null;
+          email: string | null;
+        } | null;
+        shopper?: {
+          id: string;
+          name: string | null;
+          profile_picture: string | null;
           phone: string | null;
           email: string | null;
         } | null;
@@ -166,6 +200,42 @@ export default async function handler(
       }
     }
 
+    // Enrich with assigned shopper and their ratings (for right-side "Your Plaser" panel)
+    let Shoppers: any = null;
+    if (row.shopper_id && row.shopper) {
+      let ratings: any[] = [];
+      try {
+        const ratingsData = await hasuraClient.request<{
+          Ratings: Array<{
+            id: string;
+            rating: string;
+            review: string | null;
+            reviewed_at: string | null;
+            packaging_quality: string | null;
+            delivery_experience: string | null;
+            professionalism: string | null;
+          }>;
+        }>(GET_SHOPPER_RATINGS, { shopper_id: row.shopper_id });
+        ratings = ratingsData.Ratings || [];
+      } catch {
+        // leave ratings empty
+      }
+      const s = row.shopper;
+      Shoppers = {
+        id: row.shopper_id,
+        name: s.name,
+        phone: s.phone,
+        email: s.email,
+        profile_picture: s.profile_picture,
+        shopper: {
+          full_name: s.name,
+          profile_photo: s.profile_picture,
+          phone_number: s.phone,
+        },
+        Ratings: ratings,
+      };
+    }
+
     const order = {
       id: row.id,
       OrderID: row.id.substring(0, 8).toUpperCase(),
@@ -193,6 +263,7 @@ export default async function handler(
       allProducts: products,
       orderedBy: row.orderedBy,
       orderType: "business",
+      Shoppers,
     };
 
     return res.status(200).json({ order });

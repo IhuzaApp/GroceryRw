@@ -401,18 +401,18 @@ export default function UserOrderDetails({
               <button
                 type="button"
                 onClick={onContactSupport}
-                className="group flex items-center justify-center gap-2 !rounded-md bg-gradient-to-r from-green-500 to-green-600 px-4 py-2.5 text-sm font-semibold !text-white shadow-md transition-all duration-200 hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-[0.98]"
+                className="group flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-5 py-3 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:from-green-600 hover:to-green-700 hover:shadow-xl active:scale-[0.98]"
               >
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2.5"
-                  className="h-5 w-5 !text-white transition-transform group-hover:scale-110"
+                  className="h-5 w-5 shrink-0 !text-white transition-transform group-hover:scale-110 [stroke:white]"
                 >
                   <path d="M15.05 5A5 5 0 0119 8.95M15.05 1A9 9 0 0123 8.94m-1 7.98v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"></path>
                 </svg>
-                Contact Support
+                <span className="!text-white">Contact Support</span>
               </button>
               {/* 
               <Button
