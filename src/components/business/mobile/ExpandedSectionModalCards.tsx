@@ -18,6 +18,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { formatCurrencySync } from "../../../utils/formatCurrency";
+import { formatOperatingDays } from "../../../lib/formatters";
 
 export function RFQCard({
   rfq,
@@ -386,6 +387,11 @@ export function StoreCard({
   store: any;
   onView: (item: any) => void;
 }) {
+  const address = store.address || (store.latitude && store.longitude
+    ? `${store.latitude.substring(0, 8)}, ${store.longitude.substring(0, 8)}`
+    : null);
+  const operatingDays = formatOperatingDays(store.operating_hours);
+
   return (
     <div
       onClick={() => onView(store)}
@@ -402,6 +408,16 @@ export function StoreCard({
           {store.description && (
             <p className="line-clamp-2 text-xs text-gray-600 dark:text-gray-400">
               {store.description}
+            </p>
+          )}
+          {address && (
+            <p className="mt-1 line-clamp-1 text-xs text-gray-500 dark:text-gray-500">
+              {address}
+            </p>
+          )}
+          {operatingDays && (
+            <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-500">
+              {operatingDays}
             </p>
           )}
         </div>

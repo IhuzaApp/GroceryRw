@@ -30,6 +30,7 @@ import { useTheme } from "../../../src/context/ThemeContext";
 import toast from "react-hot-toast";
 import CameraCapture from "../../../src/components/ui/CameraCapture";
 import { formatCurrencySync } from "../../../src/utils/formatCurrency";
+import { formatOperatingDays } from "../../../src/lib/formatters";
 import { RichTextEditor } from "../../../src/components/ui/RichTextEditor";
 
 export default function StoreDetailsPage() {
@@ -566,32 +567,32 @@ export default function StoreDetailsPage() {
 
                     {/* Stats Row */}
                     <div className="mt-4 flex flex-wrap gap-3">
-                      {store.latitude && store.longitude && (
+                      {(store.address || (store.latitude && store.longitude)) && (
                         <div className="flex items-center rounded-full bg-white/20 px-3 py-1.5 backdrop-blur-sm">
                           <MapPin
-                            className="mr-1.5 h-4 w-4"
+                            className="mr-1.5 h-4 w-4 shrink-0"
                             style={{ color: "#ffffff" }}
                           />
                           <span
                             className="text-xs sm:text-sm"
                             style={{ color: "#ffffff" }}
                           >
-                            {store.latitude}, {store.longitude}
+                            {store.address || `${store.latitude}, ${store.longitude}`}
                           </span>
                         </div>
                       )}
 
-                      {store.operating_hours && (
+                      {formatOperatingDays(store.operating_hours) && (
                         <div className="flex items-center rounded-full bg-white/20 px-3 py-1.5 backdrop-blur-sm">
                           <Clock
-                            className="mr-1.5 h-4 w-4"
+                            className="mr-1.5 h-4 w-4 shrink-0"
                             style={{ color: "#ffffff" }}
                           />
                           <span
                             className="text-xs sm:text-sm"
                             style={{ color: "#ffffff" }}
                           >
-                            Custom hours
+                            {formatOperatingDays(store.operating_hours)}
                           </span>
                         </div>
                       )}

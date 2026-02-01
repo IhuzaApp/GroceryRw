@@ -12,6 +12,7 @@ const GET_BUSINESS_STORE = gql`
       id
       name
       description
+      address
       category_id
       image
       latitude

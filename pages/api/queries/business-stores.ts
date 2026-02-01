@@ -10,6 +10,7 @@ const GET_BUSINESS_STORES = gql`
       id
       name
       description
+      address
       category_id
       image
       latitude

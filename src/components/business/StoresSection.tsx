@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { Store, Plus, ExternalLink, MapPin, Eye } from "lucide-react";
+import { Store, Plus, ExternalLink, MapPin, Eye, Clock } from "lucide-react";
+import { formatOperatingDays } from "../../lib/formatters";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { CreateStoreForm } from "./CreateStoreForm";
@@ -179,13 +180,23 @@ export function StoresSection({
                   </p>
                 )}
 
-                {/* Location Info */}
-                {store.latitude && store.longitude && (
+                {/* Location Info - prefer address over coordinates */}
+                {(store.address || (store.latitude && store.longitude)) && (
                   <div className="mb-2 flex items-center gap-1.5 text-[10px] text-gray-500 dark:text-gray-500 sm:mb-3 sm:gap-2 sm:text-xs">
-                    <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                    <MapPin className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />
                     <span className="line-clamp-1">
-                      {store.latitude.substring(0, 8)},{" "}
-                      {store.longitude.substring(0, 8)}
+                      {store.address ||
+                        `${store.latitude?.substring(0, 8)}, ${store.longitude?.substring(0, 8)}`}
+                    </span>
+                  </div>
+                )}
+
+                {/* Operating Days - only show open days */}
+                {formatOperatingDays(store.operating_hours) && (
+                  <div className="mb-2 flex items-center gap-1.5 text-[10px] text-gray-500 dark:text-gray-500 sm:mb-3 sm:gap-2 sm:text-xs">
+                    <Clock className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />
+                    <span className="line-clamp-1">
+                      {formatOperatingDays(store.operating_hours)}
                     </span>
                   </div>
                 )}
