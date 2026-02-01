@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import { Plus, Edit, Trash2, X } from "lucide-react";
 import toast from "react-hot-toast";
+import { useHideBottomBar } from "../../context/HideBottomBarContext";
 
 interface StoreProductCardProps {
   id: string;
@@ -40,6 +41,21 @@ export default function StoreProductCard({
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
   const [imageError, setImageError] = useState(false);
+  const { setHideBottomBar } = useHideBottomBar();
+
+  useEffect(() => {
+    if (showDetailsModal || showQuantityModal) {
+      setHideBottomBar(true);
+      document.body.classList.add("hide-bottom-bar");
+    } else {
+      setHideBottomBar(false);
+      document.body.classList.remove("hide-bottom-bar");
+    }
+    return () => {
+      setHideBottomBar(false);
+      document.body.classList.remove("hide-bottom-bar");
+    };
+  }, [showDetailsModal, showQuantityModal, setHideBottomBar]);
 
   const handleAdd = () => {
     onAdd({
@@ -78,13 +94,13 @@ export default function StoreProductCard({
 
   return (
     <>
-      {/* Compact Card - Small on mobile, 2 per row */}
+      {/* Compact Card - Small on mobile (3 per row), full on desktop */}
       <div
-        className="group relative cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white shadow-md transition-all duration-300 hover:border-green-400 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl"
+        className="group relative cursor-pointer overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:border-green-400 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl sm:shadow-md"
         onClick={() => setShowDetailsModal(true)}
       >
-        {/* Image Section - Smaller on mobile */}
-        <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-700 dark:via-gray-800 dark:to-gray-700">
+        {/* Image Section - Compact on mobile (5:4), square on larger screens */}
+        <div className="relative aspect-[5/4] overflow-hidden bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-700 dark:via-gray-800 dark:to-gray-700 sm:aspect-square">
           <img
             src={
               imageError
@@ -103,10 +119,10 @@ export default function StoreProductCard({
           {/* Overlay gradient */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent transition-opacity duration-300 group-hover:from-black/50" />
 
-          {/* Measurement unit badge - Desktop only */}
-          {measurement_unit && (
-            <div className="absolute right-2 top-2 hidden rounded-full bg-gradient-to-r from-green-600 to-emerald-600 px-2 py-1 text-[10px] font-bold !text-white shadow-lg backdrop-blur-sm sm:block">
-              {measurement_unit}
+          {/* Unit/measurement badge - e.g. 100/box, kg, piece */}
+          {(measurement_unit || unit) && (
+            <div className="absolute right-1 top-1 rounded-full bg-gradient-to-r from-green-600/95 to-emerald-600/95 px-1.5 py-0.5 text-[9px] font-bold !text-white shadow-md backdrop-blur-sm sm:right-2 sm:top-2 sm:px-2 sm:py-1 sm:text-[10px]">
+              {measurement_unit || unit}
             </div>
           )}
 
@@ -120,24 +136,31 @@ export default function StoreProductCard({
           </div>
         </div>
 
-        {/* Mobile: Minimal info - Name, Price, Add button */}
-        <div className="p-2 sm:hidden">
-          <p className="mb-1 line-clamp-1 text-xs font-semibold text-gray-900 dark:text-white">
+        {/* Mobile: Minimal info - Name, Price, Unit, Add button */}
+        <div className="p-1.5 sm:hidden">
+          <p className="mb-0.5 line-clamp-1 text-[11px] font-semibold leading-tight text-gray-900 dark:text-white">
             {name}
           </p>
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-bold text-green-600 dark:text-green-400">
-              {formatCurrencySync(parseFloat(price || "0"))}
-            </p>
+          <div className="flex items-center justify-between gap-1">
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-bold text-green-600 dark:text-green-400">
+                {formatCurrencySync(parseFloat(price || "0"))}
+              </p>
+              {(measurement_unit || unit) && (
+                <p className="truncate text-[9px] font-medium text-gray-500 dark:text-gray-400">
+                  {measurement_unit || unit}
+                </p>
+              )}
+            </div>
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 setShowQuantityModal(true);
               }}
-              className="flex-shrink-0 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 p-1.5 shadow-md transition-all active:scale-95"
+              className="flex-shrink-0 rounded-md bg-gradient-to-r from-green-500 to-emerald-500 p-1 shadow-md transition-all active:scale-95"
             >
-              <Plus className="h-3.5 w-3.5 text-white" />
+              <Plus className="h-3 w-3 text-white" />
             </button>
           </div>
         </div>
@@ -180,151 +203,153 @@ export default function StoreProductCard({
         </div>
       </div>
 
-      {/* Product Details Modal */}
+      {/* Product Details Modal - Fits viewport, touches left/right/bottom edges, cart button at bottom, bottom bar hidden */}
       {showDetailsModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex flex-col bg-black/70 pt-6 backdrop-blur-md"
           onClick={() => setShowDetailsModal(false)}
         >
           <div
-            className="w-full max-w-md overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800"
+            className="flex h-[calc(100vh-1.5rem)] w-full flex-col overflow-hidden rounded-t-2xl border-x-0 border-t border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800 sm:mx-auto sm:max-w-md sm:border-x"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="relative bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 dark:from-green-900/20 dark:to-emerald-900/20">
+            <div className="flex-shrink-0 bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-3 dark:from-green-900/20 dark:to-emerald-900/20">
               <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                <div className="min-w-0 flex-1 pr-2">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                     Product Details
                   </h3>
-                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                  <p className="mt-0.5 truncate text-sm text-gray-600 dark:text-gray-400">
                     {name}
                   </p>
                 </div>
                 <button
                   onClick={() => setShowDetailsModal(false)}
-                  className="rounded-full p-2 text-gray-400 transition-all hover:bg-white/80 hover:text-gray-600 hover:shadow-md dark:hover:bg-gray-700 dark:hover:text-gray-300"
+                  className="flex-shrink-0 rounded-full p-2 text-gray-400 transition-all hover:bg-white/80 hover:text-gray-600 hover:shadow-md dark:hover:bg-gray-700 dark:hover:text-gray-300"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
             </div>
 
-            {/* Product Image */}
-            <div className="relative h-64 w-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
-              <img
-                src={
-                  imageError
-                    ? "/images/groceryPlaceholder.png"
-                    : image || "/images/groceryPlaceholder.png"
-                }
-                alt={name}
-                className="h-full w-full object-cover"
-                onError={(e) => {
-                  if (!imageError) {
-                    setImageError(true);
-                    e.currentTarget.src = "/images/groceryPlaceholder.png";
+            {/* Scrollable Content */}
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              {/* Product Image */}
+              <div className="relative h-48 w-full flex-shrink-0 overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 sm:h-52">
+                <img
+                  src={
+                    imageError
+                      ? "/images/groceryPlaceholder.png"
+                      : image || "/images/groceryPlaceholder.png"
                   }
-                }}
-              />
+                  alt={name}
+                  className="h-full w-full object-cover"
+                  onError={(e) => {
+                    if (!imageError) {
+                      setImageError(true);
+                      e.currentTarget.src = "/images/groceryPlaceholder.png";
+                    }
+                  }}
+                />
+              </div>
+
+              {/* Product Info */}
+              <div className="p-4 sm:p-5">
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                      Product Name
+                    </label>
+                    <p className="mt-1 text-base font-bold text-gray-900 dark:text-white">
+                      {name}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                        Price
+                      </label>
+                      <p className="mt-1 text-lg font-bold text-green-600 dark:text-green-400">
+                        {formatCurrencySync(parseFloat(price || "0"))}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                        Unit
+                      </label>
+                      <p className="mt-1 text-base font-semibold text-gray-900 dark:text-white">
+                        {unit}
+                      </p>
+                    </div>
+                  </div>
+
+                  {measurement_unit && (
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                        Measurement Unit
+                      </label>
+                      <p className="mt-1 text-base font-semibold text-gray-900 dark:text-white">
+                        {measurement_unit}
+                      </p>
+                    </div>
+                  )}
+
+                  {description && (
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                        Description
+                      </label>
+                      <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
+                        {description}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
-            {/* Product Info */}
-            <div className="p-6">
-              <div className="mb-4 space-y-3">
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                    Product Name
-                  </label>
-                  <p className="mt-1 text-base font-bold text-gray-900 dark:text-white">
-                    {name}
-                  </p>
+            {/* Footer - Add to Cart fixed at bottom */}
+            <div className="flex-shrink-0 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDetailsModal(false);
+                  setShowQuantityModal(true);
+                }}
+                className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3 text-sm font-bold !text-white shadow-lg transition-all duration-200 hover:from-green-600 hover:to-emerald-600 active:scale-[0.98]"
+              >
+                Add to Cart
+              </button>
+              {(onEdit || onDelete) && (
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {onEdit && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit();
+                      }}
+                      className="flex items-center justify-center gap-2 rounded-xl border-2 border-blue-500 bg-blue-50 px-3 py-2.5 text-sm font-bold text-blue-600 dark:bg-blue-900/20 dark:text-blue-400"
+                    >
+                      <Edit className="h-4 w-4" />
+                      Edit
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete();
+                      }}
+                      className="flex items-center justify-center gap-2 rounded-xl border-2 border-red-500 bg-red-50 px-3 py-2.5 text-sm font-bold text-red-600 dark:bg-red-900/20 dark:text-red-400"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Disable
+                    </button>
+                  )}
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                      Price
-                    </label>
-                    <p className="mt-1 text-lg font-bold text-green-600 dark:text-green-400">
-                      {formatCurrencySync(parseFloat(price || "0"))}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                      Unit
-                    </label>
-                    <p className="mt-1 text-base font-semibold text-gray-900 dark:text-white">
-                      {unit}
-                    </p>
-                  </div>
-                </div>
-
-                {measurement_unit && (
-                  <div>
-                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                      Measurement Unit
-                    </label>
-                    <p className="mt-1 text-base font-semibold text-gray-900 dark:text-white">
-                      {measurement_unit}
-                    </p>
-                  </div>
-                )}
-
-                {description && (
-                  <div>
-                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                      Description
-                    </label>
-                    <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
-                      {description}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="mt-6 space-y-3">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowDetailsModal(false);
-                    setShowQuantityModal(true);
-                  }}
-                  className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3 text-sm font-bold !text-white shadow-lg transition-all duration-200 hover:scale-105 hover:from-green-600 hover:to-emerald-600 active:scale-95"
-                >
-                  Add to Cart
-                </button>
-
-                {(onEdit || onDelete) && (
-                  <div className="grid grid-cols-2 gap-3">
-                    {onEdit && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEdit();
-                        }}
-                        className="flex items-center justify-center gap-2 rounded-xl border-2 border-blue-500 bg-blue-50 px-4 py-3 text-sm font-bold text-blue-600 transition-all hover:bg-blue-100 active:scale-95 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30"
-                      >
-                        <Edit className="h-4 w-4" />
-                        Edit
-                      </button>
-                    )}
-                    {onDelete && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete();
-                        }}
-                        className="flex items-center justify-center gap-2 rounded-xl border-2 border-red-500 bg-red-50 px-4 py-3 text-sm font-bold text-red-600 transition-all hover:bg-red-100 active:scale-95 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Disable
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           </div>
         </div>
