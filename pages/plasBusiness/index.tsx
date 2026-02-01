@@ -399,6 +399,12 @@ function BuyerDashboardContent({
                       icon: Package,
                     },
                     {
+                      id: "orders",
+                      label: "Orders",
+                      shortLabel: "Orders",
+                      icon: Truck,
+                    },
+                    {
                       id: "stores",
                       label: "Stores",
                       shortLabel: "Stores",
@@ -519,7 +525,8 @@ function BuyerDashboardContent({
           <QuotesSection onViewQuoteDetails={handleViewQuoteDetails} />
         )}
 
-        {activeTab === "orders" && <OrdersSection />}
+        {(activeTab === "orders" &&
+          (isServiceProvider || isPersonalAccount)) && <OrdersSection />}
 
         {activeTab === "contracts" && (
           <ContractsManagement
