@@ -742,6 +742,17 @@ function ViewOrderDetailsPage() {
     );
   }
 
+  // Always show Contact support for business (store) and reel orders; for others show when "ready for pickup" or no ticket
+  const isReadyForPickup =
+    order?.status &&
+    String(order.status).toLowerCase().replace(/_/g, " ").includes("ready");
+  const alwaysShowSupport =
+    orderType === "business" || orderType === "reel";
+  const showContactSupport =
+    alwaysShowSupport || isReadyForPickup || !supportTicket
+      ? () => setShowSupportModal(true)
+      : undefined;
+
   return (
     <AuthGuard requireAuth={true}>
       <RootLayout>
@@ -751,9 +762,7 @@ function ViewOrderDetailsPage() {
             order={order}
             orderType={orderType}
             combinedOrders={combinedOrders}
-            onContactSupport={
-              supportTicket ? undefined : () => setShowSupportModal(true)
-            }
+            onContactSupport={showContactSupport}
             supportTicket={supportTicket}
           />
         </div>
@@ -764,9 +773,7 @@ function ViewOrderDetailsPage() {
             order={order}
             orderType={orderType}
             combinedOrders={combinedOrders}
-            onContactSupport={
-              supportTicket ? undefined : () => setShowSupportModal(true)
-            }
+            onContactSupport={showContactSupport}
             supportTicket={supportTicket}
           />
         </div>

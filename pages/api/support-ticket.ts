@@ -4,6 +4,7 @@ import { authOptions } from "./auth/[...nextauth]";
 import {
   sendSupportTicketToSlack,
   sendRequestEnableStoreToSlack,
+  type SupportTicketPayload,
 } from "../../src/lib/slackSupportNotifier";
 import { logErrorToSlack } from "../../src/lib/slackErrorReporter";
 import { hasuraClient } from "../../src/lib/hasuraClient";
@@ -39,7 +40,7 @@ type Body =
       requestType?: "order";
       orderId: string;
       orderDisplayId?: string;
-      orderType: "regular" | "reel" | "restaurant";
+      orderType: "regular" | "reel" | "restaurant" | "business";
       storeName?: string;
       status?: string;
       message: string;
@@ -134,7 +135,7 @@ export default async function handler(
     }
 
     // 2. Send ticket to Slack (SLACK_SUPPORT_WEBHOOK) with ticket number instead of internal ID
-    await sendSupportTicketToSlack({
+    const slackPayload: SupportTicketPayload = {
       orderId,
       orderDisplayId: displayId,
       orderType,
@@ -145,7 +146,8 @@ export default async function handler(
       userName: session.user?.name ?? undefined,
       userPhone: session.user?.phone ?? undefined,
       ticketNum,
-    });
+    };
+    await sendSupportTicketToSlack(slackPayload);
 
     return res.status(200).json({ success: true });
   } catch (err) {

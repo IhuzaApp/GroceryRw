@@ -5,8 +5,8 @@ export interface SupportTicketPayload {
   orderId: string;
   /** Display order number (e.g. OrderID from DB) */
   orderDisplayId?: string;
-  /** Order type: regular, reel, restaurant */
-  orderType: "regular" | "reel" | "restaurant";
+  /** Order type: regular, reel, restaurant, business (store) */
+  orderType: "regular" | "reel" | "restaurant" | "business";
   /** Store/shop/restaurant name */
   storeName?: string;
   /** Order status */
@@ -27,6 +27,7 @@ const ORDER_TYPE_LABELS: Record<SupportTicketPayload["orderType"], string> = {
   regular: "🛒 Regular",
   reel: "🎬 Reel",
   restaurant: "🍽️ Restaurant",
+  business: "🏪 Store",
 };
 
 /**

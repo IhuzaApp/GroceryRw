@@ -12,7 +12,7 @@ export interface ContactSupportModalProps {
   /** Current order (regular, reel, or restaurant) */
   order: any;
   /** Order type for this order */
-  orderType: "regular" | "reel" | "restaurant";
+  orderType: "regular" | "reel" | "restaurant" | "business";
   onSuccess?: () => void;
 }
 
@@ -214,6 +214,8 @@ export default function ContactSupportModal({
                   ? "Reel"
                   : orderType === "restaurant"
                   ? "Restaurant"
+                  : orderType === "business"
+                  ? "Store"
                   : "Regular"}
               </p>
               <p

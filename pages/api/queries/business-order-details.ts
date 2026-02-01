@@ -39,6 +39,16 @@ const GET_BUSINESS_ORDER = gql`
   }
 `;
 
+const GET_BUSINESS_PRODUCTS_BY_IDS = gql`
+  query GetBusinessProductsByIds($product_ids: [uuid!]!) {
+    PlasBusinessProductsOrSerive(where: { id: { _in: $product_ids } }) {
+      id
+      Image
+      name
+    }
+  }
+`;
+
 interface SessionUser {
   id: string;
   [key: string]: any;
@@ -113,12 +123,48 @@ export default async function handler(
     }
 
     const row = data.businessProductOrders[0];
-    const baseTotal = parseFloat(row.total || "0");
+    // DB stores grand total; fees are stored separately
+    const total = parseFloat(row.total || "0");
     const transportFee = parseFloat(row.transportation_fee || "0");
     const serviceFee = parseFloat(row.service_fee || "0");
-    const total = baseTotal + transportFee + serviceFee;
-    const products = Array.isArray(row.allProducts) ? row.allProducts : [];
+    const subtotal = Math.max(0, total - transportFee - serviceFee);
+    let products = Array.isArray(row.allProducts) ? row.allProducts : [];
     const bs = row.business_store;
+
+    // Enrich products with images from PlasBusinessProductsOrSerive
+    const productIds = [...new Set(products.map((p: any) => (p.id || p.product_id)?.toString()).filter(Boolean))] as string[];
+    if (productIds.length > 0) {
+      try {
+        const productsData = await hasuraClient.request<{
+          PlasBusinessProductsOrSerive: Array<{
+            id: string;
+            Image?: string | null;
+            image?: string | null;
+            name?: string | null;
+          }>;
+        }>(GET_BUSINESS_PRODUCTS_BY_IDS, {
+          product_ids: productIds,
+        });
+        const imageMap = new Map<string, string | null>();
+        (productsData.PlasBusinessProductsOrSerive || []).forEach((x: any) => {
+          const id = x.id?.toString();
+          if (id) {
+            const img = x.Image ?? x.image ?? null;
+            imageMap.set(id, img && String(img).trim() ? String(img) : null);
+          }
+        });
+        products = products.map((p: any) => {
+          const key = (p.id || p.product_id)?.toString();
+          const imageUrl = key ? imageMap.get(key) : null;
+          return {
+            ...p,
+            image: imageUrl ?? p.image ?? null,
+          };
+        });
+      } catch {
+        // leave products as-is
+      }
+    }
 
     const order = {
       id: row.id,
@@ -127,6 +173,7 @@ export default async function handler(
       created_at: row.created_at,
       delivery_time: row.delivered_time || row.created_at,
       timeRange: row.timeRange,
+      subtotal,
       total,
       transportation_fee: transportFee,
       service_fee: serviceFee,
