@@ -137,28 +137,6 @@ function CurrentOrdersPage() {
       const data = await res.json();
       const newOrders = data.orders || [];
 
-      // Debug: log order info to trace why images may not show
-      if (process.env.NODE_ENV === "development" && newOrders.length > 0) {
-        console.log("[CurrentPendingOrders] Orders from API", {
-          count: newOrders.length,
-          page: pageNum,
-          sample: newOrders.slice(0, 3).map((o: any) => ({
-            id: o.id,
-            OrderID: o.OrderID,
-            orderType: o.orderType,
-            shop: o.shop
-              ? {
-                  id: o.shop.id,
-                  name: o.shop.name,
-                  image: o.shop.image ?? "(empty)",
-                  logo: (o.shop as any)?.logo ?? "(none)",
-                }
-              : null,
-            reel: o.reel ? { id: o.reel.id, title: o.reel.title } : null,
-          })),
-        });
-      }
-
       if (append) {
         setOrders((prev) => {
           const next = [...prev, ...newOrders];
@@ -194,17 +172,6 @@ function CurrentOrdersPage() {
 
     const cached = getOrdersFromCache();
     if (cached && cached.orders.length >= 0) {
-      if (process.env.NODE_ENV === "development") {
-        console.log("[CurrentPendingOrders] Using orders from cache", {
-          count: cached.orders.length,
-          sample: cached.orders.slice(0, 2).map((o: any) => ({
-            id: o.id,
-            orderType: o.orderType,
-            shopImage: o.shop?.image ? "(present)" : "(empty)",
-            shopLogo: (o.shop as any)?.logo ? "(present)" : "(none)",
-          })),
-        });
-      }
       setOrders(cached.orders);
       setHasMore(cached.hasMore);
       setPage(cached.page);

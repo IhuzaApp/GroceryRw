@@ -77,23 +77,6 @@ interface UserRecentOrdersProps {
   onRefresh?: () => void;
 }
 
-// Debug: log order image info when orders change (dev only)
-function useOrderImageDebug(orders: Order[]) {
-  React.useEffect(() => {
-    if (process.env.NODE_ENV !== "development" || !orders.length) return;
-    const sample = orders.slice(0, 5).map((o) => ({
-      id: o.id,
-      OrderID: o.OrderID,
-      orderType: o.orderType,
-      shopName: o.shop?.name,
-      shopImage: (o.shop as any)?.image ?? "(empty)",
-      shopLogo: (o.shop as any)?.logo ?? "(none)",
-      imageSrcUsed: (o.shop as any)?.logo || (o.shop as any)?.image || "(none - will show placeholder)",
-    }));
-    console.log("[UserRecentOrders] Order image info (why images may not show)", sample);
-  }, [orders]);
-}
-
 // Helper to display timestamps as relative time ago
 function timeAgo(timestamp: string): string {
   const now = Date.now();
@@ -278,8 +261,6 @@ export default function UserRecentOrders({
   const { pathname } = useRouter();
   const isPendingOrdersPage = pathname === "/CurrentPendingOrders";
 
-  useOrderImageDebug(orders);
-
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 4;
@@ -461,15 +442,6 @@ export default function UserRecentOrders({
                             alt={order.shop.name}
                             className="h-12 w-12 rounded-full object-cover md:h-10 md:w-10"
                             onError={(e) => {
-                              const failedSrc = e.currentTarget.src;
-                              if (process.env.NODE_ENV === "development") {
-                                console.log("[UserRecentOrders] Image failed to load", {
-                                  orderId: order.id,
-                                  OrderID: order.OrderID,
-                                  shopName: order.shop?.name,
-                                  failedSrc,
-                                });
-                              }
                               e.currentTarget.src =
                                 "/images/shop-placeholder.jpg";
                             }}
