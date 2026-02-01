@@ -324,7 +324,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-16">
         {/* Mobile Header - Full width cover image with circular logo */}
         <div
-          className="relative h-32 w-full sm:hidden"
+          className="relative h-36 w-full sm:hidden"
           style={{
             marginTop: "-44px",
             marginLeft: "-16px",
@@ -344,26 +344,24 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
           {/* Gradient Overlay for better text readability */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/70" />
 
-          {/* Back Button */}
-          <button
-            onClick={() => router.back()}
-            className="absolute left-4 top-7 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/30"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="h-4 w-4 !text-white"
+          {/* Top bar - Back button & Status badge */}
+          <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 pt-[max(2.75rem,env(safe-area-inset-top,2.75rem))]">
+            <button
+              onClick={() => router.back()}
+              className="ml-4 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/30"
             >
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-          </button>
-
-          {/* Store Status Badge */}
-          <div className="absolute right-4 top-7 z-20">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="h-4 w-4 !text-white"
+              >
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+            </button>
             <div
-              className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold backdrop-blur-md ${
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold backdrop-blur-md ${
                 store.is_active && storeStatus.isOpen
                   ? "bg-green-500/90 !text-white"
                   : store.is_active && !storeStatus.isOpen
@@ -373,12 +371,12 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
             >
               {store.is_active ? (
                 <>
-                  <CheckCircle className="h-3 w-3" />
+                  <CheckCircle className="h-3 w-3 shrink-0" />
                   <span>{storeStatus.statusText}</span>
                 </>
               ) : (
                 <>
-                  <X className="h-3 w-3" />
+                  <X className="h-3 w-3 shrink-0" />
                   <span>Inactive</span>
                 </>
               )}
@@ -386,7 +384,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
           </div>
 
           {/* Store Logo - Circular at bottom left */}
-          <div className="absolute -bottom-4 left-3 z-50">
+          <div className="absolute -bottom-4 left-5 z-50">
             <div className="h-16 w-16 overflow-hidden rounded-full border-4 border-green-500 shadow-lg">
               <Image
                 src={store.image || "/images/store-placeholder.jpg"}

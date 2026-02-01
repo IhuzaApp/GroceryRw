@@ -37,6 +37,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     router.pathname.startsWith("/plasBusiness/");
   const isStoresPage =
     router.pathname.startsWith("/stores/");
+  const isStoresCheckoutPage = router.pathname === "/stores/[id]/checkout";
   const isOrderDetailsPage = router.pathname.startsWith(
     "/CurrentPendingOrders/viewOrderDetails/"
   );
@@ -100,7 +101,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         >
           {children}
         </div>
-        {!isChatPage && !isReelsPage && !isMessagesPage && !isStoresPage && !hideBottomBar && (
+        {!isChatPage && !isReelsPage && !isMessagesPage && !isStoresCheckoutPage && !hideBottomBar && (
           <BottomBar />
         )}
       </main>
