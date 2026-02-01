@@ -32,6 +32,7 @@ import { formatOperatingDays } from "../../../src/lib/formatters";
 import { RichTextEditor } from "../../../src/components/ui/RichTextEditor";
 import { CreateStoreForm } from "../../../src/components/business/CreateStoreForm";
 import { PRODUCT_CATEGORIES } from "../../../src/constants/productCategories";
+import { CategorySelect } from "../../../src/components/ui/CategorySelect";
 
 export default function StoreDetailsPage() {
   const router = useRouter();
@@ -1077,20 +1078,13 @@ export default function StoreDetailsPage() {
                 <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Category
                 </label>
-                <select
+                <CategorySelect
                   value={newProduct.category}
-                  onChange={(e) =>
-                    setNewProduct({ ...newProduct, category: e.target.value })
+                  onChange={(category) =>
+                    setNewProduct({ ...newProduct, category })
                   }
-                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
-                >
-                  <option value="">Select a category (optional)</option>
-                  {PRODUCT_CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Select a category (optional)"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">

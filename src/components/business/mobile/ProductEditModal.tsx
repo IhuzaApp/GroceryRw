@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import CameraCapture from "../../ui/CameraCapture";
-import { PRODUCT_CATEGORIES } from "../../../constants/productCategories";
+import { CategorySelect } from "../../ui/CategorySelect";
 
 interface ProductEditModalProps {
   product?: any; // If provided, we're editing. If not, we're adding.
@@ -243,20 +243,13 @@ export function ProductEditModal({
               <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Category
               </label>
-              <select
+              <CategorySelect
                 value={productForm.category}
-                onChange={(e) =>
-                  setProductForm({ ...productForm, category: e.target.value })
+                onChange={(category) =>
+                  setProductForm({ ...productForm, category })
                 }
-                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-              >
-                <option value="">Select a category (optional)</option>
-                {PRODUCT_CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
+                placeholder="Select a category (optional)"
+              />
             </div>
 
             {/* Price and Unit */}
