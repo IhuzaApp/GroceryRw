@@ -25,6 +25,7 @@ import {
   Building,
   MessageSquare,
   Package as PackageIcon,
+  Loader2,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { QuoteSubmissionForm } from "../QuoteSubmissionForm";
@@ -92,6 +93,7 @@ export function ExpandedSectionModal({
   const [isQuoteDetailsOpen, setIsQuoteDetailsOpen] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState<any>(null);
   const [isOpeningQuoteForm, setIsOpeningQuoteForm] = useState(false);
+  const [updatingOrderStatus, setUpdatingOrderStatus] = useState(false);
 
   const sectionTitles: Record<string, string> = {
     rfqs: "My RFQs",
@@ -405,6 +407,34 @@ export function ExpandedSectionModal({
     }
   };
 
+  const handleConfirmReadyForPickup = async (orderId: string) => {
+    setUpdatingOrderStatus(true);
+    try {
+      const response = await fetch(
+        "/api/mutations/update-business-product-order-status",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId,
+            status: "Ready for Pickup",
+          }),
+        }
+      );
+      if (response.ok) {
+        toast.success("Order confirmed as ready for pickup!");
+        fetchOrderDetails(orderId);
+      } else {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update order status");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to confirm availability");
+    } finally {
+      setUpdatingOrderStatus(false);
+    }
+  };
+
   const handleDeleteProduct = async (product: any) => {
     if (
       !window.confirm(`Are you sure you want to disable "${product.name}"?`)
@@ -450,7 +480,7 @@ export function ExpandedSectionModal({
   if (selectedItem) {
     return (
       <div
-        className="fixed inset-0 z-[9999] flex flex-col bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-[10000] flex flex-col bg-black/50 backdrop-blur-sm"
         onClick={onClose}
         style={{
           position: "fixed",
@@ -463,11 +493,11 @@ export function ExpandedSectionModal({
         }}
       >
         <div
-          className="mt-[5vh] flex h-[92vh] flex-col rounded-t-3xl bg-white shadow-2xl dark:bg-gray-800"
+          className="absolute inset-x-0 bottom-0 top-[5vh] flex flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-gray-800"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Item Detail Header */}
-          <div className="flex items-center justify-between rounded-t-3xl border-b border-gray-200 bg-white px-5 py-4 dark:border-gray-700 dark:bg-gray-800">
+          <div className="flex shrink-0 items-center justify-between rounded-t-3xl border-b border-gray-200 bg-white px-5 py-4 dark:border-gray-700 dark:bg-gray-800">
             <div className="flex items-center gap-3">
               <button
                 onClick={handleBackToList}
@@ -516,6 +546,41 @@ export function ExpandedSectionModal({
             onDeleteProduct={handleDeleteProduct}
             onViewContract={onViewContract}
           />
+
+          {/* Sticky bottom bar - Ready for Pickup button (mobile, order details) */}
+          {sectionId === "orders" &&
+            orderDetails &&
+            Array.isArray(orderDetails.allProducts) &&
+            orderDetails.allProducts.length > 0 &&
+            (orderDetails.status === "Pending" ||
+              orderDetails.status === "Processing" ||
+              (orderDetails.status &&
+                orderDetails.status.toLowerCase() === "pending") ||
+              (orderDetails.status &&
+                orderDetails.status.toLowerCase() === "processing")) && (
+              <div
+                className="shrink-0 border-t border-gray-200 bg-white px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] dark:border-gray-700 dark:bg-gray-800"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={() => handleConfirmReadyForPickup(orderDetails.id)}
+                  disabled={updatingOrderStatus}
+                  className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-yellow-500 px-6 py-3.5 text-base font-semibold !text-white shadow-lg transition-all duration-300 hover:from-orange-600 hover:to-yellow-600 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {updatingOrderStatus ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Confirming...
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center gap-2">
+                      <CheckCircle className="h-5 w-5" />
+                      Confirm Items Available for Pickup
+                    </span>
+                  )}
+                </button>
+              </div>
+            )}
         </div>
       </div>
     );
@@ -523,7 +588,7 @@ export function ExpandedSectionModal({
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex flex-col bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-[10000] flex flex-col bg-black/50 backdrop-blur-sm"
       onClick={onClose}
       style={{
         position: "fixed",

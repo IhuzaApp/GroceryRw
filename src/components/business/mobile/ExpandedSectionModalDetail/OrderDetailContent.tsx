@@ -12,6 +12,7 @@ import {
   DollarSign,
   Truck,
   Store,
+  CheckCircle,
 } from "lucide-react";
 import { formatCurrencySync } from "../../../../utils/formatCurrency";
 
@@ -246,60 +247,75 @@ export function OrderDetailContent({
         </div>
       )}
 
-      {order.Order_Items && order.Order_Items.length > 0 && (
-        <div className="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-          <h5 className="mb-3 flex items-center gap-2 font-bold text-gray-900 dark:text-white">
-            <Package className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-            Order Items ({order.Order_Items.length})
-          </h5>
-          <div className="space-y-3">
-            {order.Order_Items.map((item: any, index: number) => (
-              <div
-                key={item.id || index}
-                className="flex gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-600 dark:bg-gray-700/50"
-              >
-                {item.product?.image || item.product?.ProductName?.image ? (
-                  <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-600">
-                    <img
-                      src={
-                        item.product.image || item.product.ProductName?.image
-                      }
-                      alt={item.product?.ProductName?.name || "Product"}
-                      className="h-full w-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                        e.currentTarget.nextElementSibling?.classList.remove(
-                          "hidden"
-                        );
-                      }}
-                    />
-                    <Package className="hidden h-8 w-8 text-gray-400" />
+      {(() => {
+        const items =
+          Array.isArray(order.allProducts) && order.allProducts.length > 0
+            ? order.allProducts
+            : order.Order_Items || [];
+        if (items.length === 0) return null;
+        return (
+          <div className="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <h5 className="mb-3 flex items-center gap-2 font-bold text-gray-900 dark:text-white">
+              <Package className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+              Order Items ({items.length})
+            </h5>
+            <div className="space-y-3">
+              {items.map((item: any, index: number) => {
+                const img =
+                  item.image ||
+                  item.product?.image ||
+                  item.product?.ProductName?.image;
+                const name =
+                  item.name ||
+                  item.product?.ProductName?.name ||
+                  item.product?.name ||
+                  "Product";
+                const qty = item.quantity;
+                const price =
+                  item.price ||
+                  item.price_per_item ||
+                  item.product?.price ||
+                  "0";
+                return (
+                  <div
+                    key={item.id || index}
+                    className="flex gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-600 dark:bg-gray-700/50"
+                  >
+                    {img ? (
+                      <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-600">
+                        <img
+                          src={img}
+                          alt={name}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-600">
+                        <Package className="h-8 w-8 text-gray-400" />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <h6 className="mb-1 font-semibold text-gray-900 dark:text-white">
+                        {name}
+                      </h6>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          Qty: {qty}
+                        </span>
+                        <span className="text-sm font-bold text-green-600 dark:text-green-400">
+                          {typeof price === "number"
+                            ? formatCurrencySync(price)
+                            : `${price} RF`}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-600">
-                    <Package className="h-8 w-8 text-gray-400" />
-                  </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <h6 className="mb-1 font-semibold text-gray-900 dark:text-white">
-                    {item.product?.ProductName?.name ||
-                      item.product?.name ||
-                      "Product"}
-                  </h6>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Qty: {item.quantity}
-                    </span>
-                    <span className="text-sm font-bold text-green-600 dark:text-green-400">
-                      {item.price || item.product?.price || "0"} RF
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {order.deliveryAddress && (
         <div className="mb-4 rounded-2xl border-2 border-gray-200 bg-white p-5 shadow-lg dark:border-gray-700 dark:bg-gray-800">
@@ -368,6 +384,30 @@ export function OrderDetailContent({
           </div>
         </div>
       </div>
+
+      {/* Ready for Pickup button is in the sticky bottom bar (ExpandedSectionModal) */}
+
+      {(order.status === "Ready for Pickup" ||
+        (order.status && order.status.toLowerCase().includes("ready")) ||
+        order.status === "In Transit" ||
+        order.status === "Delivered" ||
+        (order.status && order.status.toLowerCase() === "delivered")) && (
+        <div className="mb-4 rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-4 dark:border-green-800 dark:from-green-900/20 dark:to-emerald-900/20">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/10">
+              <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                Availability Confirmed
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Items have been confirmed as available for pickup
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {(order.deliveryDate || order.deliveryTime || order.comment) && (
         <div className="mb-4 rounded-2xl border-2 border-gray-200 bg-white p-5 shadow-lg dark:border-gray-700 dark:bg-gray-800">
