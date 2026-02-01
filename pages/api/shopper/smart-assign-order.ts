@@ -147,7 +147,9 @@ const GET_ELIGIBLE_RESTAURANT_ORDERS = gql`
       limit: 50
     ) {
       id
+      OrderID
       created_at
+      updated_at
       delivery_fee
       total
       delivery_time
@@ -164,6 +166,41 @@ const GET_ELIGIBLE_RESTAURANT_ORDERS = gql`
         longitude
         street
         city
+      }
+    }
+  }
+`;
+
+const GET_ELIGIBLE_BUSINESS_ORDERS = gql`
+  query GetEligibleBusinessOrders {
+    businessProductOrders(
+      where: {
+        _and: [
+          { status: { _eq: "Ready for Pickup" } }
+          { shopper_id: { _is_null: true } }
+          { _not: { orderOffers: { status: { _eq: "OFFERED" } } } }
+        ]
+      }
+      order_by: { created_at: asc }
+      limit: 50
+    ) {
+      id
+      created_at
+      total
+      transportation_fee
+      service_fee
+      units
+      latitude
+      longitude
+      deliveryAddress
+      business_store {
+        id
+        name
+        latitude
+        longitude
+      }
+      orderedBy {
+        name
       }
     }
   }
@@ -197,6 +234,7 @@ const GET_CURRENT_ROUND = gql`
           { order_id: { _eq: $order_id } }
           { reel_order_id: { _eq: $order_id } }
           { restaurant_order_id: { _eq: $order_id } }
+          { business_order_id: { _eq: $order_id } }
         ]
       }
       order_by: { round_number: desc }
@@ -260,6 +298,29 @@ const CHECK_SHOPPER_DECLINED_ORDER_RESTAURANT = gql`
       where: {
         _and: [
           { restaurant_order_id: { _eq: $restaurant_order_id } }
+          { shopper_id: { _eq: $shopper_id } }
+          { status: { _eq: "DECLINED" } }
+        ]
+      }
+      limit: 1
+    ) {
+      id
+      status
+      round_number
+    }
+  }
+`;
+
+// Query to check if shopper has already declined a business order
+const CHECK_SHOPPER_DECLINED_ORDER_BUSINESS = gql`
+  query CheckShopperDeclinedOrderBusiness(
+    $business_order_id: uuid!
+    $shopper_id: uuid!
+  ) {
+    order_offers(
+      where: {
+        _and: [
+          { business_order_id: { _eq: $business_order_id } }
           { shopper_id: { _eq: $shopper_id } }
           { status: { _eq: "DECLINED" } }
         ]
@@ -339,6 +400,32 @@ const CHECK_SHOPPER_EXISTING_OFFER_RESTAURANT = gql`
           { order_type: { _eq: $order_type } }
           { status: { _in: ["OFFERED"] } }
           { restaurant_order_id: { _eq: $restaurant_order_id } }
+        ]
+      }
+      limit: 1
+    ) {
+      id
+      expires_at
+      round_number
+      status
+    }
+  }
+`;
+
+// Query to check if shopper already has an active offer for this order (business)
+const CHECK_SHOPPER_EXISTING_OFFER_BUSINESS = gql`
+  query CheckShopperExistingOfferBusiness(
+    $business_order_id: uuid!
+    $shopper_id: uuid!
+    $order_type: String!
+  ) {
+    order_offers(
+      where: {
+        _and: [
+          { shopper_id: { _eq: $shopper_id } }
+          { order_type: { _eq: $order_type } }
+          { status: { _in: ["OFFERED"] } }
+          { business_order_id: { _eq: $business_order_id } }
         ]
       }
       limit: 1
@@ -469,6 +556,16 @@ const VERIFY_ORDER_UNASSIGNED_RESTAURANT = gql`
   }
 `;
 
+const VERIFY_ORDER_UNASSIGNED_BUSINESS = gql`
+  query VerifyOrderUnassignedBusiness($order_id: uuid!) {
+    businessProductOrders_by_pk(id: $order_id) {
+      id
+      shopper_id
+      status
+    }
+  }
+`;
+
 // Query to verify all orders in a combined group are unassigned
 const VERIFY_COMBINED_ORDERS_UNASSIGNED = gql`
   query VerifyCombinedOrdersUnassigned($order_ids: [uuid!]!) {
@@ -513,11 +610,31 @@ function formatOrderForResponse(
   shopperLocation: { lat: number; lng: number },
   expiresInMs: number | null
 ): any {
+  const deliveryLat =
+    order.orderType === "business"
+      ? parseFloat(
+          order.latitude ||
+            order.business_store?.latitude ||
+            "0"
+        )
+      : parseFloat(
+          order.Address?.latitude || order.address?.latitude || "0"
+        );
+  const deliveryLng =
+    order.orderType === "business"
+      ? parseFloat(
+          order.longitude ||
+            order.business_store?.longitude ||
+            "0"
+        )
+      : parseFloat(
+          order.Address?.longitude || order.address?.longitude || "0"
+        );
   const distance = calculateDistanceKm(
     shopperLocation.lat,
     shopperLocation.lng,
-    parseFloat(order.Address?.latitude || order.address?.latitude),
-    parseFloat(order.Address?.longitude || order.address?.longitude)
+    deliveryLat,
+    deliveryLng
   );
 
   // Calculate items count based on order type
@@ -531,7 +648,26 @@ function formatOrderForResponse(
     itemsCount = order.quantity || 1;
   } else if (order.orderType === "restaurant") {
     itemsCount = order.items || order.quantity || 1;
+  } else if (order.orderType === "business") {
+    const u = order.units;
+    itemsCount =
+      typeof u === "number"
+        ? u
+        : typeof u === "string"
+          ? parseInt(u, 10) || 1
+          : 1;
   }
+
+  const customerAddressStr =
+    order.orderType === "business"
+      ? typeof order.deliveryAddress === "string"
+        ? order.deliveryAddress
+        : order.deliveryAddress
+          ? JSON.stringify(order.deliveryAddress)
+          : "—"
+      : `${order.Address?.street || order.address?.street || ""}, ${
+          order.Address?.city || order.address?.city || ""
+        }`.trim() || "—";
 
   return {
     id: order.id,
@@ -542,35 +678,39 @@ function formatOrderForResponse(
       order.Shop?.name ||
       order.Reel?.title ||
       order.Restaurant?.name ||
+      order.business_store?.name ||
       "Unknown Shop",
     distance: distance,
     travelTimeMinutes: calculateTravelTime(distance),
     createdAt: order.created_at,
-    customerAddress: `${order.Address?.street || order.address?.street}, ${
-      order.Address?.city || order.address?.city
-    }`,
+    customerAddress: customerAddressStr,
     itemsCount: itemsCount,
     estimatedEarnings:
       order.orderType === "restaurant"
         ? parseFloat(order.delivery_fee || "0")
-        : parseFloat(order.service_fee || "0") +
-          parseFloat(order.delivery_fee || "0"),
+        : order.orderType === "business"
+          ? parseFloat(order.transportation_fee || "0") +
+            parseFloat(order.service_fee || "0")
+          : parseFloat(order.service_fee || "0") +
+            parseFloat(order.delivery_fee || "0"),
     orderType: order.orderType,
     priority: order.priority,
     expiresIn: expiresInMs ?? null,
     // Add coordinates for map route display
     shopLatitude: parseFloat(
-      order.Shop?.latitude || order.Restaurant?.lat || "0"
+      order.Shop?.latitude ||
+        order.Restaurant?.lat ||
+        order.business_store?.latitude ||
+        "0"
     ),
     shopLongitude: parseFloat(
-      order.Shop?.longitude || order.Restaurant?.long || "0"
+      order.Shop?.longitude ||
+        order.Restaurant?.long ||
+        order.business_store?.longitude ||
+        "0"
     ),
-    customerLatitude: parseFloat(
-      order.Address?.latitude || order.address?.latitude || "0"
-    ),
-    customerLongitude: parseFloat(
-      order.Address?.longitude || order.address?.longitude || "0"
-    ),
+    customerLatitude: deliveryLat,
+    customerLongitude: deliveryLng,
     // Add restaurant-specific fields
     ...(order.orderType === "restaurant" && {
       restaurant: order.Restaurant,
@@ -580,6 +720,13 @@ function formatOrderForResponse(
     // Add reel-specific fields
     ...(order.orderType === "reel" && {
       reel: order.Reel,
+    }),
+    // Add business-specific fields
+    ...(order.orderType === "business" && {
+      business_store: order.business_store,
+      total: parseFloat(order.total || "0"),
+      transportation_fee: parseFloat(order.transportation_fee || "0"),
+      service_fee: parseFloat(order.service_fee || "0"),
     }),
   };
 }
@@ -612,7 +759,8 @@ function calculateShopperPriority(
 
   // Calculate order age in minutes
   const orderTimestamp =
-    order.orderType === "restaurant" && order.updated_at
+    (order.orderType === "restaurant" && order.updated_at) ||
+    (order.orderType === "business" && order.updated_at)
       ? new Date(order.updated_at).getTime()
       : new Date(order.created_at).getTime();
   const ageInMinutes = (Date.now() - orderTimestamp) / 60000;
@@ -818,7 +966,8 @@ export default async function handler(
       const orderId =
         activeOffer.order_id ||
         activeOffer.reel_order_id ||
-        activeOffer.restaurant_order_id;
+        activeOffer.restaurant_order_id ||
+        activeOffer.business_order_id;
 
       console.log(
         "🚫 Shopper already has an active OFFERED offer - cannot receive new offer:",
@@ -863,11 +1012,13 @@ export default async function handler(
       regularOrdersData,
       reelOrdersData,
       restaurantOrdersData,
+      businessOrdersData,
       performanceData,
     ] = await Promise.all([
       hasuraClient.request(GET_ELIGIBLE_ORDERS) as any,
       hasuraClient.request(GET_ELIGIBLE_REEL_ORDERS) as any,
       hasuraClient.request(GET_ELIGIBLE_RESTAURANT_ORDERS) as any,
+      hasuraClient.request(GET_ELIGIBLE_BUSINESS_ORDERS) as any,
       hasuraClient.request(GET_SHOPPER_PERFORMANCE, {
         shopper_id: user_id,
       }) as any,
@@ -877,15 +1028,19 @@ export default async function handler(
     const availableReelOrders = reelOrdersData.reel_orders || [];
     const availableRestaurantOrders =
       restaurantOrdersData.restaurant_orders || [];
+    const availableBusinessOrders =
+      businessOrdersData.businessProductOrders || [];
 
     console.log("Eligible orders (no active offers):", {
       regular: availableOrders.length,
       reel: availableReelOrders.length,
       restaurant: availableRestaurantOrders.length,
+      business: availableBusinessOrders.length,
       total:
         availableOrders.length +
         availableReelOrders.length +
-        availableRestaurantOrders.length,
+        availableRestaurantOrders.length +
+        availableBusinessOrders.length,
     });
 
     // Combine all orders with type information
@@ -901,6 +1056,10 @@ export default async function handler(
       ...availableRestaurantOrders.map((order: any) => ({
         ...order,
         orderType: "restaurant",
+      })),
+      ...availableBusinessOrders.map((order: any) => ({
+        ...order,
+        orderType: "business",
       })),
     ];
 
@@ -968,10 +1127,24 @@ export default async function handler(
     const nearbyOrders: any[] = [];
 
     for (const order of allOrders) {
-      const orderLocation = {
-        lat: parseFloat(order.Address?.latitude || order.address?.latitude),
-        lng: parseFloat(order.Address?.longitude || order.address?.longitude),
-      };
+      const orderLocation =
+        order.orderType === "business"
+          ? {
+              lat: parseFloat(
+                order.latitude || order.business_store?.latitude || "0"
+              ),
+              lng: parseFloat(
+                order.longitude || order.business_store?.longitude || "0"
+              ),
+            }
+          : {
+              lat: parseFloat(
+                order.Address?.latitude || order.address?.latitude || "0"
+              ),
+              lng: parseFloat(
+                order.Address?.longitude || order.address?.longitude || "0"
+              ),
+            };
 
       const distance = calculateDistanceKm(
         shopperLocation.lat,
@@ -1091,6 +1264,14 @@ export default async function handler(
             CHECK_SHOPPER_DECLINED_ORDER_RESTAURANT,
             {
               restaurant_order_id: order.id,
+              shopper_id: user_id,
+            }
+          )) as any;
+        } else if (order.orderType === "business") {
+          declinedCheck = (await hasuraClient.request(
+            CHECK_SHOPPER_DECLINED_ORDER_BUSINESS,
+            {
+              business_order_id: order.id,
               shopper_id: user_id,
             }
           )) as any;
@@ -1258,6 +1439,8 @@ export default async function handler(
       offerVariables.reel_order_id = bestOrder.id;
     } else if (bestOrder.orderType === "restaurant") {
       offerVariables.restaurant_order_id = bestOrder.id;
+    } else if (bestOrder.orderType === "business") {
+      offerVariables.business_order_id = bestOrder.id;
     }
 
     // ========================================================================
@@ -1292,6 +1475,15 @@ export default async function handler(
           shopper_id: user_id,
           order_type: bestOrder.orderType,
           restaurant_order_id: bestOrder.id,
+        }
+      );
+    } else if (bestOrder.orderType === "business") {
+      existingOfferData = await hasuraClient.request(
+        CHECK_SHOPPER_EXISTING_OFFER_BUSINESS,
+        {
+          shopper_id: user_id,
+          order_type: bestOrder.orderType,
+          business_order_id: bestOrder.id,
         }
       );
     }
@@ -1356,6 +1548,15 @@ export default async function handler(
             shopper_id: user_id,
             order_type: bestOrder.orderType,
             restaurant_order_id: bestOrder.id,
+          }
+        );
+      } else if (bestOrder.orderType === "business") {
+        finalCheckData = await hasuraClient.request(
+          CHECK_SHOPPER_EXISTING_OFFER_BUSINESS,
+          {
+            shopper_id: user_id,
+            order_type: bestOrder.orderType,
+            business_order_id: bestOrder.id,
           }
         );
       }
@@ -1492,6 +1693,15 @@ export default async function handler(
                   shopper_id: user_id,
                   order_type: bestOrder.orderType,
                   restaurant_order_id: bestOrder.id,
+                }
+              );
+            } else if (bestOrder.orderType === "business") {
+              recoveryCheckData = await hasuraClient.request(
+                CHECK_SHOPPER_EXISTING_OFFER_BUSINESS,
+                {
+                  shopper_id: user_id,
+                  order_type: bestOrder.orderType,
+                  business_order_id: bestOrder.id,
                 }
               );
             }
@@ -1650,12 +1860,18 @@ export default async function handler(
               VERIFY_ORDER_UNASSIGNED_RESTAURANT,
               { order_id: bestOrder.id }
             )) as any;
+          } else if (bestOrder.orderType === "business") {
+            verificationData = (await hasuraClient.request(
+              VERIFY_ORDER_UNASSIGNED_BUSINESS,
+              { order_id: bestOrder.id }
+            )) as any;
           }
 
           const order =
             verificationData?.Orders_by_pk ||
             verificationData?.reel_orders_by_pk ||
-            verificationData?.restaurant_orders_by_pk;
+            verificationData?.restaurant_orders_by_pk ||
+            verificationData?.businessProductOrders_by_pk;
 
           if (order && order.shopper_id !== null) {
             orderStillUnassigned = false;
@@ -1694,8 +1910,8 @@ export default async function handler(
           });
         }
 
-        // For reel orders: do not notify the same order again if this shopper already declined it
-        let skipFcmForReelDeclined = false;
+        // For reel/restaurant orders: do not notify the same order again if this shopper already declined it
+        let skipFcmForDeclined = false;
         if (bestOrder.orderType === "reel") {
           const reelDeclinedCheck = (await hasuraClient.request(
             CHECK_SHOPPER_DECLINED_ORDER_REEL,
@@ -1711,12 +1927,46 @@ export default async function handler(
             console.log(
               `⏭️ Skipping FCM for reel order ${bestOrder.id} - shopper already declined this order (no duplicate notification)`
             );
-            skipFcmForReelDeclined = true;
+            skipFcmForDeclined = true;
+          }
+        } else if (bestOrder.orderType === "restaurant") {
+          const restaurantDeclinedCheck = (await hasuraClient.request(
+            CHECK_SHOPPER_DECLINED_ORDER_RESTAURANT,
+            {
+              restaurant_order_id: bestOrder.id,
+              shopper_id: user_id,
+            }
+          )) as any;
+          if (
+            restaurantDeclinedCheck.order_offers &&
+            restaurantDeclinedCheck.order_offers.length > 0
+          ) {
+            console.log(
+              `⏭️ Skipping FCM for restaurant order ${bestOrder.id} - shopper already declined this order (no duplicate notification)`
+            );
+            skipFcmForDeclined = true;
+          }
+        } else if (bestOrder.orderType === "business") {
+          const businessDeclinedCheck = (await hasuraClient.request(
+            CHECK_SHOPPER_DECLINED_ORDER_BUSINESS,
+            {
+              business_order_id: bestOrder.id,
+              shopper_id: user_id,
+            }
+          )) as any;
+          if (
+            businessDeclinedCheck.order_offers &&
+            businessDeclinedCheck.order_offers.length > 0
+          ) {
+            console.log(
+              `⏭️ Skipping FCM for business order ${bestOrder.id} - shopper already declined this order (no duplicate notification)`
+            );
+            skipFcmForDeclined = true;
           }
         }
 
-        // Order is still unassigned - safe to send notification (unless skipped for reel declined)
-        if (!skipFcmForReelDeclined) {
+        // Order is still unassigned - safe to send notification (unless skipped for declined)
+        if (!skipFcmForDeclined) {
           console.log(
             `✅ Verified order ${bestOrder.id} is still unassigned - sending notification`
           );
