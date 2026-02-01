@@ -1691,40 +1691,63 @@ export default async function handler(
           });
         }
 
-        // Order is still unassigned - safe to send notification
-        console.log(
-          `✅ Verified order ${bestOrder.id} is still unassigned - sending notification`
-        );
+        // For reel orders: do not notify the same order again if this shopper already declined it
+        let skipFcmForReelDeclined = false;
+        if (bestOrder.orderType === "reel") {
+          const reelDeclinedCheck = (await hasuraClient.request(
+            CHECK_SHOPPER_DECLINED_ORDER_REEL,
+            {
+              reel_order_id: bestOrder.id,
+              shopper_id: user_id,
+            }
+          )) as any;
+          if (
+            reelDeclinedCheck.order_offers &&
+            reelDeclinedCheck.order_offers.length > 0
+          ) {
+            console.log(
+              `⏭️ Skipping FCM for reel order ${bestOrder.id} - shopper already declined this order (no duplicate notification)`
+            );
+            skipFcmForReelDeclined = true;
+          }
+        }
 
-        // Send notification aligned with what the UI should display/accept
-        await sendNewOrderNotification(user_id, {
-          id: responseOrder.id,
-          shopName: responseOrder.shopName,
-          customerAddress: responseOrder.customerAddress,
-          distance: responseOrder.distance,
-          travelTimeMinutes: responseOrder.travelTimeMinutes,
-          estimatedEarnings: responseOrder.estimatedEarnings,
-          orderType: responseOrder.orderType,
-          // Action-based system: no expiry. Omit to use server default (or ignore).
-          expiresInMs: undefined,
-          displayOrderId: responseOrder.displayOrderId,
-          isCombinedOrder: responseOrder.isCombinedOrder,
-          orderCount: responseOrder.orderCount,
-          storeNames: responseOrder.storeNames,
-          combinedOrderId: responseOrder.combinedOrderId,
-          orderIds: responseOrder.orderIds,
-        });
+        // Order is still unassigned - safe to send notification (unless skipped for reel declined)
+        if (!skipFcmForReelDeclined) {
+          console.log(
+            `✅ Verified order ${bestOrder.id} is still unassigned - sending notification`
+          );
 
-        console.log(
-          "✅ FCM notification sent to shopper:",
-          user_id,
-          "for order:",
-          bestOrder.id,
-          responseOrder.isCombinedOrder
-            ? `(Combined: ${responseOrder.orderCount} stores)`
-            : "",
-          "| No time limit - waiting for explicit action"
-        );
+          // Send notification aligned with what the UI should display/accept
+          await sendNewOrderNotification(user_id, {
+            id: responseOrder.id,
+            shopName: responseOrder.shopName,
+            customerAddress: responseOrder.customerAddress,
+            distance: responseOrder.distance,
+            travelTimeMinutes: responseOrder.travelTimeMinutes,
+            estimatedEarnings: responseOrder.estimatedEarnings,
+            orderType: responseOrder.orderType,
+            // Action-based system: no expiry. Omit to use server default (or ignore).
+            expiresInMs: undefined,
+            displayOrderId: responseOrder.displayOrderId,
+            isCombinedOrder: responseOrder.isCombinedOrder,
+            orderCount: responseOrder.orderCount,
+            storeNames: responseOrder.storeNames,
+            combinedOrderId: responseOrder.combinedOrderId,
+            orderIds: responseOrder.orderIds,
+          });
+
+          console.log(
+            "✅ FCM notification sent to shopper:",
+            user_id,
+            "for order:",
+            bestOrder.id,
+            responseOrder.isCombinedOrder
+              ? `(Combined: ${responseOrder.orderCount} stores)`
+              : "",
+            "| No time limit - waiting for explicit action"
+          );
+        }
       } catch (fcmError) {
         console.error("Failed to send FCM notification:", fcmError);
         // Continue even if notification fails - shopper can still poll

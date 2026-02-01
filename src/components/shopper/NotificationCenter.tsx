@@ -35,6 +35,8 @@ interface NotificationItem {
   totalEarnings?: number;
   storeNames?: string;
   orderIds?: string | string[]; // For combined orders - can be string (JSON) or array
+  orderType?: string; // regular | reel | restaurant - for deduplication
+  combinedOrderId?: string;
 }
 
 export default function NotificationCenter() {
@@ -217,6 +219,33 @@ export default function NotificationCenter() {
         }
         return true; // Keep notification
       });
+
+      // Deduplicate order notifications: show at most one per order (avoid same reel/order twice)
+      // Especially important for reel orders that must not re-notify after shopper declined
+      if (isShopper) {
+        const seenOrderKeys = new Set<string>();
+        const deduped: NotificationItem[] = [];
+        for (const n of filteredHistory) {
+          if (n.type !== "new_order" && n.type !== "batch_orders") {
+            deduped.push(n);
+            continue;
+          }
+          const orderId = n.orderId != null ? String(n.orderId) : "";
+          const orderType = n.orderType || "regular";
+          const combinedId = n.combinedOrderId || "";
+          const key = combinedId
+            ? `combined:${combinedId}`
+            : `${orderType}:${orderId}`;
+          if (!key || !orderId) {
+            deduped.push(n);
+            continue;
+          }
+          if (seenOrderKeys.has(key)) continue; // skip duplicate for same order
+          seenOrderKeys.add(key);
+          deduped.push(n);
+        }
+        filteredHistory = deduped;
+      }
 
       // Sort by timestamp (newest first)
       const sortedNotifications = filteredHistory.sort(

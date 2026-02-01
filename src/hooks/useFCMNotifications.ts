@@ -136,11 +136,44 @@ export const useFCMNotifications = (): FCMNotificationHook => {
                 ? parseFloat(data.estimatedEarnings)
                 : undefined,
               storeNames: data?.storeNames || data?.shopName,
+              orderType: data?.orderType || "regular",
+              combinedOrderId: data?.combinedOrderId,
               // Include any additional data
               ...(data || {}),
             };
 
-            notificationHistory.unshift(notificationEntry);
+            // For order notifications: avoid duplicate entries for the same order (e.g. reel re-offered after decline)
+            const isOrderNotification =
+              type === "new_order" || type === "batch_orders";
+            const orderId = data?.orderId != null ? String(data.orderId) : "";
+            const orderType = data?.orderType || "regular";
+            const combinedOrderId = data?.combinedOrderId || "";
+
+            if (isOrderNotification && orderId) {
+              const key = combinedOrderId
+                ? `combined:${combinedOrderId}`
+                : `${orderType}:${orderId}`;
+              const existingIdx = notificationHistory.findIndex(
+                (n: { type?: string; orderId?: string; orderType?: string; combinedOrderId?: string }) => {
+                  if (n.type !== "new_order" && n.type !== "batch_orders")
+                    return false;
+                  const nOrderId = n.orderId != null ? String(n.orderId) : "";
+                  const nType = n.orderType || "regular";
+                  const nCombined = n.combinedOrderId || "";
+                  const nKey = nCombined
+                    ? `combined:${nCombined}`
+                    : `${nType}:${nOrderId}`;
+                  return nKey === key;
+                }
+              );
+              if (existingIdx !== -1) {
+                notificationHistory.splice(existingIdx, 1);
+              }
+              notificationHistory.unshift(notificationEntry);
+            } else {
+              notificationHistory.unshift(notificationEntry);
+            }
+
             if (notificationHistory.length > 50) {
               notificationHistory.pop();
             }
