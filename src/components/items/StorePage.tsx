@@ -52,6 +52,7 @@ interface Product {
   measurement_unit?: string;
   category?: string;
   status?: string;
+  otherDetails?: { options?: Array<{ key: string; label: string; values: string[] }> } | null;
 }
 
 interface SelectedProduct {
@@ -62,6 +63,7 @@ interface SelectedProduct {
   measurement_unit?: string;
   quantity: number;
   image?: string;
+  selectedDetails?: Record<string, string>;
 }
 
 interface StorePageProps {
@@ -135,10 +137,12 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
   }, [store.latitude, store.longitude]);
 
   const handleAddProduct = (product: SelectedProduct) => {
+    const detailsKey = JSON.stringify(product.selectedDetails ?? {});
     setSelectedProducts((prev) => {
-      const existingIndex = prev.findIndex((p) => p.id === product.id);
+      const existingIndex = prev.findIndex(
+        (p) => p.id === product.id && JSON.stringify(p.selectedDetails ?? {}) === detailsKey
+      );
       if (existingIndex >= 0) {
-        // Update quantity if product already exists
         const updated = [...prev];
         updated[existingIndex] = {
           ...updated[existingIndex],
@@ -150,18 +154,30 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
     });
   };
 
-  const handleRemoveProduct = (productId: string) => {
-    setSelectedProducts((prev) => prev.filter((p) => p.id !== productId));
+  const handleRemoveProduct = (productId: string, selectedDetails?: Record<string, string>) => {
+    const detailsKey = JSON.stringify(selectedDetails ?? {});
+    setSelectedProducts((prev) =>
+      prev.filter(
+        (p) => !(p.id === productId && JSON.stringify(p.selectedDetails ?? {}) === detailsKey)
+      )
+    );
   };
 
-  const handleUpdateQuantity = (productId: string, newQuantity: number) => {
+  const handleUpdateQuantity = (
+    productId: string,
+    newQuantity: number,
+    selectedDetails?: Record<string, string>
+  ) => {
     if (newQuantity <= 0) {
-      handleRemoveProduct(productId);
+      handleRemoveProduct(productId, selectedDetails);
       return;
     }
+    const detailsKey = JSON.stringify(selectedDetails ?? {});
     setSelectedProducts((prev) =>
       prev.map((p) =>
-        p.id === productId ? { ...p, quantity: newQuantity } : p
+        p.id === productId && JSON.stringify(p.selectedDetails ?? {}) === detailsKey
+          ? { ...p, quantity: newQuantity }
+          : p
       )
     );
   };
@@ -663,6 +679,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                           unit={product.unit}
                           measurement_unit={product.measurement_unit}
                           description={product.description}
+                          otherDetails={product.otherDetails ?? null}
                           onAdd={handleAddProduct}
                         />
                       ))}
@@ -682,6 +699,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                     unit={product.unit}
                     measurement_unit={product.measurement_unit}
                     description={product.description}
+                    otherDetails={product.otherDetails ?? null}
                     onAdd={handleAddProduct}
                   />
                 ))}
@@ -727,7 +745,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                   <div className="flex-1 space-y-3 overflow-y-auto">
                     {selectedProducts.map((product) => (
                       <div
-                        key={product.id}
+                        key={`${product.id}-${JSON.stringify(product.selectedDetails ?? {})}`}
                         className="group rounded-xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-4 shadow-sm transition-all duration-200 hover:shadow-md dark:border-gray-700 dark:from-gray-800 dark:to-gray-700/50"
                       >
                         <div className="flex items-start gap-3">
@@ -746,6 +764,13 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                             <h3 className="mb-1 truncate text-sm font-bold text-gray-900 dark:text-white">
                               {product.name}
                             </h3>
+                            {product.selectedDetails && Object.keys(product.selectedDetails).length > 0 && (
+                              <p className="mb-1 text-xs text-gray-600 dark:text-gray-400">
+                                {Object.entries(product.selectedDetails)
+                                  .map(([k, v]) => `${k}: ${v}`)
+                                  .join(" · ")}
+                              </p>
+                            )}
                             <p className="mb-2 text-xs font-semibold text-green-600 dark:text-green-400">
                               {formatCurrencySync(parseFloat(product.price))} /{" "}
                               {product.unit}
@@ -755,7 +780,8 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                                 onClick={() =>
                                   handleUpdateQuantity(
                                     product.id,
-                                    product.quantity - 1
+                                    product.quantity - 1,
+                                    product.selectedDetails
                                   )
                                 }
                                 className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm transition-all hover:scale-110 hover:bg-gray-50 hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
@@ -769,7 +795,8 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                                 onClick={() =>
                                   handleUpdateQuantity(
                                     product.id,
-                                    product.quantity + 1
+                                    product.quantity + 1,
+                                    product.selectedDetails
                                   )
                                 }
                                 className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm transition-all hover:scale-110 hover:bg-gray-50 hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
@@ -784,7 +811,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                             </div>
                           </div>
                           <button
-                            onClick={() => handleRemoveProduct(product.id)}
+                            onClick={() => handleRemoveProduct(product.id, product.selectedDetails)}
                             className="flex-shrink-0 rounded-lg p-1.5 text-gray-400 transition-all hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                           >
                             <X className="h-5 w-5" />
@@ -916,7 +943,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                     </h3>
                     {selectedProducts.map((product) => (
                       <div
-                        key={product.id}
+                        key={`${product.id}-${JSON.stringify(product.selectedDetails ?? {})}`}
                         className="group rounded-xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-3 shadow-sm transition-all duration-200 hover:shadow-md dark:border-gray-700 dark:from-gray-800 dark:to-gray-700/50"
                       >
                         <div className="flex items-start gap-3">
@@ -935,6 +962,13 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                             <h3 className="mb-1 truncate text-sm font-bold text-gray-900 dark:text-white">
                               {product.name}
                             </h3>
+                            {product.selectedDetails && Object.keys(product.selectedDetails).length > 0 && (
+                              <p className="mb-1 text-xs text-gray-600 dark:text-gray-400">
+                                {Object.entries(product.selectedDetails)
+                                  .map(([k, v]) => `${k}: ${v}`)
+                                  .join(" · ")}
+                              </p>
+                            )}
                             <p className="mb-2 text-xs font-semibold text-green-600 dark:text-green-400">
                               {formatCurrencySync(parseFloat(product.price))} /{" "}
                               {product.unit}
@@ -944,7 +978,8 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                                 onClick={() =>
                                   handleUpdateQuantity(
                                     product.id,
-                                    product.quantity - 1
+                                    product.quantity - 1,
+                                    product.selectedDetails
                                   )
                                 }
                                 className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm transition-all hover:scale-110 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
@@ -958,7 +993,8 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                                 onClick={() =>
                                   handleUpdateQuantity(
                                     product.id,
-                                    product.quantity + 1
+                                    product.quantity + 1,
+                                    product.selectedDetails
                                   )
                                 }
                                 className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm transition-all hover:scale-110 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
@@ -973,7 +1009,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                             </div>
                           </div>
                           <button
-                            onClick={() => handleRemoveProduct(product.id)}
+                            onClick={() => handleRemoveProduct(product.id, product.selectedDetails)}
                             className="flex-shrink-0 rounded-lg p-1.5 text-gray-400 transition-all hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                           >
                             <X className="h-4 w-4" />

@@ -21,6 +21,7 @@ const GET_BUSINESS_PRODUCTS = gql`
       delveryArea
       query_id
       speciality
+      otherDetails
     }
   }
 `;
@@ -83,6 +84,7 @@ export default async function handler(
         delveryArea: string;
         query_id: string;
         speciality: string;
+        otherDetails: { options?: Array<{ key: string; label: string; values: string[] }> } | null;
       }>;
     }>(GET_BUSINESS_PRODUCTS, variables);
 

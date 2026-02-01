@@ -29,6 +29,7 @@ interface Product {
   unit: string;
   measurement_type?: string;
   image?: string;
+  selectedDetails?: Record<string, string>;
 }
 
 interface Order {
@@ -617,6 +618,15 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
                                 <h4 className="font-semibold text-gray-900 dark:text-white">
                                   {product.name}
                                 </h4>
+                                {product.selectedDetails &&
+                                  typeof product.selectedDetails === "object" &&
+                                  Object.keys(product.selectedDetails).length > 0 && (
+                                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                                      {Object.entries(product.selectedDetails)
+                                        .map(([k, v]) => `${k}: ${v}`)
+                                        .join(" · ")}
+                                    </p>
+                                  )}
                                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                                   Quantity: {product.quantity}{" "}
                                   {product.unit ||

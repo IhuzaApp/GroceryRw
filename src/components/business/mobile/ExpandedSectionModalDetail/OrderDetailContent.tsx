@@ -298,6 +298,15 @@ export function OrderDetailContent({
                       <h6 className="mb-1 font-semibold text-gray-900 dark:text-white">
                         {name}
                       </h6>
+                      {item.selectedDetails &&
+                        typeof item.selectedDetails === "object" &&
+                        Object.keys(item.selectedDetails).length > 0 && (
+                          <p className="mb-1 text-xs text-gray-600 dark:text-gray-400">
+                            {Object.entries(item.selectedDetails)
+                              .map(([k, v]) => `${k}: ${v}`)
+                              .join(" · ")}
+                          </p>
+                        )}
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600 dark:text-gray-400">
                           Qty: {qty}

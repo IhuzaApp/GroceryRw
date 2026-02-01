@@ -19,6 +19,7 @@ interface SelectedProduct {
   measurement_unit?: string;
   quantity: number;
   image?: string;
+  selectedDetails?: Record<string, string>;
 }
 
 interface CheckoutData {
@@ -528,6 +529,9 @@ export default function StoreCheckoutPage() {
         quantity: p.quantity,
         unit: p.unit,
         measurement_type: p.measurement_unit || p.unit,
+        ...(p.selectedDetails && Object.keys(p.selectedDetails).length > 0
+          ? { selectedDetails: p.selectedDetails }
+          : {}),
       }));
 
       const totalUnits = checkoutData.products.reduce(

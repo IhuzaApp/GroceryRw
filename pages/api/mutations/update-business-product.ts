@@ -22,6 +22,7 @@ const UPDATE_BUSINESS_PRODUCT = gql`
     $unit: String = ""
     $user_id: uuid = ""
     $store_id: uuid
+    $otherDetails: jsonb
   ) {
     update_PlasBusinessProductsOrSerive(
       where: { id: { _eq: $product_id } }
@@ -40,6 +41,7 @@ const UPDATE_BUSINESS_PRODUCT = gql`
         unit: $unit
         user_id: $user_id
         store_id: $store_id
+        otherDetails: $otherDetails
       }
     ) {
       affected_rows
@@ -70,6 +72,16 @@ interface Session {
   expires: string;
 }
 
+interface OtherDetailsOption {
+  key: string;
+  label: string;
+  values: string[];
+}
+
+interface OtherDetailsInput {
+  options?: OtherDetailsOption[];
+}
+
 interface UpdateBusinessProductInput {
   product_id: string;
   name: string;
@@ -86,6 +98,7 @@ interface UpdateBusinessProductInput {
   store_id?: string;
   user_id?: string;
   Plasbusiness_id?: string;
+  otherDetails?: OtherDetailsInput | null;
 }
 
 export default async function handler(
@@ -127,6 +140,7 @@ export default async function handler(
       store_id,
       user_id = "",
       Plasbusiness_id = "",
+      otherDetails,
     } = req.body as UpdateBusinessProductInput;
 
     // Validate required fields
@@ -183,6 +197,23 @@ export default async function handler(
       variables.store_id = store_id.trim();
     } else {
       variables.store_id = null;
+    }
+
+    // otherDetails: jsonb for product options (size, color, model, etc.)
+    if (otherDetails != null && typeof otherDetails === "object") {
+      const opts = Array.isArray(otherDetails.options)
+        ? otherDetails.options.filter(
+            (o: any) =>
+              o &&
+              typeof o.key === "string" &&
+              typeof o.label === "string" &&
+              Array.isArray(o.values)
+          )
+        : [];
+      variables.otherDetails =
+        opts.length > 0 ? { options: opts } : null;
+    } else {
+      variables.otherDetails = null;
     }
 
     const result = await hasuraClient.request<{

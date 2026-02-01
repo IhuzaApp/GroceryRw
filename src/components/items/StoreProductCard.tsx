@@ -15,6 +15,12 @@ interface ProductRating {
   Users?: { id: string; name: string | null; email: string | null } | null;
 }
 
+export interface OtherDetailsOption {
+  key: string;
+  label: string;
+  values: string[];
+}
+
 interface StoreProductCardProps {
   id: string;
   name: string;
@@ -23,6 +29,7 @@ interface StoreProductCardProps {
   unit: string;
   measurement_unit?: string;
   description?: string;
+  otherDetails?: { options?: OtherDetailsOption[] } | null;
   onAdd: (product: {
     id: string;
     name: string;
@@ -31,6 +38,7 @@ interface StoreProductCardProps {
     measurement_unit?: string;
     quantity: number;
     image?: string;
+    selectedDetails?: Record<string, string>;
   }) => void;
   onEdit?: (productId: string) => void;
   onDelete?: (productId: string) => void;
@@ -44,17 +52,31 @@ export default function StoreProductCard({
   unit,
   measurement_unit,
   description,
+  otherDetails,
   onAdd,
   onEdit,
   onDelete,
 }: StoreProductCardProps) {
+  const options = otherDetails?.options ?? [];
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
+  const [selectedDetails, setSelectedDetails] = useState<Record<string, string>>({});
   const [imageError, setImageError] = useState(false);
   const [ratings, setRatings] = useState<ProductRating[]>([]);
   const [ratingsLoading, setRatingsLoading] = useState(false);
   const { setHideBottomBar } = useHideBottomBar();
+
+  // When opening quantity modal, default each option to first value
+  useEffect(() => {
+    if (showQuantityModal && options.length > 0) {
+      const defaults: Record<string, string> = {};
+      options.forEach((opt) => {
+        if (opt.values?.length) defaults[opt.key] = opt.values[0];
+      });
+      setSelectedDetails((prev) => (Object.keys(prev).length ? prev : defaults));
+    }
+  }, [showQuantityModal, options.length]);
 
   useEffect(() => {
     if (showDetailsModal || showQuantityModal) {
@@ -93,6 +115,8 @@ export default function StoreProductCard({
   };
 
   const handleAdd = () => {
+    const details =
+      Object.keys(selectedDetails).length > 0 ? selectedDetails : undefined;
     onAdd({
       id,
       name,
@@ -101,9 +125,11 @@ export default function StoreProductCard({
       measurement_unit,
       quantity: selectedQuantity,
       image,
+      selectedDetails: details,
     });
     setShowQuantityModal(false);
     setSelectedQuantity(1);
+    setSelectedDetails({});
   };
 
   const handleEdit = () => {
@@ -475,6 +501,38 @@ export default function StoreProductCard({
 
             <div className="p-6">
               <div className="mb-6 space-y-4">
+                {options.length > 0 && (
+                  <div className="space-y-3">
+                    {options.map((opt) => (
+                      <div key={opt.key}>
+                        <label className="mb-1.5 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          {opt.label || opt.key}
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          {(opt.values || []).map((val) => (
+                            <button
+                              key={val}
+                              type="button"
+                              onClick={() =>
+                                setSelectedDetails((prev) => ({
+                                  ...prev,
+                                  [opt.key]: val,
+                                }))
+                              }
+                              className={`rounded-xl border-2 px-3 py-2 text-sm font-medium transition-all ${
+                                selectedDetails[opt.key] === val
+                                  ? "border-green-500 bg-green-500 text-white dark:bg-green-600"
+                                  : "border-gray-200 bg-white text-gray-700 hover:border-green-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-green-500"
+                              }`}
+                            >
+                              {val}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Enter Quantity

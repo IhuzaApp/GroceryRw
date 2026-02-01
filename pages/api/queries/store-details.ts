@@ -38,6 +38,7 @@ const GET_STORE_PRODUCTS = gql`
       query_id
       speciality
       category
+      otherDetails
     }
   }
 `;
@@ -73,6 +74,7 @@ interface ProductsResponse {
     query_id: string;
     speciality: string;
     category: string;
+    otherDetails: { options?: Array<{ key: string; label: string; values: string[] }> } | null;
   }>;
 }
 
@@ -130,6 +132,7 @@ export default async function handler(
         created_at: product.created_at,
         updated_at: product.created_at,
         shop_id: id, // Use store id as shop_id for compatibility
+        otherDetails: product.otherDetails ?? null,
       })
     );
 

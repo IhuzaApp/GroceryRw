@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import {
@@ -22,6 +22,7 @@ import {
   XCircle,
   Search,
   Eye,
+  ChevronDown,
 } from "lucide-react";
 import RootLayout from "../../../src/components/ui/layout";
 import { useAuth } from "../../../src/context/AuthContext";
@@ -34,6 +35,22 @@ import { RichTextEditor } from "../../../src/components/ui/RichTextEditor";
 import { CreateStoreForm } from "../../../src/components/business/CreateStoreForm";
 import { PRODUCT_CATEGORIES } from "../../../src/constants/productCategories";
 import { CategorySelect } from "../../../src/components/ui/CategorySelect";
+
+/** Clothes: garment sizes. Item: general / product sizes (phones, etc.). */
+const CLOTHES_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
+const ITEM_SIZES = [
+  "Small", "Medium", "Large",
+  "Min", "Pro", "Pro Max", "Ultra", "Standard", "Plus",
+];
+const COLORS = [
+  "Blue", "Light Blue", "Dark Blue", "Sky Blue", "Navy",
+  "Red", "Green", "Light Green", "Dark Green", "Forest Green", "Mint",
+  "Yellow", "Gold", "Orange", "Pink", "Rose",
+  "Black", "White", "Gray", "Silver", "Charcoal",
+  "Brown", "Beige", "Tan", "Cream",
+  "Purple", "Violet", "Lavender",
+  "Multi", "Transparent",
+];
 
 export default function StoreDetailsPage() {
   const router = useRouter();
@@ -59,8 +76,27 @@ export default function StoreDetailsPage() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [showEditStoreModal, setShowEditStoreModal] = useState(false);
+  const [openSizesPicker, setOpenSizesPicker] = useState(false);
+  const [openColorsPicker, setOpenColorsPicker] = useState(false);
+  const sizesPickerRef = useRef<HTMLDivElement>(null);
+  const colorsPickerRef = useRef<HTMLDivElement>(null);
 
-  const [newProduct, setNewProduct] = useState({
+  const [newProduct, setNewProduct] = useState<{
+    name: string;
+    description: string;
+    price: string;
+    unit: string;
+    category: string;
+    minimumOrders: string;
+    maxOrders: string;
+    deliveryArea: string;
+    otherDetails?: {
+      productType?: "item" | "clothes";
+      selectedSizes?: string[];
+      selectedColors?: string[];
+      options?: Array<{ key: string; label: string; values: string[] }>;
+    };
+  }>({
     name: "",
     description: "",
     price: "",
@@ -69,6 +105,11 @@ export default function StoreDetailsPage() {
     minimumOrders: "0",
     maxOrders: "",
     deliveryArea: "",
+    otherDetails: {
+      productType: "item",
+      selectedSizes: [],
+      selectedColors: [],
+    },
   });
 
   useEffect(() => {
@@ -84,6 +125,23 @@ export default function StoreDetailsPage() {
       fetchBusinessAccount();
     }
   }, [storeId, authReady, isLoggedIn]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        sizesPickerRef.current &&
+        !sizesPickerRef.current.contains(e.target as Node)
+      )
+        setOpenSizesPicker(false);
+      if (
+        colorsPickerRef.current &&
+        !colorsPickerRef.current.contains(e.target as Node)
+      )
+        setOpenColorsPicker(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const fetchProductStats = async () => {
     if (!storeId) return;
@@ -259,6 +317,15 @@ export default function StoreDetailsPage() {
   const handleEditProduct = (product: any) => {
     setEditingProduct(product);
     setQueryId(null); // No query ID needed for editing
+    const opts = product.otherDetails?.options ?? [];
+    const sizeOpt = opts.find((o: any) => o.key === "size");
+    const colorOpt = opts.find((o: any) => o.key === "color");
+    const sizeValues = sizeOpt && Array.isArray(sizeOpt.values) ? sizeOpt.values : [];
+    const colorValues = colorOpt && Array.isArray(colorOpt.values) ? colorOpt.values : [];
+    const isClothes =
+      product.otherDetails?.productType === "clothes" ||
+      (sizeValues.length > 0 &&
+        sizeValues.some((v: string) => CLOTHES_SIZES.includes(v)));
     setNewProduct({
       name: product.name || "",
       description: product.Description || "",
@@ -268,6 +335,11 @@ export default function StoreDetailsPage() {
       minimumOrders: product.minimumOrders || "0",
       maxOrders: product.maxOrders || "",
       deliveryArea: product.delveryArea || "",
+      otherDetails: {
+        productType: isClothes ? "clothes" : "item",
+        selectedSizes: sizeValues,
+        selectedColors: colorValues,
+      },
     });
     setProductImage(product.Image || "");
     setShowAddProductModal(true);
@@ -321,6 +393,14 @@ export default function StoreDetailsPage() {
 
       const method = editingProduct ? "PUT" : "POST";
 
+      const productType = newProduct.otherDetails?.productType ?? "item";
+      const selectedSizes = newProduct.otherDetails?.selectedSizes ?? [];
+      const selectedColors = newProduct.otherDetails?.selectedColors ?? [];
+      const opts: Array<{ key: string; label: string; values: string[] }> = [];
+      if (selectedSizes.length > 0)
+        opts.push({ key: "size", label: "Size", values: selectedSizes });
+      if (selectedColors.length > 0)
+        opts.push({ key: "color", label: "Color", values: selectedColors });
       const body: any = {
         name: newProduct.name,
         description: newProduct.description,
@@ -334,6 +414,8 @@ export default function StoreDetailsPage() {
         delveryArea: newProduct.deliveryArea || "",
         store_id: storeId as string,
         Plasbusiness_id: businessAccountId || "",
+        otherDetails:
+          opts.length > 0 ? { productType, options: opts } : null,
       };
 
       if (editingProduct) {
@@ -368,9 +450,12 @@ export default function StoreDetailsPage() {
           minimumOrders: "0",
           maxOrders: "",
           deliveryArea: "",
+          otherDetails: { productType: "item", selectedSizes: [], selectedColors: [] },
         });
         setProductImage("");
         setQueryId(null);
+        setOpenSizesPicker(false);
+        setOpenColorsPicker(false);
         fetchProducts();
         fetchProductStats();
       } else {
@@ -1219,9 +1304,12 @@ export default function StoreDetailsPage() {
                     minimumOrders: "0",
                     maxOrders: "",
                     deliveryArea: "",
+                    otherDetails: { productType: "item", selectedSizes: [], selectedColors: [] },
                   });
                   setProductImage("");
                   setQueryId(null);
+                  setOpenSizesPicker(false);
+                  setOpenColorsPicker(false);
                 }}
                 className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
               >
@@ -1430,6 +1518,164 @@ export default function StoreDetailsPage() {
                 </p>
               </div>
 
+              {/* Product type: Item or Clothes, then sizes & colors */}
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Product type (optional)
+                </label>
+                <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
+                  Choose Item or Clothes. Then select which sizes and colors you have. Customers will pick from these when ordering.
+                </p>
+                <div className="space-y-4">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                      Is this an item or clothes?
+                    </label>
+                    <select
+                      value={newProduct.otherDetails?.productType ?? "item"}
+                      onChange={(e) =>
+                        setNewProduct({
+                          ...newProduct,
+                          otherDetails: {
+                            ...newProduct.otherDetails,
+                            productType: e.target.value as "item" | "clothes",
+                            selectedSizes: [],
+                            selectedColors: newProduct.otherDetails?.selectedColors ?? [],
+                          },
+                        })
+                      }
+                      className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400"
+                    >
+                      <option value="item">Item</option>
+                      <option value="clothes">Clothes</option>
+                    </select>
+                  </div>
+
+                  {(() => {
+                    const productType = newProduct.otherDetails?.productType ?? "item";
+                    const selectedSizes = newProduct.otherDetails?.selectedSizes ?? [];
+                    const selectedColors = newProduct.otherDetails?.selectedColors ?? [];
+                    const sizeOptions = productType === "clothes" ? CLOTHES_SIZES : ITEM_SIZES;
+
+                    const toggleSize = (size: string) => {
+                      const next = selectedSizes.includes(size)
+                        ? selectedSizes.filter((s) => s !== size)
+                        : [...selectedSizes, size];
+                      setNewProduct({
+                        ...newProduct,
+                        otherDetails: {
+                          ...newProduct.otherDetails,
+                          selectedSizes: next,
+                          selectedColors: selectedColors,
+                        },
+                      });
+                    };
+                    const toggleColor = (color: string) => {
+                      const next = selectedColors.includes(color)
+                        ? selectedColors.filter((c) => c !== color)
+                        : [...selectedColors, color];
+                      setNewProduct({
+                        ...newProduct,
+                        otherDetails: {
+                          ...newProduct.otherDetails,
+                          selectedSizes: selectedSizes,
+                          selectedColors: next,
+                        },
+                      });
+                    };
+
+                    return (
+                      <>
+                        <div ref={sizesPickerRef} className="relative">
+                          <label className="mb-1.5 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                            Sizes you have ({productType === "clothes" ? "garment" : "item"})
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOpenSizesPicker((v) => !v);
+                              setOpenColorsPicker(false);
+                            }}
+                            className="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-left text-sm transition-all focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400"
+                          >
+                            <span className={selectedSizes.length === 0 ? "text-gray-500 dark:text-gray-400" : "text-gray-900 dark:text-white"}>
+                              {selectedSizes.length === 0
+                                ? "Select sizes…"
+                                : selectedSizes.join(", ")}
+                            </span>
+                            <ChevronDown
+                              className={`h-4 w-4 shrink-0 text-gray-500 transition-transform dark:text-gray-400 ${
+                                openSizesPicker ? "rotate-180" : ""
+                              }`}
+                            />
+                          </button>
+                          {openSizesPicker && (
+                            <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-56 overflow-y-auto rounded-xl border border-gray-200 bg-white py-2 shadow-lg dark:border-gray-600 dark:bg-gray-800">
+                              {sizeOptions.map((size) => (
+                                <label
+                                  key={size}
+                                  className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedSizes.includes(size)}
+                                    onChange={() => toggleSize(size)}
+                                    className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-600"
+                                  />
+                                  <span className="text-gray-900 dark:text-white">{size}</span>
+                                </label>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div ref={colorsPickerRef} className="relative">
+                          <label className="mb-1.5 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                            Colors you have
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOpenColorsPicker((v) => !v);
+                              setOpenSizesPicker(false);
+                            }}
+                            className="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-left text-sm transition-all focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400"
+                          >
+                            <span className={selectedColors.length === 0 ? "text-gray-500 dark:text-gray-400" : "text-gray-900 dark:text-white"}>
+                              {selectedColors.length === 0
+                                ? "Select colors…"
+                                : selectedColors.join(", ")}
+                            </span>
+                            <ChevronDown
+                              className={`h-4 w-4 shrink-0 text-gray-500 transition-transform dark:text-gray-400 ${
+                                openColorsPicker ? "rotate-180" : ""
+                              }`}
+                            />
+                          </button>
+                          {openColorsPicker && (
+                            <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-56 overflow-y-auto rounded-xl border border-gray-200 bg-white py-2 shadow-lg dark:border-gray-600 dark:bg-gray-800">
+                              {COLORS.map((color) => (
+                                <label
+                                  key={color}
+                                  className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedColors.includes(color)}
+                                    onChange={() => toggleColor(color)}
+                                    className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-600"
+                                  />
+                                  <span className="text-gray-900 dark:text-white">{color}</span>
+                                </label>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Product Image *
@@ -1480,9 +1726,12 @@ export default function StoreDetailsPage() {
                       minimumOrders: "0",
                       maxOrders: "",
                       deliveryArea: "",
+                      otherDetails: { productType: "item", selectedSizes: [], selectedColors: [] },
                     });
                     setProductImage("");
                     setQueryId(null);
+                    setOpenSizesPicker(false);
+                    setOpenColorsPicker(false);
                   }}
                   className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 sm:px-5 sm:text-base"
                 >

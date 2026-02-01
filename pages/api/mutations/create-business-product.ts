@@ -23,6 +23,7 @@ const CREATE_BUSINESS_PRODUCT = gql`
     $user_id: uuid = ""
     $store_id: uuid
     $query_id: String = ""
+    $otherDetails: jsonb = ""
   ) {
     insert_PlasBusinessProductsOrSerive(
       objects: {
@@ -41,6 +42,7 @@ const CREATE_BUSINESS_PRODUCT = gql`
         user_id: $user_id
         store_id: $store_id
         query_id: $query_id
+        otherDetails: $otherDetails
       }
     ) {
       affected_rows
@@ -71,6 +73,17 @@ interface Session {
   expires: string;
 }
 
+/** Option for otherDetails: e.g. { key: "size", label: "Size", values: ["S","M","L"] } or { key: "color", label: "Color", values: ["Blue","Red"] } */
+export interface OtherDetailsOption {
+  key: string;
+  label: string;
+  values: string[];
+}
+
+export interface OtherDetailsInput {
+  options?: OtherDetailsOption[];
+}
+
 interface CreateBusinessProductInput {
   name: string;
   description?: string;
@@ -87,6 +100,7 @@ interface CreateBusinessProductInput {
   store_id?: string;
   user_id?: string;
   Plasbusiness_id?: string;
+  otherDetails?: OtherDetailsInput | null;
 }
 
 export default async function handler(
@@ -128,6 +142,7 @@ export default async function handler(
       store_id,
       user_id = "",
       Plasbusiness_id = "",
+      otherDetails,
     } = req.body as CreateBusinessProductInput;
 
     // Validate required fields
@@ -199,6 +214,23 @@ export default async function handler(
           ? String(Plasbusiness_id).trim()
           : "",
     };
+
+    // otherDetails: jsonb for product options (size, color, model, etc.)
+    if (otherDetails != null && typeof otherDetails === "object") {
+      const opts = Array.isArray(otherDetails.options)
+        ? otherDetails.options.filter(
+            (o: any) =>
+              o &&
+              typeof o.key === "string" &&
+              typeof o.label === "string" &&
+              Array.isArray(o.values)
+          )
+        : [];
+      variables.otherDetails =
+        opts.length > 0 ? { options: opts } : null;
+    } else {
+      variables.otherDetails = null;
+    }
 
     // Handle store_id: null for services, or a valid UUID for products
     const hasStoreId =

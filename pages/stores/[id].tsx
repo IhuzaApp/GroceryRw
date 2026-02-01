@@ -70,6 +70,7 @@ interface ProductsResponse {
     query_id: string;
     speciality: string;
     category: string;
+    otherDetails: { options?: Array<{ key: string; label: string; values: string[] }> } | null;
   }>;
 }
 
@@ -179,6 +180,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         query_id
         speciality
         category
+        otherDetails
       }
     }
   `;
@@ -250,6 +252,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         maxOrders: product.maxOrders,
         delveryArea: product.delveryArea,
         status: product.status,
+        otherDetails: product.otherDetails ?? null,
       }));
 
     return {
