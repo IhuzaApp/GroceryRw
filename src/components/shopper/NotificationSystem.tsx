@@ -20,7 +20,7 @@ interface Order {
   customerAddress: string;
   itemsCount?: number;
   estimatedEarnings?: number;
-  orderType?: "regular" | "reel" | "restaurant";
+  orderType?: "regular" | "reel" | "restaurant" | "business";
   // Coordinates for map route display
   shopLatitude?: number;
   shopLongitude?: number;
@@ -57,10 +57,10 @@ const formatStoreList = (raw: string): string => {
   return `${unique.slice(0, -1).join(", ")} and ${unique[unique.length - 1]}`;
 };
 
-/** Fetch ordered item names for the notification card (regular / reel / restaurant). */
+/** Fetch ordered item names for the notification card (regular / reel / restaurant / business). */
 async function fetchOrderItemNames(
   orderId: string,
-  orderType: "regular" | "reel" | "restaurant" | undefined
+  orderType: "regular" | "reel" | "restaurant" | "business" | undefined
 ): Promise<string[]> {
   const type = orderType || "regular";
   const url =
@@ -68,6 +68,8 @@ async function fetchOrderItemNames(
       ? `/api/queries/reel-order-details?id=${orderId}`
       : type === "restaurant"
       ? `/api/queries/restaurant-order-details?id=${orderId}`
+      : type === "business"
+      ? `/api/queries/business-order-details?id=${orderId}&forShopper=1`
       : `/api/queries/orderDetails?id=${orderId}`;
   const resp = await fetch(url);
   if (!resp.ok) return [];
@@ -91,6 +93,17 @@ async function fetchOrderItemNames(
       )
       .filter(Boolean)
       .map((s: string) => s.trim());
+  }
+  if (type === "business") {
+    const products = Array.isArray(order.allProducts) ? order.allProducts : [];
+    return products
+      .map((p: { name?: string | null; product_name?: string | null; quantity?: number }) => {
+        const name = p.name || p.product_name;
+        if (!name || typeof name !== "string") return null;
+        const qty = p.quantity;
+        return qty != null && qty > 1 ? `${name.trim()} (×${qty})` : name.trim();
+      })
+      .filter(Boolean);
   }
   // regular: Order_Items with product.ProductName.name
   const items = order.Order_Items ?? [];
@@ -1508,7 +1521,7 @@ export default function NotificationSystem({
                     : orderType === "restaurant"
                     ? `/api/queries/restaurant-order-details?id=${offer.order.id}`
                     : orderType === "business"
-                    ? `/api/queries/business-order-details?id=${offer.order.id}`
+                    ? `/api/queries/business-order-details?id=${offer.order.id}&forShopper=1`
                     : `/api/queries/orderDetails?id=${offer.order.id}`;
                 const resp = await fetch(orderDetailsUrl);
                 if (resp.ok) {

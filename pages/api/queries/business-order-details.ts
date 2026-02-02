@@ -11,6 +11,48 @@ const GET_BUSINESS_ORDER = gql`
       limit: 1
     ) {
       id
+      OrderID
+      store_id
+      total
+      transportation_fee
+      service_fee
+      status
+      created_at
+      delivered_time
+      timeRange
+      units
+      pin
+      deliveryAddress
+      comment
+      allProducts
+      shopper_id
+      business_store {
+        id
+        name
+        image
+      }
+      orderedBy {
+        id
+        name
+        phone
+        email
+      }
+      shopper {
+        id
+        name
+        profile_picture
+        phone
+        email
+      }
+    }
+  }
+`;
+
+const GET_BUSINESS_ORDER_FOR_SHOPPER = gql`
+  query GetBusinessOrderForShopper($id: uuid!) {
+    businessProductOrders(where: { id: { _eq: $id } }, limit: 1) {
+      id
+      OrderID
       store_id
       total
       transportation_fee
@@ -97,6 +139,8 @@ export default async function handler(
   }
 
   const id = Array.isArray(req.query.id) ? req.query.id[0] : req.query.id;
+  const forShopper =
+    req.query.forShopper === "1" || req.query.forShopper === "true";
   if (!id) {
     return res.status(400).json({ error: "Missing order id" });
   }
@@ -106,46 +150,48 @@ export default async function handler(
       return res.status(500).json({ error: "Server not configured" });
     }
 
-    const data = await hasuraClient.request<{
-      businessProductOrders: Array<{
+    interface BusinessOrderRow {
+      id: string;
+      OrderID?: string | number | null;
+      store_id: string;
+      total: string;
+      transportation_fee: string;
+      service_fee: string;
+      status: string | null;
+      created_at: string;
+      delivered_time: string | null;
+      timeRange: string | null;
+      units: string;
+      pin?: number | null;
+      deliveryAddress: string | null;
+      comment: string | null;
+      allProducts: any;
+      shopper_id?: string | null;
+      business_store: { id: string; name: string; image: string | null } | null;
+      orderedBy: {
         id: string;
-        store_id: string;
-        total: string;
-        transportation_fee: string;
-        service_fee: string;
-        status: string | null;
-        created_at: string;
-        delivered_time: string | null;
-        timeRange: string | null;
-        units: string;
-        pin?: number | null;
-        deliveryAddress: string | null;
-        comment: string | null;
-        allProducts: any;
-        shopper_id?: string | null;
-        business_store: {
-          id: string;
-          name: string;
-          image: string | null;
-        } | null;
-        orderedBy: {
-          id: string;
-          name: string;
-          phone: string | null;
-          email: string | null;
-        } | null;
-        shopper?: {
-          id: string;
-          name: string | null;
-          profile_picture: string | null;
-          phone: string | null;
-          email: string | null;
-        } | null;
-      }>;
-    }>(GET_BUSINESS_ORDER, {
-      id,
-      ordered_by: session.user.id,
-    });
+        name: string;
+        phone: string | null;
+        email: string | null;
+      } | null;
+      shopper?: {
+        id: string;
+        name: string | null;
+        profile_picture: string | null;
+        phone: string | null;
+        email: string | null;
+      } | null;
+    }
+
+    const data = forShopper
+      ? await hasuraClient.request<{ businessProductOrders: BusinessOrderRow[] }>(
+          GET_BUSINESS_ORDER_FOR_SHOPPER,
+          { id }
+        )
+      : await hasuraClient.request<{ businessProductOrders: BusinessOrderRow[] }>(
+          GET_BUSINESS_ORDER,
+          { id, ordered_by: session.user.id }
+        );
 
     if (
       !data.businessProductOrders ||
@@ -164,13 +210,10 @@ export default async function handler(
     const bs = row.business_store;
 
     // Enrich products with images from PlasBusinessProductsOrSerive
-    const productIds = [
-      ...new Set(
-        products
-          .map((p: any) => (p.id || p.product_id)?.toString())
-          .filter(Boolean)
-      ),
-    ] as string[];
+    const ids = products
+      .map((p: any) => (p.id || p.product_id)?.toString())
+      .filter(Boolean) as string[];
+    const productIds = ids.filter((id, i) => ids.indexOf(id) === i);
     if (productIds.length > 0) {
       try {
         const productsData = await hasuraClient.request<{
@@ -242,7 +285,10 @@ export default async function handler(
 
     const order = {
       id: row.id,
-      OrderID: row.id.substring(0, 8).toUpperCase(),
+      OrderID:
+        row.OrderID != null
+          ? row.OrderID
+          : row.id.substring(0, 8).toUpperCase(),
       status: row.status || "Pending",
       created_at: row.created_at,
       delivery_time: row.delivered_time || row.created_at,
