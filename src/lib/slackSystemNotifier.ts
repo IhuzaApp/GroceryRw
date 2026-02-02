@@ -1,5 +1,67 @@
 const SLACK_GENERAL_WEBHOOK = process.env.SLACK_GENERAL_WEBHOOK;
 
+// --- Generic system notification (e.g. Redis status) ---
+
+export interface SystemNotificationPayload {
+  /** Short title (e.g. "Redis connected") */
+  title: string;
+  /** Message body */
+  message: string;
+  /** Optional context (env, etc.) */
+  context?: Record<string, string | number | boolean | undefined>;
+}
+
+/**
+ * Send a generic system notification to Slack using SLACK_GENERAL_WEBHOOK.
+ * Used for operational events (e.g. Redis connected, service status).
+ * Throttled at call site (e.g. at most once per minute).
+ */
+export async function notifySystemToSlack(payload: SystemNotificationPayload) {
+  if (!SLACK_GENERAL_WEBHOOK) {
+    return;
+  }
+
+  const title = payload.title?.trim() || "System";
+  const message = payload.message?.trim() || "—";
+  const context = payload.context ?? {};
+
+  const blocks: any[] = [
+    {
+      type: "header",
+      text: { type: "plain_text", text: title },
+    },
+    {
+      type: "section",
+      text: { type: "mrkdwn", text: message },
+    },
+  ];
+
+  if (Object.keys(context).length > 0) {
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: "*Context*\n```" + JSON.stringify(context, null, 2).slice(0, 800) + "```",
+      },
+    });
+  }
+
+  blocks.push({
+    type: "context",
+    elements: [{ type: "mrkdwn", text: `🕒 ${new Date().toISOString()}` }],
+  });
+
+  try {
+    await fetch(SLACK_GENERAL_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: `${title}: ${message}`, blocks }),
+    });
+  } catch (error) {
+    console.error("Failed to send system notification to Slack", error);
+  }
+}
+
 export interface NewReviewPayload {
   /** Order number for display (e.g. OrderID) */
   orderNumber: string;

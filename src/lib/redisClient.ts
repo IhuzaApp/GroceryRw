@@ -1,4 +1,6 @@
 import Redis from "ioredis";
+import { notifySystemToSlack } from "./slackSystemNotifier";
+import { logErrorToSlack } from "./slackErrorReporter";
 
 // ============================================================================
 // REDIS CLIENT FOR LOCATION & ONLINE STATUS
@@ -34,10 +36,12 @@ export const getRedisClient = (): Redis | null => {
         if (times > 3) {
           const now = Date.now();
           if (now - lastLoggedErrorAt >= REDIS_LOG_THROTTLE_MS) {
-            console.warn(
-              "⚠️ Redis connection failed after 3 attempts. Running in degraded mode."
-            );
+
             lastLoggedErrorAt = now;
+            logErrorToSlack("redisClient", new Error("Redis connection failed after 3 attempts"), {
+              degradedMode: true,
+              message: "Running in degraded mode (no location tracking) failed after 3 attempts",
+            }).catch(() => {});
           }
           return null; // Stop retrying
         }
@@ -62,19 +66,25 @@ export const getRedisClient = (): Redis | null => {
     redis.on("connect", () => {
       const now = Date.now();
       if (now - lastLoggedConnectAt >= REDIS_LOG_THROTTLE_MS) {
-        console.log("✅ Redis connected successfully");
+      
         lastLoggedConnectAt = now;
+        notifySystemToSlack({
+          title: "✅ Redis connected successfully",
+          message: "Redis is available. Location tracking is active.",
+          context: { env: process.env.NODE_ENV },
+        }).catch(() => {});
       }
     });
 
     redis.on("error", (err) => {
       const now = Date.now();
       if (now - lastLoggedErrorAt >= REDIS_LOG_THROTTLE_MS) {
-        console.warn("⚠️ Redis unavailable:", err.message);
-        console.warn(
-          "   System will work in degraded mode (no location tracking)"
-        );
+  
         lastLoggedErrorAt = now;
+        logErrorToSlack("redisClient", err, {
+          degradedMode: true,
+          message: `System will work in degraded mode (no location tracking) ${err.message}`,
+        }).catch(() => {});
       }
     });
 
@@ -90,18 +100,25 @@ export const getRedisClient = (): Redis | null => {
     redis.connect().catch((err) => {
       const now = Date.now();
       if (now - lastLoggedErrorAt >= REDIS_LOG_THROTTLE_MS) {
-        console.warn("⚠️ Redis initial connection failed:", err.message);
-        console.warn("   Will retry on next operation");
+     
         lastLoggedErrorAt = now;
+        logErrorToSlack("redisClient", err, {
+          degradedMode: true,
+          message: `Will retry on next operation ${err.message} Will retry on next operation`,
+        }).catch(() => {});
       }
     });
 
     return redis;
   } catch (error) {
-    console.error("❌ Failed to initialize Redis:", error);
+     logErrorToSlack("redisClient", error, {
+          degradedMode: true,
+          message: `Failed to initialize Redis ${error instanceof Error ? error.message : "Unknown error"}`,
+        }).catch(() => {});
+      }
     return null;
   }
-};
+
 
 // ============================================================================
 // LOCATION STORAGE
