@@ -202,6 +202,13 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
   // Format expected delivery time with countdown
   const formatExpectedDeliveryTime = () => {
     if (!order.deliveryTime) {
+      // Business orders may not have delivery_time; show a friendly fallback
+      if (isBusinessOrder) {
+        return {
+          text: "Within 2h",
+          color: theme === "dark" ? "text-gray-400" : "text-gray-600",
+        };
+      }
       return {
         text: "N/A",
         color: theme === "dark" ? "text-gray-400" : "text-gray-600",

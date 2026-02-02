@@ -155,8 +155,12 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
     });
   };
 
-  const formatTime = (dateString?: string) => {
-    if (!dateString) return "N/A";
+  const formatTime = (dateString?: string, order?: Order) => {
+    if (!dateString) {
+      // Business orders may not have delivery_time; show a friendly fallback
+      if (order?.orderType === "business") return "Within 2h";
+      return "N/A";
+    }
     const date = new Date(dateString);
     const start = date.toLocaleTimeString("en-US", {
       hour: "numeric",
@@ -174,7 +178,13 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
   };
 
   const getOrderTypeBadge = (order: Order) => {
-    if (order.orderType === "reel") {
+    // Show "Regular" for orders that are not actually combined (single order with combined_order_id)
+    const displayType =
+      order.orderType === "combined" &&
+      (!order.orderIDs || order.orderIDs.length <= 1)
+        ? "regular"
+        : order.orderType;
+    if (displayType === "reel") {
       return (
         <div className="inline-flex items-center gap-1.5 rounded-full bg-purple-100 px-2.5 py-1 text-xs font-medium text-purple-700 dark:bg-purple-900/20 dark:text-purple-300">
           <svg
@@ -194,7 +204,7 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
         </div>
       );
     }
-    if (order.orderType === "restaurant") {
+    if (displayType === "restaurant") {
       return (
         <div className="inline-flex items-center gap-1.5 rounded-full bg-orange-100 px-2.5 py-1 text-xs font-medium text-orange-700 dark:bg-orange-900/20 dark:text-orange-300">
           <svg
@@ -214,7 +224,7 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
         </div>
       );
     }
-    if (order.orderType === "business") {
+    if (displayType === "business") {
       return (
         <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
           <svg
@@ -234,7 +244,7 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
         </div>
       );
     }
-    if (order.orderType === "combined") {
+    if (displayType === "combined") {
       return (
         <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
           Combined
@@ -412,7 +422,7 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
 
                   {/* Time */}
                   <td className="whitespace-nowrap px-6 py-4">
-                    {formatTime(order.deliveryTime)}
+                    {formatTime(order.deliveryTime, order)}
                   </td>
 
                   {/* Address */}
