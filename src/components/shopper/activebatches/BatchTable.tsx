@@ -244,9 +244,7 @@ export function BatchTable({ orders }: BatchTableProps) {
     if (!deliveryTime) {
       // Business orders may not have delivery_time; show a friendly fallback
       if (order?.orderType === "business") {
-        return (
-          <span className="text-sm text-gray-500">Within 2h</span>
-        );
+        return <span className="text-sm text-gray-500">Within 2h</span>;
       }
       return <span className="text-sm text-gray-500">N/A</span>;
     }
@@ -495,7 +493,10 @@ export function BatchTable({ orders }: BatchTableProps) {
                     </a>
                   </td>
                   <td className="px-6 py-4">
-                    <TimeDisplay deliveryTime={order.deliveryTime} order={order} />
+                    <TimeDisplay
+                      deliveryTime={order.deliveryTime}
+                      order={order}
+                    />
                   </td>
                   <td className="px-6 py-4">
                     <a

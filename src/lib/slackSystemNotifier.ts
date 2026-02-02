@@ -41,7 +41,10 @@ export async function notifySystemToSlack(payload: SystemNotificationPayload) {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: "*Context*\n```" + JSON.stringify(context, null, 2).slice(0, 800) + "```",
+        text:
+          "*Context*\n```" +
+          JSON.stringify(context, null, 2).slice(0, 800) +
+          "```",
       },
     });
   }

@@ -97,12 +97,20 @@ async function fetchOrderItemNames(
   if (type === "business") {
     const products = Array.isArray(order.allProducts) ? order.allProducts : [];
     return products
-      .map((p: { name?: string | null; product_name?: string | null; quantity?: number }) => {
-        const name = p.name || p.product_name;
-        if (!name || typeof name !== "string") return null;
-        const qty = p.quantity;
-        return qty != null && qty > 1 ? `${name.trim()} (×${qty})` : name.trim();
-      })
+      .map(
+        (p: {
+          name?: string | null;
+          product_name?: string | null;
+          quantity?: number;
+        }) => {
+          const name = p.name || p.product_name;
+          if (!name || typeof name !== "string") return null;
+          const qty = p.quantity;
+          return qty != null && qty > 1
+            ? `${name.trim()} (×${qty})`
+            : name.trim();
+        }
+      )
       .filter(Boolean);
   }
   // regular: Order_Items with product.ProductName.name
@@ -1761,7 +1769,10 @@ export default function NotificationSystem({
                     const shopLng = selectedOrder.shopLongitude;
                     const custLat = selectedOrder.customerLatitude;
                     const custLng = selectedOrder.customerLongitude;
-                    const hasValidCoords = (lat: number | undefined, lng: number | undefined) =>
+                    const hasValidCoords = (
+                      lat: number | undefined,
+                      lng: number | undefined
+                    ) =>
                       typeof lat === "number" &&
                       typeof lng === "number" &&
                       !Number.isNaN(lat) &&
@@ -1774,7 +1785,9 @@ export default function NotificationSystem({
                     } else if (hasValidCoords(custLat, custLng)) {
                       mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${custLat},${custLng}`;
                     } else if (selectedOrder.customerAddress?.trim()) {
-                      const dest = encodeURIComponent(selectedOrder.customerAddress.trim());
+                      const dest = encodeURIComponent(
+                        selectedOrder.customerAddress.trim()
+                      );
                       mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${dest}`;
                     } else {
                       mapsUrl = "https://www.google.com/maps";
@@ -2120,7 +2133,10 @@ export default function NotificationSystem({
                   onClick={async () => {
                     acceptClickCount.current += 1;
 
-                    const success = await handleAcceptOrder(selectedOrder.id, selectedOrder.orderType);
+                    const success = await handleAcceptOrder(
+                      selectedOrder.id,
+                      selectedOrder.orderType
+                    );
 
                     if (success) {
                       setShowMapModal(false);

@@ -1136,7 +1136,10 @@ export default async function handler(
           id: activeOffer.reel_order_id,
         })) as any;
         rawOrder = r?.reel_orders_by_pk;
-      } else if (orderType === "restaurant" && activeOffer.restaurant_order_id) {
+      } else if (
+        orderType === "restaurant" &&
+        activeOffer.restaurant_order_id
+      ) {
         const r = (await hasuraClient.request(GET_RESTAURANT_ORDER_BY_PK, {
           id: activeOffer.restaurant_order_id,
         })) as any;
@@ -1150,7 +1153,9 @@ export default async function handler(
       if (rawOrder) {
         rawOrder.orderType = orderType;
         const shopperLocation =
-          currentLocation && typeof currentLocation.lat === "number" && typeof currentLocation.lng === "number"
+          currentLocation &&
+          typeof currentLocation.lat === "number" &&
+          typeof currentLocation.lng === "number"
             ? { lat: currentLocation.lat, lng: currentLocation.lng }
             : { lat: 0, lng: 0 };
         const formattedOrder = formatOrderForResponse(

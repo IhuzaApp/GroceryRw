@@ -93,15 +93,10 @@ const ACCEPT_RESTAURANT_BATCH_MUTATION = gql`
 `;
 
 const ACCEPT_BUSINESS_BATCH_MUTATION = gql`
-  mutation AcceptBusinessBatch(
-    $orderId: uuid!
-    $shopperId: uuid!
-  ) {
+  mutation AcceptBusinessBatch($orderId: uuid!, $shopperId: uuid!) {
     update_businessProductOrders_by_pk(
       pk_columns: { id: $orderId }
-      _set: {
-        shopper_id: $shopperId
-      }
+      _set: { shopper_id: $shopperId }
     ) {
       id
       status
@@ -295,10 +290,7 @@ const CHECK_ACTIVE_ORDERS = gql`
       status
     }
     businessProductOrders(
-      where: {
-        shopper_id: { _eq: $shopper_id }
-        status: { _neq: "delivered" }
-      }
+      where: { shopper_id: { _eq: $shopper_id }, status: { _neq: "delivered" } }
     ) {
       id
       status
@@ -361,10 +353,7 @@ export default async function handler(
     const isBusinessOrder = !!businessOrder;
 
     const isSingleOrder =
-      !!regularOrder ||
-      !!reelOrder ||
-      !!restaurantOrder ||
-      !!businessOrder;
+      !!regularOrder || !!reelOrder || !!restaurantOrder || !!businessOrder;
 
     // Handle combined regular orders (accept all linked orders at once)
     if (!isSingleOrder) {
@@ -619,7 +608,10 @@ export default async function handler(
       ? "Ready for Pickup"
       : "PENDING";
     if (order.status !== validStatusForAccept) {
-      console.warn("❌ Order is not in valid state for acceptance:", order.status);
+      console.warn(
+        "❌ Order is not in valid state for acceptance:",
+        order.status
+      );
       return res.status(409).json({
         error: "This batch is no longer available for assignment",
         code: "INVALID_STATUS",
@@ -635,20 +627,10 @@ export default async function handler(
     if (shopperLocation) {
       // Get order location (pickup/store for distance validation)
       const orderLat = isBusinessOrder
-        ? parseFloat(
-            order.business_store?.latitude ||
-              order.latitude ||
-              "0"
-          )
-        : parseFloat(
-            order.Address?.latitude || order.address?.latitude || "0"
-          );
+        ? parseFloat(order.business_store?.latitude || order.latitude || "0")
+        : parseFloat(order.Address?.latitude || order.address?.latitude || "0");
       const orderLng = isBusinessOrder
-        ? parseFloat(
-            order.business_store?.longitude ||
-              order.longitude ||
-              "0"
-          )
+        ? parseFloat(order.business_store?.longitude || order.longitude || "0")
         : parseFloat(
             order.Address?.longitude || order.address?.longitude || "0"
           );

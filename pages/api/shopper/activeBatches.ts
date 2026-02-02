@@ -100,10 +100,7 @@ const GET_ACTIVE_REEL_ORDERS = gql`
 const GET_ACTIVE_BUSINESS_ORDERS = gql`
   query GetActiveBusinessOrders($shopperId: uuid!) {
     businessProductOrders(
-      where: {
-        shopper_id: { _eq: $shopperId }
-        status: { _neq: "delivered" }
-      }
+      where: { shopper_id: { _eq: $shopperId }, status: { _neq: "delivered" } }
       order_by: { created_at: desc }
     ) {
       id
@@ -226,147 +223,154 @@ export default async function handler(
     }
 
     // Fetch regular, reel, restaurant, and business orders in parallel
-    let regularOrdersData, reelOrdersData, restaurantOrdersData, businessOrdersData;
+    let regularOrdersData,
+      reelOrdersData,
+      restaurantOrdersData,
+      businessOrdersData;
 
     try {
-      [regularOrdersData, reelOrdersData, restaurantOrdersData, businessOrdersData] =
-        await Promise.all([
-          hasuraClient.request<{
-            Orders: Array<{
+      [
+        regularOrdersData,
+        reelOrdersData,
+        restaurantOrdersData,
+        businessOrdersData,
+      ] = await Promise.all([
+        hasuraClient.request<{
+          Orders: Array<{
+            id: string;
+            OrderID: number;
+            created_at: string;
+            status: string;
+            service_fee: string | null;
+            delivery_fee: string | null;
+            total: number | null;
+            delivery_time: string | null;
+            combined_order_id: string | null;
+            pin: string | null;
+            shop_id: string;
+            Shop: {
               id: string;
-              OrderID: number;
-              created_at: string;
-              status: string;
-              service_fee: string | null;
-              delivery_fee: string | null;
-              total: number | null;
-              delivery_time: string | null;
-              combined_order_id: string | null;
-              pin: string | null;
-              shop_id: string;
-              Shop: {
-                id: string;
-                name: string;
-                address: string;
-                latitude: string;
-                longitude: string;
-              };
-              orderedBy: { id: string; name: string };
-              Address: {
-                latitude: string;
-                longitude: string;
-                street: string;
-                city: string;
-              };
-              Order_Items_aggregate: {
-                aggregate: {
-                  count: number | null;
-                  sum: {
-                    quantity: number | null;
-                  } | null;
+              name: string;
+              address: string;
+              latitude: string;
+              longitude: string;
+            };
+            orderedBy: { id: string; name: string };
+            Address: {
+              latitude: string;
+              longitude: string;
+              street: string;
+              city: string;
+            };
+            Order_Items_aggregate: {
+              aggregate: {
+                count: number | null;
+                sum: {
+                  quantity: number | null;
                 } | null;
-              };
-            }>;
-          }>(GET_ACTIVE_ORDERS, { shopperId: userId }),
-          hasuraClient.request<{
-            reel_orders: Array<{
+              } | null;
+            };
+          }>;
+        }>(GET_ACTIVE_ORDERS, { shopperId: userId }),
+        hasuraClient.request<{
+          reel_orders: Array<{
+            id: string;
+            OrderID: string | number | null;
+            created_at: string;
+            status: string;
+            service_fee: string | null;
+            delivery_fee: string | null;
+            total: string;
+            delivery_time: string | null;
+            quantity: string;
+            delivery_note: string | null;
+            Reel: {
               id: string;
-              OrderID: string | number | null;
-              created_at: string;
-              status: string;
-              service_fee: string | null;
-              delivery_fee: string | null;
-              total: string;
-              delivery_time: string | null;
+              title: string;
+              description: string;
+              Price: string;
+              Product: string;
+              type: string;
+              video_url: string;
+              restaurant_id: string | null;
+              user_id: string | null;
+            };
+            User: {
+              id: string;
+              name: string;
+              phone: string;
+            };
+            Address: {
+              latitude: string;
+              longitude: string;
+              street: string;
+              city: string;
+            };
+          }>;
+        }>(GET_ACTIVE_REEL_ORDERS, { shopperId: userId }),
+        hasuraClient.request<{
+          restaurant_orders: Array<{
+            id: string;
+            OrderID: string | number | null;
+            created_at: string;
+            status: string;
+            delivery_fee: string | null;
+            total: string;
+            delivery_time: string | null;
+            delivery_notes: string | null;
+            Restaurant: {
+              id: string;
+              name: string;
+              location: string;
+              lat: string;
+              long: string;
+            };
+            orderedBy: {
+              id: string;
+              name: string;
+              phone: string;
+            };
+            Address: {
+              latitude: string;
+              longitude: string;
+              street: string;
+              city: string;
+            };
+            restaurant_order_items: Array<{
+              id: string;
               quantity: string;
-              delivery_note: string | null;
-              Reel: {
-                id: string;
-                title: string;
-                description: string;
-                Price: string;
-                Product: string;
-                type: string;
-                video_url: string;
-                restaurant_id: string | null;
-                user_id: string | null;
-              };
-              User: {
-                id: string;
-                name: string;
-                phone: string;
-              };
-              Address: {
-                latitude: string;
-                longitude: string;
-                street: string;
-                city: string;
-              };
             }>;
-          }>(GET_ACTIVE_REEL_ORDERS, { shopperId: userId }),
-          hasuraClient.request<{
-            restaurant_orders: Array<{
+          }>;
+        }>(GET_ACTIVE_RESTAURANT_ORDERS, { shopperId: userId }),
+        hasuraClient.request<{
+          businessProductOrders: Array<{
+            id: string;
+            OrderID: string | number | null;
+            created_at: string;
+            status: string;
+            total: string;
+            transportation_fee: string;
+            service_fee: string;
+            units: string;
+            deliveryAddress: string | any;
+            latitude: string | number | null;
+            longitude: string | number | null;
+            delivered_time: string | null;
+            timeRange: string | null;
+            business_store: {
               id: string;
-              OrderID: string | number | null;
-              created_at: string;
-              status: string;
-              delivery_fee: string | null;
-              total: string;
-              delivery_time: string | null;
-              delivery_notes: string | null;
-              Restaurant: {
-                id: string;
-                name: string;
-                location: string;
-                lat: string;
-                long: string;
-              };
-              orderedBy: {
-                id: string;
-                name: string;
-                phone: string;
-              };
-              Address: {
-                latitude: string;
-                longitude: string;
-                street: string;
-                city: string;
-              };
-              restaurant_order_items: Array<{
-                id: string;
-                quantity: string;
-              }>;
-            }>;
-          }>(GET_ACTIVE_RESTAURANT_ORDERS, { shopperId: userId }),
-          hasuraClient.request<{
-            businessProductOrders: Array<{
+              name: string;
+              latitude: string;
+              longitude: string;
+            } | null;
+            orderedBy: {
               id: string;
-              OrderID: string | number | null;
-              created_at: string;
-              status: string;
-              total: string;
-              transportation_fee: string;
-              service_fee: string;
-              units: string;
-              deliveryAddress: string | any;
-              latitude: string | number | null;
-              longitude: string | number | null;
-              delivered_time: string | null;
-              timeRange: string | null;
-              business_store: {
-                id: string;
-                name: string;
-                latitude: string;
-                longitude: string;
-              } | null;
-              orderedBy: {
-                id: string;
-                name: string;
-                phone: string | null;
-              } | null;
-            }>;
-          }>(GET_ACTIVE_BUSINESS_ORDERS, { shopperId: userId }),
-        ]);
+              name: string;
+              phone: string | null;
+            } | null;
+          }>;
+        }>(GET_ACTIVE_BUSINESS_ORDERS, { shopperId: userId }),
+      ]);
     } catch (fetchError) {
       console.error("Error fetching orders from Hasura:", fetchError);
       console.error(
@@ -641,11 +645,7 @@ export default async function handler(
         typeof da === "string"
           ? da
           : da && typeof da === "object"
-          ? [
-              (da as any).street,
-              (da as any).city,
-              (da as any).address,
-            ]
+          ? [(da as any).street, (da as any).city, (da as any).address]
               .filter(Boolean)
               .join(", ") || "—"
           : "—";

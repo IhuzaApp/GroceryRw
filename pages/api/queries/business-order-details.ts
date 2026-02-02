@@ -184,14 +184,12 @@ export default async function handler(
     }
 
     const data = forShopper
-      ? await hasuraClient.request<{ businessProductOrders: BusinessOrderRow[] }>(
-          GET_BUSINESS_ORDER_FOR_SHOPPER,
-          { id }
-        )
-      : await hasuraClient.request<{ businessProductOrders: BusinessOrderRow[] }>(
-          GET_BUSINESS_ORDER,
-          { id, ordered_by: session.user.id }
-        );
+      ? await hasuraClient.request<{
+          businessProductOrders: BusinessOrderRow[];
+        }>(GET_BUSINESS_ORDER_FOR_SHOPPER, { id })
+      : await hasuraClient.request<{
+          businessProductOrders: BusinessOrderRow[];
+        }>(GET_BUSINESS_ORDER, { id, ordered_by: session.user.id });
 
     if (
       !data.businessProductOrders ||

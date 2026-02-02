@@ -36,12 +36,16 @@ export const getRedisClient = (): Redis | null => {
         if (times > 3) {
           const now = Date.now();
           if (now - lastLoggedErrorAt >= REDIS_LOG_THROTTLE_MS) {
-
             lastLoggedErrorAt = now;
-            logErrorToSlack("redisClient", new Error("Redis connection failed after 3 attempts"), {
-              degradedMode: true,
-              message: "Running in degraded mode (no location tracking) failed after 3 attempts",
-            }).catch(() => {});
+            logErrorToSlack(
+              "redisClient",
+              new Error("Redis connection failed after 3 attempts"),
+              {
+                degradedMode: true,
+                message:
+                  "Running in degraded mode (no location tracking) failed after 3 attempts",
+              }
+            ).catch(() => {});
           }
           return null; // Stop retrying
         }
@@ -66,7 +70,6 @@ export const getRedisClient = (): Redis | null => {
     redis.on("connect", () => {
       const now = Date.now();
       if (now - lastLoggedConnectAt >= REDIS_LOG_THROTTLE_MS) {
-      
         lastLoggedConnectAt = now;
         notifySystemToSlack({
           title: "✅ Redis connected successfully",
@@ -79,7 +82,6 @@ export const getRedisClient = (): Redis | null => {
     redis.on("error", (err) => {
       const now = Date.now();
       if (now - lastLoggedErrorAt >= REDIS_LOG_THROTTLE_MS) {
-  
         lastLoggedErrorAt = now;
         logErrorToSlack("redisClient", err, {
           degradedMode: true,
@@ -100,7 +102,6 @@ export const getRedisClient = (): Redis | null => {
     redis.connect().catch((err) => {
       const now = Date.now();
       if (now - lastLoggedErrorAt >= REDIS_LOG_THROTTLE_MS) {
-     
         lastLoggedErrorAt = now;
         logErrorToSlack("redisClient", err, {
           degradedMode: true,
@@ -111,14 +112,15 @@ export const getRedisClient = (): Redis | null => {
 
     return redis;
   } catch (error) {
-     logErrorToSlack("redisClient", error, {
-          degradedMode: true,
-          message: `Failed to initialize Redis ${error instanceof Error ? error.message : "Unknown error"}`,
-        }).catch(() => {});
-      }
-    return null;
+    logErrorToSlack("redisClient", error, {
+      degradedMode: true,
+      message: `Failed to initialize Redis ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`,
+    }).catch(() => {});
   }
-
+  return null;
+};
 
 // ============================================================================
 // LOCATION STORAGE
