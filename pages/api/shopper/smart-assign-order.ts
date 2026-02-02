@@ -879,6 +879,15 @@ export default async function handler(
           id
           status
         }
+        businessProductOrders(
+          where: {
+            shopper_id: { _eq: $shopper_id }
+            status: { _neq: "delivered" }
+          }
+        ) {
+          id
+          status
+        }
       }
     `;
 
@@ -890,6 +899,7 @@ export default async function handler(
       ...(activeOrdersData.Orders || []),
       ...(activeOrdersData.reel_orders || []),
       ...(activeOrdersData.restaurant_orders || []),
+      ...(activeOrdersData.businessProductOrders || []),
     ];
     const activeOrderCount = activeOrders.length;
 
