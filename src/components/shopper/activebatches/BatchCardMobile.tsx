@@ -13,6 +13,8 @@ interface Order {
   shopName: string;
   shopNames?: string[];
   shopAddress: string;
+  shopLat?: number;
+  shopLng?: number;
   customerName: string;
   customerAddress: string;
   customerLat: number;
@@ -355,6 +357,34 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
             {getDestination()}
           </p>
         </div>
+
+        {/* Shop / Restaurant / Store - Open in Google Maps */}
+        {typeof order.shopLat === "number" &&
+          typeof order.shopLng === "number" &&
+          !Number.isNaN(order.shopLat) &&
+          !Number.isNaN(order.shopLng) && (
+          <div>
+            <p
+              className={`text-xs ${
+                theme === "dark" ? "text-gray-400" : "text-gray-500"
+              }`}
+            >
+              Shop / pickup location
+            </p>
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${order.shopLat},${order.shopLng}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`text-sm font-medium underline underline-offset-2 transition-colors ${
+                theme === "dark"
+                  ? "text-green-400 hover:text-green-300"
+                  : "text-green-600 hover:text-green-700"
+              }`}
+            >
+              Open in Google Maps
+            </a>
+          </div>
+        )}
 
         {/* Earning */}
         <div>
