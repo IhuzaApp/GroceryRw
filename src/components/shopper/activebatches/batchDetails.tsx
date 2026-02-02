@@ -284,6 +284,13 @@ export default function BatchDetails({
 
     const checkForPendingInvoiceProof = async () => {
       try {
+        // Invoice proof is only for combined and regular orders — skip for reel and restaurant
+        const allOrdersInBatch = [order, ...(order.combinedOrders || [])];
+        const isReelOrRestaurantBatch = allOrdersInBatch.every(
+          (o) => o.orderType === "reel" || o.orderType === "restaurant"
+        );
+        if (isReelOrRestaurantBatch) return;
+
         // Check main order
         if (order.status === "on_the_way") {
           const hasInvoice = await checkOrderHasInvoice(order.id);
@@ -351,11 +358,27 @@ export default function BatchDetails({
   const currentStep = useMemo(() => {
     if (!order) return 0;
     const allOrders = [order, ...(order.combinedOrders || [])];
+    const isReelOrRestaurantBatch = allOrders.every(
+      (o) => o.orderType === "reel" || o.orderType === "restaurant"
+    );
 
-    // Check if everything is delivered
+    // Reel and restaurant: 3 steps only — Pickup (0), On the way (1), Delivered (2)
+    if (isReelOrRestaurantBatch) {
+      if (allOrders.every((o) => o.status === "delivered")) return 2;
+      if (
+        allOrders.every(
+          (o) =>
+            o.status === "on_the_way" ||
+            o.status === "at_customer" ||
+            o.status === "delivered"
+        )
+      )
+        return 1;
+      return 0; // accepted / Pickup
+    }
+
+    // Regular orders: 4 steps — Order Accepted, Shopping, On the way, Delivered
     if (allOrders.every((o) => o.status === "delivered")) return 3;
-
-    // Check if everything is at least on_the_way (Transition to Delivery Phase)
     if (
       allOrders.every(
         (o) =>
@@ -366,20 +389,8 @@ export default function BatchDetails({
     ) {
       return 2;
     }
-
-    // Check if any is shopping or paid
     if (allOrders.some((o) => o.status === "shopping" || o.status === "paid"))
       return 1;
-
-    // Default based on type if still at start
-    const isRestaurantOrder = allOrders.some(
-      (o) => o.orderType === "restaurant"
-    );
-    const isRestaurantUserReel = allOrders.some(
-      (o) => o.reel?.restaurant_id || o.reel?.user_id
-    );
-    if (isRestaurantOrder || isRestaurantUserReel) return 1;
-
     return 0;
   }, [order]);
 
@@ -2643,8 +2654,14 @@ export default function BatchDetails({
           return null; // Hide main batch delivery button for multi-customer orders
         }
 
-        // Only show Confirm Delivery button if invoice proof has been uploaded for this specific order
-        if (!uploadedProofs[activeOrder.id]) {
+        // Invoice proof required only for combined and regular orders — reel and restaurant skip it
+        const isReelOrRestaurant =
+          activeOrder?.orderType === "reel" ||
+          activeOrder?.orderType === "restaurant";
+        const requiresInvoiceProof =
+          !isReelOrRestaurant && !uploadedProofs[activeOrder.id];
+
+        if (requiresInvoiceProof) {
           return (
             <div
               className={`flex flex-col items-center justify-center rounded-xl border-2 p-6 text-center ${
@@ -3462,9 +3479,16 @@ export default function BatchDetails({
           </div>
         )}
 
-        {/* Invoice Proof Modal */}
+        {/* Invoice Proof Modal — only for combined and regular orders, not reel/restaurant */}
         <InvoiceProofModal
-          open={showInvoiceProofModal}
+          open={
+            showInvoiceProofModal &&
+            !(order &&
+              [order, ...(order.combinedOrders || [])].every(
+                (o) =>
+                  o?.orderType === "reel" || o?.orderType === "restaurant"
+              ))
+          }
           onClose={() => {
             setShowInvoiceProofModal(false);
             setInvoiceProofTargetOrder(null);

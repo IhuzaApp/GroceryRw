@@ -74,6 +74,9 @@ export default function OrderProgressSteps({
   order,
   currentStep,
 }: OrderProgressStepsProps) {
+  const isReelOrRestaurant =
+    order?.orderType === "reel" || order?.orderType === "restaurant";
+
   return (
     <div className="hidden rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800 sm:block sm:p-6">
       <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
@@ -99,32 +102,48 @@ export default function OrderProgressSteps({
 
       <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-600 dark:bg-slate-700 sm:p-6">
         <Steps current={currentStep} className="custom-steps-green">
-          <Steps.Item
-            title="Order Accepted"
-            description="Order has been assigned to you"
-            status={currentStep >= 0 ? "finish" : "wait"}
-          />
-          {!(
-            order?.reel?.restaurant_id ||
-            order?.reel?.user_id ||
-            order?.orderType === "restaurant"
-          ) && (
-            <Steps.Item
-              title="Shopping"
-              description="Collecting items from the store"
-              status={currentStep >= 1 ? "finish" : "wait"}
-            />
+          {isReelOrRestaurant ? (
+            <>
+              <Steps.Item
+                title="Pickup"
+                description="Confirm pickup at store or restaurant"
+                status={currentStep >= 0 ? "finish" : "wait"}
+              />
+              <Steps.Item
+                title="On The Way"
+                description="Delivering to customer"
+                status={currentStep >= 1 ? "finish" : "wait"}
+              />
+              <Steps.Item
+                title="Delivered"
+                description="Order completed successfully"
+                status={currentStep >= 2 ? "finish" : "wait"}
+              />
+            </>
+          ) : (
+            <>
+              <Steps.Item
+                title="Order Accepted"
+                description="Order has been assigned to you"
+                status={currentStep >= 0 ? "finish" : "wait"}
+              />
+              <Steps.Item
+                title="Shopping"
+                description="Collecting items from the store"
+                status={currentStep >= 1 ? "finish" : "wait"}
+              />
+              <Steps.Item
+                title="On The Way"
+                description="Delivering to customer"
+                status={currentStep >= 2 ? "finish" : "wait"}
+              />
+              <Steps.Item
+                title="Delivered"
+                description="Order completed successfully"
+                status={currentStep >= 3 ? "finish" : "wait"}
+              />
+            </>
           )}
-          <Steps.Item
-            title="On The Way"
-            description="Delivering to customer"
-            status={currentStep >= 2 ? "finish" : "wait"}
-          />
-          <Steps.Item
-            title="Delivered"
-            description="Order completed successfully"
-            status={currentStep >= 3 ? "finish" : "wait"}
-          />
         </Steps>
       </div>
     </div>

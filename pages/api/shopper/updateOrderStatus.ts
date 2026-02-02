@@ -49,7 +49,30 @@ const UPDATE_COMBINED_REEL_ORDERS = gql`
     update_reel_orders(
       where: {
         combined_order_id: { _eq: $combinedId }
-        shop_id: { _eq: $shopId }
+        Reel: { shop_id: { _eq: $shopId } }
+      }
+      _set: { status: $status, updated_at: $updated_at }
+    ) {
+      affected_rows
+      returning {
+        id
+        status
+      }
+    }
+  }
+`;
+
+const UPDATE_COMBINED_REEL_ORDERS_BY_RESTAURANT = gql`
+  mutation UpdateCombinedReelOrdersByRestaurant(
+    $combinedId: uuid!
+    $restaurantId: uuid!
+    $status: String!
+    $updated_at: timestamptz!
+  ) {
+    update_reel_orders(
+      where: {
+        combined_order_id: { _eq: $combinedId }
+        Reel: { restaurant_id: { _eq: $restaurantId } }
       }
       _set: { status: $status, updated_at: $updated_at }
     ) {
@@ -282,6 +305,7 @@ export default async function handler(
     let combinedId: string | null = null;
     let shopId: string | null = null;
     let restaurantId: string | null = null;
+    let reelRestaurantId: string | null = null;
 
     if (isReelOrder) {
       const reelDetails = await hasuraClient.request<any>(
@@ -290,8 +314,11 @@ export default async function handler(
           reel_orders_by_pk(id: $orderId) {
             id
             combined_order_id
-            shop_id
             status
+            Reel {
+              shop_id
+              restaurant_id
+            }
           }
         }
       `,
@@ -299,7 +326,8 @@ export default async function handler(
       );
       orderDetails = reelDetails.reel_orders_by_pk;
       combinedId = orderDetails?.combined_order_id;
-      shopId = orderDetails?.shop_id;
+      shopId = orderDetails?.Reel?.shop_id ?? null;
+      reelRestaurantId = orderDetails?.Reel?.restaurant_id ?? null;
     } else if (isRestaurantOrder) {
       const restaurantDetails = await hasuraClient.request<any>(
         `
@@ -446,12 +474,21 @@ export default async function handler(
         );
       }
       if (isReelOrder) {
-        updatePromises.push(
-          hasuraClient.request(UPDATE_COMBINED_REEL_ORDERS, {
-            ...variables,
-            shopId,
-          })
-        );
+        if (shopId) {
+          updatePromises.push(
+            hasuraClient.request(UPDATE_COMBINED_REEL_ORDERS, {
+              ...variables,
+              shopId,
+            })
+          );
+        } else if (reelRestaurantId) {
+          updatePromises.push(
+            hasuraClient.request(UPDATE_COMBINED_REEL_ORDERS_BY_RESTAURANT, {
+              ...variables,
+              restaurantId: reelRestaurantId,
+            })
+          );
+        }
       }
       if (isRestaurantOrder) {
         updatePromises.push(
