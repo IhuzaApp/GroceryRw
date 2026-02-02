@@ -253,7 +253,7 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
       className={`relative rounded-2xl p-4 transition-colors duration-200 ${
         theme === "dark"
           ? "bg-gray-800 shadow-lg shadow-gray-900/50"
-          : "bg-white shadow-sm"
+          : "bg-white shadow-md shadow-gray-200/80"
       }`}
     >
       {/* Ellipsis Menu Button - Top Right */}

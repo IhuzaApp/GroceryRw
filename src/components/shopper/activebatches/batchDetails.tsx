@@ -35,6 +35,7 @@ import {
   recordPaymentTransactions,
   generateInvoice,
 } from "../../../lib/walletTransactions";
+import { reportErrorToSlackClient } from "../../../lib/reportErrorClient";
 import { useSession } from "next-auth/react";
 import { useTheme } from "../../../context/ThemeContext";
 import { OrderItem, OrderDetailsType, BatchDetailsProps } from "./types";
@@ -317,6 +318,10 @@ export default function BatchDetails({
         }
       } catch (error) {
         console.error("❌ Error checking for pending invoice proof:", error);
+        reportErrorToSlackClient(
+          "BatchDetails (check pending invoice proof)",
+          error
+        );
       }
     };
 
@@ -658,6 +663,11 @@ export default function BatchDetails({
           "❌ [BatchDetails] Error fetching combined details:",
           error
         );
+        reportErrorToSlackClient(
+          "BatchDetails (fetch combined details)",
+          error,
+          { orderId: order?.id }
+        );
       }
     };
 
@@ -868,7 +878,10 @@ export default function BatchDetails({
       // Keep payment modal open - it will handle OTP step internally
       setPaymentLoading(false);
     } catch (err) {
-      // Payment processing error
+      reportErrorToSlackClient("BatchDetails (payment processing)", err, {
+        orderId: targetOrderForPayment?.id,
+        OrderID: targetOrderForPayment?.OrderID,
+      });
       toaster.push(
         <Notification type="error" header="Payment Failed" closable>
           {err instanceof Error
@@ -1013,7 +1026,10 @@ export default function BatchDetails({
           throw new Error(momoData.error || "MoMo payment initiation failed");
         }
       } catch (momoError) {
-        // MoMo payment error
+        reportErrorToSlackClient("BatchDetails (MoMo payment)", momoError, {
+          orderId: targetOrderForPayment?.id,
+          OrderID: targetOrderForPayment?.OrderID,
+        });
         toaster.push(
           <Notification type="error" header="MoMo Payment Failed" closable>
             {momoError instanceof Error
@@ -1089,8 +1105,11 @@ export default function BatchDetails({
         paymentSuccess = true;
         walletUpdated = true;
       } catch (paymentError) {
-        // Payment processing error
-        // Show error and stop the flow
+        reportErrorToSlackClient(
+          "BatchDetails (processPayment API)",
+          paymentError,
+          { orderId: targetOrderForPayment?.id }
+        );
         toaster.push(
           <Notification type="error" header="Payment Failed" closable>
             {paymentError instanceof Error
@@ -1178,6 +1197,11 @@ export default function BatchDetails({
             }
           } catch (invoiceError) {
             console.error("Error generating invoices:", invoiceError);
+            reportErrorToSlackClient(
+              "BatchDetails (generate invoices)",
+              invoiceError,
+              { orderId: order?.id }
+            );
             toaster.push(
               <Notification
                 type="warning"
@@ -1260,7 +1284,10 @@ export default function BatchDetails({
         }
       }
     } catch (err) {
-      // OTP verification error
+      reportErrorToSlackClient("BatchDetails (OTP verification)", err, {
+        orderId: order?.id,
+        paymentTargetOrderId: paymentTargetOrderId ?? undefined,
+      });
       toaster.push(
         <Notification type="error" header="Verification Failed" closable>
           {err instanceof Error
@@ -1475,6 +1502,11 @@ export default function BatchDetails({
       setInvoiceData(combinedInvoiceData);
     } catch (error) {
       console.error("Error preparing combined delivery confirmation:", error);
+      reportErrorToSlackClient(
+        "BatchDetails (prepare combined delivery confirmation)",
+        error,
+        { orderId: order?.id }
+      );
       setShowInvoiceModal(false);
       setInvoiceLoading(false);
     } finally {
@@ -1979,6 +2011,9 @@ export default function BatchDetails({
       );
     } catch (error) {
       console.error("Error processing invoice proof:", error);
+      reportErrorToSlackClient("BatchDetails (process invoice proof)", error, {
+        orderId: order?.id,
+      });
       toaster.push(
         <Notification type="error" header="Error" closable>
           {error instanceof Error
@@ -2017,12 +2052,6 @@ export default function BatchDetails({
       !isRestaurantOrder &&
       !isRestaurantUserReel
     ) {
-      console.log(
-        "💰 Setting payment target for order:",
-        idToUpdate,
-        "status:",
-        newStatus
-      );
       setPaymentTargetOrderId(idToUpdate);
       handleShowPaymentModal();
       return;
@@ -2109,6 +2138,9 @@ export default function BatchDetails({
       );
     } catch (err) {
       console.error("Error confirming pickup:", err);
+      reportErrorToSlackClient("BatchDetails (confirm pickup)", err, {
+        orderId: pickupScannerOrder?.id,
+      });
       toaster.push(
         <Notification type="error" header="Update failed" closable>
           {err instanceof Error ? err.message : "Failed to update status."}
@@ -3090,6 +3122,9 @@ export default function BatchDetails({
       }
     } catch (error) {
       console.error("Error refetching order data:", error);
+      reportErrorToSlackClient("BatchDetails (refetch order data)", error, {
+        orderId: order?.id,
+      });
       setErrorState("Failed to refresh order data");
     } finally {
       setOrderDetailsLoading(false);

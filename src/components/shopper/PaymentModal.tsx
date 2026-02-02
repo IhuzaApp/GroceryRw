@@ -147,21 +147,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
   if (!open || !isMounted) return null;
 
-  // Console logs for mobile payment modal
-  if (isMobile && open) {
-    console.log("🔄 PaymentModal opened on mobile");
-    console.log("📋 Order Details:", {
-      OrderID: orderId, // Numeric OrderID from database
-      id: externalId, // UUID id from database
-      orderAmount: orderAmount,
-      serviceFee: serviceFee,
-      deliveryFee: deliveryFee,
-      momoCode: momoCode,
-      currentStep: currentStep,
-      paymentStatus: paymentStatus,
-    });
-  }
-
   const modalContent = (
     <div className="fixed inset-0 z-[999999] flex items-end justify-center bg-black/70 p-0 backdrop-blur-md sm:items-center sm:p-4">
       <div

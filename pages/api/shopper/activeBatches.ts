@@ -4,6 +4,7 @@ import { gql } from "graphql-request";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { logger } from "../../../src/utils/logger";
+import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 
 // Fetch active regular orders for a specific shopper
 const GET_ACTIVE_ORDERS = gql`
@@ -571,6 +572,11 @@ export default async function handler(
       userId,
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
+    });
+
+    await logErrorToSlack("api/shopper/activeBatches", error, {
+      userId,
+      hasuraClientExists: !!hasuraClient,
     });
 
     // Return a more informative error response with correct format
