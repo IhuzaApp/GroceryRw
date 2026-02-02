@@ -173,9 +173,6 @@ export default function NotificationSystem({
 
       // If shopper has 2 or more orders, clear any pending notifications
       if (count >= 2 && selectedOrder) {
-        console.log(
-          "🧹 Clearing notifications: Shopper reached 2 active orders"
-        );
         setShowMapModal(false);
         setSelectedOrder(null);
         onNotificationShow?.(null);
@@ -302,9 +299,6 @@ export default function NotificationSystem({
 
         // Clear notifications when going offline (only if we were actually running)
         if (!online && checkInterval.current !== null) {
-          console.log("🔴 Going offline - stopping notification system", {
-            componentId: componentId.current,
-          });
           stopNotificationSystem();
 
           // Close any open notification modals
@@ -359,10 +353,6 @@ export default function NotificationSystem({
       if (!document.hidden) {
         lastUserActivityTime.current = Date.now();
       }
-      console.log("👁️ Page visibility changed:", {
-        visible: isPageVisible.current,
-        timestamp: new Date().toISOString(),
-      });
     };
 
     const handleUserActivity = () => {
@@ -393,65 +383,33 @@ export default function NotificationSystem({
       const { order } = event.detail;
       const now = Date.now();
 
-      console.log("📲 FCM NEW ORDER EVENT", {
-        orderId: order.id,
-        timestamp: new Date().toISOString(),
-        isDeclined: declinedOrders.current.has(order.id),
-        alreadyShowing: activeToasts.current.has(order.id),
-        recentlyShown: showToastLock.current.has(order.id),
-        pageVisible: isPageVisible.current,
-        timeSincePageLoad: now - pageLoadTimestamp.current,
-        timeSinceLastActivity: now - lastUserActivityTime.current,
-      });
-
       // CRITICAL: Don't show notifications within 10 seconds of page load (prevent page refresh spam)
       if (now - pageLoadTimestamp.current < 10000) {
-        console.log("🚫 FCM: Blocking - page just loaded/refreshed", {
-          orderId: order.id,
-          timeSincePageLoad: now - pageLoadTimestamp.current,
-        });
         return;
       }
 
       // CRITICAL: Only show notifications if page is visible and user is active
       if (!isPageVisible.current) {
-        console.log("🚫 FCM: Blocking - page not visible", {
-          orderId: order.id,
-        });
         return;
       }
 
       // Check if user has been inactive for more than 5 minutes
       if (now - lastUserActivityTime.current > 300000) {
-        console.log("🚫 FCM: Blocking - user inactive for too long", {
-          orderId: order.id,
-          inactiveTime: now - lastUserActivityTime.current,
-        });
         return;
       }
 
       // Check if shopper already has 2 or more active orders - CRITICAL GUARD
       if (activeOrderCount >= 2) {
-        console.log("🚫 FCM: Blocking - shopper already has 2 active orders", {
-          orderId: order.id,
-          activeOrderCount,
-        });
         return;
       }
 
       // Check if order was declined
       if (declinedOrders.current.has(order.id)) {
-        console.log("🚫 FCM: Order was declined, ignoring", {
-          orderId: order.id,
-        });
         return;
       }
 
       // Skip if order is already showing
       if (activeToasts.current.has(order.id)) {
-        console.log("🚫 FCM: Order already showing, ignoring", {
-          orderId: order.id,
-        });
         return;
       }
 
@@ -485,33 +443,18 @@ export default function NotificationSystem({
       const { orders } = event.detail;
       const now = Date.now();
 
-      console.log("📲 FCM BATCH ORDERS EVENT", {
-        orderCount: orders.length,
-        timestamp: new Date().toISOString(),
-        pageVisible: isPageVisible.current,
-        timeSincePageLoad: now - pageLoadTimestamp.current,
-        timeSinceLastActivity: now - lastUserActivityTime.current,
-      });
-
       // CRITICAL: Don't show notifications within 10 seconds of page load
       if (now - pageLoadTimestamp.current < 10000) {
-        console.log("🚫 FCM BATCH: Blocking - page just loaded/refreshed", {
-          timeSincePageLoad: now - pageLoadTimestamp.current,
-        });
         return;
       }
 
       // CRITICAL: Only show notifications if page is visible and user is active
       if (!isPageVisible.current) {
-        console.log("🚫 FCM BATCH: Blocking - page not visible");
         return;
       }
 
       // Check if user has been inactive for more than 5 minutes
       if (now - lastUserActivityTime.current > 300000) {
-        console.log("🚫 FCM BATCH: Blocking - user inactive for too long", {
-          inactiveTime: now - lastUserActivityTime.current,
-        });
         return;
       }
 
@@ -519,13 +462,6 @@ export default function NotificationSystem({
       orders.forEach((order: any) => {
         // Check if shopper already has 2 or more active orders - CRITICAL GUARD
         if (activeOrderCount >= 2) {
-          console.log(
-            "🚫 FCM BATCH: Blocking - shopper already has 2 active orders",
-            {
-              orderId: order.id,
-              activeOrderCount,
-            }
-          );
           return;
         }
 
@@ -536,9 +472,6 @@ export default function NotificationSystem({
 
         // Skip if order is already showing
         if (activeToasts.current.has(order.id)) {
-          console.log("🚫 FCM BATCH: Order already showing, ignoring", {
-            orderId: order.id,
-          });
           return;
         }
 
@@ -726,7 +659,6 @@ export default function NotificationSystem({
     // Clear deduplication lock after 5 seconds to allow re-showing if needed
     setTimeout(() => {
       showToastLock.current.delete(orderId);
-      console.log("🔓 Cleared deduplication lock for order", { orderId });
     }, 5000);
 
     // Also remove from batch assignments
@@ -963,13 +895,6 @@ export default function NotificationSystem({
 
     // Check if shopper already has 2 or more active orders - CRITICAL GUARD
     if (activeOrderCount >= 2 && type === "info") {
-      console.log(
-        "🚫 showToast: Blocking - shopper already has 2 active orders",
-        {
-          orderId: order.id,
-          activeOrderCount,
-        }
-      );
       return;
     }
 
@@ -1411,13 +1336,6 @@ export default function NotificationSystem({
         if ((!currentUserAssignment || isBetterOrder) && !wasDeclined) {
           // If replacing a current order, remove the old one first with smooth transition
           if (currentUserAssignment && isBetterOrder) {
-            console.log("🔄 Replacing current order with better one", {
-              oldOrderId: currentUserAssignment.orderId,
-              oldEarnings: currentOrderEarnings,
-              newOrderId: order.id,
-              newEarnings: newOrderEarnings,
-            });
-
             // Remove old assignment
             batchAssignments.current = batchAssignments.current.filter(
               (a) => a.orderId !== currentUserAssignment.orderId
@@ -1427,19 +1345,7 @@ export default function NotificationSystem({
             removeToastForOrder(currentUserAssignment.orderId);
 
             // Wait for exit animation to complete before showing new notification
-            console.log("⏳ Waiting for exit animation (500ms)...", {
-              oldOrderId: currentUserAssignment.orderId,
-              newOrderId: order.id,
-            });
-
             setTimeout(() => {
-              console.log(
-                "✨ Exit animation complete, showing new notification",
-                {
-                  newOrderId: order.id,
-                }
-              );
-
               // Now show the new order after old one has disappeared
               showNewOrderNotification(order, currentTime);
             }, 500); // Wait 500ms for exit animation
@@ -1464,9 +1370,6 @@ export default function NotificationSystem({
           // lastNotificationTime was already updated above to prevent rapid API calls
         }
       } else if (data.reason === "MAX_ACTIVE_ORDERS_REACHED") {
-        console.log("🚫 Shopper reached max active orders limit", {
-          count: data.activeOrderCount,
-        });
         setActiveOrderCount(data.activeOrderCount || 2);
 
         // Clear any pending notifications since shopper can't accept more
@@ -1577,9 +1480,6 @@ export default function NotificationSystem({
       // This prevents the card from flashing on page refresh/change if they have 2 orders
       const currentCount = await fetchActiveOrderCount();
       if (currentCount >= 2) {
-        console.log(
-          "🚫 Blocking active offer check: Shopper has 2+ active orders"
-        );
         localStorage.removeItem("active_offer");
         // Ensure any existing card is hidden
         setShowMapModal(false);
@@ -2037,12 +1937,6 @@ export default function NotificationSystem({
                         );
                       }
 
-                      console.log("✅ Offer declined successfully", {
-                        orderId,
-                        offerId: data.offerId,
-                        roundNumber: data.roundNumber,
-                      });
-
                       // Add to declined orders list (expires after 5 minutes)
                       declinedOrders.current.set(orderId, expiresAt);
 
@@ -2055,12 +1949,6 @@ export default function NotificationSystem({
                         localStorage.setItem(
                           "declined_orders",
                           JSON.stringify(declinedObj)
-                        );
-                        console.log(
-                          "💾 Saved declined orders to localStorage",
-                          {
-                            count: declinedOrders.current.size,
-                          }
                         );
                       } catch (error) {
                         console.error(
