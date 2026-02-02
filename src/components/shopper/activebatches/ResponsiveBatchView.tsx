@@ -28,7 +28,7 @@ interface Order {
   items?: number;
   total: number;
   estimatedEarnings?: string;
-  orderType?: "regular" | "reel" | "restaurant" | "combined";
+  orderType?: "regular" | "reel" | "restaurant" | "combined" | "business";
   reel?: {
     id: string;
     title: string;

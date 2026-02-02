@@ -84,7 +84,7 @@ interface BatchOrderDetailsType {
     };
   };
   // Add order type and reel-specific fields
-  orderType?: "regular" | "reel" | "restaurant";
+  orderType?: "regular" | "reel" | "restaurant" | "business";
   reel?: {
     id: string;
     title: string;
@@ -166,15 +166,18 @@ function BatchDetailsPage({ orderData, error }: BatchDetailsPageProps) {
         await deleteFirebaseMessages(orderId);
       }
 
-      const response = await fetch("/api/shopper/updateOrderStatus", {
+      // Business orders use a different API
+      const endpoint =
+        orderData?.orderType === "business"
+          ? "/api/mutations/update-business-product-order-status"
+          : "/api/shopper/updateOrderStatus";
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          orderId,
-          status: newStatus,
-        }),
+        body: JSON.stringify({ orderId, status: newStatus }),
       });
 
       if (!response.ok) {
@@ -595,6 +598,56 @@ export const getServerSideProps: GetServerSideProps<
       }
     }
 
+    // If still no order found, try as a business order
+    if (!order) {
+      console.log("🔄 Trying business order query...");
+      const GET_BUSINESS_ORDER_DETAILS = gql`
+        query GetBusinessOrderDetails($id: uuid!) {
+          businessProductOrders(where: { id: { _eq: $id } }, limit: 1) {
+            id
+            OrderID
+            created_at
+            status
+            total
+            transportation_fee
+            service_fee
+            units
+            deliveryAddress
+            latitude
+            longitude
+            allProducts
+            business_store {
+              id
+              name
+              latitude
+              longitude
+            }
+            orderedBy {
+              id
+              name
+              phone
+              email
+            }
+            shopper {
+              id
+              name
+              profile_picture
+              phone
+            }
+          }
+        }
+      `;
+      const businessData = await hasuraClient.request<{
+        businessProductOrders: any[];
+      }>(GET_BUSINESS_ORDER_DETAILS, { id });
+      order = businessData.businessProductOrders?.[0];
+      orderType = "business";
+      console.log("📊 Business order result:", {
+        found: !!order,
+        count: businessData.businessProductOrders?.length ?? 0,
+      });
+    }
+
     if (!order) {
       console.log("❌ No order found for ID:", id);
       return {
@@ -630,6 +683,16 @@ export const getServerSideProps: GetServerSideProps<
     const isRestaurantCustomer =
       orderType === "restaurant" && order.user_id === session.user.id;
 
+    // For business orders, check if user is the assigned shopper
+    const isBusinessShopper =
+      orderType === "business" && order.shopper_id === session.user.id;
+
+    // For business orders, check if user is the customer via orderedBy
+    const isBusinessCustomer =
+      orderType === "business" &&
+      (order.ordered_by === session.user.id ||
+        order.orderedBy?.id === session.user.id);
+
     console.log("🔐 Authorization check:", {
       isAssignedShopper,
       isCustomer,
@@ -637,6 +700,8 @@ export const getServerSideProps: GetServerSideProps<
       isReelShopper,
       isRestaurantShopper,
       isRestaurantCustomer,
+      isBusinessShopper,
+      isBusinessCustomer,
       orderType,
       assignedToId: order.Shoppers?.id,
       shopperId: order.shopper?.id,
@@ -649,7 +714,9 @@ export const getServerSideProps: GetServerSideProps<
       !isReelCustomer &&
       !isReelShopper &&
       !isRestaurantShopper &&
-      !isRestaurantCustomer
+      !isRestaurantCustomer &&
+      !isBusinessShopper &&
+      !isBusinessCustomer
     ) {
       console.log("❌ User not authorized to view this order");
       return {
@@ -662,15 +729,19 @@ export const getServerSideProps: GetServerSideProps<
 
     // Format timestamps to human-readable strings
     console.log("🔄 Formatting order data...");
+    const placedAtRaw = order.placedAt ?? order.created_at;
+    const estimatedDeliveryRaw = order.estimatedDelivery ?? order.created_at;
     const formattedOrder: any = {
       ...order,
       orderType,
-      placedAt: new Date(order.placedAt).toLocaleString("en-US", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }),
-      estimatedDelivery: order.estimatedDelivery
-        ? new Date(order.estimatedDelivery).toLocaleString("en-US", {
+      placedAt: placedAtRaw
+        ? new Date(placedAtRaw).toLocaleString("en-US", {
+            dateStyle: "medium",
+            timeStyle: "short",
+          })
+        : null,
+      estimatedDelivery: estimatedDeliveryRaw
+        ? new Date(estimatedDeliveryRaw).toLocaleString("en-US", {
             dateStyle: "medium",
             timeStyle: "short",
           })
@@ -690,6 +761,50 @@ export const getServerSideProps: GetServerSideProps<
         latitude: order.Restaurant.lat ?? null,
         longitude: order.Restaurant.long ?? null,
       };
+    }
+
+    // For business orders, set shop from business_store and map fee fields
+    if (orderType === "business" && order.business_store) {
+      formattedOrder.serviceFee = order.service_fee ?? "0";
+      formattedOrder.deliveryFee = order.transportation_fee ?? "0";
+      const addr =
+        typeof order.deliveryAddress === "string"
+          ? order.deliveryAddress
+          : order.deliveryAddress?.address ||
+            [order.deliveryAddress?.street, order.deliveryAddress?.city]
+              .filter(Boolean)
+              .join(", ") ||
+            null;
+      formattedOrder.shop = {
+        id: order.business_store.id,
+        name: order.business_store.name,
+        address: addr ?? "",
+        phone: null,
+        image: null,
+        operating_hours: null,
+        latitude: order.business_store.latitude ?? null,
+        longitude: order.business_store.longitude ?? null,
+      };
+      formattedOrder.address = {
+        id: order.id,
+        street: addr ?? "",
+        city: "",
+        postal_code: "",
+        latitude: String(order.latitude ?? ""),
+        longitude: String(order.longitude ?? ""),
+      };
+      formattedOrder.Order_Items = Array.isArray(order.allProducts)
+        ? order.allProducts.map((p: any) => ({
+            id: p.id || p.product_id,
+            product_id: p.id || p.product_id,
+            quantity: p.quantity || 1,
+            price: p.price || "0",
+            product: {
+              id: p.id || p.product_id,
+              ProductName: { name: p.name || "Item" },
+            },
+          }))
+        : [];
     }
 
     console.log("✅ Successfully formatted order:", {

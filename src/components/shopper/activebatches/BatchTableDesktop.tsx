@@ -27,7 +27,7 @@ interface Order {
   items: number;
   total: number;
   estimatedEarnings: string;
-  orderType?: "regular" | "reel" | "restaurant" | "combined";
+  orderType?: "regular" | "reel" | "restaurant" | "combined" | "business";
 }
 
 const formatOrderIdsForDisplay = (order: Order): string => {
@@ -211,6 +211,33 @@ export function BatchTableDesktop({ orders }: BatchTableDesktopProps) {
             />
           </svg>
           Restaurant
+        </div>
+      );
+    }
+    if (order.orderType === "business") {
+      return (
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
+          <svg
+            className="h-3 w-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+            />
+          </svg>
+          Business
+        </div>
+      );
+    }
+    if (order.orderType === "combined") {
+      return (
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
+          Combined
         </div>
       );
     }

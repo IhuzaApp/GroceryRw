@@ -96,6 +96,42 @@ const GET_ACTIVE_REEL_ORDERS = gql`
   }
 `;
 
+// Fetch active business orders for a specific shopper
+const GET_ACTIVE_BUSINESS_ORDERS = gql`
+  query GetActiveBusinessOrders($shopperId: uuid!) {
+    businessProductOrders(
+      where: {
+        shopper_id: { _eq: $shopperId }
+        status: { _neq: "delivered" }
+      }
+      order_by: { created_at: desc }
+    ) {
+      id
+      OrderID
+      created_at
+      status
+      total
+      transportation_fee
+      service_fee
+      units
+      deliveryAddress
+      latitude
+      longitude
+      business_store {
+        id
+        name
+        latitude
+        longitude
+      }
+      orderedBy {
+        id
+        name
+        phone
+      }
+    }
+  }
+`;
+
 // Fetch active restaurant orders for a specific shopper
 const GET_ACTIVE_RESTAURANT_ORDERS = gql`
   query GetActiveRestaurantOrders($shopperId: uuid!) {
@@ -187,11 +223,11 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    // Fetch regular, reel, and restaurant orders in parallel
-    let regularOrdersData, reelOrdersData, restaurantOrdersData;
+    // Fetch regular, reel, restaurant, and business orders in parallel
+    let regularOrdersData, reelOrdersData, restaurantOrdersData, businessOrdersData;
 
     try {
-      [regularOrdersData, reelOrdersData, restaurantOrdersData] =
+      [regularOrdersData, reelOrdersData, restaurantOrdersData, businessOrdersData] =
         await Promise.all([
           hasuraClient.request<{
             Orders: Array<{
@@ -300,6 +336,32 @@ export default async function handler(
               }>;
             }>;
           }>(GET_ACTIVE_RESTAURANT_ORDERS, { shopperId: userId }),
+          hasuraClient.request<{
+            businessProductOrders: Array<{
+              id: string;
+              OrderID: string | number | null;
+              created_at: string;
+              status: string;
+              total: string;
+              transportation_fee: string;
+              service_fee: string;
+              units: string;
+              deliveryAddress: string | any;
+              latitude: string | number | null;
+              longitude: string | number | null;
+              business_store: {
+                id: string;
+                name: string;
+                latitude: string;
+                longitude: string;
+              } | null;
+              orderedBy: {
+                id: string;
+                name: string;
+                phone: string | null;
+              } | null;
+            }>;
+          }>(GET_ACTIVE_BUSINESS_ORDERS, { shopperId: userId }),
         ]);
     } catch (fetchError) {
       console.error("Error fetching orders from Hasura:", fetchError);
@@ -317,14 +379,19 @@ export default async function handler(
     const regularOrders = regularOrdersData.Orders;
     const reelOrders = reelOrdersData.reel_orders;
     const restaurantOrders = restaurantOrdersData.restaurant_orders;
+    const businessOrders = businessOrdersData.businessProductOrders || [];
 
     logger.info("Active batches query results", "ActiveBatchesAPI", {
       userId,
       regularOrdersCount: regularOrders.length,
       reelOrdersCount: reelOrders.length,
       restaurantOrdersCount: restaurantOrders.length,
+      businessOrdersCount: businessOrders.length,
       totalOrders:
-        regularOrders.length + reelOrders.length + restaurantOrders.length,
+        regularOrders.length +
+        reelOrders.length +
+        restaurantOrders.length +
+        businessOrders.length,
     });
 
     // Group regular orders by combined_order_id
@@ -506,6 +573,54 @@ export default async function handler(
       };
     });
 
+    // Transform business orders
+    const transformedBusinessOrders = businessOrders.map((o) => {
+      const da = o.deliveryAddress;
+      const deliveryAddr =
+        typeof da === "string"
+          ? da
+          : da && typeof da === "object"
+          ? [
+              (da as any).street,
+              (da as any).city,
+              (da as any).address,
+            ]
+              .filter(Boolean)
+              .join(", ") || "—"
+          : "—";
+      const custLat = parseFloat(
+        String(o.latitude ?? (da && (da as any).latitude) ?? 0)
+      );
+      const custLng = parseFloat(
+        String(o.longitude ?? (da && (da as any).longitude) ?? 0)
+      );
+      const store = o.business_store;
+      return {
+        id: o.id,
+        OrderID: o.OrderID != null ? o.OrderID : o.id,
+        status: o.status,
+        createdAt: o.created_at,
+        deliveryTime: undefined,
+        shopName: store?.name || "Business Store",
+        shopNames: [store?.name || "Business Store"],
+        shopAddress: store ? "Business store" : "—",
+        shopLat: store ? parseFloat(store.latitude) : 0,
+        shopLng: store ? parseFloat(store.longitude) : 0,
+        customerName: o.orderedBy?.name || "Customer",
+        customerAddress: deliveryAddr,
+        customerLat: custLat,
+        customerLng: custLng,
+        items: parseInt(String(o.units), 10) || 1,
+        total: parseFloat(o.total || "0"),
+        estimatedEarnings: (
+          parseFloat(o.transportation_fee || "0") +
+          parseFloat(o.service_fee || "0")
+        ).toFixed(2),
+        orderType: "business" as const,
+        customerPhone: o.orderedBy?.phone || null,
+      };
+    });
+
     // Transform restaurant orders (show OrderID in order column, not id)
     const transformedRestaurantOrders = restaurantOrders.map((o) => ({
       id: o.id,
@@ -539,6 +654,7 @@ export default async function handler(
       ...transformedStandaloneOrders,
       ...transformedReelOrders,
       ...transformedRestaurantOrders,
+      ...transformedBusinessOrders,
     ];
 
     // If no orders were found, return a specific message but with 200 status code

@@ -207,6 +207,50 @@ export default function OrderItemsSection({
     );
   }
 
+  // Business order: show store and products from Order_Items (mapped from allProducts)
+  if (order?.orderType === "business") {
+    const storeName = order.shop?.name ?? "Business Store";
+    const items = order.Order_Items ?? [];
+    return (
+      <div className={`${activeTab === "items" ? "block" : "hidden sm:block"}`}>
+        <div className="mb-3 flex items-center gap-2 px-3 sm:mb-4 sm:gap-3 sm:px-0">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
+            Order Items
+          </h2>
+        </div>
+        <div className="space-y-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/30 sm:p-6">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            {storeName} • {items.length} {items.length === 1 ? "Item" : "Items"}
+          </h3>
+          <div className="space-y-2 sm:space-y-3">
+            {items.map((item: any) => {
+              const name =
+                item.product?.ProductName?.name ?? item.product?.name ?? "Item";
+              const qty = Number(item.quantity) || 1;
+              const price = item.price ?? "0";
+              return (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-800 sm:gap-4 sm:p-4"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-slate-900 dark:text-slate-100">
+                      {name}
+                    </p>
+                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                      Qty: {qty} × {formatCurrency(Number(price))} ={" "}
+                      {formatCurrency(Number(price) * qty)}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Restaurant order: show restaurant name and dish list from restaurant_order_items
   if (order?.orderType === "restaurant") {
     const restaurantName =

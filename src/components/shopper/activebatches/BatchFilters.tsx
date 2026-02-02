@@ -30,6 +30,7 @@ export function BatchFilters({
     { value: "regular", label: "Regular Order" },
     { value: "reel", label: "Reel Order" },
     { value: "restaurant", label: "Restaurant Order" },
+    { value: "business", label: "Business Order" },
     { value: "store", label: "Store Order" },
     { value: "plasone", label: "Plas One Order", disabled: true },
   ];

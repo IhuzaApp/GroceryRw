@@ -320,7 +320,7 @@ export default async function handler(
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { orderId, userId } = req.body;
+  const { orderId, userId, orderType: clientOrderType } = req.body;
 
   if (!orderId || !userId) {
     return res.status(400).json({ error: "Order ID and User ID are required" });
@@ -747,6 +747,7 @@ export default async function handler(
         }
       )) as any;
     } else if (isRestaurantOrder) {
+      // Restaurant orders: update restaurant_orders row and set status to "accepted"
       acceptResponse = (await hasuraClient.request(
         ACCEPT_RESTAURANT_BATCH_MUTATION,
         {

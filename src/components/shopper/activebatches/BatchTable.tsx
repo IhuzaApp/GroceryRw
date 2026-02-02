@@ -23,7 +23,7 @@ interface Order {
   items: number;
   total: number;
   estimatedEarnings: string;
-  orderType?: "regular" | "reel" | "restaurant" | "combined";
+  orderType?: "regular" | "reel" | "restaurant" | "combined" | "business";
   invoiceUrl?: string;
 }
 
@@ -160,6 +160,16 @@ export function BatchTable({ orders }: BatchTableProps) {
         bg: "bg-orange-100 dark:bg-orange-900/30",
         text: "text-orange-700 dark:text-orange-300",
         label: "Restaurant",
+      },
+      business: {
+        bg: "bg-blue-100 dark:bg-blue-900/30",
+        text: "text-blue-700 dark:text-blue-300",
+        label: "Business",
+      },
+      combined: {
+        bg: "bg-amber-100 dark:bg-amber-900/30",
+        text: "text-amber-700 dark:text-amber-300",
+        label: "Combined",
       },
       regular: {
         bg: "bg-emerald-100 dark:bg-emerald-900/30",

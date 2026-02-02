@@ -54,11 +54,48 @@ export default function ShopInfo({ order }: ShopInfoProps) {
             ? "Reel Details"
             : order.orderType === "restaurant"
             ? "Restaurant Details"
+            : order.orderType === "business"
+            ? "Store Details"
             : "Shop Details"}
         </h2>
       </div>
 
-      {order.orderType === "restaurant" && (order.Restaurant || order.shop) ? (
+      {order.orderType === "business" && order.shop ? (
+        (() => {
+          const logoUrl = resolveImageUrl(order.shop.image);
+          return (
+            <div className="space-y-3">
+              <div className="flex gap-3 rounded-lg border border-slate-200 p-3 dark:border-slate-600 sm:gap-4 sm:p-4">
+                <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:h-20 sm:w-20">
+                  {logoUrl ? (
+                    <Image
+                      src={logoUrl}
+                      alt={order.shop.name ?? "Store"}
+                      width={80}
+                      height={80}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6 sm:h-8 sm:w-8">
+                        <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
+                    {order.shop.name ?? "Business Store"}
+                  </h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    {order.shop.address ?? ""}
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })()
+      ) : order.orderType === "restaurant" && (order.Restaurant || order.shop) ? (
         (() => {
           const logoUrl = resolveImageUrl(
             order.Restaurant?.logo ?? order.shop?.image

@@ -364,12 +364,15 @@ export default function BatchDetails({
   const currentStep = useMemo(() => {
     if (!order) return 0;
     const allOrders = [order, ...(order.combinedOrders || [])];
-    const isReelOrRestaurantBatch = allOrders.every(
-      (o) => o.orderType === "reel" || o.orderType === "restaurant"
+    const isReelOrRestaurantOrBusinessBatch = allOrders.every(
+      (o) =>
+        o.orderType === "reel" ||
+        o.orderType === "restaurant" ||
+        o.orderType === "business"
     );
 
-    // Reel and restaurant: 3 steps only — Pickup (0), On the way (1), Delivered (2)
-    if (isReelOrRestaurantBatch) {
+    // Reel, restaurant, business: 3 steps — Pickup (0), On the way (1), Delivered (2)
+    if (isReelOrRestaurantOrBusinessBatch) {
       if (allOrders.every((o) => o.status === "delivered")) return 2;
       if (
         allOrders.every(
@@ -380,7 +383,7 @@ export default function BatchDetails({
         )
       )
         return 1;
-      return 0; // accepted / Pickup
+      return 0; // accepted / Ready for Pickup / Pickup
     }
 
     // Regular orders: 4 steps — Order Accepted, Shopping, On the way, Delivered

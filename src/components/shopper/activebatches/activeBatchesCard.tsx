@@ -44,7 +44,7 @@ interface Order {
   service_fee?: string;
   delivery_fee?: string;
   // Add order type and reel-specific fields
-  orderType?: "regular" | "reel" | "restaurant" | "combined";
+  orderType?: "regular" | "reel" | "restaurant" | "combined" | "business";
   reel?: {
     id: string;
     title: string;

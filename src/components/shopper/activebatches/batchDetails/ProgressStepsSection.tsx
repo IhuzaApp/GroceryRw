@@ -13,8 +13,10 @@ export default function ProgressStepsSection({
   order,
   currentStep,
 }: ProgressStepsSectionProps) {
-  const isReelOrRestaurant =
-    order?.orderType === "reel" || order?.orderType === "restaurant";
+  const isReelOrRestaurantOrBusiness =
+    order?.orderType === "reel" ||
+    order?.orderType === "restaurant" ||
+    order?.orderType === "business";
 
   return (
     <div className="hidden rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800 sm:block sm:p-6">
@@ -41,7 +43,7 @@ export default function ProgressStepsSection({
 
       <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-600 dark:bg-slate-700 sm:p-6">
         <Steps current={currentStep} className="custom-steps-green">
-          {isReelOrRestaurant ? (
+          {isReelOrRestaurantOrBusiness ? (
             <>
               <Steps.Item
                 title="Pickup"

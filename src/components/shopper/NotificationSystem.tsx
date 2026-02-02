@@ -788,7 +788,10 @@ export default function NotificationSystem({
     showDesktopNotification(orderForNotification);
   };
 
-  const handleAcceptOrder = async (orderId: string) => {
+  const handleAcceptOrder = async (
+    orderId: string,
+    orderType?: "regular" | "reel" | "restaurant" | "business"
+  ) => {
     if (!session?.user?.id) {
       toast.error("You must be logged in to accept orders");
       return false;
@@ -802,7 +805,7 @@ export default function NotificationSystem({
     setAcceptingOrders((prev) => new Set(prev).add(orderId));
 
     try {
-      // Accept order via API
+      // Accept order via API (orderType ensures backend sets restaurant order status to "accepted")
       const response = await fetch("/api/shopper/accept-batch", {
         method: "POST",
         headers: {
@@ -811,6 +814,7 @@ export default function NotificationSystem({
         body: JSON.stringify({
           orderId,
           userId: session.user.id,
+          orderType,
         }),
       });
 
@@ -2107,7 +2111,7 @@ export default function NotificationSystem({
                   onClick={async () => {
                     acceptClickCount.current += 1;
 
-                    const success = await handleAcceptOrder(selectedOrder.id);
+                    const success = await handleAcceptOrder(selectedOrder.id, selectedOrder.orderType);
 
                     if (success) {
                       setShowMapModal(false);

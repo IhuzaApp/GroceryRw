@@ -22,7 +22,7 @@ interface Order {
   items: number;
   total: number;
   estimatedEarnings: string;
-  orderType?: "regular" | "reel" | "restaurant" | "combined";
+  orderType?: "regular" | "reel" | "restaurant" | "combined" | "business";
   reel?: {
     id: string;
     title: string;
@@ -44,6 +44,7 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const isReelOrder = order.orderType === "reel";
   const isRestaurantOrder = order.orderType === "restaurant";
+  const isBusinessOrder = order.orderType === "business";
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -88,6 +89,9 @@ export function BatchCardMobile({ order, currentTime }: BatchCardMobileProps) {
   const getDestination = () => {
     if (isReelOrder) {
       return `${order.customerName || "Customer"}`;
+    }
+    if (isBusinessOrder) {
+      return `${order.shopName} → ${order.customerName || "Customer"}`;
     }
     return `${order.shopName} to ${order.customerName}`;
   };
