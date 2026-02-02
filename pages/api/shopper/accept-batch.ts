@@ -757,6 +757,7 @@ export default async function handler(
         }
       )) as any;
     } else if (isReelOrder) {
+      // Reel orders: update reel_orders row and set status to "accepted"
       acceptResponse = (await hasuraClient.request(ACCEPT_REEL_BATCH_MUTATION, {
         orderId,
         shopperId: userId,
