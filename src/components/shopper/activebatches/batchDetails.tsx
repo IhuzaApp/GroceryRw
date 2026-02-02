@@ -2511,9 +2511,18 @@ export default function BatchDetails({
   };
 
   // Function to get the right action button based on current status
-  const getActionButton = (targetOrderOverride?: any) => {
+  // When onCard is true, return null for reel/restaurant so only the bottom button shows
+  const getActionButton = (
+    targetOrderOverride?: any,
+    options?: { onCard?: boolean }
+  ) => {
     const activeOrder = targetOrderOverride || order;
     if (!activeOrder) return null;
+
+    // Reel and restaurant: show action button only at bottom, not on the delivery route card
+    if (options?.onCard && (activeOrder.orderType === "reel" || activeOrder.orderType === "restaurant")) {
+      return null;
+    }
 
     const isRestaurantOrder = activeOrder.orderType === "restaurant";
     // Skip shopping if EITHER restaurant_id OR user_id is not null
@@ -2753,7 +2762,7 @@ export default function BatchDetails({
         uploadedProofs={uploadedProofs}
         handleDirectionsClick={handleDirectionsClick}
         handleChatClick={handleChatClick}
-        getActionButton={getActionButton}
+        getActionButton={(o) => getActionButton(o, { onCard: true })}
         onConfirmDeliveryForCustomer={(orders) => {
           // Confirm delivery for all orders in this customer group
           orders.forEach((o) => {
