@@ -940,14 +940,15 @@ export default async function handler(
           where: {
             shopper_id: { _eq: $shopper_id }
             status: { _eq: "OFFERED" }
-            expires_at: { _gt: "now()" }
           }
+          order_by: { offered_at: desc }
           limit: 1
         ) {
           id
           order_id
           reel_order_id
           restaurant_order_id
+          business_order_id
           order_type
           status
           expires_at
@@ -1600,6 +1601,37 @@ export default async function handler(
         });
         isExtendingOffer = true; // Mark that we're extending, not creating
       } else {
+        // Re-check for ANY active offer right before creating (prevents race when 2 requests run in parallel)
+        const preCreateCheck = (await hasuraClient.request(
+          CHECK_ACTIVE_OFFERED_OFFER,
+          { shopper_id: user_id }
+        )) as any;
+        if (
+          preCreateCheck.order_offers &&
+          preCreateCheck.order_offers.length > 0
+        ) {
+          const existing = preCreateCheck.order_offers[0];
+          const existingOrderId =
+            existing.order_id ||
+            existing.reel_order_id ||
+            existing.restaurant_order_id ||
+            existing.business_order_id;
+          console.log(
+            "🚫 Race prevented: Another request already created offer for this shopper:",
+            { offerId: existing.id, orderId: existingOrderId }
+          );
+          return res.status(200).json({
+            success: false,
+            message:
+              "You have a pending offer. Please accept or decline it before receiving new offers",
+            reason: "ACTIVE_OFFER_PENDING",
+            activeOfferId: existing.id,
+            activeOrderId: existingOrderId,
+            activeOrderType: existing.order_type,
+            note: "Action-based system: You must accept or decline your current offer before receiving a new one",
+          });
+        }
+
         // Confirmed no existing offer - safe to create new one
         console.log("Creating exclusive offer:", {
           orderId: bestOrder.id,
