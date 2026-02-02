@@ -13,7 +13,9 @@ import Redis from "ioredis";
 // ============================================================================
 
 let redis: Redis | null = null;
-let hasLoggedError = false; // Track if we've already logged an error
+let lastLoggedErrorAt = 0;
+let lastLoggedConnectAt = 0;
+const REDIS_LOG_THROTTLE_MS = 60_000; // Log at most once per minute
 
 const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
 
@@ -30,11 +32,12 @@ export const getRedisClient = (): Redis | null => {
       retryStrategy: (times) => {
         // Stop retrying after 3 attempts to avoid spam
         if (times > 3) {
-          if (!hasLoggedError) {
+          const now = Date.now();
+          if (now - lastLoggedErrorAt >= REDIS_LOG_THROTTLE_MS) {
             console.warn(
               "⚠️ Redis connection failed after 3 attempts. Running in degraded mode."
             );
-            hasLoggedError = true;
+            lastLoggedErrorAt = now;
           }
           return null; // Stop retrying
         }
@@ -57,23 +60,26 @@ export const getRedisClient = (): Redis | null => {
     });
 
     redis.on("connect", () => {
-      console.log("✅ Redis connected successfully");
-      hasLoggedError = false; // Reset flag on successful connection
+      const now = Date.now();
+      if (now - lastLoggedConnectAt >= REDIS_LOG_THROTTLE_MS) {
+        console.log("✅ Redis connected successfully");
+        lastLoggedConnectAt = now;
+      }
     });
 
     redis.on("error", (err) => {
-      // Only log once to avoid spam
-      if (!hasLoggedError) {
+      const now = Date.now();
+      if (now - lastLoggedErrorAt >= REDIS_LOG_THROTTLE_MS) {
         console.warn("⚠️ Redis unavailable:", err.message);
         console.warn(
           "   System will work in degraded mode (no location tracking)"
         );
-        hasLoggedError = true;
+        lastLoggedErrorAt = now;
       }
     });
 
     redis.on("ready", () => {
-      hasLoggedError = false; // Reset flag when ready
+      // No log spam
     });
 
     redis.on("close", () => {
@@ -82,11 +88,11 @@ export const getRedisClient = (): Redis | null => {
 
     // Connect immediately, but don't fail if connection fails
     redis.connect().catch((err) => {
-      // Don't set redis to null - keep the client instance for retry
-      // The error handler will log it
-      if (!hasLoggedError) {
+      const now = Date.now();
+      if (now - lastLoggedErrorAt >= REDIS_LOG_THROTTLE_MS) {
         console.warn("⚠️ Redis initial connection failed:", err.message);
         console.warn("   Will retry on next operation");
+        lastLoggedErrorAt = now;
       }
     });
 
