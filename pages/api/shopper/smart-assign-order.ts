@@ -218,6 +218,130 @@ const GET_ELIGIBLE_BUSINESS_ORDERS = gql`
   }
 `;
 
+// Fetch single order by pk for existing-offer display (same shape as eligible so formatOrderForResponse works)
+const GET_ORDER_BY_PK = gql`
+  query GetOrderByPk($id: uuid!) {
+    Orders_by_pk(id: $id) {
+      id
+      OrderID
+      created_at
+      shop_id
+      service_fee
+      delivery_fee
+      combined_order_id
+      pin
+      Shop {
+        name
+        latitude
+        longitude
+      }
+      Address {
+        latitude
+        longitude
+        street
+        city
+      }
+      Order_Items_aggregate {
+        aggregate {
+          count
+          sum {
+            quantity
+          }
+        }
+      }
+    }
+  }
+`;
+
+const GET_REEL_ORDER_BY_PK = gql`
+  query GetReelOrderByPk($id: uuid!) {
+    reel_orders_by_pk(id: $id) {
+      id
+      OrderID
+      created_at
+      service_fee
+      delivery_fee
+      total
+      quantity
+      Reel {
+        title
+        type
+        Restaurant {
+          lat
+          long
+        }
+        Shops {
+          latitude
+          longitude
+        }
+      }
+      user: User {
+        name
+      }
+      address: Address {
+        latitude
+        longitude
+        street
+        city
+      }
+    }
+  }
+`;
+
+const GET_RESTAURANT_ORDER_BY_PK = gql`
+  query GetRestaurantOrderByPk($id: uuid!) {
+    restaurant_orders_by_pk(id: $id) {
+      id
+      OrderID
+      created_at
+      updated_at
+      delivery_fee
+      total
+      delivery_time
+      Restaurant {
+        name
+        lat
+        long
+      }
+      orderedBy {
+        name
+      }
+      Address {
+        latitude
+        longitude
+        street
+        city
+      }
+    }
+  }
+`;
+
+const GET_BUSINESS_ORDER_BY_PK = gql`
+  query GetBusinessOrderByPk($id: uuid!) {
+    businessProductOrders_by_pk(id: $id) {
+      id
+      OrderID
+      created_at
+      total
+      transportation_fee
+      service_fee
+      units
+      latitude
+      longitude
+      deliveryAddress
+      business_store {
+        id
+        name
+        latitude
+        longitude
+      }
+      orderedBy {
+        name
+      }
+    }
+  }
+`;
+
 // GraphQL query to get shopper performance data
 const GET_SHOPPER_PERFORMANCE = gql`
   query GetShopperPerformance($shopper_id: uuid!) {
@@ -997,6 +1121,58 @@ export default async function handler(
           round: activeOffer.round_number,
         }
       );
+
+      // Return existing offer details so the client can show the notification card on refresh/navigate
+      const orderType = activeOffer.order_type || "regular";
+      const currentLocation = (req.body as any)?.current_location;
+      let rawOrder: any = null;
+      if (orderType === "regular" && activeOffer.order_id) {
+        const r = (await hasuraClient.request(GET_ORDER_BY_PK, {
+          id: activeOffer.order_id,
+        })) as any;
+        rawOrder = r?.Orders_by_pk;
+      } else if (orderType === "reel" && activeOffer.reel_order_id) {
+        const r = (await hasuraClient.request(GET_REEL_ORDER_BY_PK, {
+          id: activeOffer.reel_order_id,
+        })) as any;
+        rawOrder = r?.reel_orders_by_pk;
+      } else if (orderType === "restaurant" && activeOffer.restaurant_order_id) {
+        const r = (await hasuraClient.request(GET_RESTAURANT_ORDER_BY_PK, {
+          id: activeOffer.restaurant_order_id,
+        })) as any;
+        rawOrder = r?.restaurant_orders_by_pk;
+      } else if (orderType === "business" && activeOffer.business_order_id) {
+        const r = (await hasuraClient.request(GET_BUSINESS_ORDER_BY_PK, {
+          id: activeOffer.business_order_id,
+        })) as any;
+        rawOrder = r?.businessProductOrders_by_pk;
+      }
+      if (rawOrder) {
+        rawOrder.orderType = orderType;
+        const shopperLocation =
+          currentLocation && typeof currentLocation.lat === "number" && typeof currentLocation.lng === "number"
+            ? { lat: currentLocation.lat, lng: currentLocation.lng }
+            : { lat: 0, lng: 0 };
+        const formattedOrder = formatOrderForResponse(
+          rawOrder,
+          shopperLocation,
+          null
+        );
+        return res.status(200).json({
+          success: false,
+          message:
+            "You have a pending offer. Please accept or decline it before receiving new offers",
+          reason: "ACTIVE_OFFER_PENDING",
+          activeOfferId: activeOffer.id,
+          activeOrderId: orderId,
+          activeOrderType: orderType,
+          existingOffer: {
+            order: formattedOrder,
+            offerId: activeOffer.id,
+          },
+          note: "Action-based system: You must accept or decline your current offer before receiving a new one",
+        });
+      }
 
       return res.status(200).json({
         success: false,

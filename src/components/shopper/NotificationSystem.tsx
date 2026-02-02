@@ -1549,8 +1549,8 @@ export default function NotificationSystem({
               }
             }
 
-            // Double check count again before showing restored offer
-            if (activeOrderCount < 2) {
+            // Double check count again before showing restored offer (use currentCount from step 1, not state)
+            if (currentCount < 2) {
               showNewOrderNotification(offer.order, Date.now());
               return; // Exit early, offer restored from cache
             }
@@ -1586,8 +1586,17 @@ export default function NotificationSystem({
           offerId: data.offerId, // Include offerId from API response
         };
 
-        // Final guard before showing
-        if (activeOrderCount < 2) {
+        // Final guard before showing (use currentCount from step 1)
+        if (currentCount < 2) {
+          await showNewOrderNotification(order, Date.now());
+        }
+      } else if (data.existingOffer?.order) {
+        // Shopper has active OFFERED offer; API returned existing offer details so we can show the card on refresh/navigate
+        const order = {
+          ...data.existingOffer.order,
+          offerId: data.existingOffer.offerId,
+        };
+        if (currentCount < 2) {
           await showNewOrderNotification(order, Date.now());
         }
       } else if (data.reason === "MAX_ACTIVE_ORDERS_REACHED") {
