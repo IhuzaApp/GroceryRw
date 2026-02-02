@@ -1733,10 +1733,30 @@ export default function NotificationSystem({
                   onClick={() => {
                     directionsClickCount.current += 1;
 
-                    // Open Google Maps with directions to SHOP location
-                    const destLat = selectedOrder.shopLatitude;
-                    const destLng = selectedOrder.shopLongitude;
-                    const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`;
+                    // Open Google Maps with directions to SHOP/pickup location
+                    // Use shop coords first; fallback to customer coords (e.g. reels); else use address
+                    const shopLat = selectedOrder.shopLatitude;
+                    const shopLng = selectedOrder.shopLongitude;
+                    const custLat = selectedOrder.customerLatitude;
+                    const custLng = selectedOrder.customerLongitude;
+                    const hasValidCoords = (lat: number | undefined, lng: number | undefined) =>
+                      typeof lat === "number" &&
+                      typeof lng === "number" &&
+                      !Number.isNaN(lat) &&
+                      !Number.isNaN(lng) &&
+                      (lat !== 0 || lng !== 0);
+
+                    let mapsUrl: string;
+                    if (hasValidCoords(shopLat, shopLng)) {
+                      mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${shopLat},${shopLng}`;
+                    } else if (hasValidCoords(custLat, custLng)) {
+                      mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${custLat},${custLng}`;
+                    } else if (selectedOrder.customerAddress?.trim()) {
+                      const dest = encodeURIComponent(selectedOrder.customerAddress.trim());
+                      mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${dest}`;
+                    } else {
+                      mapsUrl = "https://www.google.com/maps";
+                    }
                     window.open(mapsUrl, "_blank");
                   }}
                   className={`flex h-12 w-12 items-center justify-center rounded-full shadow-md transition-colors ${

@@ -122,6 +122,14 @@ const GET_ELIGIBLE_REEL_ORDERS = gql`
       Reel {
         title
         type
+        Restaurant {
+          lat
+          long
+        }
+        Shops {
+          latitude
+          longitude
+        }
       }
       user: User {
         name
@@ -503,6 +511,8 @@ const GET_ORDERS_BY_COMBINED_ORDER_ID = gql`
       delivery_fee
       Shop {
         name
+        latitude
+        longitude
       }
       Order_Items_aggregate {
         aggregate {
@@ -687,17 +697,21 @@ function formatOrderForResponse(
     orderType: order.orderType,
     priority: order.priority,
     expiresIn: expiresInMs ?? null,
-    // Add coordinates for map route display
+    // Add coordinates for map route display (pickup location)
     shopLatitude: parseFloat(
       order.Shop?.latitude ||
         order.Restaurant?.lat ||
         order.business_store?.latitude ||
+        order.Reel?.Restaurant?.lat ||
+        order.Reel?.Shops?.latitude ||
         "0"
     ),
     shopLongitude: parseFloat(
       order.Shop?.longitude ||
         order.Restaurant?.long ||
         order.business_store?.longitude ||
+        order.Reel?.Restaurant?.long ||
+        order.Reel?.Shops?.longitude ||
         "0"
     ),
     customerLatitude: deliveryLat,
@@ -1778,6 +1792,7 @@ export default async function handler(
         .join(", ");
 
       const firstOrderId = combinedOrders[0]?.OrderID;
+      const firstShop = combinedOrders[0]?.Shop;
 
       responseOrder = {
         ...orderData,
@@ -1794,6 +1809,12 @@ export default async function handler(
           firstOrderId !== null && firstOrderId !== undefined
             ? `Combined-${String(firstOrderId)}`
             : "Combined",
+        // Use first store coords for directions (shopper goes to first store first)
+        ...(firstShop?.latitude != null &&
+          firstShop?.longitude != null && {
+            shopLatitude: parseFloat(firstShop.latitude),
+            shopLongitude: parseFloat(firstShop.longitude),
+          }),
       };
     }
 
