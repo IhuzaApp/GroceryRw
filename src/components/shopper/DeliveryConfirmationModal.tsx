@@ -294,7 +294,10 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       setUploadError(null);
       setForceOpen(false);
     } catch (error) {
-      reportErrorToSlackClient("DeliveryConfirmationModal (upload delivery photo)", error);
+      reportErrorToSlackClient(
+        "DeliveryConfirmationModal (upload delivery photo)",
+        error
+      );
       setUploadError("Failed to upload photo. Please try again.");
     } finally {
       setPhotoUploading(false);
@@ -432,7 +435,10 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
             }
           }
         } catch (error) {
-          reportErrorToSlackClient("DeliveryConfirmationModal (check pending orders)", error);
+          reportErrorToSlackClient(
+            "DeliveryConfirmationModal (check pending orders)",
+            error
+          );
           // If there's an error checking, proceed with redirect anyway
         }
       }
@@ -444,7 +450,10 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
         }, 1500);
       }
     } catch (error) {
-      reportErrorToSlackClient("DeliveryConfirmationModal (confirm delivery)", error);
+      reportErrorToSlackClient(
+        "DeliveryConfirmationModal (confirm delivery)",
+        error
+      );
       setUploadError("Failed to confirm delivery. Please try again.");
     } finally {
       setConfirmingDelivery(false);

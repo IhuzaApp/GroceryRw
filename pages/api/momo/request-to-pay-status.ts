@@ -37,7 +37,8 @@ export default async function handler(
       {
         method: "POST",
         headers: {
-          "Ocp-Apim-Subscription-Key": process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX!,
+          "Ocp-Apim-Subscription-Key":
+            process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX!,
           Authorization: `Basic ${Buffer.from(
             `${process.env.MOMO_API_USER_SANDBOX}:${process.env.MOMO_API_KEY_SANDBOX}`
           ).toString("base64")}`,

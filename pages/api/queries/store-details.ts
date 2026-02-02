@@ -74,7 +74,9 @@ interface ProductsResponse {
     query_id: string;
     speciality: string;
     category: string;
-    otherDetails: { options?: Array<{ key: string; label: string; values: string[] }> } | null;
+    otherDetails: {
+      options?: Array<{ key: string; label: string; values: string[] }>;
+    } | null;
   }>;
 }
 
@@ -109,10 +111,10 @@ export default async function handler(
     }
 
     // Transform products to match FreshMarkPage format (active only)
-    const transformedProducts = productsData.PlasBusinessProductsOrSerive
-      .filter((p) => p.status === "active")
-      .map(
-      (product) => ({
+    const transformedProducts =
+      productsData.PlasBusinessProductsOrSerive.filter(
+        (p) => p.status === "active"
+      ).map((product) => ({
         id: product.id,
         name: product.name,
         ProductName: {
@@ -133,8 +135,7 @@ export default async function handler(
         updated_at: product.created_at,
         shop_id: id, // Use store id as shop_id for compatibility
         otherDetails: product.otherDetails ?? null,
-      })
-    );
+      }));
 
     // Transform store to match Shop format for FreshMarkPage
     const store = {

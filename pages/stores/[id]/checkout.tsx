@@ -5,7 +5,16 @@ import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import RootLayout from "../../../src/components/ui/layout";
-import { ArrowLeft, MapPin, Clock, ShoppingBag, ChevronDown, Wallet, Smartphone, Plus } from "lucide-react";
+import {
+  ArrowLeft,
+  MapPin,
+  Clock,
+  ShoppingBag,
+  ChevronDown,
+  Wallet,
+  Smartphone,
+  Plus,
+} from "lucide-react";
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../../src/utils/formatCurrency";
@@ -56,7 +65,11 @@ interface SavedPaymentMethod {
 
 function sanitizeSrc(src: string | null | undefined): string {
   if (!src || typeof src !== "string") return "/images/shop-placeholder.jpg";
-  if (src.startsWith("data:") || src.startsWith("http://") || src.startsWith("https://"))
+  if (
+    src.startsWith("data:") ||
+    src.startsWith("http://") ||
+    src.startsWith("https://")
+  )
     return src;
   if (src.startsWith("/")) return src;
   return src;
@@ -106,10 +119,14 @@ export default function StoreCheckoutPage() {
   const [addressInput, setAddressInput] = useState("");
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [showAddressDropdown, setShowAddressDropdown] = useState(false);
-  const [savedPaymentMethods, setSavedPaymentMethods] = useState<SavedPaymentMethod[]>([]);
+  const [savedPaymentMethods, setSavedPaymentMethods] = useState<
+    SavedPaymentMethod[]
+  >([]);
   const [walletBalance, setWalletBalance] = useState(0);
   const [showPaymentDropdown, setShowPaymentDropdown] = useState(false);
-  const [selectedPaymentValue, setSelectedPaymentValue] = useState<string | null>(null);
+  const [selectedPaymentValue, setSelectedPaymentValue] = useState<
+    string | null
+  >(null);
   const [oneTimePhoneNumber, setOneTimePhoneNumber] = useState("");
   const [payRemainderWithMomo, setPayRemainderWithMomo] = useState(false);
   const [momoPhoneForRemainder, setMomoPhoneForRemainder] = useState("");
@@ -119,7 +136,10 @@ export default function StoreCheckoutPage() {
     name?: string;
   } | null>(null);
   const [isMounted, setIsMounted] = useState(false);
-  const [serviceFeeConfig, setServiceFeeConfig] = useState<{ rate?: number; fixed?: number } | null>(null);
+  const [serviceFeeConfig, setServiceFeeConfig] = useState<{
+    rate?: number;
+    fixed?: number;
+  } | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -218,11 +238,15 @@ export default function StoreCheckoutPage() {
         const balance = walletData.wallet?.balance;
         setWalletBalance(parseFloat(String(balance ?? "0")));
 
-        const defaultMethod = methods.find((m: SavedPaymentMethod) => m.is_default);
+        const defaultMethod = methods.find(
+          (m: SavedPaymentMethod) => m.is_default
+        );
         if (defaultMethod) {
           setSelectedPaymentValue(defaultMethod.id);
           setSelectedPaymentMethod({
-            type: defaultMethod.method.toLowerCase().includes("momo") ? "momo" : "card",
+            type: defaultMethod.method.toLowerCase().includes("momo")
+              ? "momo"
+              : "card",
             id: defaultMethod.id,
             number: defaultMethod.number,
           });
@@ -431,7 +455,11 @@ export default function StoreCheckoutPage() {
     if (!userAddress || !selectedPaymentMethod) return false;
     if (isOneTimePhoneSelected && !isValidOneTimePhone) return false;
     if (isWalletWithMomoRemainder && !isValidMomoRemainderPhone) return false;
-    if (selectedPaymentValue === "wallet" && !canUseWallet && !payRemainderWithMomo)
+    if (
+      selectedPaymentValue === "wallet" &&
+      !canUseWallet &&
+      !payRemainderWithMomo
+    )
       return false;
     return true;
   };
@@ -514,8 +542,14 @@ export default function StoreCheckoutPage() {
       return;
     }
 
-    if (selectedPaymentValue === "wallet" && !canUseWallet && !payRemainderWithMomo) {
-      toast.error("Please enable 'Pay remainder via MoMo' or choose another payment method");
+    if (
+      selectedPaymentValue === "wallet" &&
+      !canUseWallet &&
+      !payRemainderWithMomo
+    ) {
+      toast.error(
+        "Please enable 'Pay remainder via MoMo' or choose another payment method"
+      );
       return;
     }
 
@@ -541,7 +575,9 @@ export default function StoreCheckoutPage() {
 
       let paymentMethodString = "mobile_money";
       if (selectedPaymentMethod.type === "refund") {
-        paymentMethodString = isWalletWithMomoRemainder ? "wallet_and_momo" : "wallet";
+        paymentMethodString = isWalletWithMomoRemainder
+          ? "wallet_and_momo"
+          : "wallet";
       } else if (selectedPaymentMethod.type === "card") {
         paymentMethodString = "card";
       } else if (selectedPaymentMethod.type === "momo") {
@@ -556,32 +592,36 @@ export default function StoreCheckoutPage() {
       }
 
       const needsMomoConfirmation =
-        isWalletWithMomoRemainder || (selectedPaymentMethod?.type === "momo" && totalAmount > 0);
+        isWalletWithMomoRemainder ||
+        (selectedPaymentMethod?.type === "momo" && totalAmount > 0);
 
-      const orderRes = await fetch("/api/mutations/create-business-product-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          store_id: checkoutData.storeId,
-          allProducts: productsJsonb,
-          total: totalAmount.toString(),
-          transportation_fee: transportationFee.toString(),
-          service_fee: serviceFee.toString(),
-          units: totalUnits.toString(),
-          latitude: userAddress.latitude || "",
-          longitude: userAddress.longitude || "",
-          deliveryAddress: addressInput || "Current Location",
-          comment: comment || "",
-          delivered_time:
-            deliveredTime || new Date(Date.now() + 60 * 60000).toISOString(),
-          timeRange: timeRange || "Within 1-2 hours",
-          ordered_by: userId,
-          status: "Pending",
-          payment_method: paymentMethodString,
-          payment_method_id: selectedPaymentMethod.id || null,
-          await_momo_payment: needsMomoConfirmation,
-        }),
-      });
+      const orderRes = await fetch(
+        "/api/mutations/create-business-product-order",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            store_id: checkoutData.storeId,
+            allProducts: productsJsonb,
+            total: totalAmount.toString(),
+            transportation_fee: transportationFee.toString(),
+            service_fee: serviceFee.toString(),
+            units: totalUnits.toString(),
+            latitude: userAddress.latitude || "",
+            longitude: userAddress.longitude || "",
+            deliveryAddress: addressInput || "Current Location",
+            comment: comment || "",
+            delivered_time:
+              deliveredTime || new Date(Date.now() + 60 * 60000).toISOString(),
+            timeRange: timeRange || "Within 1-2 hours",
+            ordered_by: userId,
+            status: "Pending",
+            payment_method: paymentMethodString,
+            payment_method_id: selectedPaymentMethod.id || null,
+            await_momo_payment: needsMomoConfirmation,
+          }),
+        }
+      );
 
       if (!orderRes.ok) {
         const err = await orderRes.json();
@@ -622,7 +662,9 @@ export default function StoreCheckoutPage() {
       return (
         <div className="flex items-center gap-2">
           <div className="h-6 w-6 animate-pulse rounded bg-gray-200 dark:bg-gray-600" />
-          <span className="text-sm text-gray-500 dark:text-gray-400">Loading…</span>
+          <span className="text-sm text-gray-500 dark:text-gray-400">
+            Loading…
+          </span>
         </div>
       );
     }
@@ -634,29 +676,51 @@ export default function StoreCheckoutPage() {
       );
     }
     const badges = {
-      refund: { bg: "bg-violet-100 dark:bg-violet-900/30", text: "text-violet-700 dark:text-violet-300", label: "Personal wallet" },
-      momo: { bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-300", label: "MoMo" },
-      card: { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-300", label: "Card" },
+      refund: {
+        bg: "bg-violet-100 dark:bg-violet-900/30",
+        text: "text-violet-700 dark:text-violet-300",
+        label: "Personal wallet",
+      },
+      momo: {
+        bg: "bg-amber-100 dark:bg-amber-900/30",
+        text: "text-amber-700 dark:text-amber-300",
+        label: "MoMo",
+      },
+      card: {
+        bg: "bg-blue-100 dark:bg-blue-900/30",
+        text: "text-blue-700 dark:text-blue-300",
+        label: "Card",
+      },
     };
     const badge = badges[selectedPaymentMethod?.type || "momo"] || badges.card;
     let detail = "";
     if (selectedPaymentMethod?.type === "refund") {
       if (isWalletWithMomoRemainder) {
-        detail = `${formatCurrencySync(walletBalance)} + ${formatCurrencySync(remainderAmount)} MoMo`;
+        detail = `${formatCurrencySync(walletBalance)} + ${formatCurrencySync(
+          remainderAmount
+        )} MoMo`;
       } else {
         detail = `${formatCurrencySync(walletBalance)} available`;
       }
     } else if (isOneTimePhoneSelected) {
-      detail = oneTimePhoneNumber ? `•••• ${oneTimePhoneNumber.slice(-4)}` : "Enter phone number";
+      detail = oneTimePhoneNumber
+        ? `•••• ${oneTimePhoneNumber.slice(-4)}`
+        : "Enter phone number";
     } else {
-      detail = selectedPaymentMethod?.number ? `•••• ${selectedPaymentMethod.number.slice(-3)}` : "";
+      detail = selectedPaymentMethod?.number
+        ? `•••• ${selectedPaymentMethod.number.slice(-3)}`
+        : "";
     }
     return (
       <div className="flex items-center gap-2">
-        <span className={`rounded-md px-2 py-0.5 text-xs font-medium ${badge.bg} ${badge.text}`}>
+        <span
+          className={`rounded-md px-2 py-0.5 text-xs font-medium ${badge.bg} ${badge.text}`}
+        >
           {badge.label}
         </span>
-        <span className="text-sm text-gray-600 dark:text-gray-300">{detail}</span>
+        <span className="text-sm text-gray-600 dark:text-gray-300">
+          {detail}
+        </span>
       </div>
     );
   };
@@ -763,14 +827,16 @@ export default function StoreCheckoutPage() {
                 <h1 className="text-xl font-bold text-gray-900 dark:text-white">
                   Checkout · {checkoutData.storeName}
                 </h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{totalItems} items in cart</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {totalItems} items in cart
+                </p>
               </div>
             </div>
           </div>
 
           {/* Products List - Mobile Only - Full width, no side gaps */}
           <div className="mb-4 md:hidden">
-            <div className="rounded-none border-x-0 border-t border-b border-gray-200/80 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div className="rounded-none border-x-0 border-b border-t border-gray-200/80 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/30">
                   <ShoppingBag className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
@@ -782,7 +848,9 @@ export default function StoreCheckoutPage() {
               <div className="space-y-2.5">
                 {checkoutData.products.map((product, idx) => (
                   <div
-                    key={`${product.id}-${JSON.stringify(product.selectedDetails ?? {})}-${idx}`}
+                    key={`${product.id}-${JSON.stringify(
+                      product.selectedDetails ?? {}
+                    )}-${idx}`}
                     className="flex items-center gap-3 rounded-xl bg-gray-50/80 p-3 dark:bg-gray-700/50"
                   >
                     <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-600">
@@ -805,7 +873,9 @@ export default function StoreCheckoutPage() {
                         {product.name}
                       </h3>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {product.quantity} × {formatCurrencySync(parseFloat(product.price))} / {product.unit}
+                        {product.quantity} ×{" "}
+                        {formatCurrencySync(parseFloat(product.price))} /{" "}
+                        {product.unit}
                       </p>
                       {product.selectedDetails &&
                         typeof product.selectedDetails === "object" &&
@@ -818,7 +888,9 @@ export default function StoreCheckoutPage() {
                         )}
                     </div>
                     <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-                      {formatCurrencySync(parseFloat(product.price) * product.quantity)}
+                      {formatCurrencySync(
+                        parseFloat(product.price) * product.quantity
+                      )}
                     </p>
                   </div>
                 ))}
@@ -838,7 +910,9 @@ export default function StoreCheckoutPage() {
                 <div className="space-y-3">
                   {checkoutData.products.map((product, idx) => (
                     <div
-                      key={`${product.id}-${JSON.stringify(product.selectedDetails ?? {})}-${idx}`}
+                      key={`${product.id}-${JSON.stringify(
+                        product.selectedDetails ?? {}
+                      )}-${idx}`}
                       className="flex items-center gap-4 rounded-xl bg-gray-50/80 py-3 pl-3 pr-4 dark:bg-gray-700/40"
                     >
                       <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-600 lg:h-16 lg:w-16">
@@ -861,7 +935,9 @@ export default function StoreCheckoutPage() {
                           {product.name}
                         </h3>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {product.quantity} × {formatCurrencySync(parseFloat(product.price))} / {product.unit}
+                          {product.quantity} ×{" "}
+                          {formatCurrencySync(parseFloat(product.price))} /{" "}
+                          {product.unit}
                         </p>
                         {product.selectedDetails &&
                           typeof product.selectedDetails === "object" &&
@@ -874,7 +950,9 @@ export default function StoreCheckoutPage() {
                           )}
                       </div>
                       <p className="font-semibold text-emerald-600 dark:text-emerald-400">
-                        {formatCurrencySync(parseFloat(product.price) * product.quantity)}
+                        {formatCurrencySync(
+                          parseFloat(product.price) * product.quantity
+                        )}
                       </p>
                     </div>
                   ))}
@@ -906,11 +984,18 @@ export default function StoreCheckoutPage() {
                       <span className="truncate">
                         {addressInput || "Select delivery address"}
                       </span>
-                      <ChevronDown className={`h-5 w-5 shrink-0 transition-transform ${showAddressDropdown ? "rotate-180" : ""}`} />
+                      <ChevronDown
+                        className={`h-5 w-5 shrink-0 transition-transform ${
+                          showAddressDropdown ? "rotate-180" : ""
+                        }`}
+                      />
                     </button>
                     {showAddressDropdown && (
                       <>
-                        <div className="fixed inset-0 z-10" onClick={() => setShowAddressDropdown(false)} />
+                        <div
+                          className="fixed inset-0 z-10"
+                          onClick={() => setShowAddressDropdown(false)}
+                        />
                         <div className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800">
                           {savedAddresses.map((addr) => (
                             <button
@@ -918,13 +1003,20 @@ export default function StoreCheckoutPage() {
                               type="button"
                               onClick={() => handleSelectAddressFromList(addr)}
                               className={`flex w-full items-start gap-3 px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 ${
-                                addressInput === `${addr.street}, ${addr.city}` ? "bg-emerald-50 dark:bg-emerald-900/20" : ""
+                                addressInput === `${addr.street}, ${addr.city}`
+                                  ? "bg-emerald-50 dark:bg-emerald-900/20"
+                                  : ""
                               }`}
                             >
                               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
                               <div>
                                 <p className="font-medium">{addr.street}</p>
-                                <p className="text-gray-500 dark:text-gray-400">{addr.city}{addr.postal_code ? `, ${addr.postal_code}` : ""}</p>
+                                <p className="text-gray-500 dark:text-gray-400">
+                                  {addr.city}
+                                  {addr.postal_code
+                                    ? `, ${addr.postal_code}`
+                                    : ""}
+                                </p>
                               </div>
                             </button>
                           ))}
@@ -959,7 +1051,10 @@ export default function StoreCheckoutPage() {
 
                 <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                   <label className="mb-2 block text-sm font-semibold text-gray-900 dark:text-white">
-                    Add a note <span className="font-normal text-gray-500">(optional)</span>
+                    Add a note{" "}
+                    <span className="font-normal text-gray-500">
+                      (optional)
+                    </span>
                   </label>
                   <textarea
                     value={comment}
@@ -981,27 +1076,48 @@ export default function StoreCheckoutPage() {
 
                 <div className="space-y-3 border-b border-gray-100 pb-5 dark:border-gray-700">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">Subtotal</span>
-                    <span className="font-medium text-gray-900 dark:text-white">{formatCurrencySync(checkoutData.total)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">Units</span>
-                    <span className="font-medium text-gray-900 dark:text-white">{totalItems}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">Transportation</span>
-                    <span className="font-medium text-gray-900 dark:text-white">{formatCurrencySync(transportationFee)}</span>
+                    <span className="text-gray-500 dark:text-gray-400">
+                      Subtotal
+                    </span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {formatCurrencySync(checkoutData.total)}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500 dark:text-gray-400">
-                      Service fee{serviceFeeConfig?.rate != null ? ` (${(serviceFeeConfig.rate * 100).toFixed(0)}%)` : serviceFeeConfig?.fixed != null ? "" : " (5%)"}
+                      Units
                     </span>
-                    <span className="font-medium text-gray-900 dark:text-white">{formatCurrencySync(serviceFee)}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {totalItems}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500 dark:text-gray-400">
+                      Transportation
+                    </span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {formatCurrencySync(transportationFee)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500 dark:text-gray-400">
+                      Service fee
+                      {serviceFeeConfig?.rate != null
+                        ? ` (${(serviceFeeConfig.rate * 100).toFixed(0)}%)`
+                        : serviceFeeConfig?.fixed != null
+                        ? ""
+                        : " (5%)"}
+                    </span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {formatCurrencySync(serviceFee)}
+                    </span>
                   </div>
                 </div>
 
                 <div className="my-5 flex justify-between rounded-xl bg-emerald-50 px-4 py-4 dark:bg-emerald-900/20">
-                  <span className="font-semibold text-gray-900 dark:text-white">Total</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">
+                    Total
+                  </span>
                   <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
                     {formatCurrencySync(totalAmount)}
                   </span>
@@ -1025,17 +1141,26 @@ export default function StoreCheckoutPage() {
                       }`}
                     >
                       {renderPaymentMethod()}
-                      <ChevronDown className={`h-5 w-5 shrink-0 transition-transform ${showPaymentDropdown ? "rotate-180" : ""}`} />
+                      <ChevronDown
+                        className={`h-5 w-5 shrink-0 transition-transform ${
+                          showPaymentDropdown ? "rotate-180" : ""
+                        }`}
+                      />
                     </button>
                     {showPaymentDropdown && (
                       <>
-                        <div className="fixed inset-0 z-10" onClick={() => setShowPaymentDropdown(false)} />
+                        <div
+                          className="fixed inset-0 z-10"
+                          onClick={() => setShowPaymentDropdown(false)}
+                        />
                         <div className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800">
                           <button
                             type="button"
                             onClick={() => handlePaymentMethodChange("wallet")}
                             className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 ${
-                              selectedPaymentValue === "wallet" ? "bg-emerald-50 dark:bg-emerald-900/20" : ""
+                              selectedPaymentValue === "wallet"
+                                ? "bg-emerald-50 dark:bg-emerald-900/20"
+                                : ""
                             }`}
                           >
                             <Wallet className="h-4 w-4 text-violet-500" />
@@ -1046,21 +1171,30 @@ export default function StoreCheckoutPage() {
                                 {!canUseWallet && remainderAmount > 0 && (
                                   <span className="text-amber-600">
                                     {" "}
-                                    — pay {formatCurrencySync(remainderAmount)} via MoMo
+                                    — pay {formatCurrencySync(
+                                      remainderAmount
+                                    )}{" "}
+                                    via MoMo
                                   </span>
                                 )}
                               </p>
                             </div>
                           </button>
                           {savedPaymentMethods.map((method) => {
-                            const isMomo = method.method.toLowerCase().includes("momo");
+                            const isMomo = method.method
+                              .toLowerCase()
+                              .includes("momo");
                             return (
                               <button
                                 key={method.id}
                                 type="button"
-                                onClick={() => handlePaymentMethodChange(method.id)}
+                                onClick={() =>
+                                  handlePaymentMethodChange(method.id)
+                                }
                                 className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 ${
-                                  selectedPaymentValue === method.id ? "bg-emerald-50 dark:bg-emerald-900/20" : ""
+                                  selectedPaymentValue === method.id
+                                    ? "bg-emerald-50 dark:bg-emerald-900/20"
+                                    : ""
                                 }`}
                               >
                                 {isMomo ? (
@@ -1069,21 +1203,36 @@ export default function StoreCheckoutPage() {
                                   <Wallet className="h-4 w-4 text-blue-500" />
                                 )}
                                 <div>
-                                  <p className="font-medium">{method.method} ••• {isMomo ? method.number.slice(-3) : method.number.slice(-4)}</p>
-                                  {method.is_default && <p className="text-xs text-gray-500">Default</p>}
+                                  <p className="font-medium">
+                                    {method.method} •••{" "}
+                                    {isMomo
+                                      ? method.number.slice(-3)
+                                      : method.number.slice(-4)}
+                                  </p>
+                                  {method.is_default && (
+                                    <p className="text-xs text-gray-500">
+                                      Default
+                                    </p>
+                                  )}
                                 </div>
                               </button>
                             );
                           })}
                           <button
                             type="button"
-                            onClick={() => handlePaymentMethodChange("one-time-phone")}
+                            onClick={() =>
+                              handlePaymentMethodChange("one-time-phone")
+                            }
                             className={`flex w-full items-center gap-3 border-t border-gray-100 px-4 py-3 text-left text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700 ${
-                              selectedPaymentValue === "one-time-phone" ? "bg-emerald-50 dark:bg-emerald-900/20" : ""
+                              selectedPaymentValue === "one-time-phone"
+                                ? "bg-emerald-50 dark:bg-emerald-900/20"
+                                : ""
                             }`}
                           >
                             <Plus className="h-4 w-4 text-emerald-500" />
-                            <span className="font-medium">Use different phone number</span>
+                            <span className="font-medium">
+                              Use different phone number
+                            </span>
                           </button>
                         </div>
                       </>
@@ -1098,30 +1247,37 @@ export default function StoreCheckoutPage() {
                       className="mt-3 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     />
                   )}
-                  {selectedPaymentValue === "wallet" && !canUseWallet && remainderAmount > 0 && (
-                    <div className="mt-4 space-y-3 rounded-xl border border-amber-200 bg-amber-50/50 p-4 dark:border-amber-800 dark:bg-amber-900/10">
-                      <label className="flex cursor-pointer items-start gap-3">
-                        <input
-                          type="checkbox"
-                          checked={payRemainderWithMomo}
-                          onChange={(e) => setPayRemainderWithMomo(e.target.checked)}
-                          className="mt-1 h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                        />
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                          Pay remainder {formatCurrencySync(remainderAmount)} via MoMo
-                        </span>
-                      </label>
-                      {payRemainderWithMomo && (
-                        <input
-                          type="tel"
-                          placeholder="MoMo phone e.g. 0781234567"
-                          value={momoPhoneForRemainder}
-                          onChange={(e) => setMomoPhoneForRemainder(e.target.value)}
-                          className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                        />
-                      )}
-                    </div>
-                  )}
+                  {selectedPaymentValue === "wallet" &&
+                    !canUseWallet &&
+                    remainderAmount > 0 && (
+                      <div className="mt-4 space-y-3 rounded-xl border border-amber-200 bg-amber-50/50 p-4 dark:border-amber-800 dark:bg-amber-900/10">
+                        <label className="flex cursor-pointer items-start gap-3">
+                          <input
+                            type="checkbox"
+                            checked={payRemainderWithMomo}
+                            onChange={(e) =>
+                              setPayRemainderWithMomo(e.target.checked)
+                            }
+                            className="mt-1 h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                          />
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                            Pay remainder {formatCurrencySync(remainderAmount)}{" "}
+                            via MoMo
+                          </span>
+                        </label>
+                        {payRemainderWithMomo && (
+                          <input
+                            type="tel"
+                            placeholder="MoMo phone e.g. 0781234567"
+                            value={momoPhoneForRemainder}
+                            onChange={(e) =>
+                              setMomoPhoneForRemainder(e.target.value)
+                            }
+                            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                          />
+                        )}
+                      </div>
+                    )}
                 </div>
 
                 <button
@@ -1146,7 +1302,7 @@ export default function StoreCheckoutPage() {
             )}
 
             <div
-              className={`fixed left-0 right-0 z-50 flex w-full flex-col rounded-t-2xl border-x-0 border-t border-b-0 border-gray-200/80 bg-white shadow-2xl transition-[max-height] duration-300 dark:border-gray-700 dark:bg-gray-800 pb-[env(safe-area-inset-bottom)] ${
+              className={`fixed left-0 right-0 z-50 flex w-full flex-col rounded-t-2xl border-x-0 border-b-0 border-t border-gray-200/80 bg-white pb-[env(safe-area-inset-bottom)] shadow-2xl transition-[max-height] duration-300 dark:border-gray-700 dark:bg-gray-800 ${
                 isExpanded ? "max-h-[85vh]" : "max-h-[200px]"
               }`}
               style={{ bottom: 0, overflow: "hidden" }}
@@ -1176,9 +1332,23 @@ export default function StoreCheckoutPage() {
                   <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
                     {formatCurrencySync(totalAmount)}
                   </span>
-                  <span className={`text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}>
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <span
+                    className={`text-gray-400 transition-transform ${
+                      isExpanded ? "rotate-180" : ""
+                    }`}
+                  >
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
                     </svg>
                   </span>
                 </div>
@@ -1186,27 +1356,49 @@ export default function StoreCheckoutPage() {
 
               {/* Expanded content - scrollable middle */}
               <div
-                className={`min-h-0 flex-1 overflow-y-auto px-5 ${isExpanded ? "block" : "hidden"}`}
+                className={`min-h-0 flex-1 overflow-y-auto px-5 ${
+                  isExpanded ? "block" : "hidden"
+                }`}
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="space-y-4 border-b border-gray-100 pb-5 dark:border-gray-700">
                   {[
-                    { label: "Subtotal", value: formatCurrencySync(checkoutData.total) },
-                    { label: "Units", value: totalItems },
-                    { label: "Transportation", value: formatCurrencySync(transportationFee) },
                     {
-                      label: `Service fee${serviceFeeConfig?.rate != null ? ` (${(serviceFeeConfig.rate * 100).toFixed(0)}%)` : serviceFeeConfig?.fixed != null ? "" : " (5%)"}`,
+                      label: "Subtotal",
+                      value: formatCurrencySync(checkoutData.total),
+                    },
+                    { label: "Units", value: totalItems },
+                    {
+                      label: "Transportation",
+                      value: formatCurrencySync(transportationFee),
+                    },
+                    {
+                      label: `Service fee${
+                        serviceFeeConfig?.rate != null
+                          ? ` (${(serviceFeeConfig.rate * 100).toFixed(0)}%)`
+                          : serviceFeeConfig?.fixed != null
+                          ? ""
+                          : " (5%)"
+                      }`,
                       value: formatCurrencySync(serviceFee),
                     },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex justify-between text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">{label}</span>
-                      <span className="font-medium text-gray-900 dark:text-white">{value}</span>
+                      <span className="text-gray-500 dark:text-gray-400">
+                        {label}
+                      </span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {value}
+                      </span>
                     </div>
                   ))}
                   <div className="mt-3 flex justify-between rounded-xl bg-emerald-50 px-4 py-3 dark:bg-emerald-900/20">
-                    <span className="font-semibold text-gray-900 dark:text-white">Total</span>
-                    <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatCurrencySync(totalAmount)}</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">
+                      Total
+                    </span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                      {formatCurrencySync(totalAmount)}
+                    </span>
                   </div>
                 </div>
 
@@ -1230,12 +1422,21 @@ export default function StoreCheckoutPage() {
                             : "border-amber-300 bg-white text-amber-700 dark:text-amber-400"
                         }`}
                       >
-                        <span className="truncate">{addressInput || "Select address"}</span>
-                        <ChevronDown className={`h-4 w-4 shrink-0 ${showAddressDropdown ? "rotate-180" : ""}`} />
+                        <span className="truncate">
+                          {addressInput || "Select address"}
+                        </span>
+                        <ChevronDown
+                          className={`h-4 w-4 shrink-0 ${
+                            showAddressDropdown ? "rotate-180" : ""
+                          }`}
+                        />
                       </button>
                       {showAddressDropdown && (
                         <>
-                          <div className="fixed inset-0 z-10" onClick={() => setShowAddressDropdown(false)} />
+                          <div
+                            className="fixed inset-0 z-10"
+                            onClick={() => setShowAddressDropdown(false)}
+                          />
                           <div className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800">
                             {savedAddresses.map((addr) => (
                               <button
@@ -1272,11 +1473,15 @@ export default function StoreCheckoutPage() {
                       <Clock className="h-4 w-4 text-emerald-500" />
                       Estimated delivery
                     </h4>
-                    <p className="text-sm text-gray-700 dark:text-gray-300">{deliveryTime} ({distance})</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      {deliveryTime} ({distance})
+                    </p>
                   </div>
 
                   <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-700/50">
-                    <h4 className="mb-2 text-sm font-medium text-gray-900 dark:text-white">Payment method</h4>
+                    <h4 className="mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                      Payment method
+                    </h4>
                     <div className="relative">
                       <button
                         type="button"
@@ -1286,15 +1491,24 @@ export default function StoreCheckoutPage() {
                           setShowAddressDropdown(false);
                         }}
                         className={`flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-left text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white ${
-                          !selectedPaymentValue ? "text-gray-500 dark:text-gray-400" : ""
+                          !selectedPaymentValue
+                            ? "text-gray-500 dark:text-gray-400"
+                            : ""
                         }`}
                       >
                         {renderPaymentMethod()}
-                        <ChevronDown className={`h-4 w-4 shrink-0 ${showPaymentDropdown ? "rotate-180" : ""}`} />
+                        <ChevronDown
+                          className={`h-4 w-4 shrink-0 ${
+                            showPaymentDropdown ? "rotate-180" : ""
+                          }`}
+                        />
                       </button>
                       {showPaymentDropdown && (
                         <>
-                          <div className="fixed inset-0 z-10" onClick={() => setShowPaymentDropdown(false)} />
+                          <div
+                            className="fixed inset-0 z-10"
+                            onClick={() => setShowPaymentDropdown(false)}
+                          />
                           <div className="absolute z-20 mt-1 max-h-52 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800">
                             <button
                               type="button"
@@ -1306,14 +1520,20 @@ export default function StoreCheckoutPage() {
                             >
                               <Wallet className="h-4 w-4 text-violet-500" />
                               <span>
-                                Personal wallet ({formatCurrencySync(walletBalance)})
+                                Personal wallet (
+                                {formatCurrencySync(walletBalance)})
                                 {!canUseWallet && remainderAmount > 0 && (
-                                  <span className="text-amber-600"> + MoMo</span>
+                                  <span className="text-amber-600">
+                                    {" "}
+                                    + MoMo
+                                  </span>
                                 )}
                               </span>
                             </button>
                             {savedPaymentMethods.map((method) => {
-                              const isMomo = method.method.toLowerCase().includes("momo");
+                              const isMomo = method.method
+                                .toLowerCase()
+                                .includes("momo");
                               return (
                                 <button
                                   key={method.id}
@@ -1329,7 +1549,10 @@ export default function StoreCheckoutPage() {
                                   ) : (
                                     <Wallet className="h-4 w-4 text-blue-500" />
                                   )}
-                                  <span>{method.method} ••• {method.number.slice(-4)}</span>
+                                  <span>
+                                    {method.method} •••{" "}
+                                    {method.number.slice(-4)}
+                                  </span>
                                 </button>
                               );
                             })}
@@ -1341,7 +1564,8 @@ export default function StoreCheckoutPage() {
                               }}
                               className="flex w-full items-center gap-3 border-t border-gray-100 px-3 py-2.5 text-left text-sm font-medium text-emerald-600 dark:border-gray-700 dark:text-emerald-400"
                             >
-                              <Plus className="h-4 w-4" /> Use different phone number
+                              <Plus className="h-4 w-4" /> Use different phone
+                              number
                             </button>
                           </div>
                         </>
@@ -1352,34 +1576,47 @@ export default function StoreCheckoutPage() {
                         type="tel"
                         placeholder="e.g. 0781234567"
                         value={oneTimePhoneNumber}
-                        onChange={(e) => handleOneTimePhoneChange(e.target.value)}
+                        onChange={(e) =>
+                          handleOneTimePhoneChange(e.target.value)
+                        }
                         onClick={(e) => e.stopPropagation()}
                         className="mt-2 w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                       />
                     )}
-                    {selectedPaymentValue === "wallet" && !canUseWallet && remainderAmount > 0 && (
-                      <div className="mt-3 space-y-2 rounded-lg border border-amber-200 bg-amber-50/50 p-3 dark:border-amber-800 dark:bg-amber-900/10">
-                        <label className="flex cursor-pointer items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                          <input
-                            type="checkbox"
-                            checked={payRemainderWithMomo}
-                            onChange={(e) => setPayRemainderWithMomo(e.target.checked)}
-                            className="h-4 w-4 rounded border-gray-300 text-emerald-600"
-                          />
-                          <span className="text-sm font-medium">Pay {formatCurrencySync(remainderAmount)} via MoMo</span>
-                        </label>
-                        {payRemainderWithMomo && (
-                          <input
-                            type="tel"
-                            placeholder="MoMo phone e.g. 0781234567"
-                            value={momoPhoneForRemainder}
-                            onChange={(e) => setMomoPhoneForRemainder(e.target.value)}
+                    {selectedPaymentValue === "wallet" &&
+                      !canUseWallet &&
+                      remainderAmount > 0 && (
+                        <div className="mt-3 space-y-2 rounded-lg border border-amber-200 bg-amber-50/50 p-3 dark:border-amber-800 dark:bg-amber-900/10">
+                          <label
+                            className="flex cursor-pointer items-center gap-2"
                             onClick={(e) => e.stopPropagation()}
-                            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                          />
-                        )}
-                      </div>
-                    )}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={payRemainderWithMomo}
+                              onChange={(e) =>
+                                setPayRemainderWithMomo(e.target.checked)
+                              }
+                              className="h-4 w-4 rounded border-gray-300 text-emerald-600"
+                            />
+                            <span className="text-sm font-medium">
+                              Pay {formatCurrencySync(remainderAmount)} via MoMo
+                            </span>
+                          </label>
+                          {payRemainderWithMomo && (
+                            <input
+                              type="tel"
+                              placeholder="MoMo phone e.g. 0781234567"
+                              value={momoPhoneForRemainder}
+                              onChange={(e) =>
+                                setMomoPhoneForRemainder(e.target.value)
+                              }
+                              onClick={(e) => e.stopPropagation()}
+                              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            />
+                          )}
+                        </div>
+                      )}
                   </div>
 
                   <div>
@@ -1404,7 +1641,13 @@ export default function StoreCheckoutPage() {
                   onClick={(e) => {
                     e.stopPropagation();
                     if (!canPlaceOrder()) {
-                      toast.error(!userAddress ? "Please set your delivery address" : !selectedPaymentMethod ? "Please select a payment method" : "Please enter a valid phone number");
+                      toast.error(
+                        !userAddress
+                          ? "Please set your delivery address"
+                          : !selectedPaymentMethod
+                          ? "Please select a payment method"
+                          : "Please enter a valid phone number"
+                      );
                       return;
                     }
                     handlePlaceOrder();

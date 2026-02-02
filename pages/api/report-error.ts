@@ -27,7 +27,11 @@ export default async function handler(
         ? Object.assign(new Error(message), { stack })
         : new Error(message);
 
-    await logErrorToSlack(where, err, extra && typeof extra === "object" ? extra : undefined);
+    await logErrorToSlack(
+      where,
+      err,
+      extra && typeof extra === "object" ? extra : undefined
+    );
     return res.status(200).json({ ok: true });
   } catch (e) {
     return res.status(500).json({ error: "Failed to report error" });

@@ -24,12 +24,12 @@ function normalizeOcrForHandwriting(text: string): string {
   // + is often read instead of # or 1
   s = s.replace(/^\+/, "#").replace(/\s\+\s?/g, " # ");
   // Digits commonly confused with letters (handwriting/OCR)
-  s = s.replace(/[HIl|]/gi, "1");  // 1
-  s = s.replace(/B/gi, "8");       // 8
-  s = s.replace(/[Ss]/g, "5");     // 5
-  s = s.replace(/[OQ]/gi, "0");    // 0
-  s = s.replace(/G/gi, "6");       // 6
-  s = s.replace(/Z/gi, "2");       // 2
+  s = s.replace(/[HIl|]/gi, "1"); // 1
+  s = s.replace(/B/gi, "8"); // 8
+  s = s.replace(/[Ss]/g, "5"); // 5
+  s = s.replace(/[OQ]/gi, "0"); // 0
+  s = s.replace(/G/gi, "6"); // 6
+  s = s.replace(/Z/gi, "2"); // 2
   return s;
 }
 
@@ -43,7 +43,9 @@ function extractOrderIdsFromText(text: string): string[] {
     ids.push(s.replace(/#\s*/g, "").replace(/\D/g, ""))
   );
   // Standalone numbers (e.g. "19" or "1" "9")
-  (normalized.match(/\b\d+\b/g) || []).forEach((s) => ids.push(s.replace(/\D/g, "")));
+  (normalized.match(/\b\d+\b/g) || []).forEach((s) =>
+    ids.push(s.replace(/\D/g, ""))
+  );
   // All digits in order concatenated (e.g. "1 9" or "1 9 1" -> "19" or "191")
   const digitsOnly = normalized.replace(/\D/g, "");
   if (digitsOnly) ids.push(digitsOnly);
@@ -134,16 +136,23 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
             }
 
             if (err && err.name !== "NotFoundException") {
-              reportErrorToSlackClient("PickupConfirmationScanner (ZXing)", err, {
-                name: err?.name,
-                expectedOrderId: expectedOrderId,
-              });
+              reportErrorToSlackClient(
+                "PickupConfirmationScanner (ZXing)",
+                err,
+                {
+                  name: err?.name,
+                  expectedOrderId: expectedOrderId,
+                }
+              );
               setError("Scan error.");
             }
           }
         );
       } catch (err) {
-        reportErrorToSlackClient("PickupConfirmationScanner (camera/ZXing)", err);
+        reportErrorToSlackClient(
+          "PickupConfirmationScanner (camera/ZXing)",
+          err
+        );
         setError("Could not access the camera. Check permissions.");
       }
     };
@@ -189,11 +198,7 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
           scheduleNext();
           return;
         }
-        ctx.drawImage(
-          video,
-          sx, sy, cropW, cropH,
-          0, 0, cropW, cropH
-        );
+        ctx.drawImage(video, sx, sy, cropW, cropH, 0, 0, cropW, cropH);
         const imageData = canvas.toDataURL("image/png");
 
         const {
@@ -211,9 +216,7 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
           const normalizedForHandwriting = normalizeOcrForHandwriting(rawText);
           const idsRaw = extractOrderIdsFromText(rawText);
           const idsNorm = extractOrderIdsFromText(normalizedForHandwriting);
-          const ids = Array.from(
-            new Set<string>([...idsRaw, ...idsNorm])
-          );
+          const ids = Array.from(new Set<string>([...idsRaw, ...idsNorm]));
 
           for (const id of ids) {
             if (normalizeOrderId(id) === expectedNormalized) {
@@ -222,7 +225,11 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
               break;
             }
           }
-          if (!isMatchRef.current && ids.length > 0 && ids.join("") === expectedNormalized) {
+          if (
+            !isMatchRef.current &&
+            ids.length > 0 &&
+            ids.join("") === expectedNormalized
+          ) {
             isMatchRef.current = true;
             setMatchResult("match");
           }
@@ -263,9 +270,13 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
       await onConfirm();
       onClose();
     } catch (err) {
-      reportErrorToSlackClient("PickupConfirmationScanner (handleConfirm)", err, {
-        expectedOrderId: expectedOrderId,
-      });
+      reportErrorToSlackClient(
+        "PickupConfirmationScanner (handleConfirm)",
+        err,
+        {
+          expectedOrderId: expectedOrderId,
+        }
+      );
       setError("Failed to confirm pickup.");
     } finally {
       setConfirming(false);
@@ -392,7 +403,8 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
               </span>
             </div>
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-lg bg-black/70 px-4 py-2 text-center text-sm text-white">
-              Hold <strong>#{expectedNormalized}</strong> (always start with #) inside the frame
+              Hold <strong>#{expectedNormalized}</strong> (always start with #)
+              inside the frame
             </div>
           </div>
 
@@ -426,7 +438,8 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
               }`}
             >
               <p className="text-sm">
-                Order number does not match. Show <strong>#OrderID</strong> (e.g. #{expectedNormalized}) — always start with #.
+                Order number does not match. Show <strong>#OrderID</strong>{" "}
+                (e.g. #{expectedNormalized}) — always start with #.
               </p>
             </div>
           )}

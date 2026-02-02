@@ -615,24 +615,12 @@ function formatOrderForResponse(
 ): any {
   const deliveryLat =
     order.orderType === "business"
-      ? parseFloat(
-          order.latitude ||
-            order.business_store?.latitude ||
-            "0"
-        )
-      : parseFloat(
-          order.Address?.latitude || order.address?.latitude || "0"
-        );
+      ? parseFloat(order.latitude || order.business_store?.latitude || "0")
+      : parseFloat(order.Address?.latitude || order.address?.latitude || "0");
   const deliveryLng =
     order.orderType === "business"
-      ? parseFloat(
-          order.longitude ||
-            order.business_store?.longitude ||
-            "0"
-        )
-      : parseFloat(
-          order.Address?.longitude || order.address?.longitude || "0"
-        );
+      ? parseFloat(order.longitude || order.business_store?.longitude || "0")
+      : parseFloat(order.Address?.longitude || order.address?.longitude || "0");
   const distance = calculateDistanceKm(
     shopperLocation.lat,
     shopperLocation.lng,
@@ -657,8 +645,8 @@ function formatOrderForResponse(
       typeof u === "number"
         ? u
         : typeof u === "string"
-          ? parseInt(u, 10) || 1
-          : 1;
+        ? parseInt(u, 10) || 1
+        : 1;
   }
 
   const customerAddressStr =
@@ -666,8 +654,8 @@ function formatOrderForResponse(
       ? typeof order.deliveryAddress === "string"
         ? order.deliveryAddress
         : order.deliveryAddress
-          ? JSON.stringify(order.deliveryAddress)
-          : "—"
+        ? JSON.stringify(order.deliveryAddress)
+        : "—"
       : `${order.Address?.street || order.address?.street || ""}, ${
           order.Address?.city || order.address?.city || ""
         }`.trim() || "—";
@@ -675,8 +663,7 @@ function formatOrderForResponse(
   return {
     id: order.id,
     OrderID: order.OrderID ?? null,
-    displayOrderId:
-      order.OrderID != null ? String(order.OrderID) : null,
+    displayOrderId: order.OrderID != null ? String(order.OrderID) : null,
     shopName:
       order.Shop?.name ||
       order.Reel?.title ||
@@ -692,10 +679,10 @@ function formatOrderForResponse(
       order.orderType === "restaurant"
         ? parseFloat(order.delivery_fee || "0")
         : order.orderType === "business"
-          ? parseFloat(order.transportation_fee || "0") +
-            parseFloat(order.service_fee || "0")
-          : parseFloat(order.service_fee || "0") +
-            parseFloat(order.delivery_fee || "0"),
+        ? parseFloat(order.transportation_fee || "0") +
+          parseFloat(order.service_fee || "0")
+        : parseFloat(order.service_fee || "0") +
+          parseFloat(order.delivery_fee || "0"),
     orderType: order.orderType,
     priority: order.priority,
     expiresIn: expiresInMs ?? null,

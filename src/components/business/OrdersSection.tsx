@@ -203,7 +203,9 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
               .join("; ")
           : order.items || "—";
         const orderTotal =
-          order.value - (order.transportation_fee || 0) - (order.service_fee || 0);
+          order.value -
+          (order.transportation_fee || 0) -
+          (order.service_fee || 0);
         return {
           "#": index + 1,
           "Order ID": order.orderId,
@@ -254,10 +256,10 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
       XLSX.writeFile(wb, filename);
 
       setShowExportMenu(false);
-      toast.success(
-        `Exported ${toExport.length} order(s) to ${filename}`,
-        { duration: 3000, icon: "📊" }
-      );
+      toast.success(`Exported ${toExport.length} order(s) to ${filename}`, {
+        duration: 3000,
+        icon: "📊",
+      });
     } catch (err) {
       console.error("Export error:", err);
       toast.error("Failed to export to Excel. Please try again.");
@@ -791,7 +793,8 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
                                 </h4>
                                 {product.selectedDetails &&
                                   typeof product.selectedDetails === "object" &&
-                                  Object.keys(product.selectedDetails).length > 0 && (
+                                  Object.keys(product.selectedDetails).length >
+                                    0 && (
                                     <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
                                       {Object.entries(product.selectedDetails)
                                         .map(([k, v]) => `${k}: ${v}`)

@@ -39,10 +39,7 @@ export default function AIChatProvider() {
 
   return (
     <>
-      <AIChatButton
-        onClick={toggleChat}
-        hideOnMobile={isStoreOrCheckout}
-      />
+      <AIChatButton onClick={toggleChat} hideOnMobile={isStoreOrCheckout} />
       <AIChatWindow isOpen={isOpen} onClose={() => setIsOpen(false)} />
     </>
   );

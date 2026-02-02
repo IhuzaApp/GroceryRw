@@ -33,11 +33,18 @@ export default async function handler(
     }
 
     if (walletAmt === 0 && momoAmt === 0) {
-      return res.status(400).json({ error: "At least one payment amount required" });
+      return res
+        .status(400)
+        .json({ error: "At least one payment amount required" });
     }
 
-    if (momoAmt > 0 && (!momoPhone || String(momoPhone).replace(/\D/g, "").length < 10)) {
-      return res.status(400).json({ error: "Valid MoMo phone number required for remainder" });
+    if (
+      momoAmt > 0 &&
+      (!momoPhone || String(momoPhone).replace(/\D/g, "").length < 10)
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Valid MoMo phone number required for remainder" });
     }
 
     let walletDeducted = false;
@@ -45,7 +52,9 @@ export default async function handler(
 
     if (walletAmt > 0) {
       const deductRes = await fetch(
-        `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/user/deduct-from-wallet`,
+        `${
+          process.env.NEXTAUTH_URL || "http://localhost:3000"
+        }/api/user/deduct-from-wallet`,
         {
           method: "POST",
           headers: {
@@ -69,7 +78,9 @@ export default async function handler(
 
     if (momoAmt > 0) {
       const momoRes = await fetch(
-        `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/momo/request-to-pay`,
+        `${
+          process.env.NEXTAUTH_URL || "http://localhost:3000"
+        }/api/momo/request-to-pay`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -84,12 +95,17 @@ export default async function handler(
         }
       );
 
-      const momoData = (await momoRes.json()) as { referenceId?: string; error?: string };
+      const momoData = (await momoRes.json()) as {
+        referenceId?: string;
+        error?: string;
+      };
 
       if (!momoRes.ok) {
         if (walletDeducted) {
           await fetch(
-            `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/user/add-money-to-wallet`,
+            `${
+              process.env.NEXTAUTH_URL || "http://localhost:3000"
+            }/api/user/add-money-to-wallet`,
             {
               method: "POST",
               headers: {
@@ -124,7 +140,8 @@ export default async function handler(
   } catch (error) {
     console.error("[process-split-payment] Error:", error);
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Payment processing failed",
+      error:
+        error instanceof Error ? error.message : "Payment processing failed",
     });
   }
 }

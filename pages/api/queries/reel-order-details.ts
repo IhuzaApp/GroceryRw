@@ -338,10 +338,10 @@ export default async function handler(
         orderData.pin != null && String(orderData.pin).trim() !== ""
           ? String(orderData.pin)
           : orderData.OrderID != null
-            ? String(orderData.OrderID).padStart(4, "0").slice(-4)
-            : orderData.id
-              ? orderData.id.slice(0, 4).toUpperCase()
-              : "",
+          ? String(orderData.OrderID).padStart(4, "0").slice(-4)
+          : orderData.id
+          ? orderData.id.slice(0, 4).toUpperCase()
+          : "",
       orderType: "reel" as const,
       reel: orderData.Reel,
       assignedTo: orderData.Shoppers

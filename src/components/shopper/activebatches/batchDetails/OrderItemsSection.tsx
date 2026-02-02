@@ -221,17 +221,18 @@ export default function OrderItemsSection({
         </div>
         <div className="space-y-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/30 sm:p-6">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            {restaurantName} • {items.length} {items.length === 1 ? "Item" : "Items"}
+            {restaurantName} • {items.length}{" "}
+            {items.length === 1 ? "Item" : "Items"}
           </h3>
           <div className="space-y-2 sm:space-y-3">
             {items.map((row: any) => {
               const dish = row.restaurant_dishes;
               const name =
-                dish?.ProductNames?.name ??
-                dish?.dishes?.name ??
-                "Dish";
+                dish?.ProductNames?.name ?? dish?.dishes?.name ?? "Dish";
               const description =
-                dish?.ProductNames?.description ?? dish?.dishes?.description ?? "";
+                dish?.ProductNames?.description ??
+                dish?.dishes?.description ??
+                "";
               const image =
                 dish?.ProductNames?.image ?? dish?.dishes?.image ?? null;
               const qty = Number(row.quantity) || 1;
@@ -255,7 +256,7 @@ export default function OrderItemsSection({
                       {name}
                     </p>
                     {description && (
-                      <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
+                      <p className="line-clamp-2 text-sm text-slate-500 dark:text-slate-400">
                         {description}
                       </p>
                     )}

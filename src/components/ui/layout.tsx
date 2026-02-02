@@ -35,8 +35,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const isPlasBusinessPage =
     router.pathname === "/plasBusiness" ||
     router.pathname.startsWith("/plasBusiness/");
-  const isStoresPage =
-    router.pathname.startsWith("/stores/");
+  const isStoresPage = router.pathname.startsWith("/stores/");
   const isStoresCheckoutPage = router.pathname === "/stores/[id]/checkout";
   const isOrderDetailsPage = router.pathname.startsWith(
     "/CurrentPendingOrders/viewOrderDetails/"
@@ -66,7 +65,11 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       {/* Main content */}
       <main
         className={`text-gray-900 transition-colors duration-200 dark:text-white ${
-          isChatPage || isReelsPage || isMessagesPage || isPlasBusinessPage || isStoresPage
+          isChatPage ||
+          isReelsPage ||
+          isMessagesPage ||
+          isPlasBusinessPage ||
+          isStoresPage
             ? ""
             : isOrderDetailsPage
             ? "pb-20 md:pb-0 md:pt-16"
@@ -101,9 +104,11 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         >
           {children}
         </div>
-        {!isChatPage && !isReelsPage && !isMessagesPage && !isStoresCheckoutPage && !hideBottomBar && (
-          <BottomBar />
-        )}
+        {!isChatPage &&
+          !isReelsPage &&
+          !isMessagesPage &&
+          !isStoresCheckoutPage &&
+          !hideBottomBar && <BottomBar />}
       </main>
       {/* AI Chat - Available on all pages except chat pages */}
       {!isChatPage && !isMessagesPage && !isOrderDetailsPage && (

@@ -70,7 +70,9 @@ interface ProductsResponse {
     query_id: string;
     speciality: string;
     category: string;
-    otherDetails: { options?: Array<{ key: string; label: string; values: string[] }> } | null;
+    otherDetails: {
+      options?: Array<{ key: string; label: string; values: string[] }>;
+    } | null;
   }>;
 }
 
@@ -236,24 +238,24 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     };
 
     // Transform products
-    const products = productsData.PlasBusinessProductsOrSerive
-      .filter((p) => p.status === "active")
-      .map((product) => ({
-        id: product.id,
-        name: product.name,
-        description: product.Description || "",
-        image: product.Image || "",
-        price: product.price,
-        unit: product.unit || "",
-        measurement_unit: product.unit || "",
-        category:
-          product.category?.trim() || product.speciality?.trim() || "Other",
-        minimumOrders: product.minimumOrders,
-        maxOrders: product.maxOrders,
-        delveryArea: product.delveryArea,
-        status: product.status,
-        otherDetails: product.otherDetails ?? null,
-      }));
+    const products = productsData.PlasBusinessProductsOrSerive.filter(
+      (p) => p.status === "active"
+    ).map((product) => ({
+      id: product.id,
+      name: product.name,
+      description: product.Description || "",
+      image: product.Image || "",
+      price: product.price,
+      unit: product.unit || "",
+      measurement_unit: product.unit || "",
+      category:
+        product.category?.trim() || product.speciality?.trim() || "Other",
+      minimumOrders: product.minimumOrders,
+      maxOrders: product.maxOrders,
+      delveryArea: product.delveryArea,
+      status: product.status,
+      otherDetails: product.otherDetails ?? null,
+    }));
 
     return {
       props: {

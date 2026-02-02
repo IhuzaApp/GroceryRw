@@ -210,8 +210,7 @@ export default async function handler(
               Array.isArray(o.values)
           )
         : [];
-      variables.otherDetails =
-        opts.length > 0 ? { options: opts } : null;
+      variables.otherDetails = opts.length > 0 ? { options: opts } : null;
     } else {
       variables.otherDetails = null;
     }

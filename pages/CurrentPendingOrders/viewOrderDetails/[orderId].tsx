@@ -746,8 +746,7 @@ function ViewOrderDetailsPage() {
   const isReadyForPickup =
     order?.status &&
     String(order.status).toLowerCase().replace(/_/g, " ").includes("ready");
-  const alwaysShowSupport =
-    orderType === "business" || orderType === "reel";
+  const alwaysShowSupport = orderType === "business" || orderType === "reel";
   const showContactSupport =
     alwaysShowSupport || isReadyForPickup || !supportTicket
       ? () => setShowSupportModal(true)

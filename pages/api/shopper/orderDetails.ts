@@ -984,8 +984,7 @@ export default async function handler(
             rd?.ProductNames?.name ?? rd?.dishes?.name ?? "Unknown Dish";
           const description =
             rd?.ProductNames?.description ?? rd?.dishes?.description ?? null;
-          const image =
-            rd?.ProductNames?.image ?? rd?.dishes?.image ?? null;
+          const image = rd?.ProductNames?.image ?? rd?.dishes?.image ?? null;
 
           return {
             id: dishOrder.id,

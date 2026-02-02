@@ -154,7 +154,12 @@ export const useFCMNotifications = (): FCMNotificationHook => {
                 ? `combined:${combinedOrderId}`
                 : `${orderType}:${orderId}`;
               const existingIdx = notificationHistory.findIndex(
-                (n: { type?: string; orderId?: string; orderType?: string; combinedOrderId?: string }) => {
+                (n: {
+                  type?: string;
+                  orderId?: string;
+                  orderType?: string;
+                  combinedOrderId?: string;
+                }) => {
                   if (n.type !== "new_order" && n.type !== "batch_orders")
                     return false;
                   const nOrderId = n.orderId != null ? String(n.orderId) : "";

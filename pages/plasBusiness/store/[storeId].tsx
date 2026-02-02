@@ -39,17 +39,47 @@ import { CategorySelect } from "../../../src/components/ui/CategorySelect";
 /** Clothes: garment sizes. Item: general / product sizes (phones, etc.). */
 const CLOTHES_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 const ITEM_SIZES = [
-  "Small", "Medium", "Large",
-  "Min", "Pro", "Pro Max", "Ultra", "Standard", "Plus",
+  "Small",
+  "Medium",
+  "Large",
+  "Min",
+  "Pro",
+  "Pro Max",
+  "Ultra",
+  "Standard",
+  "Plus",
 ];
 const COLORS = [
-  "Blue", "Light Blue", "Dark Blue", "Sky Blue", "Navy",
-  "Red", "Green", "Light Green", "Dark Green", "Forest Green", "Mint",
-  "Yellow", "Gold", "Orange", "Pink", "Rose",
-  "Black", "White", "Gray", "Silver", "Charcoal",
-  "Brown", "Beige", "Tan", "Cream",
-  "Purple", "Violet", "Lavender",
-  "Multi", "Transparent",
+  "Blue",
+  "Light Blue",
+  "Dark Blue",
+  "Sky Blue",
+  "Navy",
+  "Red",
+  "Green",
+  "Light Green",
+  "Dark Green",
+  "Forest Green",
+  "Mint",
+  "Yellow",
+  "Gold",
+  "Orange",
+  "Pink",
+  "Rose",
+  "Black",
+  "White",
+  "Gray",
+  "Silver",
+  "Charcoal",
+  "Brown",
+  "Beige",
+  "Tan",
+  "Cream",
+  "Purple",
+  "Violet",
+  "Lavender",
+  "Multi",
+  "Transparent",
 ];
 
 /** Map color label -> { bg hex, text: 'white' | 'black' } for chips. */
@@ -82,12 +112,19 @@ const COLOR_STYLES: Record<string, { bg: string; text: "white" | "black" }> = {
   Purple: { bg: "#7c3aed", text: "white" },
   Violet: { bg: "#6d28d9", text: "white" },
   Lavender: { bg: "#c4b5fd", text: "black" },
-  Multi: { bg: "linear-gradient(135deg,#ec4899,#8b5cf6,#06b6d4)", text: "white" },
+  Multi: {
+    bg: "linear-gradient(135deg,#ec4899,#8b5cf6,#06b6d4)",
+    text: "white",
+  },
   Transparent: { bg: "transparent", text: "black" },
 };
 
-function getColorStyle(label: string): { background: string; color: string } | null {
-  const key = Object.keys(COLOR_STYLES).find((k) => k.toLowerCase() === label.toLowerCase());
+function getColorStyle(
+  label: string
+): { background: string; color: string } | null {
+  const key = Object.keys(COLOR_STYLES).find(
+    (k) => k.toLowerCase() === label.toLowerCase()
+  );
   if (!key) return null;
   const s = COLOR_STYLES[key];
   return { background: s.bg, color: s.text === "white" ? "#fff" : "#171717" };
@@ -111,9 +148,13 @@ export default function StoreDetailsPage() {
   );
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [statusTab, setStatusTab] = useState<"active" | "pending_disabled">("active");
+  const [statusTab, setStatusTab] = useState<"active" | "pending_disabled">(
+    "active"
+  );
   const [allProducts, setAllProducts] = useState<any[]>([]);
-  const [productStats, setProductStats] = useState<Record<string, { orders: number; unitsSold: number }>>({});
+  const [productStats, setProductStats] = useState<
+    Record<string, { orders: number; unitsSold: number }>
+  >({});
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [showEditStoreModal, setShowEditStoreModal] = useState(false);
@@ -187,7 +228,9 @@ export default function StoreDetailsPage() {
   const fetchProductStats = async () => {
     if (!storeId) return;
     try {
-      const res = await fetch(`/api/queries/store-product-stats?store_id=${storeId}`);
+      const res = await fetch(
+        `/api/queries/store-product-stats?store_id=${storeId}`
+      );
       if (res.ok) {
         const data = await res.json();
         setProductStats(data.stats || {});
@@ -289,9 +332,14 @@ export default function StoreDetailsPage() {
   }, [searchQuery, allProducts]);
 
   // Filter by status tab: active only, or pending+disabled combined
-  const tabFilteredProducts = statusTab === "active"
-    ? filteredProducts.filter((p) => (p.status || "active").toLowerCase() === "active")
-    : filteredProducts.filter((p) => (p.status || "active").toLowerCase() !== "active");
+  const tabFilteredProducts =
+    statusTab === "active"
+      ? filteredProducts.filter(
+          (p) => (p.status || "active").toLowerCase() === "active"
+        )
+      : filteredProducts.filter(
+          (p) => (p.status || "active").toLowerCase() !== "active"
+        );
 
   // Group products by category for display
   const UNCATEGORIZED = "Other";
@@ -304,8 +352,12 @@ export default function StoreDetailsPage() {
     return acc;
   }, {});
 
-  const activeCount = allProducts.filter((p) => (p.status || "active").toLowerCase() === "active").length;
-  const pendingDisabledCount = allProducts.filter((p) => (p.status || "active").toLowerCase() !== "active").length;
+  const activeCount = allProducts.filter(
+    (p) => (p.status || "active").toLowerCase() === "active"
+  ).length;
+  const pendingDisabledCount = allProducts.filter(
+    (p) => (p.status || "active").toLowerCase() !== "active"
+  ).length;
 
   const maxUnitsSold = tabFilteredProducts.length
     ? Math.max(
@@ -361,8 +413,10 @@ export default function StoreDetailsPage() {
     const opts = product.otherDetails?.options ?? [];
     const sizeOpt = opts.find((o: any) => o.key === "size");
     const colorOpt = opts.find((o: any) => o.key === "color");
-    const sizeValues = sizeOpt && Array.isArray(sizeOpt.values) ? sizeOpt.values : [];
-    const colorValues = colorOpt && Array.isArray(colorOpt.values) ? colorOpt.values : [];
+    const sizeValues =
+      sizeOpt && Array.isArray(sizeOpt.values) ? sizeOpt.values : [];
+    const colorValues =
+      colorOpt && Array.isArray(colorOpt.values) ? colorOpt.values : [];
     const isClothes =
       product.otherDetails?.productType === "clothes" ||
       (sizeValues.length > 0 &&
@@ -455,8 +509,7 @@ export default function StoreDetailsPage() {
         delveryArea: newProduct.deliveryArea || "",
         store_id: storeId as string,
         Plasbusiness_id: businessAccountId || "",
-        otherDetails:
-          opts.length > 0 ? { productType, options: opts } : null,
+        otherDetails: opts.length > 0 ? { productType, options: opts } : null,
       };
 
       if (editingProduct) {
@@ -491,7 +544,11 @@ export default function StoreDetailsPage() {
           minimumOrders: "0",
           maxOrders: "",
           deliveryArea: "",
-          otherDetails: { productType: "item", selectedSizes: [], selectedColors: [] },
+          otherDetails: {
+            productType: "item",
+            selectedSizes: [],
+            selectedColors: [],
+          },
         });
         setProductImage("");
         setQueryId(null);
@@ -967,7 +1024,8 @@ export default function StoreDetailsPage() {
                       const stats = productStats[product.id];
                       const unitsSold = stats?.unitsSold ?? 0;
                       const orders = stats?.orders ?? 0;
-                      const pct = maxUnitsSold > 0 ? (unitsSold / maxUnitsSold) * 100 : 0;
+                      const pct =
+                        maxUnitsSold > 0 ? (unitsSold / maxUnitsSold) * 100 : 0;
                       return (
                         <tr
                           key={product.id}
@@ -1014,7 +1072,7 @@ export default function StoreDetailsPage() {
                               </div>
                               <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-600">
                                 <div
-                                  className="h-full rounded-full bg-green-500 dark:bg-green-600 transition-all"
+                                  className="h-full rounded-full bg-green-500 transition-all dark:bg-green-600"
                                   style={{ width: `${Math.min(100, pct)}%` }}
                                 />
                               </div>
@@ -1028,31 +1086,44 @@ export default function StoreDetailsPage() {
                           <td className="px-4 py-3">
                             <span
                               className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
-                                (product.status || "").toLowerCase() === "active"
+                                (product.status || "").toLowerCase() ===
+                                "active"
                                   ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                                  : (product.status || "").toLowerCase() === "pending"
+                                  : (product.status || "").toLowerCase() ===
+                                    "pending"
                                   ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
                                   : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
                               }`}
                             >
-                              {(product.status || "").toLowerCase() === "active" ? (
+                              {(product.status || "").toLowerCase() ===
+                              "active" ? (
                                 <CheckCircle className="h-3 w-3" />
                               ) : (
                                 <XCircle className="h-3 w-3" />
                               )}
-                              {(product.status || "other").toLowerCase() === "inactive"
+                              {(product.status || "other").toLowerCase() ===
+                              "inactive"
                                 ? "Disabled"
-                                : (product.status || "Other").charAt(0).toUpperCase() +
-                                  (product.status || "Other").slice(1).toLowerCase()}
+                                : (product.status || "Other")
+                                    .charAt(0)
+                                    .toUpperCase() +
+                                  (product.status || "Other")
+                                    .slice(1)
+                                    .toLowerCase()}
                             </span>
                           </td>
                           <td className="px-4 py-3">
                             <span className="text-sm font-semibold text-green-600 dark:text-green-500">
-                              {formatCurrencySync(parseFloat(product.price || "0"))}
+                              {formatCurrencySync(
+                                parseFloat(product.price || "0")
+                              )}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-right">
-                            <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                            <div
+                              className="flex items-center justify-end gap-1"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               <button
                                 onClick={() => handleEditProduct(product)}
                                 className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-green-600 dark:hover:bg-gray-600 dark:hover:text-green-400"
@@ -1081,243 +1152,247 @@ export default function StoreDetailsPage() {
 
               {/* Mobile & tablet: Card grid */}
               <div className="lg:hidden">
-              {categoryOrder.map((categoryName) => (
-                <div
-                  key={categoryName}
-                  className="mb-10 first:mt-0 last:mb-0 sm:mb-12"
-                >
-                  <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white sm:mb-5 sm:text-lg">
-                    <Tag className="h-4 w-4 text-green-600 dark:text-green-500 sm:h-5 sm:w-5" />
-                    {categoryName}
-                    <span className="ml-2 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-                      {groupedByCategory[categoryName]?.length ?? 0}
-                    </span>
-                  </h3>
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3">
-                    {(groupedByCategory[categoryName] ?? []).map((product) => (
-                      <div
-                        key={product.id}
-                        className="group relative flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:border-green-400 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-600"
-                      >
-                        {/* Image Section */}
-                        <div className="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-700">
-                          {product.Image ? (
-                            <img
-                              src={product.Image}
-                              alt={product.name}
-                              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                            />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
-                              <Package className="h-10 w-10 text-gray-300 sm:h-16 sm:w-16" />
-                            </div>
-                          )}
-
-                          {/* Edit Button - Desktop only */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditProduct(product);
-                            }}
-                            className="absolute right-2 top-2 hidden rounded-lg bg-white/90 p-1.5 text-green-600 shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-110 hover:bg-white hover:text-green-700 dark:bg-gray-800/90 dark:text-green-400 dark:hover:bg-gray-800 sm:right-3 sm:top-3 sm:block lg:right-2 lg:top-2 lg:p-1"
-                            title="Edit product"
+                {categoryOrder.map((categoryName) => (
+                  <div
+                    key={categoryName}
+                    className="mb-10 first:mt-0 last:mb-0 sm:mb-12"
+                  >
+                    <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white sm:mb-5 sm:text-lg">
+                      <Tag className="h-4 w-4 text-green-600 dark:text-green-500 sm:h-5 sm:w-5" />
+                      {categoryName}
+                      <span className="ml-2 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                        {groupedByCategory[categoryName]?.length ?? 0}
+                      </span>
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3">
+                      {(groupedByCategory[categoryName] ?? []).map(
+                        (product) => (
+                          <div
+                            key={product.id}
+                            className="group relative flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:border-green-400 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-600"
                           >
-                            <Edit className="h-3.5 w-3.5 lg:h-3 lg:w-3" />
-                          </button>
-
-                          {/* Status Badge on Image - Mobile */}
-                          {product.status && (
-                            <span
-                              className={`absolute left-2 top-2 flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold shadow-sm sm:hidden ${
-                                product.status === "active"
-                                  ? "bg-green-500"
-                                  : "bg-gray-500"
-                              }`}
-                              style={{ color: "#ffffff" }}
-                            >
-                              {product.status === "active" ? (
-                                <CheckCircle
-                                  className="h-2 w-2"
-                                  style={{ color: "#ffffff" }}
+                            {/* Image Section */}
+                            <div className="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-700">
+                              {product.Image ? (
+                                <img
+                                  src={product.Image}
+                                  alt={product.name}
+                                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                                 />
                               ) : (
-                                <XCircle
-                                  className="h-2 w-2"
-                                  style={{ color: "#ffffff" }}
-                                />
+                                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
+                                  <Package className="h-10 w-10 text-gray-300 sm:h-16 sm:w-16" />
+                                </div>
                               )}
-                              <span
-                                className="capitalize"
-                                style={{ color: "#ffffff" }}
+
+                              {/* Edit Button - Desktop only */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditProduct(product);
+                                }}
+                                className="absolute right-2 top-2 hidden rounded-lg bg-white/90 p-1.5 text-green-600 shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-110 hover:bg-white hover:text-green-700 dark:bg-gray-800/90 dark:text-green-400 dark:hover:bg-gray-800 sm:right-3 sm:top-3 sm:block lg:right-2 lg:top-2 lg:p-1"
+                                title="Edit product"
                               >
-                                {product.status === "active"
-                                  ? "Active"
-                                  : "Inactive"}
-                              </span>
-                            </span>
-                          )}
-                        </div>
+                                <Edit className="h-3.5 w-3.5 lg:h-3 lg:w-3" />
+                              </button>
 
-                        {/* Content Section */}
-                        <div className="flex flex-1 flex-col p-2.5 sm:p-3 lg:p-2.5">
-                          {/* Product Name */}
-                          <h3 className="mb-1.5 line-clamp-2 flex-1 text-xs font-semibold leading-tight text-gray-900 dark:text-white sm:text-sm lg:text-xs xl:mb-1">
-                            {product.name}
-                          </h3>
-
-                          {/* Price and Unit */}
-                          <div className="mb-1.5 flex items-baseline gap-1 sm:mb-2 lg:mb-1.5 xl:mb-1">
-                            <span className="text-sm font-bold text-green-600 dark:text-green-500 sm:text-lg lg:text-sm">
-                              {formatCurrencySync(parseFloat(product.price))}
-                            </span>
-                            <span className="text-[10px] text-gray-500 dark:text-gray-400 sm:text-xs lg:text-[10px]">
-                              / {product.unit}
-                            </span>
-                          </div>
-
-                          {/* Status Badge - Mobile only, hidden on desktop for compact view */}
-                          {product.status && (
-                            <div className="mb-2 sm:hidden">
-                              <span
-                                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
-                                  product.status === "active"
-                                    ? "bg-green-500"
-                                    : product.status === "inactive"
-                                    ? "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-                                    : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
-                                }`}
-                                style={
-                                  product.status === "active"
-                                    ? { color: "#ffffff" }
-                                    : {}
-                                }
-                              >
-                                {product.status === "active" ? (
-                                  <CheckCircle
-                                    className="h-3 w-3"
-                                    style={{ color: "#ffffff" }}
-                                  />
-                                ) : (
-                                  <XCircle className="h-3 w-3" />
-                                )}
+                              {/* Status Badge on Image - Mobile */}
+                              {product.status && (
                                 <span
-                                  className="capitalize"
-                                  style={
+                                  className={`absolute left-2 top-2 flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold shadow-sm sm:hidden ${
                                     product.status === "active"
-                                      ? { color: "#ffffff" }
-                                      : {}
-                                  }
+                                      ? "bg-green-500"
+                                      : "bg-gray-500"
+                                  }`}
+                                  style={{ color: "#ffffff" }}
                                 >
-                                  {product.status}
+                                  {product.status === "active" ? (
+                                    <CheckCircle
+                                      className="h-2 w-2"
+                                      style={{ color: "#ffffff" }}
+                                    />
+                                  ) : (
+                                    <XCircle
+                                      className="h-2 w-2"
+                                      style={{ color: "#ffffff" }}
+                                    />
+                                  )}
+                                  <span
+                                    className="capitalize"
+                                    style={{ color: "#ffffff" }}
+                                  >
+                                    {product.status === "active"
+                                      ? "Active"
+                                      : "Inactive"}
+                                  </span>
                                 </span>
-                              </span>
+                              )}
                             </div>
-                          )}
 
-                          {/* Description - Hidden on card, shown in modal */}
+                            {/* Content Section */}
+                            <div className="flex flex-1 flex-col p-2.5 sm:p-3 lg:p-2.5">
+                              {/* Product Name */}
+                              <h3 className="mb-1.5 line-clamp-2 flex-1 text-xs font-semibold leading-tight text-gray-900 dark:text-white sm:text-sm lg:text-xs xl:mb-1">
+                                {product.name}
+                              </h3>
 
-                          {/* View Details Button */}
-                          <div className="mt-auto">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedProduct(product);
-                                setShowProductModal(true);
-                              }}
-                              className="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-[10px] font-medium text-gray-700 transition-all hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 sm:px-3 sm:py-2 sm:text-xs lg:px-2 lg:py-1.5 lg:text-[10px]"
-                            >
-                              View Details
-                            </button>
-                          </div>
-
-                          {/* Full Details - Hidden on card, shown in modal */}
-                          <div className="hidden">
-                            {/* Verification ID */}
-                            {product.query_id && (
-                              <div className="flex items-center gap-2 rounded-lg bg-gray-50 p-2 dark:bg-gray-700/50">
-                                <Tag className="h-4 w-4 flex-shrink-0 text-gray-400" />
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                                    Verification ID
-                                  </p>
-                                  <p className="truncate font-mono text-xs font-bold text-gray-900 dark:text-gray-100">
-                                    {product.query_id}
-                                  </p>
-                                </div>
+                              {/* Price and Unit */}
+                              <div className="mb-1.5 flex items-baseline gap-1 sm:mb-2 lg:mb-1.5 xl:mb-1">
+                                <span className="text-sm font-bold text-green-600 dark:text-green-500 sm:text-lg lg:text-sm">
+                                  {formatCurrencySync(
+                                    parseFloat(product.price)
+                                  )}
+                                </span>
+                                <span className="text-[10px] text-gray-500 dark:text-gray-400 sm:text-xs lg:text-[10px]">
+                                  / {product.unit}
+                                </span>
                               </div>
-                            )}
 
-                            {/* Minimum Orders */}
-                            {product.minimumOrders &&
-                              parseFloat(product.minimumOrders) > 0 && (
-                                <div className="flex items-center gap-2 rounded-lg bg-blue-50 p-2 dark:bg-blue-900/20">
-                                  <ShoppingCart className="h-4 w-4 flex-shrink-0 text-blue-500 dark:text-blue-400" />
-                                  <div className="min-w-0 flex-1">
-                                    <p className="text-xs font-medium text-blue-600 dark:text-blue-400">
-                                      Min. Order
-                                    </p>
-                                    <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">
-                                      {product.minimumOrders} {product.unit}
-                                    </p>
-                                  </div>
+                              {/* Status Badge - Mobile only, hidden on desktop for compact view */}
+                              {product.status && (
+                                <div className="mb-2 sm:hidden">
+                                  <span
+                                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                      product.status === "active"
+                                        ? "bg-green-500"
+                                        : product.status === "inactive"
+                                        ? "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                                        : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
+                                    }`}
+                                    style={
+                                      product.status === "active"
+                                        ? { color: "#ffffff" }
+                                        : {}
+                                    }
+                                  >
+                                    {product.status === "active" ? (
+                                      <CheckCircle
+                                        className="h-3 w-3"
+                                        style={{ color: "#ffffff" }}
+                                      />
+                                    ) : (
+                                      <XCircle className="h-3 w-3" />
+                                    )}
+                                    <span
+                                      className="capitalize"
+                                      style={
+                                        product.status === "active"
+                                          ? { color: "#ffffff" }
+                                          : {}
+                                      }
+                                    >
+                                      {product.status}
+                                    </span>
+                                  </span>
                                 </div>
                               )}
 
-                            {/* Maximum Orders */}
-                            {product.maxOrders &&
-                              product.maxOrders.trim() !== "" &&
-                              parseFloat(product.maxOrders) > 0 && (
-                                <div className="flex items-center gap-2 rounded-lg bg-purple-50 p-2 dark:bg-purple-900/20">
-                                  <ShoppingCart className="h-4 w-4 flex-shrink-0 text-purple-500 dark:text-purple-400" />
-                                  <div className="min-w-0 flex-1">
-                                    <p className="text-xs font-medium text-purple-600 dark:text-purple-400">
-                                      Max. Order
-                                    </p>
-                                    <p className="text-sm font-semibold text-purple-900 dark:text-purple-200">
-                                      {product.maxOrders} {product.unit}
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
+                              {/* Description - Hidden on card, shown in modal */}
 
-                            {/* Delivery Area */}
-                            {product.delveryArea &&
-                              product.delveryArea.trim() !== "" && (
-                                <div className="flex items-center gap-2 rounded-lg bg-orange-50 p-2 dark:bg-orange-900/20">
-                                  <Truck className="h-4 w-4 flex-shrink-0 text-orange-500 dark:text-orange-400" />
-                                  <div className="min-w-0 flex-1">
-                                    <p className="text-xs font-medium text-orange-600 dark:text-orange-400">
-                                      Delivery Area
-                                    </p>
-                                    <p className="line-clamp-1 text-sm font-semibold text-orange-900 dark:text-orange-200">
-                                      {product.delveryArea}
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
+                              {/* View Details Button */}
+                              <div className="mt-auto">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedProduct(product);
+                                    setShowProductModal(true);
+                                  }}
+                                  className="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-[10px] font-medium text-gray-700 transition-all hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 sm:px-3 sm:py-2 sm:text-xs lg:px-2 lg:py-1.5 lg:text-[10px]"
+                                >
+                                  View Details
+                                </button>
+                              </div>
 
-                            {/* Speciality */}
-                            {product.speciality &&
-                              product.speciality.trim() !== "" && (
-                                <div className="flex items-center gap-2 rounded-lg bg-indigo-50 p-2 dark:bg-indigo-900/20">
-                                  <Tag className="h-4 w-4 flex-shrink-0 text-indigo-500 dark:text-indigo-400" />
-                                  <div className="min-w-0 flex-1">
-                                    <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400">
-                                      Speciality
-                                    </p>
-                                    <p className="line-clamp-1 text-sm font-semibold text-indigo-900 dark:text-indigo-200">
-                                      {product.speciality}
-                                    </p>
+                              {/* Full Details - Hidden on card, shown in modal */}
+                              <div className="hidden">
+                                {/* Verification ID */}
+                                {product.query_id && (
+                                  <div className="flex items-center gap-2 rounded-lg bg-gray-50 p-2 dark:bg-gray-700/50">
+                                    <Tag className="h-4 w-4 flex-shrink-0 text-gray-400" />
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                                        Verification ID
+                                      </p>
+                                      <p className="truncate font-mono text-xs font-bold text-gray-900 dark:text-gray-100">
+                                        {product.query_id}
+                                      </p>
+                                    </div>
                                   </div>
-                                </div>
-                              )}
+                                )}
+
+                                {/* Minimum Orders */}
+                                {product.minimumOrders &&
+                                  parseFloat(product.minimumOrders) > 0 && (
+                                    <div className="flex items-center gap-2 rounded-lg bg-blue-50 p-2 dark:bg-blue-900/20">
+                                      <ShoppingCart className="h-4 w-4 flex-shrink-0 text-blue-500 dark:text-blue-400" />
+                                      <div className="min-w-0 flex-1">
+                                        <p className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                                          Min. Order
+                                        </p>
+                                        <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">
+                                          {product.minimumOrders} {product.unit}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                {/* Maximum Orders */}
+                                {product.maxOrders &&
+                                  product.maxOrders.trim() !== "" &&
+                                  parseFloat(product.maxOrders) > 0 && (
+                                    <div className="flex items-center gap-2 rounded-lg bg-purple-50 p-2 dark:bg-purple-900/20">
+                                      <ShoppingCart className="h-4 w-4 flex-shrink-0 text-purple-500 dark:text-purple-400" />
+                                      <div className="min-w-0 flex-1">
+                                        <p className="text-xs font-medium text-purple-600 dark:text-purple-400">
+                                          Max. Order
+                                        </p>
+                                        <p className="text-sm font-semibold text-purple-900 dark:text-purple-200">
+                                          {product.maxOrders} {product.unit}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                {/* Delivery Area */}
+                                {product.delveryArea &&
+                                  product.delveryArea.trim() !== "" && (
+                                    <div className="flex items-center gap-2 rounded-lg bg-orange-50 p-2 dark:bg-orange-900/20">
+                                      <Truck className="h-4 w-4 flex-shrink-0 text-orange-500 dark:text-orange-400" />
+                                      <div className="min-w-0 flex-1">
+                                        <p className="text-xs font-medium text-orange-600 dark:text-orange-400">
+                                          Delivery Area
+                                        </p>
+                                        <p className="line-clamp-1 text-sm font-semibold text-orange-900 dark:text-orange-200">
+                                          {product.delveryArea}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                {/* Speciality */}
+                                {product.speciality &&
+                                  product.speciality.trim() !== "" && (
+                                    <div className="flex items-center gap-2 rounded-lg bg-indigo-50 p-2 dark:bg-indigo-900/20">
+                                      <Tag className="h-4 w-4 flex-shrink-0 text-indigo-500 dark:text-indigo-400" />
+                                      <div className="min-w-0 flex-1">
+                                        <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400">
+                                          Speciality
+                                        </p>
+                                        <p className="line-clamp-1 text-sm font-semibold text-indigo-900 dark:text-indigo-200">
+                                          {product.speciality}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  )}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    ))}
+                        )
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
               </div>
             </>
           )}
@@ -1345,7 +1420,11 @@ export default function StoreDetailsPage() {
                     minimumOrders: "0",
                     maxOrders: "",
                     deliveryArea: "",
-                    otherDetails: { productType: "item", selectedSizes: [], selectedColors: [] },
+                    otherDetails: {
+                      productType: "item",
+                      selectedSizes: [],
+                      selectedColors: [],
+                    },
                   });
                   setProductImage("");
                   setQueryId(null);
@@ -1565,7 +1644,8 @@ export default function StoreDetailsPage() {
                   Product type (optional)
                 </label>
                 <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
-                  Choose Item or Clothes. Then select which sizes and colors you have. Customers will pick from these when ordering.
+                  Choose Item or Clothes. Then select which sizes and colors you
+                  have. Customers will pick from these when ordering.
                 </p>
                 <div className="space-y-4">
                   <div>
@@ -1581,7 +1661,8 @@ export default function StoreDetailsPage() {
                             ...newProduct.otherDetails,
                             productType: e.target.value as "item" | "clothes",
                             selectedSizes: [],
-                            selectedColors: newProduct.otherDetails?.selectedColors ?? [],
+                            selectedColors:
+                              newProduct.otherDetails?.selectedColors ?? [],
                           },
                         })
                       }
@@ -1593,10 +1674,14 @@ export default function StoreDetailsPage() {
                   </div>
 
                   {(() => {
-                    const productType = newProduct.otherDetails?.productType ?? "item";
-                    const selectedSizes = newProduct.otherDetails?.selectedSizes ?? [];
-                    const selectedColors = newProduct.otherDetails?.selectedColors ?? [];
-                    const sizeOptions = productType === "clothes" ? CLOTHES_SIZES : ITEM_SIZES;
+                    const productType =
+                      newProduct.otherDetails?.productType ?? "item";
+                    const selectedSizes =
+                      newProduct.otherDetails?.selectedSizes ?? [];
+                    const selectedColors =
+                      newProduct.otherDetails?.selectedColors ?? [];
+                    const sizeOptions =
+                      productType === "clothes" ? CLOTHES_SIZES : ITEM_SIZES;
 
                     const toggleSize = (size: string) => {
                       const next = selectedSizes.includes(size)
@@ -1629,7 +1714,8 @@ export default function StoreDetailsPage() {
                       <>
                         <div ref={sizesPickerRef} className="relative">
                           <label className="mb-1.5 block text-xs font-medium text-gray-500 dark:text-gray-400">
-                            Sizes you have ({productType === "clothes" ? "garment" : "item"})
+                            Sizes you have (
+                            {productType === "clothes" ? "garment" : "item"})
                           </label>
                           <button
                             type="button"
@@ -1639,7 +1725,13 @@ export default function StoreDetailsPage() {
                             }}
                             className="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-left text-sm transition-all focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400"
                           >
-                            <span className={selectedSizes.length === 0 ? "text-gray-500 dark:text-gray-400" : "text-gray-900 dark:text-white"}>
+                            <span
+                              className={
+                                selectedSizes.length === 0
+                                  ? "text-gray-500 dark:text-gray-400"
+                                  : "text-gray-900 dark:text-white"
+                              }
+                            >
                               {selectedSizes.length === 0
                                 ? "Select sizes…"
                                 : selectedSizes.join(", ")}
@@ -1663,7 +1755,9 @@ export default function StoreDetailsPage() {
                                     onChange={() => toggleSize(size)}
                                     className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-600"
                                   />
-                                  <span className="text-gray-900 dark:text-white">{size}</span>
+                                  <span className="text-gray-900 dark:text-white">
+                                    {size}
+                                  </span>
                                 </label>
                               ))}
                             </div>
@@ -1681,7 +1775,13 @@ export default function StoreDetailsPage() {
                             }}
                             className="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-left text-sm transition-all focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400"
                           >
-                            <span className={selectedColors.length === 0 ? "text-gray-500 dark:text-gray-400" : "text-gray-900 dark:text-white"}>
+                            <span
+                              className={
+                                selectedColors.length === 0
+                                  ? "text-gray-500 dark:text-gray-400"
+                                  : "text-gray-900 dark:text-white"
+                              }
+                            >
                               {selectedColors.length === 0
                                 ? "Select colors…"
                                 : selectedColors.join(", ")}
@@ -1705,7 +1805,9 @@ export default function StoreDetailsPage() {
                                     onChange={() => toggleColor(color)}
                                     className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-600"
                                   />
-                                  <span className="text-gray-900 dark:text-white">{color}</span>
+                                  <span className="text-gray-900 dark:text-white">
+                                    {color}
+                                  </span>
                                 </label>
                               ))}
                             </div>
@@ -1767,7 +1869,11 @@ export default function StoreDetailsPage() {
                       minimumOrders: "0",
                       maxOrders: "",
                       deliveryArea: "",
-                      otherDetails: { productType: "item", selectedSizes: [], selectedColors: [] },
+                      otherDetails: {
+                        productType: "item",
+                        selectedSizes: [],
+                        selectedColors: [],
+                      },
                     });
                     setProductImage("");
                     setQueryId(null);
@@ -1817,7 +1923,7 @@ export default function StoreDetailsPage() {
           }}
         >
           <div
-            className="flex h-full max-h-[92vh] w-full max-w-[100vw] flex-col animate-slide-up overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-gray-800 sm:h-auto sm:max-h-[88vh] sm:max-w-2xl sm:animate-none sm:rounded-2xl sm:border sm:border-gray-200 sm:dark:border-gray-700"
+            className="flex h-full max-h-[92vh] w-full max-w-[100vw] animate-slide-up flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-gray-800 sm:h-auto sm:max-h-[88vh] sm:max-w-2xl sm:animate-none sm:rounded-2xl sm:border sm:border-gray-200 sm:dark:border-gray-700"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -1887,7 +1993,9 @@ export default function StoreDetailsPage() {
                   </p>
                   <p className="mt-1 flex items-baseline gap-2">
                     <span className="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
-                      {formatCurrencySync(parseFloat(selectedProduct.price || "0"))}
+                      {formatCurrencySync(
+                        parseFloat(selectedProduct.price || "0")
+                      )}
                     </span>
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
                       per {selectedProduct.unit}
@@ -1931,45 +2039,66 @@ export default function StoreDetailsPage() {
                         </h4>
                         <div className="space-y-3">
                           {selectedProduct.otherDetails.options.map(
-                            (opt: { key: string; label: string; values: string[] }, idx: number) =>
+                            (
+                              opt: {
+                                key: string;
+                                label: string;
+                                values: string[];
+                              },
+                              idx: number
+                            ) =>
                               opt.values && opt.values.length > 0 ? (
                                 <div
                                   key={opt.key || idx}
                                   className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50"
                                 >
-                                <p className="mb-2 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-                                  {opt.label || opt.key}
-                                </p>
-                                <div className="flex flex-wrap gap-2">
-                                  {opt.values.map((v: string) => {
-                                    const isColor = (opt.key || "").toLowerCase() === "color";
-                                    const colorStyle = isColor ? getColorStyle(v) : null;
-                                    const isTransparent = isColor && v.toLowerCase() === "transparent";
-                                    const chipClass = colorStyle
-                                      ? "inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium"
-                                      : "inline-flex items-center rounded-full bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-200";
-                                    return (
-                                      <span
-                                        key={v}
-                                        className={chipClass}
-                                        style={
-                                          colorStyle
-                                            ? isTransparent
-                                              ? { border: "2px solid #d4d4d4", background: "#f5f5f5", color: "#171717" }
-                                              : { background: colorStyle.background, color: colorStyle.color }
-                                            : undefined
-                                        }
-                                      >
-                                        {v}
-                                      </span>
-                                    );
-                                  })}
+                                  <p className="mb-2 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
+                                    {opt.label || opt.key}
+                                  </p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {opt.values.map((v: string) => {
+                                      const isColor =
+                                        (opt.key || "").toLowerCase() ===
+                                        "color";
+                                      const colorStyle = isColor
+                                        ? getColorStyle(v)
+                                        : null;
+                                      const isTransparent =
+                                        isColor &&
+                                        v.toLowerCase() === "transparent";
+                                      const chipClass = colorStyle
+                                        ? "inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium"
+                                        : "inline-flex items-center rounded-full bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-200";
+                                      return (
+                                        <span
+                                          key={v}
+                                          className={chipClass}
+                                          style={
+                                            colorStyle
+                                              ? isTransparent
+                                                ? {
+                                                    border: "2px solid #d4d4d4",
+                                                    background: "#f5f5f5",
+                                                    color: "#171717",
+                                                  }
+                                                : {
+                                                    background:
+                                                      colorStyle.background,
+                                                    color: colorStyle.color,
+                                                  }
+                                              : undefined
+                                          }
+                                        >
+                                          {v}
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
                                 </div>
-                              </div>
                               ) : null
-                            )}
-                          </div>
-                        </section>
+                          )}
+                        </div>
+                      </section>
                     </>
                   )}
 
@@ -1980,102 +2109,103 @@ export default function StoreDetailsPage() {
                     <Package className="h-4 w-4" />
                     Details
                   </h4>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {/* Category */}
-                  {selectedProduct.category &&
-                    selectedProduct.category.trim() !== "" && (
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {/* Category */}
+                    {selectedProduct.category &&
+                      selectedProduct.category.trim() !== "" && (
+                        <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/50">
+                          <Tag className="h-5 w-5 flex-shrink-0 text-emerald-500 dark:text-emerald-400" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                              Category
+                            </p>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                              {selectedProduct.category}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Verification ID */}
+                    {selectedProduct.query_id && (
                       <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/50">
-                        <Tag className="h-5 w-5 flex-shrink-0 text-emerald-500 dark:text-emerald-400" />
+                        <Tag className="h-5 w-5 flex-shrink-0 text-gray-500 dark:text-gray-400" />
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                            Category
+                            Verification ID
                           </p>
-                          <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                            {selectedProduct.category}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                  {/* Verification ID */}
-                  {selectedProduct.query_id && (
-                    <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/50">
-                      <Tag className="h-5 w-5 flex-shrink-0 text-gray-500 dark:text-gray-400" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                          Verification ID
-                        </p>
-                        <p className="truncate font-mono text-sm font-bold text-gray-900 dark:text-white">
-                          {selectedProduct.query_id}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Minimum Orders */}
-                  {selectedProduct.minimumOrders != null &&
-                    String(selectedProduct.minimumOrders).trim() !== "" && (
-                      <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/50">
-                        <ShoppingCart className="h-5 w-5 flex-shrink-0 text-blue-500 dark:text-blue-400" />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                            Min. order
-                          </p>
-                          <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                            {selectedProduct.minimumOrders} {selectedProduct.unit}
+                          <p className="truncate font-mono text-sm font-bold text-gray-900 dark:text-white">
+                            {selectedProduct.query_id}
                           </p>
                         </div>
                       </div>
                     )}
 
-                  {/* Maximum Orders */}
-                  {selectedProduct.maxOrders != null &&
-                    selectedProduct.maxOrders.trim() !== "" && (
-                      <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/50">
-                        <ShoppingCart className="h-5 w-5 flex-shrink-0 text-purple-500 dark:text-purple-400" />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                            Max. order
-                          </p>
-                          <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                            {selectedProduct.maxOrders} {selectedProduct.unit}
-                          </p>
+                    {/* Minimum Orders */}
+                    {selectedProduct.minimumOrders != null &&
+                      String(selectedProduct.minimumOrders).trim() !== "" && (
+                        <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/50">
+                          <ShoppingCart className="h-5 w-5 flex-shrink-0 text-blue-500 dark:text-blue-400" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                              Min. order
+                            </p>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                              {selectedProduct.minimumOrders}{" "}
+                              {selectedProduct.unit}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                  {/* Delivery Area */}
-                  {selectedProduct.delveryArea &&
-                    selectedProduct.delveryArea.trim() !== "" && (
-                      <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-600 dark:bg-gray-800/50 sm:col-span-2">
-                        <MapPin className="h-5 w-5 flex-shrink-0 text-orange-500 dark:text-orange-400" />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium text-orange-600 dark:text-orange-400">
-                            Delivery Area
-                          </p>
-                          <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                            {selectedProduct.delveryArea}
-                          </p>
+                    {/* Maximum Orders */}
+                    {selectedProduct.maxOrders != null &&
+                      selectedProduct.maxOrders.trim() !== "" && (
+                        <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/50">
+                          <ShoppingCart className="h-5 w-5 flex-shrink-0 text-purple-500 dark:text-purple-400" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                              Max. order
+                            </p>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                              {selectedProduct.maxOrders} {selectedProduct.unit}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                  {/* Speciality */}
-                  {selectedProduct.speciality &&
-                    selectedProduct.speciality.trim() !== "" && (
-                      <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/50 sm:col-span-2">
-                        <Tag className="h-5 w-5 flex-shrink-0 text-indigo-500 dark:text-indigo-400" />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400">
-                            Speciality
-                          </p>
-                          <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                            {selectedProduct.speciality}
-                          </p>
+                    {/* Delivery Area */}
+                    {selectedProduct.delveryArea &&
+                      selectedProduct.delveryArea.trim() !== "" && (
+                        <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-600 dark:bg-gray-800/50 sm:col-span-2">
+                          <MapPin className="h-5 w-5 flex-shrink-0 text-orange-500 dark:text-orange-400" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-medium text-orange-600 dark:text-orange-400">
+                              Delivery Area
+                            </p>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                              {selectedProduct.delveryArea}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                </div>
+                      )}
+
+                    {/* Speciality */}
+                    {selectedProduct.speciality &&
+                      selectedProduct.speciality.trim() !== "" && (
+                        <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800/50 sm:col-span-2">
+                          <Tag className="h-5 w-5 flex-shrink-0 text-indigo-500 dark:text-indigo-400" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400">
+                              Speciality
+                            </p>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                              {selectedProduct.speciality}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                  </div>
                 </section>
 
                 <div className="border-t border-gray-200 dark:border-gray-600" />

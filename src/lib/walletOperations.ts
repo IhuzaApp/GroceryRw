@@ -499,7 +499,14 @@ export async function processWalletOperation(
   // Fallback: if not found with client flags, try reel then restaurant then regular
   if (!order) {
     const reelData = await hasuraClient!.request<{
-      reel_orders_by_pk: { id: string; total: string; service_fee?: string; delivery_fee: string; shopper_id?: string; user_id: string } | null;
+      reel_orders_by_pk: {
+        id: string;
+        total: string;
+        service_fee?: string;
+        delivery_fee: string;
+        shopper_id?: string;
+        user_id: string;
+      } | null;
     }>(GET_REEL_ORDER_DETAILS, { orderId });
     if (reelData.reel_orders_by_pk) {
       order = reelData.reel_orders_by_pk;
@@ -509,7 +516,13 @@ export async function processWalletOperation(
   }
   if (!order) {
     const restaurantData = await hasuraClient!.request<{
-      restaurant_orders_by_pk: { id: string; total: string; delivery_fee: string; shopper_id?: string; user_id: string } | null;
+      restaurant_orders_by_pk: {
+        id: string;
+        total: string;
+        delivery_fee: string;
+        shopper_id?: string;
+        user_id: string;
+      } | null;
     }>(GET_RESTAURANT_ORDER_DETAILS, { orderId });
     if (restaurantData.restaurant_orders_by_pk) {
       order = restaurantData.restaurant_orders_by_pk;
@@ -519,7 +532,16 @@ export async function processWalletOperation(
   }
   if (!order) {
     const regularData = await hasuraClient!.request<{
-      Orders_by_pk: { id: string; total: string; service_fee?: string; delivery_fee: string; shopper_id?: string; user_id: string; combined_order_id?: string; shop_id?: string } | null;
+      Orders_by_pk: {
+        id: string;
+        total: string;
+        service_fee?: string;
+        delivery_fee: string;
+        shopper_id?: string;
+        user_id: string;
+        combined_order_id?: string;
+        shop_id?: string;
+      } | null;
     }>(GET_ORDER_DETAILS, { orderId });
     if (regularData.Orders_by_pk) {
       order = regularData.Orders_by_pk;
@@ -656,7 +678,11 @@ export async function processWalletOperation(
     case "cancelled":
       // For cancelled operations, we need to handle combined orders differently
       // since the cancellation might affect the entire batch
-      if (!isReelOrderFinal && !isRestaurantOrderFinal && order.combined_order_id) {
+      if (
+        !isReelOrderFinal &&
+        !isRestaurantOrderFinal &&
+        order.combined_order_id
+      ) {
         // For same-shop combined orders, calculate the batch total from items for refund
         try {
           const GET_COMBINED_ORDER_ITEMS = gql`

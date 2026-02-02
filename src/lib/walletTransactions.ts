@@ -216,10 +216,14 @@ export const recordPaymentTransactions = async (
       },
     };
   } catch (error) {
-    await logErrorToSlack("walletTransactions:recordPaymentTransactions", error, {
-      shopperId,
-      orderId,
-    });
+    await logErrorToSlack(
+      "walletTransactions:recordPaymentTransactions",
+      error,
+      {
+        shopperId,
+        orderId,
+      }
+    );
     throw error;
   }
 };

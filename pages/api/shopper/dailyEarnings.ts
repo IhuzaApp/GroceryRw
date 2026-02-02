@@ -410,7 +410,10 @@ export default async function handler(
     const formattedData = formatEarningsData(allItems, period);
 
     // Total net earnings (Orders + reel_orders + restaurant_orders, after commission)
-    const totalEarnings = allItems.reduce((sum, item) => sum + item.earnings, 0);
+    const totalEarnings = allItems.reduce(
+      (sum, item) => sum + item.earnings,
+      0
+    );
     const totalOrderCount =
       ordersData.Orders.length +
       reelData.reel_orders.length +

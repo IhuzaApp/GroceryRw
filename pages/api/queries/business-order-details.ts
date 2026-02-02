@@ -88,11 +88,9 @@ export default async function handler(
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const session = (await getServerSession(
-    req,
-    res,
-    authOptions as any
-  )) as { user: SessionUser } | null;
+  const session = (await getServerSession(req, res, authOptions as any)) as {
+    user: SessionUser;
+  } | null;
 
   if (!session?.user?.id) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -166,7 +164,13 @@ export default async function handler(
     const bs = row.business_store;
 
     // Enrich products with images from PlasBusinessProductsOrSerive
-    const productIds = [...new Set(products.map((p: any) => (p.id || p.product_id)?.toString()).filter(Boolean))] as string[];
+    const productIds = [
+      ...new Set(
+        products
+          .map((p: any) => (p.id || p.product_id)?.toString())
+          .filter(Boolean)
+      ),
+    ] as string[];
     if (productIds.length > 0) {
       try {
         const productsData = await hasuraClient.request<{

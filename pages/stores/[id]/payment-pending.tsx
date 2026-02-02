@@ -12,14 +12,18 @@ export default function PaymentPendingPage() {
   const router = useRouter();
   const { id: storeId, orderId, referenceId } = router.query;
 
-  const [status, setStatus] = useState<"pending" | "success" | "failed">("pending");
+  const [status, setStatus] = useState<"pending" | "success" | "failed">(
+    "pending"
+  );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const pollStatus = useCallback(async () => {
     if (!referenceId || typeof referenceId !== "string") return;
 
     try {
-      const res = await fetch(`/api/momo/request-to-pay-status?referenceId=${referenceId}`);
+      const res = await fetch(
+        `/api/momo/request-to-pay-status?referenceId=${referenceId}`
+      );
       const data = await res.json();
 
       if (data.status === "SUCCESSFUL") {
@@ -39,9 +43,15 @@ export default function PaymentPendingPage() {
         return;
       }
 
-      if (data.status === "FAILED" || data.status === "REJECTED" || data.status === "EXPIRED") {
+      if (
+        data.status === "FAILED" ||
+        data.status === "REJECTED" ||
+        data.status === "EXPIRED"
+      ) {
         setStatus("failed");
-        setErrorMessage(data.reason || data.message || "Payment was not completed.");
+        setErrorMessage(
+          data.reason || data.message || "Payment was not completed."
+        );
         return;
       }
     } catch (_) {
@@ -57,7 +67,9 @@ export default function PaymentPendingPage() {
       if (Date.now() - startTime > MAX_POLL_TIME_MS) {
         clearInterval(interval);
         setStatus("failed");
-        setErrorMessage("Payment timed out. Please check your phone and try again.");
+        setErrorMessage(
+          "Payment timed out. Please check your phone and try again."
+        );
         return;
       }
       pollStatus();
@@ -87,7 +99,7 @@ export default function PaymentPendingPage() {
   if (!storeId || !referenceId) {
     return (
       <RootLayout>
-        <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+        <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 dark:bg-gray-900">
           <p className="text-gray-500 dark:text-gray-400">Loading...</p>
           <button
             onClick={() => router.push("/")}
@@ -102,7 +114,7 @@ export default function PaymentPendingPage() {
 
   return (
     <RootLayout>
-      <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 md:ml-16">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 dark:bg-gray-900 md:ml-16">
         <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg dark:bg-gray-800">
           {status === "pending" && (
             <>
@@ -113,7 +125,8 @@ export default function PaymentPendingPage() {
                 Waiting for MoMo payment
               </h1>
               <p className="mt-3 text-center text-sm text-gray-500 dark:text-gray-400">
-                Open your MoMo app and approve the payment request on your phone.
+                Open your MoMo app and approve the payment request on your
+                phone.
               </p>
               <div className="mt-6 flex items-center justify-center gap-2 rounded-lg bg-gray-50 px-4 py-3 dark:bg-gray-700">
                 <Smartphone className="h-5 w-5 text-gray-500" />
@@ -153,7 +166,8 @@ export default function PaymentPendingPage() {
                 Payment incomplete
               </h1>
               <p className="mt-3 text-center text-sm text-gray-500 dark:text-gray-400">
-                {errorMessage || "The payment was not completed. You can try again from the store."}
+                {errorMessage ||
+                  "The payment was not completed. You can try again from the store."}
               </p>
               <button
                 onClick={handleBackToStore}

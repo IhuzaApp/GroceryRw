@@ -583,7 +583,10 @@ export const getServerSideProps: GetServerSideProps<
       });
       // Log full restaurant order so we can see what we have
       console.log("🍽️ Restaurant order (raw):", JSON.stringify(order, null, 2));
-      console.log("🍽️ Restaurant order (keys):", order ? Object.keys(order) : []);
+      console.log(
+        "🍽️ Restaurant order (keys):",
+        order ? Object.keys(order) : []
+      );
       if (order?.Restaurant) {
         console.log("🍽️ Restaurant details:", order.Restaurant);
       }

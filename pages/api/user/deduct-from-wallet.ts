@@ -86,7 +86,8 @@ export default async function handler(
   } catch (error) {
     console.error("Error deducting from wallet:", error);
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to deduct from wallet",
+      error:
+        error instanceof Error ? error.message : "Failed to deduct from wallet",
     });
   }
 }

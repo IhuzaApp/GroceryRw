@@ -5,7 +5,11 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
 const GET_ORDERS_BY_STORE = gql`
-  query GetOrdersByStore($store_id: uuid!, $businessAccount_id: uuid!, $user_id: uuid!) {
+  query GetOrdersByStore(
+    $store_id: uuid!
+    $businessAccount_id: uuid!
+    $user_id: uuid!
+  ) {
     businessProductOrders(
       where: {
         store_id: { _eq: $store_id }
@@ -42,11 +46,9 @@ export default async function handler(
   }
 
   try {
-    const session = (await getServerSession(
-      req,
-      res,
-      authOptions as any
-    )) as { user?: { id: string } } | null;
+    const session = (await getServerSession(req, res, authOptions as any)) as {
+      user?: { id: string };
+    } | null;
 
     if (!session?.user?.id) {
       return res.status(401).json({ error: "Unauthorized" });
@@ -82,7 +84,9 @@ export default async function handler(
     const stats: Record<string, ProductStats> = {};
     const orderIdsByProduct: Record<string, Set<string>> = {};
     for (const order of businessProductOrders || []) {
-      const products = Array.isArray(order.allProducts) ? order.allProducts : [];
+      const products = Array.isArray(order.allProducts)
+        ? order.allProducts
+        : [];
       const seenInOrder = new Set<string>();
       for (const p of products) {
         const productId = p.id || p.product_id;

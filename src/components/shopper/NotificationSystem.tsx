@@ -67,8 +67,8 @@ async function fetchOrderItemNames(
     type === "reel"
       ? `/api/queries/reel-order-details?id=${orderId}`
       : type === "restaurant"
-        ? `/api/queries/restaurant-order-details?id=${orderId}`
-        : `/api/queries/orderDetails?id=${orderId}`;
+      ? `/api/queries/restaurant-order-details?id=${orderId}`
+      : `/api/queries/orderDetails?id=${orderId}`;
   const resp = await fetch(url);
   if (!resp.ok) return [];
   const data = await resp.json();
@@ -83,8 +83,11 @@ async function fetchOrderItemNames(
     const items = order.restaurant_order_items ?? [];
     return items
       .map(
-        (item: { restaurant_dishes?: { dishes?: { name?: string | null } | null } | null }) =>
-          item.restaurant_dishes?.dishes?.name ?? null
+        (item: {
+          restaurant_dishes?: {
+            dishes?: { name?: string | null } | null;
+          } | null;
+        }) => item.restaurant_dishes?.dishes?.name ?? null
       )
       .filter(Boolean)
       .map((s: string) => s.trim());
@@ -93,8 +96,9 @@ async function fetchOrderItemNames(
   const items = order.Order_Items ?? [];
   return items
     .map(
-      (item: { product?: { ProductName?: { name?: string | null } | null } | null }) =>
-        item.product?.ProductName?.name ?? null
+      (item: {
+        product?: { ProductName?: { name?: string | null } | null } | null;
+      }) => item.product?.ProductName?.name ?? null
     )
     .filter(Boolean)
     .map((s: string) => s.trim());
@@ -1502,10 +1506,10 @@ export default function NotificationSystem({
                   orderType === "reel"
                     ? `/api/queries/reel-order-details?id=${offer.order.id}`
                     : orderType === "restaurant"
-                      ? `/api/queries/restaurant-order-details?id=${offer.order.id}`
-                      : orderType === "business"
-                        ? `/api/queries/business-order-details?id=${offer.order.id}`
-                        : `/api/queries/orderDetails?id=${offer.order.id}`;
+                    ? `/api/queries/restaurant-order-details?id=${offer.order.id}`
+                    : orderType === "business"
+                    ? `/api/queries/business-order-details?id=${offer.order.id}`
+                    : `/api/queries/orderDetails?id=${offer.order.id}`;
                 const resp = await fetch(orderDetailsUrl);
                 if (resp.ok) {
                   const details = await resp.json();
@@ -1698,12 +1702,12 @@ export default function NotificationSystem({
                               ? "bg-purple-500/30 text-purple-300"
                               : "bg-purple-100 text-purple-700"
                             : selectedOrder.orderType === "restaurant"
-                              ? theme === "dark"
-                                ? "bg-amber-500/30 text-amber-300"
-                                : "bg-amber-100 text-amber-700"
-                              : theme === "dark"
-                                ? "bg-blue-500/30 text-blue-300"
-                                : "bg-blue-100 text-blue-700"
+                            ? theme === "dark"
+                              ? "bg-amber-500/30 text-amber-300"
+                              : "bg-amber-100 text-amber-700"
+                            : theme === "dark"
+                            ? "bg-blue-500/30 text-blue-300"
+                            : "bg-blue-100 text-blue-700"
                         }`}
                       >
                         {selectedOrder.orderType}
@@ -1818,7 +1822,9 @@ export default function NotificationSystem({
                     className="flex flex-1 cursor-pointer items-center space-x-2 text-left outline-none focus:ring-0"
                   >
                     <svg
-                      className={`h-5 w-5 flex-shrink-0 text-gray-600 dark:text-gray-300 transition-transform ${itemsExpanded ? "rotate-90" : ""}`}
+                      className={`h-5 w-5 flex-shrink-0 text-gray-600 transition-transform dark:text-gray-300 ${
+                        itemsExpanded ? "rotate-90" : ""
+                      }`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"

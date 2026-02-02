@@ -442,10 +442,10 @@ export default async function handler(
           r.pin != null && String(r.pin).trim() !== ""
             ? String(r.pin)
             : r.OrderID != null
-              ? String(r.OrderID).padStart(4, "0").slice(-4)
-              : r.id
-                ? r.id.slice(0, 4).toUpperCase()
-                : "",
+            ? String(r.OrderID).padStart(4, "0").slice(-4)
+            : r.id
+            ? r.id.slice(0, 4).toUpperCase()
+            : "",
         combined_order_id: r.combined_order_id,
         total: grandTotal,
         shop_id: reelShopId,

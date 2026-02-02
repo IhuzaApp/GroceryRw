@@ -157,126 +157,133 @@ export default function UserBusinessOrderDetails({
       <div className="flex flex-col gap-6 md:flex-row">
         {/* Left column - Order details */}
         <div className="w-full space-y-6 md:w-2/3">
-      <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-        <h3 className="mb-3 text-base font-semibold text-gray-900 dark:text-white">
-          Items
-        </h3>
-        <ul className="space-y-3">
-          {products.length === 0 ? (
-            <li className="text-sm text-gray-500 dark:text-gray-400">
-              No items
-            </li>
-          ) : (
-            products.map((p: any, idx: number) => (
-              <li
-                key={p.id || idx}
-                className="flex items-center gap-4 border-b border-gray-100 py-3 last:border-0 dark:border-gray-700"
-              >
-                <ProductImageCell src={p.image ?? p.Image} alt={p.name || "Item"} />
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium text-gray-900 dark:text-white">
-                    {p.name || "Item"}
-                  </p>
-                  {p.selectedDetails &&
-                    typeof p.selectedDetails === "object" &&
-                    Object.keys(p.selectedDetails).length > 0 && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {Object.entries(p.selectedDetails)
-                          .map(([k, v]) => `${k}: ${v}`)
-                          .join(" · ")}
+          <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+            <h3 className="mb-3 text-base font-semibold text-gray-900 dark:text-white">
+              Items
+            </h3>
+            <ul className="space-y-3">
+              {products.length === 0 ? (
+                <li className="text-sm text-gray-500 dark:text-gray-400">
+                  No items
+                </li>
+              ) : (
+                products.map((p: any, idx: number) => (
+                  <li
+                    key={p.id || idx}
+                    className="flex items-center gap-4 border-b border-gray-100 py-3 last:border-0 dark:border-gray-700"
+                  >
+                    <ProductImageCell
+                      src={p.image ?? p.Image}
+                      alt={p.name || "Item"}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {p.name || "Item"}
                       </p>
-                    )}
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Qty: {p.quantity || 0} {p.unit || ""}
-                  </p>
+                      {p.selectedDetails &&
+                        typeof p.selectedDetails === "object" &&
+                        Object.keys(p.selectedDetails).length > 0 && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {Object.entries(p.selectedDetails)
+                              .map(([k, v]) => `${k}: ${v}`)
+                              .join(" · ")}
+                          </p>
+                        )}
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Qty: {p.quantity || 0} {p.unit || ""}
+                      </p>
+                    </div>
+                    <p className="flex-shrink-0 font-semibold text-gray-900 dark:text-white">
+                      {formatCurrency(
+                        (p.price_per_item || p.price || 0) * (p.quantity || 0)
+                      )}
+                    </p>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
+
+          <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+            <h3 className="mb-3 text-base font-semibold text-gray-900 dark:text-white">
+              Order total
+            </h3>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                <span>Subtotal</span>
+                <span>{formatCurrency(order?.subtotal ?? 0)}</span>
+              </div>
+              {(order?.service_fee ?? 0) > 0 && (
+                <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                  <span>Service fee</span>
+                  <span>{formatCurrency(order.service_fee)}</span>
                 </div>
-                <p className="flex-shrink-0 font-semibold text-gray-900 dark:text-white">
-                  {formatCurrency(
-                    (p.price_per_item || p.price || 0) * (p.quantity || 0)
-                  )}
+              )}
+              {(order?.transportation_fee ?? 0) > 0 && (
+                <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                  <span>Delivery fee</span>
+                  <span>{formatCurrency(order.transportation_fee)}</span>
+                </div>
+              )}
+              <div className="flex justify-between border-t border-gray-200 pt-2 text-base font-bold text-gray-900 dark:border-gray-600 dark:text-white">
+                <span>Total</span>
+                <span>{formatCurrency(order?.total ?? 0)}</span>
+              </div>
+            </div>
+          </div>
+
+          {order?.deliveryAddress && (
+            <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+              <h3 className="mb-2 text-base font-semibold text-gray-900 dark:text-white">
+                Delivery address
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {order.deliveryAddress}
+              </p>
+              {order?.timeRange && (
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+                  Time: {order.timeRange}
                 </p>
-              </li>
-            ))
-          )}
-        </ul>
-      </div>
-
-      <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-        <h3 className="mb-3 text-base font-semibold text-gray-900 dark:text-white">
-          Order total
-        </h3>
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-            <span>Subtotal</span>
-            <span>{formatCurrency(order?.subtotal ?? 0)}</span>
-          </div>
-          {(order?.service_fee ?? 0) > 0 && (
-            <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-              <span>Service fee</span>
-              <span>{formatCurrency(order.service_fee)}</span>
+              )}
             </div>
           )}
-          {(order?.transportation_fee ?? 0) > 0 && (
-            <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-              <span>Delivery fee</span>
-              <span>{formatCurrency(order.transportation_fee)}</span>
-            </div>
-          )}
-          <div className="flex justify-between border-t border-gray-200 pt-2 text-base font-bold text-gray-900 dark:border-gray-600 dark:text-white">
-            <span>Total</span>
-            <span>{formatCurrency(order?.total ?? 0)}</span>
+
+          <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+            <h3 className="mb-2 text-base font-semibold text-gray-900 dark:text-white">
+              Support
+            </h3>
+            {supportTicket && (
+              <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">
+                Ticket #{supportTicket.ticket_num} — {supportTicket.status}
+              </p>
+            )}
+            {onContactSupport ? (
+              <button
+                type="button"
+                onClick={onContactSupport}
+                className="group inline-flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-5 py-3 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:from-green-600 hover:to-green-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 active:scale-[0.98] dark:focus:ring-offset-gray-800"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  className="h-5 w-5 shrink-0 !text-white transition-transform [stroke:white] group-hover:scale-110"
+                >
+                  <path
+                    d="M15.05 5A5 5 0 0119 8.95M15.05 1A9 9 0 0123 8.94m-1 7.98v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span className="!text-white">Contact support</span>
+              </button>
+            ) : !supportTicket ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Need help? Contact support from the order list.
+              </p>
+            ) : null}
           </div>
-        </div>
-      </div>
-
-      {order?.deliveryAddress && (
-        <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-          <h3 className="mb-2 text-base font-semibold text-gray-900 dark:text-white">
-            Delivery address
-          </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            {order.deliveryAddress}
-          </p>
-          {order?.timeRange && (
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-              Time: {order.timeRange}
-            </p>
-          )}
-        </div>
-      )}
-
-      <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-        <h3 className="mb-2 text-base font-semibold text-gray-900 dark:text-white">
-          Support
-        </h3>
-        {supportTicket && (
-          <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">
-            Ticket #{supportTicket.ticket_num} — {supportTicket.status}
-          </p>
-        )}
-        {onContactSupport ? (
-          <button
-            type="button"
-            onClick={onContactSupport}
-            className="group inline-flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-5 py-3 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:from-green-600 hover:to-green-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 active:scale-[0.98] dark:focus:ring-offset-gray-800"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              className="h-5 w-5 shrink-0 !text-white transition-transform group-hover:scale-110 [stroke:white]"
-            >
-              <path d="M15.05 5A5 5 0 0119 8.95M15.05 1A9 9 0 0123 8.94m-1 7.98v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span className="!text-white">Contact support</span>
-          </button>
-        ) : !supportTicket ? (
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Need help? Contact support from the order list.
-          </p>
-        ) : null}
-      </div>
         </div>
 
         {/* Right column - Your Plaser (desktop only) */}
@@ -338,13 +345,24 @@ export default function UserBusinessOrderDetails({
                   <button
                     type="button"
                     onClick={() => {
-                      if (shopperPhone) window.location.href = `tel:${shopperPhone}`;
+                      if (shopperPhone)
+                        window.location.href = `tel:${shopperPhone}`;
                     }}
                     disabled={order?.status === "delivered" || !shopperPhone}
                     className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-gradient-to-r from-green-500 to-green-600 px-3 py-2 text-xs font-semibold text-white shadow-md transition hover:from-green-600 hover:to-green-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-4 w-4">
-                      <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" strokeLinecap="round" strokeLinejoin="round" />
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      className="h-4 w-4"
+                    >
+                      <path
+                        d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                     Call
                   </button>
@@ -358,8 +376,18 @@ export default function UserBusinessOrderDetails({
                     }}
                     className="flex flex-1 items-center justify-center gap-1.5 rounded-md border-2 border-green-500 bg-white px-3 py-2 text-xs font-semibold text-green-600 transition hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-green-600 dark:bg-gray-800 dark:text-green-400 dark:hover:bg-green-900/20"
                   >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-4 w-4">
-                      <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" strokeLinecap="round" strokeLinejoin="round" />
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      className="h-4 w-4"
+                    >
+                      <path
+                        d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                     Message
                   </button>
@@ -372,7 +400,8 @@ export default function UserBusinessOrderDetails({
                         Ratings &amp; Reviews
                       </h3>
                       <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {order.Shoppers.Ratings.length} review{order.Shoppers.Ratings.length !== 1 ? "s" : ""}
+                        {order.Shoppers.Ratings.length} review
+                        {order.Shoppers.Ratings.length !== 1 ? "s" : ""}
                       </span>
                     </div>
                     <div className="max-h-[280px] space-y-3 overflow-y-auto pr-1">
@@ -384,7 +413,9 @@ export default function UserBusinessOrderDetails({
                           <div className="mb-2 flex items-start justify-between gap-2">
                             {rating.reviewed_at && (
                               <p className="text-xs text-gray-500 dark:text-gray-400">
-                                {new Date(rating.reviewed_at).toLocaleDateString("en-US", {
+                                {new Date(
+                                  rating.reviewed_at
+                                ).toLocaleDateString("en-US", {
                                   month: "short",
                                   day: "numeric",
                                   year: "numeric",
@@ -395,7 +426,11 @@ export default function UserBusinessOrderDetails({
                               {[...Array(5)].map((_, i) => (
                                 <svg
                                   key={i}
-                                  className={`h-3.5 w-3.5 ${i < Number(rating.rating || 0) ? "fill-yellow-400 text-yellow-400" : "fill-gray-200 text-gray-200 dark:fill-gray-600 dark:text-gray-600"}`}
+                                  className={`h-3.5 w-3.5 ${
+                                    i < Number(rating.rating || 0)
+                                      ? "fill-yellow-400 text-yellow-400"
+                                      : "fill-gray-200 text-gray-200 dark:fill-gray-600 dark:text-gray-600"
+                                  }`}
                                   viewBox="0 0 20 20"
                                   xmlns="http://www.w3.org/2000/svg"
                                 >
@@ -412,21 +447,28 @@ export default function UserBusinessOrderDetails({
                               {rating.review}
                             </p>
                           )}
-                          {(rating.packaging_quality || rating.delivery_experience || rating.professionalism) && (
+                          {(rating.packaging_quality ||
+                            rating.delivery_experience ||
+                            rating.professionalism) && (
                             <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
                               {rating.packaging_quality && (
                                 <span className="rounded bg-gray-200/80 px-1.5 py-0.5 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
-                                  Packaging: {Number(rating.packaging_quality).toFixed(1)}
+                                  Packaging:{" "}
+                                  {Number(rating.packaging_quality).toFixed(1)}
                                 </span>
                               )}
                               {rating.delivery_experience && (
                                 <span className="rounded bg-gray-200/80 px-1.5 py-0.5 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
-                                  Delivery: {Number(rating.delivery_experience).toFixed(1)}
+                                  Delivery:{" "}
+                                  {Number(rating.delivery_experience).toFixed(
+                                    1
+                                  )}
                                 </span>
                               )}
                               {rating.professionalism && (
                                 <span className="rounded bg-gray-200/80 px-1.5 py-0.5 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
-                                  Professionalism: {Number(rating.professionalism).toFixed(1)}
+                                  Professionalism:{" "}
+                                  {Number(rating.professionalism).toFixed(1)}
                                 </span>
                               )}
                             </div>
@@ -446,7 +488,12 @@ export default function UserBusinessOrderDetails({
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
                   </svg>
                 </div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">

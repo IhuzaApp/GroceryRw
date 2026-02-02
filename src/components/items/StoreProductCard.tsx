@@ -46,8 +46,12 @@ const COLOR_CHIP_STYLES: Record<string, { bg: string; text: string }> = {
   Violet: { bg: "#6d28d9", text: "#fff" },
   Lavender: { bg: "#c4b5fd", text: "#171717" },
 };
-function getColorChipStyle(name: string): { background: string; color: string } | null {
-  const key = Object.keys(COLOR_CHIP_STYLES).find((k) => k.toLowerCase() === name.toLowerCase());
+function getColorChipStyle(
+  name: string
+): { background: string; color: string } | null {
+  const key = Object.keys(COLOR_CHIP_STYLES).find(
+    (k) => k.toLowerCase() === name.toLowerCase()
+  );
   if (!key) return null;
   const s = COLOR_CHIP_STYLES[key];
   return { background: s.bg, color: s.text };
@@ -93,7 +97,9 @@ export default function StoreProductCard({
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
-  const [selectedDetails, setSelectedDetails] = useState<Record<string, string>>({});
+  const [selectedDetails, setSelectedDetails] = useState<
+    Record<string, string>
+  >({});
   const [imageError, setImageError] = useState(false);
   const [ratings, setRatings] = useState<ProductRating[]>([]);
   const [ratingsLoading, setRatingsLoading] = useState(false);
@@ -409,16 +415,22 @@ export default function StoreProductCard({
                       </label>
                       {otherDetails.options.map(
                         (opt) =>
-                          opt.values && opt.values.length > 0 && (
+                          opt.values &&
+                          opt.values.length > 0 && (
                             <div key={opt.key || opt.label}>
                               <p className="mb-1.5 text-xs font-medium text-gray-500 dark:text-gray-400">
                                 {opt.label || opt.key}
                               </p>
                               <div className="flex flex-wrap gap-2">
                                 {opt.values.map((v) => {
-                                  const isColor = (opt.key || "").toLowerCase() === "color";
-                                  const colorStyle = isColor ? getColorChipStyle(v) : null;
-                                  const isTransparent = isColor && v.toLowerCase() === "transparent";
+                                  const isColor =
+                                    (opt.key || "").toLowerCase() === "color";
+                                  const colorStyle = isColor
+                                    ? getColorChipStyle(v)
+                                    : null;
+                                  const isTransparent =
+                                    isColor &&
+                                    v.toLowerCase() === "transparent";
                                   const chipClass = colorStyle
                                     ? "inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium"
                                     : "inline-flex items-center rounded-full bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-200";
@@ -429,8 +441,16 @@ export default function StoreProductCard({
                                       style={
                                         colorStyle
                                           ? isTransparent
-                                            ? { border: "2px solid #d4d4d4", background: "#f5f5f5", color: "#171717" }
-                                            : { background: colorStyle.background, color: colorStyle.color }
+                                            ? {
+                                                border: "2px solid #d4d4d4",
+                                                background: "#f5f5f5",
+                                                color: "#171717",
+                                              }
+                                            : {
+                                                background:
+                                                  colorStyle.background,
+                                                color: colorStyle.color,
+                                              }
                                           : undefined
                                       }
                                     >
@@ -452,13 +472,15 @@ export default function StoreProductCard({
                       Reviews {ratings.length > 0 && `(${ratings.length})`}
                     </h4>
                     {ratingsLoading ? (
-                      <p className="py-4 text-center text-sm text-gray-500">Loading reviews...</p>
+                      <p className="py-4 text-center text-sm text-gray-500">
+                        Loading reviews...
+                      </p>
                     ) : ratings.length === 0 ? (
                       <p className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
                         No reviews yet. Be the first to review!
                       </p>
                     ) : (
-                      <div className="space-y-3 max-h-40 overflow-y-auto">
+                      <div className="max-h-40 space-y-3 overflow-y-auto">
                         {ratings.map((r) => (
                           <div
                             key={r.id}
@@ -477,7 +499,9 @@ export default function StoreProductCard({
                                 <Star
                                   key={i}
                                   className={`h-3.5 w-3.5 ${
-                                    i <= (parseFloat(r.ratings || "0") || 0) ? "fill-amber-500" : "fill-gray-200 dark:fill-gray-600"
+                                    i <= (parseFloat(r.ratings || "0") || 0)
+                                      ? "fill-amber-500"
+                                      : "fill-gray-200 dark:fill-gray-600"
                                   }`}
                                 />
                               ))}
@@ -550,7 +574,9 @@ export default function StoreProductCard({
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                    {options.length > 0 ? "Choose size, color & quantity" : "Select quantity"}
+                    {options.length > 0
+                      ? "Choose size, color & quantity"
+                      : "Select quantity"}
                   </h3>
                   <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                     {name}

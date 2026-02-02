@@ -197,7 +197,8 @@ export default function BatchDetails({
     {}
   );
   const [showPickupScannerModal, setShowPickupScannerModal] = useState(false);
-  const [pickupScannerOrder, setPickupScannerOrder] = useState<OrderDetailsType | null>(null);
+  const [pickupScannerOrder, setPickupScannerOrder] =
+    useState<OrderDetailsType | null>(null);
   const [combinedOrderIds, setCombinedOrderIds] = useState<string[]>([]);
   const [combinedOrderNumbers, setCombinedOrderNumbers] = useState<string[]>(
     []
@@ -2520,7 +2521,11 @@ export default function BatchDetails({
     if (!activeOrder) return null;
 
     // Reel and restaurant: show action button only at bottom, not on the delivery route card
-    if (options?.onCard && (activeOrder.orderType === "reel" || activeOrder.orderType === "restaurant")) {
+    if (
+      options?.onCard &&
+      (activeOrder.orderType === "reel" ||
+        activeOrder.orderType === "restaurant")
+    ) {
       return null;
     }
 
@@ -2556,9 +2561,7 @@ export default function BatchDetails({
             color="green"
             size="lg"
             block
-            onClick={() =>
-              handleUpdateStatus("shopping", activeOrder.id)
-            }
+            onClick={() => handleUpdateStatus("shopping", activeOrder.id)}
             loading={loading}
             className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
           >
@@ -3155,204 +3158,196 @@ export default function BatchDetails({
     setOrderDetailsLoading(true);
 
     fetch(`/api/shopper/orderDetails?id=${order.id}`)
-        .then((res) => {
-          // API response status
-          return res.json();
-        })
-        .then((data) => {
-          // API response data
+      .then((res) => {
+        // API response status
+        return res.json();
+      })
+      .then((data) => {
+        // API response data
 
-          // Console log the initial orderDetails API response
+        // Console log the initial orderDetails API response
 
-          if (data.order) {
-            // Transform the API response to match BatchDetails expected structure
-            const transformOrderItems = (
-              items: any[],
-              shopId?: string,
-              orderId?: string
-            ) => {
-              return (
-                items?.map((item: any) => {
-                  // Handle both data formats: flattened (from orderDetails API) and nested (from combined orders API)
-                  const isNestedFormat =
-                    item.product && item.product.ProductName;
+        if (data.order) {
+          // Transform the API response to match BatchDetails expected structure
+          const transformOrderItems = (
+            items: any[],
+            shopId?: string,
+            orderId?: string
+          ) => {
+            return (
+              items?.map((item: any) => {
+                // Handle both data formats: flattened (from orderDetails API) and nested (from combined orders API)
+                const isNestedFormat = item.product && item.product.ProductName;
 
-                  let productId,
-                    productName,
-                    productImage,
-                    finalPrice,
-                    measurementUnit,
-                    productNameData;
+                let productId,
+                  productName,
+                  productImage,
+                  finalPrice,
+                  measurementUnit,
+                  productNameData;
 
-                  if (isNestedFormat) {
-                    // Nested format from combined orders API
-                    productId = item.product?.id || item.id;
-                    productName =
-                      item.product?.ProductName?.name || "Unknown Product";
-                    productImage =
+                if (isNestedFormat) {
+                  // Nested format from combined orders API
+                  productId = item.product?.id || item.id;
+                  productName =
+                    item.product?.ProductName?.name || "Unknown Product";
+                  productImage =
+                    item.product?.ProductName?.image ||
+                    item.product?.image ||
+                    "/images/groceryPlaceholder.png";
+                  finalPrice =
+                    item.product?.final_price || item.price?.toString() || "0";
+                  measurementUnit = item.product?.measurement_unit || "item";
+                  productNameData = {
+                    id: item.product?.ProductName?.id || item.id,
+                    name: item.product?.ProductName?.name || "Unknown Product",
+                    description: item.product?.ProductName?.description || "",
+                    barcode: item.product?.ProductName?.barcode || "",
+                    sku: item.product?.ProductName?.sku || "",
+                    image:
                       item.product?.ProductName?.image ||
                       item.product?.image ||
-                      "/images/groceryPlaceholder.png";
-                    finalPrice =
-                      item.product?.final_price ||
-                      item.price?.toString() ||
-                      "0";
-                    measurementUnit = item.product?.measurement_unit || "item";
-                    productNameData = {
-                      id: item.product?.ProductName?.id || item.id,
-                      name:
-                        item.product?.ProductName?.name || "Unknown Product",
-                      description: item.product?.ProductName?.description || "",
-                      barcode: item.product?.ProductName?.barcode || "",
-                      sku: item.product?.ProductName?.sku || "",
-                      image:
-                        item.product?.ProductName?.image ||
-                        item.product?.image ||
-                        "/images/groceryPlaceholder.png",
-                      create_at:
-                        item.product?.ProductName?.create_at ||
-                        new Date().toISOString(),
-                    };
-                  } else {
-                    // Flattened format from orderDetails API - use existing product data
-                    productId = item.product?.id || item.id;
-                    productName = item.product?.name || item.name;
-                    productImage =
-                      item.product?.image ||
-                      item.productImage ||
-                      "/images/groceryPlaceholder.png";
-                    finalPrice =
-                      item.product?.final_price ||
-                      item.price?.toString() ||
-                      "0";
-                    measurementUnit =
-                      item.product?.measurement_unit ||
-                      item.measurement_unit ||
-                      "item";
-
-                    // Use existing ProductName data from the flattened format
-                    productNameData = item.product?.ProductName
-                      ? {
-                          id: item.product.ProductName.id,
-                          name: item.product.ProductName.name,
-                          description:
-                            item.product.ProductName.description || "",
-                          barcode: item.product.ProductName.barcode || "",
-                          sku: item.product.ProductName.sku || "",
-                          image:
-                            item.product.ProductName.image ||
-                            item.productImage ||
-                            "/images/groceryPlaceholder.png",
-                          create_at:
-                            item.product.ProductName.create_at ||
-                            new Date().toISOString(),
-                        }
-                      : {
-                          id: item.id, // Fallback to item.id if no ProductName data
-                          name: item.name,
-                          description: "",
-                          barcode: item.barcode || "",
-                          sku: item.sku || "",
-                          image:
-                            item.productImage ||
-                            "/images/groceryPlaceholder.png",
-                          create_at: new Date().toISOString(),
-                        };
-                  }
-
-                  const transformedItem = {
-                    id: item.id,
-                    quantity: item.quantity,
-                    price: item.price,
-                    shopId: shopId, // Attach shopId for split view grouping
-                    orderId: orderId, // Attach orderId to maintain correct order context
-                    product: {
-                      id: productId,
-                      name: productName,
-                      image: productImage,
-                      final_price: finalPrice,
-                      measurement_unit: measurementUnit,
-                      barcode: productNameData.barcode,
-                      sku: productNameData.sku,
-                      ProductName: productNameData,
-                    },
+                      "/images/groceryPlaceholder.png",
+                    create_at:
+                      item.product?.ProductName?.create_at ||
+                      new Date().toISOString(),
                   };
+                } else {
+                  // Flattened format from orderDetails API - use existing product data
+                  productId = item.product?.id || item.id;
+                  productName = item.product?.name || item.name;
+                  productImage =
+                    item.product?.image ||
+                    item.productImage ||
+                    "/images/groceryPlaceholder.png";
+                  finalPrice =
+                    item.product?.final_price || item.price?.toString() || "0";
+                  measurementUnit =
+                    item.product?.measurement_unit ||
+                    item.measurement_unit ||
+                    "item";
 
-                  return transformedItem;
-                }) || []
-              );
-            };
+                  // Use existing ProductName data from the flattened format
+                  productNameData = item.product?.ProductName
+                    ? {
+                        id: item.product.ProductName.id,
+                        name: item.product.ProductName.name,
+                        description: item.product.ProductName.description || "",
+                        barcode: item.product.ProductName.barcode || "",
+                        sku: item.product.ProductName.sku || "",
+                        image:
+                          item.product.ProductName.image ||
+                          item.productImage ||
+                          "/images/groceryPlaceholder.png",
+                        create_at:
+                          item.product.ProductName.create_at ||
+                          new Date().toISOString(),
+                      }
+                    : {
+                        id: item.id, // Fallback to item.id if no ProductName data
+                        name: item.name,
+                        description: "",
+                        barcode: item.barcode || "",
+                        sku: item.sku || "",
+                        image:
+                          item.productImage || "/images/groceryPlaceholder.png",
+                        create_at: new Date().toISOString(),
+                      };
+                }
 
-            let allItems = transformOrderItems(
-              data.order.items || [],
-              data.order.shop?.id,
-              data.order.id
+                const transformedItem = {
+                  id: item.id,
+                  quantity: item.quantity,
+                  price: item.price,
+                  shopId: shopId, // Attach shopId for split view grouping
+                  orderId: orderId, // Attach orderId to maintain correct order context
+                  product: {
+                    id: productId,
+                    name: productName,
+                    image: productImage,
+                    final_price: finalPrice,
+                    measurement_unit: measurementUnit,
+                    barcode: productNameData.barcode,
+                    sku: productNameData.sku,
+                    ProductName: productNameData,
+                  },
+                };
+
+                return transformedItem;
+              }) || []
+            );
+          };
+
+          let allItems = transformOrderItems(
+            data.order.items || [],
+            data.order.shop?.id,
+            data.order.id
+          );
+
+          // If combined orders exist, handle them based on same shop vs different shops
+          if (
+            data.order.combinedOrders &&
+            data.order.combinedOrders.length > 0
+          ) {
+            // Check if all combined orders are from the same shop as the main order
+            const mainShopId = data.order.shop?.id;
+            const sameShopOrders = data.order.combinedOrders.filter(
+              (subOrder: any) => subOrder.shop?.id === mainShopId
+            );
+            const differentShopOrders = data.order.combinedOrders.filter(
+              (subOrder: any) => subOrder.shop?.id !== mainShopId
             );
 
-            // If combined orders exist, handle them based on same shop vs different shops
-            if (
-              data.order.combinedOrders &&
-              data.order.combinedOrders.length > 0
-            ) {
-              // Check if all combined orders are from the same shop as the main order
-              const mainShopId = data.order.shop?.id;
-              const sameShopOrders = data.order.combinedOrders.filter(
-                (subOrder: any) => subOrder.shop?.id === mainShopId
-              );
-              const differentShopOrders = data.order.combinedOrders.filter(
-                (subOrder: any) => subOrder.shop?.id !== mainShopId
-              );
+            // For orders from the SAME shop: DON'T duplicate items, just keep them separate for combinedOrders array
+            sameShopOrders.forEach((subOrder: any) => {
+              if (subOrder.items && subOrder.id !== data.order.id) {
+                const subItems = transformOrderItems(
+                  subOrder.items,
+                  subOrder.shop?.id,
+                  subOrder.id
+                );
+                subOrder.Order_Items = subItems; // Attach for split view
+                // DON'T add to allItems for same shop orders to avoid duplication
+              }
+            });
 
-              // For orders from the SAME shop: DON'T duplicate items, just keep them separate for combinedOrders array
-              sameShopOrders.forEach((subOrder: any) => {
-                if (subOrder.items && subOrder.id !== data.order.id) {
-                  const subItems = transformOrderItems(
-                    subOrder.items,
-                    subOrder.shop?.id,
-                    subOrder.id
-                  );
-                  subOrder.Order_Items = subItems; // Attach for split view
-                  // DON'T add to allItems for same shop orders to avoid duplication
-                }
-              });
-
-              // For orders from DIFFERENT shops: Add items to allItems for multi-shop logic
-              differentShopOrders.forEach((subOrder: any) => {
-                if (subOrder.items && subOrder.id !== data.order.id) {
-                  const subItems = transformOrderItems(
-                    subOrder.items,
-                    subOrder.shop?.id,
-                    subOrder.id
-                  );
-                  subOrder.Order_Items = subItems; // Attach for split view
-                  allItems = [...allItems, ...subItems]; // Add to main items for different shops
-                }
-              });
-            }
-
-            const transformedOrder = {
-              ...data.order,
-              Order_Items: allItems,
-              combinedOrders: data.order.combinedOrders, // Ensure this is passed through
-            };
-
-            // Console log the final transformed order with all combined data
-
-            setOrder(transformedOrder);
-            if (!activeShopId && data.order.shop?.id) {
-              setActiveShopId(data.order.shop.id);
-            }
-          } else {
-            // No order data in response
+            // For orders from DIFFERENT shops: Add items to allItems for multi-shop logic
+            differentShopOrders.forEach((subOrder: any) => {
+              if (subOrder.items && subOrder.id !== data.order.id) {
+                const subItems = transformOrderItems(
+                  subOrder.items,
+                  subOrder.shop?.id,
+                  subOrder.id
+                );
+                subOrder.Order_Items = subItems; // Attach for split view
+                allItems = [...allItems, ...subItems]; // Add to main items for different shops
+              }
+            });
           }
-          setOrderDetailsLoading(false);
-          setItemsLoading(false);
-        })
-        .catch(() => {
-          // Error fetching order details
-          setOrderDetailsLoading(false);
-          setItemsLoading(false);
-        });
+
+          const transformedOrder = {
+            ...data.order,
+            Order_Items: allItems,
+            combinedOrders: data.order.combinedOrders, // Ensure this is passed through
+          };
+
+          // Console log the final transformed order with all combined data
+
+          setOrder(transformedOrder);
+          if (!activeShopId && data.order.shop?.id) {
+            setActiveShopId(data.order.shop.id);
+          }
+        } else {
+          // No order data in response
+        }
+        setOrderDetailsLoading(false);
+        setItemsLoading(false);
+      })
+      .catch(() => {
+        // Error fetching order details
+        setOrderDetailsLoading(false);
+        setItemsLoading(false);
+      });
   }, [order?.id, orderData?.orderType, session?.user?.id]);
 
   if (initialLoading || (loading && !order) || orderDetailsLoading) {
@@ -3493,11 +3488,12 @@ export default function BatchDetails({
         <InvoiceProofModal
           open={
             showInvoiceProofModal &&
-            !(order &&
+            !(
+              order &&
               [order, ...(order.combinedOrders || [])].every(
-                (o) =>
-                  o?.orderType === "reel" || o?.orderType === "restaurant"
-              ))
+                (o) => o?.orderType === "reel" || o?.orderType === "restaurant"
+              )
+            )
           }
           onClose={() => {
             setShowInvoiceProofModal(false);
@@ -3670,26 +3666,28 @@ export default function BatchDetails({
               {shouldShowOrderDetails() &&
                 order?.orderType !== "reel" &&
                 order?.orderType !== "restaurant" && (
-                <OrderSummarySection
-                  order={order}
-                  isSummaryExpanded={isSummaryExpanded}
-                  onToggleSummary={() =>
-                    setIsSummaryExpanded(!isSummaryExpanded)
-                  }
-                  getActiveOrder={getActiveOrder}
-                  getActiveOrderItems={getActiveOrderItems}
-                  calculateFoundItemsTotal={calculateFoundItemsTotal}
-                  calculateOriginalSubtotal={calculateOriginalSubtotal}
-                  calculateBatchTotal={calculateBatchTotal}
-                  calculateOriginalBatchSubtotal={
-                    calculateOriginalBatchSubtotal
-                  }
-                  hasCombinedOrders={
-                    !!(order?.combinedOrders && order.combinedOrders.length > 0)
-                  }
-                  hasSameShopCombinedOrders={hasSameShopCombinedOrders}
-                />
-              )}
+                  <OrderSummarySection
+                    order={order}
+                    isSummaryExpanded={isSummaryExpanded}
+                    onToggleSummary={() =>
+                      setIsSummaryExpanded(!isSummaryExpanded)
+                    }
+                    getActiveOrder={getActiveOrder}
+                    getActiveOrderItems={getActiveOrderItems}
+                    calculateFoundItemsTotal={calculateFoundItemsTotal}
+                    calculateOriginalSubtotal={calculateOriginalSubtotal}
+                    calculateBatchTotal={calculateBatchTotal}
+                    calculateOriginalBatchSubtotal={
+                      calculateOriginalBatchSubtotal
+                    }
+                    hasCombinedOrders={
+                      !!(
+                        order?.combinedOrders && order.combinedOrders.length > 0
+                      )
+                    }
+                    hasSameShopCombinedOrders={hasSameShopCombinedOrders}
+                  />
+                )}
 
               {/* Delivery Notes */}
               <DeliveryNotesSection order={order} activeTab={activeTab} />

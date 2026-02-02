@@ -140,7 +140,11 @@ function CurrentOrdersPage() {
       if (append) {
         setOrders((prev) => {
           const next = [...prev, ...newOrders];
-          setOrdersCache(next, data.pagination?.hasMore ?? newOrders.length === 20, pageNum);
+          setOrdersCache(
+            next,
+            data.pagination?.hasMore ?? newOrders.length === 20,
+            pageNum
+          );
           return next;
         });
         setHasMore(data.pagination?.hasMore ?? newOrders.length === 20);
@@ -149,7 +153,11 @@ function CurrentOrdersPage() {
         setOrders(newOrders);
         setHasMore(data.pagination?.hasMore ?? newOrders.length === 20);
         setPage(pageNum);
-        setOrdersCache(newOrders, data.pagination?.hasMore ?? newOrders.length === 20, pageNum);
+        setOrdersCache(
+          newOrders,
+          data.pagination?.hasMore ?? newOrders.length === 20,
+          pageNum
+        );
       }
     } catch (error) {
       console.error("Error fetching orders:", error);

@@ -525,8 +525,9 @@ function BuyerDashboardContent({
           <QuotesSection onViewQuoteDetails={handleViewQuoteDetails} />
         )}
 
-        {(activeTab === "orders" &&
-          (isServiceProvider || isPersonalAccount)) && <OrdersSection />}
+        {activeTab === "orders" && (isServiceProvider || isPersonalAccount) && (
+          <OrdersSection />
+        )}
 
         {activeTab === "contracts" && (
           <ContractsManagement

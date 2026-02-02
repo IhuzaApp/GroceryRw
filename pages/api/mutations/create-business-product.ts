@@ -226,8 +226,7 @@ export default async function handler(
               Array.isArray(o.values)
           )
         : [];
-      variables.otherDetails =
-        opts.length > 0 ? { options: opts } : null;
+      variables.otherDetails = opts.length > 0 ? { options: opts } : null;
     } else {
       variables.otherDetails = null;
     }
@@ -247,7 +246,7 @@ export default async function handler(
     }
 
     // Store products start as "pending" for review; services use "active"
-    variables.status = hasStoreId ? "pending" : (status?.trim() || "active");
+    variables.status = hasStoreId ? "pending" : status?.trim() || "active";
 
     const result = await hasuraClient.request<{
       insert_PlasBusinessProductsOrSerive: {
@@ -308,7 +307,10 @@ export default async function handler(
           businessAccountId: variables.Plasbusiness_id || undefined,
         });
       } catch (slackErr) {
-        console.error("Failed to send product review notification to Slack:", slackErr);
+        console.error(
+          "Failed to send product review notification to Slack:",
+          slackErr
+        );
         // Don't fail the request - product was created successfully
       }
     }
