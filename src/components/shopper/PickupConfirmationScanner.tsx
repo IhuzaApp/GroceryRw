@@ -6,8 +6,7 @@ import { BrowserMultiFormatReader, IScannerControls } from "@zxing/browser";
 import Tesseract from "tesseract.js";
 import { useTheme } from "../../context/ThemeContext";
 import { reportErrorToSlackClient } from "../../lib/reportErrorClient";
-
-const PICKUP_SCAN_LOG = "[PickupConfirmationScanner]";
+// Errors are reported via reportErrorToSlackClient -> /api/report-error -> logErrorToSlack (slackErrorReporter)
 
 /** Normalize order ID for comparison: strip # and non-digits, compare as string */
 function normalizeOrderId(value: string | number): string {
@@ -84,12 +83,6 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
 
   const expectedNormalized = normalizeOrderId(expectedOrderId);
 
-  useEffect(() => {
-    console.log(
-      `${PICKUP_SCAN_LOG} Expected OrderID (normalized): "${expectedNormalized}" (raw: ${expectedOrderId})`
-    );
-  }, [expectedNormalized, expectedOrderId]);
-
   const stopScanner = useCallback(() => {
     if (controlsRef.current) {
       controlsRef.current.stop();
@@ -105,17 +98,8 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
   const checkMatch = useCallback(
     (source: string, raw: string) => {
       const scannedNormalized = normalizeOrderId(raw);
-      console.log(
-        `${PICKUP_SCAN_LOG} [${source}] raw="${raw}" normalized="${scannedNormalized}" expected="${expectedNormalized}"`
-      );
       if (!scannedNormalized) return false;
-      const match = scannedNormalized === expectedNormalized;
-      if (match) {
-        console.log(`${PICKUP_SCAN_LOG} [${source}] MATCH ✓`);
-        return true;
-      }
-      console.log(`${PICKUP_SCAN_LOG} [${source}] no match`);
-      return false;
+      return scannedNormalized === expectedNormalized;
     },
     [expectedNormalized]
   );
@@ -150,12 +134,14 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
             }
 
             if (err && err.name !== "NotFoundException") {
-              console.error(`${PICKUP_SCAN_LOG} ZXing error:`, err);
+              reportErrorToSlackClient("PickupConfirmationScanner (ZXing)", err, {
+                name: err?.name,
+                expectedOrderId: expectedOrderId,
+              });
               setError("Scan error.");
             }
           }
         );
-        console.log(`${PICKUP_SCAN_LOG} ZXing (barcode/QR) scanner started`);
       } catch (err) {
         reportErrorToSlackClient("PickupConfirmationScanner (camera/ZXing)", err);
         setError("Could not access the camera. Check permissions.");
@@ -213,11 +199,7 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
         const {
           data: { text },
         } = await Tesseract.recognize(imageData, "eng", {
-          logger: (m) => {
-            if (m.status === "recognizing text" && m.progress === 1) {
-              console.log(`${PICKUP_SCAN_LOG} OCR done`);
-            }
-          },
+          logger: () => {},
         });
 
         if (!ocrMountedRef.current || isMatchRef.current) return;
@@ -225,30 +207,22 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
         const rawText = (text || "").trim();
         if (rawText) {
           setLastOcrText(rawText);
-          console.log(`${PICKUP_SCAN_LOG} [OCR] raw text: "${rawText}"`);
 
           const normalizedForHandwriting = normalizeOcrForHandwriting(rawText);
-          if (normalizedForHandwriting !== rawText) {
-            console.log(`${PICKUP_SCAN_LOG} [OCR] after handwriting norm: "${normalizedForHandwriting}"`);
-          }
-
           const idsRaw = extractOrderIdsFromText(rawText);
           const idsNorm = extractOrderIdsFromText(normalizedForHandwriting);
           const ids = Array.from(
             new Set<string>([...idsRaw, ...idsNorm])
           );
-          console.log(`${PICKUP_SCAN_LOG} [OCR] extracted ids:`, ids, `(expected: "${expectedNormalized}")`);
 
           for (const id of ids) {
             if (normalizeOrderId(id) === expectedNormalized) {
-              console.log(`${PICKUP_SCAN_LOG} [OCR] MATCH ✓ id="${id}"`);
               isMatchRef.current = true;
               setMatchResult("match");
               break;
             }
           }
           if (!isMatchRef.current && ids.length > 0 && ids.join("") === expectedNormalized) {
-            console.log(`${PICKUP_SCAN_LOG} [OCR] MATCH ✓ joined ids="${ids.join("")}"`);
             isMatchRef.current = true;
             setMatchResult("match");
           }
@@ -271,9 +245,6 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
 
     // Start first run after a short delay so video is ready
     ocrTimeoutRef.current = window.setTimeout(runOcr, 800);
-    console.log(
-      `${PICKUP_SCAN_LOG} OCR started (next run after each completion, delay ${delayMs}ms)`
-    );
 
     return () => {
       ocrMountedRef.current = false;
@@ -291,6 +262,11 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
     try {
       await onConfirm();
       onClose();
+    } catch (err) {
+      reportErrorToSlackClient("PickupConfirmationScanner (handleConfirm)", err, {
+        expectedOrderId: expectedOrderId,
+      });
+      setError("Failed to confirm pickup.");
     } finally {
       setConfirming(false);
     }
