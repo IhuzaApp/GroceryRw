@@ -2,7 +2,8 @@
 
 import React from "react";
 import Image from "next/image";
-import { formatCurrency } from "../../../lib/formatCurrency";
+import { formatCurrency } from "../../../../lib/formatCurrency";
+import { resolveImageUrl } from "../../../../lib/imageUrl";
 import { OrderDetailsType } from "../types";
 
 interface ShopInfoProps {
@@ -58,13 +59,16 @@ export default function ShopInfo({ order }: ShopInfoProps) {
       </div>
 
       {order.orderType === "restaurant" && (order.Restaurant || order.shop) ? (
+        (() => {
+          const logoUrl = resolveImageUrl(order.Restaurant?.logo ?? order.shop?.image);
+          return (
         <div className="space-y-3">
           <div className="flex gap-3 rounded-lg border border-slate-200 p-3 dark:border-slate-600 sm:gap-4 sm:p-4">
-            {/* Restaurant logo from DB (Restaurant.logo or shop.image from SSR) */}
+            {/* Restaurant logo from DB: supports full URLs and storage paths */}
             <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:h-20 sm:w-20">
-              {order.Restaurant?.logo ?? order.shop?.image ? (
+              {logoUrl ? (
                 <Image
-                  src={order.Restaurant?.logo ?? order.shop?.image ?? ""}
+                  src={logoUrl}
                   alt={order.Restaurant?.name ?? order.shop?.name ?? "Restaurant"}
                   width={80}
                   height={80}
@@ -119,6 +123,8 @@ export default function ShopInfo({ order }: ShopInfoProps) {
             </div>
           </div>
         </div>
+          );
+        })()
       ) : order.orderType === "reel" ? (
         <div className="space-y-3 sm:space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
@@ -218,17 +224,19 @@ export default function ShopInfo({ order }: ShopInfoProps) {
             if (uniqueShops.length === 0 && order.shop)
               uniqueShops.push(order.shop);
 
-            return uniqueShops.map((shop, index) => (
+            return uniqueShops.map((shop, index) => {
+              const shopLogoUrl = resolveImageUrl(shop.image);
+              return (
               <div
                 key={shop.id || index}
                 className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-600 sm:p-4"
               >
                 <div className="flex gap-3 sm:gap-4">
-                  {/* Shop Image */}
+                  {/* Shop Image — supports full URLs and storage paths */}
                   <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:h-20 sm:w-20">
-                    {shop.image ? (
+                    {shopLogoUrl ? (
                       <Image
-                        src={shop.image}
+                        src={shopLogoUrl}
                         alt={shop.name}
                         width={80}
                         height={80}
@@ -290,7 +298,8 @@ export default function ShopInfo({ order }: ShopInfoProps) {
                   </div>
                 </div>
               </div>
-            ));
+              );
+            });
           })()}
         </div>
       )}
