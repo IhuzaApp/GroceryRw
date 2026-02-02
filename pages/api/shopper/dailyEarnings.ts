@@ -3,6 +3,7 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
+import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 
 // Fetch daily earnings for a shopper for the selected period based on delivery completion time
 const GET_DAILY_EARNINGS = gql`
@@ -26,10 +27,67 @@ const GET_DAILY_EARNINGS = gql`
   }
 `;
 
+// Reel orders for the same period
+const GET_DAILY_REEL_EARNINGS = gql`
+  query GetDailyReelEarnings(
+    $shopper_id: uuid!
+    $start_date: timestamptz!
+    $end_date: timestamptz!
+  ) {
+    reel_orders(
+      where: {
+        shopper_id: { _eq: $shopper_id }
+        status: { _eq: "delivered" }
+        updated_at: { _gte: $start_date, _lte: $end_date }
+      }
+    ) {
+      id
+      service_fee
+      delivery_fee
+      updated_at
+    }
+  }
+`;
+
+// Restaurant orders for the same period
+const GET_DAILY_RESTAURANT_EARNINGS = gql`
+  query GetDailyRestaurantEarnings(
+    $shopper_id: uuid!
+    $start_date: timestamptz!
+    $end_date: timestamptz!
+  ) {
+    restaurant_orders(
+      where: {
+        shopper_id: { _eq: $shopper_id }
+        status: { _eq: "delivered" }
+        updated_at: { _gte: $start_date, _lte: $end_date }
+      }
+    ) {
+      id
+      delivery_fee
+      updated_at
+    }
+  }
+`;
+
+interface OrderEarningRow {
+  id: string;
+  service_fee?: string | null;
+  delivery_fee: string | null;
+  updated_at: string;
+}
+
 interface OrdersResponse {
-  Orders: Array<{
+  Orders: Array<OrderEarningRow>;
+}
+
+interface ReelOrdersResponse {
+  reel_orders: Array<OrderEarningRow>;
+}
+
+interface RestaurantOrdersResponse {
+  restaurant_orders: Array<{
     id: string;
-    service_fee: string | null;
     delivery_fee: string | null;
     updated_at: string;
   }>;
@@ -102,17 +160,10 @@ const getDateRange = (period: string) => {
   return { startDate, endDate };
 };
 
-// Calculate net earnings from an order (after platform commission deduction)
-const calculateOrderEarnings = async (
-  order: OrdersResponse["Orders"][0]
-): Promise<number> => {
-  const serviceFee = parseFloat(order.service_fee || "0");
-  const deliveryFee = parseFloat(order.delivery_fee || "0");
-  const totalEarnings = serviceFee + deliveryFee;
-
-  // Get platform commission percentage
+// Get platform commission percentage (fetch once per request)
+const getCommissionPercentage = async (): Promise<number> => {
   try {
-    const systemConfigResponse = await hasuraClient.request<{
+    const systemConfigResponse = await hasuraClient!.request<{
       System_configuratioins: Array<{
         deliveryCommissionPercentage: string;
       }>;
@@ -123,33 +174,55 @@ const calculateOrderEarnings = async (
         }
       }
     `);
-
-    const deliveryCommissionPercentage = parseFloat(
+    return parseFloat(
       systemConfigResponse.System_configuratioins[0]
         ?.deliveryCommissionPercentage || "20"
     );
-
-    // Calculate platform fee and net earnings
-    const platformFee = (totalEarnings * deliveryCommissionPercentage) / 100;
-    const netEarnings = totalEarnings - platformFee;
-
-    return netEarnings;
   } catch (error) {
     console.error(
       "Error fetching commission percentage, using default 20%:",
       error
     );
-    // Fallback: deduct 20% commission
-    const platformFee = (totalEarnings * 20) / 100;
-    return totalEarnings - platformFee;
+    return 20;
   }
 };
 
+// Apply commission to raw earnings (sync)
+const applyCommission = (rawTotal: number, commissionPct: number): number => {
+  const platformFee = (rawTotal * commissionPct) / 100;
+  return rawTotal - platformFee;
+};
+
+// Calculate net earnings from an order row (Orders or reel_orders)
+const rowToNetEarnings = (
+  order: OrderEarningRow,
+  commissionPct: number
+): number => {
+  const serviceFee = parseFloat(order.service_fee || "0");
+  const deliveryFee = parseFloat(order.delivery_fee || "0");
+  return applyCommission(serviceFee + deliveryFee, commissionPct);
+};
+
+// Calculate net earnings from a restaurant order (delivery_fee only)
+const restaurantRowToNetEarnings = (
+  order: RestaurantOrdersResponse["restaurant_orders"][0],
+  commissionPct: number
+): number => {
+  const deliveryFee = parseFloat(order.delivery_fee || "0");
+  return applyCommission(deliveryFee, commissionPct);
+};
+
+// Unified item for chart aggregation (pre-computed earnings from Orders, reel_orders, restaurant_orders)
+interface EarningsItem {
+  updated_at: string;
+  earnings: number;
+}
+
 // Format data for different period types
-const formatEarningsData = async (
-  orders: OrdersResponse["Orders"],
+const formatEarningsData = (
+  items: EarningsItem[],
   period: string
-): Promise<Array<{ day: string; earnings: number }>> => {
+): Array<{ day: string; earnings: number }> => {
   // For 'today', we show hourly data
   if (period === "today") {
     const hourlyEarningsMap = new Map<number, number>();
@@ -160,15 +233,11 @@ const formatEarningsData = async (
     }
 
     // Aggregate earnings by hour
-    for (const order of orders) {
-      // Use updated_at as delivery completion date since orders are filtered by status: "delivered"
-      const deliveryDate = new Date(order.updated_at);
+    for (const item of items) {
+      const deliveryDate = new Date(item.updated_at);
       const hourIndex = deliveryDate.getHours();
-
-      const orderEarnings = await calculateOrderEarnings(order);
-
       const currentTotal = hourlyEarningsMap.get(hourIndex) || 0;
-      hourlyEarningsMap.set(hourIndex, currentTotal + orderEarnings);
+      hourlyEarningsMap.set(hourIndex, currentTotal + item.earnings);
     }
 
     // Format for display - only include hours with data or important hours
@@ -194,15 +263,11 @@ const formatEarningsData = async (
     }
 
     // Aggregate earnings by day
-    for (const order of orders) {
-      // Use updated_at as delivery completion date since orders are filtered by status: "delivered"
-      const deliveryDate = new Date(order.updated_at);
+    for (const item of items) {
+      const deliveryDate = new Date(item.updated_at);
       const dayIndex = deliveryDate.getDay(); // 0 = Sunday, 6 = Saturday
-
-      const orderEarnings = await calculateOrderEarnings(order);
-
       const currentTotal = dailyEarningsMap.get(dayIndex) || 0;
-      dailyEarningsMap.set(dayIndex, currentTotal + orderEarnings);
+      dailyEarningsMap.set(dayIndex, currentTotal + item.earnings);
     }
 
     // Format the data for the chart
@@ -222,12 +287,12 @@ const formatEarningsData = async (
   else {
     const weeklyEarningsMap = new Map<number, number>();
 
-    // Get the first day of the month from the first order or current date
-    const firstOrderDate =
-      orders.length > 0 ? new Date(orders[0].updated_at) : new Date();
+    // Get the first day of the month from the first item or current date
+    const firstItemDate =
+      items.length > 0 ? new Date(items[0].updated_at) : new Date();
     const startOfMonth = new Date(
-      firstOrderDate.getFullYear(),
-      firstOrderDate.getMonth(),
+      firstItemDate.getFullYear(),
+      firstItemDate.getMonth(),
       1
     );
 
@@ -245,15 +310,11 @@ const formatEarningsData = async (
     }
 
     // Aggregate earnings by week
-    for (const order of orders) {
-      // Use updated_at as delivery completion date since orders are filtered by status: "delivered"
-      const deliveryDate = new Date(order.updated_at);
+    for (const item of items) {
+      const deliveryDate = new Date(item.updated_at);
       const weekIndex = Math.floor((deliveryDate.getDate() - 1) / 7);
-
-      const orderEarnings = await calculateOrderEarnings(order);
-
       const currentTotal = weeklyEarningsMap.get(weekIndex) || 0;
-      weeklyEarningsMap.set(weekIndex, currentTotal + orderEarnings);
+      weeklyEarningsMap.set(weekIndex, currentTotal + item.earnings);
     }
 
     // Format the data for the chart
@@ -310,27 +371,50 @@ export default async function handler(
     // Calculate date range based on period
     const { startDate, endDate } = getDateRange(period);
 
-    // Fetch orders for the selected period
-    const data = await hasuraClient.request<OrdersResponse>(
-      GET_DAILY_EARNINGS,
-      {
-        shopper_id: shopperId,
-        start_date: startDate.toISOString(),
-        end_date: endDate.toISOString(),
-      }
-    );
+    const vars = {
+      shopper_id: shopperId,
+      start_date: startDate.toISOString(),
+      end_date: endDate.toISOString(),
+    };
+
+    // Fetch Orders, reel_orders, and restaurant_orders in parallel
+    const [ordersData, reelData, restaurantData] = await Promise.all([
+      hasuraClient.request<OrdersResponse>(GET_DAILY_EARNINGS, vars),
+      hasuraClient.request<ReelOrdersResponse>(GET_DAILY_REEL_EARNINGS, vars),
+      hasuraClient.request<RestaurantOrdersResponse>(
+        GET_DAILY_RESTAURANT_EARNINGS,
+        vars
+      ),
+    ]);
+
+    // Get commission percentage once for all order types
+    const commissionPct = await getCommissionPercentage();
+
+    // Build unified list of { updated_at, earnings } from all order types
+    const allItems: EarningsItem[] = [
+      ...ordersData.Orders.map((order) => ({
+        updated_at: order.updated_at,
+        earnings: rowToNetEarnings(order, commissionPct),
+      })),
+      ...reelData.reel_orders.map((order) => ({
+        updated_at: order.updated_at,
+        earnings: rowToNetEarnings(order, commissionPct),
+      })),
+      ...restaurantData.restaurant_orders.map((order) => ({
+        updated_at: order.updated_at,
+        earnings: restaurantRowToNetEarnings(order, commissionPct),
+      })),
+    ];
 
     // Format data based on the selected period
-    const formattedData = await formatEarningsData(data.Orders, period);
+    const formattedData = formatEarningsData(allItems, period);
 
-    // Calculate the total net earnings (after commission)
-    const totalEarnings = await data.Orders.reduce(
-      async (totalPromise, order) => {
-        const total = await totalPromise;
-        return total + (await calculateOrderEarnings(order));
-      },
-      Promise.resolve(0)
-    );
+    // Total net earnings (Orders + reel_orders + restaurant_orders, after commission)
+    const totalEarnings = allItems.reduce((sum, item) => sum + item.earnings, 0);
+    const totalOrderCount =
+      ordersData.Orders.length +
+      reelData.reel_orders.length +
+      restaurantData.restaurant_orders.length;
 
     // Create a response that includes the earnings structure expected by the Sidebar
     return res.status(200).json({
@@ -341,20 +425,22 @@ export default async function handler(
         end: endDate.toISOString(),
         type: period,
       },
-      // Add this earnings object structure that the sidebar expects
       earnings: {
-        active: 0, // Assume 0 for active since we're only fetching completed ones
+        active: 0,
         completed: totalEarnings,
         total: totalEarnings,
       },
       orderCounts: {
-        active: 0, // Assume 0 for active since we're only fetching completed ones
-        completed: data.Orders.length,
-        total: data.Orders.length,
+        active: 0,
+        completed: totalOrderCount,
+        total: totalOrderCount,
       },
     });
   } catch (error) {
     console.error("Error fetching daily earnings:", error);
+    await logErrorToSlack("api/shopper/dailyEarnings", error, {
+      period: (req.query.period as string) || "this-week",
+    });
     return res.status(500).json({
       error:
         error instanceof Error
