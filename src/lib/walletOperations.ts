@@ -301,6 +301,24 @@ export async function handleDeliveredOperation(
     await hasuraClient!.request(CREATE_WALLET_TRANSACTIONS, {
       transactions,
     });
+  } else if (isReelOrder) {
+    // For reel orders, create earnings transaction (service_fee + delivery_fee)
+    const transactions = [
+      {
+        wallet_id: wallet.id,
+        amount: remainingEarnings.toFixed(2),
+        type: "earnings",
+        status: "completed",
+        related_order_id: null,
+        related_reel_orderId: orderId,
+        related_restaurant_order_id: null,
+        description: "Earnings after platform fee deduction",
+      },
+    ];
+
+    await hasuraClient!.request(CREATE_WALLET_TRANSACTIONS, {
+      transactions,
+    });
   }
 
   // Add plasa fee revenue when order is delivered
@@ -433,8 +451,11 @@ export async function processWalletOperation(
     throw new Error("Hasura client is not initialized");
   }
 
-  // Get order details with fees
+  // Get order details with fees — try requested type first, then fallback to other tables if not found
   let orderDetails: any;
+  let resolvedReel = isReelOrder;
+  let resolvedRestaurant = isRestaurantOrder;
+
   if (isReelOrder) {
     orderDetails = await hasuraClient!.request<{
       reel_orders_by_pk: {
@@ -445,9 +466,7 @@ export async function processWalletOperation(
         shopper_id: string;
         user_id: string;
       };
-    }>(GET_REEL_ORDER_DETAILS, {
-      orderId,
-    });
+    }>(GET_REEL_ORDER_DETAILS, { orderId });
   } else if (isRestaurantOrder) {
     orderDetails = await hasuraClient!.request<{
       restaurant_orders_by_pk: {
@@ -457,9 +476,7 @@ export async function processWalletOperation(
         shopper_id: string;
         user_id: string;
       };
-    }>(GET_RESTAURANT_ORDER_DETAILS, {
-      orderId,
-    });
+    }>(GET_RESTAURANT_ORDER_DETAILS, { orderId });
   } else {
     orderDetails = await hasuraClient!.request<{
       Orders_by_pk: {
@@ -470,20 +487,58 @@ export async function processWalletOperation(
         shopper_id: string;
         user_id: string;
       };
-    }>(GET_ORDER_DETAILS, {
-      orderId,
-    });
+    }>(GET_ORDER_DETAILS, { orderId });
   }
 
-  const order = isReelOrder
+  let order = isReelOrder
     ? orderDetails.reel_orders_by_pk
     : isRestaurantOrder
     ? orderDetails.restaurant_orders_by_pk
     : orderDetails.Orders_by_pk;
 
+  // Fallback: if not found with client flags, try reel then restaurant then regular
   if (!order) {
+    const reelData = await hasuraClient!.request<{
+      reel_orders_by_pk: { id: string; total: string; service_fee?: string; delivery_fee: string; shopper_id?: string; user_id: string } | null;
+    }>(GET_REEL_ORDER_DETAILS, { orderId });
+    if (reelData.reel_orders_by_pk) {
+      order = reelData.reel_orders_by_pk;
+      resolvedReel = true;
+      resolvedRestaurant = false;
+    }
+  }
+  if (!order) {
+    const restaurantData = await hasuraClient!.request<{
+      restaurant_orders_by_pk: { id: string; total: string; delivery_fee: string; shopper_id?: string; user_id: string } | null;
+    }>(GET_RESTAURANT_ORDER_DETAILS, { orderId });
+    if (restaurantData.restaurant_orders_by_pk) {
+      order = restaurantData.restaurant_orders_by_pk;
+      resolvedReel = false;
+      resolvedRestaurant = true;
+    }
+  }
+  if (!order) {
+    const regularData = await hasuraClient!.request<{
+      Orders_by_pk: { id: string; total: string; service_fee?: string; delivery_fee: string; shopper_id?: string; user_id: string; combined_order_id?: string; shop_id?: string } | null;
+    }>(GET_ORDER_DETAILS, { orderId });
+    if (regularData.Orders_by_pk) {
+      order = regularData.Orders_by_pk;
+      resolvedReel = false;
+      resolvedRestaurant = false;
+    }
+  }
+
+  if (!order) {
+    await logErrorToSlack(
+      "walletOperations:processWalletOperation",
+      new Error("Order not found"),
+      { orderId, operation, isReelOrder, isRestaurantOrder, userId }
+    );
     throw new Error("Order not found");
   }
+
+  const isReelOrderFinal = resolvedReel;
+  const isRestaurantOrderFinal = resolvedRestaurant;
 
   // Get shopper wallet
   const walletData = await hasuraClient!.request<{
@@ -508,8 +563,8 @@ export async function processWalletOperation(
   // Check if this is a same-shop combined order for shopping operation
   if (
     operation === "shopping" &&
-    !isReelOrder &&
-    !isRestaurantOrder &&
+    !isReelOrderFinal &&
+    !isRestaurantOrderFinal &&
     order.combined_order_id
   ) {
     try {
@@ -583,8 +638,8 @@ export async function processWalletOperation(
         wallet,
         orderTotal,
         orderId,
-        isReelOrder,
-        isRestaurantOrder,
+        isReelOrderFinal,
+        isRestaurantOrderFinal,
         req
       );
 
@@ -593,15 +648,15 @@ export async function processWalletOperation(
         wallet,
         order,
         orderId,
-        isReelOrder,
-        isRestaurantOrder,
+        isReelOrderFinal,
+        isRestaurantOrderFinal,
         req
       );
 
     case "cancelled":
       // For cancelled operations, we need to handle combined orders differently
       // since the cancellation might affect the entire batch
-      if (!isReelOrder && !isRestaurantOrder && order.combined_order_id) {
+      if (!isReelOrderFinal && !isRestaurantOrderFinal && order.combined_order_id) {
         // For same-shop combined orders, calculate the batch total from items for refund
         try {
           const GET_COMBINED_ORDER_ITEMS = gql`
@@ -667,8 +722,8 @@ export async function processWalletOperation(
         order,
         orderTotal,
         orderId,
-        isReelOrder,
-        isRestaurantOrder
+        isReelOrderFinal,
+        isRestaurantOrderFinal
       );
 
     default:

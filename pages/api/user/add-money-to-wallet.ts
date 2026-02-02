@@ -3,6 +3,7 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
+import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 
 // GraphQL query to get personal wallet by user ID
 const GET_PERSONAL_WALLET = gql`
@@ -129,7 +130,7 @@ export default async function handler(
       message: `Successfully added ${amount.toFixed(2)} to your wallet`,
     });
   } catch (error) {
-    console.error("Error adding money to wallet:", error);
+    await logErrorToSlack("user/add-money-to-wallet", error);
     return res.status(500).json({
       error:
         error instanceof Error

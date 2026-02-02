@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { useTheme } from "../../context/ThemeContext";
 import Image from "next/image";
 import CameraCapture from "../ui/CameraCapture";
+import { reportErrorToSlackClient } from "../../lib/reportErrorClient";
 
 interface InvoiceItem {
   name: string;
@@ -293,7 +294,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       setUploadError(null);
       setForceOpen(false);
     } catch (error) {
-      console.error("Error uploading delivery photo:", error);
+      reportErrorToSlackClient("DeliveryConfirmationModal (upload delivery photo)", error);
       setUploadError("Failed to upload photo. Please try again.");
     } finally {
       setPhotoUploading(false);
@@ -431,7 +432,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
             }
           }
         } catch (error) {
-          console.error("Error checking for pending orders:", error);
+          reportErrorToSlackClient("DeliveryConfirmationModal (check pending orders)", error);
           // If there's an error checking, proceed with redirect anyway
         }
       }
@@ -443,7 +444,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
         }, 1500);
       }
     } catch (error) {
-      console.error("Error confirming delivery:", error);
+      reportErrorToSlackClient("DeliveryConfirmationModal (confirm delivery)", error);
       setUploadError("Failed to confirm delivery. Please try again.");
     } finally {
       setConfirmingDelivery(false);

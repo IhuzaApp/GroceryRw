@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { BrowserMultiFormatReader, IScannerControls } from "@zxing/browser";
 import Tesseract from "tesseract.js";
 import { useTheme } from "../../context/ThemeContext";
+import { reportErrorToSlackClient } from "../../lib/reportErrorClient";
 
 const PICKUP_SCAN_LOG = "[PickupConfirmationScanner]";
 
@@ -156,7 +157,7 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
         );
         console.log(`${PICKUP_SCAN_LOG} ZXing (barcode/QR) scanner started`);
       } catch (err) {
-        console.error(`${PICKUP_SCAN_LOG} Camera/ZXing:`, err);
+        reportErrorToSlackClient("PickupConfirmationScanner (camera/ZXing)", err);
         setError("Could not access the camera. Check permissions.");
       }
     };
@@ -256,7 +257,7 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
           }
         }
       } catch (err) {
-        console.error(`${PICKUP_SCAN_LOG} OCR error:`, err);
+        reportErrorToSlackClient("PickupConfirmationScanner (OCR)", err);
       } finally {
         ocrRunning = false;
         scheduleNext();

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]";
 import { gql } from "graphql-request";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
+import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 
 // GraphQL query to get wallet information
 const GET_WALLET_BY_SHOPPER_ID = gql`
@@ -85,7 +86,9 @@ export default async function handler(
       wallet: wallet,
     });
   } catch (error) {
-    console.error("Error fetching wallet:", error);
+    await logErrorToSlack("shopper/wallet", error, {
+      shopperId: req.query.shopperId,
+    });
     return res.status(500).json({
       error:
         error instanceof Error ? error.message : "An unexpected error occurred",

@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { GraphQLClient, gql } from "graphql-request";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
+import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 
 const HASURA_URL = process.env.HASURA_GRAPHQL_URL!;
 const HASURA_SECRET = process.env.HASURA_GRAPHQL_ADMIN_SECRET!;
@@ -103,7 +104,7 @@ export default async function handler(
 
     return res.status(200).json({ wallet });
   } catch (error) {
-    console.error("Error fetching wallet balance:", error);
+    await logErrorToSlack("queries/wallet-balance", error);
     return res.status(500).json({
       error:
         error instanceof Error ? error.message : "An unexpected error occurred",

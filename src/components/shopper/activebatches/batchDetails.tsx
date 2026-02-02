@@ -1397,9 +1397,9 @@ export default function BatchDetails({
       created_at: new Date().toISOString(),
       invoice_items: [],
       Proof: null,
-      orderType: "regular", // Explicitly set as regular order
-      isReelOrder: false,
-      isRestaurantOrder: false,
+      orderType: targetOrder.orderType || "regular",
+      isReelOrder: targetOrder.orderType === "reel",
+      isRestaurantOrder: targetOrder.orderType === "restaurant",
     };
 
     setInvoiceData(combinedInvoiceData);
@@ -1517,8 +1517,8 @@ export default function BatchDetails({
       return;
     }
 
-    // For restaurant/user reel orders, show modal directly
-    if (activeOrder?.orderType === "reel" && isRestaurantUserReel) {
+    // For all reel orders (shop or restaurant/user), show modal with isReelOrder so wallet credits earnings
+    if (activeOrder?.orderType === "reel") {
       handleReelDeliveryConfirmation();
       return;
     }
@@ -1592,8 +1592,8 @@ export default function BatchDetails({
           deliveryFee: 0,
           total: 0,
           orderType: "combined", // Set as "combined" so we can pass updateOnlyThisOrder flag
-          isReelOrder: false,
-          isRestaurantOrder: false,
+          isReelOrder: targetOrder.orderType === "reel",
+          isRestaurantOrder: targetOrder.orderType === "restaurant",
         };
 
         setInvoiceData(mockInvoiceData);
@@ -1699,7 +1699,7 @@ export default function BatchDetails({
       total: parseFloat(order.total?.toString() || "0"),
       orderType: order.orderType || "regular",
       isReelOrder: order.orderType === "reel",
-      isRestaurantOrder: false,
+      isRestaurantOrder: order.orderType === "restaurant",
     };
 
     setInvoiceData(mockInvoiceData);

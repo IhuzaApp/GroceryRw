@@ -3,6 +3,7 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
+import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 
 // GraphQL query to get wallet and transaction information
 const GET_WALLET_AND_TRANSACTIONS = gql`
@@ -125,7 +126,9 @@ export default async function handler(
       transactions,
     });
   } catch (error) {
-    console.error("Error fetching wallet data:", error);
+    await logErrorToSlack("shopper/walletHistory", error, {
+      userId,
+    });
     return res.status(500).json({
       error:
         error instanceof Error ? error.message : "Failed to fetch wallet data",

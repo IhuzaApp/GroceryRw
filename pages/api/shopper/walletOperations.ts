@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { processWalletOperation } from "../../../src/lib/walletOperations";
+import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 
 export default async function handler(
   req: NextApiRequest,
@@ -56,7 +57,12 @@ export default async function handler(
       ...result,
     });
   } catch (error) {
-    console.error(`Error processing wallet operation ${operation}:`, error);
+    await logErrorToSlack("shopper/walletOperations", error, {
+      orderId,
+      operation,
+      isReelOrder,
+      isRestaurantOrder,
+    });
     return res.status(500).json({
       error:
         error instanceof Error

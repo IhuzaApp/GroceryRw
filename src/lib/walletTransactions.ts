@@ -1,5 +1,6 @@
 import { gql } from "graphql-request";
 import { hasuraClient } from "./hasuraClient";
+import { logErrorToSlack } from "./slackErrorReporter";
 
 // Helper to determine if code is running on client or server
 const isClient = typeof window !== "undefined";
@@ -215,7 +216,10 @@ export const recordPaymentTransactions = async (
       },
     };
   } catch (error) {
-    console.error("Error recording wallet transactions:", error);
+    await logErrorToSlack("walletTransactions:recordPaymentTransactions", error, {
+      shopperId,
+      orderId,
+    });
     throw error;
   }
 };
@@ -397,7 +401,9 @@ export const generateInvoice = async (
 
     return invoiceData;
   } catch (error) {
-    console.error("Error generating invoice:", error);
+    await logErrorToSlack("walletTransactions:generateInvoice", error, {
+      orderId,
+    });
     throw error;
   }
 };

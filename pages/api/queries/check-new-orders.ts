@@ -7,6 +7,7 @@ import {
   stopOrderNotifications,
 } from "../../../src/utils/orderNotifier";
 import { logger } from "../../../src/utils/logger";
+import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 
 const googleMapsClient = new GoogleMapsClient({});
 
@@ -355,6 +356,11 @@ export default async function handler(
     }
   } catch (error) {
     logger.error("Error checking new orders", "CheckNewOrdersAPI", error);
+    await logErrorToSlack("queries/check-new-orders", error, {
+      user_id: req.query.user_id,
+      latitude: req.query.latitude,
+      longitude: req.query.longitude,
+    });
     res.status(500).json({ error: "Failed to check new orders" });
   }
 }
