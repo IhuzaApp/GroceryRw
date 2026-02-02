@@ -825,6 +825,15 @@ export default function NotificationSystem({
       if (success) {
         // Remove toast and show success message
         removeToastForOrder(orderId);
+        // Clear active_offer from localStorage so next order doesn't restore stale data
+        try {
+          localStorage.removeItem("active_offer");
+        } catch {
+          // ignore
+        }
+        // Reset UI state for next notification
+        setItemsExpanded(false);
+        setOrderItemNames(null);
         toast.success("Order accepted successfully! 🎉");
 
         // Dispatch custom event to notify other components (like BatchDetails) to refetch
