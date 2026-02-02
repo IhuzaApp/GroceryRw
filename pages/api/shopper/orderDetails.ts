@@ -380,11 +380,18 @@ const GET_RESTAURANT_ORDER_DETAILS = gql`
           price
           preparingTime
           is_active
-          name
-          description
-          image
-          ingredients
-          category
+          ProductNames {
+            name
+            description
+            image
+          }
+          dishes {
+            name
+            description
+            image
+            ingredients
+            category
+          }
         }
       }
       shopper {
@@ -969,20 +976,26 @@ export default async function handler(
       const deliveryFee = parseFloat(orderData.delivery_fee || "0");
       const totalEarnings = deliveryFee; // Restaurant orders don't have service fee
 
-      // Format dish items (schema: restaurant_order_items -> restaurant_dishes)
+      // Format dish items (schema: restaurant_order_items -> restaurant_dishes; name/description/image from ProductNames or dishes)
       const formattedDishItems = orderData.restaurant_order_items.map(
         (dishOrder: any) => {
           const rd = dishOrder.restaurant_dishes;
+          const name =
+            rd?.ProductNames?.name ?? rd?.dishes?.name ?? "Unknown Dish";
+          const description =
+            rd?.ProductNames?.description ?? rd?.dishes?.description ?? null;
+          const image =
+            rd?.ProductNames?.image ?? rd?.dishes?.image ?? null;
 
           return {
             id: dishOrder.id,
-            name: rd?.name || "Unknown Dish",
+            name,
             quantity: dishOrder.quantity,
             price: parseFloat(dishOrder.price) || 0,
-            description: rd?.description || null,
-            image: rd?.image || null,
-            category: rd?.category || null,
-            ingredients: rd?.ingredients ?? null,
+            description,
+            image,
+            category: rd?.dishes?.category ?? null,
+            ingredients: rd?.dishes?.ingredients ?? null,
             preparingTime: rd?.preparingTime || null,
           };
         }

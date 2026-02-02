@@ -49,11 +49,77 @@ export default function ShopInfo({ order }: ShopInfoProps) {
           )}
         </span>
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
-          {order.orderType === "reel" ? "Reel Details" : "Shop Details"}
+          {order.orderType === "reel"
+            ? "Reel Details"
+            : order.orderType === "restaurant"
+            ? "Restaurant Details"
+            : "Shop Details"}
         </h2>
       </div>
 
-      {order.orderType === "reel" ? (
+      {order.orderType === "restaurant" && (order.Restaurant || order.shop) ? (
+        <div className="space-y-3">
+          <div className="flex gap-3 rounded-lg border border-slate-200 p-3 dark:border-slate-600 sm:gap-4 sm:p-4">
+            {/* Restaurant logo from DB (Restaurant.logo or shop.image from SSR) */}
+            <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:h-20 sm:w-20">
+              {order.Restaurant?.logo ?? order.shop?.image ? (
+                <Image
+                  src={order.Restaurant?.logo ?? order.shop?.image ?? ""}
+                  alt={order.Restaurant?.name ?? order.shop?.name ?? "Restaurant"}
+                  width={80}
+                  height={80}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="h-6 w-6 sm:h-8 sm:w-8"
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <path d="M16 8h.01M8 16h.01M16 16h.01" />
+                  </svg>
+                </div>
+              )}
+            </div>
+            <div className="flex-1">
+              <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
+                {order.Restaurant?.name ?? order.shop?.name ?? "Restaurant"}
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                {order.Restaurant?.location ?? order.shop?.address ?? ""}
+              </p>
+              {(order.Restaurant?.phone ?? order.shop?.phone) && (
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  📞 {order.Restaurant?.phone ?? order.shop?.phone}
+                </p>
+              )}
+              {order.Restaurant?.operating_hours &&
+                typeof order.Restaurant.operating_hours === "object" &&
+                Object.keys(order.Restaurant.operating_hours).length > 0 && (
+                  <div className="mt-2 border-t border-slate-200 pt-2 dark:border-slate-600">
+                    <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                      Operating hours
+                    </p>
+                    <ul className="mt-1 space-y-0.5 text-xs text-slate-500 dark:text-slate-400">
+                      {Object.entries(order.Restaurant.operating_hours).map(
+                        ([day, hours]) => (
+                          <li key={day}>
+                            <span className="capitalize">{day}:</span>{" "}
+                            {String(hours)}
+                          </li>
+                        )
+                      )}
+                    </ul>
+                  </div>
+                )}
+            </div>
+          </div>
+        </div>
+      ) : order.orderType === "reel" ? (
         <div className="space-y-3 sm:space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
             <div className="relative mx-auto h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:mx-0 sm:h-20 sm:w-20">
@@ -202,6 +268,25 @@ export default function ShopInfo({ order }: ShopInfoProps) {
                         📞 {shop.phone}
                       </p>
                     )}
+                    {shop.operating_hours &&
+                      typeof shop.operating_hours === "object" &&
+                      Object.keys(shop.operating_hours).length > 0 && (
+                        <div className="mt-2 border-t border-slate-200 pt-2 dark:border-slate-600">
+                          <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                            Operating hours
+                          </p>
+                          <ul className="mt-1 space-y-0.5 text-xs text-slate-500 dark:text-slate-400">
+                            {Object.entries(shop.operating_hours).map(
+                              ([day, hours]) => (
+                                <li key={day}>
+                                  <span className="capitalize">{day}:</span>{" "}
+                                  {String(hours)}
+                                </li>
+                              )
+                            )}
+                          </ul>
+                        </div>
+                      )}
                   </div>
                 </div>
               </div>

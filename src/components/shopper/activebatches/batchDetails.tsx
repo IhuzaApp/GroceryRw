@@ -3144,15 +3144,17 @@ export default function BatchDetails({
     };
   }, [router, order?.id]);
 
-  // Fetch complete order data when component mounts
+  // Fetch complete order data when component mounts (skip for restaurant orders — use SSR data)
   useEffect(() => {
-    if (order?.id) {
-      // Initial order data from SSR
-      setOrderDetailsLoading(true);
+    if (!order?.id) return;
+    if (orderData?.orderType === "restaurant") {
+      setOrderDetailsLoading(false);
+      setItemsLoading(false);
+      return;
+    }
+    setOrderDetailsLoading(true);
 
-      // Fetching order details for ID
-
-      fetch(`/api/shopper/orderDetails?id=${order.id}`)
+    fetch(`/api/shopper/orderDetails?id=${order.id}`)
         .then((res) => {
           // API response status
           return res.json();
@@ -3351,8 +3353,7 @@ export default function BatchDetails({
           setOrderDetailsLoading(false);
           setItemsLoading(false);
         });
-    }
-  }, [order?.id, session?.user?.id]);
+  }, [order?.id, orderData?.orderType, session?.user?.id]);
 
   if (initialLoading || (loading && !order) || orderDetailsLoading) {
     return <BatchDetailsSkeleton />;

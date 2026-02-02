@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { formatCurrency } from "../../../../lib/formatCurrency";
 import { OrderItem } from "../types";
 import OrderItemCard from "../OrderItemCard";
 
@@ -200,6 +201,74 @@ export default function OrderItemsSection({
           </div>
           <div className="text-sm text-slate-500 dark:text-slate-400">
             Quantity: {order.quantity} pcs
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Restaurant order: show restaurant name and dish list from restaurant_order_items
+  if (order?.orderType === "restaurant") {
+    const restaurantName =
+      order.shop?.name ?? order.Restaurant?.name ?? "Restaurant";
+    const items = order.restaurant_order_items ?? [];
+    return (
+      <div className={`${activeTab === "items" ? "block" : "hidden sm:block"}`}>
+        <div className="mb-3 flex items-center gap-2 px-3 sm:mb-4 sm:gap-3 sm:px-0">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
+            Order Items
+          </h2>
+        </div>
+        <div className="space-y-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/30 sm:p-6">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            {restaurantName} • {items.length} {items.length === 1 ? "Item" : "Items"}
+          </h3>
+          <div className="space-y-2 sm:space-y-3">
+            {items.map((row: any) => {
+              const dish = row.restaurant_dishes;
+              const name =
+                dish?.ProductNames?.name ??
+                dish?.dishes?.name ??
+                "Dish";
+              const description =
+                dish?.ProductNames?.description ?? dish?.dishes?.description ?? "";
+              const image =
+                dish?.ProductNames?.image ?? dish?.dishes?.image ?? null;
+              const qty = Number(row.quantity) || 1;
+              const price = row.price ?? dish?.price ?? "0";
+              return (
+                <div
+                  key={row.id}
+                  className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-800 sm:gap-4 sm:p-4"
+                >
+                  {image && (
+                    <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:h-14 sm:w-14">
+                      <img
+                        src={image}
+                        alt={name}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-slate-900 dark:text-slate-100">
+                      {name}
+                    </p>
+                    {description && (
+                      <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
+                        {description}
+                      </p>
+                    )}
+                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                      Qty: {qty} × {formatCurrency(Number(price))}
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0 font-semibold text-slate-900 dark:text-slate-100">
+                    {formatCurrency(Number(price) * qty)}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

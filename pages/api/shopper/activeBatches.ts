@@ -103,6 +103,7 @@ const GET_ACTIVE_RESTAURANT_ORDERS = gql`
       order_by: { created_at: desc }
     ) {
       id
+      OrderID
       created_at
       status
       delivery_fee
@@ -231,6 +232,7 @@ export default async function handler(
           hasuraClient.request<{
             reel_orders: Array<{
               id: string;
+              OrderID: string | number | null;
               created_at: string;
               status: string;
               service_fee: string | null;
@@ -266,6 +268,7 @@ export default async function handler(
           hasuraClient.request<{
             restaurant_orders: Array<{
               id: string;
+              OrderID: string | number | null;
               created_at: string;
               status: string;
               delivery_fee: string | null;
@@ -502,10 +505,10 @@ export default async function handler(
       };
     });
 
-    // Transform restaurant orders
+    // Transform restaurant orders (show OrderID in order column, not id)
     const transformedRestaurantOrders = restaurantOrders.map((o) => ({
       id: o.id,
-      OrderID: o.id,
+      OrderID: o.OrderID != null ? o.OrderID : o.id,
       status: o.status,
       createdAt: o.created_at,
       deliveryTime: o.delivery_time || undefined,

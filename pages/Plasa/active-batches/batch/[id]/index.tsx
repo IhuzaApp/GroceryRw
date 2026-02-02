@@ -498,6 +498,8 @@ export const getServerSideProps: GetServerSideProps<
               phone
               email
               profile_picture
+              is_active
+              is_guest
             }
             address: Address {
               id
@@ -514,10 +516,39 @@ export const getServerSideProps: GetServerSideProps<
               restaurant_dishes {
                 id
                 price
-                name
-                description
-                image
+                ProductNames {
+                  name
+                  description
+                  image
+                  barcode
+                  create_at
+                  id
+                  sku
+                }
+                dishes {
+                  name
+                  description
+                  image
+                  category
+                  created_at
+                  id
+                  ingredients
+                  update_at
+                }
+                SKU
+                created_at
+                discount
+                dish_id
+                preparingTime
+                product_id
+                promo
+                promo_type
+                quantity
+                restaurant_id
+                updated_at
               }
+              dish_id
+              order_id
             }
             shopper {
               id
@@ -528,7 +559,14 @@ export const getServerSideProps: GetServerSideProps<
                   count
                 }
               }
+              email
+              gender
+              phone
+              password_hash
+              updated_at
             }
+            voucher_code
+            updated_at
           }
         }
       `;
@@ -543,6 +581,15 @@ export const getServerSideProps: GetServerSideProps<
         found: !!order,
         count: restaurantData.restaurant_orders.length,
       });
+      // Log full restaurant order so we can see what we have
+      console.log("🍽️ Restaurant order (raw):", JSON.stringify(order, null, 2));
+      console.log("🍽️ Restaurant order (keys):", order ? Object.keys(order) : []);
+      if (order?.Restaurant) {
+        console.log("🍽️ Restaurant details:", order.Restaurant);
+      }
+      if (order?.restaurant_order_items?.length) {
+        console.log("🍽️ Restaurant order items:", order.restaurant_order_items);
+      }
     }
 
     if (!order) {
@@ -612,7 +659,7 @@ export const getServerSideProps: GetServerSideProps<
 
     // Format timestamps to human-readable strings
     console.log("🔄 Formatting order data...");
-    const formattedOrder = {
+    const formattedOrder: any = {
       ...order,
       orderType,
       placedAt: new Date(order.placedAt).toLocaleString("en-US", {
@@ -626,6 +673,21 @@ export const getServerSideProps: GetServerSideProps<
           })
         : null,
     };
+
+    // For restaurant orders, set shop from Restaurant so ShopInfo/ShopInfoCard display name, location, phone
+    // Use null (not undefined) for optional fields so getServerSideProps props are JSON-serializable
+    if (orderType === "restaurant" && order.Restaurant) {
+      formattedOrder.shop = {
+        id: order.Restaurant.id,
+        name: order.Restaurant.name,
+        address: order.Restaurant.location,
+        phone: order.Restaurant.phone ?? null,
+        image: order.Restaurant.logo ?? null,
+        operating_hours: order.Restaurant.operating_hours ?? null,
+        latitude: order.Restaurant.lat ?? null,
+        longitude: order.Restaurant.long ?? null,
+      };
+    }
 
     console.log("✅ Successfully formatted order:", {
       orderType,
