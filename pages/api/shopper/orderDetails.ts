@@ -623,8 +623,10 @@ const GET_RELATED_RESTAURANT_ORDERS = gql`
         restaurant_dishes {
           id
           price
-          name
-          image
+          dishes {
+            name
+            image
+          }
         }
       }
     }
@@ -1176,13 +1178,14 @@ export default async function handler(
               const items =
                 order.restaurant_order_items?.map((item: any) => {
                   const rd = item.restaurant_dishes;
+                  const dish = rd?.dishes;
 
                   return {
                     id: item.id,
-                    name: rd?.name || "Dish",
+                    name: dish?.name || rd?.name || "Dish",
                     quantity: item.quantity,
                     price: parseFloat(item.price) || 0,
-                    productImage: rd?.image || null,
+                    productImage: dish?.image || rd?.image || null,
                   };
                 }) || [];
 

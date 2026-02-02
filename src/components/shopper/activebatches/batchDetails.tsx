@@ -27,6 +27,7 @@ import QuantityConfirmationModal from "../QuantityConfirmationModal";
 import PaymentModal from "../PaymentModal";
 import DeliveryConfirmationModal from "../DeliveryConfirmationModal";
 import InvoiceProofModal from "../InvoiceProofModal";
+import PickupConfirmationScanner from "../PickupConfirmationScanner";
 import { useChat } from "../../../context/ChatContext";
 import { isMobileDevice } from "../../../lib/formatters";
 import ShopperChatDrawer from "../../chat/ShopperChatDrawer";
@@ -195,6 +196,8 @@ export default function BatchDetails({
   const [uploadedProofs, setUploadedProofs] = useState<Record<string, boolean>>(
     {}
   );
+  const [showPickupScannerModal, setShowPickupScannerModal] = useState(false);
+  const [pickupScannerOrder, setPickupScannerOrder] = useState<OrderDetailsType | null>(null);
   const [combinedOrderIds, setCombinedOrderIds] = useState<string[]>([]);
   const [combinedOrderNumbers, setCombinedOrderNumbers] = useState<string[]>(
     []
@@ -2069,6 +2072,44 @@ export default function BatchDetails({
     }
   };
 
+  // Confirm pickup after OrderID scan match (reel/restaurant) → set status to on_the_way
+  const handlePickupConfirmed = async () => {
+    if (!pickupScannerOrder || !order) return;
+    try {
+      setLoading(true);
+      await onUpdateStatus(pickupScannerOrder.id, "on_the_way");
+      const ordersToUpdate = [pickupScannerOrder.id];
+      const updatedMain = ordersToUpdate.includes(order.id)
+        ? { ...order, status: "on_the_way" }
+        : order;
+      const updatedCombined = (order.combinedOrders || []).map((o) =>
+        ordersToUpdate.includes(o.id) ? { ...o, status: "on_the_way" } : o
+      );
+      setOrder({
+        ...updatedMain,
+        combinedOrders: updatedCombined,
+      });
+      toaster.push(
+        <Notification type="success" header="Pickup confirmed" closable>
+          Order status updated to on the way
+        </Notification>,
+        { placement: "topEnd" }
+      );
+    } catch (err) {
+      console.error("Error confirming pickup:", err);
+      toaster.push(
+        <Notification type="error" header="Update failed" closable>
+          {err instanceof Error ? err.message : "Failed to update status."}
+        </Notification>,
+        { placement: "topEnd" }
+      );
+    } finally {
+      setLoading(false);
+      setShowPickupScannerModal(false);
+      setPickupScannerOrder(null);
+    }
+  };
+
   // Function to show product image in modal
   const showProductImage = (item: OrderItem) => {
     setSelectedImage(
@@ -2470,31 +2511,38 @@ export default function BatchDetails({
 
     switch (activeOrder.status) {
       case "accepted":
+        // Reel and restaurant: confirm pickup via OrderID scan, then on_the_way (no Start Shopping)
+        if (activeOrder.orderType === "reel" || isRestaurantOrder) {
+          return (
+            <Button
+              appearance="primary"
+              color="green"
+              size="lg"
+              block
+              onClick={() => {
+                setPickupScannerOrder(activeOrder);
+                setShowPickupScannerModal(true);
+              }}
+              loading={loading}
+              className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
+            >
+              Confirm pickup
+            </Button>
+          );
+        }
         return (
           <Button
             appearance="primary"
             color="green"
             size="lg"
             block
-            onClick={() => {
-              if (activeOrder.orderType === "reel" && isRestaurantUserReel) {
-                // Skip shopping and go straight to delivery for restaurant/user reels
-                handleUpdateStatus("on_the_way", activeOrder.id);
-              } else {
-                handleUpdateStatus(
-                  isRestaurantOrder ? "on_the_way" : "shopping",
-                  activeOrder.id
-                );
-              }
-            }}
+            onClick={() =>
+              handleUpdateStatus("shopping", activeOrder.id)
+            }
             loading={loading}
             className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
           >
-            {activeOrder.orderType === "reel" && isRestaurantUserReel
-              ? "Start Delivery"
-              : isRestaurantOrder
-              ? "Start Delivery"
-              : "Start Shopping"}
+            Start Shopping
           </Button>
         );
       case "shopping":
@@ -3428,6 +3476,20 @@ export default function BatchDetails({
           combinedOrderNumbers={combinedOrderNumbers}
         />
 
+        {/* Pickup confirmation scanner (reel/restaurant): scan #OrderID then confirm → on_the_way */}
+        {showPickupScannerModal && pickupScannerOrder && (
+          <PickupConfirmationScanner
+            expectedOrderId={
+              pickupScannerOrder.OrderID ?? pickupScannerOrder.id
+            }
+            onConfirm={handlePickupConfirmed}
+            onClose={() => {
+              setShowPickupScannerModal(false);
+              setPickupScannerOrder(null);
+            }}
+          />
+        )}
+
         {/* Delivery Confirmation Modal */}
         <DeliveryConfirmationModal
           open={showInvoiceModal}
@@ -3570,8 +3632,10 @@ export default function BatchDetails({
                 />
               )}
 
-              {/* Order Summary */}
-              {shouldShowOrderDetails() && (
+              {/* Order Summary - hidden for reel/restaurant (no payment, pickup only) */}
+              {shouldShowOrderDetails() &&
+                order?.orderType !== "reel" &&
+                order?.orderType !== "restaurant" && (
                 <OrderSummarySection
                   order={order}
                   isSummaryExpanded={isSummaryExpanded}
