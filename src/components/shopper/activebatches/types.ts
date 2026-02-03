@@ -60,21 +60,29 @@ export interface OrderDetailsType {
   shop?: {
     id: string;
     name: string;
-    address: string;
-    image: string;
+    address?: string;
+    image?: string;
     phone?: string;
     operating_hours?: any;
-    latitude?: string;
-    longitude?: string;
+    latitude?: string | number | null;
+    longitude?: string | number | null;
+    business_account?: {
+      business_name?: string | null;
+      business_location?: string | null;
+      business_phone?: string | null;
+      business_email?: string | null;
+    } | null;
   };
   Order_Items?: OrderItem[];
-  address: {
-    id: string;
+  /** Business orders use deliveryAddress (string) instead of address object */
+  deliveryAddress?: string;
+  address?: {
+    id?: string;
     street: string;
     city: string;
-    postal_code: string;
-    latitude: string;
-    longitude: string;
+    postal_code?: string;
+    latitude?: string;
+    longitude?: string;
     placeDetails?: any;
   };
   assignedTo: {

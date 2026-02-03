@@ -19,17 +19,28 @@ const GET_BUSINESS_ORDER = gql`
       status
       created_at
       delivered_time
+      delivery_proof
       timeRange
       units
       pin
       deliveryAddress
       comment
+      latitude
+      longitude
       allProducts
       shopper_id
       business_store {
         id
         name
         image
+        latitude
+        longitude
+        business_account {
+          business_email
+          business_location
+          business_name
+          business_phone
+        }
       }
       orderedBy {
         id
@@ -60,17 +71,28 @@ const GET_BUSINESS_ORDER_FOR_SHOPPER = gql`
       status
       created_at
       delivered_time
+      delivery_proof
       timeRange
       units
       pin
       deliveryAddress
       comment
+      latitude
+      longitude
       allProducts
       shopper_id
       business_store {
         id
         name
         image
+        latitude
+        longitude
+        business_account {
+          business_email
+          business_location
+          business_name
+          business_phone
+        }
       }
       orderedBy {
         id
@@ -302,11 +324,28 @@ export default async function handler(
       shop: bs
         ? {
             id: bs.id,
-            name: bs.name,
+            name: bs.name ?? bs.business_account?.business_name ?? "Business Store",
             image: bs.image,
-            address: "",
+            address:
+              bs.business_account?.business_location ??
+              (bs.latitude != null && bs.longitude != null
+                ? `${bs.latitude}, ${bs.longitude}`
+                : ""),
+            latitude: bs.latitude ?? null,
+            longitude: bs.longitude ?? null,
+            business_account: bs.business_account
+              ? {
+                  business_email: bs.business_account.business_email ?? null,
+                  business_location: bs.business_account.business_location ?? null,
+                  business_name: bs.business_account.business_name ?? null,
+                  business_phone: bs.business_account.business_phone ?? null,
+                }
+              : null,
           }
         : null,
+      delivery_proof: row.delivery_proof ?? null,
+      latitude: row.latitude ?? null,
+      longitude: row.longitude ?? null,
       shop_id: row.store_id,
       allProducts: products,
       orderedBy: row.orderedBy,

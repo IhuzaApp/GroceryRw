@@ -434,13 +434,23 @@ export default function BatchDetails({
     const mainCustomer = order?.user || order?.orderedBy;
     if (mainCustomer && mainCustomer.id && !customerIds.has(mainCustomer.id)) {
       customerIds.add(mainCustomer.id);
+      // For business orders, delivery address is on the order (deliveryAddress string), not on customer
+      const mainAddress =
+        order?.address ||
+        (order?.deliveryAddress
+          ? {
+              street: order.deliveryAddress,
+              city: "",
+              postal_code: "",
+            }
+          : undefined);
       customers.push({
         ...mainCustomer,
-        // Ensure we have all required fields for CustomerInfoCard
         name: mainCustomer.name,
         email: mainCustomer.email || mainCustomer.email,
         profile_picture: mainCustomer.profile_picture || null,
         phone: mainCustomer.phone,
+        address: mainAddress ?? (mainCustomer as { address?: any }).address,
       });
     }
 
@@ -465,7 +475,13 @@ export default function BatchDetails({
     });
 
     return customers;
-  }, [order?.user, order?.orderedBy, order?.combinedOrders]);
+  }, [
+    order?.user,
+    order?.orderedBy,
+    order?.combinedOrders,
+    order?.address,
+    order?.deliveryAddress,
+  ]);
 
   // Add useEffect to get current location when component mounts
   useEffect(() => {
@@ -2958,8 +2974,97 @@ export default function BatchDetails({
 
     try {
       setOrderDetailsLoading(true);
-      const response = await fetch(`/api/shopper/orderDetails?id=${order.id}`);
+      const isBusinessOrder = order?.orderType === "business";
+      const url = isBusinessOrder
+        ? `/api/queries/business-order-details?id=${order.id}&forShopper=1`
+        : `/api/shopper/orderDetails?id=${order.id}`;
+      const response = await fetch(url);
       const data = await response.json();
+
+      const apiOrder = data?.order ?? data;
+      if (isBusinessOrder && apiOrder) {
+        const shop = apiOrder.shop
+          ? {
+              id: apiOrder.shop.id,
+              name:
+                apiOrder.shop.name ??
+                apiOrder.shop.business_account?.business_name ??
+                "Business Store",
+              image: apiOrder.shop.image ?? null,
+              address:
+                apiOrder.shop.address ??
+                apiOrder.shop.business_account?.business_location ??
+                "",
+              latitude: apiOrder.shop.latitude ?? null,
+              longitude: apiOrder.shop.longitude ?? null,
+              business_account: apiOrder.shop.business_account ?? null,
+            }
+          : null;
+        const deliveryAddress =
+          apiOrder.deliveryAddress ?? apiOrder.customerAddress ?? "";
+        const addressObj = deliveryAddress
+          ? { street: deliveryAddress, city: "", postal_code: "" }
+          : null;
+        const businessItems = (apiOrder.allProducts ?? []).map(
+          (p: any, idx: number) => {
+            const productId =
+              p.id ?? p.product_id ?? p.productId ?? `item-${idx}`;
+            const name = p.name ?? p.productName ?? "Item";
+            const image =
+              p.image ?? p.Image ?? "/images/groceryPlaceholder.png";
+            const price = Number(
+              p.price_per_item ??
+                p.unit_price ??
+                p.price ??
+                p.amount ??
+                0
+            );
+            const qty = Number(p.quantity ?? 1);
+            const itemId = p.order_item_id ?? p.id ?? `item-${idx}`;
+            return {
+              id: itemId,
+              quantity: qty,
+              price,
+              shopId: apiOrder.shop_id ?? shop?.id,
+              orderId: apiOrder.id,
+              product: {
+                id: productId,
+                name,
+                image,
+                final_price: String(price),
+                measurement_unit: "item",
+                barcode: p.barcode ?? null,
+                sku: p.sku ?? null,
+                ProductName: {
+                  id: productId,
+                  name,
+                  description: p.description ?? "",
+                  barcode: p.barcode ?? "",
+                  sku: p.sku ?? "",
+                  image,
+                  create_at: p.create_at ?? new Date().toISOString(),
+                },
+              },
+            };
+          }
+        );
+        const transformedOrder = {
+          ...apiOrder,
+          orderType: "business",
+          shop,
+          shop_id: apiOrder.shop_id ?? shop?.id,
+          address: addressObj,
+          customerAddress: deliveryAddress || "No address",
+          orderedBy: apiOrder.orderedBy ?? null,
+          Order_Items: businessItems,
+          items: businessItems,
+          allProducts: apiOrder.allProducts,
+        };
+        setOrder(transformedOrder);
+        if (!activeShopId && shop?.id) setActiveShopId(shop.id);
+        setErrorState(null);
+        return;
+      }
 
       if (data.order) {
         // Use the same transformation logic as the initial fetch
@@ -3195,15 +3300,167 @@ export default function BatchDetails({
     }
     setOrderDetailsLoading(true);
 
-    fetch(`/api/shopper/orderDetails?id=${order.id}`)
-      .then((res) => {
-        // API response status
-        return res.json();
-      })
-      .then((data) => {
-        // API response data
+    // Business orders use a different API (queries/business-order-details); shopper orderDetails only handles regular/reel/restaurant
+    const isBusinessOrder = order?.orderType === "business";
+    const orderDetailsUrl = isBusinessOrder
+      ? `/api/queries/business-order-details?id=${order.id}&forShopper=1`
+      : `/api/shopper/orderDetails?id=${order.id}`;
 
-        // Console log the initial orderDetails API response
+    fetch(orderDetailsUrl)
+      .then((res) => {
+        if (!res.ok && res.status === 404 && !isBusinessOrder) {
+          // If shopper API returns 404, try business order API (in case orderType wasn't set)
+          return fetch(
+            `/api/queries/business-order-details?id=${order.id}&forShopper=1`
+          ).then((r) => r.json().then((d) => ({ data: d, triedBusiness: true })));
+        }
+        return res.json().then((data) => ({ data, triedBusiness: false }));
+      })
+      .then(({ data, triedBusiness }: { data: any; triedBusiness?: boolean }) => {
+        // Normalize: shopper API returns { success, order }; business API returns { order }
+        const apiOrder = data?.order ?? data;
+        if (apiOrder) {
+          // If we recovered from 404 with business API, transform business response
+          const isBusiness =
+            isBusinessOrder || triedBusiness || apiOrder.orderType === "business";
+          if (isBusiness) {
+            // --- BUSINESS ORDER: log everything so we can debug amount/price 0 ---
+            console.log("[BatchDetails] BUSINESS ORDER – raw API response (apiOrder):", {
+              orderId: apiOrder.id,
+              OrderID: apiOrder.OrderID,
+              total: apiOrder.total,
+              subtotal: apiOrder.subtotal,
+              transportation_fee: apiOrder.transportation_fee,
+              service_fee: apiOrder.service_fee,
+              shop: apiOrder.shop,
+              deliveryAddress: apiOrder.deliveryAddress,
+              orderedBy: apiOrder.orderedBy,
+              allProductsRaw: apiOrder.allProducts,
+              allProductsLength: Array.isArray(apiOrder.allProducts)
+                ? apiOrder.allProducts.length
+                : 0,
+            });
+            if (Array.isArray(apiOrder.allProducts)) {
+              apiOrder.allProducts.forEach((p: any, idx: number) => {
+                console.log(
+                  `[BatchDetails] BUSINESS ORDER – allProducts[${idx}] (every key/value):`,
+                  p,
+                  "keys:",
+                  Object.keys(p || {}),
+                  "price:",
+                  p?.price,
+                  "amount:",
+                  p?.amount,
+                  "quantity:",
+                  p?.quantity,
+                  "unit_price:",
+                  (p as any)?.unit_price,
+                  "total:",
+                  (p as any)?.total,
+                );
+              });
+            }
+
+            // Transform business-order-details response to BatchDetails shape (include business_account, latitude, longitude for Shop Details card)
+            const shop = apiOrder.shop
+              ? {
+                  id: apiOrder.shop.id,
+                  name:
+                    apiOrder.shop.name ??
+                    apiOrder.shop.business_account?.business_name ??
+                    "Business Store",
+                  image: apiOrder.shop.image ?? null,
+                  address:
+                    apiOrder.shop.address ??
+                    apiOrder.shop.business_account?.business_location ??
+                    "",
+                  latitude: apiOrder.shop.latitude ?? null,
+                  longitude: apiOrder.shop.longitude ?? null,
+                  business_account: apiOrder.shop.business_account ?? null,
+                }
+              : null;
+            const deliveryAddress =
+              apiOrder.deliveryAddress ?? apiOrder.customerAddress ?? "";
+            const addressObj = deliveryAddress
+              ? { street: deliveryAddress, city: "", postal_code: "" }
+              : null;
+
+            const businessItems = (apiOrder.allProducts ?? []).map(
+              (p: any, idx: number) => {
+                const productId = p.id ?? p.product_id ?? p.productId ?? `item-${idx}`;
+                const name = p.name ?? p.productName ?? "Item";
+                const image =
+                  p.image ?? p.Image ?? "/images/groceryPlaceholder.png";
+                // API uses price_per_item (and sometimes unit_price); fallback to price/amount
+                const price = Number(
+                  p.price_per_item ??
+                    p.unit_price ??
+                    p.price ??
+                    p.amount ??
+                    0
+                );
+                const qty = Number(p.quantity ?? 1);
+                const itemId = p.order_item_id ?? p.id ?? `item-${idx}`;
+                const item = {
+                  id: itemId,
+                  quantity: qty,
+                  price,
+                  shopId: apiOrder.shop_id ?? shop?.id,
+                  orderId: apiOrder.id,
+                  product: {
+                    id: productId,
+                    name,
+                    image,
+                    final_price: String(price),
+                    measurement_unit: "item",
+                    barcode: p.barcode ?? null,
+                    sku: p.sku ?? null,
+                    ProductName: {
+                      id: productId,
+                      name,
+                      description: p.description ?? "",
+                      barcode: p.barcode ?? "",
+                      sku: p.sku ?? "",
+                      image,
+                      create_at: p.create_at ?? new Date().toISOString(),
+                    },
+                  },
+                };
+                console.log(
+                  `[BatchDetails] BUSINESS ORDER – transformed item[${idx}]:`,
+                  { rawPrice: p.price, rawAmount: p.amount, price, qty, name, item },
+                );
+                return item;
+              }
+            );
+
+            console.log("[BatchDetails] BUSINESS ORDER – final businessItems:", businessItems);
+            console.log("[BatchDetails] BUSINESS ORDER – order totals:", {
+              total: apiOrder.total,
+              subtotal: apiOrder.subtotal,
+              transportFee: apiOrder.transportation_fee,
+              serviceFee: apiOrder.service_fee,
+            });
+
+            const transformedOrder = {
+              ...apiOrder,
+              orderType: "business",
+              shop,
+              shop_id: apiOrder.shop_id ?? shop?.id,
+              address: addressObj,
+              customerAddress: deliveryAddress || "No address",
+              orderedBy: apiOrder.orderedBy ?? null,
+              Order_Items: businessItems,
+              items: businessItems,
+              allProducts: apiOrder.allProducts,
+            };
+            setOrder(transformedOrder);
+            if (!activeShopId && shop?.id) setActiveShopId(shop.id);
+            setOrderDetailsLoading(false);
+            setItemsLoading(false);
+            return;
+          }
+        }
 
         if (data.order) {
           // Transform the API response to match BatchDetails expected structure

@@ -1,7 +1,9 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { formatCurrency } from "../../../../lib/formatCurrency";
+import { resolveImageUrl } from "../../../../lib/imageUrl";
 import { OrderItem } from "../types";
 import OrderItemCard from "../OrderItemCard";
 
@@ -225,14 +227,47 @@ export default function OrderItemsSection({
           <div className="space-y-2 sm:space-y-3">
             {items.map((item: any) => {
               const name =
-                item.product?.ProductName?.name ?? item.product?.name ?? "Item";
-              const qty = Number(item.quantity) || 1;
-              const price = item.price ?? "0";
+                item.name ??
+                item.product?.ProductName?.name ??
+                item.product?.name ??
+                "Item";
+              const qty = Number(item.quantity) ?? Number(item.qty) ?? 1;
+              const price = item.price ?? item.price_per_item ?? "0";
+              const imgSrc =
+                item.image ??
+                item.product?.image ??
+                item.product?.ProductName?.image ??
+                "/images/groceryPlaceholder.png";
+              const isDataUrl =
+                typeof imgSrc === "string" && imgSrc.startsWith("data:");
+              const resolvedImg = isDataUrl ? imgSrc : resolveImageUrl(imgSrc) ?? imgSrc;
               return (
                 <div
                   key={item.id}
                   className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-800 sm:gap-4 sm:p-4"
                 >
+                  <div className="relative h-32 w-32 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:h-40 sm:w-40">
+                    {isDataUrl ? (
+                      <img
+                        src={imgSrc}
+                        alt={name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : resolvedImg ? (
+                      <Image
+                        src={resolvedImg}
+                        alt={name}
+                        width={160}
+                        height={160}
+                        className="h-full w-full object-cover"
+                        unoptimized={resolvedImg.startsWith("data:")}
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
+                        <span className="text-xs">No image</span>
+                      </div>
+                    )}
+                  </div>
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-slate-900 dark:text-slate-100">
                       {name}
