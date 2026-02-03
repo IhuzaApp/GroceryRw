@@ -204,7 +204,7 @@ export default function CustomerInfoCard({
             {/* Message Button */}
             {order.status !== "delivered" && (
               <button
-                onClick={onChatClick}
+                onClick={() => onChatClick()}
                 title="Message Customer"
                 className={`flex h-12 w-12 items-center justify-center rounded-full text-white shadow-md transition-all hover:scale-110 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
                   theme === "dark"

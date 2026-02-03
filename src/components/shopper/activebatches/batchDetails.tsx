@@ -2835,6 +2835,15 @@ export default function BatchDetails({
   ) => {
     if (!order) return;
 
+    // Ignore if first arg is a React synthetic event (e.g. from onClick without wrapper)
+    const isEvent =
+      typeof targetCustomerId === "object" &&
+      targetCustomerId !== null &&
+      "nativeEvent" in targetCustomerId;
+    if (isEvent) {
+      targetCustomerId = undefined;
+    }
+
     // Type assertion to access the new fields
     const orderWithNewFields = order as OrderDetailsType & {
       customerId?: string;
@@ -2846,9 +2855,10 @@ export default function BatchDetails({
     };
 
     const customerId =
-      targetCustomerId ||
-      orderWithNewFields.customerId ||
-      orderWithNewFields.orderedBy?.id;
+      typeof targetCustomerId === "string" && targetCustomerId
+        ? targetCustomerId
+        : orderWithNewFields.customerId ||
+          orderWithNewFields.orderedBy?.id;
 
     if (!customerId) {
       // Cannot start chat - missing customer data
