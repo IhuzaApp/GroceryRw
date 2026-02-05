@@ -44,6 +44,15 @@ interface Message {
   read: boolean;
 }
 
+// Pending (optimistic) message before Firebase confirms
+interface PendingMessage {
+  tempId: string;
+  text: string;
+  senderId: string;
+  senderType: "customer" | "shopper";
+  timestamp: Date;
+}
+
 // Helper to format order ID
 function formatOrderID(id?: string | string[] | number): string {
   if (Array.isArray(id)) {
@@ -61,9 +70,9 @@ function ChatPage() {
 
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [isSending, setIsSending] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [customerData, setCustomerData] = useState<{
     id: string;
@@ -200,14 +209,26 @@ function ChatPage() {
             : doc.data().timestamp,
       })) as Message[];
 
+      // Remove pending messages that are now confirmed in Firebase
+      setPendingMessages((prev) =>
+        prev.filter(
+          (p) =>
+            !messagesList.some(
+              (m) =>
+                m.senderId === p.senderId &&
+                (m.text === p.text || m.message === p.text)
+            )
+        )
+      );
+
       // Check for new unread messages from customer and play sound
       const previousMessageCount = messages.length;
       const newMessages = messagesList.slice(previousMessageCount);
       const newUnreadCustomerMessages = newMessages.filter(
-        (message) =>
-          message.senderType === "customer" &&
-          message.senderId !== user?.id &&
-          !message.read
+        (msg) =>
+          msg.senderType === "customer" &&
+          msg.senderId !== user?.id &&
+          !msg.read
       );
 
       if (newUnreadCustomerMessages.length > 0) {
@@ -220,14 +241,14 @@ function ChatPage() {
       setMessages(messagesList);
 
       // Mark messages as read if they were sent to the current user
-      messagesList.forEach(async (message) => {
-        if (message.senderType === "customer" && !message.read) {
+      messagesList.forEach(async (msg) => {
+        if (msg.senderType === "customer" && !msg.read) {
           const messageRef = doc(
             db,
             "chat_conversations",
             conversationId,
             "messages",
-            message.id
+            msg.id
           );
           await updateDoc(messageRef, { read: true });
 
@@ -246,52 +267,58 @@ function ChatPage() {
     return () => unsubscribe();
   }, [conversationId, user?.id]);
 
-  // Scroll to bottom when messages change
+  // Scroll to bottom when messages or pending change
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, pendingMessages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleSendMessage = async (e?: React.FormEvent) => {
-    if (e) {
-      e.preventDefault();
-    }
-
-    console.log("🔍 [Shopper Chat] Attempting to send message:", {
-      message: message.trim(),
-      hasUser: !!user?.id,
-      userId: user?.id,
-      hasConversation: !!conversationId,
-      conversationId: conversationId,
-      hasCustomerData: !!customerData?.id,
-      customerId: customerData?.id,
-      customerData: customerData,
+  // Combined list for display: server messages + pending (optimistic), sorted by time
+  const displayMessages = React.useMemo(() => {
+    const pendingAsDisplay: (Message | PendingMessage)[] = pendingMessages.map(
+      (p) => ({
+        ...p,
+        id: p.tempId,
+        timestamp: p.timestamp,
+      })
+    );
+    const combined = [...messages, ...pendingAsDisplay];
+    combined.sort((a, b) => {
+      const tA = a.timestamp instanceof Date ? a.timestamp.getTime() : (a.timestamp?.getTime?.() ?? 0);
+      const tB = b.timestamp instanceof Date ? b.timestamp.getTime() : (b.timestamp?.getTime?.() ?? 0);
+      return tA - tB;
     });
+    return combined;
+  }, [messages, pendingMessages]);
+
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
 
     if (!message.trim() || !user?.id || !conversationId || !customerData?.id) {
-      console.log(
-        "❌ [Shopper Chat] Cannot send message, missing required data:",
-        {
-          hasMessage: !!message.trim(),
-          hasUser: !!user?.id,
-          hasConversation: !!conversationId,
-          hasCustomerData: !!customerData?.id,
-        }
-      );
       return;
     }
 
+    const text = message.trim();
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    // Optimistic: add to UI immediately with "Sending..." status
+    setPendingMessages((prev) => [
+      ...prev,
+      {
+        tempId,
+        text,
+        senderId: user.id,
+        senderType: "shopper",
+        timestamp: new Date(),
+      },
+    ]);
+    setMessage("");
+    scrollToBottom();
+
     try {
-      setIsSending(true);
-
-      console.log(
-        "✅ [Shopper Chat] All data available, proceeding to send message"
-      );
-
-      // Add new message to Firestore
       const messagesRef = collection(
         db,
         "chat_conversations",
@@ -299,8 +326,8 @@ function ChatPage() {
         "messages"
       );
       await addDoc(messagesRef, {
-        text: message.trim(),
-        message: message.trim(),
+        text,
+        message: text,
         senderId: user.id,
         senderName: user.name || "Shopper",
         senderType: "shopper",
@@ -309,55 +336,30 @@ function ChatPage() {
         read: false,
       });
 
-      // Update conversation with last message
       const convRef = doc(db, "chat_conversations", conversationId);
       await updateDoc(convRef, {
-        lastMessage: message.trim(),
+        lastMessage: text,
         lastMessageTime: serverTimestamp(),
       });
 
-      // Send FCM notification to the customer
       try {
-        const response = await fetch("/api/fcm/send-notification", {
+        await fetch("/api/fcm/send-notification", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             recipientId: customerData.id,
             senderName: user.name || "Shopper",
-            message: message.trim(),
+            message: text,
             orderId: orderId,
             conversationId: conversationId,
           }),
         });
-
-        if (response.ok) {
-          console.log("✅ [Shopper Chat] FCM notification sent to customer");
-        } else {
-          const errorData = await response.json().catch(() => ({}));
-          console.log("⚠️ [Shopper Chat] FCM notification failed:", {
-            status: response.status,
-            statusText: response.statusText,
-            error: errorData,
-          });
-        }
-      } catch (fcmError) {
-        console.error(
-          "⚠️ [Shopper Chat] FCM notification error (non-critical):",
-          fcmError
-        );
+      } catch {
+        // FCM non-critical
       }
-
-      // Clear input
-      setMessage("");
-      console.log(
-        "✅ [Shopper Chat] Message sent successfully and input cleared"
-      );
     } catch (error) {
       console.error("❌ [Shopper Chat] Error sending message:", error);
-    } finally {
-      setIsSending(false);
+      setPendingMessages((prev) => prev.filter((p) => p.tempId !== tempId));
     }
   };
 
@@ -368,23 +370,23 @@ function ChatPage() {
     }
   };
 
-  // Group messages by date for better display
-  const groupMessagesByDate = () => {
-    const groups: { date: string; messages: Message[] }[] = [];
+  // Group display messages by date for better display
+  const groupMessagesByDate = (list: (Message | PendingMessage)[]) => {
+    const groups: { date: string; messages: (Message | PendingMessage)[] }[] = [];
     let currentDate = "";
-    let currentGroup: Message[] = [];
+    let currentGroup: (Message | PendingMessage)[] = [];
 
-    messages.forEach((message) => {
-      const messageDate = formatMessageDate(message.timestamp);
+    list.forEach((msg) => {
+      const messageDate = formatMessageDate(msg.timestamp);
 
       if (messageDate !== currentDate) {
         if (currentGroup.length > 0) {
           groups.push({ date: currentDate, messages: currentGroup });
         }
         currentDate = messageDate;
-        currentGroup = [message];
+        currentGroup = [msg];
       } else {
-        currentGroup.push(message);
+        currentGroup.push(msg);
       }
     });
 
@@ -395,7 +397,7 @@ function ChatPage() {
     return groups;
   };
 
-  const messageGroups = groupMessagesByDate();
+  const messageGroups = groupMessagesByDate(displayMessages);
 
   if (!customerData && isLoading) {
     return (
@@ -616,7 +618,7 @@ function ChatPage() {
 
           {/* Messages Container */}
           <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-4 dark:bg-gray-900">
-            {messages.length === 0 ? (
+            {displayMessages.length === 0 ? (
               <div className="flex h-full items-center justify-center">
                 <div className="text-center">
                   <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
@@ -644,58 +646,73 @@ function ChatPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {messages.map((msg, index) => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${
-                      msg.senderType === "shopper"
-                        ? "justify-end"
-                        : "justify-start"
-                    }`}
-                  >
-                    <div className="max-w-[75%]">
-                      {msg.senderType !== "shopper" && (
-                        <div className="mb-1 flex items-center space-x-2">
-                          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                            {customerData?.name || "Customer"}
-                          </span>
-                          <span className="text-xs text-gray-400 dark:text-gray-500">
-                            {formatMessageTime(msg.timestamp)}
-                          </span>
-                        </div>
-                      )}
-                      <div
-                        className={`rounded-2xl px-4 py-3 shadow-sm ${
-                          msg.senderType === "shopper"
-                            ? "bg-green-500 text-white"
-                            : "bg-white text-gray-900 dark:bg-gray-800 dark:text-white"
-                        }`}
-                      >
-                        <p className="text-sm leading-relaxed">
-                          {msg.text || msg.message}
-                        </p>
-                        {msg.senderType === "shopper" && (
-                          <div className="mt-1 flex items-center justify-end space-x-1">
-                            <span className="text-xs text-green-100">
+                {displayMessages.map((msg) => {
+                  const isShopper = msg.senderType === "shopper";
+                  const isPending =
+                    "tempId" in msg && (msg as PendingMessage).tempId.startsWith("temp-");
+                  const statusLabel: "Sending..." | "Sent" | null = isShopper
+                    ? isPending
+                      ? "Sending..."
+                      : "Sent"
+                    : null;
+                  return (
+                    <div
+                      key={msg.id}
+                      className={`flex ${
+                        isShopper ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      <div className="flex max-w-[75%] flex-col items-end">
+                        {!isShopper && (
+                          <div className="mb-1 flex items-center space-x-2">
+                            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                              {customerData?.name || "Customer"}
+                            </span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500">
                               {formatMessageTime(msg.timestamp)}
                             </span>
-                            <svg
-                              className="h-3 w-3 text-green-100"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
                           </div>
+                        )}
+                        <div
+                          className={`rounded-2xl px-4 py-3 shadow-sm ${
+                            isShopper
+                              ? "bg-green-500 text-white"
+                              : "bg-white text-gray-900 dark:bg-gray-800 dark:text-white"
+                          }`}
+                        >
+                          <p className="text-sm leading-relaxed">
+                            {"text" in msg ? msg.text : (msg as Message).text || (msg as Message).message}
+                          </p>
+                          {isShopper && (
+                            <div className="mt-1 flex items-center justify-end space-x-1">
+                              <span className="text-xs text-green-100">
+                                {formatMessageTime(msg.timestamp)}
+                              </span>
+                              {!isPending && (
+                                <svg
+                                  className="h-3 w-3 text-green-100"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        {isShopper && statusLabel && (
+                          <span className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            {statusLabel}
+                          </span>
                         )}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 <div ref={messagesEndRef} />
               </div>
             )}
@@ -719,53 +736,22 @@ function ChatPage() {
               </div>
               <button
                 type="submit"
-                disabled={isSending || !message.trim()}
-                onClick={() => {
-                  console.log("🔍 [Shopper Chat] Send button clicked:", {
-                    isSending,
-                    messageTrimmed: message.trim(),
-                    disabled: isSending || !message.trim(),
-                  });
-                }}
+                disabled={!message.trim()}
                 className="flex-shrink-0 rounded-full bg-green-500 p-3 text-white shadow-lg transition-all duration-200 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
               >
-                {isSending ? (
-                  <div className="flex items-center">
-                    <svg
-                      className="h-4 w-4 animate-spin"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                  </div>
-                ) : (
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                    />
-                  </svg>
-                )}
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                  />
+                </svg>
               </button>
             </form>
           </div>

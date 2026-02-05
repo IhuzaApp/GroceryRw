@@ -64,43 +64,62 @@ interface Message {
   message?: string;
   senderId: string;
   senderType: "customer" | "shopper";
-  recipientId: string;
+  recipientId?: string;
   timestamp: any;
-  read: boolean;
+  read?: boolean;
+}
+
+// Pending (optimistic) message before Firebase confirms
+interface PendingMessage {
+  tempId: string;
+  text: string;
+  senderId: string;
+  senderType: "customer" | "shopper";
+  timestamp: Date;
 }
 
 // Message component for customers
 interface MessageProps {
-  message: Message;
+  message: Message | PendingMessage;
   isCurrentUser: boolean;
   shopperName: string;
+  statusLabel?: "Sending..." | "Sent" | null;
 }
 
 const CustomerMessage: React.FC<MessageProps> = ({
   message,
   isCurrentUser,
   shopperName,
+  statusLabel,
 }) => {
-  const messageContent = message.text || message.message || "";
+  const messageContent =
+    "text" in message ? message.text : (message as Message).text || (message as Message).message || "";
 
   return (
     <div
       className={`mb-2 flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
     >
       {!isCurrentUser && <Avatar color="blue" circle size="xs" />}
-      <div
-        className={`max-w-[80%] ${
-          isCurrentUser
-            ? "bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-100"
-            : "bg-blue-100 text-gray-900 dark:bg-blue-900 dark:text-blue-100"
-        } rounded-lg p-2`}
-      >
-        {!isCurrentUser && (
-          <div className="mb-1 text-xs font-medium text-gray-600 dark:text-gray-300">
-            {shopperName}
-          </div>
+      <div className="flex max-w-[80%] flex-col items-end">
+        <div
+          className={`${
+            isCurrentUser
+              ? "bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-100"
+              : "bg-blue-100 text-gray-900 dark:bg-blue-900 dark:text-blue-100"
+          } rounded-lg p-2`}
+        >
+          {!isCurrentUser && (
+            <div className="mb-1 text-xs font-medium text-gray-600 dark:text-gray-300">
+              {shopperName}
+            </div>
+          )}
+          <div className="whitespace-pre-wrap text-sm">{messageContent}</div>
+        </div>
+        {isCurrentUser && statusLabel && (
+          <span className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+            {statusLabel}
+          </span>
         )}
-        <div className="whitespace-pre-wrap text-sm">{messageContent}</div>
       </div>
       {isCurrentUser && <Avatar color="green" circle size="xs" />}
     </div>
@@ -128,8 +147,8 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
 }) => {
   const { data: session } = useSession();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [isSending, setIsSending] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -211,55 +230,55 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        console.log(
-          "🔍 [Customer Chat] Messages snapshot received, count:",
-          snapshot.docs.length
-        );
-
         const messagesList = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-          // Convert Firestore timestamp to regular Date if needed
           timestamp:
             doc.data().timestamp instanceof Timestamp
               ? doc.data().timestamp.toDate()
               : doc.data().timestamp,
         })) as Message[];
 
-        console.log("🔍 [Customer Chat] Processed messages:", messagesList);
+        // Remove pending messages that are now confirmed in Firebase (same text + senderId)
+        setPendingMessages((prev) =>
+          prev.filter(
+            (p) =>
+              !messagesList.some(
+                (m) =>
+                  m.senderId === p.senderId &&
+                  (m.text === p.text || m.message === p.text)
+              )
+          )
+        );
 
         // Check for new unread messages from shopper and play sound
         const previousMessageCount = messages.length;
         const newMessages = messagesList.slice(previousMessageCount);
         const newUnreadShopperMessages = newMessages.filter(
-          (message) =>
-            message.senderType === "shopper" &&
-            message.senderId !== session?.user?.id &&
-            !message.read
+          (msg) =>
+            msg.senderType === "shopper" &&
+            msg.senderId !== session?.user?.id &&
+            !msg.read
         );
 
         if (newUnreadShopperMessages.length > 0) {
-          console.log(
-            "🔊 [Customer Chat] New unread message from shopper, playing notification sound"
-          );
           soundNotification.play();
         }
 
         setMessages(messagesList);
 
         // Mark messages as read if they were sent to the current user (customer)
-        messagesList.forEach(async (message) => {
-          if (message.senderType === "shopper" && !message.read) {
+        messagesList.forEach(async (msg) => {
+          if (msg.senderType === "shopper" && !msg.read) {
             const messageRef = doc(
               db,
               "chat_conversations",
               conversationId,
               "messages",
-              message.id
+              msg.id
             );
             await updateDoc(messageRef, { read: true });
 
-            // Update unread count in conversation
             const convRef = doc(db, "chat_conversations", conversationId);
             await updateDoc(convRef, {
               unreadCount: 0,
@@ -267,7 +286,6 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
           }
         });
 
-        // Scroll to bottom after messages load
         setTimeout(scrollToBottom, 100);
       },
       (error) => {
@@ -279,10 +297,10 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
     return () => unsubscribe();
   }, [conversationId, session?.user?.id]);
 
-  // Scroll to bottom when messages change
+  // Scroll to bottom when messages or pending change
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, pendingMessages]);
 
   // Initialize conversation when drawer opens
   useEffect(() => {
@@ -291,7 +309,25 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
     }
   }, [isOpen, orderId, shopper?.id]);
 
-  // Handle sending a new message
+  // Combined list for display: server messages + pending (optimistic), sorted by time
+  const displayMessages = React.useMemo(() => {
+    const pendingAsDisplay: (Message | PendingMessage)[] = pendingMessages.map(
+      (p) => ({
+        ...p,
+        id: p.tempId,
+        timestamp: p.timestamp,
+      })
+    );
+    const combined = [...messages, ...pendingAsDisplay];
+    combined.sort((a, b) => {
+      const tA = a.timestamp instanceof Date ? a.timestamp.getTime() : (a.timestamp?.getTime?.() ?? 0);
+      const tB = b.timestamp instanceof Date ? b.timestamp.getTime() : (b.timestamp?.getTime?.() ?? 0);
+      return tA - tB;
+    });
+    return combined;
+  }, [messages, pendingMessages]);
+
+  // Handle sending a new message (optimistic: show immediately, then confirm)
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
@@ -301,27 +337,27 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
       !conversationId ||
       !shopper?.id
     ) {
-      console.log("Cannot send message, missing data:", {
-        hasMessage: !!newMessage.trim(),
-        hasUser: !!session?.user?.id,
-        hasConversation: !!conversationId,
-        hasShopperId: !!shopper?.id,
-      });
       return;
     }
 
-    try {
-      setIsSending(true);
+    const text = newMessage.trim();
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-      console.log("🔍 [Customer Chat] Sending message:", {
-        text: newMessage.trim(),
+    // Optimistic: add to UI immediately with "Sending..." status
+    setPendingMessages((prev) => [
+      ...prev,
+      {
+        tempId,
+        text,
         senderId: session.user.id,
-        senderName: session.user.name || "Customer",
-        recipientId: shopper.id,
         senderType: "customer",
-      });
+        timestamp: new Date(),
+      },
+    ]);
+    setNewMessage("");
+    scrollToBottom();
 
-      // Add new message to Firestore
+    try {
       const messagesRef = collection(
         db,
         "chat_conversations",
@@ -329,8 +365,8 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
         "messages"
       );
       await addDoc(messagesRef, {
-        text: newMessage.trim(),
-        message: newMessage.trim(),
+        text,
+        message: text,
         senderId: session.user.id,
         senderName: session.user.name || "Customer",
         senderType: "customer",
@@ -339,53 +375,32 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
         read: false,
       });
 
-      // Update conversation with last message
       const convRef = doc(db, "chat_conversations", conversationId);
       await updateDoc(convRef, {
-        lastMessage: newMessage.trim(),
+        lastMessage: text,
         lastMessageTime: serverTimestamp(),
-        unreadCount: 1, // Increment unread count for shopper
+        unreadCount: 1,
       });
 
-      // Send FCM notification to the shopper
       try {
-        const response = await fetch("/api/fcm/send-notification", {
+        await fetch("/api/fcm/send-notification", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             recipientId: shopper.id,
             senderName: session.user.name || "Customer",
-            message: newMessage.trim(),
-            orderId: orderId,
-            conversationId: conversationId,
+            message: text,
+            orderId,
+            conversationId,
           }),
         });
-
-        if (response.ok) {
-          console.log(
-            "✅ [Customer Chat Drawer] FCM notification sent to shopper"
-          );
-        } else {
-          console.log(
-            "⚠️ [Customer Chat Drawer] FCM notification failed (non-critical)"
-          );
-        }
-      } catch (fcmError) {
-        console.error(
-          "⚠️ [Customer Chat Drawer] FCM notification error (non-critical):",
-          fcmError
-        );
+      } catch {
+        // FCM non-critical
       }
-
-      // Clear input
-      setNewMessage("");
-    } catch (error) {
-      console.error("Error sending message:", error);
-      setError("Error sending message. Please try again later.");
-    } finally {
-      setIsSending(false);
+    } catch (err) {
+      console.error("Error sending message:", err);
+      setError("Error sending message. Please try again.");
+      setPendingMessages((prev) => prev.filter((p) => p.tempId !== tempId));
     }
   };
 
@@ -449,11 +464,8 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
 
       {/* Messages */}
       <div className="flex h-[calc(100vh-8rem)] flex-col">
-        <div
-          className="flex-1 overflow-y-auto bg-gray-50 px-3 py-2 dark:bg-gray-900"
-          ref={messagesEndRef}
-        >
-          {messages.length === 0 ? (
+        <div className="flex-1 overflow-y-auto bg-gray-50 px-3 py-2 dark:bg-gray-900">
+          {displayMessages.length === 0 ? (
             <div className="flex h-full items-center justify-center">
               <div className="text-center">
                 <div className="mb-2 text-4xl">💬</div>
@@ -463,14 +475,28 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
               </div>
             </div>
           ) : (
-            messages.map((message) => (
-              <CustomerMessage
-                key={message.id}
-                message={message}
-                isCurrentUser={message.senderId === session?.user?.id}
-                shopperName={shopper.name}
-              />
-            ))
+            <>
+              {displayMessages.map((message) => {
+                const isCurrentUser = message.senderId === session?.user?.id;
+                const isPending =
+                  "tempId" in message && message.tempId.startsWith("temp-");
+                const statusLabel: "Sending..." | "Sent" | null = isCurrentUser
+                  ? isPending
+                    ? "Sending..."
+                    : "Sent"
+                  : null;
+                return (
+                  <CustomerMessage
+                    key={message.id}
+                    message={message}
+                    isCurrentUser={isCurrentUser}
+                    shopperName={shopper.name}
+                    statusLabel={statusLabel}
+                  />
+                );
+              })}
+              <div ref={messagesEndRef} />
+            </>
           )}
         </div>
 
@@ -487,26 +513,22 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
             />
             <button
               type="submit"
-              disabled={isSending || !newMessage.trim()}
+              disabled={!newMessage.trim()}
               className="rounded-full bg-green-500 p-2 text-white shadow-lg transition-all duration-200 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
             >
-              {isSending ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-              ) : (
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                  />
-                </svg>
-              )}
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                />
+              </svg>
             </button>
           </form>
         </div>

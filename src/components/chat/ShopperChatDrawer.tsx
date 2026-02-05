@@ -69,38 +69,57 @@ interface Message {
   read: boolean;
 }
 
+// Pending (optimistic) message before Firebase confirms
+interface PendingMessage {
+  tempId: string;
+  text: string;
+  senderId: string;
+  senderType: "customer" | "shopper";
+  timestamp: Date;
+}
+
 // Message component for shoppers
 interface MessageProps {
-  message: Message;
+  message: Message | PendingMessage;
   isCurrentUser: boolean;
   customerName: string;
+  statusLabel?: "Sending..." | "Sent" | null;
 }
 
 const ShopperMessage: React.FC<MessageProps> = ({
   message,
   isCurrentUser,
   customerName,
+  statusLabel,
 }) => {
-  const messageContent = message.text || message.message || "";
+  const messageContent =
+    "text" in message ? message.text : (message as Message).text || (message as Message).message || "";
 
   return (
     <div
       className={`mb-2 flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
     >
       {!isCurrentUser && <Avatar color="blue" circle size="xs" />}
-      <div
-        className={`max-w-[80%] ${
-          isCurrentUser
-            ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100"
-            : "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100"
-        } rounded-lg p-2`}
-      >
-        {!isCurrentUser && (
-          <div className="mb-1 text-xs font-medium text-gray-600 dark:text-gray-300">
-            {customerName}
-          </div>
+      <div className="flex max-w-[80%] flex-col items-end">
+        <div
+          className={`${
+            isCurrentUser
+              ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100"
+              : "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100"
+          } rounded-lg p-2`}
+        >
+          {!isCurrentUser && (
+            <div className="mb-1 text-xs font-medium text-gray-600 dark:text-gray-300">
+              {customerName}
+            </div>
+          )}
+          <div className="whitespace-pre-wrap text-sm">{messageContent}</div>
+        </div>
+        {isCurrentUser && statusLabel && (
+          <span className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+            {statusLabel}
+          </span>
         )}
-        <div className="whitespace-pre-wrap text-sm">{messageContent}</div>
       </div>
       {isCurrentUser && <Avatar color="blue" circle size="xs" />}
     </div>
@@ -128,8 +147,8 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
 }) => {
   const { data: session } = useSession();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [isSending, setIsSending] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -201,6 +220,18 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
               : doc.data().timestamp,
         })) as Message[];
 
+        // Remove pending messages that are now confirmed in Firebase (same text + senderId)
+        setPendingMessages((prev) =>
+          prev.filter(
+            (p) =>
+              !messagesList.some(
+                (m) =>
+                  m.senderId === p.senderId &&
+                  (m.text === p.text || m.message === p.text)
+              )
+          )
+        );
+
         // Check for new unread messages from customer and play sound
         const previousMessageCount = messages.length;
         const newMessages = messagesList.slice(previousMessageCount);
@@ -249,10 +280,10 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
     return () => unsubscribe();
   }, [conversationId, session?.user?.id]);
 
-  // Scroll to bottom when messages change
+  // Scroll to bottom when messages or pending change
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, pendingMessages]);
 
   // Initialize conversation when drawer opens
   useEffect(() => {
@@ -261,7 +292,25 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
     }
   }, [isOpen, orderId, customer?.id]);
 
-  // Handle sending a new message
+  // Combined list for display: server messages + pending (optimistic), sorted by time
+  const displayMessages = React.useMemo(() => {
+    const pendingAsDisplay: (Message | PendingMessage)[] = pendingMessages.map(
+      (p) => ({
+        ...p,
+        id: p.tempId,
+        timestamp: p.timestamp,
+      })
+    );
+    const combined = [...messages, ...pendingAsDisplay];
+    combined.sort((a, b) => {
+      const tA = a.timestamp instanceof Date ? a.timestamp.getTime() : (a.timestamp?.getTime?.() ?? 0);
+      const tB = b.timestamp instanceof Date ? b.timestamp.getTime() : (b.timestamp?.getTime?.() ?? 0);
+      return tA - tB;
+    });
+    return combined;
+  }, [messages, pendingMessages]);
+
+  // Handle sending a new message (optimistic: show immediately with "Sending...", then "Sent" when confirmed)
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
@@ -274,9 +323,24 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
       return;
     }
 
-    try {
-      setIsSending(true);
+    const text = newMessage.trim();
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
+    // Optimistic: add to UI immediately with "Sending..." status
+    setPendingMessages((prev) => [
+      ...prev,
+      {
+        tempId,
+        text,
+        senderId: session.user.id,
+        senderType: "shopper",
+        timestamp: new Date(),
+      },
+    ]);
+    setNewMessage("");
+    scrollToBottom();
+
+    try {
       // Add new message to Firestore
       const messagesRef = collection(
         db,
@@ -285,8 +349,8 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
         "messages"
       );
       await addDoc(messagesRef, {
-        text: newMessage.trim(),
-        message: newMessage.trim(),
+        text,
+        message: text,
         senderId: session.user.id,
         senderName: session.user.name || "Shopper",
         senderType: "shopper",
@@ -298,14 +362,14 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
       // Update conversation with last message
       const convRef = doc(db, "chat_conversations", conversationId);
       await updateDoc(convRef, {
-        lastMessage: newMessage.trim(),
+        lastMessage: text,
         lastMessageTime: serverTimestamp(),
         unreadCount: 1, // Increment unread count for customer
       });
 
       // Send FCM notification to the customer
       try {
-        const response = await fetch("/api/fcm/send-notification", {
+        await fetch("/api/fcm/send-notification", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -313,31 +377,18 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
           body: JSON.stringify({
             recipientId: customer.id,
             senderName: session.user.name || "Shopper",
-            message: newMessage.trim(),
+            message: text,
             orderId: orderId,
             conversationId: conversationId,
           }),
         });
-
-        if (response.ok) {
-          // FCM notification sent successfully
-        } else {
-          // FCM notification failed (non-critical)
-        }
-      } catch (fcmError) {
-        console.error(
-          "⚠️ [Shopper Chat Drawer] FCM notification error (non-critical):",
-          fcmError
-        );
+      } catch {
+        // FCM non-critical
       }
-
-      // Clear input
-      setNewMessage("");
-    } catch (error) {
-      console.error("Error sending message:", error);
+    } catch (err) {
+      console.error("Error sending message:", err);
       setError("Error sending message. Please try again later.");
-    } finally {
-      setIsSending(false);
+      setPendingMessages((prev) => prev.filter((p) => p.tempId !== tempId));
     }
   };
 
@@ -399,11 +450,8 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
 
       {/* Messages */}
       <div className="flex h-[calc(100vh-8rem)] flex-col">
-        <div
-          className="flex-1 overflow-y-auto bg-gray-50 px-3 py-2 dark:bg-gray-900"
-          ref={messagesEndRef}
-        >
-          {messages.length === 0 ? (
+        <div className="flex-1 overflow-y-auto bg-gray-50 px-3 py-2 dark:bg-gray-900">
+          {displayMessages.length === 0 ? (
             <div className="flex h-full items-center justify-center">
               <div className="text-center">
                 <div className="mb-2 text-4xl">💬</div>
@@ -413,14 +461,28 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
               </div>
             </div>
           ) : (
-            messages.map((message) => (
-              <ShopperMessage
-                key={message.id}
-                message={message}
-                isCurrentUser={message.senderId === session?.user?.id}
-                customerName={customer.name}
-              />
-            ))
+            <>
+              {displayMessages.map((message) => {
+                const isCurrentUser = message.senderId === session?.user?.id;
+                const isPending =
+                  "tempId" in message && message.tempId.startsWith("temp-");
+                const statusLabel: "Sending..." | "Sent" | null = isCurrentUser
+                  ? isPending
+                    ? "Sending..."
+                    : "Sent"
+                  : null;
+                return (
+                  <ShopperMessage
+                    key={message.id}
+                    message={message}
+                    isCurrentUser={isCurrentUser}
+                    customerName={customer.name}
+                    statusLabel={statusLabel}
+                  />
+                );
+              })}
+              <div ref={messagesEndRef} />
+            </>
           )}
         </div>
 
@@ -437,26 +499,22 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
             />
             <button
               type="submit"
-              disabled={isSending || !newMessage.trim()}
+              disabled={!newMessage.trim()}
               className="rounded-full bg-blue-500 p-2 text-white shadow-lg transition-all duration-200 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
             >
-              {isSending ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-              ) : (
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                  />
-                </svg>
-              )}
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                />
+              </svg>
             </button>
           </form>
         </div>
