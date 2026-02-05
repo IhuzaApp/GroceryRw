@@ -243,7 +243,7 @@ export default async function handler(
           order_id: null,
           shop_id: order.store_id,
           restaurant_id: null,
-          shopper_id: order.shopper_id,
+          shopper_id: null,
           amount: plasaFee.toFixed(2),
           commission_percentage: deliveryCommissionPercentage.toString(),
           businessOrder_Id: orderId,
