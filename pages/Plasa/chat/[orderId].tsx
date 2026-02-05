@@ -92,28 +92,34 @@ function ChatPage() {
     const fetchOrderAndCustomer = async () => {
       setIsLoading(true);
       try {
-        // Fetch order details using shopper API
-        const res = await fetch(`/api/shopper/orderDetails?id=${orderId}`);
-        const data = await res.json();
+        // Try business order first (avoids 404 in console when opening Message from business order on mobile)
+        let res = await fetch(
+          `/api/queries/business-order-details?id=${orderId}&forShopper=1`
+        );
+        let data = await res.json();
+
+        // If 404, try shopper orderDetails (regular, reel, restaurant orders)
+        if (res.status === 404) {
+          res = await fetch(`/api/shopper/orderDetails?id=${orderId}`);
+          data = await res.json();
+        }
 
         if (data.order) {
           setOrder(data.order);
 
+          // Customer is from orderedBy (shopper API) or orderedBy (business API)
+          const orderedBy = data.order.orderedBy || data.order.user;
           console.log("🔍 [Shopper Chat] Order data received:", {
             orderId: data.order.id,
-            hasOrderedBy: !!data.order.orderedBy,
-            orderedBy: data.order.orderedBy,
-            hasUser: !!data.order.user,
-            user: data.order.user,
+            hasOrderedBy: !!orderedBy,
+            orderedBy,
           });
 
-          // Set customer data - customer is ALWAYS from orderedBy
           const customerDataToSet = {
-            id: data.order.orderedBy?.id,
-            name: data.order.orderedBy?.name || "Customer",
+            id: orderedBy?.id,
+            name: orderedBy?.name || "Customer",
             avatar:
-              data.order.orderedBy?.profile_picture ||
-              "/images/userProfile.png",
+              orderedBy?.profile_picture || "/images/userProfile.png",
             lastSeen: "Online now",
           };
 
@@ -123,7 +129,6 @@ function ChatPage() {
           );
           setCustomerData(customerDataToSet);
 
-          // Get or create conversation
           await getOrCreateConversation(data.order.id, customerDataToSet.id);
         }
       } catch (error) {
@@ -592,7 +597,11 @@ function ChatPage() {
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     {order?.address?.street && order?.address?.city
                       ? `${order.address.street}, ${order.address.city}`
-                      : "Address not available"}
+                      : order?.customerAddress
+                        ? order.customerAddress
+                        : order?.deliveryAddress
+                          ? order.deliveryAddress
+                          : "Address not available"}
                   </p>
                 </div>
               </div>

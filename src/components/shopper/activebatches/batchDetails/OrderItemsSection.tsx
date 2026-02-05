@@ -303,7 +303,7 @@ export default function OrderItemsSection({
                     <p className="text-base font-medium text-slate-900 dark:text-slate-100 sm:text-lg">
                       {name}
                     </p>
-                    {/* For business orders show Description and query_id from PlasBusinessProductsOrSerive instead of price line */}
+                    {/* For business orders show Description and query_id from PlasBusinessProductsOrSerive; no item price */}
                     {(item.product?.ProductName?.description ?? item.description ?? "")?.trim() ? (
                       <p className="mt-1 text-sm text-slate-600 dark:text-slate-300 sm:text-base line-clamp-2">
                         {(item.product?.ProductName?.description ?? item.description ?? "").trim()}
@@ -314,12 +314,6 @@ export default function OrderItemsSection({
                         Ref: {item.query_id ?? item.product?.query_id}
                       </p>
                     ) : null}
-                    {!(item.product?.ProductName?.description ?? item.description)?.trim() && !(item.query_id ?? item.product?.query_id) && (
-                      <p className="mt-1 text-sm text-slate-600 dark:text-slate-300 sm:text-base">
-                        Qty: {qty} × {formatCurrency(Number(price))} ={" "}
-                        {formatCurrency(Number(price) * qty)}
-                      </p>
-                    )}
                   </div>
                 </div>
               );

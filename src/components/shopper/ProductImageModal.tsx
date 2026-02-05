@@ -97,7 +97,7 @@ export default function ProductImageModal({
                 </div>
 
                 {isBusinessOrder ? (
-                  /* Business order: selected details (size, color, etc.), unit, quantity, price */
+                  /* Business order: selected details (size, color, etc.), unit, quantity; no price */
                   <div className="space-y-4 rounded-xl border border-slate-100 bg-slate-50/80 p-4 text-sm dark:border-slate-700 dark:bg-slate-800/60">
                     <div className="space-y-2">
                       {Object.entries(selectedDetails).map(([key, value]) => (
@@ -129,14 +129,6 @@ export default function ProductImageModal({
                         </span>
                         <span className="text-slate-900 dark:text-slate-50">
                           {currentOrderItem.quantity}
-                        </span>
-                      </div>
-                      <div className="flex justify-between gap-4">
-                        <span className="font-medium text-slate-600 dark:text-slate-300">
-                          Price:
-                        </span>
-                        <span className="text-base font-bold text-emerald-600 dark:text-emerald-400">
-                          {formatCurrency(safePrice(currentOrderItem))}
                         </span>
                       </div>
                     </div>
