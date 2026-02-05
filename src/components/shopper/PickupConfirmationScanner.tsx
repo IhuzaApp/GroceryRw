@@ -6,6 +6,8 @@ import { BrowserMultiFormatReader, IScannerControls } from "@zxing/browser";
 import Tesseract from "tesseract.js";
 import { useTheme } from "../../context/ThemeContext";
 import { reportErrorToSlackClient } from "../../lib/reportErrorClient";
+
+const SCAN_DEBUG = true; // Set to false to disable scan logs
 // Errors are reported via reportErrorToSlackClient -> /api/report-error -> logErrorToSlack (slackErrorReporter)
 
 /** Normalize order ID for comparison: strip # and non-digits, compare as string */
@@ -76,6 +78,8 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
   const isMatchRef = useRef(false);
   const ocrTimeoutRef = useRef<number | null>(null);
   const ocrMountedRef = useRef(true);
+  const scannerStartedRef = useRef(false); // Prevent double start (e.g. Strict Mode) → avoids video play() interrupted
+  const ocrWorkerRef = useRef<Tesseract.Worker | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [matchResult, setMatchResult] = useState<"idle" | "match" | "no_match">(
     "idle"
@@ -95,6 +99,7 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
       ocrTimeoutRef.current = null;
     }
     ocrMountedRef.current = false;
+    // Do not clear scannerStartedRef here so a double effect run (e.g. Strict Mode) does not start the stream again and cause "play() interrupted"
   }, []);
 
   const checkMatch = useCallback(
@@ -106,12 +111,16 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
     [expectedNormalized]
   );
 
-  // ZXing: barcode/QR
+  // ZXing: barcode/QR — single start to avoid "play() interrupted by new load request"
   useEffect(() => {
     isMatchRef.current = false;
 
     const startScanner = async () => {
       if (!videoRef.current) return;
+      if (scannerStartedRef.current) {
+        if (SCAN_DEBUG) console.log("[PickupScan] ZXing skipped (already started)");
+        return;
+      }
 
       const reader = new BrowserMultiFormatReader();
       try {
@@ -119,6 +128,7 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
           video: { facingMode: "environment" },
         });
 
+        scannerStartedRef.current = true;
         controlsRef.current = await reader.decodeFromStream(
           stream,
           videoRef.current,
@@ -127,7 +137,17 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
 
             if (result) {
               const text = result.getText().trim();
-              if (checkMatch("ZXing", text)) {
+              const scannedNorm = normalizeOrderId(text);
+              const matched = checkMatch("ZXing", text);
+              if (SCAN_DEBUG) {
+                console.log("[PickupScan] ZXing:", {
+                  raw: text,
+                  normalized: scannedNorm,
+                  expected: expectedNormalized,
+                  match: matched,
+                });
+              }
+              if (matched) {
                 isMatchRef.current = true;
                 setMatchResult("match");
               } else {
@@ -149,6 +169,7 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
           }
         );
       } catch (err) {
+        scannerStartedRef.current = false;
         reportErrorToSlackClient(
           "PickupConfirmationScanner (camera/ZXing)",
           err
@@ -161,9 +182,8 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
     return () => stopScanner();
   }, [expectedNormalized, stopScanner, checkMatch]);
 
-  // OCR: written/printed numbers (e.g. "19" on paper)
-  // Use recursive setTimeout instead of setInterval so we only schedule the next run
-  // after the current OCR finishes — avoids stacking and reduces "[Violation] 'setTimeout' handler took Nms"
+  // OCR: written/printed numbers (e.g. "19" on paper) — focus on digits and # only
+  // Use recursive setTimeout so we only schedule the next run after the current OCR finishes
   useEffect(() => {
     ocrMountedRef.current = true;
     const video = videoRef.current;
@@ -173,6 +193,14 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
     canvasRef.current = canvas;
     let ocrRunning = false;
     const delayMs = 2500;
+
+    // Worker with whitelist so OCR focuses on QR/number content only (digits + #)
+    const getWorker = async () => {
+      if (ocrWorkerRef.current) return ocrWorkerRef.current;
+      const w = await Tesseract.createWorker("eng", 1, { logger: () => {} });
+      ocrWorkerRef.current = w;
+      return w;
+    };
 
     const runOcr = async () => {
       if (!ocrMountedRef.current || isMatchRef.current) return;
@@ -201,11 +229,12 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
         ctx.drawImage(video, sx, sy, cropW, cropH, 0, 0, cropW, cropH);
         const imageData = canvas.toDataURL("image/png");
 
+        const worker = await getWorker();
         const {
           data: { text },
-        } = await Tesseract.recognize(imageData, "eng", {
-          logger: () => {},
-        });
+        } = await worker.recognize(imageData, {
+          tessedit_char_whitelist: "0123456789#",
+        } as Tesseract.RecognizeOptions & { tessedit_char_whitelist?: string });
 
         if (!ocrMountedRef.current || isMatchRef.current) return;
 
@@ -218,10 +247,12 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
           const idsNorm = extractOrderIdsFromText(normalizedForHandwriting);
           const ids = Array.from(new Set<string>([...idsRaw, ...idsNorm]));
 
+          let matched = false;
           for (const id of ids) {
             if (normalizeOrderId(id) === expectedNormalized) {
               isMatchRef.current = true;
               setMatchResult("match");
+              matched = true;
               break;
             }
           }
@@ -232,9 +263,20 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
           ) {
             isMatchRef.current = true;
             setMatchResult("match");
+            matched = true;
           }
           if (!isMatchRef.current && ids.length > 0) {
             setMatchResult("no_match");
+          }
+
+          if (SCAN_DEBUG) {
+            console.log("[PickupScan] OCR:", {
+              raw: rawText,
+              normalizedHandwriting: normalizedForHandwriting,
+              extractedIds: ids,
+              expected: expectedNormalized,
+              match: matched || isMatchRef.current,
+            });
           }
         }
       } catch (err) {
@@ -260,6 +302,10 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
         ocrTimeoutRef.current = null;
       }
       canvasRef.current = null;
+      if (ocrWorkerRef.current) {
+        ocrWorkerRef.current.terminate().catch(() => {});
+        ocrWorkerRef.current = null;
+      }
     };
   }, [expectedNormalized]);
 
@@ -385,7 +431,6 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
           <div className="relative overflow-hidden rounded-xl bg-gray-900">
             <video
               ref={videoRef}
-              autoPlay
               playsInline
               muted
               className="h-48 w-full object-cover sm:h-56"
@@ -415,6 +460,15 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
               }`}
             >
               Last read: &quot;{lastOcrText}&quot;
+            </p>
+          )}
+          {SCAN_DEBUG && (
+            <p
+              className={`mt-1 text-xs ${
+                theme === "dark" ? "text-gray-500" : "text-gray-400"
+              }`}
+            >
+              Debug: open DevTools → Console to see [PickupScan] ZXing/OCR logs
             </p>
           )}
 

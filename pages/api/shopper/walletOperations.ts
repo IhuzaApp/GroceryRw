@@ -26,6 +26,7 @@ export default async function handler(
     operation,
     isReelOrder = false,
     isRestaurantOrder = false,
+    isBusinessOrder = false,
   } = req.body;
 
   if (!orderId || !operation) {
@@ -47,6 +48,7 @@ export default async function handler(
       operation,
       isReelOrder,
       isRestaurantOrder,
+      isBusinessOrder,
       req
     );
 
@@ -62,6 +64,7 @@ export default async function handler(
       operation,
       isReelOrder,
       isRestaurantOrder,
+      isBusinessOrder,
     });
     return res.status(500).json({
       error:

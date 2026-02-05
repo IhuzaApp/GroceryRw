@@ -286,12 +286,15 @@ export default function BatchDetails({
 
     const checkForPendingInvoiceProof = async () => {
       try {
-        // Invoice proof is only for combined and regular orders — skip for reel and restaurant
+        // Invoice proof is only for combined and regular orders — skip for reel, restaurant, and business
         const allOrdersInBatch = [order, ...(order.combinedOrders || [])];
-        const isReelOrRestaurantBatch = allOrdersInBatch.every(
-          (o) => o.orderType === "reel" || o.orderType === "restaurant"
+        const isReelOrRestaurantOrBusinessBatch = allOrdersInBatch.every(
+          (o) =>
+            o.orderType === "reel" ||
+            o.orderType === "restaurant" ||
+            o.orderType === "business"
         );
-        if (isReelOrRestaurantBatch) return;
+        if (isReelOrRestaurantOrBusinessBatch) return;
 
         // Check main order
         if (order.status === "on_the_way") {
@@ -1255,8 +1258,15 @@ export default function BatchDetails({
             { placement: "topEnd", duration: 5000 }
           );
 
-          // Show invoice proof modal for same-shop combined orders
-          setShowInvoiceProofModal(true);
+          // Show invoice proof modal for same-shop combined orders (not for business batches)
+          const sameShopBatchOrders = [
+            order,
+            ...(order?.combinedOrders || []),
+          ];
+          const isBusinessBatch = sameShopBatchOrders.every(
+            (o) => o?.orderType === "business"
+          );
+          if (!isBusinessBatch) setShowInvoiceProofModal(true);
           setShowInvoiceProofLoading(false);
         } else {
           // DIFFERENT SHOP COMBINED ORDERS or SINGLE ORDERS: Use existing logic
@@ -1284,8 +1294,8 @@ export default function BatchDetails({
             });
           }
 
-          // Show invoice proof modal for proof upload
-          setShowInvoiceProofModal(true);
+          // Show invoice proof modal for proof upload (not for business orders)
+          if (order?.orderType !== "business") setShowInvoiceProofModal(true);
           setShowInvoiceProofLoading(false);
 
           // Show success notification
@@ -3819,14 +3829,17 @@ export default function BatchDetails({
           </div>
         )}
 
-        {/* Invoice Proof Modal — only for combined and regular orders, not reel/restaurant */}
+        {/* Invoice Proof Modal — only for combined and regular orders, not reel/restaurant/business */}
         <InvoiceProofModal
           open={
             showInvoiceProofModal &&
             !(
               order &&
               [order, ...(order.combinedOrders || [])].every(
-                (o) => o?.orderType === "reel" || o?.orderType === "restaurant"
+                (o) =>
+                  o?.orderType === "reel" ||
+                  o?.orderType === "restaurant" ||
+                  o?.orderType === "business"
               )
             )
           }

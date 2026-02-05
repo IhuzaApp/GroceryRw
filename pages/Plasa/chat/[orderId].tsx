@@ -13,6 +13,7 @@ import {
 } from "../../../src/lib/formatters";
 import { useAuth } from "../../../src/context/AuthContext";
 import { useTheme } from "../../../src/context/ThemeContext";
+import { useChat } from "../../../src/context/ChatContext";
 import { AuthGuard } from "../../../src/components/AuthGuard";
 import {
   collection,
@@ -67,6 +68,7 @@ function ChatPage() {
   const { orderId } = router.query;
   const { user } = useAuth();
   const { theme } = useTheme();
+  const { closeChat } = useChat();
 
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -92,44 +94,41 @@ function ChatPage() {
     const fetchOrderAndCustomer = async () => {
       setIsLoading(true);
       try {
-        // Try business order first (avoids 404 in console when opening Message from business order on mobile)
-        let res = await fetch(
-          `/api/queries/business-order-details?id=${orderId}&forShopper=1`
-        );
+        // Single API for regular, reel, and restaurant orders; fallback to business orders
+        let res = await fetch(`/api/shopper/orderDetails?id=${orderId}`);
         let data = await res.json();
 
-        // If 404, try shopper orderDetails (regular, reel, restaurant orders)
+        // If 404, try business order API (e.g. when opening Message from a business order on mobile)
         if (res.status === 404) {
-          res = await fetch(`/api/shopper/orderDetails?id=${orderId}`);
+          res = await fetch(
+            `/api/queries/business-order-details?id=${orderId}&forShopper=1`
+          );
           data = await res.json();
         }
 
         if (data.order) {
           setOrder(data.order);
+          const o = data.order;
 
-          // Customer is from orderedBy (shopper API) or orderedBy (business API)
-          const orderedBy = data.order.orderedBy || data.order.user;
-          console.log("🔍 [Shopper Chat] Order data received:", {
-            orderId: data.order.id,
-            hasOrderedBy: !!orderedBy,
-            orderedBy,
-          });
+          // Customer: orderedBy (regular/restaurant/business), user (reel), or fallbacks
+          const orderedBy = o.orderedBy || o.user;
+          const customerId =
+            orderedBy?.id || o.customerId || o.user?.id;
+          const customerName =
+            orderedBy?.name || o.customerName || "Customer";
 
           const customerDataToSet = {
-            id: orderedBy?.id,
-            name: orderedBy?.name || "Customer",
+            id: customerId,
+            name: customerName,
             avatar:
               orderedBy?.profile_picture || "/images/userProfile.png",
             lastSeen: "Online now",
           };
 
-          console.log(
-            "🔍 [Shopper Chat] Customer data to set:",
-            customerDataToSet
-          );
           setCustomerData(customerDataToSet);
-
-          await getOrCreateConversation(data.order.id, customerDataToSet.id);
+          if (customerId) {
+            await getOrCreateConversation(o.id, customerId);
+          }
         }
       } catch (error) {
         console.error("Error fetching order details:", error);
@@ -561,26 +560,30 @@ function ChatPage() {
           {/* Professional Header */}
           <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800">
             <div className="flex items-center space-x-3">
-              <Link
-                href={`/Plasa/active-batches/batch/${orderId}`}
-                className="flex items-center"
+              <button
+                type="button"
+                className="rounded-full p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                onClick={() => {
+                  closeChat();
+                  const id = typeof orderId === "string" ? orderId : Array.isArray(orderId) ? orderId[0] : "";
+                  if (id) router.replace(`/Plasa/active-batches/batch/${id}`);
+                }}
+                aria-label="Back to batch"
               >
-                <button className="rounded-full p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
-                </button>
-              </Link>
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
               <div className="flex items-center space-x-3">
                 <div className="relative">
                   <img
@@ -591,9 +594,34 @@ function ChatPage() {
                   <div className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-white bg-green-500 dark:border-gray-800"></div>
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {customerData?.name || "Customer"}
-                  </h2>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {customerData?.name || "Customer"}
+                    </h2>
+                    {order?.orderType &&
+                      order.orderType !== "regular" &&
+                      order.orderType !== "combined" && (
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                            order.orderType === "reel"
+                              ? "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300"
+                              : order.orderType === "restaurant"
+                                ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                                : order.orderType === "business"
+                                  ? "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300"
+                                  : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                          }`}
+                        >
+                          {order.orderType === "reel"
+                            ? "Reel order"
+                            : order.orderType === "restaurant"
+                              ? "Restaurant order"
+                              : order.orderType === "business"
+                                ? "Business order"
+                                : order.orderType}
+                        </span>
+                      )}
+                  </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     {order?.address?.street && order?.address?.city
                       ? `${order.address.street}, ${order.address.city}`

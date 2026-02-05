@@ -53,6 +53,7 @@ interface DeliveryConfirmationModalProps {
     | "regular"
     | "reel"
     | "restaurant"
+    | "business"
     | "combined"
     | "combined_customer";
 }
@@ -339,7 +340,8 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       // Process wallet operations for each order sequentially
       // For combined_customer: Processes all orders, adding earnings for each order to wallet
       // For combined (different customers): Processes only the current order, adding earnings for that specific order
-      // Each order's earnings are calculated and added individually to the available balance
+      // Business orders: pass isBusinessOrder so backend uses business order fees
+      const isBusinessOrder = invoiceData.orderType === "business";
       for (const orderId of orderIdsToUpdate) {
         const walletResponse = await fetch("/api/shopper/walletOperations", {
           method: "POST",
@@ -349,6 +351,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
             operation: "delivered",
             isReelOrder: invoiceData.isReelOrder || false,
             isRestaurantOrder: invoiceData.isRestaurantOrder || false,
+            isBusinessOrder: isBusinessOrder || false,
           }),
         });
 
@@ -369,20 +372,37 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
         invoiceData.orderType === "combined" ||
         (orderIdsToUpdate.length === 1 &&
           invoiceData.orderType !== "combined_customer");
+      // For business orders use the business order status API; otherwise use shopper updateOrderStatus
       for (const orderId of orderIdsToUpdate) {
-        const response = await fetch("/api/shopper/updateOrderStatus", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            orderId,
-            status: "delivered",
-            updateOnlyThisOrder: updateOnlyThisOrder, // Pass flag to prevent updating all orders in combined batch
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to confirm delivery");
+        if (isBusinessOrder) {
+          const response = await fetch(
+            "/api/mutations/update-business-product-order-status",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ orderId, status: "delivered" }),
+            }
+          );
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(
+              errorData.message || errorData.error || "Failed to confirm delivery"
+            );
+          }
+        } else {
+          const response = await fetch("/api/shopper/updateOrderStatus", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              orderId,
+              status: "delivered",
+              updateOnlyThisOrder: updateOnlyThisOrder,
+            }),
+          });
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || "Failed to confirm delivery");
+          }
         }
       }
 
@@ -1143,7 +1163,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                               d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"
                             />
                           </svg>
-                          Confirm Pin For Delviery
+                          Confirm Pin For Delivery
                         </>
                       )}
                     </button>

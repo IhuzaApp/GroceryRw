@@ -63,6 +63,20 @@ const GET_RESTAURANT_ORDER_DETAILS = gql`
   }
 `;
 
+// GraphQL query to get business order details with fees
+const GET_BUSINESS_ORDER_DETAILS = gql`
+  query GetBusinessOrderDetails($orderId: uuid!) {
+    businessProductOrders_by_pk(id: $orderId) {
+      id
+      total
+      transportation_fee
+      service_fee
+      shopper_id
+      ordered_by
+    }
+  }
+`;
+
 // GraphQL query to get shopper wallet
 const GET_SHOPPER_WALLET = gql`
   query GetShopperWallet($shopper_id: uuid!) {
@@ -215,6 +229,7 @@ export async function handleDeliveredOperation(
   orderId: string,
   isReelOrder: boolean,
   isRestaurantOrder: boolean,
+  isBusinessOrder: boolean = false,
   req?: NextApiRequest
 ) {
   // Get system configuration for platform fee calculation
@@ -241,6 +256,7 @@ export async function handleDeliveredOperation(
   const deliveryFee = parseFloat(order.delivery_fee || "0");
 
   // For restaurant orders, only delivery fee is earned (no service fee)
+  // For business and regular/reel: service_fee + delivery_fee (business uses transportation_fee as delivery_fee)
   const totalEarnings = isRestaurantOrder
     ? deliveryFee
     : serviceFee + deliveryFee;
@@ -266,6 +282,7 @@ export async function handleDeliveredOperation(
 
   // Create wallet transactions for delivered order
   // NOTE: Only create earnings transaction - reserved balance deduction happens during payment
+  // Regular and business orders use related_order_id for the order reference
   if (!isReelOrder && !isRestaurantOrder) {
     const transactions = [
       {
@@ -276,7 +293,9 @@ export async function handleDeliveredOperation(
         related_order_id: orderId,
         related_reel_orderId: null,
         related_restaurant_order_id: null,
-        description: "Earnings after platform fee deduction",
+        description: isBusinessOrder
+          ? "Business order earnings after platform fee deduction"
+          : "Earnings after platform fee deduction",
       },
     ];
 
@@ -440,13 +459,21 @@ export async function processWalletOperation(
   operation: "shopping" | "delivered" | "cancelled",
   isReelOrder: boolean = false,
   isRestaurantOrder: boolean = false,
+  isBusinessOrder: boolean = false,
   req?: NextApiRequest
 ) {
   if (!hasuraClient) {
     await logErrorToSlack(
       "WalletOperations:processWalletOperation",
       new Error("Hasura client is not initialized"),
-      { userId: userId, orderId, operation, isReelOrder, isRestaurantOrder }
+      {
+        userId,
+        orderId,
+        operation,
+        isReelOrder,
+        isRestaurantOrder,
+        isBusinessOrder,
+      }
     );
     throw new Error("Hasura client is not initialized");
   }
@@ -455,6 +482,7 @@ export async function processWalletOperation(
   let orderDetails: any;
   let resolvedReel = isReelOrder;
   let resolvedRestaurant = isRestaurantOrder;
+  let resolvedBusiness = isBusinessOrder;
 
   if (isReelOrder) {
     orderDetails = await hasuraClient!.request<{
@@ -477,6 +505,17 @@ export async function processWalletOperation(
         user_id: string;
       };
     }>(GET_RESTAURANT_ORDER_DETAILS, { orderId });
+  } else if (isBusinessOrder) {
+    orderDetails = await hasuraClient!.request<{
+      businessProductOrders_by_pk: {
+        id: string;
+        total: string;
+        transportation_fee: string | number;
+        service_fee: string | number;
+        shopper_id: string;
+        ordered_by: string;
+      };
+    }>(GET_BUSINESS_ORDER_DETAILS, { orderId });
   } else {
     orderDetails = await hasuraClient!.request<{
       Orders_by_pk: {
@@ -490,13 +529,33 @@ export async function processWalletOperation(
     }>(GET_ORDER_DETAILS, { orderId });
   }
 
-  let order = isReelOrder
+  let order: any = isReelOrder
     ? orderDetails.reel_orders_by_pk
     : isRestaurantOrder
     ? orderDetails.restaurant_orders_by_pk
+    : isBusinessOrder
+    ? orderDetails.businessProductOrders_by_pk
     : orderDetails.Orders_by_pk;
 
-  // Fallback: if not found with client flags, try reel then restaurant then regular
+  // Normalize business order to same shape as regular (delivery_fee = transportation_fee) for handleDeliveredOperation
+  if (order && isBusinessOrder) {
+    order = {
+      ...order,
+      delivery_fee: String(order.transportation_fee ?? 0),
+      service_fee: String(order.service_fee ?? 0),
+      user_id: order.ordered_by,
+    };
+  }
+
+  // Fallback: if not found with client flags, try reel then restaurant then regular (skip for business - order id is business order id only)
+  if (!order && isBusinessOrder) {
+    await logErrorToSlack(
+      "walletOperations:processWalletOperation",
+      new Error("Business order not found"),
+      { orderId, operation, userId }
+    );
+    throw new Error("Order not found");
+  }
   if (!order) {
     const reelData = await hasuraClient!.request<{
       reel_orders_by_pk: {
@@ -554,13 +613,21 @@ export async function processWalletOperation(
     await logErrorToSlack(
       "walletOperations:processWalletOperation",
       new Error("Order not found"),
-      { orderId, operation, isReelOrder, isRestaurantOrder, userId }
+      {
+        orderId,
+        operation,
+        isReelOrder,
+        isRestaurantOrder,
+        isBusinessOrder,
+        userId,
+      }
     );
     throw new Error("Order not found");
   }
 
   const isReelOrderFinal = resolvedReel;
   const isRestaurantOrderFinal = resolvedRestaurant;
+  const isBusinessOrderFinal = resolvedBusiness;
 
   // Get shopper wallet
   const walletData = await hasuraClient!.request<{
@@ -672,6 +739,7 @@ export async function processWalletOperation(
         orderId,
         isReelOrderFinal,
         isRestaurantOrderFinal,
+        isBusinessOrderFinal,
         req
       );
 

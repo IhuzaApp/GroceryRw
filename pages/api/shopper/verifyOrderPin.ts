@@ -144,6 +144,16 @@ export default async function handler(
         }
       `;
       variableName = "reel_orders_by_pk";
+    } else if (orderType === "business") {
+      query = gql`
+        query VerifyBusinessOrderPin($orderId: uuid!) {
+          businessProductOrders_by_pk(id: $orderId) {
+            id
+            pin
+          }
+        }
+      `;
+      variableName = "businessProductOrders_by_pk";
     } else {
       // Regular order
       query = gql`
@@ -166,8 +176,10 @@ export default async function handler(
         .json({ error: "Order not found", verified: false });
     }
 
-    // Verify the PIN
-    const verified = order.pin && order.pin === pin;
+    // Verify the PIN (business orders may store pin as number)
+    const orderPin =
+      order.pin != null ? String(order.pin) : "";
+    const verified = orderPin !== "" && orderPin === pin;
 
     return res.status(200).json({
       verified,
