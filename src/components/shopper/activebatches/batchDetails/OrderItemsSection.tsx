@@ -241,12 +241,43 @@ export default function OrderItemsSection({
               const isDataUrl =
                 typeof imgSrc === "string" && imgSrc.startsWith("data:");
               const resolvedImg = isDataUrl ? imgSrc : resolveImageUrl(imgSrc) ?? imgSrc;
+              const syntheticItem = {
+                id: item.id,
+                quantity: qty,
+                price: Number(price),
+                product: {
+                  id: item.id,
+                  name,
+                  image: resolvedImg || imgSrc,
+                  final_price: String(item.price_per_item ?? item.price ?? price ?? 0),
+                  description: item.description ?? undefined,
+                  measurement_unit:
+                    item.product?.measurement_unit ??
+                    item.unit ??
+                    item.measurement_type ??
+                    undefined,
+                  measurement_type:
+                    item.product?.measurement_type ??
+                    item.measurement_type ??
+                    item.unit ??
+                    undefined,
+                  selectedDetails:
+                    item.product?.selectedDetails ?? item.selectedDetails ?? undefined,
+                  category: item.category ?? item.Category?.name ?? undefined,
+                  ProductName: { name },
+                },
+              };
               return (
                 <div
                   key={item.id}
                   className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-800 sm:gap-4 sm:p-4"
                 >
-                  <div className="relative h-32 w-32 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:h-40 sm:w-40">
+                  <button
+                    type="button"
+                    className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100 shadow-sm transition-all hover:ring-2 hover:ring-emerald-500 hover:ring-offset-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-700 sm:h-12 sm:w-12"
+                    onClick={() => onShowProductImage(syntheticItem as OrderItem)}
+                    aria-label={`View larger image of ${name}`}
+                  >
                     {isDataUrl ? (
                       <img
                         src={imgSrc}
@@ -257,25 +288,38 @@ export default function OrderItemsSection({
                       <Image
                         src={resolvedImg}
                         alt={name}
-                        width={160}
-                        height={160}
+                        width={48}
+                        height={48}
                         className="h-full w-full object-cover"
-                        unoptimized={resolvedImg.startsWith("data:")}
+                        unoptimized={typeof resolvedImg === "string" && resolvedImg.startsWith("data:")}
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
                         <span className="text-xs">No image</span>
                       </div>
                     )}
-                  </div>
+                  </button>
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium text-slate-900 dark:text-slate-100">
+                    <p className="text-base font-medium text-slate-900 dark:text-slate-100 sm:text-lg">
                       {name}
                     </p>
-                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                      Qty: {qty} × {formatCurrency(Number(price))} ={" "}
-                      {formatCurrency(Number(price) * qty)}
-                    </p>
+                    {/* For business orders show Description and query_id from PlasBusinessProductsOrSerive instead of price line */}
+                    {(item.product?.ProductName?.description ?? item.description ?? "")?.trim() ? (
+                      <p className="mt-1 text-sm text-slate-600 dark:text-slate-300 sm:text-base line-clamp-2">
+                        {(item.product?.ProductName?.description ?? item.description ?? "").trim()}
+                      </p>
+                    ) : null}
+                    {(item.query_id ?? item.product?.query_id) ? (
+                      <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
+                        Ref: {item.query_id ?? item.product?.query_id}
+                      </p>
+                    ) : null}
+                    {!(item.product?.ProductName?.description ?? item.description)?.trim() && !(item.query_id ?? item.product?.query_id) && (
+                      <p className="mt-1 text-sm text-slate-600 dark:text-slate-300 sm:text-base">
+                        Qty: {qty} × {formatCurrency(Number(price))} ={" "}
+                        {formatCurrency(Number(price) * qty)}
+                      </p>
+                    )}
                   </div>
                 </div>
               );

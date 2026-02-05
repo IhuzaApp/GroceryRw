@@ -206,26 +206,6 @@ export default function ShopInfoCard({
                         </span>
                       </div>
                     )}
-                  {/* Business store: full working hours (all days) */}
-                  {shop.operating_hours &&
-                    typeof shop.operating_hours === "object" &&
-                    Object.keys(shop.operating_hours).length > 0 && (
-                      <div className="mt-2 border-t border-slate-200 pt-2 dark:border-slate-600">
-                        <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                          Working hours
-                        </p>
-                        <ul className="mt-1 space-y-0.5 text-xs text-slate-500 dark:text-slate-400">
-                          {Object.entries(shop.operating_hours).map(
-                            ([day, hours]) => (
-                              <li key={day}>
-                                <span className="capitalize">{day}:</span>{" "}
-                                {String(hours)}
-                              </li>
-                            )
-                          )}
-                        </ul>
-                      </div>
-                    )}
                 </div>
               </div>
 
@@ -255,42 +235,44 @@ export default function ShopInfoCard({
                   </div>
                 )}
 
-                {/* Operating Hours */}
-                {shop.operating_hours && (
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center text-slate-600 dark:text-slate-400">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        className="mr-2 h-4 w-4"
-                      >
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12,6 12,12 16,14" />
-                      </svg>
-                      Hours
-                    </span>
-                    <span className="font-medium text-slate-900 dark:text-slate-100">
-                      {(() => {
-                        const hoursObj = shop.operating_hours;
-                        if (hoursObj && typeof hoursObj === "object") {
-                          const now = new Date();
-                          const dayKey = now
-                            .toLocaleDateString("en-US", {
-                              weekday: "long",
-                            })
-                            .toLowerCase();
-                          const todaysHours = (hoursObj as any)[dayKey];
-                          if (todaysHours) {
-                            return todaysHours;
+                {/* Operating Hours - current date only */}
+                {shop.operating_hours &&
+                  typeof shop.operating_hours === "object" &&
+                  Object.keys(shop.operating_hours).length > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center text-slate-600 dark:text-slate-400">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="mr-2 h-4 w-4"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <polyline points="12,6 12,12 16,14" />
+                        </svg>
+                        Today
+                      </span>
+                      <span className="font-medium text-slate-900 dark:text-slate-100">
+                        {(() => {
+                          const hoursObj = shop.operating_hours;
+                          if (hoursObj && typeof hoursObj === "object") {
+                            const now = new Date();
+                            const dayKey = now
+                              .toLocaleDateString("en-US", {
+                                weekday: "long",
+                              })
+                              .toLowerCase();
+                            const todaysHours = (hoursObj as any)[dayKey];
+                            if (todaysHours) {
+                              return String(todaysHours);
+                            }
                           }
-                        }
-                        return "Check store for hours";
-                      })()}
-                    </span>
-                  </div>
-                )}
+                          return "Check store for hours";
+                        })()}
+                      </span>
+                    </div>
+                  )}
               </div>
 
               {/* Shop Directions Button */}

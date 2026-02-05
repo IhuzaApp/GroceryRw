@@ -12,6 +12,14 @@ interface ProductImageModalProps {
   currentOrderItem: OrderItem | null;
 }
 
+function safePrice(item: OrderItem | null): number {
+  if (!item) return 0;
+  const fromFinal = Number((item.product as any)?.final_price);
+  const fromItem = Number(item.price);
+  const value = Number.isFinite(fromFinal) ? fromFinal : Number.isFinite(fromItem) ? fromItem : 0;
+  return Number.isFinite(value) ? value : 0;
+}
+
 export default function ProductImageModal({
   open,
   onClose,
@@ -19,6 +27,13 @@ export default function ProductImageModal({
   selectedProductName,
   currentOrderItem,
 }: ProductImageModalProps) {
+  const product = currentOrderItem?.product as any;
+  const selectedDetails = product?.selectedDetails;
+  const isBusinessOrder =
+    selectedDetails &&
+    typeof selectedDetails === "object" &&
+    Object.keys(selectedDetails).length > 0;
+
   return (
     <Modal open={open} onClose={onClose} size="md">
       <Modal.Header className="border-b bg-gray-100">
@@ -42,53 +57,89 @@ export default function ProductImageModal({
 
             {/* Right: Product Details */}
             <div className="space-y-4 text-left">
-              {/* Product Name */}
               <h3 className="text-lg font-bold text-gray-800">
                 {currentOrderItem.product.ProductName?.name ||
+                  product?.name ||
                   "Unknown Product"}
               </h3>
 
-              {/* Description */}
-              <div>
-                <h4 className="text-sm font-medium text-gray-600">
-                  Description
-                </h4>
-                <p className="text-sm text-gray-700">
-                  {currentOrderItem.product.description ||
-                    "No description available for this product."}
-                </p>
-              </div>
-
-              {/* Details Grid */}
-              <div className="grid grid-cols-2 gap-4 border-t pt-4">
-                {/* Category */}
-                <div>
-                  <h4 className="text-sm font-medium text-gray-600">
-                    Category
-                  </h4>
-                  <p className="text-sm text-gray-700">
-                    {currentOrderItem.product.category || "General"}
-                  </p>
+              {isBusinessOrder ? (
+                /* Business order: only selected details (size, color, etc.), unit, quantity, price */
+                <div className="space-y-3 border-t pt-4">
+                  {Object.entries(selectedDetails).map(([key, value]) => (
+                    <div key={key}>
+                      <span className="text-sm font-medium capitalize text-gray-600">
+                        {key.replace(/_/g, " ")}:{" "}
+                      </span>
+                      <span className="text-sm text-gray-800">{String(value)}</span>
+                    </div>
+                  ))}
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">
+                      Unit:{" "}
+                    </span>
+                    <span className="text-sm text-gray-800">
+                      {product?.measurement_type ||
+                        product?.measurement_unit ||
+                        "—"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">
+                      Quantity:{" "}
+                    </span>
+                    <span className="text-sm text-gray-800">
+                      {currentOrderItem.quantity}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">
+                      Price:{" "}
+                    </span>
+                    <span className="font-bold text-green-600">
+                      {formatCurrency(safePrice(currentOrderItem))}
+                    </span>
+                  </div>
                 </div>
-
-                {/* Measurement Unit */}
-                <div>
-                  <h4 className="text-sm font-medium text-gray-600">Unit</h4>
-                  <p className="text-sm text-gray-700">
-                    {currentOrderItem.product.measurement_unit || "Each"}
-                  </p>
-                </div>
-
-                {/* Price */}
-                <div className="col-span-2">
-                  <h4 className="text-sm font-medium text-gray-600">Price</h4>
-                  <p className="font-bold text-green-600">
-                    {formatCurrency(
-                      parseFloat(currentOrderItem.product.final_price)
-                    )}
-                  </p>
-                </div>
-              </div>
+              ) : (
+                /* Regular order: description, category, unit, price */
+                <>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-600">
+                      Description
+                    </h4>
+                    <p className="text-sm text-gray-700">
+                      {currentOrderItem.product.description || "—"}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 border-t pt-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-600">
+                        Category
+                      </h4>
+                      <p className="text-sm text-gray-700">
+                        {currentOrderItem.product.category || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-600">
+                        Unit
+                      </h4>
+                      <p className="text-sm text-gray-700">
+                        {currentOrderItem.product.measurement_unit || "—"}
+                      </p>
+                    </div>
+                    <div className="col-span-2">
+                      <h4 className="text-sm font-medium text-gray-600">
+                        Price
+                      </h4>
+                      <p className="font-bold text-green-600">
+                        {formatCurrency(safePrice(currentOrderItem))}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}

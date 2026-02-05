@@ -139,6 +139,8 @@ const GET_BUSINESS_PRODUCTS_BY_IDS = gql`
       id
       Image
       name
+      Description
+      query_id
     }
   }
 `;
@@ -264,24 +266,36 @@ export default async function handler(
             Image?: string | null;
             image?: string | null;
             name?: string | null;
+            Description?: string | null;
+            query_id?: string | null;
           }>;
         }>(GET_BUSINESS_PRODUCTS_BY_IDS, {
           product_ids: productIds,
         });
         const imageMap = new Map<string, string | null>();
+        const descriptionMap = new Map<string, string | null>();
+        const queryIdMap = new Map<string, string | null>();
         (productsData.PlasBusinessProductsOrSerive || []).forEach((x: any) => {
           const id = x.id?.toString();
           if (id) {
             const img = x.Image ?? x.image ?? null;
             imageMap.set(id, img && String(img).trim() ? String(img) : null);
+            const desc = x.Description ?? null;
+            descriptionMap.set(id, desc && String(desc).trim() ? String(desc) : null);
+            const qid = x.query_id ?? null;
+            queryIdMap.set(id, qid != null && String(qid).trim() ? String(qid) : null);
           }
         });
         products = products.map((p: any) => {
           const key = (p.id || p.product_id)?.toString();
           const imageUrl = key ? imageMap.get(key) : null;
+          const description = key ? descriptionMap.get(key) : null;
+          const query_id = key ? queryIdMap.get(key) : null;
           return {
             ...p,
             image: imageUrl ?? p.image ?? null,
+            description: description ?? p.description ?? null,
+            query_id: query_id ?? p.query_id ?? null,
           };
         });
       } catch {

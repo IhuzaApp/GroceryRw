@@ -3024,6 +3024,8 @@ export default function BatchDetails({
         const addressObj = deliveryAddress
           ? { street: deliveryAddress, city: "", postal_code: "" }
           : null;
+        const measurementTypeForItem = (p: any) =>
+          p.measurement_type ?? p.unit ?? "item";
         const businessItems = (apiOrder.allProducts ?? []).map(
           (p: any, idx: number) => {
             const productId =
@@ -3040,20 +3042,26 @@ export default function BatchDetails({
             );
             const qty = Number(p.quantity ?? 1);
             const itemId = p.order_item_id ?? p.id ?? `item-${idx}`;
+            const measurementType = measurementTypeForItem(p);
             return {
               id: itemId,
               quantity: qty,
               price,
               shopId: apiOrder.shop_id ?? shop?.id,
               orderId: apiOrder.id,
+              description: p.description ?? null,
+              query_id: p.query_id ?? null,
               product: {
                 id: productId,
                 name,
                 image,
                 final_price: String(price),
-                measurement_unit: "item",
+                measurement_unit: measurementType,
+                measurement_type: measurementType,
+                selectedDetails: p.selectedDetails ?? null,
                 barcode: p.barcode ?? null,
                 sku: p.sku ?? null,
+                query_id: p.query_id ?? null,
                 ProductName: {
                   id: productId,
                   name,
@@ -3427,20 +3435,26 @@ export default function BatchDetails({
                 );
                 const qty = Number(p.quantity ?? 1);
                 const itemId = p.order_item_id ?? p.id ?? `item-${idx}`;
+                const measurementType = p.measurement_type ?? p.unit ?? "item";
                 const item = {
                   id: itemId,
                   quantity: qty,
                   price,
                   shopId: apiOrder.shop_id ?? shop?.id,
                   orderId: apiOrder.id,
+                  description: p.description ?? null,
+                  query_id: p.query_id ?? null,
                   product: {
                     id: productId,
                     name,
                     image,
                     final_price: String(price),
-                    measurement_unit: "item",
+                    measurement_unit: measurementType,
+                    measurement_type: measurementType,
+                    selectedDetails: p.selectedDetails ?? null,
                     barcode: p.barcode ?? null,
                     sku: p.sku ?? null,
+                    query_id: p.query_id ?? null,
                     ProductName: {
                       id: productId,
                       name,
