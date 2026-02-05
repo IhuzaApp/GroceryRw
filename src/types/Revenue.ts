@@ -64,9 +64,17 @@ export interface Revenue {
   shopper_id: string | null;
   products: string | null; // JSONB string for product details
   commission_percentage: string | null;
+  reel_order_id?: string | null;
+  restaurant_order_id?: string | null;
+  businessOrder_Id?: string | null;
+  Plasbusiness_id?: string | null;
   Order?: Order;
   Shop?: Shop;
   shopper?: Shopper;
+  businessProductOrders?: { total?: string | number; id?: string; [key: string]: any } | null;
+  reel_orders?: { total?: string; [key: string]: any } | null;
+  restaurant_orders?: { total?: string; [key: string]: any } | null;
+  Restaurants?: { [key: string]: any } | null;
 }
 
 export interface RevenueResponse {

@@ -282,8 +282,26 @@ export async function handleDeliveredOperation(
 
   // Create wallet transactions for delivered order
   // NOTE: Only create earnings transaction - reserved balance deduction happens during payment
-  // Regular and business orders use related_order_id for the order reference
-  if (!isReelOrder && !isRestaurantOrder) {
+  // Business orders use relate_business_order_id (FK to business order); regular use related_order_id
+  if (isBusinessOrder) {
+    const transactions = [
+      {
+        wallet_id: wallet.id,
+        amount: remainingEarnings.toFixed(2),
+        type: "earnings",
+        status: "completed",
+        related_order_id: null,
+        related_reel_orderId: null,
+        related_restaurant_order_id: null,
+        relate_business_order_id: orderId,
+        description: "Business order earnings after platform fee deduction",
+      },
+    ];
+
+    await hasuraClient!.request(CREATE_WALLET_TRANSACTIONS, {
+      transactions,
+    });
+  } else if (!isReelOrder && !isRestaurantOrder) {
     const transactions = [
       {
         wallet_id: wallet.id,
@@ -293,9 +311,7 @@ export async function handleDeliveredOperation(
         related_order_id: orderId,
         related_reel_orderId: null,
         related_restaurant_order_id: null,
-        description: isBusinessOrder
-          ? "Business order earnings after platform fee deduction"
-          : "Earnings after platform fee deduction",
+        description: "Earnings after platform fee deduction",
       },
     ];
 
@@ -340,9 +356,16 @@ export async function handleDeliveredOperation(
     });
   }
 
-  // Add plasa fee revenue when order is delivered
-  if (!isReelOrder && !isRestaurantOrder && req) {
+  // Add plasa fee revenue when order is delivered (all order types; API branches on orderType)
+  if (req) {
     try {
+      const orderType = isBusinessOrder
+        ? "business"
+        : isReelOrder
+        ? "reel"
+        : isRestaurantOrder
+        ? "restaurant"
+        : "regular";
       const plasaFeeResponse = await fetch(
         `${
           req.headers.host
@@ -355,7 +378,7 @@ export async function handleDeliveredOperation(
             "Content-Type": "application/json",
             Cookie: req.headers.cookie || "",
           },
-          body: JSON.stringify({ orderId }),
+          body: JSON.stringify({ orderId, orderType }),
         }
       );
 

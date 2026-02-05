@@ -138,7 +138,11 @@ export default function ActiveBatches({
         setIsRefreshing(true);
       }
       setError(null);
-      setFetchSuccess(false);
+      // Only clear fetchSuccess on initial load; when refreshing, keep previous
+      // state so we don't flash the error UI while the refresh is in progress
+      if (showLoading) {
+        setFetchSuccess(false);
+      }
 
       const controller = new AbortController();
       const signal = controller.signal;
