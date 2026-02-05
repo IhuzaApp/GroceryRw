@@ -236,13 +236,13 @@ export default function BusinessChatDrawer({
               {/* Search */}
               <div className="flex-shrink-0 border-b border-gray-200 p-4 dark:border-gray-700">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
                     placeholder="Search conversations..."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                    className="w-full rounded-2xl border border-gray-200 bg-gray-100 py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 transition-colors focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-emerald-400 dark:focus:bg-gray-600 dark:focus:ring-emerald-500/30"
                   />
                 </div>
               </div>
@@ -302,12 +302,12 @@ export default function BusinessChatDrawer({
           ) : (
             /* Chat Body */
             <div className="flex h-full w-full flex-col overflow-hidden">
-              {/* Chat Header */}
+              {/* Chat header */}
               <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
                 <div className="flex min-w-0 flex-1 items-center gap-3">
                   <button
                     onClick={handleBackToList}
-                    className="flex-shrink-0 rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                    className="flex-shrink-0 rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
                     title="Back to conversations"
                   >
                     <ArrowLeft className="h-5 w-5" />
@@ -323,20 +323,20 @@ export default function BusinessChatDrawer({
                 </div>
                 <div className="flex flex-shrink-0 items-center gap-1">
                   <button
-                    className="hidden rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 sm:block"
+                    className="hidden rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700 dark:hover:text-gray-200 sm:block"
                     title="Audio call"
                   >
                     <Phone className="h-4 w-4" />
                   </button>
                   <button
-                    className="hidden rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 sm:block"
+                    className="hidden rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700 dark:hover:text-gray-200 sm:block"
                     title="Video call"
                   >
                     <Video className="h-4 w-4" />
                   </button>
                   <button
                     onClick={onClose}
-                    className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    className="rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700 dark:hover:text-gray-200"
                     title="Close"
                   >
                     <X className="h-4 w-4" />
@@ -344,24 +344,24 @@ export default function BusinessChatDrawer({
                 </div>
               </div>
 
-              {/* Messages Container */}
-              <div className="flex-1 overflow-y-auto bg-gray-50 px-4 pb-0 pt-4 dark:bg-gray-900">
+              {/* Messages container */}
+              <div className="flex-1 overflow-y-auto bg-gray-50/80 px-4 pb-0 pt-4 dark:bg-gray-900/80">
                 {currentMessages.length === 0 ? (
-                  <div className="flex h-full items-center justify-center">
+                  <div className="flex h-full min-h-[200px] items-center justify-center">
                     <div className="text-center">
-                      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-                        <MessageSquare className="h-8 w-8 text-gray-400" />
+                      <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 dark:bg-emerald-900/40">
+                        <MessageSquare className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
                       </div>
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                      <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                         No messages yet
                       </h3>
-                      <p className="text-gray-500 dark:text-gray-400">
+                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         Start the conversation
                       </p>
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {currentMessages.map((m) => (
                       <div
                         key={m.id}
@@ -369,43 +369,25 @@ export default function BusinessChatDrawer({
                           m.sender === "me" ? "justify-end" : "justify-start"
                         }`}
                       >
-                        <div className="max-w-[75%]">
+                        <div className={`flex max-w-[82%] flex-col ${m.sender === "me" ? "items-end" : "items-start"}`}>
                           <div
-                            className={`rounded-2xl px-4 py-3 shadow-sm ${
+                            className={`rounded-2xl px-4 py-2.5 shadow-sm ${
                               m.sender === "me"
-                                ? "bg-green-500 text-white"
-                                : "bg-white text-gray-900 dark:bg-gray-800 dark:text-white"
+                                ? "bg-emerald-500 text-white dark:bg-emerald-600"
+                                : "bg-white text-gray-900 shadow-gray-200/50 dark:bg-gray-700 dark:text-gray-100 dark:shadow-none"
                             }`}
-                            style={
-                              m.sender === "me"
-                                ? { color: "#ffffff" }
-                                : undefined
-                            }
                           >
                             <p className="text-sm leading-relaxed">{m.text}</p>
-                            {m.sender === "me" && (
-                              <div className="mt-1 flex items-center justify-end space-x-1">
-                                <span className="text-xs text-green-100">
-                                  {m.timestamp}
-                                </span>
-                                <svg
-                                  className="h-3 w-3 text-green-100"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
-                              </div>
-                            )}
-                            {m.sender !== "me" && (
-                              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            <div className={`mt-1 flex items-center ${m.sender === "me" ? "justify-end" : "justify-start"}`}>
+                              <span className={`text-xs ${m.sender === "me" ? "text-emerald-100" : "text-gray-500 dark:text-gray-400"}`}>
                                 {m.timestamp}
-                              </p>
-                            )}
+                              </span>
+                              {m.sender === "me" && (
+                                <svg className="ml-1 h-3 w-3 text-emerald-100" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -415,37 +397,35 @@ export default function BusinessChatDrawer({
                 )}
               </div>
 
-              {/* Professional Message Input */}
-              <div className="flex-shrink-0 border-t border-gray-200 bg-white px-6 py-6 dark:border-gray-700 dark:bg-gray-800">
+              {/* Message input */}
+              <div className="flex-shrink-0 border-t border-gray-200 bg-white px-4 py-4 dark:border-gray-700 dark:bg-gray-800">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
                     handleSend();
                   }}
-                  className="flex items-end space-x-3"
+                  className="flex items-center gap-3"
                 >
-                  <div className="flex-1 ">
-                    <input
-                      type="text"
-                      placeholder="Type your message..."
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSend();
-                        }
-                      }}
-                      className="w-full rounded-full border border-gray-300 bg-gray-50 px-4 py-3 text-sm focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-400 dark:focus:bg-gray-600"
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    placeholder="Type your message..."
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSend();
+                      }
+                    }}
+                    className="min-w-0 flex-1 rounded-2xl border border-gray-200 bg-gray-100 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-500 transition-colors focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-emerald-400 dark:focus:bg-gray-600 dark:focus:ring-emerald-500/30"
+                  />
                   <button
                     type="submit"
                     disabled={!input.trim()}
-                    className="flex-shrink-0 rounded-full bg-green-500 p-3 text-white shadow-lg transition-all duration-200 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
-                    style={{ color: "#ffffff" }}
+                    className="flex-shrink-0 rounded-full bg-emerald-500 p-2.5 text-white shadow-md transition-all duration-200 hover:bg-emerald-600 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none dark:focus:ring-offset-gray-800"
+                    aria-label="Send message"
                   >
-                    <Send className="h-4 w-4" />
+                    <Send className="h-5 w-5" strokeWidth={2} />
                   </button>
                 </form>
               </div>
