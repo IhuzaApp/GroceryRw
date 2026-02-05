@@ -2142,12 +2142,23 @@ export default function BatchDetails({
     }
   };
 
-  // Confirm pickup after OrderID scan match (reel/restaurant) → set status to on_the_way
+  // Confirm pickup after OrderID scan match (reel/restaurant/business) → set status to on_the_way
   const handlePickupConfirmed = async () => {
     if (!pickupScannerOrder || !order) return;
+    console.log("[BatchDetails] Pickup confirmed – calling API:", {
+      orderId: pickupScannerOrder.id,
+      status: "on_the_way",
+      orderType: pickupScannerOrder.orderType ?? order?.orderType,
+    });
     try {
       setLoading(true);
-      await onUpdateStatus(pickupScannerOrder.id, "on_the_way");
+      const result = await onUpdateStatus(pickupScannerOrder.id, "on_the_way");
+      if (result?.businessOrderPickup) {
+        console.log(
+          "[BatchDetails] BUSINESS ORDER PICKUP – wallet/transaction result:",
+          result.businessOrderPickup
+        );
+      }
       const ordersToUpdate = [pickupScannerOrder.id];
       const updatedMain = ordersToUpdate.includes(order.id)
         ? { ...order, status: "on_the_way" }

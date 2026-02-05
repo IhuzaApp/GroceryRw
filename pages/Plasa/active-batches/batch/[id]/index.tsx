@@ -166,13 +166,9 @@ function BatchDetailsPage({ orderData, error }: BatchDetailsPageProps) {
         await deleteFirebaseMessages(orderId);
       }
 
-      // Business orders use a different API
-      const endpoint =
-        orderData?.orderType === "business"
-          ? "/api/mutations/update-business-product-order-status"
-          : "/api/shopper/updateOrderStatus";
-
-      const response = await fetch(endpoint, {
+      // Use updateOrderStatus for all order types (regular, reel, restaurant, business).
+      // For business orders it also updates business_wallet and business_transactions on pickup (on_the_way).
+      const response = await fetch("/api/shopper/updateOrderStatus", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -191,6 +187,17 @@ function BatchDetailsPage({ orderData, error }: BatchDetailsPageProps) {
       }
 
       const result = await response.json();
+
+      if (
+        orderData?.orderType === "business" &&
+        newStatus === "on_the_way" &&
+        result.businessOrderPickup
+      ) {
+        console.log(
+          "[BatchDetails] BUSINESS ORDER PICKUP – API result (wallet/transaction):",
+          result.businessOrderPickup
+        );
+      }
 
       return result;
     } catch (err) {

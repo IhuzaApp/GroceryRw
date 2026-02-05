@@ -190,12 +190,25 @@ export default async function handler(
       }
     `;
 
+    const CHECK_BUSINESS_ORDER = gql`
+      query CheckBusinessOrder($orderId: uuid!, $shopperId: uuid!) {
+        businessProductOrders(
+          where: { id: { _eq: $orderId }, shopper_id: { _eq: $shopperId } }
+        ) {
+          id
+          status
+          store_id
+        }
+      }
+    `;
+
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
 
     let isReelOrder = false;
     let isRestaurantOrder = false;
+    let isBusinessOrder = false;
     let orderType = "regular";
 
     // Check regular orders first
@@ -251,21 +264,41 @@ export default async function handler(
           isRestaurantOrder = true;
           orderType = "restaurant";
         } else {
-          console.error(
-            "Authorization failed: Shopper not assigned to this order"
-          );
-          return res
-            .status(403)
-            .json({ error: "You are not assigned to this order" });
+          // Check business orders
+          const businessOrderCheck = await hasuraClient.request<{
+            businessProductOrders: Array<{
+              id: string;
+              status: string;
+              store_id: string;
+            }>;
+          }>(CHECK_BUSINESS_ORDER, {
+            orderId,
+            shopperId: userId,
+          });
+
+          if (
+            businessOrderCheck.businessProductOrders &&
+            businessOrderCheck.businessProductOrders.length > 0
+          ) {
+            isBusinessOrder = true;
+            orderType = "business";
+          } else {
+            console.error(
+              "Authorization failed: Shopper not assigned to this order"
+            );
+            return res
+              .status(403)
+              .json({ error: "You are not assigned to this order" });
+          }
         }
       }
     }
 
-    // Prevent restaurant orders from being updated to "shopping" status
-    if (isRestaurantOrder && status === "shopping") {
+    // Prevent restaurant and business orders from being updated to "shopping" status
+    if ((isRestaurantOrder || isBusinessOrder) && status === "shopping") {
       return res.status(400).json({
         error:
-          "Restaurant orders cannot be updated to 'shopping' status. Use 'on_the_way' instead.",
+          "Restaurant and business orders cannot be updated to 'shopping' status. Use 'on_the_way' instead.",
       });
     }
 
@@ -346,6 +379,51 @@ export default async function handler(
       orderDetails = restaurantDetails.restaurant_orders_by_pk;
       combinedId = orderDetails?.combined_order_id;
       restaurantId = orderDetails?.restaurant_id;
+    } else if (isBusinessOrder) {
+      const businessDetails = await hasuraClient.request<any>(
+        `
+        query GetBusinessOrderDetails($orderId: uuid!) {
+          businessProductOrders_by_pk(id: $orderId) {
+            id
+            status
+            store_id
+            total
+            service_fee
+            transportation_fee
+            business_store {
+              business_id
+            }
+          }
+        }
+      `,
+        { orderId }
+      );
+      orderDetails = businessDetails.businessProductOrders_by_pk;
+      // Store belongs to business: get business_id from store (business_wallet is keyed by business_id)
+      if (orderDetails?.store_id) {
+        const storeBusinessId =
+          orderDetails.business_store?.business_id ??
+          (
+            await hasuraClient.request<{
+              business_stores_by_pk: { business_id: string } | null;
+            }>(
+              gql`
+                query GetStoreBusinessId($store_id: uuid!) {
+                  business_stores_by_pk(id: $store_id) {
+                    business_id
+                  }
+                }
+              `,
+              { store_id: orderDetails.store_id }
+            )
+          ).business_stores_by_pk?.business_id;
+        if (storeBusinessId) {
+          orderDetails = {
+            ...orderDetails,
+            store: { business_id: storeBusinessId },
+          };
+        }
+      }
     } else {
       const regularDetails = await hasuraClient.request<any>(
         `
@@ -429,6 +507,17 @@ export default async function handler(
           }
         }
       `;
+      const UPDATE_BUSINESS_ORDER_STATUS = gql`
+        mutation UpdateBusinessOrderStatus($id: uuid!, $status: String!) {
+          update_businessProductOrders_by_pk(
+            pk_columns: { id: $id }
+            _set: { status: $status }
+          ) {
+            id
+            status
+          }
+        }
+      `;
 
       if (isReelOrder) {
         const result = await hasuraClient.request<any>(
@@ -450,6 +539,15 @@ export default async function handler(
           }
         );
         updatedOrders = [result.update_restaurant_orders_by_pk];
+      } else if (isBusinessOrder) {
+        const result = await hasuraClient.request<any>(
+          UPDATE_BUSINESS_ORDER_STATUS,
+          {
+            id: orderId,
+            status,
+          }
+        );
+        updatedOrders = [result.update_businessProductOrders_by_pk];
       } else {
         const result = await hasuraClient.request<any>(UPDATE_ORDER_STATUS, {
           id: orderId,
@@ -564,6 +662,17 @@ export default async function handler(
           }
         }
       `;
+      const UPDATE_BUSINESS_ORDER_STATUS_SINGLE = gql`
+        mutation UpdateBusinessOrderStatusSingle($id: uuid!, $status: String!) {
+          update_businessProductOrders_by_pk(
+            pk_columns: { id: $id }
+            _set: { status: $status }
+          ) {
+            id
+            status
+          }
+        }
+      `;
 
       if (isReelOrder) {
         const result = await hasuraClient.request<any>(
@@ -585,6 +694,15 @@ export default async function handler(
           }
         );
         updatedOrders = [result.update_restaurant_orders_by_pk];
+      } else if (isBusinessOrder) {
+        const result = await hasuraClient.request<any>(
+          UPDATE_BUSINESS_ORDER_STATUS_SINGLE,
+          {
+            id: orderId,
+            status,
+          }
+        );
+        updatedOrders = [result.update_businessProductOrders_by_pk];
       } else {
         const result = await hasuraClient.request<any>(UPDATE_ORDER_STATUS, {
           id: orderId,
@@ -593,6 +711,205 @@ export default async function handler(
         });
         updatedOrders = [result.update_Orders_by_pk];
       }
+    }
+
+    // Business order pickup (on_the_way): credit business wallet and record transaction
+    // business_wallet is keyed by business_id; store belongs to business, so we use store.business_id
+    const businessIdFromStore =
+      orderDetails?.store?.business_id ??
+      (orderDetails as any)?.business_store?.business_id;
+
+    let businessOrderPickup: {
+      walletUpdated: boolean;
+      transactionInserted: boolean;
+      message?: string;
+    } | null = null;
+
+    console.log("[updateOrderStatus] BUSINESS ORDER PICKUP – check:", {
+      status,
+      isBusinessOrder,
+      orderId,
+      orderDetailsTotal: orderDetails?.total,
+      businessIdFromStore,
+      willEnterWalletBlock:
+        status === "on_the_way" &&
+        isBusinessOrder &&
+        orderDetails?.total != null &&
+        !!businessIdFromStore,
+    });
+
+    if (
+      status === "on_the_way" &&
+      isBusinessOrder &&
+      orderDetails?.total != null &&
+      businessIdFromStore
+    ) {
+      try {
+        const totalNum = parseFloat(String(orderDetails.total));
+        const serviceFeeNum = parseFloat(String(orderDetails.service_fee || "0"));
+        const transportFeeNum = parseFloat(
+          String(orderDetails.transportation_fee || "0")
+        );
+        const itemAmount = Math.max(
+          0,
+          totalNum - serviceFeeNum - transportFeeNum
+        );
+        const businessId = businessIdFromStore;
+
+        console.log("[updateOrderStatus] BUSINESS ORDER PICKUP – amounts:", {
+          totalNum,
+          serviceFeeNum,
+          transportFeeNum,
+          itemAmount,
+          businessId,
+        });
+
+        const GET_BUSINESS_WALLET = gql`
+          query GetBusinessWallet($business_id: uuid!) {
+            business_wallet(where: { business_id: { _eq: $business_id } }) {
+              id
+              amount
+            }
+          }
+        `;
+        const walletResult = await hasuraClient.request<{
+          business_wallet: Array<{ id: string; amount: string }>;
+        }>(GET_BUSINESS_WALLET, { business_id: businessId });
+
+        console.log("[updateOrderStatus] BUSINESS ORDER PICKUP – wallet lookup:", {
+          business_id: businessId,
+          walletCount: walletResult.business_wallet?.length ?? 0,
+          wallet: walletResult.business_wallet?.[0]
+            ? {
+                id: walletResult.business_wallet[0].id,
+                amount: walletResult.business_wallet[0].amount,
+              }
+            : null,
+        });
+
+        if (
+          walletResult.business_wallet &&
+          walletResult.business_wallet.length > 0
+        ) {
+          const wallet = walletResult.business_wallet[0];
+          const currentAmount = parseFloat(wallet.amount || "0");
+          const newAmount = (currentAmount + itemAmount).toFixed(2);
+          const updatedAt = new Date().toISOString();
+
+          console.log("[updateOrderStatus] BUSINESS ORDER PICKUP – updating wallet:", {
+            wallet_id: wallet.id,
+            currentAmount,
+            itemAmount,
+            newAmount,
+            business_id: businessId,
+          });
+
+          const UPDATE_BUSINESS_WALLET = gql`
+            mutation UpdateBusinessWallet(
+              $amount: String!
+              $updated_at: timestamptz!
+              $business_id: uuid!
+            ) {
+              update_business_wallet(
+                _set: { amount: $amount, updated_at: $updated_at }
+                where: { business_id: { _eq: $business_id } }
+              ) {
+                affected_rows
+              }
+            }
+          `;
+          const updateWalletResult = await hasuraClient.request<{
+            update_business_wallet: { affected_rows: number };
+          }>(UPDATE_BUSINESS_WALLET, {
+            amount: newAmount,
+            updated_at: updatedAt,
+            business_id: businessId,
+          });
+
+          console.log("[updateOrderStatus] BUSINESS ORDER PICKUP – wallet updated in DB:", {
+            affected_rows: updateWalletResult.update_business_wallet?.affected_rows,
+          });
+
+          const INSERT_BUSINESS_TRANSACTION = gql`
+            mutation InsertBusinessTransaction(
+              $action: String!
+              $type: String!
+              $related_order: uuid!
+              $wallet_id: uuid!
+              $status: String!
+            ) {
+              insert_business_transactions(
+                objects: {
+                  action: $action
+                  type: $type
+                  related_order: $related_order
+                  wallet_id: $wallet_id
+                  status: $status
+                }
+              ) {
+                affected_rows
+              }
+            }
+          `;
+          const insertTxResult = await hasuraClient.request<{
+            insert_business_transactions: { affected_rows: number };
+          }>(INSERT_BUSINESS_TRANSACTION, {
+            action: "credit",
+            type: "order_item_amount",
+            related_order: orderId,
+            wallet_id: wallet.id,
+            status: "completed",
+          });
+
+          console.log("[updateOrderStatus] BUSINESS ORDER PICKUP – transaction inserted in DB:", {
+            affected_rows: insertTxResult.insert_business_transactions?.affected_rows,
+          });
+
+          businessOrderPickup = {
+            walletUpdated: (updateWalletResult.update_business_wallet?.affected_rows ?? 0) > 0,
+            transactionInserted:
+              (insertTxResult.insert_business_transactions?.affected_rows ?? 0) > 0,
+          };
+        } else {
+          console.log(
+            "[updateOrderStatus] BUSINESS ORDER PICKUP – no business_wallet row found for business_id, skipping wallet/transaction update"
+          );
+          businessOrderPickup = {
+            walletUpdated: false,
+            transactionInserted: false,
+            message: "No business_wallet row found for business_id",
+          };
+        }
+      } catch (businessWalletError) {
+        console.error(
+          "Error updating business wallet / transaction:",
+          businessWalletError
+        );
+        businessOrderPickup = {
+          walletUpdated: false,
+          transactionInserted: false,
+          message:
+            businessWalletError instanceof Error
+              ? businessWalletError.message
+              : "Wallet/transaction update failed",
+        };
+        // Don't fail the status update; wallet/transaction can be reconciled later
+      }
+    } else if (status === "on_the_way" && isBusinessOrder) {
+      console.log(
+        "[updateOrderStatus] BUSINESS ORDER PICKUP – skipped (missing total or business_id):",
+        {
+          hasTotal: orderDetails?.total != null,
+          hasBusinessId: !!businessIdFromStore,
+        }
+      );
+      businessOrderPickup = {
+        walletUpdated: false,
+        transactionInserted: false,
+        message: !businessIdFromStore
+          ? "Missing business_id from store"
+          : "Missing order total",
+      };
     }
 
     // Handle cancelled status - process wallet operations directly
@@ -634,11 +951,15 @@ export default async function handler(
     // Note: Wallet operations for "delivered" status are handled separately
     // in the DeliveryConfirmationModal before calling this API
 
-    return res.status(200).json({
+    const responsePayload: Record<string, unknown> = {
       success: true,
       orders: updatedOrders,
       orderType,
-    });
+    };
+    if (businessOrderPickup != null) {
+      responsePayload.businessOrderPickup = businessOrderPickup;
+    }
+    return res.status(200).json(responsePayload);
   } catch (error) {
     console.error("Error updating order status:", error);
     return res.status(500).json({
