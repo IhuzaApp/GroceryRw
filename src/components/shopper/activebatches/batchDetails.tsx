@@ -2571,24 +2571,32 @@ export default function BatchDetails({
     const activeOrder = targetOrderOverride || order;
     if (!activeOrder) return null;
 
-    // Reel and restaurant: show action button only at bottom, not on the delivery route card
+    // Reel, restaurant, business: show action button only at bottom, not on the delivery route card
     if (
       options?.onCard &&
       (activeOrder.orderType === "reel" ||
-        activeOrder.orderType === "restaurant")
+        activeOrder.orderType === "restaurant" ||
+        activeOrder.orderType === "business")
     ) {
       return null;
     }
 
     const isRestaurantOrder = activeOrder.orderType === "restaurant";
+    const isBusinessOrder = activeOrder.orderType === "business";
     // Skip shopping if EITHER restaurant_id OR user_id is not null
     const isRestaurantUserReel =
       activeOrder.reel?.restaurant_id || activeOrder.reel?.user_id;
 
+    // Reel, restaurant, business: confirm pickup via OrderID scan, then on_the_way (no Start Shopping)
+    const showConfirmPickup =
+      activeOrder.orderType === "reel" ||
+      isRestaurantOrder ||
+      isBusinessOrder;
+
     switch (activeOrder.status) {
       case "accepted":
-        // Reel and restaurant: confirm pickup via OrderID scan, then on_the_way (no Start Shopping)
-        if (activeOrder.orderType === "reel" || isRestaurantOrder) {
+      case "Ready for Pickup":
+        if (showConfirmPickup) {
           return (
             <Button
               appearance="primary"
@@ -2717,12 +2725,13 @@ export default function BatchDetails({
           return null; // Hide main batch delivery button for multi-customer orders
         }
 
-        // Invoice proof required only for combined and regular orders — reel and restaurant skip it
-        const isReelOrRestaurant =
+        // Invoice proof required only for combined and regular orders — reel, restaurant, business skip it
+        const isReelOrRestaurantOrBusiness =
           activeOrder?.orderType === "reel" ||
-          activeOrder?.orderType === "restaurant";
+          activeOrder?.orderType === "restaurant" ||
+          activeOrder?.orderType === "business";
         const requiresInvoiceProof =
-          !isReelOrRestaurant && !uploadedProofs[activeOrder.id];
+          !isReelOrRestaurantOrBusiness && !uploadedProofs[activeOrder.id];
 
         if (requiresInvoiceProof) {
           return (

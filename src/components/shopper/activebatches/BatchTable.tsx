@@ -664,8 +664,11 @@ export function BatchTable({ orders }: BatchTableProps) {
                               Update Status
                             </div>
 
-                            {/* Start Shopping */}
-                            {order.status === "accepted" && (
+                            {/* Start Shopping — only for regular/combined; reel, restaurant, business use Confirm pickup in batch details */}
+                            {order.status === "accepted" &&
+                              order.orderType !== "reel" &&
+                              order.orderType !== "restaurant" &&
+                              order.orderType !== "business" && (
                               <button
                                 className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors ${
                                   theme === "dark"
