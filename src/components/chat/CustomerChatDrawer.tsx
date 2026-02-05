@@ -101,7 +101,7 @@ const CustomerMessage: React.FC<MessageProps> = ({
     >
       {!isCurrentUser && (
         <div className="flex-shrink-0">
-          <Avatar color="blue" circle size="sm" />
+          <Avatar color="green" circle size="sm" />
         </div>
       )}
       <div className={`flex max-w-[82%] flex-col ${isCurrentUser ? "items-end" : "items-start"}`}>

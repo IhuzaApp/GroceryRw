@@ -101,19 +101,19 @@ const ShopperMessage: React.FC<MessageProps> = ({
     >
       {!isCurrentUser && (
         <div className="flex-shrink-0">
-          <Avatar color="cyan" circle size="sm" />
+          <Avatar color="green" circle size="sm" />
         </div>
       )}
       <div className={`flex max-w-[82%] flex-col ${isCurrentUser ? "items-end" : "items-start"}`}>
         <div
           className={`rounded-2xl px-4 py-2.5 shadow-sm ${
             isCurrentUser
-              ? "bg-blue-500 text-white dark:bg-blue-600"
+              ? "bg-emerald-500 text-white dark:bg-emerald-600"
               : "bg-white text-gray-900 shadow-gray-200/50 dark:bg-gray-700 dark:text-gray-100 dark:shadow-none"
           }`}
         >
           {!isCurrentUser && (
-            <div className="mb-1 text-xs font-medium text-blue-600 dark:text-blue-400">
+            <div className="mb-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
               {customerName}
             </div>
           )}
@@ -127,7 +127,7 @@ const ShopperMessage: React.FC<MessageProps> = ({
       </div>
       {isCurrentUser && (
         <div className="flex-shrink-0">
-          <Avatar color="blue" circle size="sm" />
+          <Avatar color="green" circle size="sm" />
         </div>
       )}
     </div>
@@ -424,8 +424,8 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
             </svg>
           </button>
           <div className="relative flex-shrink-0">
-            <Avatar src={customer.avatar} alt={customer.name} circle size="md" className="ring-2 ring-blue-500/20 dark:ring-blue-400/30" />
-            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-blue-500 dark:border-gray-800 dark:bg-blue-400" title="Online" />
+            <Avatar src={customer.avatar} alt={customer.name} circle size="md" className="ring-2 ring-emerald-500/20 dark:ring-emerald-400/30" />
+            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500 dark:border-gray-800 dark:bg-emerald-400" title="Online" />
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="truncate font-semibold text-gray-900 dark:text-white">
@@ -439,7 +439,7 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
         {customer.phone && (
           <a
             href={`tel:${customer.phone}`}
-            className="flex-shrink-0 rounded-full bg-blue-500 p-2.5 text-white transition-colors hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+            className="flex-shrink-0 rounded-full bg-emerald-500 p-2.5 text-white transition-colors hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
             aria-label="Call customer"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -455,8 +455,8 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
           {displayMessages.length === 0 ? (
             <div className="flex h-full min-h-[200px] items-center justify-center">
               <div className="text-center">
-                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 dark:bg-blue-900/40">
-                  <svg className="h-7 w-7 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 dark:bg-emerald-900/40">
+                  <svg className="h-7 w-7 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                 </div>
@@ -503,12 +503,12 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Type a message..."
-              className="min-w-0 flex-1 rounded-2xl border border-gray-200 bg-gray-100 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-500 transition-colors focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-400 dark:focus:bg-gray-600 dark:focus:ring-blue-500/30"
+              className="min-w-0 flex-1 rounded-2xl border border-gray-200 bg-gray-100 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-500 transition-colors focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-emerald-400 dark:focus:bg-gray-600 dark:focus:ring-emerald-500/30"
             />
             <button
               type="submit"
               disabled={!newMessage.trim()}
-              className="flex-shrink-0 rounded-full bg-blue-500 p-2.5 text-white shadow-md transition-all duration-200 hover:bg-blue-600 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none dark:focus:ring-offset-gray-800"
+              className="flex-shrink-0 rounded-full bg-emerald-500 p-2.5 text-white shadow-md transition-all duration-200 hover:bg-emerald-600 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none dark:focus:ring-offset-gray-800"
               aria-label="Send message"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
