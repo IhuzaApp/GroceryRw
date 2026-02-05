@@ -269,16 +269,17 @@ export default async function handler(
       });
     }
 
-    // Handle shopping status - process wallet operations directly
-    // Skip wallet operations for restaurant orders as they don't have shopping phase
-    if (status === "shopping" && !isRestaurantOrder) {
+    // Handle shopping status - process wallet operations only for regular/combined orders
+    // Reel and restaurant orders don't use wallet "shopping"; others are skipped (no wallet op)
+    if (status === "shopping" && !isRestaurantOrder && !isReelOrder) {
       try {
         await processWalletOperation(
           userId,
           orderId,
           "shopping",
-          isReelOrder,
-          isRestaurantOrder,
+          false,
+          false,
+          false,
           req
         );
       } catch (walletError) {
@@ -603,6 +604,7 @@ export default async function handler(
           "cancelled",
           isReelOrder,
           isRestaurantOrder,
+          false,
           req
         );
       } catch (walletError) {
