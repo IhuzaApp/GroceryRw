@@ -45,9 +45,9 @@ export default function QuoteDetailsModal({
   onReject,
   onMessage,
 }: QuoteDetailsModalProps) {
-  if (!isOpen || !quote) return null;
-
   const [activeTab, setActiveTab] = useState("overview");
+
+  if (!isOpen || !quote) return null;
 
   const handleMessage = () => {
     if (quote.rfqRequester?.email || quote.rfqEmail) {

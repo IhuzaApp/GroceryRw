@@ -20,7 +20,7 @@ interface Order {
   customerAddress: string;
   itemsCount?: number;
   estimatedEarnings?: number;
-  orderType?: "regular" | "reel" | "restaurant";
+  orderType?: "regular" | "reel" | "restaurant" | "business";
   // Coordinates for map route display
   shopLatitude?: number;
   shopLongitude?: number;
@@ -56,6 +56,74 @@ const formatStoreList = (raw: string): string => {
   if (unique.length === 2) return `${unique[0]} and ${unique[1]}`;
   return `${unique.slice(0, -1).join(", ")} and ${unique[unique.length - 1]}`;
 };
+
+/** Fetch ordered item names for the notification card (regular / reel / restaurant / business). */
+async function fetchOrderItemNames(
+  orderId: string,
+  orderType: "regular" | "reel" | "restaurant" | "business" | undefined
+): Promise<string[]> {
+  const type = orderType || "regular";
+  const url =
+    type === "reel"
+      ? `/api/queries/reel-order-details?id=${orderId}`
+      : type === "restaurant"
+      ? `/api/queries/restaurant-order-details?id=${orderId}`
+      : type === "business"
+      ? `/api/queries/business-order-details?id=${orderId}&forShopper=1`
+      : `/api/queries/orderDetails?id=${orderId}`;
+  const resp = await fetch(url);
+  if (!resp.ok) return [];
+  const data = await resp.json();
+  const order = data?.order;
+  if (!order) return [];
+
+  if (type === "reel") {
+    const name = order.reel?.Product;
+    return typeof name === "string" && name.trim() ? [name.trim()] : [];
+  }
+  if (type === "restaurant") {
+    const items = order.restaurant_order_items ?? [];
+    return items
+      .map(
+        (item: {
+          restaurant_dishes?: {
+            dishes?: { name?: string | null } | null;
+          } | null;
+        }) => item.restaurant_dishes?.dishes?.name ?? null
+      )
+      .filter(Boolean)
+      .map((s: string) => s.trim());
+  }
+  if (type === "business") {
+    const products = Array.isArray(order.allProducts) ? order.allProducts : [];
+    return products
+      .map(
+        (p: {
+          name?: string | null;
+          product_name?: string | null;
+          quantity?: number;
+        }) => {
+          const name = p.name || p.product_name;
+          if (!name || typeof name !== "string") return null;
+          const qty = p.quantity;
+          return qty != null && qty > 1
+            ? `${name.trim()} (×${qty})`
+            : name.trim();
+        }
+      )
+      .filter(Boolean);
+  }
+  // regular: Order_Items with product.ProductName.name
+  const items = order.Order_Items ?? [];
+  return items
+    .map(
+      (item: {
+        product?: { ProductName?: { name?: string | null } | null } | null;
+      }) => item.product?.ProductName?.name ?? null
+    )
+    .filter(Boolean)
+    .map((s: string) => s.trim());
+}
 
 interface BatchAssignment {
   shopperId: string;
@@ -106,6 +174,17 @@ export default function NotificationSystem({
   const [decliningOrders, setDecliningOrders] = useState<Set<string>>(
     new Set()
   ); // Track orders being declined
+  const [itemsExpanded, setItemsExpanded] = useState(false);
+  const [orderItemNames, setOrderItemNames] = useState<string[] | null>(null);
+  const [orderItemsLoading, setOrderItemsLoading] = useState(false);
+
+  // Reset items state when selected order changes
+  useEffect(() => {
+    if (selectedOrder) {
+      setItemsExpanded(false);
+      setOrderItemNames(null);
+    }
+  }, [selectedOrder?.id]);
 
   // Helper to fetch active order count
   const fetchActiveOrderCount = async () => {
@@ -119,9 +198,6 @@ export default function NotificationSystem({
 
       // If shopper has 2 or more orders, clear any pending notifications
       if (count >= 2 && selectedOrder) {
-        console.log(
-          "🧹 Clearing notifications: Shopper reached 2 active orders"
-        );
         setShowMapModal(false);
         setSelectedOrder(null);
         onNotificationShow?.(null);
@@ -248,9 +324,6 @@ export default function NotificationSystem({
 
         // Clear notifications when going offline (only if we were actually running)
         if (!online && checkInterval.current !== null) {
-          console.log("🔴 Going offline - stopping notification system", {
-            componentId: componentId.current,
-          });
           stopNotificationSystem();
 
           // Close any open notification modals
@@ -305,10 +378,6 @@ export default function NotificationSystem({
       if (!document.hidden) {
         lastUserActivityTime.current = Date.now();
       }
-      console.log("👁️ Page visibility changed:", {
-        visible: isPageVisible.current,
-        timestamp: new Date().toISOString(),
-      });
     };
 
     const handleUserActivity = () => {
@@ -339,65 +408,33 @@ export default function NotificationSystem({
       const { order } = event.detail;
       const now = Date.now();
 
-      console.log("📲 FCM NEW ORDER EVENT", {
-        orderId: order.id,
-        timestamp: new Date().toISOString(),
-        isDeclined: declinedOrders.current.has(order.id),
-        alreadyShowing: activeToasts.current.has(order.id),
-        recentlyShown: showToastLock.current.has(order.id),
-        pageVisible: isPageVisible.current,
-        timeSincePageLoad: now - pageLoadTimestamp.current,
-        timeSinceLastActivity: now - lastUserActivityTime.current,
-      });
-
       // CRITICAL: Don't show notifications within 10 seconds of page load (prevent page refresh spam)
       if (now - pageLoadTimestamp.current < 10000) {
-        console.log("🚫 FCM: Blocking - page just loaded/refreshed", {
-          orderId: order.id,
-          timeSincePageLoad: now - pageLoadTimestamp.current,
-        });
         return;
       }
 
       // CRITICAL: Only show notifications if page is visible and user is active
       if (!isPageVisible.current) {
-        console.log("🚫 FCM: Blocking - page not visible", {
-          orderId: order.id,
-        });
         return;
       }
 
       // Check if user has been inactive for more than 5 minutes
       if (now - lastUserActivityTime.current > 300000) {
-        console.log("🚫 FCM: Blocking - user inactive for too long", {
-          orderId: order.id,
-          inactiveTime: now - lastUserActivityTime.current,
-        });
         return;
       }
 
       // Check if shopper already has 2 or more active orders - CRITICAL GUARD
       if (activeOrderCount >= 2) {
-        console.log("🚫 FCM: Blocking - shopper already has 2 active orders", {
-          orderId: order.id,
-          activeOrderCount,
-        });
         return;
       }
 
       // Check if order was declined
       if (declinedOrders.current.has(order.id)) {
-        console.log("🚫 FCM: Order was declined, ignoring", {
-          orderId: order.id,
-        });
         return;
       }
 
       // Skip if order is already showing
       if (activeToasts.current.has(order.id)) {
-        console.log("🚫 FCM: Order already showing, ignoring", {
-          orderId: order.id,
-        });
         return;
       }
 
@@ -431,33 +468,18 @@ export default function NotificationSystem({
       const { orders } = event.detail;
       const now = Date.now();
 
-      console.log("📲 FCM BATCH ORDERS EVENT", {
-        orderCount: orders.length,
-        timestamp: new Date().toISOString(),
-        pageVisible: isPageVisible.current,
-        timeSincePageLoad: now - pageLoadTimestamp.current,
-        timeSinceLastActivity: now - lastUserActivityTime.current,
-      });
-
       // CRITICAL: Don't show notifications within 10 seconds of page load
       if (now - pageLoadTimestamp.current < 10000) {
-        console.log("🚫 FCM BATCH: Blocking - page just loaded/refreshed", {
-          timeSincePageLoad: now - pageLoadTimestamp.current,
-        });
         return;
       }
 
       // CRITICAL: Only show notifications if page is visible and user is active
       if (!isPageVisible.current) {
-        console.log("🚫 FCM BATCH: Blocking - page not visible");
         return;
       }
 
       // Check if user has been inactive for more than 5 minutes
       if (now - lastUserActivityTime.current > 300000) {
-        console.log("🚫 FCM BATCH: Blocking - user inactive for too long", {
-          inactiveTime: now - lastUserActivityTime.current,
-        });
         return;
       }
 
@@ -465,13 +487,6 @@ export default function NotificationSystem({
       orders.forEach((order: any) => {
         // Check if shopper already has 2 or more active orders - CRITICAL GUARD
         if (activeOrderCount >= 2) {
-          console.log(
-            "🚫 FCM BATCH: Blocking - shopper already has 2 active orders",
-            {
-              orderId: order.id,
-              activeOrderCount,
-            }
-          );
           return;
         }
 
@@ -482,9 +497,6 @@ export default function NotificationSystem({
 
         // Skip if order is already showing
         if (activeToasts.current.has(order.id)) {
-          console.log("🚫 FCM BATCH: Order already showing, ignoring", {
-            orderId: order.id,
-          });
           return;
         }
 
@@ -672,7 +684,6 @@ export default function NotificationSystem({
     // Clear deduplication lock after 5 seconds to allow re-showing if needed
     setTimeout(() => {
       showToastLock.current.delete(orderId);
-      console.log("🔓 Cleared deduplication lock for order", { orderId });
     }, 5000);
 
     // Also remove from batch assignments
@@ -785,7 +796,10 @@ export default function NotificationSystem({
     showDesktopNotification(orderForNotification);
   };
 
-  const handleAcceptOrder = async (orderId: string) => {
+  const handleAcceptOrder = async (
+    orderId: string,
+    orderType?: "regular" | "reel" | "restaurant" | "business"
+  ) => {
     if (!session?.user?.id) {
       toast.error("You must be logged in to accept orders");
       return false;
@@ -799,7 +813,7 @@ export default function NotificationSystem({
     setAcceptingOrders((prev) => new Set(prev).add(orderId));
 
     try {
-      // Accept order via API
+      // Accept order via API (orderType ensures backend sets restaurant order status to "accepted")
       const response = await fetch("/api/shopper/accept-batch", {
         method: "POST",
         headers: {
@@ -808,6 +822,7 @@ export default function NotificationSystem({
         body: JSON.stringify({
           orderId,
           userId: session.user.id,
+          orderType,
         }),
       });
 
@@ -822,7 +837,23 @@ export default function NotificationSystem({
       if (success) {
         // Remove toast and show success message
         removeToastForOrder(orderId);
+        // Clear active_offer from localStorage so next order doesn't restore stale data
+        try {
+          localStorage.removeItem("active_offer");
+        } catch {
+          // ignore
+        }
+        // Reset UI state for next notification
+        setItemsExpanded(false);
+        setOrderItemNames(null);
         toast.success("Order accepted successfully! 🎉");
+
+        // Dispatch custom event to notify other components (like BatchDetails) to refetch
+        window.dispatchEvent(
+          new CustomEvent("order-accepted", {
+            detail: { orderId },
+          })
+        );
 
         // Note: Removed onAcceptBatch callback to prevent redirect
         // User stays on current page with success toast
@@ -902,13 +933,6 @@ export default function NotificationSystem({
 
     // Check if shopper already has 2 or more active orders - CRITICAL GUARD
     if (activeOrderCount >= 2 && type === "info") {
-      console.log(
-        "🚫 showToast: Blocking - shopper already has 2 active orders",
-        {
-          orderId: order.id,
-          activeOrderCount,
-        }
-      );
       return;
     }
 
@@ -1350,13 +1374,6 @@ export default function NotificationSystem({
         if ((!currentUserAssignment || isBetterOrder) && !wasDeclined) {
           // If replacing a current order, remove the old one first with smooth transition
           if (currentUserAssignment && isBetterOrder) {
-            console.log("🔄 Replacing current order with better one", {
-              oldOrderId: currentUserAssignment.orderId,
-              oldEarnings: currentOrderEarnings,
-              newOrderId: order.id,
-              newEarnings: newOrderEarnings,
-            });
-
             // Remove old assignment
             batchAssignments.current = batchAssignments.current.filter(
               (a) => a.orderId !== currentUserAssignment.orderId
@@ -1366,19 +1383,7 @@ export default function NotificationSystem({
             removeToastForOrder(currentUserAssignment.orderId);
 
             // Wait for exit animation to complete before showing new notification
-            console.log("⏳ Waiting for exit animation (500ms)...", {
-              oldOrderId: currentUserAssignment.orderId,
-              newOrderId: order.id,
-            });
-
             setTimeout(() => {
-              console.log(
-                "✨ Exit animation complete, showing new notification",
-                {
-                  newOrderId: order.id,
-                }
-              );
-
               // Now show the new order after old one has disappeared
               showNewOrderNotification(order, currentTime);
             }, 500); // Wait 500ms for exit animation
@@ -1403,9 +1408,6 @@ export default function NotificationSystem({
           // lastNotificationTime was already updated above to prevent rapid API calls
         }
       } else if (data.reason === "MAX_ACTIVE_ORDERS_REACHED") {
-        console.log("🚫 Shopper reached max active orders limit", {
-          count: data.activeOrderCount,
-        });
         setActiveOrderCount(data.activeOrderCount || 2);
 
         // Clear any pending notifications since shopper can't accept more
@@ -1516,9 +1518,6 @@ export default function NotificationSystem({
       // This prevents the card from flashing on page refresh/change if they have 2 orders
       const currentCount = await fetchActiveOrderCount();
       if (currentCount >= 2) {
-        console.log(
-          "🚫 Blocking active offer check: Shopper has 2+ active orders"
-        );
         localStorage.removeItem("active_offer");
         // Ensure any existing card is hidden
         setShowMapModal(false);
@@ -1536,12 +1535,19 @@ export default function NotificationSystem({
             // Older cached offers may not have OrderID saved yet — fetch once (best effort)
             if (!offer?.order?.OrderID && offer?.order?.id) {
               try {
-                const resp = await fetch(
-                  `/api/queries/orderDetails?id=${offer.order.id}`
-                );
+                const orderType = offer?.order?.orderType || "regular";
+                const orderDetailsUrl =
+                  orderType === "reel"
+                    ? `/api/queries/reel-order-details?id=${offer.order.id}`
+                    : orderType === "restaurant"
+                    ? `/api/queries/restaurant-order-details?id=${offer.order.id}`
+                    : orderType === "business"
+                    ? `/api/queries/business-order-details?id=${offer.order.id}&forShopper=1`
+                    : `/api/queries/orderDetails?id=${offer.order.id}`;
+                const resp = await fetch(orderDetailsUrl);
                 if (resp.ok) {
                   const details = await resp.json();
-                  if (details?.order?.OrderID) {
+                  if (details?.order?.OrderID != null) {
                     offer.order.OrderID = details.order.OrderID;
                     localStorage.setItem("active_offer", JSON.stringify(offer));
                   }
@@ -1551,8 +1557,8 @@ export default function NotificationSystem({
               }
             }
 
-            // Double check count again before showing restored offer
-            if (activeOrderCount < 2) {
+            // Double check count again before showing restored offer (use currentCount from step 1, not state)
+            if (currentCount < 2) {
               showNewOrderNotification(offer.order, Date.now());
               return; // Exit early, offer restored from cache
             }
@@ -1588,8 +1594,17 @@ export default function NotificationSystem({
           offerId: data.offerId, // Include offerId from API response
         };
 
-        // Final guard before showing
-        if (activeOrderCount < 2) {
+        // Final guard before showing (use currentCount from step 1)
+        if (currentCount < 2) {
+          await showNewOrderNotification(order, Date.now());
+        }
+      } else if (data.existingOffer?.order) {
+        // Shopper has active OFFERED offer; API returned existing offer details so we can show the card on refresh/navigate
+        const order = {
+          ...data.existingOffer.order,
+          offerId: data.existingOffer.offerId,
+        };
+        if (currentCount < 2) {
           await showNewOrderNotification(order, Date.now());
         }
       } else if (data.reason === "MAX_ACTIVE_ORDERS_REACHED") {
@@ -1714,7 +1729,7 @@ export default function NotificationSystem({
                       </span>
                     </div>
                   </div>
-                  {/* Shop Name */}
+                  {/* Shop Name & Offer Type */}
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       Shop
@@ -1722,6 +1737,25 @@ export default function NotificationSystem({
                     <p className="text-base font-bold text-gray-900 dark:text-gray-100">
                       {formatStoreList(selectedOrder.shopName)}
                     </p>
+                    {selectedOrder.orderType && (
+                      <span
+                        className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
+                          selectedOrder.orderType === "reel"
+                            ? theme === "dark"
+                              ? "bg-purple-500/30 text-purple-300"
+                              : "bg-purple-100 text-purple-700"
+                            : selectedOrder.orderType === "restaurant"
+                            ? theme === "dark"
+                              ? "bg-amber-500/30 text-amber-300"
+                              : "bg-amber-100 text-amber-700"
+                            : theme === "dark"
+                            ? "bg-blue-500/30 text-blue-300"
+                            : "bg-blue-100 text-blue-700"
+                        }`}
+                      >
+                        {selectedOrder.orderType}
+                      </span>
+                    )}
                   </div>
                 </div>
                 {/* Directions Button */}
@@ -1729,10 +1763,35 @@ export default function NotificationSystem({
                   onClick={() => {
                     directionsClickCount.current += 1;
 
-                    // Open Google Maps with directions to SHOP location
-                    const destLat = selectedOrder.shopLatitude;
-                    const destLng = selectedOrder.shopLongitude;
-                    const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}`;
+                    // Open Google Maps with directions to SHOP/pickup location
+                    // Use shop coords first; fallback to customer coords (e.g. reels); else use address
+                    const shopLat = selectedOrder.shopLatitude;
+                    const shopLng = selectedOrder.shopLongitude;
+                    const custLat = selectedOrder.customerLatitude;
+                    const custLng = selectedOrder.customerLongitude;
+                    const hasValidCoords = (
+                      lat: number | undefined,
+                      lng: number | undefined
+                    ) =>
+                      typeof lat === "number" &&
+                      typeof lng === "number" &&
+                      !Number.isNaN(lat) &&
+                      !Number.isNaN(lng) &&
+                      (lat !== 0 || lng !== 0);
+
+                    let mapsUrl: string;
+                    if (hasValidCoords(shopLat, shopLng)) {
+                      mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${shopLat},${shopLng}`;
+                    } else if (hasValidCoords(custLat, custLng)) {
+                      mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${custLat},${custLng}`;
+                    } else if (selectedOrder.customerAddress?.trim()) {
+                      const dest = encodeURIComponent(
+                        selectedOrder.customerAddress.trim()
+                      );
+                      mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${dest}`;
+                    } else {
+                      mapsUrl = "https://www.google.com/maps";
+                    }
                     window.open(mapsUrl, "_blank");
                   }}
                   className={`flex h-12 w-12 items-center justify-center rounded-full shadow-md transition-colors ${
@@ -1802,9 +1861,49 @@ export default function NotificationSystem({
 
               {/* Order Details */}
               <div className="mb-5 space-y-3">
-                {/* Items and Earnings */}
+                {/* Items (expandable) and Earnings */}
                 <div className="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3 dark:bg-gray-700">
-                  <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const next = !itemsExpanded;
+                      setItemsExpanded(next);
+                      if (
+                        next &&
+                        orderItemNames === null &&
+                        !orderItemsLoading
+                      ) {
+                        setOrderItemsLoading(true);
+                        try {
+                          const names = await fetchOrderItemNames(
+                            selectedOrder.id,
+                            selectedOrder.orderType
+                          );
+                          setOrderItemNames(names);
+                        } catch {
+                          setOrderItemNames([]);
+                        } finally {
+                          setOrderItemsLoading(false);
+                        }
+                      }
+                    }}
+                    className="flex flex-1 cursor-pointer items-center space-x-2 text-left outline-none focus:ring-0"
+                  >
+                    <svg
+                      className={`h-5 w-5 flex-shrink-0 text-gray-600 transition-transform dark:text-gray-300 ${
+                        itemsExpanded ? "rotate-90" : ""
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
                     <svg
                       className="h-5 w-5 text-gray-600 dark:text-gray-300"
                       fill="none"
@@ -1819,9 +1918,9 @@ export default function NotificationSystem({
                       />
                     </svg>
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {selectedOrder.itemsCount || 0} Items
+                      {selectedOrder.itemsCount ?? 0} Items
                     </span>
-                  </div>
+                  </button>
                   <div className="flex items-center space-x-2">
                     <svg
                       className="h-5 w-5 text-green-600 dark:text-green-400"
@@ -1841,6 +1940,26 @@ export default function NotificationSystem({
                     </span>
                   </div>
                 </div>
+                {/* Expanded: ordered item names as bullet list */}
+                {itemsExpanded && (
+                  <div className="rounded-lg border border-gray-200 bg-gray-50/80 px-4 py-3 dark:border-gray-600 dark:bg-gray-700/80">
+                    {orderItemsLoading ? (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Loading items…
+                      </p>
+                    ) : orderItemNames && orderItemNames.length > 0 ? (
+                      <ul className="list-inside list-disc space-y-1 text-sm text-gray-700 dark:text-gray-300">
+                        {orderItemNames.map((name, i) => (
+                          <li key={i}>{name}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        No item names available
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}
@@ -1892,12 +2011,6 @@ export default function NotificationSystem({
                         );
                       }
 
-                      console.log("✅ Offer declined successfully", {
-                        orderId,
-                        offerId: data.offerId,
-                        roundNumber: data.roundNumber,
-                      });
-
                       // Add to declined orders list (expires after 5 minutes)
                       declinedOrders.current.set(orderId, expiresAt);
 
@@ -1910,12 +2023,6 @@ export default function NotificationSystem({
                         localStorage.setItem(
                           "declined_orders",
                           JSON.stringify(declinedObj)
-                        );
-                        console.log(
-                          "💾 Saved declined orders to localStorage",
-                          {
-                            count: declinedOrders.current.size,
-                          }
                         );
                       } catch (error) {
                         console.error(
@@ -2026,7 +2133,10 @@ export default function NotificationSystem({
                   onClick={async () => {
                     acceptClickCount.current += 1;
 
-                    const success = await handleAcceptOrder(selectedOrder.id);
+                    const success = await handleAcceptOrder(
+                      selectedOrder.id,
+                      selectedOrder.orderType
+                    );
 
                     if (success) {
                       setShowMapModal(false);

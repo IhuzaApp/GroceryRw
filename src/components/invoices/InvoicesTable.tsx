@@ -103,6 +103,9 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
   };
 
   const getStatusBadge = (status: string) => {
+    // Normalize status: map "completed" to "paid" since completed orders should show as paid
+    const normalizedStatus = status === "completed" ? "paid" : status;
+
     const statusConfig = {
       paid: {
         color:
@@ -128,7 +131,8 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
     };
 
     const config =
-      statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+      statusConfig[normalizedStatus as keyof typeof statusConfig] ||
+      statusConfig.pending;
 
     return (
       <span
@@ -136,9 +140,9 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
       >
         <div
           className={`mr-2 h-2 w-2 rounded-full ${
-            status === "paid"
+            normalizedStatus === "paid"
               ? "bg-green-500"
-              : status === "pending"
+              : normalizedStatus === "pending"
               ? "bg-yellow-500"
               : "bg-red-500"
           }`}
@@ -157,37 +161,152 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
   };
 
   const downloadInvoice = (invoice: Invoice) => {
-    const isMobile =
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      );
-
-    if (isMobile) {
-      // For mobile, navigate to PDF in same tab
-      const pdfUrl = `/api/invoices/${invoice.id}?pdf=true`;
-      router.push(pdfUrl);
-    } else {
-      // For desktop, navigate to invoice page with hash in same tab
-      const hash = invoice.order_type === "reel" ? "reel" : "regularOrder";
-      router.push({
-        pathname: `/Plasa/invoices/${invoice.id}`,
-        hash: hash,
-      });
-    }
+    // Trigger PDF download
+    const pdfUrl = `/api/invoices/${invoice.id}?pdf=true`;
+    const link = document.createElement("a");
+    link.href = pdfUrl;
+    link.download = `invoice-${invoice.invoice_number}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600"></div>
-          <p
-            className={`mt-4 text-sm ${
-              theme === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}
-          >
-            Loading invoices...
-          </p>
+      <div
+        className={`overflow-hidden rounded-xl border ${
+          theme === "dark"
+            ? "border-gray-700 bg-gray-800/50"
+            : "border-gray-200 bg-white shadow-sm"
+        }`}
+      >
+        {/* Desktop Table Skeleton */}
+        <div className="hidden overflow-x-auto lg:block">
+          <table className="w-full">
+            <thead
+              className={`border-b ${
+                theme === "dark"
+                  ? "border-gray-700 bg-gray-800/30"
+                  : "border-gray-100 bg-gray-50"
+              }`}
+            >
+              <tr>
+                <th className="w-12 px-6 py-4"></th>
+                <th className="px-4 py-4">
+                  <div className="h-4 w-12 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                </th>
+                <th className="px-4 py-4">
+                  <div className="h-4 w-20 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                </th>
+                <th className="px-4 py-4">
+                  <div className="h-4 w-16 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                </th>
+                <th className="px-4 py-4">
+                  <div className="h-4 w-16 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                </th>
+                <th className="px-4 py-4">
+                  <div className="h-4 w-16 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                </th>
+                <th className="px-4 py-4">
+                  <div className="h-4 w-12 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                </th>
+              </tr>
+            </thead>
+            <tbody
+              className={`divide-y ${
+                theme === "dark" ? "divide-gray-700/50" : "divide-gray-100"
+              }`}
+            >
+              {[...Array(5)].map((_, index) => (
+                <tr key={index}>
+                  <td className="w-12 px-6 py-4">
+                    <div className="h-4 w-4 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="h-4 w-24 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="h-8 w-8 animate-pulse rounded-full bg-gray-300 dark:bg-gray-600"></div>
+                      <div className="h-4 w-32 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="h-4 w-20 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="h-4 w-16 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="h-4 w-16 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="h-4 w-20 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="flex items-center justify-end space-x-2">
+                      <div className="h-8 w-8 animate-pulse rounded-lg bg-gray-300 dark:bg-gray-600"></div>
+                      <div className="h-8 w-8 animate-pulse rounded-lg bg-gray-300 dark:bg-gray-600"></div>
+                      <div className="h-8 w-8 animate-pulse rounded-lg bg-gray-300 dark:bg-gray-600"></div>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile Cards Skeleton */}
+        <div className="space-y-4 p-2 sm:p-4 lg:hidden">
+          {[...Array(3)].map((_, index) => (
+            <div
+              key={index}
+              className={`rounded-xl border ${
+                theme === "dark"
+                  ? "border-gray-700 bg-gray-800/50"
+                  : "border-gray-200 bg-white shadow-sm"
+              }`}
+            >
+              <div className="p-4 sm:p-5">
+                {/* Header Skeleton */}
+                <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex-1">
+                    <div className="mb-2 h-5 w-32 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                    <div className="h-4 w-24 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  </div>
+                  <div className="h-6 w-20 animate-pulse rounded-full bg-gray-300 dark:bg-gray-600"></div>
+                </div>
+
+                {/* Customer Info Skeleton */}
+                <div className="mb-4">
+                  <div className="mb-1 h-4 w-16 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  <div className="mb-1 h-4 w-40 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  <div className="h-3 w-48 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                </div>
+
+                {/* Order Info Skeleton */}
+                <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4">
+                  <div>
+                    <div className="mb-1 h-4 w-12 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                    <div className="h-4 w-24 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  </div>
+                  <div>
+                    <div className="mb-1 h-4 w-12 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                    <div className="h-4 w-16 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  </div>
+                </div>
+
+                {/* Total Amount Skeleton */}
+                <div className="mb-4 flex items-center justify-between border-t border-gray-200 pt-4 dark:border-gray-700">
+                  <div className="h-4 w-20 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  <div className="h-6 w-24 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                </div>
+
+                {/* Button Skeleton */}
+                <div className="h-10 w-full animate-pulse rounded-lg bg-gray-300 dark:bg-gray-600"></div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -292,7 +411,14 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                   theme === "dark" ? "text-gray-400" : "text-gray-500"
                 }`}
               >
-                Account
+                Tax Fees
+              </th>
+              <th
+                className={`px-4 py-4 text-left text-xs font-medium ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                Earnings
               </th>
               <th
                 className={`px-4 py-4 text-left text-xs font-medium ${
@@ -300,13 +426,6 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                 }`}
               >
                 Date
-              </th>
-              <th
-                className={`px-4 py-4 text-left text-xs font-medium ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
-              >
-                Method
               </th>
               <th
                 className={`px-4 py-4 text-right text-xs font-medium ${
@@ -387,19 +506,27 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                   </span>
                 </td>
 
-                {/* Account/Category Tag */}
+                {/* Tax Fees */}
                 <td className="px-4 py-4">
                   <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getCategoryColor(
-                      invoice.order_type,
-                      invoice.shop_name
-                    )}`}
+                    className={`text-sm font-medium ${
+                      theme === "dark" ? "text-gray-200" : "text-gray-900"
+                    }`}
                   >
-                    {invoice.order_type === "regular"
-                      ? invoice.shop_name || "Shop"
-                      : invoice.order_type === "reel"
-                      ? "Reel Order"
-                      : "Restaurant"}
+                    {formatCurrencySync(invoice.tax || 0)}
+                  </span>
+                </td>
+
+                {/* Earnings */}
+                <td className="px-4 py-4">
+                  <span
+                    className={`text-sm font-semibold ${
+                      theme === "dark" ? "text-green-400" : "text-green-600"
+                    }`}
+                  >
+                    {formatCurrencySync(
+                      (invoice.service_fee || 0) + (invoice.delivery_fee || 0)
+                    )}
                   </span>
                 </td>
 
@@ -411,19 +538,6 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                     }`}
                   >
                     {formatDate(invoice.created_at)}
-                  </span>
-                </td>
-
-                {/* Method/Status */}
-                <td className="px-4 py-4">
-                  <span
-                    className={`text-sm ${
-                      theme === "dark" ? "text-gray-300" : "text-gray-700"
-                    }`}
-                  >
-                    {invoice.status === "paid"
-                      ? "Invoice Payment"
-                      : "Request Payment"}
                   </span>
                 </td>
 
@@ -469,8 +583,8 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                       }}
                       className={`rounded-lg p-2 transition-colors ${
                         theme === "dark"
-                          ? "text-gray-400 hover:bg-gray-600 hover:text-gray-200"
-                          : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                          ? "text-green-400 hover:bg-green-900/30 hover:text-green-300"
+                          : "text-green-600 hover:bg-green-50 hover:text-green-700"
                       }`}
                       title="Download invoice"
                     >
@@ -488,32 +602,6 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                         />
                       </svg>
                     </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // Delete action - can be customized
-                      }}
-                      className={`rounded-lg p-2 transition-colors ${
-                        theme === "dark"
-                          ? "text-gray-400 hover:bg-red-900/30 hover:text-red-400"
-                          : "text-gray-500 hover:bg-red-50 hover:text-red-600"
-                      }`}
-                      title="Delete invoice"
-                    >
-                      <svg
-                        className="h-5 w-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </button>
                   </div>
                 </td>
               </tr>
@@ -523,7 +611,7 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
       </div>
 
       {/* Mobile Cards */}
-      <div className="space-y-4 p-4 lg:hidden">
+      <div className="space-y-4 p-2 sm:p-4 lg:hidden">
         {invoices.map((invoice) => (
           <div
             key={invoice.id}
@@ -534,46 +622,48 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
             } transition-all duration-200 hover:shadow-md`}
             onClick={() => onViewDetails(invoice.id, invoice.order_type)}
           >
-            <div className="p-5">
+            <div className="p-4 sm:p-5">
               {/* Header */}
-              <div className="mb-4 flex items-center justify-between">
-                <div>
+              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex-1">
                   <h3
-                    className={`text-lg font-semibold ${
+                    className={`text-base font-semibold sm:text-lg ${
                       theme === "dark" ? "text-white" : "text-gray-900"
                     }`}
                   >
                     #{invoice.invoice_number}
                   </h3>
                   <p
-                    className={`text-sm ${
+                    className={`mt-1 text-xs sm:text-sm ${
                       theme === "dark" ? "text-gray-400" : "text-gray-500"
                     }`}
                   >
                     {formatDate(invoice.created_at)}
                   </p>
                 </div>
-                {getStatusBadge(invoice.status)}
+                <div className="flex-shrink-0">
+                  {getStatusBadge(invoice.status)}
+                </div>
               </div>
 
               {/* Customer Info */}
               <div className="mb-4">
                 <h4
-                  className={`text-sm font-medium ${
+                  className={`mb-1 text-xs font-medium sm:text-sm ${
                     theme === "dark" ? "text-gray-300" : "text-gray-700"
                   }`}
                 >
                   Customer
                 </h4>
                 <p
-                  className={`text-sm ${
+                  className={`text-sm font-medium sm:text-base ${
                     theme === "dark" ? "text-gray-100" : "text-gray-900"
                   }`}
                 >
                   {invoice.customer_name}
                 </p>
                 <p
-                  className={`text-xs ${
+                  className={`mt-0.5 truncate text-xs ${
                     theme === "dark" ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
@@ -582,17 +672,17 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
               </div>
 
               {/* Order Info */}
-              <div className="mb-4 grid grid-cols-2 gap-4">
+              <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <h4
-                    className={`text-sm font-medium ${
+                    className={`mb-1 text-xs font-medium sm:text-sm ${
                       theme === "dark" ? "text-gray-300" : "text-gray-700"
                     }`}
                   >
                     {invoice.order_type === "regular" ? "Shop" : "Order"}
                   </h4>
                   <p
-                    className={`text-sm ${
+                    className={`truncate text-sm sm:text-base ${
                       theme === "dark" ? "text-gray-100" : "text-gray-900"
                     }`}
                   >
@@ -603,14 +693,14 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                 </div>
                 <div>
                   <h4
-                    className={`text-sm font-medium ${
+                    className={`mb-1 text-xs font-medium sm:text-sm ${
                       theme === "dark" ? "text-gray-300" : "text-gray-700"
                     }`}
                   >
                     Items
                   </h4>
                   <p
-                    className={`text-sm ${
+                    className={`text-sm sm:text-base ${
                       theme === "dark" ? "text-gray-100" : "text-gray-900"
                     }`}
                   >
@@ -620,16 +710,16 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
               </div>
 
               {/* Total Amount */}
-              <div className="mb-4 flex items-center justify-between">
+              <div className="mb-4 flex items-center justify-between border-t border-gray-200 pt-4 dark:border-gray-700">
                 <span
-                  className={`text-sm font-medium ${
+                  className={`text-sm font-medium sm:text-base ${
                     theme === "dark" ? "text-gray-300" : "text-gray-700"
                   }`}
                 >
                   Total Amount
                 </span>
                 <span
-                  className={`text-lg font-bold ${
+                  className={`text-lg font-bold sm:text-xl ${
                     theme === "dark" ? "text-green-400" : "text-green-600"
                   }`}
                 >
@@ -643,14 +733,14 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                   e.stopPropagation();
                   downloadInvoice(invoice);
                 }}
-                className={`inline-flex w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+                className={`inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:shadow-lg active:scale-[0.98] ${
                   theme === "dark"
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "bg-blue-600 text-white hover:bg-blue-700"
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "bg-green-600 hover:bg-green-700"
                 }`}
               >
                 <svg
-                  className="mr-2 h-4 w-4"
+                  className="h-5 w-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -662,7 +752,7 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                     d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-                View Invoice
+                Download
               </button>
             </div>
           </div>

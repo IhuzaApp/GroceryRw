@@ -1,24 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/router";
 import { useAuth } from "../../hooks/useAuth";
 import AIChatButton from "./AIChatButton";
 import AIChatWindow from "./AIChatWindow";
 
 export default function AIChatProvider() {
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
   const { data: session } = useSession();
   const { isGuest } = useAuth();
 
-  // Don't show AI chat for logged-out users or guests
-  if (!session?.user || isGuest) {
-    return null;
-  }
+  const isStoreOrCheckout =
+    router.pathname === "/stores/[id]" ||
+    router.pathname === "/stores/[id]/checkout" ||
+    router.pathname === "/plasBusiness/store/[storeId]";
 
   const toggleChat = () => {
     setIsOpen((prev) => !prev);
   };
 
-  // Close chat on escape key
+  // Close chat on escape key (hook must run unconditionally)
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen) {
@@ -30,9 +32,14 @@ export default function AIChatProvider() {
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen]);
 
+  // Don't show AI chat for logged-out users or guests (after all hooks)
+  if (!session?.user || isGuest) {
+    return null;
+  }
+
   return (
     <>
-      <AIChatButton onClick={toggleChat} />
+      <AIChatButton onClick={toggleChat} hideOnMobile={isStoreOrCheckout} />
       <AIChatWindow isOpen={isOpen} onClose={() => setIsOpen(false)} />
     </>
   );

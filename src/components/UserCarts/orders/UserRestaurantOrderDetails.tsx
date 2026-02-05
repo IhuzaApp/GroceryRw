@@ -35,14 +35,20 @@ function timeAgo(timestamp: string): string {
   return `${years} year${years !== 1 ? "s" : ""} ago`;
 }
 
+export type SupportTicketInfo = { ticket_num: number; status: string } | null;
+
 interface UserRestaurantOrderDetailsProps {
   order: any;
   isMobile?: boolean;
+  onContactSupport?: () => void;
+  supportTicket?: SupportTicketInfo;
 }
 
 export default function UserRestaurantOrderDetails({
   order,
   isMobile = false,
+  onContactSupport,
+  supportTicket,
 }: UserRestaurantOrderDetailsProps) {
   const { theme } = useTheme();
   const [feedbackModal, setFeedbackModal] = useState(false);
@@ -128,15 +134,6 @@ export default function UserRestaurantOrderDetails({
     }
   }, [order.status, order.created_at]);
 
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
   const handleSubmitRating = async (
     ratings: {
       rating: number;
@@ -185,30 +182,29 @@ export default function UserRestaurantOrderDetails({
   };
 
   const getOrderStatus = () => {
-    switch (order.status) {
+    const status = (order.status || "").toUpperCase();
+    switch (status) {
       case "WAITING_FOR_CONFIRMATION":
-        return "Waiting for Confirmation";
       case "PENDING":
-        return "Order Placed";
+        return "Waiting to be accepted";
       case "CONFIRMED":
-        return "Confirmed";
       case "READY":
-        return "Ready";
+        return "Accepted";
       case "OUT_FOR_DELIVERY":
-        return "Out for Delivery";
+        return "Picked and on the way";
       case "DELIVERED":
-        return "Delivered";
+        return "Delivered to you";
       default:
-        return "Unknown";
+        return "Ongoing";
     }
   };
 
   const getOrderStatusColor = () => {
-    switch (order.status) {
+    const status = (order.status || "").toUpperCase();
+    switch (status) {
       case "WAITING_FOR_CONFIRMATION":
-        return "warning";
       case "PENDING":
-        return "processing";
+        return "warning";
       case "CONFIRMED":
       case "READY":
         return "info";
@@ -222,34 +218,32 @@ export default function UserRestaurantOrderDetails({
   };
 
   const getCurrentStep = () => {
-    switch (order.status) {
+    const status = (order.status || "").toUpperCase();
+    switch (status) {
       case "WAITING_FOR_CONFIRMATION":
-        return 0;
       case "PENDING":
-        return 1;
+        return 0;
       case "CONFIRMED":
-        return 2;
       case "READY":
-        return 3;
+        return 1;
       case "OUT_FOR_DELIVERY":
-        return 4;
+        return 2;
       case "DELIVERED":
-        return 5;
+        return 3;
       default:
         return 0;
     }
   };
 
   const steps = [
-    "Order Placed",
-    "Confirmed",
-    "Ready",
-    "Out for Delivery",
-    "Delivered",
+    "Waiting to be accepted",
+    "Accepted",
+    "Picked and on the way",
+    "Delivered to you",
   ];
 
   return (
-    <div className="space-y-6">
+    <div className={`${isMobile ? "space-y-0" : "space-y-6"}`}>
       {/* Header - Only show on desktop */}
       {!isMobile && (
         <div className="flex items-center justify-between">
@@ -274,17 +268,21 @@ export default function UserRestaurantOrderDetails({
 
       {/* Restaurant Information */}
       {order.Restaurant && (
-        <Panel className="border border-gray-200 dark:border-gray-700">
+        <Panel
+          className={`border border-gray-200 dark:border-gray-700 ${
+            isMobile ? "!mx-0 !rounded-none border-x-0" : ""
+          }`}
+        >
           <div className="flex items-center gap-4">
             <div className="flex-grow">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white md:text-xl">
                 {order.Restaurant.name}
               </h2>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-xs text-gray-600 dark:text-gray-400 md:text-sm">
                 {order.Restaurant.location}
               </p>
               {order.Restaurant.phone && (
-                <p className="text-sm text-gray-500 dark:text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-gray-500 md:text-sm">
                   📞 {order.Restaurant.phone}
                 </p>
               )}
@@ -294,9 +292,13 @@ export default function UserRestaurantOrderDetails({
       )}
 
       {/* Order Status */}
-      <Panel className="border border-gray-200 dark:border-gray-700">
+      <Panel
+        className={`border border-gray-200 dark:border-gray-700 ${
+          isMobile ? "!mx-0 !rounded-none border-x-0" : ""
+        }`}
+      >
         <div className="mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white md:text-lg">
             Order Status
           </h3>
           <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
@@ -393,7 +395,7 @@ export default function UserRestaurantOrderDetails({
               </div>
               <div className="flex-grow">
                 <span
-                  className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium md:px-3 md:py-1 md:text-sm ${
                     order.status === "WAITING_FOR_CONFIRMATION"
                       ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300"
                       : order.status === "PENDING"
@@ -415,7 +417,7 @@ export default function UserRestaurantOrderDetails({
             </div>
 
             {/* Status Description */}
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="text-xs text-gray-600 dark:text-gray-400 md:text-sm">
               {order.status === "WAITING_FOR_CONFIRMATION" &&
                 "Restaurant is reviewing your order"}
               {order.status === "PENDING" &&
@@ -433,7 +435,7 @@ export default function UserRestaurantOrderDetails({
             {/* Delivery Proof Image for Mobile */}
             {order.status === "DELIVERED" && order.delivery_photo_url && (
               <div className="mt-4">
-                <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                <p className="mb-2 text-xs font-medium text-gray-700 dark:text-gray-300 md:text-sm">
                   Delivery Proof
                 </p>
                 <div className="relative mx-auto max-w-[280px] overflow-hidden rounded-lg border-2 border-gray-200 dark:border-gray-700">
@@ -478,23 +480,66 @@ export default function UserRestaurantOrderDetails({
             </div>
           )}
         </div>
+
+        {/* Contact Support or existing ticket */}
+        {supportTicket ? (
+          <div className="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 dark:border-red-800 dark:bg-red-900/30">
+            <p className="text-sm font-semibold text-red-800 dark:text-red-200">
+              Ticket #{supportTicket.ticket_num}
+            </p>
+            <p className="text-xs text-red-700 dark:text-red-300">
+              Status: <span className="capitalize">{supportTicket.status}</span>
+            </p>
+          </div>
+        ) : onContactSupport ? (
+          <div className="mt-4 flex justify-end border-t border-gray-200 pt-4 dark:border-gray-700">
+            <button
+              type="button"
+              onClick={onContactSupport}
+              className="group inline-flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-5 py-3 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:from-green-600 hover:to-green-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 active:scale-[0.98] dark:focus:ring-offset-gray-800"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                className="h-5 w-5 shrink-0 !text-white transition-transform [stroke:white] group-hover:scale-110"
+              >
+                <path
+                  d="M15.05 5A5 5 0 0119 8.95M15.05 1A9 9 0 0123 8.94m-1 7.98v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <span className="!text-white">Contact Support</span>
+            </button>
+          </div>
+        ) : null}
       </Panel>
 
       {/* Delivery & Plaser Information */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div
+        className={`grid grid-cols-1 ${
+          isMobile ? "gap-0" : "gap-6"
+        } lg:grid-cols-2`}
+      >
         {/* Delivery Information */}
-        <Panel className="border border-gray-200 dark:border-gray-700">
-          <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+        <Panel
+          className={`border border-gray-200 dark:border-gray-700 ${
+            isMobile ? "!mx-0 !rounded-none border-x-0" : ""
+          }`}
+        >
+          <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-white md:text-lg">
             Delivery Information
           </h3>
           {order.Address && (
             <div className="space-y-2">
-              <p className="text-gray-900 dark:text-white">
+              <p className="text-sm text-gray-900 dark:text-white md:text-base">
                 <strong>Address:</strong> {order.Address.street},{" "}
                 {order.Address.city} {order.Address.postal_code}
               </p>
               {order.delivery_notes && (
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-xs text-gray-600 dark:text-gray-400 md:text-sm">
                   <strong>Notes:</strong> {order.delivery_notes}
                 </p>
               )}
@@ -512,7 +557,7 @@ export default function UserRestaurantOrderDetails({
 
         {/* Assigned Plaser Details */}
         <Panel className="border border-gray-200 dark:border-gray-700">
-          <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-white md:text-lg">
             Assigned Plaser
           </h3>
           {order.Plaser_id ? (
@@ -536,13 +581,13 @@ export default function UserRestaurantOrderDetails({
                   </div>
                 </div>
                 <div className="flex-grow">
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white md:text-lg">
                     Plaser Assigned
                   </h4>
-                  <p className="text-gray-600 dark:text-gray-400">
+                  <p className="text-xs text-gray-600 dark:text-gray-400 md:text-sm">
                     Your order has been assigned to a Plaser
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-gray-500 md:text-sm">
                     Plaser ID: {order.Plaser_id.slice(-8)}
                   </p>
                 </div>
@@ -665,8 +710,12 @@ export default function UserRestaurantOrderDetails({
       </div>
 
       {/* Order Items */}
-      <Panel className="border border-gray-200 dark:border-gray-700">
-        <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+      <Panel
+        className={`border border-gray-200 dark:border-gray-700 ${
+          isMobile ? "!mx-0 !rounded-none border-x-0" : ""
+        }`}
+      >
+        <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-white md:text-lg">
           Order Items ({order.itemsCount} dishes)
         </h3>
         <div className="space-y-4">
@@ -691,16 +740,16 @@ export default function UserRestaurantOrderDetails({
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   {/* Left side - Dish info */}
                   <div className="min-w-0 flex-grow">
-                    <h4 className="text-sm font-medium text-gray-900 dark:text-white sm:text-base">
+                    <h4 className="text-xs font-medium text-gray-900 dark:text-white sm:text-sm md:text-base">
                       {item.dish?.name || "Unknown Dish"}
                     </h4>
                     {item.dish?.description && (
-                      <p className="mt-1 line-clamp-2 text-xs text-gray-600 dark:text-gray-400 sm:text-sm">
+                      <p className="mt-1 line-clamp-2 text-[10px] text-gray-600 dark:text-gray-400 sm:text-xs md:text-sm">
                         {item.dish.description}
                       </p>
                     )}
                     {item.dish?.preparingTime && (
-                      <p className="mt-1 text-xs text-green-600 dark:text-green-400">
+                      <p className="mt-1 text-[10px] text-green-600 dark:text-green-400 sm:text-xs">
                         ⏱️ Prep time: {item.dish.preparingTime}
                       </p>
                     )}
@@ -709,14 +758,14 @@ export default function UserRestaurantOrderDetails({
                   {/* Right side - Quantity and price */}
                   <div className="mt-2 flex items-center justify-between sm:mt-0 sm:flex-col sm:items-end sm:gap-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 sm:text-sm">
+                      <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 sm:text-xs md:text-sm">
                         Qty:
                       </span>
-                      <span className="text-sm font-medium text-gray-900 dark:text-white sm:text-base">
+                      <span className="text-xs font-medium text-gray-900 dark:text-white sm:text-sm md:text-base">
                         {item.quantity}
                       </span>
                     </div>
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
+                    <p className="text-xs font-semibold text-gray-900 dark:text-white sm:text-sm md:text-base">
                       {formatCurrency(
                         parseFloat(item.dish?.price || item.price) *
                           parseInt(item.quantity)
@@ -731,24 +780,28 @@ export default function UserRestaurantOrderDetails({
       </Panel>
 
       {/* Order Summary */}
-      <Panel className="border border-gray-200 dark:border-gray-700">
-        <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+      <Panel
+        className={`border border-gray-200 dark:border-gray-700 ${
+          isMobile ? "!mx-0 !rounded-none border-x-0" : ""
+        }`}
+      >
+        <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-white md:text-lg">
           Order Summary
         </h3>
         <div className="space-y-2">
-          <div className="flex justify-between">
+          <div className="flex justify-between text-xs md:text-sm">
             <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
             <span className="text-gray-900 dark:text-white">
               {formatCurrency(order.subtotal || 0)}
             </span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between text-xs md:text-sm">
             <span className="text-gray-600 dark:text-gray-400">Tax (18%):</span>
             <span className="text-gray-900 dark:text-white">
               {formatCurrency(order.tax || 0)}
             </span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between text-xs md:text-sm">
             <span className="text-gray-600 dark:text-gray-400">
               Delivery Fee:
             </span>
@@ -757,7 +810,7 @@ export default function UserRestaurantOrderDetails({
             </span>
           </div>
           {order.discount > 0 && (
-            <div className="flex justify-between">
+            <div className="flex justify-between text-xs md:text-sm">
               <span className="text-gray-600 dark:text-gray-400">
                 Discount:
               </span>
@@ -767,7 +820,7 @@ export default function UserRestaurantOrderDetails({
             </div>
           )}
           {order.voucher_code && (
-            <div className="flex justify-between">
+            <div className="flex justify-between text-xs md:text-sm">
               <span className="text-gray-600 dark:text-gray-400">Voucher:</span>
               <span className="text-gray-900 dark:text-white">
                 {order.voucher_code}
@@ -776,10 +829,10 @@ export default function UserRestaurantOrderDetails({
           )}
           <div className="border-t border-gray-200 pt-2 dark:border-gray-700">
             <div className="flex justify-between">
-              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+              <span className="text-base font-semibold text-gray-900 dark:text-white md:text-lg">
                 Total:
               </span>
-              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+              <span className="text-base font-semibold text-gray-900 dark:text-white md:text-lg">
                 {formatCurrency(order.total)}
               </span>
             </div>
@@ -789,13 +842,17 @@ export default function UserRestaurantOrderDetails({
 
       {/* Rating Section */}
       {order.status === "DELIVERED" && (
-        <Panel className="border border-gray-200 dark:border-gray-700">
+        <Panel
+          className={`border border-gray-200 dark:border-gray-700 ${
+            isMobile ? "!mx-0 !rounded-none border-x-0" : ""
+          }`}
+        >
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white md:text-lg">
                 Rate Your Experience
               </h3>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-xs text-gray-600 dark:text-gray-400 md:text-sm">
                 Help us improve by rating your order
               </p>
             </div>
@@ -928,6 +985,32 @@ export default function UserRestaurantOrderDetails({
           }
           .rs-rate {
             font-size: 2.5rem !important;
+          }
+        }
+        /* Mobile-specific styles for restaurant order details */
+        @media (max-width: 767px) {
+          /* Ensure panels are full width with no margins */
+          .rs-panel {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+          }
+          /* Add subtle border between panels instead of spacing */
+          .rs-panel + .rs-panel {
+            border-top: 1px solid rgba(229, 231, 235, 0.5) !important;
+            margin-top: 0 !important;
+          }
+          .dark .rs-panel + .rs-panel {
+            border-top-color: rgba(55, 65, 81, 0.5) !important;
+          }
+          /* Ensure panel body has proper internal padding */
+          .rs-panel-body {
+            padding: 1rem !important;
+          }
+          /* Remove top border from first panel */
+          .rs-panel:first-child {
+            border-top: none !important;
           }
         }
       `}</style>

@@ -21,6 +21,36 @@ const GET_SHOPPER_PROFILE = gql`
       onboarding_step
       created_at
       updated_at
+      Employment_id
+      Police_Clearance_Cert
+      collection_comment
+      drivingLicense_Image
+      guarantor
+      guarantorPhone
+      guarantorRelationship
+      latitude
+      longitude
+      mutual_StatusCertificate
+      mutual_status
+      national_id_photo_back
+      national_id_photo_front
+      needCollection
+      phone
+      proofOfResidency
+      signature
+      telegram_id
+      User {
+        email
+        created_at
+        gender
+        is_active
+        is_guest
+        name
+        phone
+        profile_picture
+        role
+        updated_at
+      }
     }
   }
 `;
@@ -46,11 +76,15 @@ export default async function handler(
       return res.status(500).json({ message: "Internal server error" });
     }
 
+    // Allow fetching by user_id query param or default to session user
+    const { user_id } = req.query;
+    const targetUserId = user_id || session.user.id;
+
     type ShopperProfileResponse = { shoppers: any[] };
     const { shoppers } = await hasuraClient.request<ShopperProfileResponse>(
       GET_SHOPPER_PROFILE,
       {
-        user_id: session.user.id,
+        user_id: targetUserId,
       }
     );
 

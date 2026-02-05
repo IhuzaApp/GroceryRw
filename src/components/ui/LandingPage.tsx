@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import React from "react";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import Cookies from "js-cookie";
@@ -1479,12 +1480,12 @@ export default function LandingPage() {
                 <h3 className="font-bold text-white">Links of interest</h3>
                 <ul className="space-y-2">
                   <li>
-                    <a
+                    <Link
                       href="/about"
                       className="text-gray-300 transition-colors hover:text-white"
                     >
                       About us
-                    </a>
+                    </Link>
                   </li>
                   <li>
                     <a
@@ -1519,12 +1520,12 @@ export default function LandingPage() {
                     </a>
                   </li>
                   <li>
-                    <a
+                    <Link
                       href="/Auth/Login"
                       className="text-gray-300 transition-colors hover:text-white"
                     >
                       Log in
-                    </a>
+                    </Link>
                   </li>
                 </ul>
               </div>

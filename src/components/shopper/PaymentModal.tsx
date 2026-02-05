@@ -9,12 +9,12 @@ interface PaymentModalProps {
   onSubmit: () => void;
   momoCode: string;
   setMomoCode: (value: string) => void;
-  privateKey: string;
   orderAmount: number;
   serviceFee: number;
   deliveryFee: number;
   paymentLoading: boolean;
   externalId?: string; // Order or batch ID for reference
+  orderId?: number; // Numeric OrderID from database
   orderPin?: string; // Generated order PIN to display
   // OTP related props
   otp: string;
@@ -30,12 +30,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   onSubmit,
   momoCode,
   setMomoCode,
-  privateKey,
   orderAmount,
   serviceFee,
   deliveryFee,
   paymentLoading,
   externalId,
+  orderId,
   orderPin,
   otp,
   setOtp,
@@ -55,10 +55,21 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     "momo"
   );
   const [isMounted, setIsMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Check if component is mounted (for SSR compatibility)
   useEffect(() => {
     setIsMounted(true);
+    // Check if mobile on mount
+    setIsMobile(window.innerWidth < 768);
+
+    // Add resize listener
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const formattedCurrency = (amount: number) => {
@@ -106,14 +117,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     onVerifyOtp();
   };
 
-  // Function to go back to MoMo step
-  const handleBackToMomo = () => {
-    setCurrentStep("momo");
-    setPaymentStatus("idle");
-    setStatusMessage("");
-    setOtp("");
-  };
-
   // Reset status when modal opens
   useEffect(() => {
     if (open) {
@@ -139,25 +142,19 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
   // Debug log to check button state
   useEffect(() => {
-    console.log("PaymentModal button state:", {
-      momoCode,
-      paymentLoading,
-      paymentStatus,
-      isDisabled:
-        !momoCode.trim() || paymentStatus === "processing" || paymentLoading,
-    });
+    // Debug logging removed
   }, [momoCode, paymentLoading, paymentStatus]);
 
   if (!open || !isMounted) return null;
 
   const modalContent = (
-    <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/70 px-0 backdrop-blur-md md:px-4">
+    <div className="fixed inset-0 z-[999999] flex items-end justify-center bg-black/70 p-0 backdrop-blur-md sm:items-center sm:p-4">
       <div
-        className={`flex h-full w-full flex-col overflow-hidden shadow-2xl md:h-auto md:max-h-[90vh] md:max-w-2xl md:rounded-2xl ${
+        className={`w-full max-w-[550px] rounded-t-2xl border-0 shadow-2xl sm:rounded-2xl ${
           theme === "dark"
-            ? "border-gray-700 bg-gray-800"
-            : "border-gray-200 bg-white"
-        } md:border`}
+            ? "bg-gray-800 sm:border-gray-700"
+            : "bg-white sm:border-gray-200"
+        } sm:border`}
       >
         {/* Header */}
         <div
@@ -189,17 +186,28 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 />
               </svg>
             </div>
-            <h2
-              className={`text-xl font-bold ${
-                theme === "dark" ? "text-gray-100" : "text-gray-800"
-              }`}
-            >
-              {currentStep === "momo"
-                ? "Process Payment"
-                : currentStep === "otp"
-                ? "Verify OTP"
-                : "Order Complete!"}
-            </h2>
+            <div>
+              <h2
+                className={`text-xl font-bold ${
+                  theme === "dark" ? "text-gray-100" : "text-gray-800"
+                }`}
+              >
+                {currentStep === "momo"
+                  ? "Process Payment"
+                  : currentStep === "otp"
+                  ? "Verify OTP"
+                  : "Order Complete!"}
+              </h2>
+              {orderId && (
+                <div
+                  className={`text-2xl font-bold tracking-wider ${
+                    theme === "dark" ? "text-blue-400" : "text-blue-600"
+                  }`}
+                >
+                  Order #{orderId}
+                </div>
+              )}
+            </div>
             <button
               onClick={onClose}
               className={`rounded-xl p-2 transition-colors ${
@@ -228,55 +236,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
         {/* Body */}
         <div
-          className={`flex-1 overflow-y-auto p-4 md:p-6 ${
-            theme === "dark" ? "bg-gray-800 text-gray-100" : "bg-white"
+          className={`max-h-[70vh] overflow-y-auto px-6 py-4 sm:px-8 ${
+            theme === "dark" ? "bg-gray-800" : "bg-white"
           }`}
         >
           {currentStep === "momo" ? (
             <>
-              {/* MoMo Step Content */}
-              <div
-                className={`mb-4 rounded-xl border-l-4 p-3 ${
-                  theme === "dark"
-                    ? "border-blue-500 bg-blue-900/20 text-blue-300"
-                    : "border-blue-500 bg-blue-50 text-blue-800"
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`rounded-full p-1 ${
-                      theme === "dark" ? "bg-blue-600" : "bg-blue-100"
-                    }`}
-                  >
-                    <svg
-                      className={`h-4 w-4 ${
-                        theme === "dark" ? "text-white" : "text-blue-600"
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="mb-1 font-semibold">
-                      Secure Payment Processing
-                    </p>
-                    <p className="text-sm opacity-90">
-                      Your payment is processed securely through our trusted
-                      payment gateway. Enter your MoMo code to complete the
-                      transaction safely.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
               <div className="space-y-4">
                 {/* MoMo Code Input */}
                 <div className="space-y-2">
@@ -319,56 +284,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       }`}
                     />
                   </div>
-                </div>
-
-                {/* Private Key Input */}
-                <div className="space-y-2">
-                  <label
-                    className={`block text-sm font-semibold ${
-                      theme === "dark" ? "text-gray-300" : "text-gray-700"
-                    }`}
-                  >
-                    Private Key (Auto-generated)
-                  </label>
-                  <div className="relative">
-                    <div
-                      className={`pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3`}
-                    >
-                      <svg
-                        className={`h-5 w-5 ${
-                          theme === "dark" ? "text-gray-400" : "text-gray-500"
-                        }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1 1 21 9z"
-                        />
-                      </svg>
-                    </div>
-                    <input
-                      type="text"
-                      value={privateKey}
-                      disabled
-                      className={`w-full rounded-xl border-2 py-3 pl-10 pr-4 transition-all ${
-                        theme === "dark"
-                          ? "cursor-not-allowed border-gray-600 bg-gray-700 text-gray-400"
-                          : "cursor-not-allowed border-gray-300 bg-gray-50 text-gray-500"
-                      }`}
-                    />
-                  </div>
-                  <p
-                    className={`text-xs ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-500"
-                    }`}
-                  >
-                    This is a one-time key for this transaction. Keep it for
-                    your records.
-                  </p>
                 </div>
               </div>
 
@@ -518,91 +433,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   </div>
                 </div>
               )}
-
-              {/* Warning Message */}
-              <div
-                className={`mt-6 rounded-xl border-l-4 p-4 ${
-                  theme === "dark"
-                    ? "border-yellow-500 bg-yellow-900/20 text-yellow-300"
-                    : "border-yellow-500 bg-yellow-50 text-yellow-800"
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`rounded-full p-1 ${
-                      theme === "dark" ? "bg-yellow-600" : "bg-yellow-100"
-                    }`}
-                  >
-                    <svg
-                      className={`h-4 w-4 ${
-                        theme === "dark" ? "text-white" : "text-yellow-600"
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="mb-1 font-semibold">Payment Instructions</p>
-                    <p className="text-sm opacity-90">
-                      Enter your MoMo code and click "Verify & Proceed to OTP"
-                      to continue. After OTP verification, the MoMo payment will
-                      be initiated automatically.
-                    </p>
-                  </div>
-                </div>
-              </div>
             </>
           ) : currentStep === "otp" ? (
             <>
               {/* OTP Step Content */}
-              <div
-                className={`mb-4 rounded-xl border-l-4 p-3 ${
-                  theme === "dark"
-                    ? "border-purple-500 bg-purple-900/20 text-purple-300"
-                    : "border-purple-500 bg-purple-50 text-purple-800"
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`rounded-full p-1 ${
-                      theme === "dark" ? "bg-purple-600" : "bg-purple-100"
-                    }`}
-                  >
-                    <svg
-                      className={`h-4 w-4 ${
-                        theme === "dark" ? "text-white" : "text-purple-600"
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="mb-1 font-semibold">
-                      OTP Verification Required
-                    </p>
-                    <p className="text-sm opacity-90">
-                      Please enter the 5-digit OTP that was displayed in the
-                      alert popup to complete your payment verification.
-                    </p>
-                  </div>
-                </div>
-              </div>
 
               {/* OTP Input with Square Boxes */}
               <div className="space-y-4">
@@ -1034,9 +868,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white transition-all duration-200 ${
                     !otp.trim() || otp.length !== 5 || otpLoading
                       ? "cursor-not-allowed bg-gray-400"
-                      : theme === "dark"
-                      ? "bg-purple-600 shadow-lg hover:bg-purple-700 hover:shadow-purple-500/25"
-                      : "bg-purple-600 shadow-lg hover:bg-purple-700 hover:shadow-purple-500/25"
+                      : "bg-green-600 shadow-lg hover:bg-green-700 hover:shadow-green-500/25"
                   }`}
                 >
                   {otpLoading ? (
@@ -1077,22 +909,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                           d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      Verify OTP & Complete Payment
+                      Complete Payment
                     </>
                   )}
-                </button>
-                <button
-                  onClick={handleBackToMomo}
-                  disabled={otpLoading}
-                  className={`rounded-xl px-6 py-3 font-semibold transition-all duration-200 ${
-                    otpLoading
-                      ? "cursor-not-allowed border border-gray-400 text-gray-400"
-                      : theme === "dark"
-                      ? "border border-gray-600 text-gray-300 hover:bg-gray-700"
-                      : "border border-gray-300 text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  Back
                 </button>
               </>
             ) : null}

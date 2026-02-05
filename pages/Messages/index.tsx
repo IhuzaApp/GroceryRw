@@ -112,15 +112,23 @@ function MessagesPage() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  // Handle orderId query parameter to auto-select conversation (no auto-creation)
+  useEffect(() => {
+    const { orderId } = router.query;
+    if (orderId && typeof orderId === "string") {
+      setSelectedOrderId(orderId);
+      // If mobile, navigate to the specific order chat page that handles creation safely
+      if (isMobile) {
+        router.push(`/Messages/${orderId}`);
+      }
+    }
+  }, [router.query, isMobile]);
+
   // Fetch conversations and their associated orders
   useEffect(() => {
     // Only fetch if user is authenticated
     if (status === "authenticated" && session?.user?.id) {
       const userId = session.user.id;
-      console.log(
-        "🔍 [User Messages] Fetching conversations for user:",
-        userId
-      );
 
       const fetchConversationsAndOrders = async () => {
         try {
@@ -136,48 +144,14 @@ function MessagesPage() {
             // Note: We might need to also query for shopperId, but for now let's focus on customerId
           );
 
-          console.log("🔍 [User Messages] Query setup:", {
-            collection: "chat_conversations",
-            filter: "customerId == " + userId,
-          });
-
-          // Temporary: Check ALL conversations in Firebase
-          const allConversationsRef = collection(db, "chat_conversations");
-          const allConversationsQuery = query(allConversationsRef);
-          const allConversationsSnapshot = await getDocs(allConversationsQuery);
-          console.log(
-            "🔍 [User Messages] ALL conversations in Firebase:",
-            allConversationsSnapshot.docs.map((doc) => ({
-              id: doc.id,
-              data: doc.data(),
-            }))
-          );
-
           // Set up real-time listener for conversations
           const unsubscribe = onSnapshot(
             q,
             async (snapshot) => {
-              console.log(
-                "🔍 [User Messages] Conversations snapshot received, count:",
-                snapshot.docs.length
-              );
-              console.log(
-                "🔍 [User Messages] Snapshot docs:",
-                snapshot.docs.map((doc) => ({
-                  id: doc.id,
-                  data: doc.data(),
-                }))
-              );
-
               // Check if any conversations have the current user as customerId
               const userConversations = snapshot.docs.filter(
                 (doc) => doc.data().customerId === userId
               );
-              console.log(
-                "🔍 [User Messages] Conversations for current user:",
-                userConversations.length
-              );
-              console.log("🔍 [User Messages] User ID being searched:", userId);
 
               // Get conversations and sort them in memory instead
               let conversationList = snapshot.docs.map((doc) => ({
@@ -190,24 +164,6 @@ function MessagesPage() {
                     : doc.data().lastMessageTime,
               })) as Conversation[];
 
-              console.log(
-                "🔍 [User Messages] Processed conversations:",
-                conversationList
-              );
-
-              // Log detailed conversation info
-              conversationList.forEach((conv, index) => {
-                console.log(`🔍 [User Messages] Conversation ${index + 1}:`, {
-                  id: conv.id,
-                  orderId: conv.orderId,
-                  customerId: conv.customerId,
-                  shopperId: conv.shopperId,
-                  lastMessage: conv.lastMessage,
-                  lastMessageTime: conv.lastMessageTime,
-                  unreadCount: conv.unreadCount,
-                });
-              });
-
               // Sort conversations by lastMessageTime in memory
               conversationList.sort((a, b) => {
                 const timeA = a.lastMessageTime
@@ -218,32 +174,6 @@ function MessagesPage() {
                   : 0;
                 return timeB - timeA; // descending order (newest first)
               });
-
-              console.log(
-                "🔍 [User Messages] Sorted conversations:",
-                conversationList
-              );
-
-              // Check if the specific conversation from shopper side exists
-              const shopperConversationId = "9pHJiDPXzspA7V6P5Mrp";
-              const foundConversation = conversationList.find(
-                (conv) => conv.id === shopperConversationId
-              );
-              if (foundConversation) {
-                console.log(
-                  "🔍 [User Messages] ✅ Found shopper conversation:",
-                  foundConversation
-                );
-              } else {
-                console.log(
-                  "🔍 [User Messages] ❌ Shopper conversation NOT found. Looking for ID:",
-                  shopperConversationId
-                );
-                console.log(
-                  "🔍 [User Messages] Available conversation IDs:",
-                  conversationList.map((conv) => conv.id)
-                );
-              }
 
               setConversations(conversationList);
 
@@ -472,12 +402,6 @@ function MessagesPage() {
               : doc.data().timestamp,
         })) as Message[];
 
-        console.log(
-          "🔍 [Messages] Received messages:",
-          messagesList.length,
-          "messages"
-        );
-        console.log("🔍 [Messages] Messages data:", messagesList);
         setMessages(messagesList);
 
         // Mark messages as read if they were sent to the current user
@@ -524,14 +448,6 @@ function MessagesPage() {
     try {
       setIsSending(true);
 
-      console.log("🔍 [User Messages] Sending message:", {
-        conversationId,
-        text: newMessage.trim(),
-        senderId: session.user.id,
-        senderType: "customer",
-        recipientId: selectedOrder.shopper.id,
-      });
-
       // Add new message to Firestore
       const messagesRef = collection(
         db,
@@ -549,8 +465,6 @@ function MessagesPage() {
         timestamp: serverTimestamp(),
         read: false,
       });
-
-      console.log("🔍 [User Messages] Message sent successfully");
 
       // Update conversation with last message
       const convRef = doc(db, "chat_conversations", conversationId);
@@ -574,7 +488,7 @@ function MessagesPage() {
   if (loading) {
     return (
       <RootLayout>
-        <div className="flex h-[calc(100vh-200px)] items-center justify-center">
+        <div className="flex h-screen w-full items-center justify-center bg-white dark:bg-gray-900">
           <div className="flex flex-col items-center gap-4">
             <div className="relative">
               <img
@@ -604,7 +518,7 @@ function MessagesPage() {
   if (status !== "authenticated") {
     return (
       <RootLayout>
-        <div className="flex h-[calc(100vh-200px)] items-center justify-center">
+        <div className="flex h-screen w-full items-center justify-center bg-white dark:bg-gray-900">
           <div className="text-center">
             <div className="mb-4 text-6xl">⚠️</div>
             <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
@@ -626,42 +540,44 @@ function MessagesPage() {
   if (conversations.length === 0) {
     return (
       <RootLayout>
-        <div className="mx-auto max-w-7xl p-4">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Messages
-            </h1>
-            <p className="text-gray-500 dark:text-gray-400">
-              Your conversations with shoppers
-            </p>
-          </div>
-          <Panel
-            className="text-center"
-            style={{
-              background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
-            }}
-          >
-            <Placeholder.Graph
-              style={{ height: 200 }}
-              active
-              className="mb-4"
-            />
-            <Placeholder.Paragraph rows={2} />
-            <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-              No conversations yet
-            </h3>
-            <p className="text-gray-500 dark:text-gray-400">
-              You'll see your chat conversations with shoppers here once you
-              place orders.
-            </p>
-            <div className="mt-4">
-              <Link href="/CurrentPendingOrders" passHref>
-                <Button appearance="primary" color="green">
-                  View Your Orders
-                </Button>
-              </Link>
+        <div className="flex h-screen w-full items-center justify-center bg-white p-8 dark:bg-gray-900">
+          <div className="mx-auto w-full max-w-2xl">
+            <div className="mb-6 text-center">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                Messages
+              </h1>
+              <p className="mt-2 text-gray-500 dark:text-gray-400">
+                Your conversations with shoppers
+              </p>
             </div>
-          </Panel>
+            <Panel
+              className="text-center"
+              style={{
+                background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
+              }}
+            >
+              <Placeholder.Graph
+                style={{ height: 200 }}
+                active
+                className="mb-4"
+              />
+              <Placeholder.Paragraph rows={2} />
+              <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+                No conversations yet
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400">
+                You'll see your chat conversations with shoppers here once you
+                place orders.
+              </p>
+              <div className="mt-4">
+                <Link href="/CurrentPendingOrders" passHref>
+                  <Button appearance="primary" color="green">
+                    View Your Orders
+                  </Button>
+                </Link>
+              </div>
+            </Panel>
+          </div>
         </div>
       </RootLayout>
     );
@@ -672,16 +588,14 @@ function MessagesPage() {
     return (
       <AuthGuard requireAuth={true}>
         <RootLayout>
-          <div className="h-[calc(100vh-160px)] md:ml-16 md:h-[calc(100vh-100px)]">
-            <div className="max-w-8xl container mx-auto h-full">
-              <DesktopMessagePage
-                conversations={conversations}
-                orders={orders}
-                loading={loading}
-                onConversationSelect={handleConversationSelect}
-                selectedOrderId={selectedOrderId}
-              />
-            </div>
+          <div className="h-screen w-full overflow-hidden bg-white dark:bg-gray-900">
+            <DesktopMessagePage
+              conversations={conversations}
+              orders={orders}
+              loading={loading}
+              onConversationSelect={handleConversationSelect}
+              selectedOrderId={selectedOrderId}
+            />
           </div>
         </RootLayout>
       </AuthGuard>
@@ -692,7 +606,7 @@ function MessagesPage() {
   return (
     <AuthGuard requireAuth={true}>
       <RootLayout>
-        <div className="fixed inset-0 md:relative md:inset-auto">
+        <div className="h-screen w-full overflow-hidden bg-white dark:bg-gray-900">
           <MobileMessagePage
             conversations={conversations}
             orders={orders}
@@ -708,21 +622,21 @@ function MessagesPage() {
             isDrawerOpen={isDrawerOpen}
             onCloseDrawer={() => setIsDrawerOpen(false)}
           />
+          {/* Customer Chat Drawer for Mobile */}
+          {selectedOrder && selectedOrder.shopper && (
+            <CustomerChatDrawer
+              orderId={selectedOrder.id}
+              shopper={{
+                id: selectedOrder.shopper.id,
+                name: selectedOrder.shopper.name,
+                avatar: selectedOrder.shopper.avatar,
+                phone: selectedOrder.shopper.phone,
+              }}
+              isOpen={isDrawerOpen}
+              onClose={() => setIsDrawerOpen(false)}
+            />
+          )}
         </div>
-        {/* Customer Chat Drawer for Mobile */}
-        {selectedOrder && selectedOrder.shopper && (
-          <CustomerChatDrawer
-            orderId={selectedOrder.id}
-            shopper={{
-              id: selectedOrder.shopper.id,
-              name: selectedOrder.shopper.name,
-              avatar: selectedOrder.shopper.avatar,
-              phone: selectedOrder.shopper.phone,
-            }}
-            isOpen={isDrawerOpen}
-            onClose={() => setIsDrawerOpen(false)}
-          />
-        )}
       </RootLayout>
     </AuthGuard>
   );

@@ -81,6 +81,18 @@ export default function DesktopProfile({
   const { isGuest } = useAuthHook();
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("account");
+  // Keep visited tab content mounted to avoid refetching when switching tabs
+  const [visitedTabs, setVisitedTabs] = useState<Set<string>>(
+    new Set(["account"])
+  );
+
+  // When selecting a tab, add to visited so we keep content mounted (cached, no refetch on switch)
+  const handleTabSelect = (key: string | null) => {
+    if (key) {
+      setVisitedTabs((prev) => new Set([...prev, key]));
+      setActiveTab(key);
+    }
+  };
 
   // Reset tab if user tries to access referrals but is registered and pending
   useEffect(() => {
@@ -528,7 +540,7 @@ export default function DesktopProfile({
           <Nav
             appearance="default"
             activeKey={activeTab}
-            onSelect={setActiveTab}
+            onSelect={handleTabSelect}
             className="flex min-w-max gap-2"
           >
             {[
@@ -691,14 +703,20 @@ export default function DesktopProfile({
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-          {activeTab === "account" && (
-            <div className="p-6">
+          {visitedTabs.has("account") && (
+            <div
+              className={`p-6 ${activeTab !== "account" ? "hidden" : ""}`}
+              aria-hidden={activeTab !== "account"}
+            >
               <UserAccount />
             </div>
           )}
 
-          {activeTab === "orders" && (
-            <div className="p-6">
+          {visitedTabs.has("orders") && (
+            <div
+              className={`p-6 ${activeTab !== "orders" ? "hidden" : ""}`}
+              aria-hidden={activeTab !== "orders"}
+            >
               <UserRecentOrders
                 filter="all"
                 orders={userOrders}
@@ -708,27 +726,39 @@ export default function DesktopProfile({
             </div>
           )}
 
-          {activeTab === "addresses" && (
-            <div className="p-6">
+          {visitedTabs.has("addresses") && (
+            <div
+              className={`p-6 ${activeTab !== "addresses" ? "hidden" : ""}`}
+              aria-hidden={activeTab !== "addresses"}
+            >
               <UserAddress />
             </div>
           )}
 
-          {activeTab === "payment" && (
-            <div className="p-6">
+          {visitedTabs.has("payment") && (
+            <div
+              className={`p-6 ${activeTab !== "payment" ? "hidden" : ""}`}
+              aria-hidden={activeTab !== "payment"}
+            >
               <UserPayment />
             </div>
           )}
 
-          {activeTab === "preferences" && (
-            <div className="p-6">
+          {visitedTabs.has("preferences") && (
+            <div
+              className={`p-6 ${activeTab !== "preferences" ? "hidden" : ""}`}
+              aria-hidden={activeTab !== "preferences"}
+            >
               <UserPreference />
             </div>
           )}
 
-          {activeTab === "referrals" &&
+          {visitedTabs.has("referrals") &&
             (referralStatus?.approved || !referralStatus?.registered) && (
-              <div className="p-6">
+              <div
+                className={`p-6 ${activeTab !== "referrals" ? "hidden" : ""}`}
+                aria-hidden={activeTab !== "referrals"}
+              >
                 <UserReferral />
               </div>
             )}

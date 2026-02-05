@@ -2,7 +2,8 @@
 
 import React from "react";
 import Image from "next/image";
-import { formatCurrency } from "../../../lib/formatCurrency";
+import { formatCurrency } from "../../../../lib/formatCurrency";
+import { resolveImageUrl } from "../../../../lib/imageUrl";
 import { OrderDetailsType } from "../types";
 
 interface ShopInfoProps {
@@ -49,11 +50,141 @@ export default function ShopInfo({ order }: ShopInfoProps) {
           )}
         </span>
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
-          {order.orderType === "reel" ? "Reel Details" : "Shop Details"}
+          {order.orderType === "reel"
+            ? "Reel Details"
+            : order.orderType === "restaurant"
+            ? "Restaurant Details"
+            : order.orderType === "business"
+            ? "Store Details"
+            : "Shop Details"}
         </h2>
       </div>
 
-      {order.orderType === "reel" ? (
+      {order.orderType === "business" && order.shop ? (
+        (() => {
+          const logoUrl = resolveImageUrl(order.shop.image);
+          return (
+            <div className="space-y-3">
+              <div className="flex gap-3 rounded-lg border border-slate-200 p-3 dark:border-slate-600 sm:gap-4 sm:p-4">
+                <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:h-20 sm:w-20">
+                  {logoUrl ? (
+                    <Image
+                      src={logoUrl}
+                      alt={order.shop.name ?? "Store"}
+                      width={80}
+                      height={80}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        className="h-6 w-6 sm:h-8 sm:w-8"
+                      >
+                        <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
+                    {order.shop.name ?? "Business Store"}
+                  </h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    {order.shop.address ?? ""}
+                  </p>
+                  {(order.shop.phone ??
+                    order.shop.business_account?.business_phone) && (
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                      📞{" "}
+                      {order.shop.phone ??
+                        order.shop.business_account?.business_phone}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })()
+      ) : order.orderType === "restaurant" &&
+        (order.Restaurant || order.shop) ? (
+        (() => {
+          const logoUrl = resolveImageUrl(
+            order.Restaurant?.logo ?? order.shop?.image
+          );
+          return (
+            <div className="space-y-3">
+              <div className="flex gap-3 rounded-lg border border-slate-200 p-3 dark:border-slate-600 sm:gap-4 sm:p-4">
+                {/* Restaurant logo from DB: supports full URLs and storage paths */}
+                <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:h-20 sm:w-20">
+                  {logoUrl ? (
+                    <Image
+                      src={logoUrl}
+                      alt={
+                        order.Restaurant?.name ??
+                        order.shop?.name ??
+                        "Restaurant"
+                      }
+                      width={80}
+                      height={80}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        className="h-6 w-6 sm:h-8 sm:w-8"
+                      >
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <path d="M16 8h.01M8 16h.01M16 16h.01" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
+                    {order.Restaurant?.name ?? order.shop?.name ?? "Restaurant"}
+                  </h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    {order.Restaurant?.location ?? order.shop?.address ?? ""}
+                  </p>
+                  {(order.Restaurant?.phone ?? order.shop?.phone) && (
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                      📞 {order.Restaurant?.phone ?? order.shop?.phone}
+                    </p>
+                  )}
+                  {order.Restaurant?.operating_hours &&
+                    typeof order.Restaurant.operating_hours === "object" &&
+                    Object.keys(order.Restaurant.operating_hours).length >
+                      0 && (
+                      <div className="mt-2 border-t border-slate-200 pt-2 dark:border-slate-600">
+                        <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                          Operating hours
+                        </p>
+                        <ul className="mt-1 space-y-0.5 text-xs text-slate-500 dark:text-slate-400">
+                          {Object.entries(order.Restaurant.operating_hours).map(
+                            ([day, hours]) => (
+                              <li key={day}>
+                                <span className="capitalize">{day}:</span>{" "}
+                                {String(hours)}
+                              </li>
+                            )
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                </div>
+              </div>
+            </div>
+          );
+        })()
+      ) : order.orderType === "reel" ? (
         <div className="space-y-3 sm:space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
             <div className="relative mx-auto h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:mx-0 sm:h-20 sm:w-20">
@@ -152,60 +283,82 @@ export default function ShopInfo({ order }: ShopInfoProps) {
             if (uniqueShops.length === 0 && order.shop)
               uniqueShops.push(order.shop);
 
-            return uniqueShops.map((shop, index) => (
-              <div
-                key={shop.id || index}
-                className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-600 sm:p-4"
-              >
-                <div className="flex gap-3 sm:gap-4">
-                  {/* Shop Image */}
-                  <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:h-20 sm:w-20">
-                    {shop.image ? (
-                      <Image
-                        src={shop.image}
-                        alt={shop.name}
-                        width={80}
-                        height={80}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          className="h-6 w-6 sm:h-8 sm:w-8"
-                        >
-                          <rect x="3" y="3" width="18" height="18" rx="2" />
-                          <path d="M16 8h.01M8 16h.01M16 16h.01" />
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Shop Name and Address */}
-                  <div className="flex-1">
-                    <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
-                      {shop.name}
-                      {uniqueShops.length > 1 && (
-                        <span className="ml-2 text-xs font-normal text-slate-500">
-                          (Store {index + 1})
-                        </span>
+            return uniqueShops.map((shop, index) => {
+              const shopLogoUrl = resolveImageUrl(shop.image);
+              return (
+                <div
+                  key={shop.id || index}
+                  className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-600 sm:p-4"
+                >
+                  <div className="flex gap-3 sm:gap-4">
+                    {/* Shop Image — supports full URLs and storage paths */}
+                    <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:h-20 sm:w-20">
+                      {shopLogoUrl ? (
+                        <Image
+                          src={shopLogoUrl}
+                          alt={shop.name}
+                          width={80}
+                          height={80}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            className="h-6 w-6 sm:h-8 sm:w-8"
+                          >
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <path d="M16 8h.01M8 16h.01M16 16h.01" />
+                          </svg>
+                        </div>
                       )}
-                    </h3>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      {shop.address}
-                    </p>
-                    {shop.phone && (
-                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                        📞 {shop.phone}
+                    </div>
+
+                    {/* Shop Name and Address */}
+                    <div className="flex-1">
+                      <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
+                        {shop.name}
+                        {uniqueShops.length > 1 && (
+                          <span className="ml-2 text-xs font-normal text-slate-500">
+                            (Store {index + 1})
+                          </span>
+                        )}
+                      </h3>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        {shop.address}
                       </p>
-                    )}
+                      {shop.phone && (
+                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                          📞 {shop.phone}
+                        </p>
+                      )}
+                      {shop.operating_hours &&
+                        typeof shop.operating_hours === "object" &&
+                        Object.keys(shop.operating_hours).length > 0 && (
+                          <div className="mt-2 border-t border-slate-200 pt-2 dark:border-slate-600">
+                            <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                              Operating hours
+                            </p>
+                            <ul className="mt-1 space-y-0.5 text-xs text-slate-500 dark:text-slate-400">
+                              {Object.entries(shop.operating_hours).map(
+                                ([day, hours]) => (
+                                  <li key={day}>
+                                    <span className="capitalize">{day}:</span>{" "}
+                                    {String(hours)}
+                                  </li>
+                                )
+                              )}
+                            </ul>
+                          </div>
+                        )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ));
+              );
+            });
           })()}
         </div>
       )}

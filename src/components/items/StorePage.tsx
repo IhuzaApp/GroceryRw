@@ -51,6 +51,10 @@ interface Product {
   unit: string;
   measurement_unit?: string;
   category?: string;
+  status?: string;
+  otherDetails?: {
+    options?: Array<{ key: string; label: string; values: string[] }>;
+  } | null;
 }
 
 interface SelectedProduct {
@@ -61,6 +65,7 @@ interface SelectedProduct {
   measurement_unit?: string;
   quantity: number;
   image?: string;
+  selectedDetails?: Record<string, string>;
 }
 
 interface StorePageProps {
@@ -90,6 +95,11 @@ function getDistanceFromLatLonInKm(
 
 const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
   const router = useRouter();
+  // Only show products with status "active"
+  const activeProducts = useMemo(
+    () => products.filter((p) => p.status === "active" || !p.status),
+    [products]
+  );
   const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>(
     []
   );
@@ -129,10 +139,14 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
   }, [store.latitude, store.longitude]);
 
   const handleAddProduct = (product: SelectedProduct) => {
+    const detailsKey = JSON.stringify(product.selectedDetails ?? {});
     setSelectedProducts((prev) => {
-      const existingIndex = prev.findIndex((p) => p.id === product.id);
+      const existingIndex = prev.findIndex(
+        (p) =>
+          p.id === product.id &&
+          JSON.stringify(p.selectedDetails ?? {}) === detailsKey
+      );
       if (existingIndex >= 0) {
-        // Update quantity if product already exists
         const updated = [...prev];
         updated[existingIndex] = {
           ...updated[existingIndex],
@@ -144,29 +158,49 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
     });
   };
 
-  const handleRemoveProduct = (productId: string) => {
-    setSelectedProducts((prev) => prev.filter((p) => p.id !== productId));
+  const handleRemoveProduct = (
+    productId: string,
+    selectedDetails?: Record<string, string>
+  ) => {
+    const detailsKey = JSON.stringify(selectedDetails ?? {});
+    setSelectedProducts((prev) =>
+      prev.filter(
+        (p) =>
+          !(
+            p.id === productId &&
+            JSON.stringify(p.selectedDetails ?? {}) === detailsKey
+          )
+      )
+    );
   };
 
-  const handleUpdateQuantity = (productId: string, newQuantity: number) => {
+  const handleUpdateQuantity = (
+    productId: string,
+    newQuantity: number,
+    selectedDetails?: Record<string, string>
+  ) => {
     if (newQuantity <= 0) {
-      handleRemoveProduct(productId);
+      handleRemoveProduct(productId, selectedDetails);
       return;
     }
+    const detailsKey = JSON.stringify(selectedDetails ?? {});
     setSelectedProducts((prev) =>
       prev.map((p) =>
-        p.id === productId ? { ...p, quantity: newQuantity } : p
+        p.id === productId &&
+        JSON.stringify(p.selectedDetails ?? {}) === detailsKey
+          ? { ...p, quantity: newQuantity }
+          : p
       )
     );
   };
 
   const filteredProducts = useMemo(() => {
-    let filtered = products;
+    let filtered = activeProducts;
 
     // Filter by category
     if (activeCategory !== "all") {
       filtered = filtered.filter(
-        (p) => (p.category || "General") === activeCategory
+        (p) => (p.category || "Other") === activeCategory
       );
     }
 
@@ -178,14 +212,29 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
     }
 
     return filtered;
-  }, [products, activeCategory, searchQuery]);
+  }, [activeProducts, activeCategory, searchQuery]);
 
   const categories = useMemo(() => {
     const cats = Array.from(
-      new Set(products.map((p) => p.category || "General"))
-    );
-    return ["all", ...cats];
-  }, [products]);
+      new Set(activeProducts.map((p) => p.category || "Other"))
+    ).filter(Boolean);
+    return ["all", ...cats.sort((a, b) => a.localeCompare(b))];
+  }, [activeProducts]);
+
+  const groupedByCategory = useMemo(() => {
+    const groups: Record<string, typeof filteredProducts> = {};
+    for (const p of filteredProducts) {
+      const cat = p.category || "Other";
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(p);
+    }
+    return groups;
+  }, [filteredProducts]);
+
+  const categoryOrder = useMemo(() => {
+    const cats = Object.keys(groupedByCategory);
+    return cats.sort((a, b) => a.localeCompare(b));
+  }, [groupedByCategory]);
 
   const totalPrice = useMemo(() => {
     return selectedProducts.reduce(
@@ -303,7 +352,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-16">
         {/* Mobile Header - Full width cover image with circular logo */}
         <div
-          className="relative h-32 w-full sm:hidden"
+          className="relative h-36 w-full sm:hidden"
           style={{
             marginTop: "-44px",
             marginLeft: "-16px",
@@ -323,26 +372,24 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
           {/* Gradient Overlay for better text readability */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/70" />
 
-          {/* Back Button */}
-          <button
-            onClick={() => router.back()}
-            className="absolute left-4 top-7 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/30"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="h-4 w-4 !text-white"
+          {/* Top bar - Back button & Status badge */}
+          <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 pt-[max(2.75rem,env(safe-area-inset-top,2.75rem))]">
+            <button
+              onClick={() => router.back()}
+              className="ml-4 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/30"
             >
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-          </button>
-
-          {/* Store Status Badge */}
-          <div className="absolute right-4 top-7 z-20">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="h-4 w-4 !text-white"
+              >
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+            </button>
             <div
-              className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold backdrop-blur-md ${
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold backdrop-blur-md ${
                 store.is_active && storeStatus.isOpen
                   ? "bg-green-500/90 !text-white"
                   : store.is_active && !storeStatus.isOpen
@@ -352,12 +399,12 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
             >
               {store.is_active ? (
                 <>
-                  <CheckCircle className="h-3 w-3" />
+                  <CheckCircle className="h-3 w-3 shrink-0" />
                   <span>{storeStatus.statusText}</span>
                 </>
               ) : (
                 <>
-                  <X className="h-3 w-3" />
+                  <X className="h-3 w-3 shrink-0" />
                   <span>Inactive</span>
                 </>
               )}
@@ -365,7 +412,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
           </div>
 
           {/* Store Logo - Circular at bottom left */}
-          <div className="absolute -bottom-4 left-3 z-50">
+          <div className="absolute -bottom-4 left-5 z-50">
             <div className="h-16 w-16 overflow-hidden rounded-full border-4 border-green-500 shadow-lg">
               <Image
                 src={store.image || "/images/store-placeholder.jpg"}
@@ -415,8 +462,8 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
               <div className="flex items-center gap-1">
                 <Package className="h-3 w-3" />
                 <span>
-                  {products.length}{" "}
-                  {products.length === 1 ? "Product" : "Products"}
+                  {activeProducts.length}{" "}
+                  {activeProducts.length === 1 ? "Product" : "Products"}
                 </span>
               </div>
             </div>
@@ -539,8 +586,8 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                     <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 backdrop-blur-md sm:gap-2 sm:px-3 sm:py-1.5">
                       <Package className="h-3 w-3 !text-white sm:h-3.5 sm:w-3.5" />
                       <span className="text-xs font-medium !text-white sm:text-sm">
-                        {products.length}{" "}
-                        {products.length === 1 ? "Product" : "Products"}
+                        {activeProducts.length}{" "}
+                        {activeProducts.length === 1 ? "Product" : "Products"}
                       </span>
                     </div>
                   </div>
@@ -602,7 +649,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                       : "bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:shadow-md dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                   }`}
                 >
-                  {category === "all" ? "All Products" : category}
+                  {category === "all" ? "All" : category}
                 </button>
               ))}
             </div>
@@ -622,8 +669,38 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                     : "This store doesn't have any products yet"}
                 </p>
               </div>
+            ) : activeCategory === "all" ? (
+              <div className="space-y-10">
+                {categoryOrder.map((cat) => (
+                  <div key={cat}>
+                    <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white sm:text-lg">
+                      <Package className="h-4 w-4 text-green-600 dark:text-green-500 sm:h-5 sm:w-5" />
+                      {cat}
+                      <span className="ml-2 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                        {groupedByCategory[cat]?.length ?? 0}
+                      </span>
+                    </h3>
+                    <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5">
+                      {(groupedByCategory[cat] ?? []).map((product) => (
+                        <StoreProductCard
+                          key={product.id}
+                          id={product.id}
+                          name={product.name}
+                          image={product.image}
+                          price={product.price}
+                          unit={product.unit}
+                          measurement_unit={product.measurement_unit}
+                          description={product.description}
+                          otherDetails={product.otherDetails ?? null}
+                          onAdd={handleAddProduct}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5">
                 {filteredProducts.map((product) => (
                   <StoreProductCard
                     key={product.id}
@@ -634,6 +711,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                     unit={product.unit}
                     measurement_unit={product.measurement_unit}
                     description={product.description}
+                    otherDetails={product.otherDetails ?? null}
                     onAdd={handleAddProduct}
                   />
                 ))}
@@ -679,7 +757,9 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                   <div className="flex-1 space-y-3 overflow-y-auto">
                     {selectedProducts.map((product) => (
                       <div
-                        key={product.id}
+                        key={`${product.id}-${JSON.stringify(
+                          product.selectedDetails ?? {}
+                        )}`}
                         className="group rounded-xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-4 shadow-sm transition-all duration-200 hover:shadow-md dark:border-gray-700 dark:from-gray-800 dark:to-gray-700/50"
                       >
                         <div className="flex items-start gap-3">
@@ -698,6 +778,15 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                             <h3 className="mb-1 truncate text-sm font-bold text-gray-900 dark:text-white">
                               {product.name}
                             </h3>
+                            {product.selectedDetails &&
+                              Object.keys(product.selectedDetails).length >
+                                0 && (
+                                <p className="mb-1 text-xs text-gray-600 dark:text-gray-400">
+                                  {Object.entries(product.selectedDetails)
+                                    .map(([k, v]) => `${k}: ${v}`)
+                                    .join(" · ")}
+                                </p>
+                              )}
                             <p className="mb-2 text-xs font-semibold text-green-600 dark:text-green-400">
                               {formatCurrencySync(parseFloat(product.price))} /{" "}
                               {product.unit}
@@ -707,7 +796,8 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                                 onClick={() =>
                                   handleUpdateQuantity(
                                     product.id,
-                                    product.quantity - 1
+                                    product.quantity - 1,
+                                    product.selectedDetails
                                   )
                                 }
                                 className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm transition-all hover:scale-110 hover:bg-gray-50 hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
@@ -721,7 +811,8 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                                 onClick={() =>
                                   handleUpdateQuantity(
                                     product.id,
-                                    product.quantity + 1
+                                    product.quantity + 1,
+                                    product.selectedDetails
                                   )
                                 }
                                 className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm transition-all hover:scale-110 hover:bg-gray-50 hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
@@ -736,7 +827,12 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                             </div>
                           </div>
                           <button
-                            onClick={() => handleRemoveProduct(product.id)}
+                            onClick={() =>
+                              handleRemoveProduct(
+                                product.id,
+                                product.selectedDetails
+                              )
+                            }
                             className="flex-shrink-0 rounded-lg p-1.5 text-gray-400 transition-all hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                           >
                             <X className="h-5 w-5" />
@@ -868,7 +964,9 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                     </h3>
                     {selectedProducts.map((product) => (
                       <div
-                        key={product.id}
+                        key={`${product.id}-${JSON.stringify(
+                          product.selectedDetails ?? {}
+                        )}`}
                         className="group rounded-xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-3 shadow-sm transition-all duration-200 hover:shadow-md dark:border-gray-700 dark:from-gray-800 dark:to-gray-700/50"
                       >
                         <div className="flex items-start gap-3">
@@ -887,6 +985,15 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                             <h3 className="mb-1 truncate text-sm font-bold text-gray-900 dark:text-white">
                               {product.name}
                             </h3>
+                            {product.selectedDetails &&
+                              Object.keys(product.selectedDetails).length >
+                                0 && (
+                                <p className="mb-1 text-xs text-gray-600 dark:text-gray-400">
+                                  {Object.entries(product.selectedDetails)
+                                    .map(([k, v]) => `${k}: ${v}`)
+                                    .join(" · ")}
+                                </p>
+                              )}
                             <p className="mb-2 text-xs font-semibold text-green-600 dark:text-green-400">
                               {formatCurrencySync(parseFloat(product.price))} /{" "}
                               {product.unit}
@@ -896,7 +1003,8 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                                 onClick={() =>
                                   handleUpdateQuantity(
                                     product.id,
-                                    product.quantity - 1
+                                    product.quantity - 1,
+                                    product.selectedDetails
                                   )
                                 }
                                 className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm transition-all hover:scale-110 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
@@ -910,7 +1018,8 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                                 onClick={() =>
                                   handleUpdateQuantity(
                                     product.id,
-                                    product.quantity + 1
+                                    product.quantity + 1,
+                                    product.selectedDetails
                                   )
                                 }
                                 className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm transition-all hover:scale-110 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
@@ -925,7 +1034,12 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                             </div>
                           </div>
                           <button
-                            onClick={() => handleRemoveProduct(product.id)}
+                            onClick={() =>
+                              handleRemoveProduct(
+                                product.id,
+                                product.selectedDetails
+                              )
+                            }
                             className="flex-shrink-0 rounded-lg p-1.5 text-gray-400 transition-all hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                           >
                             <X className="h-4 w-4" />

@@ -70,7 +70,13 @@ export default function BatchDetailsHeader({ order }: BatchDetailsHeaderProps) {
           <div className="h-5 w-px flex-shrink-0 bg-gray-300 dark:bg-gray-600 sm:h-6"></div>
           <h1 className="min-w-0 truncate text-base font-bold text-gray-900 dark:text-gray-100 sm:text-2xl">
             <span className="hidden sm:inline">
-              {order.orderType === "reel" ? "Reel Batch" : "Regular Batch"}{" "}
+              {order.orderType === "reel"
+                ? "Reel Batch"
+                : order.orderType === "restaurant"
+                ? "Restaurant Batch"
+                : order.orderType === "business"
+                ? "Business Batch"
+                : "Regular Batch"}{" "}
             </span>
             {order.orderType === "reel" ? "Reel Batch" : "Regular Batch"} #
             {(order as any).orderIDs && (order as any).orderIDs.length > 1

@@ -6,69 +6,114 @@ import { useSession } from "next-auth/react";
 import { ThemeProvider } from "@context/ThemeContext";
 import { useRouter } from "next/router";
 import AIChatProvider from "../ai-chat/AIChatProvider";
+import {
+  HideBottomBarProvider,
+  useHideBottomBar,
+} from "@context/HideBottomBarContext";
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+  return (
+    <ThemeProvider>
+      <HideBottomBarProvider>
+        <LayoutContent>{children}</LayoutContent>
+      </HideBottomBarProvider>
+    </ThemeProvider>
+  );
+}
 
-  // Check if current page is the chat page
+function LayoutContent({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const { hideBottomBar } = useHideBottomBar();
+
   const isChatPage = router.pathname.startsWith("/Messages/[orderId]");
-  // Check if current page is the Messages index page (mobile full screen)
   const isMessagesPage = router.pathname === "/Messages";
-  // Check if current page is the Reels page
   const isReelsPage = router.pathname === "/Reels";
-  // Check if current page is the plasBusiness page (mobile full screen)
   const isPlasBusinessPage =
     router.pathname === "/plasBusiness" ||
     router.pathname.startsWith("/plasBusiness/");
+  const isStoresPage = router.pathname.startsWith("/stores/");
+  const isStoresCheckoutPage = router.pathname === "/stores/[id]/checkout";
+  const isOrderDetailsPage = router.pathname.startsWith(
+    "/CurrentPendingOrders/viewOrderDetails/"
+  );
 
   return (
-    <ThemeProvider>
-      <div className="min-h-screen bg-white text-gray-900 transition-colors duration-200 dark:bg-gray-900 dark:text-white">
-        {!isChatPage &&
-          !isReelsPage &&
-          !isMessagesPage &&
-          !isPlasBusinessPage && <HeaderLayout />}
-        {/* Main content */}
-        <main
-          className={`text-gray-900 transition-colors duration-200 dark:text-white ${
-            isChatPage || isReelsPage || isMessagesPage || isPlasBusinessPage
-              ? ""
-              : "px-4 pb-20 pt-6 md:pb-0"
-          }`}
+    <div className="min-h-screen bg-white text-gray-900 transition-colors duration-200 dark:bg-gray-900 dark:text-white">
+      {/* Top navbar: hide on order details (mobile), show on desktop */}
+      {!isChatPage &&
+        !isReelsPage &&
+        !isMessagesPage &&
+        !isPlasBusinessPage &&
+        !isStoresPage &&
+        (isOrderDetailsPage ? (
+          <div className="hidden md:block">
+            <HeaderLayout />
+          </div>
+        ) : (
+          <HeaderLayout />
+        ))}
+      {/* Stores (checkout, store page): show header on desktop only, full-bleed on mobile */}
+      {isStoresPage && (
+        <div className="hidden md:block">
+          <HeaderLayout />
+        </div>
+      )}
+      {/* Main content */}
+      <main
+        className={`text-gray-900 transition-colors duration-200 dark:text-white ${
+          isChatPage ||
+          isReelsPage ||
+          isMessagesPage ||
+          isPlasBusinessPage ||
+          isStoresPage
+            ? ""
+            : isOrderDetailsPage
+            ? "pb-20 md:pb-0 md:pt-16"
+            : "px-4 pb-20 pt-6 md:pb-0"
+        }`}
+        style={
+          isReelsPage || isMessagesPage
+            ? {
+                margin: 0,
+                padding: 0,
+                height: "100vh",
+                minHeight: "100vh",
+                maxHeight: "100vh",
+                overflow: "hidden",
+              }
+            : {}
+        }
+      >
+        {/* Sidebar: hide on order details (mobile), show on desktop (SideBar has hidden md:block) */}
+        {!isChatPage && !isReelsPage && !isMessagesPage && <SideBar />}
+        <div
+          className="[&_*]:text-inherit"
           style={
-            isReelsPage
-              ? {
-                  margin: 0,
-                  padding: 0,
-                  height: "100vh",
-                  minHeight: "100vh",
-                  maxHeight: "100vh",
-                  overflow: "hidden",
-                }
+            isReelsPage ||
+            isPlasBusinessPage ||
+            isStoresPage ||
+            isMessagesPage ||
+            isOrderDetailsPage
+              ? { height: "100%", width: "100%" }
               : {}
           }
         >
-          {!isChatPage && !isReelsPage && !isMessagesPage && <SideBar />}
-          <div
-            className="[&_*]:text-inherit"
-            style={
-              isReelsPage || isPlasBusinessPage
-                ? { height: "100%", width: "100%" }
-                : {}
-            }
-          >
-            {children}
-          </div>
-          {!isChatPage && !isReelsPage && <BottomBar />}
-        </main>
-        {/* AI Chat - Available on all pages except chat pages */}
-        {!isChatPage && !isMessagesPage && <AIChatProvider />}
-      </div>
-    </ThemeProvider>
+          {children}
+        </div>
+        {!isChatPage &&
+          !isReelsPage &&
+          !isMessagesPage &&
+          !isStoresCheckoutPage &&
+          !hideBottomBar && <BottomBar />}
+      </main>
+      {/* AI Chat - Available on all pages except chat pages */}
+      {!isChatPage && !isMessagesPage && !isOrderDetailsPage && (
+        <AIChatProvider />
+      )}
+    </div>
   );
 }

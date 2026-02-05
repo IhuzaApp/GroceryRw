@@ -37,6 +37,8 @@ const GET_STORE_PRODUCTS = gql`
       delveryArea
       query_id
       speciality
+      category
+      otherDetails
     }
   }
 `;
@@ -71,6 +73,10 @@ interface ProductsResponse {
     delveryArea: string;
     query_id: string;
     speciality: string;
+    category: string;
+    otherDetails: {
+      options?: Array<{ key: string; label: string; values: string[] }>;
+    } | null;
   }>;
 }
 
@@ -104,9 +110,11 @@ export default async function handler(
       return res.status(404).json({ error: "Store not found" });
     }
 
-    // Transform products to match FreshMarkPage format
-    const transformedProducts = productsData.PlasBusinessProductsOrSerive.map(
-      (product) => ({
+    // Transform products to match FreshMarkPage format (active only)
+    const transformedProducts =
+      productsData.PlasBusinessProductsOrSerive.filter(
+        (p) => p.status === "active"
+      ).map((product) => ({
         id: product.id,
         name: product.name,
         ProductName: {
@@ -118,15 +126,16 @@ export default async function handler(
         price: product.price,
         final_price: product.price,
         unit: product.unit || "",
-        category: product.speciality || "General",
+        category:
+          product.category?.trim() || product.speciality?.trim() || "Other",
         measurement_unit: product.unit || "",
         quantity: 1, // Default quantity for services
         is_active: product.status === "active",
         created_at: product.created_at,
         updated_at: product.created_at,
         shop_id: id, // Use store id as shop_id for compatibility
-      })
-    );
+        otherDetails: product.otherDetails ?? null,
+      }));
 
     // Transform store to match Shop format for FreshMarkPage
     const store = {

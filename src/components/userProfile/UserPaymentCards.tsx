@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { GetServerSideProps } from "next";
 import AddPaymentCard from "./AddPaymentCard";
 import AddMoneyModal from "./AddMoneyModal";
+import { useHideBottomBar } from "../../context/HideBottomBarContext";
 import CryptoJS from "crypto-js";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import { authenticatedFetch } from "../../lib/authenticatedFetch";
@@ -174,6 +175,7 @@ export default function UserPaymentCards({
   );
   const [showAddCard, setShowAddCard] = useState(false);
   const [showAddMoneyModal, setShowAddMoneyModal] = useState(false);
+  const { setHideBottomBar } = useHideBottomBar();
 
   // Fetch user data if not provided by server-side props
   useEffect(() => {
@@ -475,10 +477,6 @@ export default function UserPaymentCards({
 
           <div className="flex items-center justify-between">
             <div>
-              <p className="mb-1 text-xs opacity-80">Status</p>
-              <p className="font-medium">PENDING</p>
-            </div>
-            <div>
               <p className="mb-1 text-xs opacity-80">Last Updated</p>
               <p className="font-medium">Today</p>
             </div>
@@ -529,7 +527,10 @@ export default function UserPaymentCards({
         {/* Add Money Modal */}
         <AddMoneyModal
           isOpen={showAddMoneyModal}
-          onClose={() => setShowAddMoneyModal(false)}
+          onClose={() => {
+            setShowAddMoneyModal(false);
+            setHideBottomBar(false);
+          }}
           onSuccess={refreshWalletBalance}
           currentBalance={walletBalance}
         />

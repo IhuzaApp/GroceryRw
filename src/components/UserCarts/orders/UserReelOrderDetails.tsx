@@ -1,11 +1,12 @@
 import React, { useEffect } from "react";
 import Image from "next/image";
-import { Input, InputGroup, Button, Panel, Steps, Message } from "rsuite";
+import { Input, InputGroup, Button, Panel, Steps } from "rsuite";
 import Link from "next/link";
 import { useState } from "react";
 import { formatCurrency } from "../../../lib/formatCurrency";
 import EstimatedDeliveryTime from "./EstimatedDeliveryTime";
 import { useTheme } from "../../../context/ThemeContext";
+import FeedbackModal from "./FeedbackModal";
 
 // Helper to pad order IDs to at least 4 digits
 function formatOrderID(id?: string | number): string {
@@ -13,14 +14,20 @@ function formatOrderID(id?: string | number): string {
   return s.length >= 4 ? s : s.padStart(4, "0");
 }
 
+export type SupportTicketInfo = { ticket_num: number; status: string } | null;
+
 interface UserReelOrderDetailsProps {
   order: any;
   isMobile?: boolean;
+  onContactSupport?: () => void;
+  supportTicket?: SupportTicketInfo;
 }
 
 export default function UserReelOrderDetails({
   order,
   isMobile = false,
+  onContactSupport,
+  supportTicket,
 }: UserReelOrderDetailsProps) {
   const { theme } = useTheme();
   const [feedbackModal, setFeedbackModal] = useState(false);
@@ -106,7 +113,6 @@ export default function UserReelOrderDetails({
       // Close modal and update state
       setFeedbackModal(false);
       setHasExistingRating(true);
-      Message.success("Thank you for your feedback!");
     } catch (error) {
       setSubmitError(
         error instanceof Error ? error.message : "Failed to submit feedback"
@@ -114,6 +120,47 @@ export default function UserReelOrderDetails({
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const getFriendlyStatus = (status: string) => {
+    const normalized = (status || "").toLowerCase();
+
+    if (normalized === "waiting_for_confirmation" || normalized === "pending") {
+      return {
+        label: "Waiting to be accepted",
+        description: "Your order is waiting for a shopper to accept it",
+      };
+    }
+
+    if (normalized === "accepted" || normalized === "confirmed") {
+      return {
+        label: "Accepted",
+        description: "A shopper has accepted your order and is preparing it",
+      };
+    }
+
+    if (
+      normalized === "on_the_way" ||
+      normalized === "out_for_delivery" ||
+      normalized === "ready"
+    ) {
+      return {
+        label: "Picked and on the way",
+        description: "Your order has been picked up and is on the way",
+      };
+    }
+
+    if (normalized === "delivered") {
+      return {
+        label: "Delivered to you",
+        description: "Order completed successfully",
+      };
+    }
+
+    return {
+      label: "Ongoing",
+      description: "Your order is being processed",
+    };
   };
 
   return (
@@ -139,6 +186,27 @@ export default function UserReelOrderDetails({
             Reel Order #{formatOrderID(order.OrderID)}
           </h1>
           <span className="ml-2 text-gray-500">Placed on {order.placedAt}</span>
+        </div>
+      )}
+
+      {/* Pickup PIN - Desktop (mobile shows PIN in parent) */}
+      {!isMobile && order?.pin && (
+        <div className="mb-6 overflow-hidden rounded-xl bg-gradient-to-br from-green-500 via-green-600 to-green-700 p-4 shadow-lg">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider !text-white">
+                Pickup PIN
+              </p>
+              <p className="mt-0.5 text-[10px] !text-white/90">
+                Show to Plaser
+              </p>
+            </div>
+            <div className="rounded-lg border-2 border-dashed border-white/30 bg-white/10 px-5 py-2">
+              <span className="text-2xl font-black tracking-wider !text-white">
+                {order.pin}
+              </span>
+            </div>
+          </div>
         </div>
       )}
 
@@ -232,26 +300,21 @@ export default function UserReelOrderDetails({
                   </div>
                 </div>
               ) : (
-                <div className="text-center">
-                  <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {order.status === "on_the_way"
-                      ? "On the Way"
-                      : order.status === "packing"
-                      ? "Packing"
-                      : order.status === "shopping"
-                      ? "Shopping"
-                      : "Pending Assignment"}
-                  </div>
-                  <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    {order.status === "on_the_way"
-                      ? "Heading to your location"
-                      : order.status === "packing"
-                      ? "Preparing for delivery"
-                      : order.status === "shopping"
-                      ? "Picking your items"
-                      : "Waiting for assignment"}
-                  </div>
-                </div>
+                (() => {
+                  const { label, description } = getFriendlyStatus(
+                    order.status
+                  );
+                  return (
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {label}
+                      </div>
+                      <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        {description}
+                      </div>
+                    </div>
+                  );
+                })()
               )}
             </div>
           ) : (
@@ -263,19 +326,21 @@ export default function UserReelOrderDetails({
                 vertical={false}
               >
                 <Steps.Item
-                  title="Awaiting Assignment"
-                  description="Waiting for assignment"
-                />
-                <Steps.Item title="Shopping" description="Picking your items" />
-                <Steps.Item
-                  title="Packing"
-                  description="Preparing for delivery"
+                  title="Waiting to be accepted"
+                  description="Order placed"
                 />
                 <Steps.Item
-                  title="On the way"
-                  description="Heading to your location"
+                  title="Accepted"
+                  description="Shopper accepted your order"
                 />
-                <Steps.Item title="Delivered" description="Enjoy your order!" />
+                <Steps.Item
+                  title="Picked & on the way"
+                  description="On the way for delivery"
+                />
+                <Steps.Item
+                  title="Delivered to you"
+                  description="Order completed"
+                />
               </Steps>
 
               {/* Delivery Proof Image for Desktop */}
@@ -326,19 +391,36 @@ export default function UserReelOrderDetails({
               Feedback
             </button>
           ) : (
-            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-              <button className="group flex items-center justify-center gap-2 !rounded-md bg-gradient-to-r from-green-500 to-green-600 px-4 py-2.5 text-sm font-semibold !text-white shadow-md transition-all duration-200 hover:from-green-600 hover:to-green-700 hover:shadow-lg active:scale-[0.98]">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  className="h-5 w-5 !text-white transition-transform group-hover:scale-110"
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+              {supportTicket && (
+                <div className="flex w-full flex-col gap-1 rounded-lg border border-red-300 bg-red-50 px-4 py-3 dark:border-red-800 dark:bg-red-900/30 sm:w-auto">
+                  <p className="text-sm font-semibold text-red-800 dark:text-red-200">
+                    Ticket #{supportTicket.ticket_num}
+                  </p>
+                  <p className="text-xs text-red-700 dark:text-red-300">
+                    Status:{" "}
+                    <span className="capitalize">{supportTicket.status}</span>
+                  </p>
+                </div>
+              )}
+              {onContactSupport && (
+                <button
+                  type="button"
+                  onClick={onContactSupport}
+                  className="group flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-5 py-3 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:from-green-600 hover:to-green-700 hover:shadow-xl active:scale-[0.98]"
                 >
-                  <path d="M15.05 5A5 5 0 0119 8.95M15.05 1A9 9 0 0123 8.94m-1 7.98v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"></path>
-                </svg>
-                Contact Support
-              </button>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    className="h-5 w-5 shrink-0 !text-white transition-transform [stroke:white] group-hover:scale-110"
+                  >
+                    <path d="M15.05 5A5 5 0 0119 8.95M15.05 1A9 9 0 0123 8.94m-1 7.98v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"></path>
+                  </svg>
+                  <span className="!text-white">Contact Support</span>
+                </button>
+              )}
             </div>
           )}
         </div>

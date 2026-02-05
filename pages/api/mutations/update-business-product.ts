@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { PRODUCT_CATEGORIES } from "../../../src/constants/productCategories";
 
 const UPDATE_BUSINESS_PRODUCT = gql`
   mutation UpdateBusinessProduct(
@@ -10,6 +11,7 @@ const UPDATE_BUSINESS_PRODUCT = gql`
     $Description: String = ""
     $Image: String = ""
     $Plasbusiness_id: uuid = ""
+    $category: String = ""
     $delveryArea: String = ""
     $maxOrders: String = ""
     $minimumOrders: String = ""
@@ -20,6 +22,7 @@ const UPDATE_BUSINESS_PRODUCT = gql`
     $unit: String = ""
     $user_id: uuid = ""
     $store_id: uuid
+    $otherDetails: jsonb
   ) {
     update_PlasBusinessProductsOrSerive(
       where: { id: { _eq: $product_id } }
@@ -27,6 +30,7 @@ const UPDATE_BUSINESS_PRODUCT = gql`
         Description: $Description
         Image: $Image
         Plasbusiness_id: $Plasbusiness_id
+        category: $category
         delveryArea: $delveryArea
         maxOrders: $maxOrders
         minimumOrders: $minimumOrders
@@ -37,6 +41,7 @@ const UPDATE_BUSINESS_PRODUCT = gql`
         unit: $unit
         user_id: $user_id
         store_id: $store_id
+        otherDetails: $otherDetails
       }
     ) {
       affected_rows
@@ -67,6 +72,16 @@ interface Session {
   expires: string;
 }
 
+interface OtherDetailsOption {
+  key: string;
+  label: string;
+  values: string[];
+}
+
+interface OtherDetailsInput {
+  options?: OtherDetailsOption[];
+}
+
 interface UpdateBusinessProductInput {
   product_id: string;
   name: string;
@@ -74,6 +89,7 @@ interface UpdateBusinessProductInput {
   image?: string;
   price: string;
   unit?: string;
+  category?: string;
   status?: string;
   minimumOrders?: string;
   maxOrders?: string;
@@ -82,6 +98,7 @@ interface UpdateBusinessProductInput {
   store_id?: string;
   user_id?: string;
   Plasbusiness_id?: string;
+  otherDetails?: OtherDetailsInput | null;
 }
 
 export default async function handler(
@@ -114,6 +131,7 @@ export default async function handler(
       image = "",
       price,
       unit = "",
+      category = "",
       status = "active",
       minimumOrders: minOrders = "0",
       maxOrders = "",
@@ -122,6 +140,7 @@ export default async function handler(
       store_id,
       user_id = "",
       Plasbusiness_id = "",
+      otherDetails,
     } = req.body as UpdateBusinessProductInput;
 
     // Validate required fields
@@ -141,6 +160,18 @@ export default async function handler(
     const minimumOrders =
       minOrders && minOrders.trim() !== "" ? minOrders.trim() : "0";
 
+    const categoryTrimmed =
+      category !== null && category !== undefined
+        ? String(category).trim()
+        : "";
+    const validCategory =
+      categoryTrimmed &&
+      PRODUCT_CATEGORIES.includes(
+        categoryTrimmed as typeof PRODUCT_CATEGORIES[number]
+      )
+        ? categoryTrimmed
+        : "";
+
     // Get user_id from session if not provided
     const final_user_id = user_id || session?.user?.id || "";
 
@@ -149,6 +180,7 @@ export default async function handler(
       name: name.trim(),
       Description: description ? description.trim() : "",
       Image: image ? image.trim() : "",
+      category: validCategory,
       price: price.trim(),
       unit: unit ? unit.trim() : "",
       status: status ? status.trim() : "active",
@@ -165,6 +197,22 @@ export default async function handler(
       variables.store_id = store_id.trim();
     } else {
       variables.store_id = null;
+    }
+
+    // otherDetails: jsonb for product options (size, color, model, etc.)
+    if (otherDetails != null && typeof otherDetails === "object") {
+      const opts = Array.isArray(otherDetails.options)
+        ? otherDetails.options.filter(
+            (o: any) =>
+              o &&
+              typeof o.key === "string" &&
+              typeof o.label === "string" &&
+              Array.isArray(o.values)
+          )
+        : [];
+      variables.otherDetails = opts.length > 0 ? { options: opts } : null;
+    } else {
+      variables.otherDetails = null;
     }
 
     const result = await hasuraClient.request<{

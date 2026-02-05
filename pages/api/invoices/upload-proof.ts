@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 
 // GraphQL mutation to update invoice proof
 const UPDATE_INVOICE_PROOF = gql`
@@ -169,6 +170,10 @@ export default async function handler(
           : { id: invoice_id },
     });
   } catch (error) {
+    await logErrorToSlack("invoices/upload-proof", error, {
+      invoice_id: req.body?.invoice_id,
+      order_type: req.body?.order_type,
+    });
     res.status(500).json({
       error: "Failed to upload proof",
       message: error instanceof Error ? error.message : "Unknown error",

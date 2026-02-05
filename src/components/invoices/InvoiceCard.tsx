@@ -17,6 +17,9 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   const { theme } = useTheme();
 
   const getStatusBadge = (status: string) => {
+    // Normalize status: map "completed" to "paid" since completed orders should show as paid
+    const normalizedStatus = status === "completed" ? "paid" : status;
+
     const statusConfig = {
       paid: {
         color:
@@ -42,7 +45,8 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     };
 
     const config =
-      statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+      statusConfig[normalizedStatus as keyof typeof statusConfig] ||
+      statusConfig.pending;
 
     return (
       <span
@@ -50,9 +54,9 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
       >
         <div
           className={`mr-2 h-2 w-2 rounded-full ${
-            status === "paid"
+            normalizedStatus === "paid"
               ? "bg-green-500"
-              : status === "pending"
+              : normalizedStatus === "pending"
               ? "bg-yellow-500"
               : "bg-red-500"
           }`}
@@ -83,13 +87,11 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   return (
     <div
       className={`mb-6 rounded-2xl border ${
-        theme === "dark"
-          ? "border-gray-700 bg-gray-800/50"
-          : "border-gray-200 bg-white shadow-sm"
+        theme === "dark" ? "border-gray-50" : "bg-white shadow-sm"
       } transition-all duration-200 hover:shadow-md`}
     >
       {/* Header */}
-      <div className="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
+      <div className="border-b border-gray-200 px-6 py-4 ">
         <div className="flex items-center justify-between">
           <div>
             <h3

@@ -84,7 +84,7 @@ interface BatchOrderDetailsType {
     };
   };
   // Add order type and reel-specific fields
-  orderType?: "regular" | "reel" | "restaurant";
+  orderType?: "regular" | "reel" | "restaurant" | "business";
   reel?: {
     id: string;
     title: string;
@@ -166,15 +166,14 @@ function BatchDetailsPage({ orderData, error }: BatchDetailsPageProps) {
         await deleteFirebaseMessages(orderId);
       }
 
+      // Use updateOrderStatus for all order types (regular, reel, restaurant, business).
+      // For business orders it also updates business_wallet and business_transactions on pickup (on_the_way).
       const response = await fetch("/api/shopper/updateOrderStatus", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          orderId,
-          status: newStatus,
-        }),
+        body: JSON.stringify({ orderId, status: newStatus }),
       });
 
       if (!response.ok) {
@@ -188,6 +187,17 @@ function BatchDetailsPage({ orderData, error }: BatchDetailsPageProps) {
       }
 
       const result = await response.json();
+
+      if (
+        orderData?.orderType === "business" &&
+        newStatus === "on_the_way" &&
+        result.businessOrderPickup
+      ) {
+        console.log(
+          "[BatchDetails] BUSINESS ORDER PICKUP – API result (wallet/transaction):",
+          result.businessOrderPickup
+        );
+      }
 
       return result;
     } catch (err) {
@@ -430,8 +440,6 @@ export const getServerSideProps: GetServerSideProps<
   `;
 
   try {
-    console.log("🔍 Starting batch details fetch for ID:", id);
-
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
@@ -500,6 +508,8 @@ export const getServerSideProps: GetServerSideProps<
               phone
               email
               profile_picture
+              is_active
+              is_guest
             }
             address: Address {
               id
@@ -515,11 +525,40 @@ export const getServerSideProps: GetServerSideProps<
               price
               restaurant_dishes {
                 id
-                name
-                description
-                image
                 price
+                ProductNames {
+                  name
+                  description
+                  image
+                  barcode
+                  create_at
+                  id
+                  sku
+                }
+                dishes {
+                  name
+                  description
+                  image
+                  category
+                  created_at
+                  id
+                  ingredients
+                  update_at
+                }
+                SKU
+                created_at
+                discount
+                dish_id
+                preparingTime
+                product_id
+                promo
+                promo_type
+                quantity
+                restaurant_id
+                updated_at
               }
+              dish_id
+              order_id
             }
             shopper {
               id
@@ -530,7 +569,14 @@ export const getServerSideProps: GetServerSideProps<
                   count
                 }
               }
+              email
+              gender
+              phone
+              password_hash
+              updated_at
             }
+            voucher_code
+            updated_at
           }
         }
       `;
@@ -544,6 +590,68 @@ export const getServerSideProps: GetServerSideProps<
       console.log("📊 Restaurant order result:", {
         found: !!order,
         count: restaurantData.restaurant_orders.length,
+      });
+      // Log full restaurant order so we can see what we have
+      console.log("🍽️ Restaurant order (raw):", JSON.stringify(order, null, 2));
+      console.log(
+        "🍽️ Restaurant order (keys):",
+        order ? Object.keys(order) : []
+      );
+      if (order?.Restaurant) {
+        console.log("🍽️ Restaurant details:", order.Restaurant);
+      }
+      if (order?.restaurant_order_items?.length) {
+        console.log("🍽️ Restaurant order items:", order.restaurant_order_items);
+      }
+    }
+
+    // If still no order found, try as a business order
+    if (!order) {
+      console.log("🔄 Trying business order query...");
+      const GET_BUSINESS_ORDER_DETAILS = gql`
+        query GetBusinessOrderDetails($id: uuid!) {
+          businessProductOrders(where: { id: { _eq: $id } }, limit: 1) {
+            id
+            OrderID
+            created_at
+            status
+            total
+            transportation_fee
+            service_fee
+            units
+            deliveryAddress
+            latitude
+            longitude
+            allProducts
+            business_store {
+              id
+              name
+              latitude
+              longitude
+            }
+            orderedBy {
+              id
+              name
+              phone
+              email
+            }
+            shopper {
+              id
+              name
+              profile_picture
+              phone
+            }
+          }
+        }
+      `;
+      const businessData = await hasuraClient.request<{
+        businessProductOrders: any[];
+      }>(GET_BUSINESS_ORDER_DETAILS, { id });
+      order = businessData.businessProductOrders?.[0];
+      orderType = "business";
+      console.log("📊 Business order result:", {
+        found: !!order,
+        count: businessData.businessProductOrders?.length ?? 0,
       });
     }
 
@@ -582,6 +690,16 @@ export const getServerSideProps: GetServerSideProps<
     const isRestaurantCustomer =
       orderType === "restaurant" && order.user_id === session.user.id;
 
+    // For business orders, check if user is the assigned shopper
+    const isBusinessShopper =
+      orderType === "business" && order.shopper_id === session.user.id;
+
+    // For business orders, check if user is the customer via orderedBy
+    const isBusinessCustomer =
+      orderType === "business" &&
+      (order.ordered_by === session.user.id ||
+        order.orderedBy?.id === session.user.id);
+
     console.log("🔐 Authorization check:", {
       isAssignedShopper,
       isCustomer,
@@ -589,6 +707,8 @@ export const getServerSideProps: GetServerSideProps<
       isReelShopper,
       isRestaurantShopper,
       isRestaurantCustomer,
+      isBusinessShopper,
+      isBusinessCustomer,
       orderType,
       assignedToId: order.Shoppers?.id,
       shopperId: order.shopper?.id,
@@ -601,7 +721,9 @@ export const getServerSideProps: GetServerSideProps<
       !isReelCustomer &&
       !isReelShopper &&
       !isRestaurantShopper &&
-      !isRestaurantCustomer
+      !isRestaurantCustomer &&
+      !isBusinessShopper &&
+      !isBusinessCustomer
     ) {
       console.log("❌ User not authorized to view this order");
       return {
@@ -614,20 +736,83 @@ export const getServerSideProps: GetServerSideProps<
 
     // Format timestamps to human-readable strings
     console.log("🔄 Formatting order data...");
-    const formattedOrder = {
+    const placedAtRaw = order.placedAt ?? order.created_at;
+    const estimatedDeliveryRaw = order.estimatedDelivery ?? order.created_at;
+    const formattedOrder: any = {
       ...order,
       orderType,
-      placedAt: new Date(order.placedAt).toLocaleString("en-US", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }),
-      estimatedDelivery: order.estimatedDelivery
-        ? new Date(order.estimatedDelivery).toLocaleString("en-US", {
+      placedAt: placedAtRaw
+        ? new Date(placedAtRaw).toLocaleString("en-US", {
+            dateStyle: "medium",
+            timeStyle: "short",
+          })
+        : null,
+      estimatedDelivery: estimatedDeliveryRaw
+        ? new Date(estimatedDeliveryRaw).toLocaleString("en-US", {
             dateStyle: "medium",
             timeStyle: "short",
           })
         : null,
     };
+
+    // For restaurant orders, set shop from Restaurant so ShopInfo/ShopInfoCard display name, location, phone
+    // Use null (not undefined) for optional fields so getServerSideProps props are JSON-serializable
+    if (orderType === "restaurant" && order.Restaurant) {
+      formattedOrder.shop = {
+        id: order.Restaurant.id,
+        name: order.Restaurant.name,
+        address: order.Restaurant.location,
+        phone: order.Restaurant.phone ?? null,
+        image: order.Restaurant.logo ?? null,
+        operating_hours: order.Restaurant.operating_hours ?? null,
+        latitude: order.Restaurant.lat ?? null,
+        longitude: order.Restaurant.long ?? null,
+      };
+    }
+
+    // For business orders, set shop from business_store and map fee fields
+    if (orderType === "business" && order.business_store) {
+      formattedOrder.serviceFee = order.service_fee ?? "0";
+      formattedOrder.deliveryFee = order.transportation_fee ?? "0";
+      const addr =
+        typeof order.deliveryAddress === "string"
+          ? order.deliveryAddress
+          : order.deliveryAddress?.address ||
+            [order.deliveryAddress?.street, order.deliveryAddress?.city]
+              .filter(Boolean)
+              .join(", ") ||
+            null;
+      formattedOrder.shop = {
+        id: order.business_store.id,
+        name: order.business_store.name,
+        address: addr ?? "",
+        phone: null,
+        image: null,
+        operating_hours: null,
+        latitude: order.business_store.latitude ?? null,
+        longitude: order.business_store.longitude ?? null,
+      };
+      formattedOrder.address = {
+        id: order.id,
+        street: addr ?? "",
+        city: "",
+        postal_code: "",
+        latitude: String(order.latitude ?? ""),
+        longitude: String(order.longitude ?? ""),
+      };
+      formattedOrder.Order_Items = Array.isArray(order.allProducts)
+        ? order.allProducts.map((p: any) => ({
+            id: p.id || p.product_id,
+            product_id: p.id || p.product_id,
+            quantity: p.quantity || 1,
+            price: p.price || "0",
+            product: {
+              id: p.id || p.product_id,
+              ProductName: { name: p.name || "Item" },
+            },
+          }))
+        : [];
+    }
 
     console.log("✅ Successfully formatted order:", {
       orderType,

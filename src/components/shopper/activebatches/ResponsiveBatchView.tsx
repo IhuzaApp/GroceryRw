@@ -13,21 +13,22 @@ interface Order {
   OrderID: string | number;
   orderIDs?: Array<string | number>;
   status: string;
-  createdAt: string;
+  createdAt?: string;
+  created_at?: string;
   deliveryTime?: string;
-  shopName: string;
+  shopName?: string;
   shopNames?: string[];
-  shopAddress: string;
-  shopLat: number;
-  shopLng: number;
-  customerName: string;
-  customerAddress: string;
-  customerLat: number;
-  customerLng: number;
-  items: number;
+  shopAddress?: string;
+  shopLat?: number;
+  shopLng?: number;
+  customerName?: string;
+  customerAddress?: string;
+  customerLat?: number;
+  customerLng?: number;
+  items?: number;
   total: number;
-  estimatedEarnings: string;
-  orderType?: "regular" | "reel" | "restaurant" | "combined";
+  estimatedEarnings?: string;
+  orderType?: "regular" | "reel" | "restaurant" | "combined" | "business";
   reel?: {
     id: string;
     title: string;
@@ -53,6 +54,8 @@ interface ResponsiveBatchViewProps {
 export function ResponsiveBatchView({
   orders,
   isLoading = false,
+  onRefresh,
+  isRefreshing = false,
 }: ResponsiveBatchViewProps) {
   const { theme } = useTheme();
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -71,6 +74,37 @@ export function ResponsiveBatchView({
   useEffect(() => {
     setFilteredOrders(orders);
   }, [orders]);
+
+  // Group orders by day (created_at) for mobile view
+  const groupOrdersByDay = (ordersList: Order[]) => {
+    const grouped: { [key: string]: { orders: Order[]; date: Date } } = {};
+
+    ordersList.forEach((order) => {
+      const date = new Date(
+        order.createdAt || order.created_at || order.deliveryTime || Date.now()
+      );
+      const dayKey = date.toLocaleDateString("en-US", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+
+      if (!grouped[dayKey]) {
+        grouped[dayKey] = { orders: [], date };
+      }
+      grouped[dayKey].orders.push(order);
+    });
+
+    // Sort days in descending order (most recent first)
+    return Object.keys(grouped)
+      .sort((a, b) => {
+        return grouped[b].date.getTime() - grouped[a].date.getTime();
+      })
+      .map((day) => ({
+        day,
+        orders: grouped[day].orders,
+      }));
+  };
 
   const calculateUrgency = (order: Order): string => {
     const now = currentTime.getTime();
@@ -145,7 +179,11 @@ export function ResponsiveBatchView({
   return (
     <div>
       {/* Filters - Show on both desktop and mobile */}
-      <BatchFilters onFilterChange={handleFilterChange} />
+      <BatchFilters
+        onFilterChange={handleFilterChange}
+        onRefresh={onRefresh}
+        isRefreshing={isRefreshing}
+      />
 
       {/* Loading Skeletons */}
       {isLoading && (
@@ -174,15 +212,28 @@ export function ResponsiveBatchView({
 
           {/* Mobile Card View - Hidden on desktop */}
           <div className="block lg:hidden">
-            <div className="grid grid-cols-1 gap-4 sm:gap-6">
-              {filteredOrders.map((order) => (
-                <BatchCardMobile
-                  key={order.id}
-                  order={order}
-                  currentTime={currentTime}
-                />
-              ))}
-            </div>
+            {groupOrdersByDay(filteredOrders).map(({ day, orders }) => (
+              <div key={day} className="mb-6">
+                {/* Day Header */}
+                <h2
+                  className={`mb-4 text-lg font-bold ${
+                    theme === "dark" ? "text-gray-100" : "text-gray-900"
+                  }`}
+                >
+                  {day}
+                </h2>
+                {/* Cards for this day */}
+                <div className="grid grid-cols-1 gap-4">
+                  {orders.map((order) => (
+                    <BatchCardMobile
+                      key={order.id}
+                      order={order}
+                      currentTime={currentTime}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </>
       )}

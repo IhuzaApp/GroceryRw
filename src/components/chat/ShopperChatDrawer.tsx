@@ -69,40 +69,77 @@ interface Message {
   read: boolean;
 }
 
+// Pending (optimistic) message before Firebase confirms
+interface PendingMessage {
+  tempId: string;
+  text: string;
+  senderId: string;
+  senderType: "customer" | "shopper";
+  timestamp: Date;
+}
+
 // Message component for shoppers
 interface MessageProps {
-  message: Message;
+  message: Message | PendingMessage;
   isCurrentUser: boolean;
   customerName: string;
+  statusLabel?: "Sending..." | "Sent" | null;
 }
 
 const ShopperMessage: React.FC<MessageProps> = ({
   message,
   isCurrentUser,
   customerName,
+  statusLabel,
 }) => {
-  const messageContent = message.text || message.message || "";
+  const messageContent =
+    "text" in message
+      ? message.text
+      : (message as Message).text || (message as Message).message || "";
 
   return (
     <div
-      className={`mb-2 flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
+      className={`mb-3 flex gap-2 ${
+        isCurrentUser ? "justify-end" : "justify-start"
+      }`}
     >
-      {!isCurrentUser && <Avatar color="blue" circle size="xs" />}
+      {!isCurrentUser && (
+        <div className="flex-shrink-0">
+          <Avatar color="green" circle size="sm" />
+        </div>
+      )}
       <div
-        className={`max-w-[80%] ${
-          isCurrentUser
-            ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100"
-            : "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100"
-        } rounded-lg p-2`}
+        className={`flex max-w-[82%] flex-col ${
+          isCurrentUser ? "items-end" : "items-start"
+        }`}
       >
-        {!isCurrentUser && (
-          <div className="mb-1 text-xs font-medium text-gray-600 dark:text-gray-300">
-            {customerName}
+        <div
+          className={`rounded-2xl px-4 py-2.5 shadow-sm ${
+            isCurrentUser
+              ? "bg-emerald-500 text-white dark:bg-emerald-600"
+              : "bg-white text-gray-900 shadow-gray-200/50 dark:bg-gray-700 dark:text-gray-100 dark:shadow-none"
+          }`}
+        >
+          {!isCurrentUser && (
+            <div className="mb-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+              {customerName}
+            </div>
+          )}
+          <div className="whitespace-pre-wrap text-sm leading-relaxed">
+            {messageContent}
           </div>
+        </div>
+        {isCurrentUser && statusLabel && (
+          <span className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            {statusLabel}
+          </span>
         )}
-        <div className="whitespace-pre-wrap text-sm">{messageContent}</div>
       </div>
-      {isCurrentUser && <Avatar color="blue" circle size="xs" />}
+      {isCurrentUser && (
+        <div className="flex-shrink-0">
+          <Avatar color="green" circle size="sm" />
+        </div>
+      )}
     </div>
   );
 };
@@ -128,8 +165,8 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
 }) => {
   const { data: session } = useSession();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [isSending, setIsSending] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -201,6 +238,18 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
               : doc.data().timestamp,
         })) as Message[];
 
+        // Remove pending messages that are now confirmed in Firebase (same text + senderId)
+        setPendingMessages((prev) =>
+          prev.filter(
+            (p) =>
+              !messagesList.some(
+                (m) =>
+                  m.senderId === p.senderId &&
+                  (m.text === p.text || m.message === p.text)
+              )
+          )
+        );
+
         // Check for new unread messages from customer and play sound
         const previousMessageCount = messages.length;
         const newMessages = messagesList.slice(previousMessageCount);
@@ -249,10 +298,10 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
     return () => unsubscribe();
   }, [conversationId, session?.user?.id]);
 
-  // Scroll to bottom when messages change
+  // Scroll to bottom when messages or pending change
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, pendingMessages]);
 
   // Initialize conversation when drawer opens
   useEffect(() => {
@@ -261,7 +310,31 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
     }
   }, [isOpen, orderId, customer?.id]);
 
-  // Handle sending a new message
+  // Combined list for display: server messages + pending (optimistic), sorted by time
+  const displayMessages = React.useMemo(() => {
+    const pendingAsDisplay: (Message | PendingMessage)[] = pendingMessages.map(
+      (p) => ({
+        ...p,
+        id: p.tempId,
+        timestamp: p.timestamp,
+      })
+    );
+    const combined = [...messages, ...pendingAsDisplay];
+    combined.sort((a, b) => {
+      const tA =
+        a.timestamp instanceof Date
+          ? a.timestamp.getTime()
+          : a.timestamp?.getTime?.() ?? 0;
+      const tB =
+        b.timestamp instanceof Date
+          ? b.timestamp.getTime()
+          : b.timestamp?.getTime?.() ?? 0;
+      return tA - tB;
+    });
+    return combined;
+  }, [messages, pendingMessages]);
+
+  // Handle sending a new message (optimistic: show immediately with "Sending...", then "Sent" when confirmed)
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
@@ -274,9 +347,24 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
       return;
     }
 
-    try {
-      setIsSending(true);
+    const text = newMessage.trim();
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
+    // Optimistic: add to UI immediately with "Sending..." status
+    setPendingMessages((prev) => [
+      ...prev,
+      {
+        tempId,
+        text,
+        senderId: session.user.id,
+        senderType: "shopper",
+        timestamp: new Date(),
+      },
+    ]);
+    setNewMessage("");
+    scrollToBottom();
+
+    try {
       // Add new message to Firestore
       const messagesRef = collection(
         db,
@@ -285,8 +373,8 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
         "messages"
       );
       await addDoc(messagesRef, {
-        text: newMessage.trim(),
-        message: newMessage.trim(),
+        text,
+        message: text,
         senderId: session.user.id,
         senderName: session.user.name || "Shopper",
         senderType: "shopper",
@@ -298,14 +386,14 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
       // Update conversation with last message
       const convRef = doc(db, "chat_conversations", conversationId);
       await updateDoc(convRef, {
-        lastMessage: newMessage.trim(),
+        lastMessage: text,
         lastMessageTime: serverTimestamp(),
         unreadCount: 1, // Increment unread count for customer
       });
 
       // Send FCM notification to the customer
       try {
-        const response = await fetch("/api/fcm/send-notification", {
+        await fetch("/api/fcm/send-notification", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -313,31 +401,18 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
           body: JSON.stringify({
             recipientId: customer.id,
             senderName: session.user.name || "Shopper",
-            message: newMessage.trim(),
+            message: text,
             orderId: orderId,
             conversationId: conversationId,
           }),
         });
-
-        if (response.ok) {
-          // FCM notification sent successfully
-        } else {
-          // FCM notification failed (non-critical)
-        }
-      } catch (fcmError) {
-        console.error(
-          "⚠️ [Shopper Chat Drawer] FCM notification error (non-critical):",
-          fcmError
-        );
+      } catch {
+        // FCM non-critical
       }
-
-      // Clear input
-      setNewMessage("");
-    } catch (error) {
-      console.error("Error sending message:", error);
+    } catch (err) {
+      console.error("Error sending message:", err);
       setError("Error sending message. Please try again later.");
-    } finally {
-      setIsSending(false);
+      setPendingMessages((prev) => prev.filter((p) => p.tempId !== tempId));
     }
   };
 
@@ -351,13 +426,14 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed right-0 top-16 z-[1000] hidden h-[calc(100vh-4rem)] w-[28rem] transform bg-white shadow-xl transition-transform duration-300 ease-in-out dark:bg-gray-800 md:block">
-      {/* Compact Header */}
-      <div className="flex items-center justify-between border-b border-gray-200 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
-        <div className="flex items-center gap-2">
+    <div className="fixed right-0 top-16 z-[1000] hidden flex-col overflow-hidden rounded-l-2xl border-l border-gray-200 bg-white shadow-2xl shadow-gray-300/30 transition-transform duration-300 ease-in-out dark:border-gray-700 dark:bg-gray-800 dark:shadow-black/20 md:flex md:h-[calc(100vh-4rem)] md:w-[28rem]">
+      {/* Header */}
+      <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           <button
             onClick={onClose}
-            className="rounded-full p-1 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+            className="flex-shrink-0 rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+            aria-label="Close chat"
           >
             <svg
               width="20"
@@ -366,97 +442,140 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
           </button>
-          <Avatar src={customer.avatar} alt={customer.name} circle size="xs" />
-          <div>
-            <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+          <div className="relative flex-shrink-0">
+            <Avatar
+              src={customer.avatar}
+              alt={customer.name}
+              circle
+              size="md"
+              className="ring-2 ring-emerald-500/20 dark:ring-emerald-400/30"
+            />
+            <span
+              className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500 dark:border-gray-800 dark:bg-emerald-400"
+              title="Online"
+            />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate font-semibold text-gray-900 dark:text-white">
               {customer.name}
             </h3>
             <p className="text-xs text-gray-500 dark:text-gray-400">Customer</p>
           </div>
         </div>
         {customer.phone && (
-          <button
-            onClick={() => window.open(`tel:${customer.phone}`, "_self")}
-            className="rounded-full bg-green-500 p-1.5 text-white hover:bg-green-600"
+          <a
+            href={`tel:${customer.phone}`}
+            className="flex-shrink-0 rounded-full bg-emerald-500 p-2.5 text-white transition-colors hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+            aria-label="Call customer"
           >
             <svg
-              width="14"
-              height="14"
+              width="18"
+              height="18"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1 .45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
             </svg>
-          </button>
+          </a>
         )}
       </div>
 
       {/* Messages */}
-      <div className="flex h-[calc(100vh-8rem)] flex-col">
-        <div
-          className="flex-1 overflow-y-auto bg-gray-50 px-3 py-2 dark:bg-gray-900"
-          ref={messagesEndRef}
-        >
-          {messages.length === 0 ? (
-            <div className="flex h-full items-center justify-center">
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex-1 overflow-y-auto bg-gray-50/80 px-4 py-4 dark:bg-gray-900/80">
+          {displayMessages.length === 0 ? (
+            <div className="flex h-full min-h-[200px] items-center justify-center">
               <div className="text-center">
-                <div className="mb-2 text-4xl">💬</div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 dark:bg-emerald-900/40">
+                  <svg
+                    className="h-7 w-7 text-emerald-600 dark:text-emerald-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                </div>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Start chatting with your customer
+                </p>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Messages appear here
                 </p>
               </div>
             </div>
           ) : (
-            messages.map((message) => (
-              <ShopperMessage
-                key={message.id}
-                message={message}
-                isCurrentUser={message.senderId === session?.user?.id}
-                customerName={customer.name}
-              />
-            ))
+            <>
+              {displayMessages.map((message) => {
+                const isCurrentUser = message.senderId === session?.user?.id;
+                const isPending =
+                  "tempId" in message && message.tempId.startsWith("temp-");
+                const statusLabel: "Sending..." | "Sent" | null = isCurrentUser
+                  ? isPending
+                    ? "Sending..."
+                    : "Sent"
+                  : null;
+                return (
+                  <ShopperMessage
+                    key={message.id}
+                    message={message}
+                    isCurrentUser={isCurrentUser}
+                    customerName={customer.name}
+                    statusLabel={statusLabel}
+                  />
+                );
+              })}
+              <div ref={messagesEndRef} />
+            </>
           )}
         </div>
 
-        {/* Input */}
-        <div className="border-t border-gray-200 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
-          <form onSubmit={handleSendMessage} className="flex gap-2">
+        {/* Input area */}
+        <div className="flex-shrink-0 border-t border-gray-200 bg-white px-4 py-4 dark:border-gray-700 dark:bg-gray-800">
+          <form
+            onSubmit={handleSendMessage}
+            className="flex items-center gap-3"
+          >
             <input
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Type a message..."
-              className="flex-1 rounded-full border border-gray-300 bg-gray-50 px-3 py-2 text-sm focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-400 dark:focus:bg-gray-600"
+              className="min-w-0 flex-1 rounded-2xl border border-gray-200 bg-gray-100 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-500 transition-colors focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-emerald-400 dark:focus:bg-gray-600 dark:focus:ring-emerald-500/30"
             />
             <button
               type="submit"
-              disabled={isSending || !newMessage.trim()}
-              className="rounded-full bg-blue-500 p-2 text-white shadow-lg transition-all duration-200 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
+              disabled={!newMessage.trim()}
+              className="flex-shrink-0 rounded-full bg-emerald-500 p-2.5 text-white shadow-md transition-all duration-200 hover:bg-emerald-600 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none dark:focus:ring-offset-gray-800"
+              aria-label="Send message"
             >
-              {isSending ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-              ) : (
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                  />
-                </svg>
-              )}
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
             </button>
           </form>
         </div>
@@ -464,7 +583,7 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
 
       {/* Error */}
       {error && (
-        <div className="border-t border-red-200 bg-red-50 px-3 py-1 dark:border-red-800 dark:bg-red-900">
+        <div className="flex-shrink-0 border-t border-red-200 bg-red-50 px-4 py-2 dark:border-red-800 dark:bg-red-900/30">
           <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
         </div>
       )}

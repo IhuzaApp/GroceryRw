@@ -42,7 +42,7 @@ type Order = {
   } | null;
   service_fee?: number;
   delivery_fee?: number;
-  orderType?: "regular" | "reel" | "restaurant";
+  orderType?: "regular" | "reel" | "restaurant" | "business";
   reel?: {
     id: string;
     title: string;
@@ -98,24 +98,92 @@ function timeAgo(timestamp: string): string {
   return `${years} year${years !== 1 ? "s" : ""} ago`;
 }
 
-// Helper to display estimated delivery time with real-time countdown
+const DELAYED_NOTIFIED_STORAGE_KEY = "plasa_delayed_notified_ids";
+const DELAYED_NOTIFIED_MAX_IDS = 50;
+
+function getDelayedNotifiedIds(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const raw = localStorage.getItem(DELAYED_NOTIFIED_STORAGE_KEY);
+    const arr = raw ? (JSON.parse(raw) as string[]) : [];
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function markDelayedNotified(orderId: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const set = getDelayedNotifiedIds();
+    set.add(orderId);
+    const arr = Array.from(set);
+    const trimmed =
+      arr.length > DELAYED_NOTIFIED_MAX_IDS
+        ? arr.slice(-DELAYED_NOTIFIED_MAX_IDS)
+        : arr;
+    localStorage.setItem(DELAYED_NOTIFIED_STORAGE_KEY, JSON.stringify(trimmed));
+  } catch {
+    // ignore
+  }
+}
+
+// Helper to display estimated delivery time with real-time countdown.
+// When ≤2 minutes remain (or already late), triggers one Slack delayed-order notification.
+// Skips orders already notified (stored in localStorage) so refresh/refetch doesn't re-alert.
 function EstimatedDelivery({
   deliveryTime,
   status,
+  orderId,
+  orderType = "regular",
 }: {
   deliveryTime: string;
   status: string;
+  orderId?: string;
+  orderType?: "regular" | "reel" | "restaurant" | "business";
 }) {
   const [currentTime, setCurrentTime] = useState(Date.now());
+  const notifiedRef = React.useRef(false);
 
   useEffect(() => {
-    // Update every second
     const interval = setInterval(() => {
       setCurrentTime(Date.now());
     }, 1000);
-
     return () => clearInterval(interval);
   }, []);
+
+  // Trigger delayed-order Slack notification when countdown hits ≤2 min or is late (once per order)
+  useEffect(() => {
+    if (!deliveryTime || status === "delivered" || !orderId) return;
+    const alreadyNotified = getDelayedNotifiedIds().has(orderId);
+    if (alreadyNotified) {
+      notifiedRef.current = true;
+      return;
+    }
+    const est = new Date(deliveryTime).getTime();
+    const diffMs = est - currentTime;
+    const minutesRemaining = diffMs / 60000;
+    const shouldNotify = minutesRemaining <= 2;
+    if (shouldNotify && !notifiedRef.current) {
+      notifiedRef.current = true;
+      fetch("/api/notifications/check-delayed-orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId,
+          orderType,
+          minutesRemaining: Math.round(minutesRemaining * 10) / 10,
+        }),
+      })
+        .then((res) => {
+          if (res.ok) markDelayedNotified(orderId);
+        })
+        .catch((err) => {
+          notifiedRef.current = false;
+          console.error("Delayed order notification failed", err);
+        });
+    }
+  }, [deliveryTime, status, orderId, orderType, currentTime]);
 
   if (!deliveryTime) return null;
   if (status === "delivered") {
@@ -126,14 +194,12 @@ function EstimatedDelivery({
   const diffMs = est.getTime() - currentTime;
   const isLate = diffMs <= 0;
 
-  // Calculate time difference
   const absMs = Math.abs(diffMs);
   const days = Math.floor(absMs / (1000 * 60 * 60 * 24));
   const hours = Math.floor((absMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const mins = Math.floor((absMs % (1000 * 60 * 60)) / (1000 * 60));
   const secs = Math.floor((absMs % (1000 * 60)) / 1000);
 
-  // Format countdown
   let countdownText: string;
   if (days > 0) {
     countdownText = `${isLate ? "-" : "+"}${days}d ${String(hours).padStart(
@@ -194,6 +260,7 @@ export default function UserRecentOrders({
 }: UserRecentOrdersProps) {
   const { pathname } = useRouter();
   const isPendingOrdersPage = pathname === "/CurrentPendingOrders";
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 4;
@@ -227,61 +294,21 @@ export default function UserRecentOrders({
     );
   });
 
-  // Group orders by combined_order_id
+  // Treat every order as an individual group (no combined orders)
   const groupOrders = (orders: Order[]): OrderGroup[] => {
-    const grouped: { [key: string]: Order[] } = {};
-    const singles: Order[] = [];
-
-    orders.forEach((order) => {
-      if (order.combined_order_id) {
-        if (!grouped[order.combined_order_id]) {
-          grouped[order.combined_order_id] = [];
-        }
-        grouped[order.combined_order_id].push(order);
-      } else {
-        singles.push(order);
-      }
-    });
-
-    // Convert grouped orders to OrderGroup format
-    const groupedOrders: OrderGroup[] = Object.entries(grouped).map(
-      ([combinedId, groupOrders]) => {
-        const totalAmount = groupOrders.reduce((sum, o) => sum + o.total, 0);
-        const earliestDate = groupOrders.reduce((earliest, o) =>
-          new Date(o.created_at) < new Date(earliest.created_at) ? o : earliest
-        ).created_at;
-        // Combined order status is "delivered" only if ALL orders are delivered
-        const allDelivered = groupOrders.every((o) => o.status === "delivered");
-        return {
-          id: combinedId,
-          is_combined: true,
-          orders: groupOrders.sort(
-            (a, b) =>
-              new Date(b.created_at).getTime() -
-              new Date(a.created_at).getTime()
-          ),
-          total: totalAmount,
-          created_at: earliestDate,
-          status: allDelivered ? "delivered" : "pending",
-        };
-      }
-    );
-
-    // Add single orders
-    const singleOrders: OrderGroup[] = singles.map((order) => ({
-      id: order.id,
-      is_combined: false,
-      orders: [order],
-      total: order.total,
-      created_at: order.created_at,
-      status: order.status,
-    }));
-
-    // Combine and sort by date (newest first)
-    return [...groupedOrders, ...singleOrders].sort(
-      (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
+    return orders
+      .map((order) => ({
+        id: order.id,
+        is_combined: false,
+        orders: [order],
+        total: order.total,
+        created_at: order.created_at,
+        status: order.status,
+      }))
+      .sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
   };
 
   const orderGroups = groupOrders(filteredOrders);
@@ -301,7 +328,7 @@ export default function UserRecentOrders({
     <>
       <div className="mb-4">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+          <h3 className="text-base font-bold text-gray-900 dark:text-white md:text-lg">
             Orders
           </h3>
           {onRefresh && (
@@ -392,214 +419,156 @@ export default function UserRecentOrders({
         <p className="text-gray-600 dark:text-gray-400">No orders found.</p>
       ) : (
         visibleOrderGroups.map((group: OrderGroup) =>
-          group.is_combined ? (
-            // Combined Orders Group - Simple Card Design
-            <Link
-              key={group.id}
-              href={`/CurrentPendingOrders/viewOrderDetails/${group.orders[0]?.id}`}
-              className="group mb-2 block overflow-hidden border-b border-green-200 bg-gradient-to-r from-green-50/80 to-emerald-50/80 p-4 transition-all duration-300 hover:from-green-50 hover:to-emerald-50 dark:border-green-800 dark:from-green-900/20 dark:to-emerald-900/20 dark:hover:from-green-900/30 dark:hover:to-emerald-900/30 md:mb-3 md:rounded-xl md:border-2 md:shadow-md md:hover:shadow-xl"
-            >
-              <div className="flex items-center gap-3">
-                {/* Group Image - Overlapping shop images */}
-                <div className="relative flex-shrink-0">
-                  {group.orders.slice(0, 3).map((order, idx) => (
-                    <div
-                      key={order.id}
-                      className="absolute"
-                      style={{
-                        left: `${idx * 14}px`,
-                        zIndex: 3 - idx,
-                      }}
-                    >
-                      {order.shop?.image ? (
-                        <img
-                          src={order.shop.image}
-                          alt={order.shop.name}
-                          className="h-12 w-12 rounded-lg border-2 border-white object-cover shadow-md dark:border-gray-800 md:h-10 md:w-10"
-                          onError={(e) => {
-                            e.currentTarget.src =
-                              "/images/shop-placeholder.jpg";
-                          }}
-                        />
-                      ) : (
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg border-2 border-white bg-gradient-to-br from-green-100 to-emerald-100 shadow-md dark:border-gray-800 dark:from-green-900/50 dark:to-emerald-900/50 md:h-10 md:w-10">
-                          <svg
-                            className="h-6 w-6 text-green-600 dark:text-green-400 md:h-5 md:w-5"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                          >
-                            <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                          </svg>
+          group.is_combined
+            ? null
+            : // Single Order (Original Display)
+              group.orders.map((order: Order) => (
+                <Link
+                  key={order.id}
+                  href={`/CurrentPendingOrders/viewOrderDetails/${order.id}${
+                    order.orderType ? `?type=${order.orderType}` : ""
+                  }`}
+                  className={`group block overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-md transition-all duration-300 hover:border-green-200 hover:bg-gray-50 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 dark:shadow-md dark:hover:border-green-500 dark:hover:bg-gray-800/80 dark:hover:shadow-2xl ${
+                    isPendingOrdersPage ? "mb-4 md:mb-4" : "mb-2 md:mb-2"
+                  }`}
+                >
+                  <div className="flex items-center gap-3 md:gap-4">
+                    {/* Shop Image */}
+                    {order.shop && (
+                      <div className="flex-shrink-0">
+                        {(order.shop as any)?.logo || order.shop?.image ? (
+                          <img
+                            src={(order.shop as any)?.logo || order.shop.image}
+                            alt={order.shop.name}
+                            className="h-12 w-12 rounded-full object-cover md:h-10 md:w-10"
+                            onError={(e) => {
+                              e.currentTarget.src =
+                                "/images/shop-placeholder.jpg";
+                            }}
+                          />
+                        ) : (
+                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700 md:h-10 md:w-10">
+                            <svg
+                              className="h-6 w-6 text-gray-400 dark:text-gray-500 md:h-5 md:w-5"
+                              viewBox="0 0 24 24"
+                              fill="currentColor"
+                            >
+                              <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Order Details - Left Column */}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <div className="truncate text-xs font-semibold text-gray-900 dark:text-white md:text-sm">
+                          {order.orderType === "reel" && order.reel
+                            ? order.reel.title
+                            : order?.shop?.name || "Unknown Shop"}
+                        </div>
+                        {order.orderType === "business" && (
+                          <span className="inline-flex items-center justify-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                            Store
+                          </span>
+                        )}
+                        {order.orderType === "reel" && (
+                          <span className="inline-flex items-center justify-center rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                            <svg
+                              className="mr-1 h-3 w-3"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <circle cx="12" cy="12" r="3" />
+                              <rect
+                                x="3"
+                                y="3"
+                                width="7"
+                                height="7"
+                                rx="1.5"
+                                ry="1.5"
+                              />
+                              <rect
+                                x="14"
+                                y="3"
+                                width="7"
+                                height="7"
+                                rx="1.5"
+                                ry="1.5"
+                              />
+                              <rect
+                                x="3"
+                                y="14"
+                                width="7"
+                                height="7"
+                                rx="1.5"
+                                ry="1.5"
+                              />
+                              <rect
+                                x="14"
+                                y="14"
+                                width="7"
+                                height="7"
+                                rx="1.5"
+                                ry="1.5"
+                              />
+                            </svg>
+                            Reel
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[10px] text-gray-500 dark:text-gray-400 md:text-xs">
+                        <span>
+                          {order.unitsCount || 0}{" "}
+                          {order.unitsCount === 1 ? "unit" : "units"}
+                        </span>
+                        <span className="hidden text-gray-300 dark:text-gray-600 md:inline">
+                          •
+                        </span>
+                        <span className="font-mono text-[11px] md:text-xs">
+                          ID #{formatOrderID(order?.OrderID)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Time, Total & PIN - Right Column */}
+                    <div className="flex flex-col items-end gap-1 text-right">
+                      <div className="text-[10px] text-gray-500 dark:text-gray-400 md:text-[11px]">
+                        {timeAgo(order?.created_at)}
+                      </div>
+                      <div className="text-xs font-bold text-gray-900 dark:text-white md:text-sm">
+                        {formatCurrency(order.total)}
+                      </div>
+                      {order?.pin && (
+                        <div className="mt-0.5 inline-flex items-center gap-1 rounded-full border border-dashed border-green-400 bg-green-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-600 dark:border-green-600 dark:bg-green-900/20 dark:text-green-400">
+                          <span>PIN</span>
+                          <span className="font-mono text-xs leading-none">
+                            {order.pin}
+                          </span>
                         </div>
                       )}
                     </div>
-                  ))}
-                  {/* Spacer to account for overlapping images */}
-                  <div
-                    className="h-12 md:h-10"
-                    style={{
-                      width: `${Math.min(group.orders.length, 3) * 14 + 34}px`,
-                    }}
-                  ></div>
-                </div>
+                  </div>
 
-                {/* Order Details - Left Column */}
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-bold text-gray-900 dark:text-white">
-                    {group.orders.length === 1
-                      ? group.orders[0]?.shop?.name || "Unknown Shop"
-                      : group.orders.length === 2
-                      ? `${group.orders[0]?.shop?.name} & ${group.orders[1]?.shop?.name}`
-                      : `${group.orders[0]?.shop?.name} & ${
-                          group.orders.length - 1
-                        } others`}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {group.orders.reduce(
-                      (sum, o) => sum + (o.unitsCount || 0),
-                      0
-                    )}{" "}
-                    units • {group.orders.length}{" "}
-                    {group.orders.length === 1 ? "store" : "stores"}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    ID{" "}
-                    {group.orders.map((o, idx) => (
-                      <span key={o.id}>
-                        #{formatOrderID(o?.OrderID)}
-                        {idx < group.orders.length - 1 ? " & " : ""}
+                  {/* Delivery Time */}
+                  {order?.delivery_time && (
+                    <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-2 dark:border-gray-700">
+                      <span className="text-[10px] text-gray-600 dark:text-gray-400 md:text-xs">
+                        Expected Delivery:
                       </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* PIN Display for Combined Orders */}
-                {group.orders[0]?.pin && (
-                  <div className="flex flex-col items-center justify-center gap-0.5 rounded-lg border-2 border-dashed border-green-400 bg-gradient-to-br from-green-50 to-green-100 px-2.5 py-1 dark:border-green-600 dark:from-green-900/30 dark:to-green-800/20">
-                    <span className="text-[9px] font-bold uppercase tracking-wide text-green-600 dark:text-green-400">
-                      PIN
-                    </span>
-                    <span className="text-lg font-black leading-none tracking-wider text-green-700 dark:text-green-300">
-                      {group.orders[0].pin}
-                    </span>
-                  </div>
-                )}
-
-                {/* Time and Price - Right Column */}
-                <div className="flex flex-col items-end gap-0.5 text-right">
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {timeAgo(group.created_at)}
-                  </div>
-                  <div className="text-sm font-bold text-gray-900 dark:text-white">
-                    {formatCurrency(group.total)}
-                  </div>
-                </div>
-              </div>
-
-              {/* Delivery Time */}
-              {group.orders[0]?.delivery_time && (
-                <div className="mt-3 flex items-center justify-between border-t border-green-100 pt-2 dark:border-green-800/30">
-                  <span className="text-xs text-gray-600 dark:text-gray-400">
-                    Expected Delivery:
-                  </span>
-                  <EstimatedDelivery
-                    deliveryTime={group.orders[0].delivery_time}
-                    status={group.status}
-                  />
-                </div>
-              )}
-            </Link>
-          ) : (
-            // Single Order (Original Display)
-            group.orders.map((order: Order) => (
-              <Link
-                key={order.id}
-                href={`/CurrentPendingOrders/viewOrderDetails/${order.id}`}
-                className="group mb-2 block overflow-hidden border-b border-gray-200 bg-white p-4 transition-all duration-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-800/80 md:mb-2 md:rounded-lg md:border md:p-3 md:shadow-sm md:hover:border-green-200 md:hover:shadow-lg"
-              >
-                <div className="flex items-center gap-3">
-                  {/* Shop Image */}
-                  {order.shop && (
-                    <div className="flex-shrink-0">
-                      {order.shop.image ? (
-                        <img
-                          src={order.shop.image}
-                          alt={order.shop.name}
-                          className="h-12 w-12 rounded-lg object-cover md:h-10 md:w-10"
-                          onError={(e) => {
-                            // Fallback to placeholder if image fails
-                            e.currentTarget.src =
-                              "/images/shop-placeholder.jpg";
-                          }}
-                        />
-                      ) : (
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700 md:h-10 md:w-10">
-                          <svg
-                            className="h-6 w-6 text-gray-400 dark:text-gray-500 md:h-5 md:w-5"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                          >
-                            <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                          </svg>
-                        </div>
-                      )}
+                      <EstimatedDelivery
+                        deliveryTime={order.delivery_time}
+                        status={order.status}
+                        orderId={order.id}
+                        orderType={order.orderType}
+                      />
                     </div>
                   )}
-
-                  {/* Order Details - Left Column */}
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-bold text-gray-900 dark:text-white">
-                      {order.orderType === "reel" && order.reel
-                        ? order.reel.title
-                        : order?.shop?.name || "Unknown Shop"}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {order.unitsCount || 0}{" "}
-                      {order.unitsCount === 1 ? "unit" : "units"}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      ID #{formatOrderID(order?.OrderID)}
-                    </div>
-                  </div>
-
-                  {/* PIN Display */}
-                  {order?.pin && (
-                    <div className="flex flex-col items-center justify-center gap-0.5 rounded-lg border-2 border-dashed border-green-400 bg-gradient-to-br from-green-50 to-green-100 px-2.5 py-1 dark:border-green-600 dark:from-green-900/30 dark:to-green-800/20">
-                      <span className="text-[9px] font-bold uppercase tracking-wide text-green-600 dark:text-green-400">
-                        PIN
-                      </span>
-                      <span className="text-lg font-black leading-none tracking-wider text-green-700 dark:text-green-300">
-                        {order.pin}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Time and Price - Right Column */}
-                  <div className="flex flex-col items-end gap-0.5 text-right">
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {timeAgo(order?.created_at)}
-                    </div>
-                    <div className="text-sm font-bold text-gray-900 dark:text-white">
-                      {formatCurrency(order.total)}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Delivery Time */}
-                {order?.delivery_time && (
-                  <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-2 dark:border-gray-700">
-                    <span className="text-xs text-gray-600 dark:text-gray-400">
-                      Expected Delivery:
-                    </span>
-                    <EstimatedDelivery
-                      deliveryTime={order.delivery_time}
-                      status={order.status}
-                    />
-                  </div>
-                )}
-              </Link>
-            ))
-          )
+                </Link>
+              ))
         )
       )}
       {/* Pagination */}

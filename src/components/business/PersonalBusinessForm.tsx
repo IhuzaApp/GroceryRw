@@ -124,18 +124,7 @@ export default function PersonalBusinessForm({
     } finally {
       setLoading(false);
     }
-  }, [
-    businessName,
-    faceImage,
-    idImage,
-    businessLocation,
-    businessDescription,
-    defaultAddress,
-    userDetails,
-    session,
-    user,
-    onSuccess,
-  ]);
+  }, [businessName, faceImage, idImage, businessLocation, onSuccess]);
 
   useEffect(() => {
     if (onSubmitRef) {

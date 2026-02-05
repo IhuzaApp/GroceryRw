@@ -92,21 +92,12 @@ const ACCEPT_RESTAURANT_BATCH_MUTATION = gql`
   }
 `;
 
-const CHECK_ORDER_EXISTS = gql`
-  query CheckOrderExists($orderId: uuid!) {
-    Orders(where: { id: { _eq: $orderId } }) {
-      id
-      status
-      shopper_id
-    }
-
-    reel_orders(where: { id: { _eq: $orderId } }) {
-      id
-      status
-      shopper_id
-    }
-
-    restaurant_orders(where: { id: { _eq: $orderId } }) {
+const ACCEPT_BUSINESS_BATCH_MUTATION = gql`
+  mutation AcceptBusinessBatch($orderId: uuid!, $shopperId: uuid!) {
+    update_businessProductOrders_by_pk(
+      pk_columns: { id: $orderId }
+      _set: { shopper_id: $shopperId }
+    ) {
       id
       status
       shopper_id
@@ -114,7 +105,54 @@ const CHECK_ORDER_EXISTS = gql`
   }
 `;
 
+const CHECK_ORDER_EXISTS = gql`
+  query CheckOrderExists($orderId: uuid!) {
+    Orders(where: { id: { _eq: $orderId } }) {
+      id
+      status
+      shopper_id
+      Address {
+        latitude
+        longitude
+      }
+    }
+
+    reel_orders(where: { id: { _eq: $orderId } }) {
+      id
+      status
+      shopper_id
+      address: Address {
+        latitude
+        longitude
+      }
+    }
+
+    restaurant_orders(where: { id: { _eq: $orderId } }) {
+      id
+      status
+      shopper_id
+      address: Address {
+        latitude
+        longitude
+      }
+    }
+
+    businessProductOrders(where: { id: { _eq: $orderId } }) {
+      id
+      status
+      shopper_id
+      latitude
+      longitude
+      business_store {
+        latitude
+        longitude
+      }
+    }
+  }
+`;
+
 // Query to verify the offer belongs to this shopper and is still valid
+// Note: Action-based system - offers stay until accept/decline (matches decline-offer.ts)
 const VERIFY_ORDER_OFFER = gql`
   query VerifyOrderOffer($orderId: uuid!, $shopperId: uuid!) {
     order_offers(
@@ -125,13 +163,15 @@ const VERIFY_ORDER_OFFER = gql`
               { order_id: { _eq: $orderId } }
               { reel_order_id: { _eq: $orderId } }
               { restaurant_order_id: { _eq: $orderId } }
+              { business_order_id: { _eq: $orderId } }
             ]
           }
           { shopper_id: { _eq: $shopperId } }
           { status: { _eq: "OFFERED" } }
-          { expires_at: { _gt: "now()" } }
         ]
       }
+      order_by: { offered_at: desc }
+      limit: 1
     ) {
       id
       shopper_id
@@ -249,6 +289,12 @@ const CHECK_ACTIVE_ORDERS = gql`
       id
       status
     }
+    businessProductOrders(
+      where: { shopper_id: { _eq: $shopper_id }, status: { _neq: "delivered" } }
+    ) {
+      id
+      status
+    }
   }
 `;
 
@@ -266,7 +312,7 @@ export default async function handler(
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { orderId, userId } = req.body;
+  const { orderId, userId, orderType: clientOrderType } = req.body;
 
   if (!orderId || !userId) {
     return res.status(400).json({ error: "Order ID and User ID are required" });
@@ -300,11 +346,14 @@ export default async function handler(
     const regularOrder = checkResponse.Orders?.[0];
     const reelOrder = checkResponse.reel_orders?.[0];
     const restaurantOrder = checkResponse.restaurant_orders?.[0];
+    const businessOrder = checkResponse.businessProductOrders?.[0];
 
     const isReelOrder = !!reelOrder;
     const isRestaurantOrder = !!restaurantOrder;
+    const isBusinessOrder = !!businessOrder;
 
-    const isSingleOrder = !!regularOrder || !!reelOrder || !!restaurantOrder;
+    const isSingleOrder =
+      !!regularOrder || !!reelOrder || !!restaurantOrder || !!businessOrder;
 
     // Handle combined regular orders (accept all linked orders at once)
     if (!isSingleOrder) {
@@ -331,6 +380,7 @@ export default async function handler(
         ...(activeOrdersData.Orders || []),
         ...(activeOrdersData.reel_orders || []),
         ...(activeOrdersData.restaurant_orders || []),
+        ...(activeOrdersData.businessProductOrders || []),
       ];
       const activeOrderCount = activeOrders.length;
       if (activeOrderCount >= 2) {
@@ -494,6 +544,7 @@ export default async function handler(
       ...(activeOrdersData.Orders || []),
       ...(activeOrdersData.reel_orders || []),
       ...(activeOrdersData.restaurant_orders || []),
+      ...(activeOrdersData.businessProductOrders || []),
     ];
     const activeOrderCount = activeOrders.length;
 
@@ -537,7 +588,7 @@ export default async function handler(
     // ========================================================================
     // (Already fetched above as checkResponse)
 
-    const order = regularOrder || reelOrder || restaurantOrder;
+    const order = regularOrder || reelOrder || restaurantOrder || businessOrder;
 
     // Check if order is already assigned to someone else
     if (order.shopper_id && order.shopper_id !== userId) {
@@ -552,8 +603,15 @@ export default async function handler(
     }
 
     // Check if order is in valid state for acceptance
-    if (order.status !== "PENDING") {
-      console.warn("❌ Order is not in PENDING state:", order.status);
+    // Regular/reel/restaurant use PENDING; business uses "Ready for Pickup"
+    const validStatusForAccept = isBusinessOrder
+      ? "Ready for Pickup"
+      : "PENDING";
+    if (order.status !== validStatusForAccept) {
+      console.warn(
+        "❌ Order is not in valid state for acceptance:",
+        order.status
+      );
       return res.status(409).json({
         error: "This batch is no longer available for assignment",
         code: "INVALID_STATUS",
@@ -567,13 +625,15 @@ export default async function handler(
     // ========================================================================
 
     if (shopperLocation) {
-      // Get order location
-      const orderLat = parseFloat(
-        order.Address?.latitude || order.address?.latitude || "0"
-      );
-      const orderLng = parseFloat(
-        order.Address?.longitude || order.address?.longitude || "0"
-      );
+      // Get order location (pickup/store for distance validation)
+      const orderLat = isBusinessOrder
+        ? parseFloat(order.business_store?.latitude || order.latitude || "0")
+        : parseFloat(order.Address?.latitude || order.address?.latitude || "0");
+      const orderLng = isBusinessOrder
+        ? parseFloat(order.business_store?.longitude || order.longitude || "0")
+        : parseFloat(
+            order.Address?.longitude || order.address?.longitude || "0"
+          );
 
       // Calculate distance using Haversine formula
       const calculateDistance = (
@@ -660,7 +720,16 @@ export default async function handler(
     // Then, assign the order to the shopper
     let acceptResponse;
 
-    if (isRestaurantOrder) {
+    if (isBusinessOrder) {
+      acceptResponse = (await hasuraClient.request(
+        ACCEPT_BUSINESS_BATCH_MUTATION,
+        {
+          orderId,
+          shopperId: userId,
+        }
+      )) as any;
+    } else if (isRestaurantOrder) {
+      // Restaurant orders: update restaurant_orders row and set status to "accepted"
       acceptResponse = (await hasuraClient.request(
         ACCEPT_RESTAURANT_BATCH_MUTATION,
         {
@@ -670,6 +739,7 @@ export default async function handler(
         }
       )) as any;
     } else if (isReelOrder) {
+      // Reel orders: update reel_orders row and set status to "accepted"
       acceptResponse = (await hasuraClient.request(ACCEPT_REEL_BATCH_MUTATION, {
         orderId,
         shopperId: userId,
@@ -686,7 +756,8 @@ export default async function handler(
     if (
       acceptResponse.update_Orders_by_pk ||
       acceptResponse.update_reel_orders_by_pk ||
-      acceptResponse.update_restaurant_orders_by_pk
+      acceptResponse.update_restaurant_orders_by_pk ||
+      acceptResponse.update_businessProductOrders_by_pk
     ) {
       console.log(
         `✅ Batch ${orderId} accepted by shopper ${userId} (offer ${offer.id}, round ${offer.round_number})`
@@ -699,7 +770,9 @@ export default async function handler(
         shopperId: userId,
         offerId: offer.id,
         roundNumber: offer.round_number,
-        orderType: isRestaurantOrder
+        orderType: isBusinessOrder
+          ? "business"
+          : isRestaurantOrder
           ? "restaurant"
           : isReelOrder
           ? "reel"

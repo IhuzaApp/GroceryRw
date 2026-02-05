@@ -58,21 +58,30 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isMobile, setIsMobile] = useState<boolean>(false);
 
   // Debug: Log dishes data
   // console.log('Restaurant dishes:', dishes);
+
+  // Check if mobile and handle scroll detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Scroll detection for sticky header (mobile only)
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
-      const isMobile = window.innerWidth < 768; // md breakpoint
       setIsScrolled(scrollTop > 100 && isMobile);
     };
 
     // Check on mount and resize
     const handleResize = () => {
-      const isMobile = window.innerWidth < 768;
       if (!isMobile) {
         setIsScrolled(false);
       }
@@ -88,7 +97,7 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("resize", handleResize);
     };
-  }, []);
+  }, [isMobile]);
 
   // Search handler
   const handleSearch = (query: string) => {
@@ -410,7 +419,7 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
 
   return (
     <RootLayout>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-20">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-16">
         {/* Sticky Header */}
         {isScrolled && (
           <div
@@ -472,13 +481,22 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
 
         {/* Main Content */}
         <div
-          className={`relative z-0 -mt-2 rounded-t-3xl bg-white transition-all duration-300 dark:bg-gray-800 ${
+          className={`relative z-0 -mt-2 transition-all duration-300 dark:bg-transparent ${
             isScrolled ? "pt-16" : ""
-          }`}
+          } sm:rounded-t-3xl`}
+          style={
+            isMobile
+              ? {
+                  marginLeft: "-16px",
+                  marginRight: "-16px",
+                  width: "calc(100% + 32px)",
+                }
+              : {}
+          }
         >
           {/* Category Tabs */}
-          <div className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-            <div className="flex space-x-1 overflow-x-auto px-4 py-3">
+          <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm dark:border-gray-700 dark:bg-transparent sm:bg-white sm:dark:bg-gray-800">
+            <div className="scrollbar-hide flex gap-2 overflow-x-auto px-4 py-3.5 sm:space-x-1 sm:py-3">
               {categories.map((category) => {
                 const isPromo = category.startsWith("Promo: ");
                 const promoType = isPromo
@@ -489,14 +507,14 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
                   <button
                     key={category}
                     onClick={() => setSelectedCategory(category)}
-                    className={`flex items-center gap-1 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                    className={`flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-95 sm:px-4 sm:py-2 sm:font-medium ${
                       selectedCategory === category
                         ? isPromo
                           ? getPromoButtonStyle(promoType, true)
-                          : "bg-green-600 !text-white"
+                          : "scale-105 bg-gradient-to-r from-green-500 to-emerald-500 !text-white shadow-lg shadow-green-500/30"
                         : isPromo
                         ? getPromoButtonStyle(promoType, false)
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                     }`}
                   >
                     {isPromo && (
@@ -582,6 +600,18 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
           />
         </div>
       </div>
+      {/* Mobile scrollbar hide styles */}
+      <style jsx global>{`
+        @media (max-width: 767px) {
+          .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+          .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+          }
+        }
+      `}</style>
     </RootLayout>
   );
 }

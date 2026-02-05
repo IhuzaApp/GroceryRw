@@ -3,6 +3,8 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../api/auth/[...nextauth]";
+import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
+import { sendNewShopperRegistrationToSlack } from "../../../src/lib/slackSupportNotifier";
 
 const REGISTER_SHOPPER = gql`
   mutation RegisterShopper(
@@ -239,6 +241,9 @@ export default async function handler(
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  let userId: string | null = null;
+  let requestDataSize: number | undefined;
+
   try {
     // Verify the user is authenticated
     const session = (await getServerSession(
@@ -260,7 +265,7 @@ export default async function handler(
     }
 
     // Log the request data size for debugging
-    const requestDataSize = JSON.stringify(req.body).length;
+    requestDataSize = JSON.stringify(req.body).length;
     console.log(
       `Received shopper registration request, data size: ${(
         requestDataSize / 1024
@@ -293,6 +298,7 @@ export default async function handler(
       collection_comment,
       needCollection,
     } = req.body as RegisterShopperInput;
+    userId = user_id;
 
     // Validate required fields
     if (
@@ -347,6 +353,10 @@ export default async function handler(
         });
       }
     } catch (phoneCheckError) {
+      await logErrorToSlack("RegisterShopperAPI:phoneCheck", phoneCheckError, {
+        user_id,
+        phone_number,
+      });
       // Continue with registration attempt if phone check fails
     }
 
@@ -397,6 +407,10 @@ export default async function handler(
         });
       } catch (updateError: any) {
         console.error("Error updating existing shopper:", updateError);
+        await logErrorToSlack("RegisterShopperAPI:updateShopper", updateError, {
+          user_id,
+          shopper_id: existingShopper.id,
+        });
         return res.status(500).json({
           error: "Failed to update shopper application",
           message: updateError.message,
@@ -436,6 +450,47 @@ export default async function handler(
         user_id,
       }
     );
+
+    try {
+      await sendNewShopperRegistrationToSlack({
+        full_name,
+        phone_number,
+        address: address || undefined,
+        transport_mode,
+        provided: {
+          profile_photo: !!(profile_photo && profile_photo.trim()),
+          national_id_photos: !!(
+            (national_id_photo_front && national_id_photo_front.trim()) ||
+            (national_id_photo_back && national_id_photo_back.trim())
+          ),
+          driving_license: !!(
+            (driving_license && driving_license.trim()) ||
+            (drivingLicense_Image && drivingLicense_Image.trim())
+          ),
+          police_clearance: !!(
+            Police_Clearance_Cert && Police_Clearance_Cert.trim()
+          ),
+          guarantor: !!(
+            (guarantor && guarantor.trim()) ||
+            (guarantorPhone && guarantorPhone.trim()) ||
+            (guarantorRelationship && guarantorRelationship.trim())
+          ),
+          proof_of_residency: !!(proofOfResidency && proofOfResidency.trim()),
+          signature: !!(signature && signature.trim()),
+        },
+      });
+    } catch (notifyErr: any) {
+      console.error(
+        "Failed to notify Slack of new shopper registration:",
+        notifyErr
+      );
+      await logErrorToSlack(
+        "RegisterShopperAPI:newShopperSlackNotify",
+        notifyErr,
+        { user_id, full_name, phone_number }
+      );
+    }
+
     res.status(200).json({
       success: true,
       affected_rows: data.insert_shoppers.affected_rows,
@@ -452,6 +507,12 @@ export default async function handler(
       message: error.message,
       stack: error.stack,
       response: error.response?.errors,
+    });
+
+    await logErrorToSlack("RegisterShopperAPI", error, {
+      userId,
+      method: req.method,
+      requestDataSize,
     });
 
     // Return a more detailed error message

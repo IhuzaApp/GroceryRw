@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   CheckCircle,
   AlertCircle,
@@ -16,10 +16,13 @@ import {
   User,
   ZoomIn,
   Image as LucideImageIcon,
+  Download,
+  ChevronDown,
 } from "lucide-react";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import Image from "next/image";
 import toast from "react-hot-toast";
+import * as XLSX from "xlsx";
 
 interface Product {
   id: string;
@@ -29,6 +32,7 @@ interface Product {
   unit: string;
   measurement_type?: string;
   image?: string;
+  selectedDetails?: Record<string, string>;
 }
 
 interface Order {
@@ -85,10 +89,26 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 12;
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        showExportMenu &&
+        exportMenuRef.current &&
+        !exportMenuRef.current.contains(e.target as Node)
+      ) {
+        setShowExportMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showExportMenu]);
 
   const fetchOrders = async () => {
     try {
@@ -111,8 +131,139 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
     }
   };
 
-  const handleExport = () => {
-    // Handle export logic
+  const isPendingOrder = (order: Order) => {
+    const s = (order.status || "").toLowerCase();
+    return s === "pending" || s === "processing";
+  };
+
+  const isSoldOrPaidOrder = (order: Order) => {
+    const s = (order.status || "").toLowerCase();
+    return (
+      s.includes("ready for pickup") ||
+      s.includes("ready") ||
+      s.includes("transit") ||
+      s.includes("on the way") ||
+      s === "in_progress" ||
+      s.includes("delivered") ||
+      s === "completed"
+    );
+  };
+
+  const formatOrderDate = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString("en-US", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return dateStr || "";
+    }
+  };
+
+  const handleExport = (type: "pending" | "sold") => {
+    try {
+      const toExport =
+        type === "pending"
+          ? orders.filter(isPendingOrder)
+          : orders.filter(isSoldOrPaidOrder);
+      const reportLabel =
+        type === "pending" ? "Pending_Orders" : "Sold_Paid_Orders";
+
+      if (toExport.length === 0) {
+        toast(
+          type === "pending"
+            ? "No pending orders to export."
+            : "No sold/paid orders to export.",
+          { icon: "📋" }
+        );
+        setShowExportMenu(false);
+        return;
+      }
+
+      const exportData = toExport.map((order, index) => {
+        const customerName =
+          order.orderedBy?.name || order.shopper?.name || "—";
+        const itemsText = Array.isArray(order.allProducts)
+          ? order.allProducts
+              .map((p: Product) => {
+                const details =
+                  p.selectedDetails &&
+                  typeof p.selectedDetails === "object" &&
+                  Object.keys(p.selectedDetails).length > 0
+                    ? ` (${Object.entries(p.selectedDetails)
+                        .map(([k, v]) => `${k}: ${v}`)
+                        .join(", ")})`
+                    : "";
+                return `${p.name} × ${p.quantity}${details}`;
+              })
+              .join("; ")
+          : order.items || "—";
+        const orderTotal =
+          order.value -
+          (order.transportation_fee || 0) -
+          (order.service_fee || 0);
+        return {
+          "#": index + 1,
+          "Order ID": order.orderId,
+          Date: formatOrderDate(order.created_at),
+          Store: order.store,
+          Status: order.status,
+          Customer: customerName,
+          Items: itemsText,
+          "Order Total": orderTotal,
+          "Order Total (Formatted)": formatCurrencySync(orderTotal),
+          "Delivery Address": order.deliveryAddress || "—",
+          "Delivery Date": order.deliveryDate || "—",
+          "Delivery Time": order.deliveryTime || "—",
+          Tracking: order.tracking || "—",
+          Comment: order.comment || "—",
+        };
+      });
+
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      ws["!cols"] = [
+        { wch: 5 },
+        { wch: 22 },
+        { wch: 20 },
+        { wch: 18 },
+        { wch: 14 },
+        { wch: 22 },
+        { wch: 50 },
+        { wch: 14 },
+        { wch: 18 },
+        { wch: 40 },
+        { wch: 14 },
+        { wch: 12 },
+        { wch: 18 },
+        { wch: 30 },
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, reportLabel.replace(/_/g, " "));
+
+      const date = new Date();
+      const dateStr = `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+      ).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+      const timeStr = `${String(date.getHours()).padStart(2, "0")}${String(
+        date.getMinutes()
+      ).padStart(2, "0")}`;
+      const filename = `Orders_${reportLabel}_${dateStr}_${timeStr}.xlsx`;
+      XLSX.writeFile(wb, filename);
+
+      setShowExportMenu(false);
+      toast.success(`Exported ${toExport.length} order(s) to ${filename}`, {
+        duration: 3000,
+        icon: "📊",
+      });
+    } catch (err) {
+      console.error("Export error:", err);
+      toast.error("Failed to export to Excel. Please try again.");
+    }
   };
 
   const handleSearch = (query: string) => {
@@ -349,13 +500,36 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
                 className="w-full rounded-lg border-2 border-gray-200 bg-white py-2 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 transition-all duration-300 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-400 md:rounded-xl md:py-2.5"
               />
             </div>
-            {/* Export Button */}
-            <button
-              onClick={handleExport}
-              className="flex-shrink-0 rounded-lg border-2 border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 transition-all duration-300 hover:border-green-500 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 md:rounded-xl md:px-4 md:py-2.5 md:text-sm"
-            >
-              Export
-            </button>
+            {/* Export dropdown */}
+            <div className="relative flex-shrink-0" ref={exportMenuRef}>
+              <button
+                type="button"
+                onClick={() => setShowExportMenu((v) => !v)}
+                className="flex items-center gap-2 rounded-lg border-2 border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 transition-all duration-300 hover:border-green-500 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 md:rounded-xl md:px-4 md:py-2.5 md:text-sm"
+              >
+                <Download className="h-4 w-4" />
+                Export
+                <ChevronDown className="h-4 w-4" />
+              </button>
+              {showExportMenu && (
+                <div className="absolute right-0 top-full z-20 mt-1 min-w-[200px] rounded-xl border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-600 dark:bg-gray-800">
+                  <button
+                    type="button"
+                    onClick={() => handleExport("pending")}
+                    className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                  >
+                    Pending orders
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleExport("sold")}
+                    className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                  >
+                    Sold / Paid orders
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
         <div className="p-4 md:p-8">
@@ -617,6 +791,16 @@ export function OrdersSection({ className = "" }: OrdersSectionProps) {
                                 <h4 className="font-semibold text-gray-900 dark:text-white">
                                   {product.name}
                                 </h4>
+                                {product.selectedDetails &&
+                                  typeof product.selectedDetails === "object" &&
+                                  Object.keys(product.selectedDetails).length >
+                                    0 && (
+                                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                                      {Object.entries(product.selectedDetails)
+                                        .map(([k, v]) => `${k}: ${v}`)
+                                        .join(" · ")}
+                                    </p>
+                                  )}
                                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                                   Quantity: {product.quantity}{" "}
                                   {product.unit ||

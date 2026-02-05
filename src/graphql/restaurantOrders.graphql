@@ -143,23 +143,23 @@ query GetAllRestaurantOrders {
       id
       order_id
       created_at
-      restaurant_dishes {
-        SKU
-        category
-        created_at
-        description
+      restaurant_menu {
         id
-        discount
-        ingredients
-        is_active
-        name
-        preparingTime
         price
-        promo
-        promo_type
-        quantity
-        restaurant_id
-        updated_at
+        preparingTime
+        is_active
+        ProductNames {
+          name
+          description
+          image
+        }
+        dishes {
+          name
+          description
+          image
+          ingredients
+          category
+        }
       }
     }
     combined_order_id

@@ -1,6 +1,7 @@
 import { hasuraClient } from "./hasuraClient";
 import { gql } from "graphql-request";
 import type { NextApiRequest } from "next";
+import { logErrorToSlack } from "./slackErrorReporter";
 
 // GraphQL query to get regular order details with fees
 const GET_ORDER_DETAILS = gql`
@@ -12,6 +13,25 @@ const GET_ORDER_DETAILS = gql`
       delivery_fee
       shopper_id
       user_id
+      combined_order_id
+      shop_id
+    }
+  }
+`;
+
+// GraphQL query to get combined orders from same shop
+const GET_COMBINED_ORDERS_SAME_SHOP = gql`
+  query GetCombinedOrdersSameShop($combinedId: uuid!, $shopId: uuid!) {
+    Orders(
+      where: {
+        combined_order_id: { _eq: $combinedId }
+        shop_id: { _eq: $shopId }
+        shopper_id: { _is_null: false }
+      }
+    ) {
+      id
+      total
+      shop_id
     }
   }
 `;
@@ -39,6 +59,20 @@ const GET_RESTAURANT_ORDER_DETAILS = gql`
       delivery_fee
       shopper_id
       user_id
+    }
+  }
+`;
+
+// GraphQL query to get business order details with fees
+const GET_BUSINESS_ORDER_DETAILS = gql`
+  query GetBusinessOrderDetails($orderId: uuid!) {
+    businessProductOrders_by_pk(id: $orderId) {
+      id
+      total
+      transportation_fee
+      service_fee
+      shopper_id
+      ordered_by
     }
   }
 `;
@@ -159,13 +193,25 @@ export async function handleShoppingOperation(
       );
 
       if (!commissionResponse.ok) {
-        console.error(
-          "Failed to add commission revenue:",
-          await commissionResponse.text()
+        const body = await commissionResponse.text();
+        console.error("Failed to add commission revenue:", body);
+        await logErrorToSlack(
+          "WalletOperations:handleShoppingOperation:addCommissionRevenue",
+          new Error("Failed to add commission revenue"),
+          {
+            orderId,
+            status: commissionResponse.status,
+            body,
+          }
         );
       }
     } catch (commissionError) {
       console.error("Error adding commission revenue:", commissionError);
+      await logErrorToSlack(
+        "WalletOperations:handleShoppingOperation:addCommissionRevenue",
+        commissionError,
+        { orderId }
+      );
     }
   }
 
@@ -183,6 +229,7 @@ export async function handleDeliveredOperation(
   orderId: string,
   isReelOrder: boolean,
   isRestaurantOrder: boolean,
+  isBusinessOrder: boolean = false,
   req?: NextApiRequest
 ) {
   // Get system configuration for platform fee calculation
@@ -209,6 +256,7 @@ export async function handleDeliveredOperation(
   const deliveryFee = parseFloat(order.delivery_fee || "0");
 
   // For restaurant orders, only delivery fee is earned (no service fee)
+  // For business and regular/reel: service_fee + delivery_fee (business uses transportation_fee as delivery_fee)
   const totalEarnings = isRestaurantOrder
     ? deliveryFee
     : serviceFee + deliveryFee;
@@ -216,27 +264,16 @@ export async function handleDeliveredOperation(
   const remainingEarnings = totalEarnings - platformFee;
 
   const currentAvailableBalance = parseFloat(wallet.available_balance);
-  const currentReservedBalance = parseFloat(wallet.reserved_balance);
 
   const newAvailableBalance = (
     currentAvailableBalance + remainingEarnings
   ).toFixed(2);
 
-  // Calculate reserved balance: never go below 0
-  let newReservedBalance = wallet.reserved_balance; // Keep existing for restaurant orders
-  let refundAmount = 0;
+  // NOTE: Reserved balance is NOT deducted here - it's already deducted during payment
+  // During delivery confirmation, we ONLY add earnings to available balance
+  const newReservedBalance = wallet.reserved_balance; // Keep reserved balance unchanged
 
-  // Only adjust reserved balance for regular orders (not restaurant or reel orders)
-  if (!isRestaurantOrder && !isReelOrder) {
-    if (currentReservedBalance >= orderTotal) {
-      newReservedBalance = (currentReservedBalance - orderTotal).toFixed(2);
-    } else {
-      newReservedBalance = "0.00";
-      refundAmount = orderTotal - currentReservedBalance;
-    }
-  }
-
-  // Update wallet balances
+  // Update wallet balances (only available balance changes, reserved balance stays the same)
   await hasuraClient!.request(UPDATE_WALLET_BALANCES, {
     wallet_id: wallet.id,
     available_balance: newAvailableBalance,
@@ -244,7 +281,27 @@ export async function handleDeliveredOperation(
   });
 
   // Create wallet transactions for delivered order
-  if (!isReelOrder && !isRestaurantOrder) {
+  // NOTE: Only create earnings transaction - reserved balance deduction happens during payment
+  // Business orders use relate_business_order_id (FK to business order); regular use related_order_id
+  if (isBusinessOrder) {
+    const transactions = [
+      {
+        wallet_id: wallet.id,
+        amount: remainingEarnings.toFixed(2),
+        type: "earnings",
+        status: "completed",
+        related_order_id: null,
+        related_reel_orderId: null,
+        related_restaurant_order_id: null,
+        relate_business_order_id: orderId,
+        description: "Business order earnings after platform fee deduction",
+      },
+    ];
+
+    await hasuraClient!.request(CREATE_WALLET_TRANSACTIONS, {
+      transactions,
+    });
+  } else if (!isReelOrder && !isRestaurantOrder) {
     const transactions = [
       {
         wallet_id: wallet.id,
@@ -256,32 +313,7 @@ export async function handleDeliveredOperation(
         related_restaurant_order_id: null,
         description: "Earnings after platform fee deduction",
       },
-      {
-        wallet_id: wallet.id,
-        amount: (
-          currentReservedBalance - parseFloat(newReservedBalance)
-        ).toFixed(2),
-        type: "expense",
-        status: "completed",
-        related_order_id: orderId,
-        related_reel_orderId: null,
-        related_restaurant_order_id: null,
-        description: "Reserved balance used for order goods",
-      },
     ];
-
-    if (refundAmount > 0) {
-      transactions.push({
-        wallet_id: wallet.id,
-        amount: refundAmount.toFixed(2),
-        type: "refund",
-        status: "completed",
-        related_order_id: orderId,
-        related_reel_orderId: null,
-        related_restaurant_order_id: null,
-        description: "Refund for excess reserved balance",
-      });
-    }
 
     await hasuraClient!.request(CREATE_WALLET_TRANSACTIONS, {
       transactions,
@@ -304,11 +336,36 @@ export async function handleDeliveredOperation(
     await hasuraClient!.request(CREATE_WALLET_TRANSACTIONS, {
       transactions,
     });
+  } else if (isReelOrder) {
+    // For reel orders, create earnings transaction (service_fee + delivery_fee)
+    const transactions = [
+      {
+        wallet_id: wallet.id,
+        amount: remainingEarnings.toFixed(2),
+        type: "earnings",
+        status: "completed",
+        related_order_id: null,
+        related_reel_orderId: orderId,
+        related_restaurant_order_id: null,
+        description: "Earnings after platform fee deduction",
+      },
+    ];
+
+    await hasuraClient!.request(CREATE_WALLET_TRANSACTIONS, {
+      transactions,
+    });
   }
 
-  // Add plasa fee revenue when order is delivered
-  if (!isReelOrder && !isRestaurantOrder && req) {
+  // Add plasa fee revenue when order is delivered (all order types; API branches on orderType)
+  if (req) {
     try {
+      const orderType = isBusinessOrder
+        ? "business"
+        : isReelOrder
+        ? "reel"
+        : isRestaurantOrder
+        ? "restaurant"
+        : "regular";
       const plasaFeeResponse = await fetch(
         `${
           req.headers.host
@@ -321,18 +378,30 @@ export async function handleDeliveredOperation(
             "Content-Type": "application/json",
             Cookie: req.headers.cookie || "",
           },
-          body: JSON.stringify({ orderId }),
+          body: JSON.stringify({ orderId, orderType }),
         }
       );
 
       if (!plasaFeeResponse.ok) {
-        console.error(
-          "Failed to add plasa fee revenue:",
-          await plasaFeeResponse.text()
+        const body = await plasaFeeResponse.text();
+        console.error("Failed to add plasa fee revenue:", body);
+        await logErrorToSlack(
+          "WalletOperations:handleDeliveredOperation:addPlasaFeeRevenue",
+          new Error("Failed to add plasa fee revenue"),
+          {
+            orderId,
+            status: plasaFeeResponse.status,
+            body,
+          }
         );
       }
     } catch (plasaFeeError) {
       console.error("Error adding plasa fee revenue:", plasaFeeError);
+      await logErrorToSlack(
+        "WalletOperations:handleDeliveredOperation:addPlasaFeeRevenue",
+        plasaFeeError,
+        { orderId }
+      );
     }
   }
 
@@ -341,8 +410,7 @@ export async function handleDeliveredOperation(
     newReservedBalance,
     earningsAdded: remainingEarnings,
     platformFeeDeducted: platformFee,
-    refundAmount,
-    message: "Wallet updated for delivered order",
+    message: "Earnings added to wallet for delivered order",
   };
 }
 
@@ -414,14 +482,31 @@ export async function processWalletOperation(
   operation: "shopping" | "delivered" | "cancelled",
   isReelOrder: boolean = false,
   isRestaurantOrder: boolean = false,
+  isBusinessOrder: boolean = false,
   req?: NextApiRequest
 ) {
   if (!hasuraClient) {
+    await logErrorToSlack(
+      "WalletOperations:processWalletOperation",
+      new Error("Hasura client is not initialized"),
+      {
+        userId,
+        orderId,
+        operation,
+        isReelOrder,
+        isRestaurantOrder,
+        isBusinessOrder,
+      }
+    );
     throw new Error("Hasura client is not initialized");
   }
 
-  // Get order details with fees
+  // Get order details with fees — try requested type first, then fallback to other tables if not found
   let orderDetails: any;
+  let resolvedReel = isReelOrder;
+  let resolvedRestaurant = isRestaurantOrder;
+  let resolvedBusiness = isBusinessOrder;
+
   if (isReelOrder) {
     orderDetails = await hasuraClient!.request<{
       reel_orders_by_pk: {
@@ -432,9 +517,7 @@ export async function processWalletOperation(
         shopper_id: string;
         user_id: string;
       };
-    }>(GET_REEL_ORDER_DETAILS, {
-      orderId,
-    });
+    }>(GET_REEL_ORDER_DETAILS, { orderId });
   } else if (isRestaurantOrder) {
     orderDetails = await hasuraClient!.request<{
       restaurant_orders_by_pk: {
@@ -444,9 +527,18 @@ export async function processWalletOperation(
         shopper_id: string;
         user_id: string;
       };
-    }>(GET_RESTAURANT_ORDER_DETAILS, {
-      orderId,
-    });
+    }>(GET_RESTAURANT_ORDER_DETAILS, { orderId });
+  } else if (isBusinessOrder) {
+    orderDetails = await hasuraClient!.request<{
+      businessProductOrders_by_pk: {
+        id: string;
+        total: string;
+        transportation_fee: string | number;
+        service_fee: string | number;
+        shopper_id: string;
+        ordered_by: string;
+      };
+    }>(GET_BUSINESS_ORDER_DETAILS, { orderId });
   } else {
     orderDetails = await hasuraClient!.request<{
       Orders_by_pk: {
@@ -457,20 +549,108 @@ export async function processWalletOperation(
         shopper_id: string;
         user_id: string;
       };
-    }>(GET_ORDER_DETAILS, {
-      orderId,
-    });
+    }>(GET_ORDER_DETAILS, { orderId });
   }
 
-  const order = isReelOrder
+  let order: any = isReelOrder
     ? orderDetails.reel_orders_by_pk
     : isRestaurantOrder
     ? orderDetails.restaurant_orders_by_pk
+    : isBusinessOrder
+    ? orderDetails.businessProductOrders_by_pk
     : orderDetails.Orders_by_pk;
 
-  if (!order) {
+  // Normalize business order to same shape as regular (delivery_fee = transportation_fee) for handleDeliveredOperation
+  if (order && isBusinessOrder) {
+    order = {
+      ...order,
+      delivery_fee: String(order.transportation_fee ?? 0),
+      service_fee: String(order.service_fee ?? 0),
+      user_id: order.ordered_by,
+    };
+  }
+
+  // Fallback: if not found with client flags, try reel then restaurant then regular (skip for business - order id is business order id only)
+  if (!order && isBusinessOrder) {
+    await logErrorToSlack(
+      "walletOperations:processWalletOperation",
+      new Error("Business order not found"),
+      { orderId, operation, userId }
+    );
     throw new Error("Order not found");
   }
+  if (!order) {
+    const reelData = await hasuraClient!.request<{
+      reel_orders_by_pk: {
+        id: string;
+        total: string;
+        service_fee?: string;
+        delivery_fee: string;
+        shopper_id?: string;
+        user_id: string;
+      } | null;
+    }>(GET_REEL_ORDER_DETAILS, { orderId });
+    if (reelData.reel_orders_by_pk) {
+      order = reelData.reel_orders_by_pk;
+      resolvedReel = true;
+      resolvedRestaurant = false;
+    }
+  }
+  if (!order) {
+    const restaurantData = await hasuraClient!.request<{
+      restaurant_orders_by_pk: {
+        id: string;
+        total: string;
+        delivery_fee: string;
+        shopper_id?: string;
+        user_id: string;
+      } | null;
+    }>(GET_RESTAURANT_ORDER_DETAILS, { orderId });
+    if (restaurantData.restaurant_orders_by_pk) {
+      order = restaurantData.restaurant_orders_by_pk;
+      resolvedReel = false;
+      resolvedRestaurant = true;
+    }
+  }
+  if (!order) {
+    const regularData = await hasuraClient!.request<{
+      Orders_by_pk: {
+        id: string;
+        total: string;
+        service_fee?: string;
+        delivery_fee: string;
+        shopper_id?: string;
+        user_id: string;
+        combined_order_id?: string;
+        shop_id?: string;
+      } | null;
+    }>(GET_ORDER_DETAILS, { orderId });
+    if (regularData.Orders_by_pk) {
+      order = regularData.Orders_by_pk;
+      resolvedReel = false;
+      resolvedRestaurant = false;
+    }
+  }
+
+  if (!order) {
+    await logErrorToSlack(
+      "walletOperations:processWalletOperation",
+      new Error("Order not found"),
+      {
+        orderId,
+        operation,
+        isReelOrder,
+        isRestaurantOrder,
+        isBusinessOrder,
+        userId,
+      }
+    );
+    throw new Error("Order not found");
+  }
+
+  const isReelOrderFinal = resolvedReel;
+  const isRestaurantOrderFinal = resolvedRestaurant;
+  const isBusinessOrderFinal = resolvedBusiness;
 
   // Get shopper wallet
   const walletData = await hasuraClient!.request<{
@@ -488,7 +668,80 @@ export async function processWalletOperation(
   }
 
   const wallet = walletData.Wallets[0];
-  const orderTotal = parseFloat(order.total);
+
+  // Calculate order total - for same-shop combined orders, calculate from Order_Items
+  let orderTotal = parseFloat(order.total);
+
+  // Check if this is a same-shop combined order for shopping operation
+  if (
+    operation === "shopping" &&
+    !isReelOrderFinal &&
+    !isRestaurantOrderFinal &&
+    order.combined_order_id
+  ) {
+    try {
+      // Query to get order items for combined orders
+      const GET_COMBINED_ORDER_ITEMS = gql`
+        query GetCombinedOrderItems($combinedId: uuid!, $shopId: uuid!) {
+          Orders(
+            where: {
+              combined_order_id: { _eq: $combinedId }
+              shop_id: { _eq: $shopId }
+              shopper_id: { _is_null: false }
+            }
+          ) {
+            id
+            Order_Items {
+              price
+              quantity
+            }
+          }
+        }
+      `;
+
+      const combinedOrdersData = await hasuraClient!.request<{
+        Orders: Array<{
+          id: string;
+          Order_Items: Array<{
+            price: string;
+            quantity: string;
+          }>;
+        }>;
+      }>(GET_COMBINED_ORDER_ITEMS, {
+        combinedId: order.combined_order_id,
+        shopId: order.shop_id,
+      });
+
+      if (combinedOrdersData.Orders && combinedOrdersData.Orders.length > 0) {
+        // Calculate total from all Order_Items across the batch
+        orderTotal = combinedOrdersData.Orders.reduce(
+          (batchTotal, combinedOrder) => {
+            const orderItemsTotal = combinedOrder.Order_Items.reduce(
+              (orderTotal, item) => {
+                const price = parseFloat(item.price || "0");
+                const quantity = parseFloat(item.quantity || "0");
+                return orderTotal + price * quantity;
+              },
+              0
+            );
+            return batchTotal + orderItemsTotal;
+          },
+          0
+        );
+
+        console.log(
+          "🔍 WALLET OPERATION - Same shop batch total from items:",
+          orderTotal
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Error fetching combined order items for wallet operation:",
+        error
+      );
+      // Fall back to single order total if combined order query fails
+    }
+  }
 
   // Handle different wallet operations
   switch (operation) {
@@ -497,8 +750,8 @@ export async function processWalletOperation(
         wallet,
         orderTotal,
         orderId,
-        isReelOrder,
-        isRestaurantOrder,
+        isReelOrderFinal,
+        isRestaurantOrderFinal,
         req
       );
 
@@ -507,19 +760,87 @@ export async function processWalletOperation(
         wallet,
         order,
         orderId,
-        isReelOrder,
-        isRestaurantOrder,
+        isReelOrderFinal,
+        isRestaurantOrderFinal,
+        isBusinessOrderFinal,
         req
       );
 
     case "cancelled":
+      // For cancelled operations, we need to handle combined orders differently
+      // since the cancellation might affect the entire batch
+      if (
+        !isReelOrderFinal &&
+        !isRestaurantOrderFinal &&
+        order.combined_order_id
+      ) {
+        // For same-shop combined orders, calculate the batch total from items for refund
+        try {
+          const GET_COMBINED_ORDER_ITEMS = gql`
+            query GetCombinedOrderItems($combinedId: uuid!, $shopId: uuid!) {
+              Orders(
+                where: {
+                  combined_order_id: { _eq: $combinedId }
+                  shop_id: { _eq: $shopId }
+                  shopper_id: { _is_null: false }
+                }
+              ) {
+                id
+                Order_Items {
+                  price
+                  quantity
+                }
+              }
+            }
+          `;
+
+          const combinedOrdersData = await hasuraClient!.request<{
+            Orders: Array<{
+              id: string;
+              Order_Items: Array<{
+                price: string;
+                quantity: string;
+              }>;
+            }>;
+          }>(GET_COMBINED_ORDER_ITEMS, {
+            combinedId: order.combined_order_id,
+            shopId: order.shop_id,
+          });
+
+          if (
+            combinedOrdersData.Orders &&
+            combinedOrdersData.Orders.length > 0
+          ) {
+            orderTotal = combinedOrdersData.Orders.reduce(
+              (batchTotal, combinedOrder) => {
+                const orderItemsTotal = combinedOrder.Order_Items.reduce(
+                  (orderTotal, item) => {
+                    const price = parseFloat(item.price || "0");
+                    const quantity = parseFloat(item.quantity || "0");
+                    return orderTotal + price * quantity;
+                  },
+                  0
+                );
+                return batchTotal + orderItemsTotal;
+              },
+              0
+            );
+          }
+        } catch (error) {
+          console.error(
+            "Error fetching combined order items for cancellation:",
+            error
+          );
+        }
+      }
+
       return await handleCancelledOperation(
         wallet,
         order,
         orderTotal,
         orderId,
-        isReelOrder,
-        isRestaurantOrder
+        isReelOrderFinal,
+        isRestaurantOrderFinal
       );
 
     default:

@@ -53,6 +53,7 @@ import { QuoteSubmissionForm } from "../QuoteSubmissionForm";
 import { SubmittedQuoteDetails } from "../SubmittedQuoteDetails";
 import { ContractDetailDrawer } from "../ContractDetailDrawer";
 import { CreateRFQForm } from "../CreateRFQForm";
+import { CreateStoreForm } from "../CreateStoreForm";
 import { formatCurrencySync } from "../../../utils/formatCurrency";
 import toast from "react-hot-toast";
 
@@ -299,6 +300,9 @@ export function MobileBusinessDashboard({
 
   // Create RFQ form state
   const [isCreateRFQOpen, setIsCreateRFQOpen] = useState(false);
+
+  // Create store modal state
+  const [isCreateStoreModalOpen, setIsCreateStoreModalOpen] = useState(false);
 
   const businessFeatures = [
     {
@@ -837,8 +841,22 @@ export function MobileBusinessDashboard({
             setSelectedContractId(contractId);
             setIsContractDrawerOpen(true);
           }}
+          onCreateStore={() => setIsCreateStoreModalOpen(true)}
         />
       )}
+
+      {/* Create Store Modal */}
+      <CreateStoreForm
+        isOpen={isCreateStoreModalOpen}
+        onClose={() => setIsCreateStoreModalOpen(false)}
+        onSubmit={(storeData) => {
+          setIsCreateStoreModalOpen(false);
+          if (expandedSection === "stores") {
+            loadSectionData("stores");
+          }
+          setStores((prev) => (storeData?.id ? [storeData, ...prev] : prev));
+        }}
+      />
 
       {/* RFQ Opportunity Details Modal */}
       {isRFQOpportunityModalOpen && selectedRFQOpportunity && (

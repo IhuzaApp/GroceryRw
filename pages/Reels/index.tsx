@@ -14,8 +14,8 @@ const HeartIcon = ({ filled = false }: { filled?: boolean }) => (
     width="24"
     height="24"
     viewBox="0 0 24 24"
-    fill={filled ? "currentColor" : "none"}
-    stroke="currentColor"
+    fill={filled ? "#ef4444" : "none"}
+    stroke={filled ? "#ef4444" : "currentColor"}
     strokeWidth="2"
   >
     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -271,9 +271,14 @@ interface BasePost {
     views?: number;
   };
   isLiked: boolean;
+  isProcessingLike?: boolean; // Prevent double-clicks
   commentsList: Comment[];
   shop_id?: string | null;
   restaurant_id?: string | null;
+  shopLat?: number;
+  shopLng?: number;
+  shopAlt?: number;
+  created_on?: string; // Timestamp for sorting/randomization
 }
 
 interface RestaurantPost extends BasePost {
@@ -333,6 +338,8 @@ interface DatabaseReel {
     id: string;
     image?: string;
     description?: string;
+    latitude?: string;
+    longitude?: string;
   } | null;
   User: {
     email: string;
@@ -346,17 +353,19 @@ interface DatabaseReel {
     profile_picture: string;
   } | null;
   Restaurant: {
-    created_at: string;
-    email: string;
     id: string;
     lat: number;
     location: string;
     long: number;
     name: string;
-    phone: string;
     profile: string;
     verified: boolean;
   } | null;
+  reel_likes_aggregate: {
+    aggregate: {
+      count: number;
+    };
+  };
   Reels_comments: Array<{
     user_id: string;
     text: string;
@@ -366,19 +375,11 @@ interface DatabaseReel {
     id: string;
     created_on: string;
     User: {
-      gender: string;
-      email: string;
+      id: string;
       name: string;
-      phone: string;
       role: string;
       profile_picture?: string;
     } | null;
-  }>;
-  reel_likes: Array<{
-    created_at: string;
-    id: string;
-    reel_id: string;
-    user_id: string;
   }>;
 }
 
@@ -396,12 +397,94 @@ const formatTimestamp = (timestamp: string): string => {
   return `${Math.floor(diffInMinutes / 1440)}d`;
 };
 
-// Check if current user has liked a reel
-const checkUserLikeStatus = (
-  reelLikes: Array<{ user_id: string }>,
-  currentUserId: string
-): boolean => {
-  return reelLikes.some((like) => like.user_id === currentUserId);
+// Calculate user's preferred reel types based on their likes
+const calculateUserPreferences = (reels: FoodPost[]): Map<string, number> => {
+  const typeCounts = new Map<string, number>();
+  let totalLikes = 0;
+
+  // Count likes per type
+  reels.forEach((reel) => {
+    if (reel.isLiked) {
+      const type = reel.type;
+      typeCounts.set(type, (typeCounts.get(type) || 0) + 1);
+      totalLikes++;
+    }
+  });
+
+  // Calculate preference scores (percentage of likes per type)
+  const preferences = new Map<string, number>();
+  if (totalLikes > 0) {
+    typeCounts.forEach((count, type) => {
+      preferences.set(type, count / totalLikes);
+    });
+  }
+
+  return preferences;
+};
+
+// Randomize reels while prioritizing recent ones and user preferences
+const randomizeReelsWithPriority = (
+  reels: FoodPost[],
+  userPreferences?: Map<string, number>
+): FoodPost[] => {
+  const now = Date.now();
+
+  // Group reels by recency based on created_on timestamp
+  const recentReels: FoodPost[] = []; // Last 24 hours
+  const weekReels: FoodPost[] = []; // Last week
+  const olderReels: FoodPost[] = []; // Older than a week
+
+  reels.forEach((reel) => {
+    const createdOn = reel.created_on ? new Date(reel.created_on).getTime() : 0;
+    const age = now - createdOn;
+
+    if (age <= 24 * 60 * 60 * 1000) {
+      // Last 24 hours - highest priority
+      recentReels.push(reel);
+    } else if (age <= 7 * 24 * 60 * 60 * 1000) {
+      // Last week - medium priority
+      weekReels.push(reel);
+    } else {
+      // Older than a week - lower priority
+      olderReels.push(reel);
+    }
+  });
+
+  // Weighted shuffle function that considers user preferences
+  const weightedShuffle = <T extends FoodPost>(
+    array: T[],
+    preferences?: Map<string, number>
+  ): T[] => {
+    if (!preferences || preferences.size === 0) {
+      // No preferences, use regular shuffle
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    // Create weighted array with preference scores
+    const weighted = array.map((reel) => {
+      const preferenceScore = preferences.get(reel.type) || 0;
+      // Base weight of 1, add preference score (0-1) multiplied by 2 for stronger influence
+      const weight = 1 + preferenceScore * 2;
+      return { reel, weight, random: Math.random() * weight };
+    });
+
+    // Sort by random weighted value (higher preference = higher chance of being first)
+    weighted.sort((a, b) => b.random - a.random);
+
+    return weighted.map((item) => item.reel);
+  };
+
+  // Randomize within each group with preference weighting (recent first)
+  return [
+    ...weightedShuffle(recentReels, userPreferences),
+    ...weightedShuffle(weekReels, userPreferences),
+    ...weightedShuffle(olderReels, userPreferences),
+  ];
 };
 
 // Cache configuration
@@ -616,29 +699,46 @@ export default function FoodReelsApp() {
 
   // Convert database reel to FoodPost format with current user's like status
   const convertDatabaseReelToFoodPost = (dbReel: DatabaseReel): FoodPost => {
-    const currentUserId = session?.user?.id;
-    const userHasLiked = currentUserId
-      ? checkUserLikeStatus(dbReel.reel_likes, currentUserId)
-      : false;
+    // Use isLiked field from database (set by backend based on current user)
+    const userHasLiked = dbReel.isLiked || false;
 
-    // Convert comments
-    const commentsList: Comment[] = dbReel.Reels_comments.map((comment) => ({
-      id: comment.id,
-      user: {
-        name: comment.User?.name || "Plas Reel Agent",
-        avatar:
-          comment.User?.profile_picture ||
-          "/placeholder.svg?height=32&width=32",
-        verified:
-          comment.User?.role === "admin" ||
-          comment.User?.role === "verified" ||
-          false,
-      },
-      text: comment.text,
-      timestamp: formatTimestamp(comment.created_on),
-      likes: parseInt(comment.likes || "0"),
-      isLiked: comment.isLiked,
-    }));
+    // Convert comments - handle case where Reels_comments might be undefined
+    const commentsList: Comment[] = (dbReel.Reels_comments || []).map(
+      (comment) => ({
+        id: comment.id,
+        user: {
+          name: comment.User?.name || "Plas Reel Agent",
+          avatar:
+            comment.User?.profile_picture ||
+            "/placeholder.svg?height=32&width=32",
+          verified:
+            comment.User?.role === "admin" ||
+            comment.User?.role === "verified" ||
+            false,
+        },
+        text: comment.text,
+        timestamp: formatTimestamp(comment.created_on),
+        likes: parseInt(comment.likes || "0"),
+        isLiked: comment.isLiked,
+      })
+    );
+
+    // Get coordinates from Restaurant or Shops
+    let shopLat = 0;
+    let shopLng = 0;
+    let shopAlt = 0;
+
+    if (dbReel.Restaurant) {
+      // Use Restaurant coordinates
+      shopLat = dbReel.Restaurant.lat || 0;
+      shopLng = dbReel.Restaurant.long || 0;
+      shopAlt = 0; // Restaurant doesn't have altitude in the schema
+    } else if (dbReel.Shops) {
+      // Use Shops coordinates (latitude and longitude are stored as strings)
+      shopLat = dbReel.Shops.latitude ? parseFloat(dbReel.Shops.latitude) : 0;
+      shopLng = dbReel.Shops.longitude ? parseFloat(dbReel.Shops.longitude) : 0;
+      shopAlt = 0; // Shops doesn't have altitude in the schema
+    }
 
     // Base post structure
     const basePost: BasePost = {
@@ -660,13 +760,19 @@ export default function FoodReelsApp() {
         category: dbReel.category,
       },
       stats: {
-        likes: dbReel.reel_likes.length, // Use actual likes count from reel_likes
-        comments: dbReel.Reels_comments.length,
+        likes:
+          dbReel.reel_likes_aggregate?.aggregate?.count ||
+          parseInt(dbReel.likes || "0"), // Use aggregate count for accurate likes
+        comments: (dbReel.Reels_comments || []).length,
       },
       isLiked: userHasLiked, // Use actual user like status
       commentsList,
       shop_id: dbReel.shop_id || null,
       restaurant_id: dbReel.restaurant_id || null,
+      created_on: dbReel.created_on, // Include created_on for randomization
+      shopLat,
+      shopLng,
+      shopAlt,
     };
 
     // Helper function to extract string value
@@ -914,12 +1020,31 @@ export default function FoodReelsApp() {
           convertDatabaseReelToFoodPost(reel)
         );
 
+        // Get user preferences from API or calculate from current batch
+        let userPreferences: Map<string, number> | undefined;
+        if (
+          data.userPreferences &&
+          Object.keys(data.userPreferences).length > 0
+        ) {
+          // Use preferences from API (based on user's full like history)
+          userPreferences = new Map(Object.entries(data.userPreferences));
+        } else {
+          // Fallback: calculate from current batch
+          userPreferences = calculateUserPreferences(convertedPosts);
+        }
+
+        // Randomize reels while prioritizing recent ones and user preferences
+        const randomizedPosts = randomizeReelsWithPriority(
+          convertedPosts,
+          userPreferences.size > 0 ? userPreferences : undefined
+        );
+
         // Update state first
-        setPosts(convertedPosts);
+        setPosts(randomizedPosts);
 
         // Try to update cache, but don't fail if it doesn't work
         try {
-          setCachedReels(convertedPosts);
+          setCachedReels(randomizedPosts);
         } catch (cacheError) {
           console.warn(
             "Failed to update cache, continuing without cache:",
@@ -962,12 +1087,31 @@ export default function FoodReelsApp() {
         convertDatabaseReelToFoodPost(reel)
       );
 
+      // Get user preferences from API or calculate from current batch
+      let userPreferences: Map<string, number> | undefined;
+      if (
+        data.userPreferences &&
+        Object.keys(data.userPreferences).length > 0
+      ) {
+        // Use preferences from API (based on user's full like history)
+        userPreferences = new Map(Object.entries(data.userPreferences));
+      } else {
+        // Fallback: calculate from current batch
+        userPreferences = calculateUserPreferences(convertedPosts);
+      }
+
+      // Randomize reels while prioritizing recent ones and user preferences
+      const randomizedPosts = randomizeReelsWithPriority(
+        convertedPosts,
+        userPreferences.size > 0 ? userPreferences : undefined
+      );
+
       // Update state first for immediate UI update
-      setPosts(convertedPosts);
+      setPosts(randomizedPosts);
 
       // Try to update cache, but don't fail if it doesn't work
       try {
-        setCachedReels(convertedPosts);
+        setCachedReels(randomizedPosts);
       } catch (cacheError) {
         console.warn(
           "Failed to update cache, continuing without cache:",
@@ -1274,6 +1418,9 @@ export default function FoodReelsApp() {
 
       const isCurrentlyLiked = currentPost.isLiked;
 
+      // Prevent action if already processing (avoid double-clicks)
+      if (currentPost.isProcessingLike) return;
+
       // Immediately update UI for instant feedback
       setPosts(
         posts.map((post: FoodPost) =>
@@ -1281,6 +1428,7 @@ export default function FoodReelsApp() {
             ? {
                 ...post,
                 isLiked: !isCurrentlyLiked,
+                isProcessingLike: true, // Mark as processing
                 stats: {
                   ...post.stats,
                   likes: isCurrentlyLiked
@@ -1304,17 +1452,87 @@ export default function FoodReelsApp() {
           reel_id: postId,
         }),
       })
-        .then((response) => {
+        .then(async (response) => {
           if (!response.ok) {
-            console.error("Error toggling like:", response.status);
-            // Optionally revert UI if backend fails
-            // For now, we'll keep the optimistic update
+            const errorData = await response.json().catch(() => ({}));
+            console.error("Error toggling like:", response.status, errorData);
+
+            // If user already liked (400 error), revert the UI change
+            if (
+              response.status === 400 &&
+              errorData.error?.includes("already liked")
+            ) {
+              setPosts(
+                posts.map((post: FoodPost) =>
+                  post.id === postId
+                    ? {
+                        ...post,
+                        isLiked: isCurrentlyLiked, // Revert to original state
+                        isProcessingLike: false,
+                        stats: {
+                          ...post.stats,
+                          likes: isCurrentlyLiked
+                            ? post.stats.likes + 1
+                            : Math.max(0, post.stats.likes - 1),
+                        },
+                      }
+                    : post
+                )
+              );
+            } else {
+              // For other errors, revert the optimistic update
+              setPosts(
+                posts.map((post: FoodPost) =>
+                  post.id === postId
+                    ? {
+                        ...post,
+                        isLiked: isCurrentlyLiked, // Revert to original state
+                        isProcessingLike: false,
+                        stats: {
+                          ...post.stats,
+                          likes: isCurrentlyLiked
+                            ? post.stats.likes + 1
+                            : Math.max(0, post.stats.likes - 1),
+                        },
+                      }
+                    : post
+                )
+              );
+            }
+          } else {
+            // Success - clear processing flag
+            setPosts(
+              posts.map((post: FoodPost) =>
+                post.id === postId
+                  ? {
+                      ...post,
+                      isProcessingLike: false,
+                    }
+                  : post
+              )
+            );
           }
         })
         .catch((error) => {
           console.error("Error toggling like:", error);
-          // Optionally revert UI if backend fails
-          // For now, we'll keep the optimistic update
+          // Revert UI on error
+          setPosts(
+            posts.map((post: FoodPost) =>
+              post.id === postId
+                ? {
+                    ...post,
+                    isLiked: isCurrentlyLiked, // Revert to original state
+                    isProcessingLike: false,
+                    stats: {
+                      ...post.stats,
+                      likes: isCurrentlyLiked
+                        ? post.stats.likes + 1
+                        : Math.max(0, post.stats.likes - 1),
+                    },
+                  }
+                : post
+            )
+          );
         });
     } catch (error) {
       console.error("Error toggling like:", error);

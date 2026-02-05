@@ -78,6 +78,11 @@ const CREATE_REVENUE = gql`
         shop_id: $shop_id
         amount: $amount
         commission_percentage: $commission_percentage
+        businessOrder_Id: null
+        reel_order_id: null
+        restaurant_order_id: null
+        restaurant_id: null
+        Plasbusiness_id: null
       }
     ) {
       affected_rows

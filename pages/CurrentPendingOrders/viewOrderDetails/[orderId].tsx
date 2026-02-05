@@ -4,6 +4,8 @@ import { useRouter } from "next/router";
 import UserOrderDetails from "@components/UserCarts/orders/UserOrderDetails";
 import UserReelOrderDetails from "@components/UserCarts/orders/UserReelOrderDetails";
 import UserRestaurantOrderDetails from "@components/UserCarts/orders/UserRestaurantOrderDetails";
+import UserBusinessOrderDetails from "@components/UserCarts/orders/UserBusinessOrderDetails";
+import ContactSupportModal from "@components/UserCarts/orders/ContactSupportModal";
 import { Button } from "rsuite";
 import Link from "next/link";
 import { AuthGuard } from "@components/AuthGuard";
@@ -181,34 +183,45 @@ function getOrderStatusInfo(order: any) {
   }
 }
 
+// Support ticket info shown when order already has a ticket
+export type SupportTicketInfo = { ticket_num: number; status: string } | null;
+
 // Mobile Component - Clean, minimal design
 const MobileOrderDetails = ({
   order,
   orderType,
   combinedOrders,
+  onContactSupport,
+  supportTicket,
 }: {
   order: any;
-  orderType: "regular" | "reel" | "restaurant" | null;
+  orderType: "regular" | "reel" | "restaurant" | "business" | null;
   combinedOrders: any[];
+  onContactSupport?: () => void;
+  supportTicket?: SupportTicketInfo;
 }) => {
   const { theme } = useTheme();
   const router = useRouter();
 
-  // Get image source - prioritize shop image, then reel image, then default
+  // Get image source - restaurant orders use dedicated asset; then shop, reel, default
   const getHeaderImage = () => {
+    if (orderType === "restaurant")
+      return "/assets/images/restaurantImage.webp";
     if (order?.shop?.image) return order.shop.image;
     if (order?.reel?.thumbnail) return order.reel.thumbnail;
     if (order?.restaurant?.image) return order.restaurant.image;
-    return "/images/store-placeholder.jpg";
+    return "/images/shop-placeholder.jpg";
   };
 
   return (
-    <div className="min-h-screen ">
-      {/* Mobile Header with Image */}
+    <div
+      className="min-h-screen pb-20 md:pb-0"
+      style={{ margin: 0, padding: 0, width: "100%" }}
+    >
+      {/* Mobile Header with Image - aligned with safe top, full-bleed */}
       <div
-        className="relative h-36 w-full sm:hidden"
+        className="relative h-40 w-full pt-4 sm:hidden"
         style={{
-          marginTop: "-44px",
           marginLeft: "-16px",
           marginRight: "-16px",
           width: "calc(100% + 32px)",
@@ -226,10 +239,10 @@ const MobileOrderDetails = ({
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/70" />
 
-        {/* Back Button */}
+        {/* Back Button - 36px from viewport (header full-bleed extends 16px off-screen) */}
         <Link
           href="/CurrentPendingOrders"
-          className="absolute left-4 top-7 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/30"
+          className="absolute left-9 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/30"
         >
           <svg
             viewBox="0 0 24 24"
@@ -243,7 +256,7 @@ const MobileOrderDetails = ({
         </Link>
 
         {/* Order ID Badge */}
-        <div className="absolute right-4 top-7 z-20">
+        <div className="absolute right-5 top-4 z-20">
           <span className="inline-flex items-center rounded-full bg-white/20 px-4 py-2 text-sm font-semibold !text-white shadow-lg backdrop-blur-md">
             {combinedOrders.length > 1 ? (
               <>
@@ -260,8 +273,8 @@ const MobileOrderDetails = ({
           </span>
         </div>
 
-        {/* Header Content */}
-        <div className="absolute bottom-0 left-0 right-0 z-10 p-4">
+        {/* Header Content - 36px horizontal from viewport */}
+        <div className="absolute bottom-0 left-0 right-0 z-10 px-9 pb-5 pt-2">
           <h1 className="text-2xl font-bold !text-white">
             {combinedOrders.length > 1 ? "Orders Details" : "Order Details"}
           </h1>
@@ -288,11 +301,18 @@ const MobileOrderDetails = ({
         </div>
       </div>
 
-      {/* Mobile Content */}
-      <div className="py-6">
+      {/* Mobile Content - px-4 for consistent side inset so content doesn't touch edges */}
+      <div
+        className={orderType === "restaurant" ? "w-full" : "px-4 py-6"}
+        style={
+          orderType === "restaurant"
+            ? { margin: 0, padding: 0, width: "100%" }
+            : {}
+        }
+      >
         {/* Order PIN Card - Compact Display */}
         {order?.pin && (
-          <div className="mb-4 px-4">
+          <div className="mb-4">
             <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-green-500 via-green-600 to-green-700 p-4 shadow-lg">
               {/* Animated background elements */}
               <div className="absolute -right-6 -top-6 h-20 w-20 animate-pulse rounded-full bg-white opacity-10"></div>
@@ -340,16 +360,35 @@ const MobileOrderDetails = ({
         )}
 
         {/* Order Details Component - Full width on mobile */}
-        <div className="mobile-full-width ">
+        <div className="mobile-full-width">
           {orderType === "reel" ? (
-            <UserReelOrderDetails order={order} isMobile={true} />
+            <UserReelOrderDetails
+              order={order}
+              isMobile={true}
+              onContactSupport={onContactSupport}
+              supportTicket={supportTicket}
+            />
           ) : orderType === "restaurant" ? (
-            <UserRestaurantOrderDetails order={order} isMobile={true} />
+            <UserRestaurantOrderDetails
+              order={order}
+              isMobile={true}
+              onContactSupport={onContactSupport}
+              supportTicket={supportTicket}
+            />
+          ) : orderType === "business" ? (
+            <UserBusinessOrderDetails
+              order={order}
+              isMobile={true}
+              onContactSupport={onContactSupport}
+              supportTicket={supportTicket}
+            />
           ) : (
             <UserOrderDetails
               order={order}
               isMobile={true}
               combinedOrders={combinedOrders}
+              onContactSupport={onContactSupport}
+              supportTicket={supportTicket}
             />
           )}
         </div>
@@ -363,10 +402,14 @@ const DesktopOrderDetails = ({
   order,
   orderType,
   combinedOrders,
+  onContactSupport,
+  supportTicket,
 }: {
   order: any;
-  orderType: "regular" | "reel" | "restaurant" | null;
+  orderType: "regular" | "reel" | "restaurant" | "business" | null;
   combinedOrders: any[];
+  onContactSupport?: () => void;
+  supportTicket?: SupportTicketInfo;
 }) => {
   return (
     <div className="min-h-screen md:ml-16">
@@ -374,11 +417,30 @@ const DesktopOrderDetails = ({
       <div className="container mx-auto px-8 py-8">
         <div className="rounded-2xl  shadow-sm ">
           {orderType === "reel" ? (
-            <UserReelOrderDetails order={order} />
+            <UserReelOrderDetails
+              order={order}
+              onContactSupport={onContactSupport}
+              supportTicket={supportTicket}
+            />
           ) : orderType === "restaurant" ? (
-            <UserRestaurantOrderDetails order={order} />
+            <UserRestaurantOrderDetails
+              order={order}
+              onContactSupport={onContactSupport}
+              supportTicket={supportTicket}
+            />
+          ) : orderType === "business" ? (
+            <UserBusinessOrderDetails
+              order={order}
+              onContactSupport={onContactSupport}
+              supportTicket={supportTicket}
+            />
           ) : (
-            <UserOrderDetails order={order} combinedOrders={combinedOrders} />
+            <UserOrderDetails
+              order={order}
+              combinedOrders={combinedOrders}
+              onContactSupport={onContactSupport}
+              supportTicket={supportTicket}
+            />
           )}
         </div>
       </div>
@@ -393,70 +455,156 @@ function ViewOrderDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [orderType, setOrderType] = useState<
-    "regular" | "reel" | "restaurant" | null
+    "regular" | "reel" | "restaurant" | "business" | null
   >(null);
   const [combinedOrders, setCombinedOrders] = useState<any[]>([]);
+  const [showSupportModal, setShowSupportModal] = useState(false);
+  const [supportTicket, setSupportTicket] = useState<{
+    ticket_num: number;
+    status: string;
+  } | null>(null);
+
+  // Fetch support ticket for this order (subject = "Order issue #orderRef")
+  const fetchSupportTicket = React.useCallback(async (orderObj: any) => {
+    if (!orderObj?.id) return;
+    const orderDisplayId =
+      orderObj?.OrderID != null ? orderObj.OrderID : orderObj?.id;
+    try {
+      const res = await fetch(
+        `/api/queries/ticket-by-order?orderId=${encodeURIComponent(
+          orderObj.id
+        )}&orderDisplayId=${encodeURIComponent(String(orderDisplayId))}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.ticket) {
+          setSupportTicket({
+            ticket_num: data.ticket.ticket_num,
+            status: data.ticket.status,
+          });
+          return;
+        }
+      }
+      setSupportTicket(null);
+    } catch (e) {
+      setSupportTicket(null);
+    }
+  }, []);
 
   useEffect(() => {
     if (!orderId || !router.isReady) return;
+
+    const typeHint = (router.query.type as string) || "regular";
 
     async function fetchDetails() {
       try {
         setLoading(true);
         setError(null);
 
-        // Try to fetch as regular order first
-        let res = await fetch(`/api/queries/orderDetails?id=${orderId}`);
+        const apis: Array<{
+          type: "regular" | "reel" | "restaurant" | "business";
+          url: string;
+        }> =
+          typeHint === "business"
+            ? [
+                {
+                  type: "business",
+                  url: `/api/queries/business-order-details?id=${orderId}`,
+                },
+                {
+                  type: "regular",
+                  url: `/api/queries/orderDetails?id=${orderId}`,
+                },
+                {
+                  type: "reel",
+                  url: `/api/queries/reel-order-details?id=${orderId}`,
+                },
+                {
+                  type: "restaurant",
+                  url: `/api/queries/restaurant-order-details?id=${orderId}`,
+                },
+              ]
+            : typeHint === "restaurant"
+            ? [
+                {
+                  type: "restaurant",
+                  url: `/api/queries/restaurant-order-details?id=${orderId}`,
+                },
+                {
+                  type: "regular",
+                  url: `/api/queries/orderDetails?id=${orderId}`,
+                },
+                {
+                  type: "reel",
+                  url: `/api/queries/reel-order-details?id=${orderId}`,
+                },
+                {
+                  type: "business",
+                  url: `/api/queries/business-order-details?id=${orderId}`,
+                },
+              ]
+            : typeHint === "reel"
+            ? [
+                {
+                  type: "reel",
+                  url: `/api/queries/reel-order-details?id=${orderId}`,
+                },
+                {
+                  type: "regular",
+                  url: `/api/queries/orderDetails?id=${orderId}`,
+                },
+                {
+                  type: "restaurant",
+                  url: `/api/queries/restaurant-order-details?id=${orderId}`,
+                },
+                {
+                  type: "business",
+                  url: `/api/queries/business-order-details?id=${orderId}`,
+                },
+              ]
+            : [
+                {
+                  type: "regular",
+                  url: `/api/queries/orderDetails?id=${orderId}`,
+                },
+                {
+                  type: "reel",
+                  url: `/api/queries/reel-order-details?id=${orderId}`,
+                },
+                {
+                  type: "restaurant",
+                  url: `/api/queries/restaurant-order-details?id=${orderId}`,
+                },
+                {
+                  type: "business",
+                  url: `/api/queries/business-order-details?id=${orderId}`,
+                },
+              ];
 
-        if (res.ok) {
-          const data = await res.json();
-          if (data.order) {
-            setOrder(data.order);
-            setOrderType("regular");
-            return;
+        for (const { type, url } of apis) {
+          const res = await fetch(url);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.order) {
+              setOrder(data.order);
+              setOrderType(type);
+              return;
+            }
           }
-        } else if (res.status === 404) {
-          // Silently handle 404 for regular orders - this is expected for reel orders
-        }
-
-        // If not found as regular order, try as reel order
-        res = await fetch(`/api/queries/reel-order-details?id=${orderId}`);
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data.order) {
-            setOrder(data.order);
-            setOrderType("reel");
-            return;
-          }
-        } else if (res.status === 404) {
-          // Silently handle 404 for reel orders - this is expected for restaurant orders
-        }
-
-        // If not found as reel order, try as restaurant order
-        res = await fetch(
-          `/api/queries/restaurant-order-details?id=${orderId}`
-        );
-
-        if (!res.ok) {
-          if (res.status === 404) {
+          if (res.status === 404) continue;
+          // Non-404 error: for restaurant we throw with detail; for others try next
+          if (type === "restaurant") {
+            const errorData = await res.json().catch(() => ({}));
+            const detail = errorData.detail ? `: ${errorData.detail}` : "";
             throw new Error(
-              "Order not found. Please check the order ID and try again."
+              (errorData.error || "Failed to fetch order details") + detail
             );
           }
-          const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.error || "Failed to fetch order details");
         }
 
-        const data = await res.json();
-
-        // Validate that we have the necessary data
-        if (!data.order) {
-          throw new Error("Order data is missing");
-        }
-
-        setOrder(data.order);
-        setOrderType("restaurant");
+        throw new Error(
+          "Order not found. Please check the order ID and try again."
+        );
       } catch (err) {
         console.error("Error fetching order details:", err);
         setError(
@@ -467,7 +615,12 @@ function ViewOrderDetailsPage() {
       }
     }
     fetchDetails();
-  }, [orderId]);
+  }, [orderId, router.isReady, router.query.type]);
+
+  // Fetch support ticket when order is loaded
+  useEffect(() => {
+    if (order) fetchSupportTicket(order);
+  }, [order, fetchSupportTicket]);
 
   // Fetch combined orders if this is a combined order
   useEffect(() => {
@@ -589,6 +742,16 @@ function ViewOrderDetailsPage() {
     );
   }
 
+  // Always show Contact support for business (store) and reel orders; for others show when "ready for pickup" or no ticket
+  const isReadyForPickup =
+    order?.status &&
+    String(order.status).toLowerCase().replace(/_/g, " ").includes("ready");
+  const alwaysShowSupport = orderType === "business" || orderType === "reel";
+  const showContactSupport =
+    alwaysShowSupport || isReadyForPickup || !supportTicket
+      ? () => setShowSupportModal(true)
+      : undefined;
+
   return (
     <AuthGuard requireAuth={true}>
       <RootLayout>
@@ -598,6 +761,8 @@ function ViewOrderDetailsPage() {
             order={order}
             orderType={orderType}
             combinedOrders={combinedOrders}
+            onContactSupport={showContactSupport}
+            supportTicket={supportTicket}
           />
         </div>
 
@@ -607,15 +772,25 @@ function ViewOrderDetailsPage() {
             order={order}
             orderType={orderType}
             combinedOrders={combinedOrders}
+            onContactSupport={showContactSupport}
+            supportTicket={supportTicket}
           />
         </div>
+
+        <ContactSupportModal
+          open={showSupportModal}
+          onClose={() => setShowSupportModal(false)}
+          order={order}
+          orderType={orderType ?? "regular"}
+          onSuccess={() => fetchSupportTicket(order)}
+        />
 
         {/* Mobile-specific styles for full-width layout */}
         <style jsx global>{`
           @media (max-width: 767px) {
-            /* Remove padding from Panel body on mobile for full-width */
+            /* Panel body padding - allow internal padding for content */
             .mobile-full-width .rs-panel-body {
-              padding: 0 !important;
+              padding: 1rem !important;
             }
 
             /* Remove padding from scroll view on mobile */
@@ -633,6 +808,8 @@ function ViewOrderDetailsPage() {
               box-shadow: none !important;
               border-left: none !important;
               border-right: none !important;
+              width: 100% !important;
+              max-width: 100% !important;
             }
 
             /* Remove border radius from panel body and scroll view */
@@ -641,26 +818,26 @@ function ViewOrderDetailsPage() {
               border-radius: 0 !important;
             }
 
-            /* Add internal padding to content inside panels for readability */
-            .mobile-full-width .rs-panel-body > div {
-              padding-left: 1rem !important;
-              padding-right: 1rem !important;
-            }
-
-            /* Ensure proper spacing for first and last elements */
-            .mobile-full-width .rs-panel-body > div:first-child {
-              padding-top: 1rem !important;
-            }
-
-            .mobile-full-width .rs-panel-body > div:last-child {
-              padding-bottom: 1rem !important;
-            }
-
             /* Remove shadows from panel containers */
             .mobile-full-width .rs-panel,
             .mobile-full-width .rs-panel-body,
             .mobile-full-width .rs-scroll-view {
               box-shadow: none !important;
+            }
+
+            /* Restaurant order details - ensure panels are connected with borders */
+            .mobile-full-width .rs-panel + .rs-panel {
+              border-top: 1px solid rgba(229, 231, 235, 0.5) !important;
+              margin-top: 0 !important;
+            }
+
+            .dark .mobile-full-width .rs-panel + .rs-panel {
+              border-top-color: rgba(55, 65, 81, 0.5) !important;
+            }
+
+            /* Ensure panel body has proper padding for restaurant orders */
+            .mobile-full-width .rs-panel-body {
+              padding: 1rem !important;
             }
           }
         `}</style>

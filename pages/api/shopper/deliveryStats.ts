@@ -3,6 +3,7 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
+import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 
 // GraphQL query to get order statistics for a shopper
 const GET_DELIVERY_STATS = gql`
@@ -211,6 +212,10 @@ export default async function handler(
     });
   } catch (error) {
     console.error("Error fetching delivery stats:", error);
+    await logErrorToSlack("DeliveryStatsAPI", error, {
+      userId,
+      method: req.method,
+    });
     return res.status(500).json({
       error:
         error instanceof Error

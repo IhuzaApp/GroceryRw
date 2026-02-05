@@ -47,27 +47,23 @@ export default function QuantityConfirmationModal({
   const [exceedsBudget, setExceedsBudget] = useState(false);
   const [refundAmount, setRefundAmount] = useState(0);
   const [missingWeight, setMissingWeight] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Mobile detection
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Check if item is weight-based
   useEffect(() => {
-    console.log(
-      "🔍 [QuantityConfirmationModal] useEffect triggered, currentItem exists:",
-      !!currentItem
-    );
     if (currentItem) {
-      console.log(
-        "🔍 [QuantityConfirmationModal] FULL currentItem:",
-        JSON.stringify(currentItem, null, 2)
-      );
-      console.log(
-        "🔍 [QuantityConfirmationModal] currentItem.product:",
-        currentItem.product
-      );
-      console.log(
-        "🔍 [QuantityConfirmationModal] currentItem.product.ProductName:",
-        currentItem.product?.ProductName
-      );
-
       // Access measurement_unit from the correct path based on GraphQL schema
       let unit = "";
 
@@ -91,18 +87,6 @@ export default function QuantityConfirmationModal({
 
       setIsWeightBased(isWeight);
       setMeasurementUnit(unit);
-
-      console.log("🔍 [QuantityConfirmationModal] Barcode/SKU check:");
-      console.log("  - product.barcode:", currentItem.product?.barcode);
-      console.log(
-        "  - product.ProductName.barcode:",
-        currentItem.product?.ProductName?.barcode
-      );
-      console.log("  - product.sku:", currentItem.product?.sku);
-      console.log(
-        "  - product.ProductName.sku:",
-        currentItem.product?.ProductName?.sku
-      );
 
       // Calculate price per unit weight
       if (isWeight && currentItem.product.final_price) {
@@ -198,6 +182,7 @@ export default function QuantityConfirmationModal({
           isWeightBased: false,
         });
         setShowBarcodeScanner(false);
+        setShowManualInput(false); // Also reset manual input state
       } else {
         setBarcodeValidation({
           isValid: false,
@@ -207,16 +192,6 @@ export default function QuantityConfirmationModal({
       }
       return;
     }
-
-    console.log(
-      "🔍 [QuantityConfirmationModal] No barcode/SKU found for validation:",
-      {
-        itemBarcode,
-        itemSku,
-        hasBarcode: !!itemBarcode,
-        hasSku: !!itemSku,
-      }
-    );
 
     // If the item has NO barcode or SKU in the database, it cannot be validated.
     setBarcodeValidation({
@@ -638,11 +613,11 @@ export default function QuantityConfirmationModal({
                             placeholder={
                               currentItem?.product.barcode ||
                               currentItem?.product.ProductName?.barcode
-                                ? "Enter the barcode from the product"
+                                ? "Barcode"
                                 : currentItem?.product.sku ||
                                   currentItem?.product.ProductName?.sku
-                                ? "Enter the SKU from the product"
-                                : "Enter SKU or barcode"
+                                ? "SKU"
+                                : "SKU or Barcode"
                             }
                             className={`w-full rounded-xl border-2 py-4 pl-12 pr-4 text-center text-lg font-medium transition-all focus:outline-none focus:ring-2 focus:ring-green-500 ${
                               theme === "dark"
@@ -788,11 +763,20 @@ export default function QuantityConfirmationModal({
                         value={isWeightBased ? foundWeight : foundQuantity}
                         onChange={(e) => {
                           const numValue = Number(e.target.value) || 0;
+                          // Prevent entering quantities higher than requested
+                          const maxAllowed = currentItem?.quantity || 0;
+                          const validValue = Math.min(numValue, maxAllowed);
+
                           if (isWeightBased) {
-                            setFoundWeight(numValue);
-                            setFoundQuantity(numValue); // Update quantity for compatibility
+                            setFoundWeight(validValue);
+                            setFoundQuantity(validValue); // Update quantity for compatibility
                           } else {
-                            setFoundQuantity(numValue);
+                            setFoundQuantity(validValue);
+                          }
+
+                          // If user tried to enter a higher value, update the input to show the capped value
+                          if (numValue > maxAllowed) {
+                            e.target.value = validValue.toString();
                           }
                         }}
                         min={0}
@@ -938,43 +922,46 @@ export default function QuantityConfirmationModal({
             >
               Cancel
             </button>
-            <button
-              onClick={onConfirm}
-              disabled={
-                foundQuantity === 0 ||
-                exceedsBudget ||
-                (!isWeightBased &&
-                  !barcodeValidation.isValid &&
-                  (currentItem?.product.ProductName?.barcode ||
-                    currentItem?.product.barcode ||
-                    currentItem?.product.ProductName?.sku ||
-                    currentItem?.product.sku))
-              }
-              className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white transition-all duration-200 sm:flex-initial ${
-                foundQuantity === 0 ||
-                exceedsBudget ||
-                (!isWeightBased && !barcodeValidation.isValid)
-                  ? "cursor-not-allowed bg-gray-400"
-                  : theme === "dark"
-                  ? "bg-green-600 shadow-lg hover:bg-green-700 hover:shadow-green-500/25"
-                  : "bg-green-600 shadow-lg hover:bg-green-700 hover:shadow-green-500/25"
-              }`}
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            {/* Hide Confirm Found button on mobile when in barcode/SKU input mode */}
+            {!(isMobile && (showBarcodeScanner || showManualInput)) && (
+              <button
+                onClick={onConfirm}
+                disabled={
+                  foundQuantity === 0 ||
+                  exceedsBudget ||
+                  (!isWeightBased &&
+                    !barcodeValidation.isValid &&
+                    (currentItem?.product.ProductName?.barcode ||
+                      currentItem?.product.barcode ||
+                      currentItem?.product.ProductName?.sku ||
+                      currentItem?.product.sku))
+                }
+                className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white transition-all duration-200 sm:flex-initial ${
+                  foundQuantity === 0 ||
+                  exceedsBudget ||
+                  (!isWeightBased && !barcodeValidation.isValid)
+                    ? "cursor-not-allowed bg-gray-400"
+                    : theme === "dark"
+                    ? "bg-green-600 shadow-lg hover:bg-green-700 hover:shadow-green-500/25"
+                    : "bg-green-600 shadow-lg hover:bg-green-700 hover:shadow-green-500/25"
+                }`}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              Confirm Found
-            </button>
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                Confirm Found
+              </button>
+            )}
           </div>
         </div>
       </div>

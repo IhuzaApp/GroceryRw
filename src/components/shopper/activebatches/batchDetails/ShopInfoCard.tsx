@@ -171,7 +171,7 @@ export default function ShopInfoCard({
                   )}
                 </div>
 
-                {/* Shop Name and Address */}
+                {/* Shop Name, Address, Description, Category, Working Hours */}
                 <div className="flex-1">
                   <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
                     {shop.name}
@@ -181,44 +181,38 @@ export default function ShopInfoCard({
                       </span>
                     )}
                   </h3>
-                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 sm:text-sm">
-                    {shop.address}
-                  </p>
+                  {shop.address && (
+                    <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 sm:text-sm">
+                      {shop.address}
+                    </p>
+                  )}
+                  {/* Business store: description */}
+                  {shop.description && String(shop.description).trim() && (
+                    <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
+                      {shop.description}
+                    </p>
+                  )}
+                  {/* Business store: category (name and/or description) */}
+                  {shop.category &&
+                    (shop.category.name || shop.category.description) && (
+                      <div className="mt-1.5">
+                        <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                          Category:{" "}
+                        </span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                          {[shop.category.name, shop.category.description]
+                            .filter(Boolean)
+                            .join(" – ")}
+                        </span>
+                      </div>
+                    )}
                 </div>
               </div>
 
               {/* Contact Information */}
               <div className="space-y-2 border-t border-slate-200 pt-3 text-sm dark:border-slate-600 sm:text-base">
-                {/* Phone Number */}
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center text-slate-600 dark:text-slate-400">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="mr-2 h-4 w-4"
-                    >
-                      <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                    Phone
-                  </span>
-                  {shop.phone ? (
-                    <a
-                      href={`tel:${shop.phone}`}
-                      className="font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
-                    >
-                      {shop.phone}
-                    </a>
-                  ) : (
-                    <span className="font-medium text-slate-500 dark:text-slate-400">
-                      N/A
-                    </span>
-                  )}
-                </div>
-
-                {/* Operating Hours */}
-                {shop.operating_hours && (
+                {/* Phone Number - only show when we have a valid number (don't show N/A) */}
+                {shop.phone && String(shop.phone).trim() && (
                   <div className="flex items-center justify-between">
                     <span className="flex items-center text-slate-600 dark:text-slate-400">
                       <svg
@@ -228,31 +222,57 @@ export default function ShopInfoCard({
                         strokeWidth="2"
                         className="mr-2 h-4 w-4"
                       >
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12,6 12,12 16,14" />
+                        <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                       </svg>
-                      Hours
+                      Phone
                     </span>
-                    <span className="font-medium text-slate-900 dark:text-slate-100">
-                      {(() => {
-                        const hoursObj = shop.operating_hours;
-                        if (hoursObj && typeof hoursObj === "object") {
-                          const now = new Date();
-                          const dayKey = now
-                            .toLocaleDateString("en-US", {
-                              weekday: "long",
-                            })
-                            .toLowerCase();
-                          const todaysHours = (hoursObj as any)[dayKey];
-                          if (todaysHours) {
-                            return todaysHours;
-                          }
-                        }
-                        return "Check store for hours";
-                      })()}
-                    </span>
+                    <a
+                      href={`tel:${shop.phone}`}
+                      className="font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+                    >
+                      {shop.phone}
+                    </a>
                   </div>
                 )}
+
+                {/* Operating Hours - current date only */}
+                {shop.operating_hours &&
+                  typeof shop.operating_hours === "object" &&
+                  Object.keys(shop.operating_hours).length > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center text-slate-600 dark:text-slate-400">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="mr-2 h-4 w-4"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <polyline points="12,6 12,12 16,14" />
+                        </svg>
+                        Today
+                      </span>
+                      <span className="font-medium text-slate-900 dark:text-slate-100">
+                        {(() => {
+                          const hoursObj = shop.operating_hours;
+                          if (hoursObj && typeof hoursObj === "object") {
+                            const now = new Date();
+                            const dayKey = now
+                              .toLocaleDateString("en-US", {
+                                weekday: "long",
+                              })
+                              .toLowerCase();
+                            const todaysHours = (hoursObj as any)[dayKey];
+                            if (todaysHours) {
+                              return String(todaysHours);
+                            }
+                          }
+                          return "Check store for hours";
+                        })()}
+                      </span>
+                    </div>
+                  )}
               </div>
 
               {/* Shop Directions Button */}

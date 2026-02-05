@@ -1,8 +1,18 @@
+/**
+ * Marketplace notification counts (RFQ responses, new RFQs, business orders, incomplete orders).
+ * Sends push notifications via fcmService when user has updates; clients receive via fcmClient
+ * (useFCMNotifications) and can refetch on "fcm-marketplace-update" event.
+ */
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { sendNotificationToUser } from "../../../src/services/fcmService";
+
+// Throttle: send at most one marketplace FCM per user per 5 minutes
+const lastMarketplaceNotifyAt = new Map<string, number>();
+const MARKETPLACE_NOTIFY_THROTTLE_MS = 5 * 60 * 1000;
 
 const GET_RFQ_RESPONSES_COUNT = gql`
   query GetRFQResponsesCount($user_id: uuid!, $seven_days_ago: timestamptz!) {
@@ -206,6 +216,36 @@ export default async function handler(
       incompleteOrdersCount +
       newRFQsCount +
       newBusinessOrdersCount;
+
+    // Notify user via FCM when they have marketplace updates (throttled)
+    if (totalCount > 0) {
+      const lastSent = lastMarketplaceNotifyAt.get(userId) ?? 0;
+      if (Date.now() - lastSent >= MARKETPLACE_NOTIFY_THROTTLE_MS) {
+        try {
+          await sendNotificationToUser(userId, {
+            title: "Marketplace updates",
+            body:
+              totalCount === 1
+                ? "You have 1 new marketplace update"
+                : `You have ${totalCount} new marketplace updates`,
+            data: {
+              type: "marketplace_update",
+              totalCount: String(totalCount),
+              rfqResponsesCount: String(rfqResponsesCount),
+              newRFQsCount: String(newRFQsCount),
+              newBusinessOrdersCount: String(newBusinessOrdersCount),
+              incompleteOrdersCount: String(incompleteOrdersCount),
+            },
+          });
+          lastMarketplaceNotifyAt.set(userId, Date.now());
+        } catch (fcmErr: any) {
+          console.warn(
+            "Marketplace FCM notify failed:",
+            fcmErr?.message || fcmErr
+          );
+        }
+      }
+    }
 
     return res.status(200).json({
       rfqResponsesCount,

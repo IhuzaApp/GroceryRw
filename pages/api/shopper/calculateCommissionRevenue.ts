@@ -53,7 +53,7 @@ const CHECK_EXISTING_COMMISSION_REVENUE = gql`
   }
 `;
 
-// Create commission revenue record
+// Create commission revenue record (regular/combined orders only; businessOrder_Id null)
 const CREATE_COMMISSION_REVENUE = gql`
   mutation CreateCommissionRevenue(
     $shopper_id: uuid
@@ -71,6 +71,11 @@ const CREATE_COMMISSION_REVENUE = gql`
         shop_id: $shop_id
         amount: $amount
         commission_percentage: null
+        businessOrder_Id: null
+        reel_order_id: null
+        restaurant_order_id: null
+        restaurant_id: null
+        Plasbusiness_id: null
       }
     ) {
       affected_rows

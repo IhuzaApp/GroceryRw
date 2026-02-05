@@ -64,6 +64,67 @@ function formatMessageDate(timestamp: any) {
   }
 }
 
+// Helper to format time only (for messages)
+function formatMessageTime(timestamp: any) {
+  if (!timestamp) return "";
+
+  const date =
+    timestamp instanceof Timestamp ? timestamp.toDate() : new Date(timestamp);
+
+  return date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+// Helper to get date label for grouping
+function getDateLabel(timestamp: any): string {
+  if (!timestamp) return "";
+
+  const date =
+    timestamp instanceof Timestamp ? timestamp.toDate() : new Date(timestamp);
+
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const isToday = date.toDateString() === today.toDateString();
+  const isYesterday = date.toDateString() === yesterday.toDateString();
+
+  if (isToday) {
+    return "Today";
+  } else if (isYesterday) {
+    return "Yesterday";
+  } else {
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  }
+}
+
+// Helper to group messages by date
+function groupMessagesByDate(
+  messages: Message[]
+): Array<{ date: string; messages: Message[] }> {
+  const groups: Record<string, Message[]> = {};
+
+  messages.forEach((message) => {
+    const dateLabel = getDateLabel(message.timestamp);
+    if (!groups[dateLabel]) {
+      groups[dateLabel] = [];
+    }
+    groups[dateLabel].push(message);
+  });
+
+  return Object.entries(groups).map(([date, msgs]) => ({
+    date,
+    messages: msgs,
+  }));
+}
+
 // Helper to format order ID
 function formatOrderID(id?: string | number): string {
   const s = id != null ? id.toString() : "0";
@@ -81,6 +142,21 @@ interface Message {
   timestamp: any;
   read: boolean;
 }
+
+// Date separator component
+const DateSeparator: React.FC<{ date: string }> = ({ date }) => {
+  return (
+    <div className="my-4 flex items-center justify-center">
+      <div className="flex items-center gap-3">
+        <div className="h-px w-12 bg-gray-300 dark:bg-gray-600"></div>
+        <span className="rounded-full bg-gray-200 px-3 py-1 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+          {date}
+        </span>
+        <div className="h-px w-12 bg-gray-300 dark:bg-gray-600"></div>
+      </div>
+    </div>
+  );
+};
 
 // Message component
 interface MessageProps {
@@ -112,11 +188,16 @@ const Message: React.FC<MessageProps> = ({
           <div className="mb-1 flex gap-2 text-xs font-medium text-gray-600 dark:text-gray-300">
             {senderName}{" "}
             <span className="text-xs text-gray-500 dark:text-gray-400">
-              {formatMessageDate(message.timestamp)}
+              {formatMessageTime(message.timestamp)}
             </span>
           </div>
         )}
         <div className="whitespace-pre-wrap text-sm">{messageContent}</div>
+        {isCurrentUser && (
+          <div className="mt-1 text-right text-xs text-gray-500 dark:text-gray-400">
+            {formatMessageTime(message.timestamp)}
+          </div>
+        )}
       </div>
       {isCurrentUser && <Avatar color="green" circle size="xs" />}
     </div>
@@ -174,13 +255,26 @@ function ChatPage() {
             const shopperId =
               data.order.assignedTo?.id || data.order.shopper_id;
             if (shopperId) {
+              const employeeId = data.order.assignedTo?.shopper?.Employment_id;
+              const fullName =
+                data.order.assignedTo?.shopper?.full_name ||
+                data.order.assignedTo?.name ||
+                "Shopper";
+              const displayName = employeeId
+                ? `00${employeeId} ${fullName}`
+                : fullName;
+
               setShopper({
                 id: shopperId,
-                name: data.order.assignedTo?.name || "Shopper",
+                name: displayName,
+                fullName: fullName,
+                employeeId: employeeId,
                 avatar:
+                  data.order.assignedTo?.shopper?.profile_photo ||
                   data.order.assignedTo?.profile_picture ||
                   "/images/ProfileImage.png",
                 phone: data.order.assignedTo?.phone,
+                email: data.order.assignedTo?.email,
               });
 
               // Get or create conversation immediately if we have shopper ID
@@ -223,7 +317,16 @@ function ChatPage() {
       if (!querySnapshot.empty) {
         // Conversation exists
         const conversationDoc = querySnapshot.docs[0];
+        const conversationData = conversationDoc.data();
         setConversationId(conversationDoc.id);
+
+        // Immediately mark conversation as read if it has unread messages
+        if (conversationData.unreadCount > 0) {
+          const convRef = doc(db, "chat_conversations", conversationDoc.id);
+          await updateDoc(convRef, {
+            unreadCount: 0,
+          });
+        }
       } else {
         // Create new conversation
         const newConversation = {
@@ -287,25 +390,32 @@ function ChatPage() {
 
         setMessages(messagesList);
 
-        // Mark messages as read if they were sent to the current user
-        messagesList.forEach(async (message) => {
-          if (message.senderType === "shopper" && !message.read) {
-            const messageRef = doc(
-              db,
-              "chat_conversations",
-              conversationId,
-              "messages",
-              message.id
-            );
-            await updateDoc(messageRef, { read: true });
+        // Mark all unread messages as read
+        const unreadMessages = messagesList.filter(
+          (message) => message.senderType === "shopper" && !message.read
+        );
 
-            // Update unread count in conversation
+        if (unreadMessages.length > 0) {
+          // Mark messages as read (async operation)
+          (async () => {
+            for (const message of unreadMessages) {
+              const messageRef = doc(
+                db,
+                "chat_conversations",
+                conversationId,
+                "messages",
+                message.id
+              );
+              await updateDoc(messageRef, { read: true });
+            }
+
+            // Update conversation unread count to 0
             const convRef = doc(db, "chat_conversations", conversationId);
             await updateDoc(convRef, {
               unreadCount: 0,
             });
-          }
-        });
+          })();
+        }
 
         // Scroll to bottom after messages load
         setTimeout(scrollToBottom, 100);
@@ -484,15 +594,22 @@ function ChatPage() {
                     </div>
                   </div>
                 ) : (
-                  messages.map((message) => (
-                    <Message
-                      key={message.id}
-                      message={message}
-                      isCurrentUser={message.senderId === session?.user?.id}
-                      senderName={
-                        message.senderType === "shopper" ? shopper.name : "You"
-                      }
-                    />
+                  groupMessagesByDate(messages).map((group, groupIndex) => (
+                    <div key={groupIndex}>
+                      <DateSeparator date={group.date} />
+                      {group.messages.map((message) => (
+                        <Message
+                          key={message.id}
+                          message={message}
+                          isCurrentUser={message.senderId === session?.user?.id}
+                          senderName={
+                            message.senderType === "shopper"
+                              ? shopper.name
+                              : "You"
+                          }
+                        />
+                      ))}
+                    </div>
                   ))
                 )}
                 <div ref={messagesEndRef} />
@@ -662,19 +779,67 @@ function ChatPage() {
                     </div>
                     {shopper && (
                       <div>
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                          Shopper
+                        <h3 className="mb-3 text-sm font-medium text-gray-500 dark:text-gray-400">
+                          Shopper Details
                         </h3>
-                        <div className="mt-1 flex items-center gap-2">
-                          <Avatar
-                            src={shopper.avatar}
-                            alt={shopper.name}
-                            circle
-                            size="sm"
-                          />
-                          <span className="text-gray-900 dark:text-white">
-                            {shopper.name}
-                          </span>
+                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800">
+                          <div className="flex items-start gap-3">
+                            <Avatar
+                              src={shopper.avatar}
+                              alt={shopper.name}
+                              circle
+                              size="md"
+                            />
+                            <div className="min-w-0 flex-1">
+                              {shopper.employeeId && (
+                                <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900/20 dark:text-green-400">
+                                  00{shopper.employeeId}
+                                </span>
+                              )}
+                              <h4 className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                                {shopper.fullName || shopper.name}
+                              </h4>
+                              {shopper.email && (
+                                <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                                  {shopper.email}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="mt-3 flex gap-2">
+                            <button className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-green-50 px-3 py-2 text-xs font-medium text-green-700 transition-all hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30">
+                              <svg
+                                className="h-3.5 w-3.5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                                />
+                              </svg>
+                              Contact
+                            </button>
+                            <button className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700 transition-all hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30">
+                              <svg
+                                className="h-3.5 w-3.5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                />
+                              </svg>
+                              Report
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import CryptoJS from "crypto-js";
 import { useLanguage } from "../../context/LanguageContext";
+import { reportErrorToSlackClient } from "../../lib/reportErrorClient";
 
 // Encryption key - in production, this should be in environment variables
 const ENCRYPTION_KEY =
@@ -74,7 +75,7 @@ export default function UserPayment() {
       const { paymentMethods } = await res.json();
       setPaymentMethods(paymentMethods);
     } catch (err) {
-      console.error("Error loading payment methods:", err);
+      reportErrorToSlackClient("userPayment (load payment methods)", err);
     }
   };
 
@@ -84,7 +85,7 @@ export default function UserPayment() {
       const data = await res.json();
       setPaymentCards(data.paymentCards || []);
     } catch (err) {
-      console.error("Error loading payment cards:", err);
+      reportErrorToSlackClient("userPayment (load payment cards)", err);
     }
   };
 
@@ -129,7 +130,7 @@ export default function UserPayment() {
       fetchPaymentMethods();
       toast.success("Payment method added!");
     } catch (err) {
-      console.error("Error saving payment method:", err);
+      reportErrorToSlackClient("userPayment (save payment method)", err);
       toast.error("Failed to save payment method");
     }
   };
@@ -150,7 +151,7 @@ export default function UserPayment() {
       toast.success("Default payment method updated!");
       fetchPaymentMethods();
     } catch (err: any) {
-      console.error("Error updating default method:", err);
+      reportErrorToSlackClient("userPayment (update default method)", err);
       toast.error(err.message || "Failed to update default payment method");
     }
   };

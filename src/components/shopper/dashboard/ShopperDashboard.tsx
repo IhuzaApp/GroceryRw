@@ -9,6 +9,7 @@ import "rsuite/dist/rsuite.min.css";
 import { useTheme } from "../../../context/ThemeContext";
 import { useRouter } from "next/router";
 import { useFCMNotifications } from "../../../hooks/useFCMNotifications";
+import { useWakeLock } from "../../../hooks/useWakeLock";
 import TodayCompletedOrders from "./TodayCompletedOrders";
 
 // Dynamically load MapSection only on client (disable SSR)
@@ -105,6 +106,9 @@ export default function ShopperDashboard() {
   } | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
+
+  // Keep screen awake when shopper is online and active (viewing real-time data)
+  useWakeLock(isOnline && !isInitializing);
   const [sortBy, setSortBy] = useState<
     "newest" | "earnings" | "distance" | "priority"
   >("priority");

@@ -1,7 +1,10 @@
 "use client";
 
 import React from "react";
-import { OrderItem } from "../../types/order";
+import Image from "next/image";
+import { formatCurrency } from "../../../../lib/formatCurrency";
+import { resolveImageUrl } from "../../../../lib/imageUrl";
+import { OrderItem } from "../types";
 import OrderItemCard from "../OrderItemCard";
 
 interface OrderItemsSectionProps {
@@ -23,6 +26,15 @@ export default function OrderItemsSection({
   onShowProductImage,
   itemsLoading,
 }: OrderItemsSectionProps) {
+  // Check if we have same-shop combined orders (multiple orders from same shop)
+  const hasCombinedOrders =
+    order?.combinedOrders && order.combinedOrders.length > 0;
+  const mainShopId = order?.shop?.id;
+  const sameShopCombinedOrders = hasCombinedOrders
+    ? order.combinedOrders.filter((co: any) => co.shop?.id === mainShopId)
+    : [];
+  const hasSameShopCombinedOrders = sameShopCombinedOrders.length > 0;
+
   // Group items by shopId (do this early before any conditional returns)
   const itemsByShop = new Map<string, any[]>();
 
@@ -36,6 +48,59 @@ export default function OrderItemsSection({
     });
   }
 
+  // Helper to get customer ID from an order
+  const getCustomerId = (o: any) => {
+    return (
+      o.orderedBy?.id || o.user_id || o.customer?.id || o.customerId || null
+    );
+  };
+
+  // Check if combined orders are from the same customer
+  const mainCustomerId = getCustomerId(order);
+  const sameCustomerSameShopOrders = hasSameShopCombinedOrders
+    ? [
+        order,
+        ...sameShopCombinedOrders.filter((co: any) => {
+          const coCustomerId = getCustomerId(co);
+          return coCustomerId && coCustomerId === mainCustomerId;
+        }),
+      ]
+    : [order];
+  const hasSameCustomerSameShopCombinedOrders =
+    sameCustomerSameShopOrders.length > 1;
+
+  // For same-shop combined orders, create order-specific groups
+  const orderGroups = hasSameShopCombinedOrders
+    ? [
+        // Main order first
+        {
+          orderId: order.OrderID || order.id,
+          order: order,
+          items: order.Order_Items || [],
+          customerName:
+            order.orderedBy?.name ||
+            order.user?.name ||
+            order.customer?.name ||
+            "Customer",
+          customerId: mainCustomerId,
+          isVisible: order.status === "accepted" || order.status === "shopping",
+        },
+        // Then combined orders from same shop
+        ...sameShopCombinedOrders.map((co: any) => ({
+          orderId: co.OrderID || co.id,
+          order: co,
+          items: co.Order_Items || [],
+          customerName:
+            co.orderedBy?.name ||
+            co.user?.name ||
+            co.customer?.name ||
+            "Customer",
+          customerId: getCustomerId(co),
+          isVisible: co.status === "accepted" || co.status === "shopping",
+        })),
+      ].filter((group) => group.isVisible)
+    : [];
+
   const allGroups = Array.from(itemsByShop.entries());
   const groups = allGroups.filter(([shopId]) => {
     const shopOrders = [order, ...(order.combinedOrders || [])].filter(
@@ -47,12 +112,51 @@ export default function OrderItemsSection({
     );
   });
 
-  // Auto-set activeShopId to the only visible shop if there's only one
+  // Combined order rendering logic - determine split types early for useEffect
+  const isSplit = groups.length > 1;
+  const isSameShopCustomerSplit =
+    hasSameShopCombinedOrders && orderGroups.length > 1;
+
+  // For same-shop customer tabs, use orderId instead of shopId
+  const isCurrentlyActiveOrderVisible = orderGroups.some(
+    (group) => group.orderId == activeShopId
+  ); // Use == for number/string comparison
+  const effectiveActiveOrderId = isCurrentlyActiveOrderVisible
+    ? activeShopId
+    : orderGroups.length > 0
+    ? orderGroups[0].orderId
+    : null;
+
+  // Use current activeShopId if it's still in the visible groups, otherwise default to first available
+  const isCurrentlyActiveVisible = groups.some(([sid]) => sid === activeShopId);
+  const effectiveActiveShopId = isCurrentlyActiveVisible
+    ? activeShopId
+    : groups.length > 0
+    ? groups[0][0]
+    : null;
+
+  // Auto-set activeShopId to the only visible shop/order if there's only one
   React.useEffect(() => {
-    if (groups.length === 1 && activeShopId !== groups[0][0]) {
+    if (isSameShopCustomerSplit) {
+      // For same-shop combined orders, set to first order if not already set
+      if (
+        orderGroups.length > 0 &&
+        !orderGroups.some((group) => group.orderId == activeShopId)
+      ) {
+        // Use == for number/string comparison
+        onSetActiveShopId(orderGroups[0].orderId);
+      }
+    } else if (groups.length === 1 && activeShopId !== groups[0][0]) {
+      // For different shops, set to the only visible shop
       onSetActiveShopId(groups[0][0]);
     }
-  }, [groups, activeShopId, onSetActiveShopId]);
+  }, [
+    groups,
+    orderGroups,
+    activeShopId,
+    onSetActiveShopId,
+    isSameShopCustomerSplit,
+  ]);
 
   if (itemsLoading) {
     return (
@@ -105,16 +209,208 @@ export default function OrderItemsSection({
     );
   }
 
-  // Combined order shops rendering logic
-  const isSplit = groups.length > 1;
+  // Business order: show store and products from Order_Items (mapped from allProducts)
+  if (order?.orderType === "business") {
+    const storeName = order.shop?.name ?? "Business Store";
+    const items = order.Order_Items ?? [];
+    return (
+      <div className={`${activeTab === "items" ? "block" : "hidden sm:block"}`}>
+        <div className="mb-3 flex items-center gap-2 px-3 sm:mb-4 sm:gap-3 sm:px-0">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
+            Order Items
+          </h2>
+        </div>
+        <div className="space-y-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/30 sm:p-6">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            {storeName} • {items.length} {items.length === 1 ? "Item" : "Items"}
+          </h3>
+          <div className="space-y-2 sm:space-y-3">
+            {items.map((item: any) => {
+              const name =
+                item.name ??
+                item.product?.ProductName?.name ??
+                item.product?.name ??
+                "Item";
+              const qty = Number(item.quantity) ?? Number(item.qty) ?? 1;
+              const price = item.price ?? item.price_per_item ?? "0";
+              const imgSrc =
+                item.image ??
+                item.product?.image ??
+                item.product?.ProductName?.image ??
+                "/images/groceryPlaceholder.png";
+              const isDataUrl =
+                typeof imgSrc === "string" && imgSrc.startsWith("data:");
+              const resolvedImg = isDataUrl
+                ? imgSrc
+                : resolveImageUrl(imgSrc) ?? imgSrc;
+              const syntheticItem = {
+                id: item.id,
+                quantity: qty,
+                price: Number(price),
+                product: {
+                  id: item.id,
+                  name,
+                  image: resolvedImg || imgSrc,
+                  final_price: String(
+                    item.price_per_item ?? item.price ?? price ?? 0
+                  ),
+                  description: item.description ?? undefined,
+                  measurement_unit:
+                    item.product?.measurement_unit ??
+                    item.unit ??
+                    item.measurement_type ??
+                    undefined,
+                  measurement_type:
+                    item.product?.measurement_type ??
+                    item.measurement_type ??
+                    item.unit ??
+                    undefined,
+                  selectedDetails:
+                    item.product?.selectedDetails ??
+                    item.selectedDetails ??
+                    undefined,
+                  category: item.category ?? item.Category?.name ?? undefined,
+                  ProductName: { name },
+                },
+              };
+              return (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-800 sm:gap-4 sm:p-4"
+                >
+                  <button
+                    type="button"
+                    className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100 shadow-sm transition-all hover:ring-2 hover:ring-emerald-500 hover:ring-offset-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-700 sm:h-12 sm:w-12"
+                    onClick={() =>
+                      onShowProductImage(syntheticItem as OrderItem)
+                    }
+                    aria-label={`View larger image of ${name}`}
+                  >
+                    {isDataUrl ? (
+                      <img
+                        src={imgSrc}
+                        alt={name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : resolvedImg ? (
+                      <Image
+                        src={resolvedImg}
+                        alt={name}
+                        width={48}
+                        height={48}
+                        className="h-full w-full object-cover"
+                        unoptimized={
+                          typeof resolvedImg === "string" &&
+                          resolvedImg.startsWith("data:")
+                        }
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
+                        <span className="text-xs">No image</span>
+                      </div>
+                    )}
+                  </button>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-base font-medium text-slate-900 dark:text-slate-100 sm:text-lg">
+                      {name}
+                    </p>
+                    {/* For business orders show Description and query_id from PlasBusinessProductsOrSerive; no item price */}
+                    {(
+                      item.product?.ProductName?.description ??
+                      item.description ??
+                      ""
+                    )?.trim() ? (
+                      <p className="mt-1 line-clamp-2 text-sm text-slate-600 dark:text-slate-300 sm:text-base">
+                        {(
+                          item.product?.ProductName?.description ??
+                          item.description ??
+                          ""
+                        ).trim()}
+                      </p>
+                    ) : null}
+                    {item.query_id ?? item.product?.query_id ? (
+                      <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
+                        Ref: {item.query_id ?? item.product?.query_id}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  // Use current activeShopId if it's still in the visible groups, otherwise default to first available
-  const isCurrentlyActiveVisible = groups.some(([sid]) => sid === activeShopId);
-  const effectiveActiveShopId = isCurrentlyActiveVisible
-    ? activeShopId
-    : groups.length > 0
-    ? groups[0][0]
-    : null;
+  // Restaurant order: show restaurant name and dish list from restaurant_order_items
+  if (order?.orderType === "restaurant") {
+    const restaurantName =
+      order.shop?.name ?? order.Restaurant?.name ?? "Restaurant";
+    const items = order.restaurant_order_items ?? [];
+    return (
+      <div className={`${activeTab === "items" ? "block" : "hidden sm:block"}`}>
+        <div className="mb-3 flex items-center gap-2 px-3 sm:mb-4 sm:gap-3 sm:px-0">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
+            Order Items
+          </h2>
+        </div>
+        <div className="space-y-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/30 sm:p-6">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            {restaurantName} • {items.length}{" "}
+            {items.length === 1 ? "Item" : "Items"}
+          </h3>
+          <div className="space-y-2 sm:space-y-3">
+            {items.map((row: any) => {
+              const dish = row.restaurant_dishes;
+              const name =
+                dish?.ProductNames?.name ?? dish?.dishes?.name ?? "Dish";
+              const description =
+                dish?.ProductNames?.description ??
+                dish?.dishes?.description ??
+                "";
+              const image =
+                dish?.ProductNames?.image ?? dish?.dishes?.image ?? null;
+              const qty = Number(row.quantity) || 1;
+              const price = row.price ?? dish?.price ?? "0";
+              return (
+                <div
+                  key={row.id}
+                  className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-800 sm:gap-4 sm:p-4"
+                >
+                  {image && (
+                    <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:h-14 sm:w-14">
+                      <img
+                        src={image}
+                        alt={name}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-slate-900 dark:text-slate-100">
+                      {name}
+                    </p>
+                    {description && (
+                      <p className="line-clamp-2 text-sm text-slate-500 dark:text-slate-400">
+                        {description}
+                      </p>
+                    )}
+                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                      Qty: {qty} × {formatCurrency(Number(price))}
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0 font-semibold text-slate-900 dark:text-slate-100">
+                    {formatCurrency(Number(price) * qty)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Helper to get shop name
   const getShopName = (sid: string) => {
@@ -123,6 +419,111 @@ export default function OrderItemsSection({
     if (sub) return sub.shop?.name;
     return "Unknown Shop";
   };
+
+  // Same-shop combined orders: Show customer tabs
+  if (isSameShopCustomerSplit) {
+    return (
+      <div className={`${activeTab === "items" ? "block" : "hidden sm:block"}`}>
+        <div className="mb-3 flex items-center gap-2 px-3 sm:mb-4 sm:gap-3 sm:px-0">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
+            Order Items
+          </h2>
+        </div>
+
+        {/* Customer/Order Tabs Navigation */}
+        <div className="scrollbar-hide mb-4 flex flex-nowrap gap-2 overflow-x-auto pb-2">
+          {orderGroups.map((group, idx) => (
+            <button
+              key={group.orderId}
+              onClick={() => onSetActiveShopId(group.orderId)}
+              className={`flex max-w-[200px] flex-shrink-0 items-center gap-2 rounded-xl border-2 px-3 py-2 text-sm font-semibold transition-all duration-200 ${
+                effectiveActiveOrderId == group.orderId // Use == for number/string comparison
+                  ? "border-green-600 bg-green-600 text-white shadow-lg shadow-green-200 dark:shadow-green-900/30"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-green-400 hover:text-green-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
+              }`}
+            >
+              <span
+                className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[10px] ${
+                  effectiveActiveOrderId == group.orderId // Use == for number/string comparison
+                    ? "bg-white/20"
+                    : "bg-slate-100 dark:bg-slate-700"
+                }`}
+              >
+                {idx + 1}
+              </span>
+              <div className="min-w-0 flex-1 truncate text-left">
+                {group.customerName}{" "}
+                <span
+                  className={`text-xs ${
+                    effectiveActiveOrderId == group.orderId // Use == for number/string comparison
+                      ? "text-white/90"
+                      : "text-slate-500 dark:text-slate-400"
+                  }`}
+                >
+                  #{group.orderId}
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Active Order Items */}
+        {(() => {
+          const activeGroup = orderGroups.find(
+            (group) => group.orderId == effectiveActiveOrderId
+          ); // Use == for number/string comparison
+          if (!activeGroup) return null;
+
+          return (
+            <div className="space-y-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/30 sm:p-6">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                {activeGroup.customerName} • Order #{activeGroup.orderId} •{" "}
+                {activeGroup.items.length} Items
+              </h3>
+              <div className="space-y-2 sm:space-y-3">
+                {activeGroup.items.map((item: any) => {
+                  // Check if this order group is part of same-customer, same-shop combined orders
+                  const isSameCustomerSameShop =
+                    hasSameCustomerSameShopCombinedOrders &&
+                    activeGroup.customerId === mainCustomerId;
+
+                  let isBatchShopping = false;
+                  if (isSameCustomerSameShop) {
+                    // For same-customer, same-shop combined orders, show button if ANY order is shopping
+                    const allSameCustomerSameShopOrders = [
+                      order,
+                      ...(order.combinedOrders || []),
+                    ].filter(
+                      (o) =>
+                        (o.shop?.id || o.shop_id) === mainShopId &&
+                        getCustomerId(o) === mainCustomerId
+                    );
+                    isBatchShopping = allSameCustomerSameShopOrders.some(
+                      (o) => o.status === "shopping"
+                    );
+                  } else {
+                    // For different customers or different shops, only check the specific order
+                    isBatchShopping = activeGroup.order.status === "shopping";
+                  }
+
+                  return (
+                    <div key={item.id}>
+                      <OrderItemCard
+                        item={item}
+                        isBatchShopping={isBatchShopping}
+                        onToggleFound={onToggleItemFound}
+                        onShowProductImage={onShowProductImage}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+      </div>
+    );
+  }
 
   if (isSplit) {
     return (
@@ -167,11 +568,20 @@ export default function OrderItemsSection({
           </h3>
           <div className="space-y-2 sm:space-y-3">
             {itemsByShop.get(effectiveActiveShopId || "")?.map((item) => {
-              // In combined orders, show Mark Found button if ANY order in the batch is shopping
-              const allOrders = [order, ...(order.combinedOrders || [])];
-              const isBatchShopping = allOrders.some(
+              // For different shops combined orders, check if ANY order from this shop is still shopping
+              // This allows marking items as found even if some orders from the same shop are already on_the_way
+              const shopOrders = [
+                order,
+                ...(order.combinedOrders || []),
+              ].filter(
+                (o) => (o.shop?.id || o.shop_id) === effectiveActiveShopId
+              );
+              const hasAnyOrderShopping = shopOrders.some(
                 (o) => o.status === "shopping"
               );
+
+              // Show Mark Found button if any order from this shop is still in shopping status
+              const isBatchShopping = hasAnyOrderShopping;
 
               return (
                 <div key={item.id}>
@@ -189,8 +599,20 @@ export default function OrderItemsSection({
       </div>
     );
   } else {
-    // Even in non-split mode, show only the active shop's items
+    // Even in non-split mode, show only the active shop's/order's items
     const activeShopItems = itemsByShop.get(effectiveActiveShopId || "") || [];
+
+    // For same-shop combined orders, show customer name instead of shop name
+    let displayName = getShopName(effectiveActiveShopId || "");
+    let displayItems = activeShopItems;
+
+    if (hasSameShopCombinedOrders && orderGroups.length === 1) {
+      // Single same-shop combined order visible
+      const singleGroup = orderGroups[0];
+      displayName = `${singleGroup.customerName} • Order #${singleGroup.orderId}`;
+      displayItems = singleGroup.items;
+    }
+
     return (
       <div className={`${activeTab === "items" ? "block" : "hidden sm:block"}`}>
         <div className="mb-3 flex items-center gap-2 px-3 sm:mb-4 sm:gap-3 sm:px-0">
@@ -200,16 +622,41 @@ export default function OrderItemsSection({
         </div>
         <div className="space-y-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/30 sm:p-6">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            {getShopName(effectiveActiveShopId || "")} •{" "}
-            {activeShopItems.length} Items
+            {displayName} • {displayItems.length} Items
           </h3>
           <div className="space-y-2 sm:space-y-3">
-            {activeShopItems.map((item) => {
-              // In combined orders, show Mark Found button if ANY order in the batch is shopping
-              const allOrders = [order, ...(order.combinedOrders || [])];
-              const isBatchShopping = allOrders.some(
-                (o) => o.status === "shopping"
-              );
+            {displayItems.map((item) => {
+              // Check if this is a same-customer, same-shop combined order scenario
+              const isSameCustomerSameShop =
+                hasSameCustomerSameShopCombinedOrders &&
+                effectiveActiveShopId === mainShopId;
+
+              let isBatchShopping = false;
+              if (isSameCustomerSameShop) {
+                // For same-customer, same-shop combined orders, show button if ANY order is shopping
+                const allSameCustomerSameShopOrders = [
+                  order,
+                  ...(order.combinedOrders || []),
+                ].filter(
+                  (o) =>
+                    (o.shop?.id || o.shop_id) === mainShopId &&
+                    getCustomerId(o) === mainCustomerId
+                );
+                isBatchShopping = allSameCustomerSameShopOrders.some(
+                  (o) => o.status === "shopping"
+                );
+              } else {
+                // For different customers or different shops, check if any order from this shop is still shopping
+                const shopOrders = [
+                  order,
+                  ...(order.combinedOrders || []),
+                ].filter(
+                  (o) => (o.shop?.id || o.shop_id) === effectiveActiveShopId
+                );
+                isBatchShopping = shopOrders.some(
+                  (o) => o.status === "shopping"
+                );
+              }
 
               return (
                 <div key={item.id}>

@@ -13,21 +13,39 @@ export const useFCMNotifications = (): FCMNotificationHook => {
   const [hasPermission, setHasPermission] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
 
-  // Check if shopper is online (has location cookies)
-  const checkOnlineStatus = () => {
-    const cookies = document.cookie
-      .split("; ")
-      .reduce((acc: Record<string, string>, cur) => {
-        const [k, v] = cur.split("=");
-        acc[k] = v;
-        return acc;
-      }, {} as Record<string, string>);
-
-    return Boolean(cookies["user_latitude"] && cookies["user_longitude"]);
-  };
-
-  // Monitor online status
+  // Monitor "online" status:
+  // - Shoppers: only online when location cookies are present (go live)
+  // - Regular users/customers: always considered online for FCM so they can receive notifications
   useEffect(() => {
+    // No session, nothing to do
+    if (!session?.user?.id) {
+      return;
+    }
+
+    const role = (session.user as any)?.role;
+    const isShopper = role === "shopper";
+
+    // For non-shoppers, always treat as online so FCM works on user pages
+    if (!isShopper) {
+      if (!isOnline) {
+        setIsOnline(true);
+      }
+      return;
+    }
+
+    // Shopper-specific: check if shopper is online (has location cookies)
+    const checkOnlineStatus = () => {
+      const cookies = document.cookie
+        .split("; ")
+        .reduce((acc: Record<string, string>, cur) => {
+          const [k, v] = cur.split("=");
+          acc[k] = v;
+          return acc;
+        }, {} as Record<string, string>);
+
+      return Boolean(cookies["user_latitude"] && cookies["user_longitude"]);
+    };
+
     const updateOnlineStatus = () => {
       const online = checkOnlineStatus();
       // Only update if status actually changed
@@ -52,7 +70,7 @@ export const useFCMNotifications = (): FCMNotificationHook => {
       window.removeEventListener("toggleGoLive", handleToggle);
       clearInterval(intervalId);
     };
-  }, [isOnline]); // Add isOnline as dependency to check against current value
+  }, [session?.user?.id, (session?.user as any)?.role, isOnline]);
 
   useEffect(() => {
     // Only initialize FCM when shopper is online
@@ -74,6 +92,21 @@ export const useFCMNotifications = (): FCMNotificationHook => {
 
           // Dispatch custom events based on notification type
           const type = data?.type;
+
+          // Check user role to filter notifications
+          const role = (session.user as any)?.role;
+          const isShopper = role === "shopper";
+
+          // For regular users (non-shoppers): save and dispatch chat_message and marketplace_update
+          // For shoppers: save and dispatch all notification types
+          if (
+            !isShopper &&
+            type !== "chat_message" &&
+            type !== "marketplace_update"
+          ) {
+            // Regular users should not receive batch/order notifications
+            return;
+          }
 
           // Save ALL FCM notifications to history (regardless of type or page visibility)
           // This ensures users can see notifications when they return to the app
@@ -103,11 +136,49 @@ export const useFCMNotifications = (): FCMNotificationHook => {
                 ? parseFloat(data.estimatedEarnings)
                 : undefined,
               storeNames: data?.storeNames || data?.shopName,
+              orderType: data?.orderType || "regular",
+              combinedOrderId: data?.combinedOrderId,
               // Include any additional data
               ...(data || {}),
             };
 
-            notificationHistory.unshift(notificationEntry);
+            // For order notifications: avoid duplicate entries for the same order (e.g. reel re-offered after decline)
+            const isOrderNotification =
+              type === "new_order" || type === "batch_orders";
+            const orderId = data?.orderId != null ? String(data.orderId) : "";
+            const orderType = data?.orderType || "regular";
+            const combinedOrderId = data?.combinedOrderId || "";
+
+            if (isOrderNotification && orderId) {
+              const key = combinedOrderId
+                ? `combined:${combinedOrderId}`
+                : `${orderType}:${orderId}`;
+              const existingIdx = notificationHistory.findIndex(
+                (n: {
+                  type?: string;
+                  orderId?: string;
+                  orderType?: string;
+                  combinedOrderId?: string;
+                }) => {
+                  if (n.type !== "new_order" && n.type !== "batch_orders")
+                    return false;
+                  const nOrderId = n.orderId != null ? String(n.orderId) : "";
+                  const nType = n.orderType || "regular";
+                  const nCombined = n.combinedOrderId || "";
+                  const nKey = nCombined
+                    ? `combined:${nCombined}`
+                    : `${nType}:${nOrderId}`;
+                  return nKey === key;
+                }
+              );
+              if (existingIdx !== -1) {
+                notificationHistory.splice(existingIdx, 1);
+              }
+              notificationHistory.unshift(notificationEntry);
+            } else {
+              notificationHistory.unshift(notificationEntry);
+            }
+
             if (notificationHistory.length > 50) {
               notificationHistory.pop();
             }
@@ -133,8 +204,8 @@ export const useFCMNotifications = (): FCMNotificationHook => {
 
           switch (type) {
             case "new_order":
-              // Double-check page visibility before dispatching
-              if (!document.hidden) {
+              // Only dispatch for shoppers
+              if (isShopper && !document.hidden) {
                 window.dispatchEvent(
                   new CustomEvent("fcm-new-order", {
                     detail: {
@@ -171,33 +242,38 @@ export const useFCMNotifications = (): FCMNotificationHook => {
               break;
 
             case "batch_orders":
-              const orders = JSON.parse(data.orders || "[]");
+              // Only dispatch for shoppers
+              if (isShopper) {
+                const orders = JSON.parse(data.orders || "[]");
 
-              window.dispatchEvent(
-                new CustomEvent("fcm-batch-orders", {
-                  detail: {
-                    orders: orders,
-                    expiresIn: parseInt(data.expiresIn || "60000"), // Default to 60 seconds
-                    timestamp: parseInt(data.timestamp),
-                  },
-                })
-              );
+                window.dispatchEvent(
+                  new CustomEvent("fcm-batch-orders", {
+                    detail: {
+                      orders: orders,
+                      expiresIn: parseInt(data.expiresIn || "60000"), // Default to 60 seconds
+                      timestamp: parseInt(data.timestamp),
+                    },
+                  })
+                );
+              }
               break;
 
             case "order_expired":
-              // Order expiration can be dispatched even if page is hidden
-              window.dispatchEvent(
-                new CustomEvent("fcm-order-expired", {
-                  detail: {
-                    orderId: data.orderId,
-                    reason: data.reason,
-                  },
-                })
-              );
+              // Only dispatch for shoppers
+              if (isShopper) {
+                window.dispatchEvent(
+                  new CustomEvent("fcm-order-expired", {
+                    detail: {
+                      orderId: data.orderId,
+                      reason: data.reason,
+                    },
+                  })
+                );
+              }
               break;
 
             case "test":
-              // Test notification received
+              // Test notification received (available for all users)
               if (typeof window !== "undefined") {
                 import("react-hot-toast").then(({ default: toast }) => {
                   toast.success("FCM notification received successfully!", {
@@ -208,8 +284,33 @@ export const useFCMNotifications = (): FCMNotificationHook => {
               }
               break;
 
+            case "marketplace_update":
+              // Marketplace updates (RFQ, business orders) – trigger refetch of counts
+              window.dispatchEvent(
+                new CustomEvent("fcm-marketplace-update", {
+                  detail: {
+                    totalCount: data.totalCount
+                      ? parseInt(data.totalCount, 10)
+                      : 0,
+                    rfqResponsesCount: data.rfqResponsesCount
+                      ? parseInt(data.rfqResponsesCount, 10)
+                      : 0,
+                    newRFQsCount: data.newRFQsCount
+                      ? parseInt(data.newRFQsCount, 10)
+                      : 0,
+                    newBusinessOrdersCount: data.newBusinessOrdersCount
+                      ? parseInt(data.newBusinessOrdersCount, 10)
+                      : 0,
+                    incompleteOrdersCount: data.incompleteOrdersCount
+                      ? parseInt(data.incompleteOrdersCount, 10)
+                      : 0,
+                  },
+                })
+              );
+              break;
+
             case "chat_message":
-              // Chat messages can be dispatched even if page is hidden (user might come back)
+              // Chat messages can be dispatched for all users (shoppers and regular users)
               window.dispatchEvent(
                 new CustomEvent("fcm-chat-message", {
                   detail: {

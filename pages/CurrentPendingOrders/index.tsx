@@ -1,33 +1,192 @@
 import RootLayout from "@components/ui/layout";
 import UserRecentOrders from "@components/userProfile/userRecentOrders";
 import Link from "next/link";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
 import { AuthGuard } from "../../src/components/AuthGuard";
+
+const ORDERS_CACHE_KEY = "plasa_current_pending_orders";
+const CACHE_MAX_AGE_MS = 30 * 60 * 1000; // 30 minutes
+// Bump when cache shape changes (e.g. we started including shop image/logo); old cache is ignored
+const CACHE_VERSION = 2;
+
+function getOrdersFromCache(): {
+  orders: any[];
+  hasMore: boolean;
+  page: number;
+} | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(ORDERS_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as {
+      orders: any[];
+      hasMore: boolean;
+      page: number;
+      timestamp: number;
+      cacheVersion?: number;
+    };
+    if (!Array.isArray(parsed.orders)) return null;
+    if (Date.now() - (parsed.timestamp || 0) > CACHE_MAX_AGE_MS) return null;
+    if ((parsed.cacheVersion ?? 1) !== CACHE_VERSION) return null;
+    return {
+      orders: parsed.orders,
+      hasMore: parsed.hasMore ?? false,
+      page: parsed.page ?? 1,
+    };
+  } catch {
+    return null;
+  }
+}
+
+// Trim only very large fields so cache fits; keep shop image/logo so list shows them on restore
+function trimOrderForCache(o: any): any {
+  return {
+    ...o,
+    shop: o.shop
+      ? {
+          id: o.shop.id,
+          name: o.shop.name,
+          image: o.shop.image ?? "",
+          logo: (o.shop as any)?.logo ?? "",
+        }
+      : null,
+    reel: o.reel
+      ? { id: o.reel.id, title: o.reel.title, video_url: undefined }
+      : o.reel,
+    allProducts: undefined, // strip large payload on business orders
+  };
+}
+
+function setOrdersCache(orders: any[], hasMore: boolean, page: number) {
+  if (typeof window === "undefined") return;
+  try {
+    const trimmed = orders.map(trimOrderForCache);
+    sessionStorage.setItem(
+      ORDERS_CACHE_KEY,
+      JSON.stringify({
+        orders: trimmed,
+        hasMore,
+        page,
+        timestamp: Date.now(),
+        cacheVersion: CACHE_VERSION,
+      })
+    );
+  } catch (e) {
+    // QuotaExceededError: try storing even slimmer (names only)
+    try {
+      const slim = orders.map((o: any) => ({
+        id: o.id,
+        OrderID: o.OrderID,
+        status: o.status,
+        created_at: o.created_at,
+        delivery_time: o.delivery_time,
+        pin: o.pin,
+        total: o.total,
+        orderType: o.orderType,
+        itemsCount: o.itemsCount,
+        unitsCount: o.unitsCount,
+        combined_order_id: o.combined_order_id,
+        shop: o.shop
+          ? {
+              id: o.shop.id,
+              name: o.shop.name,
+              image: o.shop.image ?? "",
+              logo: (o.shop as any)?.logo ?? "",
+            }
+          : null,
+        reel: o.reel ? { id: o.reel.id, title: o.reel.title } : o.reel,
+      }));
+      sessionStorage.setItem(
+        ORDERS_CACHE_KEY,
+        JSON.stringify({
+          orders: slim,
+          hasMore,
+          page,
+          timestamp: Date.now(),
+          cacheVersion: CACHE_VERSION,
+        })
+      );
+    } catch {
+      // ignore
+    }
+  }
+}
 
 function CurrentOrdersPage() {
   const [filter, setFilter] = useState("pending");
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const initialMountDone = useRef(false);
   const { data: session } = useSession();
 
-  const fetchOrders = useCallback(async () => {
-    setLoading(true);
+  const fetchOrders = useCallback(async (pageNum = 1, append = false) => {
+    if (pageNum === 1) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
     try {
-      // Use the new user-orders endpoint that properly filters by user_id
-      const res = await authenticatedFetch(`/api/queries/user-orders`);
+      const res = await authenticatedFetch(
+        `/api/queries/user-orders?page=${pageNum}&limit=20`
+      );
       const data = await res.json();
-      setOrders(data.orders || []);
+      const newOrders = data.orders || [];
+
+      if (append) {
+        setOrders((prev) => {
+          const next = [...prev, ...newOrders];
+          setOrdersCache(
+            next,
+            data.pagination?.hasMore ?? newOrders.length === 20,
+            pageNum
+          );
+          return next;
+        });
+        setHasMore(data.pagination?.hasMore ?? newOrders.length === 20);
+        setPage(pageNum);
+      } else {
+        setOrders(newOrders);
+        setHasMore(data.pagination?.hasMore ?? newOrders.length === 20);
+        setPage(pageNum);
+        setOrdersCache(
+          newOrders,
+          data.pagination?.hasMore ?? newOrders.length === 20,
+          pageNum
+        );
+      }
     } catch (error) {
       console.error("Error fetching orders:", error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  }, [session]);
+  }, []);
 
+  const loadMore = useCallback(() => {
+    if (!loadingMore && hasMore) {
+      fetchOrders(page + 1, true);
+    }
+  }, [fetchOrders, page, loadingMore, hasMore]);
+
+  // Only fetch on first mount if no valid cache; when switching back, restore from cache (no refetch)
   useEffect(() => {
-    fetchOrders();
+    if (initialMountDone.current) return;
+    initialMountDone.current = true;
+
+    const cached = getOrdersFromCache();
+    if (cached && cached.orders.length >= 0) {
+      setOrders(cached.orders);
+      setHasMore(cached.hasMore);
+      setPage(cached.page);
+      setLoading(false);
+      return;
+    }
+    fetchOrders(1, false);
   }, [fetchOrders]);
 
   if (!session) {
@@ -273,8 +432,61 @@ function CurrentOrdersPage() {
                   filter={filter}
                   orders={orders}
                   loading={loading}
-                  onRefresh={fetchOrders}
+                  onRefresh={() => fetchOrders(1, false)}
                 />
+
+                {/* Load More Button */}
+                {!loading && hasMore && orders.length > 0 && (
+                  <div className="mt-6 flex justify-center">
+                    <button
+                      onClick={loadMore}
+                      disabled={loadingMore}
+                      className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-green-300 hover:bg-green-50 hover:text-green-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-green-900/20"
+                    >
+                      {loadingMore ? (
+                        <>
+                          <svg
+                            className="h-4 w-4 animate-spin"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            />
+                          </svg>
+                          Loading...
+                        </>
+                      ) : (
+                        <>
+                          <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                          Load More Orders
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>

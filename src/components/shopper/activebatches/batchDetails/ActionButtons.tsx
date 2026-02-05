@@ -31,6 +31,7 @@ export default function ActionButtons({
   if (!activeOrder) return null;
 
   const isRestaurantOrder = activeOrder.orderType === "restaurant";
+  const isBusinessOrder = activeOrder.orderType === "business";
   // Skip shopping if EITHER restaurant_id OR user_id is not null
   const isRestaurantUserReel =
     activeOrder.reel?.restaurant_id || activeOrder.reel?.user_id;
@@ -41,6 +42,7 @@ export default function ActionButtons({
 
   switch (activeOrder.status) {
     case "accepted":
+    case "Ready for Pickup":
       return (
         <Button
           appearance="primary"
@@ -51,11 +53,10 @@ export default function ActionButtons({
             if (activeOrder.orderType === "reel" && isRestaurantUserReel) {
               // Skip shopping and go straight to delivery for restaurant/user reels
               handleUpdateStatus("on_the_way", activeOrder.id);
+            } else if (isRestaurantOrder || isBusinessOrder) {
+              handleUpdateStatus("on_the_way", activeOrder.id);
             } else {
-              handleUpdateStatus(
-                isRestaurantOrder ? "on_the_way" : "shopping",
-                activeOrder.id
-              );
+              handleUpdateStatus("shopping", activeOrder.id);
             }
           }}
           loading={loading}
@@ -63,7 +64,7 @@ export default function ActionButtons({
         >
           {activeOrder.orderType === "reel" && isRestaurantUserReel
             ? "Start Delivery"
-            : isRestaurantOrder
+            : isRestaurantOrder || isBusinessOrder
             ? "Start Delivery"
             : "Start Shopping"}
         </Button>

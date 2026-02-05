@@ -3,6 +3,24 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "./auth/[...nextauth]";
 import { hasuraClient } from "../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { notifyNewOrderToSlack } from "../../src/lib/slackOrderNotifier";
+
+const GET_ADDRESS_AND_USER = gql`
+  query GetAddressAndUser($address_id: uuid!) {
+    Addresses_by_pk(id: $address_id) {
+      street
+      city
+      postal_code
+      User {
+        name
+        email
+        phone
+      }
+      is_default
+      placeDetails
+    }
+  }
+`;
 
 // Generate a random 2-digit PIN (00-99)
 function generateOrderPin(): string {
@@ -11,7 +29,7 @@ function generateOrderPin(): string {
     .padStart(2, "0");
 }
 
-// Create a reel order
+// Create a reel order (pin is stored so it shows in order list and can be verified by shopper)
 const CREATE_REEL_ORDER = gql`
   mutation CreateReelOrder(
     $user_id: uuid!
@@ -40,9 +58,10 @@ const CREATE_REEL_ORDER = gql`
         delivery_time: $delivery_time
         delivery_note: $delivery_note
         delivery_address_id: $delivery_address_id
-        pin: $pin
         shopper_id: null
         status: "PENDING"
+        found: false
+        pin: $pin
       }
     ) {
       id
@@ -102,8 +121,10 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    // Generate PIN and create reel order
+    // Generate PIN (same way as checkoutCard.tsx - 2-digit, 00-99)
     const orderPin = generateOrderPin();
+
+    // Create reel order (pin stored so it shows in order list and can be verified by shopper)
     const orderRes = await hasuraClient.request<{
       insert_reel_orders_one: { id: string; OrderID: string; pin: string };
     }>(CREATE_REEL_ORDER, {
@@ -123,13 +144,56 @@ export default async function handler(
 
     const orderId = orderRes.insert_reel_orders_one.id;
     const orderNumber = orderRes.insert_reel_orders_one.OrderID;
-    const pin = orderRes.insert_reel_orders_one.pin;
+
+    let customerAddress: string | undefined;
+    let customerPhone: string | undefined;
+    let customerName: string | undefined;
+    try {
+      const addrRes = await hasuraClient.request<{
+        Addresses_by_pk: {
+          street: string;
+          city: string;
+          postal_code: string;
+          User: {
+            name: string | null;
+            email: string | null;
+            phone: string | null;
+          } | null;
+        } | null;
+      }>(GET_ADDRESS_AND_USER, {
+        address_id: delivery_address_id,
+      });
+      if (addrRes.Addresses_by_pk) {
+        const a = addrRes.Addresses_by_pk;
+        customerAddress = [a.street, a.city, a.postal_code]
+          .filter(Boolean)
+          .join(", ");
+        customerName = a.User?.name ?? undefined;
+        customerPhone = a.User?.phone ?? undefined;
+      }
+    } catch (_) {
+      // non-blocking
+    }
+
+    // Send Slack notification for new reel order (fire-and-forget)
+    void notifyNewOrderToSlack({
+      id: orderId,
+      orderID: orderNumber,
+      total,
+      orderType: "reel",
+      storeName: "Reel order",
+      units: quantity,
+      customerName,
+      customerPhone,
+      customerAddress,
+      deliveryTime: delivery_time,
+    });
 
     return res.status(200).json({
       success: true,
       order_id: orderId,
       order_number: orderNumber,
-      pin: pin,
+      pin: orderPin, // Return generated PIN (same format as checkoutCard)
       message: "Reel order placed successfully",
     });
   } catch (error: any) {

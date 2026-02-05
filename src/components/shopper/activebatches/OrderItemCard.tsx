@@ -17,6 +17,8 @@ interface OrderItemCardProps {
   isBatchShopping: boolean;
   onToggleFound: (item: OrderItem, found: boolean) => void;
   onShowProductImage: (item: OrderItem) => void;
+  /** When true, use larger text on desktop (e.g. for business orders) */
+  isBusinessOrder?: boolean;
 }
 
 export default function OrderItemCard({
@@ -24,41 +26,59 @@ export default function OrderItemCard({
   isBatchShopping,
   onToggleFound,
   onShowProductImage,
+  isBusinessOrder = false,
 }: OrderItemCardProps) {
+  const imgSrc =
+    item.product.ProductName?.image ||
+    item.product.image ||
+    "/images/groceryPlaceholder.png";
+  const productName = item.product.ProductName?.name || "Unknown Product";
+
   return (
     <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-800 sm:gap-4 sm:p-4">
-      {/* Product Image */}
-      <div
-        className="h-12 w-12 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg sm:h-14 sm:w-14"
+      {/* Product Image - small, clickable to expand */}
+      <button
+        type="button"
+        className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg border border-slate-200 shadow-sm transition-all hover:ring-2 hover:ring-emerald-500 hover:ring-offset-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:border-slate-600 sm:h-12 sm:w-12"
         onClick={() => onShowProductImage(item)}
+        aria-label={`View larger image of ${productName}`}
       >
         <Image
-          src={
-            item.product.ProductName?.image ||
-            item.product.image ||
-            "/images/groceryPlaceholder.png"
-          }
-          alt={item.product.ProductName?.name || "Unknown Product"}
-          width={56}
-          height={56}
+          src={imgSrc}
+          alt={productName}
+          width={48}
+          height={48}
           className="h-full w-full object-cover"
+          unoptimized={typeof imgSrc === "string" && imgSrc.startsWith("data:")}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = "/images/groceryPlaceholder.png";
           }}
         />
-      </div>
+      </button>
 
       {/* Product Details */}
       <div className="min-w-0 flex-1">
-        <p className="mb-1 font-semibold text-slate-900 dark:text-slate-100 sm:text-base">
-          {item.product.ProductName?.name || "Unknown Product"}
+        <p
+          className={`mb-1 font-semibold text-slate-900 dark:text-slate-100 ${
+            isBusinessOrder ? "text-sm sm:text-lg" : "sm:text-base"
+          }`}
+        >
+          {productName}
         </p>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+        <p
+          className={`text-slate-500 dark:text-slate-400 ${
+            isBusinessOrder ? "text-xs sm:text-base" : "text-sm"
+          }`}
+        >
           Quantity: {item.quantity}{" "}
           {(item.product as any).measurement_unit || "pcs"}
         </p>
-        <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+        <p
+          className={`mt-1 font-semibold text-slate-900 dark:text-slate-100 ${
+            isBusinessOrder ? "text-sm sm:text-base" : "text-sm"
+          }`}
+        >
           {formatCurrency(item.price * item.quantity)}
         </p>
         {item.found &&

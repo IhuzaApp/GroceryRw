@@ -7,9 +7,11 @@ import type { Session } from "next-auth";
 import { logger } from "../../../src/utils/logger";
 
 // Fetch all reels with user and restaurant details
+// Optimized: Limited comments (20 most recent), removed individual likes array, removed sensitive user fields
+// Uses aggregate count for accurate likes count
 const GET_ALL_REELS = gql`
-  query GetAllReels {
-    Reels(order_by: { created_on: desc }) {
+  query GetAllReels($limit: Int, $offset: Int) {
+    Reels(order_by: { created_on: desc }, limit: $limit, offset: $offset) {
       id
       category
       created_on
@@ -31,31 +33,30 @@ const GET_ALL_REELS = gql`
         image
         description
         address
+        latitude
+        longitude
       }
       User {
-        email
-        gender
         id
-        is_active
         name
-        created_at
-        role
-        phone
         profile_picture
+        role
       }
       Restaurant {
-        created_at
-        email
         id
         lat
         location
         long
         name
-        phone
         profile
         verified
       }
-      Reels_comments {
+      reel_likes_aggregate {
+        aggregate {
+          count
+        }
+      }
+      Reels_comments(order_by: { created_on: desc }, limit: 20) {
         user_id
         text
         reel_id
@@ -64,29 +65,26 @@ const GET_ALL_REELS = gql`
         id
         created_on
         User {
-          gender
-          email
+          id
           name
-          phone
+          profile_picture
           role
         }
-      }
-      reel_likes {
-        created_at
-        id
-        reel_id
-        user_id
       }
     }
   }
 `;
 
 // Fetch reels by user ID
+// Optimized: Limited comments (20 most recent), removed individual likes array, removed sensitive user fields
+// Uses aggregate count for accurate likes count
 const GET_REELS_BY_USER = gql`
-  query GetReelsByUser($user_id: uuid!) {
+  query GetReelsByUser($user_id: uuid!, $limit: Int, $offset: Int) {
     Reels(
       where: { user_id: { _eq: $user_id } }
       order_by: { created_on: desc }
+      limit: $limit
+      offset: $offset
     ) {
       id
       category
@@ -109,31 +107,30 @@ const GET_REELS_BY_USER = gql`
         image
         description
         address
+        latitude
+        longitude
       }
       User {
-        email
-        gender
         id
-        is_active
         name
-        created_at
-        role
-        phone
         profile_picture
+        role
       }
       Restaurant {
-        created_at
-        email
         id
         lat
         location
         long
         name
-        phone
         profile
         verified
       }
-      Reels_comments {
+      reel_likes_aggregate {
+        aggregate {
+          count
+        }
+      }
+      Reels_comments(order_by: { created_on: desc }, limit: 20) {
         user_id
         text
         reel_id
@@ -142,29 +139,26 @@ const GET_REELS_BY_USER = gql`
         id
         created_on
         User {
-          gender
-          email
+          id
           name
-          phone
+          profile_picture
           role
         }
-      }
-      reel_likes {
-        created_at
-        id
-        reel_id
-        user_id
       }
     }
   }
 `;
 
 // Fetch reels by restaurant ID
+// Optimized: Limited comments (20 most recent), removed individual likes array, removed sensitive user fields
+// Uses aggregate count for accurate likes count
 const GET_REELS_BY_RESTAURANT = gql`
-  query GetReelsByRestaurant($restaurant_id: uuid!) {
+  query GetReelsByRestaurant($restaurant_id: uuid!, $limit: Int, $offset: Int) {
     Reels(
       where: { restaurant_id: { _eq: $restaurant_id } }
       order_by: { created_on: desc }
+      limit: $limit
+      offset: $offset
     ) {
       id
       category
@@ -187,31 +181,30 @@ const GET_REELS_BY_RESTAURANT = gql`
         image
         description
         address
+        latitude
+        longitude
       }
       User {
-        email
-        gender
         id
-        is_active
         name
-        created_at
-        role
-        phone
         profile_picture
+        role
       }
       Restaurant {
-        created_at
-        email
         id
         lat
         location
         long
         name
-        phone
         profile
         verified
       }
-      Reels_comments {
+      reel_likes_aggregate {
+        aggregate {
+          count
+        }
+      }
+      Reels_comments(order_by: { created_on: desc }, limit: 20) {
         user_id
         text
         reel_id
@@ -220,18 +213,11 @@ const GET_REELS_BY_RESTAURANT = gql`
         id
         created_on
         User {
-          gender
-          email
+          id
           name
-          phone
+          profile_picture
           role
         }
-      }
-      reel_likes {
-        created_at
-        id
-        reel_id
-        user_id
       }
     }
   }
@@ -344,28 +330,25 @@ interface Reel {
     address?: string;
   } | null;
   User: {
-    email: string;
-    gender: string;
     id: string;
-    is_active: boolean;
     name: string;
-    created_at: string;
-    role: string;
-    phone: string;
     profile_picture: string;
+    role: string;
   };
   Restaurant: {
-    created_at: string;
-    email: string;
     id: string;
     lat: number;
     location: string;
     long: number;
     name: string;
-    phone: string;
     profile: string;
     verified: boolean;
   } | null;
+  reel_likes_aggregate: {
+    aggregate: {
+      count: number;
+    };
+  };
   Reels_comments: Array<{
     user_id: string;
     text: string;
@@ -375,18 +358,11 @@ interface Reel {
     id: string;
     created_on: string;
     User: {
-      gender: string;
-      email: string;
+      id: string;
       name: string;
-      phone: string;
+      profile_picture?: string;
       role: string;
-    };
-  }>;
-  reel_likes: Array<{
-    created_at: string;
-    id: string;
-    reel_id: string;
-    user_id: string;
+    } | null;
   }>;
 }
 interface ReelsResponse {
@@ -437,24 +413,43 @@ async function handleGetReels(req: NextApiRequest, res: NextApiResponse) {
   if (!hasuraClient) {
     return res.status(500).json({ error: "Hasura client not initialized" });
   }
-  const { user_id, restaurant_id, type } = req.query;
+  const { user_id, restaurant_id, type, limit, offset } = req.query;
+
+  // Default limit to 100 reels to prevent 4MB limit
+  const limitValue = limit ? parseInt(limit as string) : 100;
+  const offsetValue = offset ? parseInt(offset as string) : 0;
 
   try {
+    // Get current user session to determine if reels are liked
+    const session = (await getServerSession(
+      req,
+      res,
+      authOptions as any
+    )) as Session | null;
+    const currentUserId = session?.user ? (session.user as any).id : null;
+
     let data: ReelsResponse;
 
     if (user_id) {
       data = await hasuraClient.request<ReelsResponse>(GET_REELS_BY_USER, {
         user_id: user_id as string,
+        limit: limitValue,
+        offset: offsetValue,
       });
     } else if (restaurant_id) {
       data = await hasuraClient.request<ReelsResponse>(
         GET_REELS_BY_RESTAURANT,
         {
           restaurant_id: restaurant_id as string,
+          limit: limitValue,
+          offset: offsetValue,
         }
       );
     } else {
-      data = await hasuraClient.request<ReelsResponse>(GET_ALL_REELS);
+      data = await hasuraClient.request<ReelsResponse>(GET_ALL_REELS, {
+        limit: limitValue,
+        offset: offsetValue,
+      });
     }
 
     let reels = data.Reels;
@@ -462,8 +457,104 @@ async function handleGetReels(req: NextApiRequest, res: NextApiResponse) {
       reels = reels.filter((reel) => reel.type === type);
     }
 
+    // If user is logged in, check which reels they've liked and update isLiked field
+    if (currentUserId && reels.length > 0) {
+      const reelIds = reels.map((reel) => reel.id);
+      const userLikes = await hasuraClient.request<{
+        reel_likes: Array<{ reel_id: string }>;
+      }>(
+        gql`
+          query GetUserLikes($user_id: uuid!, $reel_ids: [uuid!]!) {
+            reel_likes(
+              where: { user_id: { _eq: $user_id }, reel_id: { _in: $reel_ids } }
+            ) {
+              reel_id
+            }
+          }
+        `,
+        { user_id: currentUserId, reel_ids: reelIds }
+      );
+
+      const likedReelIds = new Set(
+        userLikes.reel_likes.map((like) => like.reel_id)
+      );
+
+      // Update isLiked field for each reel
+      reels = reels.map((reel) => ({
+        ...reel,
+        isLiked: likedReelIds.has(reel.id),
+      }));
+    } else {
+      // If not logged in, set all isLiked to false
+      reels = reels.map((reel) => ({
+        ...reel,
+        isLiked: false,
+      }));
+    }
+
+    // Also fetch user's overall like history to calculate preferences
+    // This helps with better personalization even for reels not in current batch
+    let userLikeHistory: { [reelId: string]: { type: string } } = {};
+    if (currentUserId) {
+      try {
+        const allUserLikes = await hasuraClient.request<{
+          reel_likes: Array<{
+            reel_id: string;
+            Reels: { type: string } | null;
+          }>;
+        }>(
+          gql`
+            query GetUserLikeHistory($user_id: uuid!) {
+              reel_likes(
+                where: { user_id: { _eq: $user_id } }
+                limit: 100
+                order_by: { created_at: desc }
+              ) {
+                reel_id
+                Reels {
+                  type
+                }
+              }
+            }
+          `,
+          { user_id: currentUserId }
+        );
+
+        allUserLikes.reel_likes.forEach((like) => {
+          if (like.Reels?.type) {
+            userLikeHistory[like.reel_id] = { type: like.Reels.type };
+          }
+        });
+      } catch (error) {
+        logger.error("Error fetching user like history", "ReelsAPI", error);
+        // Continue without preference data if this fails
+      }
+    }
+
     logger.info(`Found ${reels.length} reels`, "ReelsAPI");
-    res.status(200).json({ reels });
+
+    // Calculate user preferences based on their like history
+    const typeCounts: { [type: string]: number } = {};
+    let totalLikes = 0;
+
+    Object.values(userLikeHistory).forEach((like) => {
+      const type = like.type;
+      typeCounts[type] = (typeCounts[type] || 0) + 1;
+      totalLikes++;
+    });
+
+    const preferences: { [type: string]: number } = {};
+    if (totalLikes > 0) {
+      Object.keys(typeCounts).forEach((type) => {
+        preferences[type] = typeCounts[type] / totalLikes;
+      });
+    }
+
+    res.status(200).json({
+      reels,
+      hasMore: reels.length === limitValue,
+      userPreferences: preferences, // Include preferences for frontend
+    });
   } catch (error) {
     logger.error("Error fetching reels", "ReelsAPI", error);
     res.status(500).json({ error: "Failed to fetch reels" });

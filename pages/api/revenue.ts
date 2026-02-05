@@ -27,7 +27,6 @@ const GET_REVENUE = gql`
         shop_id
         service_fee
         discount
-        found
         delivery_notes
         delivery_photo_url
         delivery_time
@@ -35,6 +34,10 @@ const GET_REVENUE = gql`
         delivery_address_id
         delivery_fee
         combined_order_id
+        pin
+        id
+        assigned_at
+        OrderID
       }
       Shop {
         logo
@@ -50,6 +53,10 @@ const GET_REVENUE = gql`
         is_active
         latitude
         address
+        relatedTo
+        phone
+        ssd
+        tin
       }
       shopper {
         Employment_id
@@ -67,7 +74,102 @@ const GET_REVENUE = gql`
         profile_photo
         onboarding_step
         national_id
+        longitude
+        mutual_StatusCertificate
+        latitude
+        mutual_status
+        guarantorPhone
+        Police_Clearance_Cert
       }
+      Restaurants {
+        created_at
+        email
+        id
+        is_active
+        lat
+        location
+        logo
+        long
+        name
+        phone
+        profile
+        relatedTo
+        tin
+        ussd
+        verified
+      }
+      businessProductOrders {
+        OrderID
+        allProducts
+        comment
+        combined_order_id
+        created_at
+        deliveryAddress
+        delivered_time
+        delivery_proof
+        id
+        latitude
+        longitude
+        ordered_by
+        shopper_id
+        status
+        store_id
+        timeRange
+        total
+        transportation_fee
+        units
+        orderedBy {
+          phone
+          gender
+          email
+          id
+          name
+          updated_at
+          is_active
+          is_guest
+          created_at
+        }
+      }
+      reel_order_id
+      restaurant_order_id
+      reel_orders {
+        OrderID
+        combined_order_id
+        assigned_at
+        created_at
+        delivery_fee
+        delivery_address_id
+        discount
+        found
+        delivery_time
+        delivery_note
+        delivery_photo_url
+        status
+        total
+        user_id
+        updated_at
+      }
+      restaurant_orders {
+        OrderID
+        assigned_at
+        combined_order_id
+        delivery_address_id
+        created_at
+        discount
+        delivery_time
+        delivery_notes
+        pin
+        restaurant_id
+        found
+        id
+        shopper_id
+        status
+        total
+        updated_at
+        user_id
+      }
+      businessOrder_Id
+      Plasbusiness_id
     }
   }
 `;
@@ -94,16 +196,25 @@ export default async function handler(
 
     const data = await hasuraClient.request<RevenueResponse>(GET_REVENUE);
 
-    // Calculate additional metrics
-    const revenueData: RevenueWithMetrics[] = data.Revenue.map((rev) => ({
-      ...rev,
-      calculated_commission_percentage: rev.Order
-        ? (
-            (parseFloat(rev.amount) / parseFloat(rev.Order.total)) *
-            100
-          ).toFixed(2)
-        : "0.00",
-    }));
+    // Calculate additional metrics (Order for regular, businessProductOrders for business, reel_orders/restaurant_orders for reel/restaurant)
+    const revenueData: RevenueWithMetrics[] = data.Revenue.map((rev) => {
+      const orderTotal = rev.Order?.total
+        ? parseFloat(rev.Order.total)
+        : rev.businessProductOrders?.total
+        ? parseFloat(String(rev.businessProductOrders.total))
+        : rev.reel_orders?.total
+        ? parseFloat(String(rev.reel_orders.total))
+        : rev.restaurant_orders?.total
+        ? parseFloat(String(rev.restaurant_orders.total))
+        : 0;
+      const amountNum = parseFloat(rev.amount || "0");
+      const calculated_commission_percentage =
+        orderTotal > 0 ? ((amountNum / orderTotal) * 100).toFixed(2) : "0.00";
+      return {
+        ...rev,
+        calculated_commission_percentage,
+      };
+    });
 
     return res.status(200).json(revenueData);
   } catch (err: any) {

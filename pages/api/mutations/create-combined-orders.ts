@@ -4,6 +4,7 @@ import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { v4 as uuidv4 } from "uuid";
+import { notifyNewOrderToSlack } from "../../../src/lib/slackOrderNotifier";
 
 // Generate a random 2-digit PIN (00-99)
 function generateOrderPin(): string {
@@ -53,6 +54,20 @@ const GET_PRODUCTS_BY_IDS = gql`
   }
 `;
 
+// Fetch delivery address and user phone for Slack notification
+const GET_ADDRESS_AND_USER = gql`
+  query GetAddressAndUser($address_id: uuid!, $user_id: uuid!) {
+    Addresses_by_pk(id: $address_id) {
+      street
+      city
+      postal_code
+    }
+    User_by_pk(id: $user_id) {
+      phone
+    }
+  }
+`;
+
 // Create a new order with combined_order_id
 const CREATE_ORDER = gql`
   mutation CreateOrder(
@@ -89,6 +104,7 @@ const CREATE_ORDER = gql`
       }
     ) {
       id
+      OrderID
       pin
       combined_order_id
     }
@@ -194,10 +210,13 @@ export default async function handler(
     const sharedPin = generateOrderPin(); // Single PIN for all combined orders
     const createdOrders: Array<{
       id: string;
+      OrderID?: string;
       pin: string;
       shop_id: string;
       total: number;
     }> = [];
+    const storeNames: string[] = [];
+    let totalUnits = 0;
 
     let grandTotal = 0;
 
@@ -225,6 +244,12 @@ export default async function handler(
               final_price: string;
             };
           }>;
+          Shop: {
+            id: string;
+            name: string;
+            latitude: string;
+            longitude: string;
+          } | null;
         }>;
       }>(GET_CART_WITH_ITEMS, { user_id, shop_id: store_id });
 
@@ -270,6 +295,7 @@ export default async function handler(
       const orderRes = await hasuraClient.request<{
         insert_Orders_one: {
           id: string;
+          OrderID?: string;
           pin: string;
           combined_order_id: string;
         };
@@ -290,6 +316,10 @@ export default async function handler(
       });
 
       const orderId = orderRes.insert_Orders_one.id;
+      const orderID = orderRes.insert_Orders_one.OrderID;
+
+      if (cart.Shop?.name) storeNames.push(cart.Shop.name);
+      totalUnits += items.reduce((sum, i) => sum + i.quantity, 0);
 
       // 5. Create order items
       const orderItems = items.map((i) => ({
@@ -313,6 +343,7 @@ export default async function handler(
         parseFloat(delivery_fee || "0");
       createdOrders.push({
         id: orderId,
+        OrderID: orderID,
         pin: sharedPin, // Use the shared PIN
         shop_id: store_id,
         total: orderTotal,
@@ -320,6 +351,48 @@ export default async function handler(
 
       grandTotal += orderTotal;
     }
+
+    // Fetch delivery address and customer phone for Slack
+    let customerAddress = "";
+    let customerPhone = "";
+    try {
+      const addrRes = await hasuraClient.request<{
+        Addresses_by_pk: {
+          street: string;
+          city: string;
+          postal_code: string;
+        } | null;
+        User_by_pk: { phone: string | null } | null;
+      }>(GET_ADDRESS_AND_USER, {
+        address_id: delivery_address_id,
+        user_id,
+      });
+      if (addrRes.Addresses_by_pk) {
+        const a = addrRes.Addresses_by_pk;
+        customerAddress = [a.street, a.city, a.postal_code]
+          .filter(Boolean)
+          .join(", ");
+      }
+      if (addrRes.User_by_pk?.phone) customerPhone = addrRes.User_by_pk.phone;
+    } catch (_) {
+      // non-blocking
+    }
+
+    const firstOrder = createdOrders[0];
+    const displayOrderID = firstOrder?.OrderID ?? combinedOrderId;
+
+    // Send Slack notification for the combined order
+    void notifyNewOrderToSlack({
+      id: combinedOrderId,
+      orderID: displayOrderID,
+      total: grandTotal,
+      orderType: "combined",
+      storeName: storeNames.length ? storeNames.join(", ") : undefined,
+      units: totalUnits,
+      customerPhone: customerPhone || undefined,
+      customerAddress: customerAddress || undefined,
+      deliveryTime: delivery_time,
+    });
 
     // Return success response with all created orders
     return res.status(200).json({

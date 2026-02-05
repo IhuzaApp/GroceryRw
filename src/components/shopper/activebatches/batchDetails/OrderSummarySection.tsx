@@ -2,31 +2,57 @@
 
 import React from "react";
 import { formatCurrency } from "../../../../lib/formatCurrency";
-import { OrderDetailsType } from "../../types/order";
+import { OrderDetailsType } from "../types";
+import { useTaxRate } from "../../../../hooks/useTaxRate";
 
 interface OrderSummarySectionProps {
   order: OrderDetailsType;
   isSummaryExpanded: boolean;
   onToggleSummary: () => void;
-  getActiveOrder: () => any;
-  getActiveOrderItems: () => any[];
+  getActiveOrder: any;
+  getActiveOrderItems: any[];
   calculateFoundItemsTotal: () => number;
   calculateOriginalSubtotal: () => number;
+  calculateBatchTotal: () => number;
+  calculateOriginalBatchSubtotal?: () => number;
+  hasCombinedOrders?: boolean;
+  /** True when all combined orders are from the same shop (batch payment & summary) */
+  hasSameShopCombinedOrders?: boolean;
 }
 
 export default function OrderSummarySection({
   order,
-  isSummaryExpanded,
+  isSummaryExpanded = false,
   onToggleSummary,
   getActiveOrder,
   getActiveOrderItems,
   calculateFoundItemsTotal,
   calculateOriginalSubtotal,
+  calculateBatchTotal,
+  calculateOriginalBatchSubtotal = () => 0,
+  hasCombinedOrders = false,
+  hasSameShopCombinedOrders = false,
 }: OrderSummarySectionProps) {
+  const { taxRate } = useTaxRate();
+
+  // Determine if any order in the batch is in shopping status (for combined orders)
+  const hasAnyOrderInShopping = hasCombinedOrders
+    ? [order, ...(order.combinedOrders || [])].some(
+        (o) => o.status === "shopping"
+      )
+    : order.status === "shopping";
+
+  // For combined orders, also show at bottom when any order is being processed (accepted, shopping, paid)
+  const shouldShowAtBottom = hasCombinedOrders
+    ? [order, ...(order.combinedOrders || [])].some((o) =>
+        ["shopping", "accepted", "paid"].includes(o.status)
+      )
+    : hasAnyOrderInShopping;
+
   return (
     <div
       className={`overflow-hidden border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl ${
-        order.status === "shopping"
+        shouldShowAtBottom
           ? "fixed bottom-[4.5rem] left-0 right-0 z-[9998] rounded-t-3xl border-x-0 border-b-0 shadow-[0_-4px_20px_rgba(0,0,0,0.15)] sm:relative sm:bottom-auto sm:z-auto sm:rounded-2xl sm:border sm:shadow-lg"
           : "rounded-t-2xl border-x-0 border-t-0 shadow-lg sm:rounded-2xl sm:border"
       }`}
@@ -34,10 +60,10 @@ export default function OrderSummarySection({
       {/* Header with Gradient */}
       <div
         className={`bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-4 dark:from-green-900/20 dark:to-emerald-900/20 ${
-          order.status === "shopping" ? "cursor-pointer sm:cursor-default" : ""
+          shouldShowAtBottom ? "cursor-pointer sm:cursor-default" : ""
         }`}
         onClick={() => {
-          if (order.status === "shopping" && window.innerWidth < 640) {
+          if (shouldShowAtBottom && window.innerWidth < 640) {
             onToggleSummary();
           }
         }}
@@ -63,13 +89,21 @@ export default function OrderSummarySection({
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">
                 Order Summary
               </h2>
-              {order.status === "shopping" && !isSummaryExpanded && (
-                <span className="text-sm font-semibold text-green-600 dark:text-green-400 sm:hidden">
-                  {formatCurrency(calculateFoundItemsTotal())}
-                </span>
-              )}
             </div>
           </div>
+
+          {/* Total Amount on the Right - Show prominently for accepted status */}
+          {order.status === "accepted" && (
+            <div className="text-right">
+              <div className="rounded-lg bg-green-50 px-3 py-1 text-xl font-bold text-green-600 dark:bg-green-900/20 dark:text-green-400">
+                {formatCurrency(
+                  hasSameShopCombinedOrders
+                    ? calculateOriginalBatchSubtotal()
+                    : calculateOriginalSubtotal()
+                )}
+              </div>
+            </div>
+          )}
           {order.status === "shopping" && (
             <button
               className="sm:hidden"
@@ -99,112 +133,112 @@ export default function OrderSummarySection({
       </div>
 
       {/* Content */}
-      <div
-        className={`overflow-y-auto px-4 py-4 transition-all duration-300 ${
-          order.status === "shopping" && !isSummaryExpanded
-            ? "hidden sm:block"
-            : ""
-        }`}
-        style={{
-          maxHeight:
-            order.status === "shopping" && isSummaryExpanded ? "50vh" : "auto",
-        }}
-      >
-        {order.orderType === "reel" ? (
-          (() => {
-            const itemsTotal =
-              parseFloat(order.reel?.Price || "0") * (order.quantity || 1);
-            const discount = order.discount || 0;
-            const finalTotal = itemsTotal - discount;
-            const vat = finalTotal * (18 / 118);
-            const subtotal = finalTotal - vat;
+      {(() => {
+        const isHidden = shouldShowAtBottom && !isSummaryExpanded;
+        const maxHeight =
+          shouldShowAtBottom && isSummaryExpanded ? "50vh" : "auto";
 
-            return (
+        return (
+          <div
+            className={`overflow-y-auto px-4 py-4 transition-all duration-300 ${
+              isHidden ? "hidden sm:block" : ""
+            }`}
+            style={{ maxHeight }}
+          >
+            {/* End of container div opening, now show content */}
+            {order.orderType === "reel" ? (
+              (() => {
+                const itemsTotal =
+                  parseFloat(order.reel?.Price || "0") * (order.quantity || 1);
+                const discount = order.discount || 0;
+                const finalTotal = itemsTotal - discount;
+                const vat = finalTotal * (taxRate / (1 + taxRate));
+                const subtotal = finalTotal - vat;
+
+                return (
+                  <>
+                    <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
+                      <span>Subtotal</span>
+                      <span className="font-medium">
+                        {formatCurrency(subtotal)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
+                      <span>VAT ({(taxRate * 100).toFixed(0)}%)</span>
+                      <span className="font-medium">{formatCurrency(vat)}</span>
+                    </div>
+                    {discount > 0 && (
+                      <div className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
+                        <span>Discount</span>
+                        <span className="font-medium">
+                          -{formatCurrency(discount)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="my-3 border-t border-gray-200 dark:border-gray-700"></div>
+                    <div className="flex justify-between rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 p-3 dark:from-green-900/20 dark:to-emerald-900/20">
+                      <span className="font-bold text-gray-900 dark:text-white">
+                        Order Total
+                      </span>
+                      <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                        {formatCurrency(finalTotal)}
+                      </span>
+                    </div>
+                  </>
+                );
+              })()
+            ) : (
               <>
-                <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
-                  <span>Subtotal</span>
-                  <span className="font-medium">
-                    {formatCurrency(subtotal)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
-                  <span>VAT (18%)</span>
-                  <span className="font-medium">{formatCurrency(vat)}</span>
-                </div>
-                {discount > 0 && (
-                  <div className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
-                    <span>Discount</span>
-                    <span className="font-medium">
-                      -{formatCurrency(discount)}
-                    </span>
-                  </div>
-                )}
-                <div className="my-3 border-t border-gray-200 dark:border-gray-700"></div>
-                <div className="flex justify-between rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 p-3 dark:from-green-900/20 dark:to-emerald-900/20">
-                  <span className="font-bold text-gray-900 dark:text-white">
-                    Order Total
-                  </span>
-                  <span className="text-lg font-bold text-green-600 dark:text-green-400">
-                    {formatCurrency(finalTotal)}
-                  </span>
-                </div>
-              </>
-            );
-          })()
-        ) : (
-          <>
-            {getActiveOrder().status === "shopping" && (
-              <>
-                <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
-                  <span>Items Found</span>
-                  <span className="font-medium">
-                    {getActiveOrderItems().filter((item) => item.found)
-                      .length || 0}{" "}
-                    / {getActiveOrderItems().length || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
-                  <span>Units Found</span>
-                  <span className="font-medium">
-                    {getActiveOrderItems().reduce((total, item) => {
-                      if (item.found) {
-                        return total + (item.foundQuantity || item.quantity);
-                      }
-                      return total;
-                    }, 0) || 0}{" "}
-                    /{" "}
-                    {getActiveOrderItems().reduce(
-                      (total, item) => total + item.quantity,
-                      0
-                    ) || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
-                  <span>Units Not Found</span>
-                  <span className="font-medium">
-                    {getActiveOrderItems().reduce((total, item) => {
-                      if (!item.found) {
-                        return total + item.quantity;
-                      } else if (
-                        item.found &&
-                        item.foundQuantity &&
-                        item.foundQuantity < item.quantity
-                      ) {
-                        return total + (item.quantity - item.foundQuantity);
-                      }
-                      return total;
-                    }, 0) || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm text-red-600 dark:text-red-400">
-                  <span>Refund Amount</span>
-                  <span className="font-medium">
-                    -
-                    {formatCurrency(
-                      getActiveOrderItems().reduce((total, item) => {
-                        return total + item.price * item.quantity;
-                      }, 0) -
-                        getActiveOrderItems().reduce((total, item) => {
+                {order.status === "shopping" && (
+                  <>
+                    {(() => {
+                      // Same-shop combined: batch items (all orders). Different-shop: active order only.
+                      const summaryItems =
+                        hasSameShopCombinedOrders &&
+                        order?.combinedOrders &&
+                        order.combinedOrders.length > 0
+                          ? [
+                              ...(order?.Order_Items || []),
+                              ...order.combinedOrders.flatMap(
+                                (co: any) => co.Order_Items || []
+                              ),
+                            ]
+                          : getActiveOrderItems;
+
+                      const itemsFound = summaryItems.filter(
+                        (item) => item.found
+                      ).length;
+                      const totalItems = summaryItems.length;
+                      const unitsFound = summaryItems.reduce((total, item) => {
+                        if (item.found) {
+                          return total + (item.foundQuantity || item.quantity);
+                        }
+                        return total;
+                      }, 0);
+                      const totalUnits = summaryItems.reduce(
+                        (total, item) => total + item.quantity,
+                        0
+                      );
+                      const unitsNotFound = summaryItems.reduce(
+                        (total, item) => {
+                          if (!item.found) {
+                            return total + item.quantity;
+                          } else if (
+                            item.found &&
+                            item.foundQuantity &&
+                            item.foundQuantity < item.quantity
+                          ) {
+                            return total + (item.quantity - item.foundQuantity);
+                          }
+                          return total;
+                        },
+                        0
+                      );
+                      const refundAmount =
+                        summaryItems.reduce((total, item) => {
+                          return total + item.price * item.quantity;
+                        }, 0) -
+                        summaryItems.reduce((total, item) => {
                           if (item.found) {
                             return (
                               total +
@@ -212,87 +246,140 @@ export default function OrderSummarySection({
                             );
                           }
                           return total;
-                        }, 0)
-                    )}
-                  </span>
-                </div>
+                        }, 0);
+
+                      return (
+                        <>
+                          <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
+                            <span>Items Found</span>
+                            <span className="font-medium">
+                              {itemsFound} / {totalItems}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
+                            <span>Units Found</span>
+                            <span className="font-medium">
+                              {unitsFound} / {totalUnits}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
+                            <span>Units Not Found</span>
+                            <span className="font-medium">{unitsNotFound}</span>
+                          </div>
+                          <div className="flex justify-between text-sm text-red-600 dark:text-red-400">
+                            <span>Refund Amount</span>
+                            <span className="font-medium">
+                              -{formatCurrency(refundAmount)}
+                            </span>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </>
+                )}
+                {(() => {
+                  const activeOrder = getActiveOrder;
+                  const anyOrderShopping =
+                    hasCombinedOrders &&
+                    [order, ...(order.combinedOrders || [])].some(
+                      (o) => o?.status === "shopping"
+                    );
+
+                  // Same-shop: batch total when any order is shopping, batch original otherwise.
+                  // Different-shop: active order found total / original subtotal.
+                  const itemsTotal = hasSameShopCombinedOrders
+                    ? anyOrderShopping
+                      ? calculateBatchTotal()
+                      : calculateOriginalBatchSubtotal()
+                    : activeOrder?.status === "shopping"
+                    ? calculateFoundItemsTotal()
+                    : calculateOriginalSubtotal();
+
+                  const discount = activeOrder?.discount || 0;
+                  const finalTotal = itemsTotal - discount;
+                  const vat = finalTotal * (taxRate / (1 + taxRate));
+                  const subtotal = finalTotal - vat;
+
+                  return (
+                    <>
+                      <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
+                        <span>Subtotal</span>
+                        <span className="font-medium">
+                          {formatCurrency(subtotal)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
+                        <span>VAT ({(taxRate * 100).toFixed(0)}%)</span>
+                        <span className="font-medium">
+                          {formatCurrency(vat)}
+                        </span>
+                      </div>
+                      {discount > 0 && (
+                        <div className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
+                          <span>Discount</span>
+                          <span className="font-medium">
+                            -{formatCurrency(discount)}
+                          </span>
+                        </div>
+                      )}
+                      <div className="my-3 border-t border-gray-200 dark:border-gray-700"></div>
+                      <div className="flex justify-between rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 p-3 dark:from-green-900/20 dark:to-emerald-900/20">
+                        <span className="font-bold text-gray-900 dark:text-white">
+                          Total
+                        </span>
+                        <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                          {formatCurrency(finalTotal)}
+                        </span>
+                      </div>
+                    </>
+                  );
+                })()}
+
+                {order.status === "shopping" && (
+                  <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/20">
+                    <div className="flex gap-2">
+                      <svg
+                        className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <p className="text-sm text-blue-900 dark:text-blue-100">
+                        <strong>Note:</strong> The total reflects only the value
+                        of found items. Service fee (
+                        {formatCurrency(
+                          parseFloat(
+                            getActiveOrder?.serviceFee ||
+                              order.serviceFee ||
+                              "0"
+                          )
+                        )}
+                        ) and delivery fee (
+                        {formatCurrency(
+                          parseFloat(
+                            getActiveOrder?.deliveryFee ||
+                              order.deliveryFee ||
+                              "0"
+                          )
+                        )}
+                        ) were already added to your wallet as earnings when you
+                        started shopping.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </>
             )}
-            {(() => {
-              const activeOrder = getActiveOrder();
-              const itemsTotal =
-                activeOrder?.status === "shopping"
-                  ? calculateFoundItemsTotal()
-                  : calculateOriginalSubtotal();
-              const discount = activeOrder?.discount || 0;
-              const finalTotal = itemsTotal - discount;
-              const vat = finalTotal * (18 / 118);
-              const subtotal = finalTotal - vat;
-
-              return (
-                <>
-                  <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
-                    <span>Subtotal</span>
-                    <span className="font-medium">
-                      {formatCurrency(subtotal)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
-                    <span>VAT (18%)</span>
-                    <span className="font-medium">{formatCurrency(vat)}</span>
-                  </div>
-                  {discount > 0 && (
-                    <div className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
-                      <span>Discount</span>
-                      <span className="font-medium">
-                        -{formatCurrency(discount)}
-                      </span>
-                    </div>
-                  )}
-                  <div className="my-3 border-t border-gray-200 dark:border-gray-700"></div>
-                  <div className="flex justify-between rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 p-3 dark:from-green-900/20 dark:to-emerald-900/20">
-                    <span className="font-bold text-gray-900 dark:text-white">
-                      Total
-                    </span>
-                    <span className="text-lg font-bold text-green-600 dark:text-green-400">
-                      {formatCurrency(finalTotal)}
-                    </span>
-                  </div>
-                </>
-              );
-            })()}
-
-            {order.status === "shopping" && (
-              <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/20">
-                <div className="flex gap-2">
-                  <svg
-                    className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <p className="text-sm text-blue-900 dark:text-blue-100">
-                    <strong>Note:</strong> The total reflects only the value of
-                    found items. Service fee (
-                    {formatCurrency(parseFloat(order.serviceFee || "0"))}) and
-                    delivery fee (
-                    {formatCurrency(parseFloat(order.deliveryFee || "0"))}) were
-                    already added to your wallet as earnings when you started
-                    shopping.
-                  </p>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

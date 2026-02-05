@@ -170,14 +170,9 @@ export default async function handler(
       Orders: Array<any>;
     }>(GET_COMBINED_ORDERS, { combined_order_id: combinedOrderId });
 
-    // Check if orders exist
-    if (!data.Orders || data.Orders.length === 0) {
-      return res
-        .status(404)
-        .json({ error: "No orders found for this combined_order_id" });
-    }
-
-    res.status(200).json({ orders: data.Orders });
+    // Return empty array when no regular Orders (e.g. combined batch is reel/restaurant only)
+    const orders = data.Orders ?? [];
+    res.status(200).json({ orders });
   } catch (error) {
     res.status(500).json({
       error: "Failed to fetch combined orders",

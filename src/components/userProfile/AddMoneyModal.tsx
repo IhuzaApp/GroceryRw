@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { authenticatedFetch } from "../../lib/authenticatedFetch";
 import toast from "react-hot-toast";
 import { useLanguage } from "../../context/LanguageContext";
@@ -18,24 +19,10 @@ export default function AddMoneyModal({
 }: AddMoneyModalProps) {
   const { t } = useLanguage();
   const [amount, setAmount] = useState<string>("");
-  const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
   // Predefined amount options
   const quickAmounts = [5000, 10000, 20000, 50000, 100000];
-
-  // Format phone number input (Rwanda format: 0781234567)
-  const formatPhoneNumberInput = (value: string) => {
-    const cleaned = value.replace(/\D/g, "");
-    // Limit to 10 digits for Rwanda phone numbers
-    return cleaned.slice(0, 10);
-  };
-
-  // Handle phone number input
-  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhoneNumberInput(e.target.value);
-    setPhoneNumber(formatted);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,22 +38,7 @@ export default function AddMoneyModal({
       return;
     }
 
-    // Validate card number (should be at least 13 digits, max 19 characters with spaces)
-    const cleanedCardNumber = cardNumber.replace(/\s/g, "");
-    if (
-      !cardNumber ||
-      cleanedCardNumber.length < 13 ||
-      cleanedCardNumber.length > 16
-    ) {
-      toast.error("Please enter a valid card number (13-16 digits)");
-      return;
-    }
-
-    // Generate description automatically
-    const lastFour = cleanedCardNumber.slice(-4);
-    const autoDescription = `Added ${amountNum.toFixed(
-      2
-    )} RWF to wallet from card ending in ${lastFour}`;
+    const description = `Added ${amountNum.toFixed(2)} RWF to wallet`;
 
     setLoading(true);
     try {
@@ -79,8 +51,7 @@ export default function AddMoneyModal({
           },
           body: JSON.stringify({
             amount: amountNum,
-            description: autoDescription,
-            card_number: cleanedCardNumber,
+            description,
           }),
         }
       );
@@ -93,7 +64,6 @@ export default function AddMoneyModal({
 
       toast.success(data.message || "Money added successfully!");
       setAmount("");
-      setPhoneNumber("");
       onSuccess();
       onClose();
     } catch (error: any) {
@@ -108,18 +78,16 @@ export default function AddMoneyModal({
     setAmount(quickAmount.toString());
   };
 
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+  const modalContent = (
+    <div className="fixed inset-0 z-[10050] flex items-end justify-center sm:items-center sm:p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-gray-700 dark:bg-gray-800">
+      {/* Modal: bottom sheet on mobile, centered on desktop */}
+      <div className="relative z-10 max-h-[90vh] w-full overflow-y-auto rounded-t-2xl border border-gray-200 bg-white p-6 pb-8 shadow-2xl dark:border-gray-700 dark:bg-gray-800 sm:max-h-[85vh] sm:max-w-md sm:rounded-2xl">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
@@ -212,42 +180,6 @@ export default function AddMoneyModal({
             </div>
           </div>
 
-          {/* Card Number Input */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Card Number <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={cardNumber}
-                onChange={handleCardNumberChange}
-                placeholder="1234 5678 9012 3456"
-                maxLength={19}
-                required
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 pl-12 text-sm font-medium text-gray-900 placeholder-gray-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 dark:focus:border-green-500"
-              />
-              <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                <svg
-                  className="h-5 w-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                  />
-                </svg>
-              </div>
-            </div>
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Enter the card number to charge for adding money
-            </p>
-          </div>
-
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
             <button
@@ -260,7 +192,7 @@ export default function AddMoneyModal({
             </button>
             <button
               type="submit"
-              disabled={loading || !amount || !phoneNumber}
+              disabled={loading || !amount}
               className="flex-1 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-3 font-semibold !text-white shadow-md transition-all hover:scale-105 hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
@@ -295,4 +227,8 @@ export default function AddMoneyModal({
       </div>
     </div>
   );
+
+  if (!isOpen) return null;
+  if (typeof document === "undefined") return null;
+  return createPortal(modalContent, document.body);
 }

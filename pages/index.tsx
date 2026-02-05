@@ -42,6 +42,8 @@ const CategoryIcon = ({ category }: { category: string }) => {
     Butchers: "🥩",
     Delicatessen: "🥪",
     "Organic Shops": "🌿",
+    "Care & Beauty": "💄",
+    Beauty: "💄",
     "Specialty Foods": "🍱",
     Restaurant: "🍽️",
     Stores: "🏬",

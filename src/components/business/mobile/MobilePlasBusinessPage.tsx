@@ -7,6 +7,10 @@ import { MobileServiceList } from "./MobileServiceList";
 import { MobileBusinessDashboard } from "./MobileBusinessDashboard";
 import { MobileServiceDetail } from "./MobileServiceDetail";
 import { MobilePlasBusinessExplorer } from "./MobilePlasBusinessExplorer";
+import {
+  PendingReviewMessage,
+  RejectedAccountMessage,
+} from "../PendingReviewMessage";
 
 type View = "list" | "dashboard" | "detail";
 
@@ -123,6 +127,24 @@ export function MobilePlasBusinessPage({
   }
 
   if (currentView === "dashboard" && hasBusinessAccount) {
+    // Show pending review message instead of dashboard when account is under review
+    if (businessAccount?.status === "pending_review") {
+      const contactEmail =
+        businessAccount?.accountType === "personal"
+          ? user?.email
+          : businessAccount?.businessEmail;
+      return <PendingReviewMessage compact contactEmail={contactEmail} />;
+    }
+    // Show rejected message when account has been disabled
+    if (businessAccount?.status === "rejected") {
+      return (
+        <RejectedAccountMessage
+          compact
+          businessAccountId={businessAccount?.id}
+        />
+      );
+    }
+    // Show dashboard only when status is approved
     return (
       <MobileBusinessDashboard
         businessAccount={businessAccount}

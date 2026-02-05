@@ -224,7 +224,7 @@ const GET_REEL_ORDER_DETAILS = gql`
       delivery_fee
       total
       quantity
-      delivery_notes
+      delivery_note
       Reel {
         id
         title
@@ -377,22 +377,21 @@ const GET_RESTAURANT_ORDER_DETAILS = gql`
         created_at
         restaurant_dishes {
           id
-          name
-          description
-          image
           price
-          SKU
-          category
-          created_at
-          discount
-          ingredients
-          is_active
           preparingTime
-          promo
-          promo_type
-          quantity
-          restaurant_id
-          updated_at
+          is_active
+          ProductNames {
+            name
+            description
+            image
+          }
+          dishes {
+            name
+            description
+            image
+            ingredients
+            category
+          }
         }
       }
       shopper {
@@ -629,9 +628,12 @@ const GET_RELATED_RESTAURANT_ORDERS = gql`
         quantity
         price
         restaurant_dishes {
-          name
-          image
+          id
           price
+          dishes {
+            name
+            image
+          }
         }
       }
     }
@@ -956,8 +958,8 @@ export default async function handler(
           user_id: orderData.Reel?.user_id,
         },
         quantity: quantity,
-        deliveryNote: orderData.delivery_notes,
-        deliveryNotes: orderData.delivery_notes, // Add deliveryNotes for compatibility
+        deliveryNote: orderData.delivery_note,
+        deliveryNotes: orderData.delivery_note, // Add deliveryNotes for compatibility
         customerName: orderData.user?.name,
         customerPhone: orderData.user?.phone,
         user: orderData.user, // Include full user data
@@ -974,19 +976,28 @@ export default async function handler(
       const deliveryFee = parseFloat(orderData.delivery_fee || "0");
       const totalEarnings = deliveryFee; // Restaurant orders don't have service fee
 
-      // Format dish items
+      // Format dish items (schema: restaurant_order_items -> restaurant_dishes; name/description/image from ProductNames or dishes)
       const formattedDishItems = orderData.restaurant_order_items.map(
-        (dishOrder: any) => ({
-          id: dishOrder.id,
-          name: dishOrder.restaurant_dishes?.name || "Unknown Dish",
-          quantity: dishOrder.quantity,
-          price: parseFloat(dishOrder.price) || 0,
-          description: dishOrder.restaurant_dishes?.description || null,
-          image: dishOrder.restaurant_dishes?.image || null,
-          category: dishOrder.restaurant_dishes?.category || null,
-          ingredients: dishOrder.restaurant_dishes?.ingredients || null,
-          preparingTime: dishOrder.restaurant_dishes?.preparingTime || null,
-        })
+        (dishOrder: any) => {
+          const rd = dishOrder.restaurant_dishes;
+          const name =
+            rd?.ProductNames?.name ?? rd?.dishes?.name ?? "Unknown Dish";
+          const description =
+            rd?.ProductNames?.description ?? rd?.dishes?.description ?? null;
+          const image = rd?.ProductNames?.image ?? rd?.dishes?.image ?? null;
+
+          return {
+            id: dishOrder.id,
+            name,
+            quantity: dishOrder.quantity,
+            price: parseFloat(dishOrder.price) || 0,
+            description,
+            image,
+            category: rd?.dishes?.category ?? null,
+            ingredients: rd?.dishes?.ingredients ?? null,
+            preparingTime: rd?.preparingTime || null,
+          };
+        }
       );
 
       // Calculate subtotal from dish orders
@@ -1177,13 +1188,18 @@ export default async function handler(
           const processedRestaurant = relatedRestaurant.restaurant_orders.map(
             (order: any) => {
               const items =
-                order.restaurant_order_items?.map((item: any) => ({
-                  id: item.id,
-                  name: item.restaurant_dishes?.name || "Dish",
-                  quantity: item.quantity,
-                  price: parseFloat(item.price) || 0,
-                  productImage: item.restaurant_dishes?.image || null,
-                })) || [];
+                order.restaurant_order_items?.map((item: any) => {
+                  const rd = item.restaurant_dishes;
+                  const dish = rd?.dishes;
+
+                  return {
+                    id: item.id,
+                    name: dish?.name || rd?.name || "Dish",
+                    quantity: item.quantity,
+                    price: parseFloat(item.price) || 0,
+                    productImage: dish?.image || rd?.image || null,
+                  };
+                }) || [];
 
               return {
                 id: order.id,
@@ -1224,6 +1240,9 @@ export default async function handler(
 
       // specific aggregations for combined orders
       if (orderData.combined_order_id && relatedOrders.length > 0) {
+        // Set order type to combined when there are combined orders
+        formattedOrder.orderType = "combined";
+
         // Create comprehensive lists including the main order and all related orders
         const allOrders = [formattedOrder, ...relatedOrders];
 

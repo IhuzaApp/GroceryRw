@@ -3,6 +3,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]";
 import { gql } from "graphql-request";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
+import {
+  getTaxRate,
+  calculateTaxAmount,
+  calculateSubtotalFromTotal,
+} from "../../../src/lib/getTaxRate";
+import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 
 // GraphQL query to get regular order details for invoice
 const GET_ORDER_DETAILS_FOR_INVOICE = gql`
@@ -130,12 +136,19 @@ const GET_RESTAURANT_ORDER_DETAILS_FOR_INVOICE = gql`
         id
         quantity
         price
-        restaurant_dishes {
+        restaurant_menu {
           id
-          name
-          description
-          image
           price
+          ProductNames {
+            name
+            description
+            image
+          }
+          dishes {
+            name
+            description
+            image
+          }
         }
       }
       shopper_id
@@ -297,17 +310,41 @@ interface RestaurantOrderDetails {
       id: string;
       quantity: number;
       price: string;
-      restaurant_dishes: {
+      restaurant_menu: {
         id: string;
-        name: string;
-        description: string;
-        image?: string;
         price: string;
-      };
+        ProductNames: {
+          name: string;
+          description: string | null;
+          image?: string | null;
+        } | null;
+        dishes: {
+          name: string;
+          description: string | null;
+          image?: string | null;
+        } | null;
+      } | null;
     }>;
     shopper_id: string;
   } | null;
 }
+
+// GraphQL query to get wallet transaction amount for order
+const GET_WALLET_TRANSACTION_AMOUNT = gql`
+  query GetWalletTransactionAmount($orderId: uuid!) {
+    Wallet_Transactions(
+      where: {
+        related_order_id: { _eq: $orderId }
+        type: { _eq: "payment" }
+        status: { _eq: "completed" }
+      }
+      limit: 1
+    ) {
+      amount
+      id
+    }
+  }
+`;
 
 // GraphQL mutation return type
 interface AddInvoiceResult {
@@ -337,46 +374,27 @@ export default async function handler(
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const { orderId, orderType = "regular", invoiceProofPhoto } = req.body;
+    const {
+      orderId,
+      orderType = "regular",
+      invoiceProofPhoto,
+      foundItemsTotal,
+    } = req.body;
 
     // Validate required fields
     if (!orderId) {
       return res.status(400).json({ error: "Missing required field: orderId" });
     }
 
-    // Handle invoice proof photo upload if provided
-    let invoiceProofUrl = "";
+    // Handle invoice proof photo - store directly as image data
+    let invoiceProofData = "";
     if (invoiceProofPhoto) {
       try {
-        // Upload to Cloudinary
-        const cloudinaryResponse = await fetch(
-          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              file: invoiceProofPhoto,
-              upload_preset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
-              folder: "invoice_proofs",
-            }),
-          }
-        );
-
-        if (!cloudinaryResponse.ok) {
-          const errorText = await cloudinaryResponse.text();
-          console.error(
-            "Failed to upload invoice proof to Cloudinary:",
-            errorText
-          );
-        } else {
-          const cloudinaryData = await cloudinaryResponse.json();
-          invoiceProofUrl = cloudinaryData.secure_url;
-        }
-      } catch (uploadError) {
-        console.error("Error uploading invoice proof:", uploadError);
-        // Continue without the proof URL rather than failing the entire invoice
+        // Store the image data directly in the database instead of uploading to Cloudinary
+        invoiceProofData = invoiceProofPhoto;
+      } catch (error) {
+        console.error("Error processing invoice proof:", error);
+        // Continue without the proof data rather than failing the entire invoice
       }
     }
 
@@ -415,6 +433,11 @@ export default async function handler(
       }
     } catch (error) {
       console.error("Error fetching order details for invoice:", error);
+      await logErrorToSlack("GenerateInvoiceAPI:getOrderDetails", error, {
+        orderId,
+        orderType,
+        userId: session.user.id,
+      });
       return res.status(500).json({
         error: "Failed to fetch order details",
         details: error instanceof Error ? error.message : String(error),
@@ -492,35 +515,63 @@ export default async function handler(
       shopAddress = order.Restaurant.location;
 
       // Create invoice items for restaurant orders
-      invoiceItems = dishOrders.map((dishOrder: any) => ({
-        id: dishOrder.id,
-        name: dishOrder.restaurant_dishes.name,
-        quantity: dishOrder.quantity,
-        unit_price: parseFloat(dishOrder.price),
-        total: parseFloat(dishOrder.price) * dishOrder.quantity,
-        unit: "dish",
-        description: dishOrder.restaurant_dishes.description,
-      }));
+      invoiceItems = dishOrders.map((dishOrder: any) => {
+        const menu = dishOrder.restaurant_menu;
+        const product = menu?.ProductNames || null;
+        const dish = menu?.dishes || null;
+
+        const name = product?.name || dish?.name || "Dish";
+        const description = product?.description || dish?.description || "";
+
+        return {
+          id: dishOrder.id,
+          name,
+          quantity: dishOrder.quantity,
+          unit_price: parseFloat(dishOrder.price),
+          total: parseFloat(dishOrder.price) * dishOrder.quantity,
+          unit: "dish",
+          description,
+        };
+      });
     } else {
       // For regular orders, use the order items
       const items = order.Order_Items;
 
-      itemsTotal = items.reduce((total: number, item: any) => {
-        return total + parseFloat(item.price) * item.quantity;
-      }, 0);
+      // For same-shop combined orders, use the found items total if provided
+      // This ensures each invoice shows only the found items for that specific order
+      if (foundItemsTotal !== undefined) {
+        itemsTotal = foundItemsTotal;
+        // For combined orders with specified found items total, we create a single invoice item
+        // representing all found items for this order
+        invoiceItems = [
+          {
+            id: `found_items_${order.id}`,
+            name: "Found Items",
+            quantity: 1,
+            unit_price: foundItemsTotal,
+            total: foundItemsTotal,
+            unit: "batch",
+          },
+        ];
+      } else {
+        // Calculate from all order items (normal case)
+        itemsTotal = items.reduce((total: number, item: any) => {
+          return total + parseFloat(item.price) * item.quantity;
+        }, 0);
+
+        // Create invoice items for regular orders
+        invoiceItems = items.map((item: any) => ({
+          id: item.id,
+          name: item.Product.ProductName?.name || "Unknown Product",
+          quantity: item.quantity,
+          unit_price: parseFloat(item.price),
+          total: parseFloat(item.price) * item.quantity,
+          unit: item.Product.measurement_unit || "item",
+        }));
+      }
 
       shopName = order.Shop.name;
       shopAddress = order.Shop.address;
-
-      // Create invoice items for regular orders
-      invoiceItems = items.map((item: any) => ({
-        id: item.id,
-        name: item.Product.ProductName?.name || "Unknown Product",
-        quantity: item.quantity,
-        unit_price: parseFloat(item.price),
-        total: parseFloat(item.price) * item.quantity,
-        unit: item.Product.measurement_unit || "item",
-      }));
     }
 
     const serviceFee = isRestaurantOrder
@@ -533,10 +584,49 @@ export default async function handler(
       order.OrderID || order.id.slice(-8)
     }-${new Date().getTime().toString().slice(-6)}`;
 
-    // Calculate tax (VAT) - same as order summary calculation (18% of final total)
-    const finalTotalBeforeTax = itemsTotal + serviceFee + deliveryFee;
-    const taxAmount = finalTotalBeforeTax * (18 / 118);
-    const subtotalAfterTax = finalTotalBeforeTax - taxAmount;
+    // For same-shop combined orders with found items total, don't add fees to the total
+    // The total should equal the found items amount only
+    const hasFoundItemsTotal = foundItemsTotal !== undefined;
+
+    // Get the actual payment amount from wallet transactions (for regular orders)
+    let walletTransactionAmount: number | null = null;
+    if (!isReelOrder && !isRestaurantOrder) {
+      try {
+        const walletTransactionResult = await hasuraClient.request<{
+          Wallet_Transactions: { amount: string }[];
+        }>(GET_WALLET_TRANSACTION_AMOUNT, {
+          orderId: orderId,
+        });
+
+        if (
+          walletTransactionResult.Wallet_Transactions &&
+          walletTransactionResult.Wallet_Transactions.length > 0
+        ) {
+          walletTransactionAmount = parseFloat(
+            walletTransactionResult.Wallet_Transactions[0].amount
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching wallet transaction amount:", error);
+      }
+    }
+
+    let finalTotalBeforeTax: number;
+    let taxAmount: number;
+    let subtotalAfterTax: number;
+
+    // Use wallet transaction amount if available, otherwise calculate from items
+    if (walletTransactionAmount !== null) {
+      finalTotalBeforeTax = walletTransactionAmount;
+    } else {
+      // Calculate total including fees for all orders (fallback)
+      finalTotalBeforeTax = itemsTotal + serviceFee + deliveryFee;
+    }
+
+    // Get dynamic tax rate from system configuration
+    const taxRate = await getTaxRate();
+    taxAmount = calculateTaxAmount(finalTotalBeforeTax, taxRate);
+    subtotalAfterTax = calculateSubtotalFromTotal(finalTotalBeforeTax, taxRate);
 
     // Format values for database storage
     const subtotalStr = subtotalAfterTax.toFixed(2);
@@ -544,7 +634,15 @@ export default async function handler(
     const deliveryFeeStr = deliveryFee.toFixed(2);
     const discountStr = "0.00"; // Assuming no discount for now
     const taxStr = taxAmount.toFixed(2);
-    const totalAmount = finalTotalBeforeTax.toFixed(2);
+
+    // For invoice proof uploads, always use the wallet transaction amount
+    // For regular invoice generation, use the calculated logic
+    const totalAmount =
+      walletTransactionAmount !== null
+        ? walletTransactionAmount.toFixed(2)
+        : hasFoundItemsTotal
+        ? itemsTotal.toFixed(2)
+        : finalTotalBeforeTax.toFixed(2);
 
     const invoicePayload = {
       customer_id: isReelOrder
@@ -563,7 +661,7 @@ export default async function handler(
       subtotal: subtotalStr,
       tax: taxStr,
       total_amount: totalAmount,
-      Proof: invoiceProofUrl,
+      Proof: invoiceProofData,
     };
 
     // Save invoice data to the database
@@ -575,6 +673,11 @@ export default async function handler(
       );
     } catch (error) {
       console.error("Failed to save invoice to database:", error);
+      await logErrorToSlack("GenerateInvoiceAPI:saveInvoice", error, {
+        orderId,
+        orderType,
+        userId: session.user.id,
+      });
       return res.status(500).json({
         error: "Failed to save invoice to database",
         details: error instanceof Error ? error.message : String(error),
@@ -617,15 +720,11 @@ export default async function handler(
       dateCompleted: new Date(order.updated_at).toLocaleString(),
       status: order.status,
       items: invoiceItems,
-      subtotal: itemsTotal,
+      subtotal: subtotalAfterTax,
       serviceFee,
       deliveryFee,
-      // When in shopping mode, the displayed total should match the subtotal without fees
-      // For other modes, include the fees
-      total:
-        order.status === "shopping"
-          ? itemsTotal
-          : itemsTotal + serviceFee + deliveryFee,
+      // Total includes items, service fee, and delivery fee
+      total: itemsTotal + serviceFee + deliveryFee,
       orderType: isReelOrder
         ? "reel"
         : isRestaurantOrder
@@ -641,6 +740,11 @@ export default async function handler(
       dbRecord: saveResult.insert_Invoices.returning[0] || null,
     });
   } catch (error) {
+    await logErrorToSlack("GenerateInvoiceAPI", error, {
+      method: req.method,
+      orderId: (req.body as any)?.orderId,
+      orderType: (req.body as any)?.orderType,
+    });
     return res.status(500).json({
       error:
         error instanceof Error ? error.message : "An unexpected error occurred",

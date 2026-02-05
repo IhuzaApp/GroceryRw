@@ -25,6 +25,7 @@ const GET_REEL_ORDER_DETAILS = gql`
       quantity
       found
       shopper_id
+      pin
       Reel {
         id
         title
@@ -333,6 +334,14 @@ export default async function handler(
       delivery_note: orderData.delivery_note,
       quantity: parseInt(orderData.quantity),
       found: orderData.found,
+      pin:
+        orderData.pin != null && String(orderData.pin).trim() !== ""
+          ? String(orderData.pin)
+          : orderData.OrderID != null
+          ? String(orderData.OrderID).padStart(4, "0").slice(-4)
+          : orderData.id
+          ? orderData.id.slice(0, 4).toUpperCase()
+          : "",
       orderType: "reel" as const,
       reel: orderData.Reel,
       assignedTo: orderData.Shoppers
