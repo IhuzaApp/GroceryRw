@@ -241,7 +241,7 @@ export default async function handler(
       if (plasaFee > 0) {
         await hasuraClient.request(CREATE_PLASA_FEE_REVENUE, {
           order_id: null,
-          shop_id: order.store_id,
+          shop_id: null,
           restaurant_id: null,
           shopper_id: null,
           amount: plasaFee.toFixed(2),
