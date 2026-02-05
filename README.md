@@ -11048,13 +11048,28 @@ Stores quotes submitted by suppliers for RFQs.
 
 #### 6. `business_wallet`
 
-Stores wallet information for businesses.
+Stores wallet information for businesses. One wallet per business (keyed by `business_id`). The store belongs to a business; the wallet is identified by the business (e.g. `business_stores.business_id`).
 
 **Key Fields**:
 
 - `id` (uuid, primary key)
 - `business_id` (uuid, foreign key to business_accounts)
 - `amount` (String)
+- `updated_at` (timestamptz, optional)
+
+#### 7. `businessTransactions`
+
+Stores transaction history for business wallets (credits, refunds, item amounts). Each row records an action (e.g. credit on pickup) with a human-readable description of the items and amount.
+
+**Key Fields**:
+
+- `id` (uuid, primary key)
+- `wallet_id` (uuid, foreign key to business_wallet)
+- `action` (String, e.g. `"credit"`)
+- `type` (String, e.g. `"order_item_amount"`)
+- `related_order` (uuid, foreign key to business_product_orders)
+- `status` (String, e.g. `"completed"`)
+- `description` (String) – Human-readable line: item names × quantities and units, then amount credited to wallet (e.g. `"SamSang Ultar × 1 box | Amount credited to wallet: 1,500,000"`)
 
 ## Workflows
 
@@ -11098,7 +11113,29 @@ Stores wallet information for businesses.
 - Automatic wallet creation
 - Category association
 
-### 3. Product Management
+### 3. Business order pickup → wallet & transaction (shopper flow)
+
+When a shopper confirms pickup for a **business order** (scan #OrderID and tap "Confirm pickup"), the system:
+
+1. **Updates order status** – `businessProductOrders` status is set to `on_the_way` via `POST /api/shopper/updateOrderStatus` (same API as regular/reel/restaurant; business orders are no longer sent to a separate status API).
+2. **Resolves business** – The order has `store_id`; the store belongs to a business. We use `store.business_id` (from `business_store.business_id` or `business_stores_by_pk(store_id).business_id`) to find the correct `business_wallet`.
+3. **Credits the business wallet** – Amount added = order **total minus service_fee minus transportation_fee** (item total only). We look up `business_wallet` where `business_id = store.business_id`, then run `update_business_wallet` to set `amount = current amount + item amount` and `updated_at`.
+4. **Inserts a business transaction** – We insert into `businessTransactions` with:
+   - `action`: `"credit"`
+   - `type`: `"order_item_amount"`
+   - `related_order`: business order id
+   - `wallet_id`: id of the `business_wallet` row
+   - `status`: `"completed"`
+   - `description`: Built from order `allProducts` (item name × quantity unit for each line), then `" | Amount credited to wallet: "` + the credited amount (e.g. `"SamSang Ultar × 1 box | Amount credited to wallet: 1,500,000"`).
+
+**API**: `POST /api/shopper/updateOrderStatus` with `{ orderId, status: "on_the_way" }`. The handler detects business orders, updates status (no `updated_at` on `businessProductOrders`), then runs the wallet credit and transaction insert. Response can include `businessOrderPickup: { walletUpdated, transactionInserted, message? }` for client logging.
+
+**Notes**:
+
+- Business orders do not use the "shopping" status; pickup confirmation sets status to `on_the_way` and triggers wallet/transaction in one call.
+- If no `business_wallet` exists for the business, the wallet step is skipped and the transaction is not inserted; the API still returns success for the status update.
+
+### 4. Product Management
 
 **Flow**:
 
@@ -11127,7 +11164,7 @@ Stores wallet information for businesses.
 - Search and pagination (18 products per page)
 - Responsive grid layout (1 col mobile, 3 cols small, 4 cols medium+)
 
-### 4. RFQ Creation (Buyer Workflow)
+### 5. RFQ Creation (Buyer Workflow)
 
 **Flow**:
 
@@ -11152,7 +11189,7 @@ Stores wallet information for businesses.
 - Deadline management
 - Urgency levels
 
-### 5. RFQ Opportunities (Supplier Workflow)
+### 6. RFQ Opportunities (Supplier Workflow)
 
 **Flow**:
 
@@ -11174,7 +11211,7 @@ Stores wallet information for businesses.
 - Category filtering
 - Search functionality
 
-### 6. Quote Submission (Supplier Workflow)
+### 7. Quote Submission (Supplier Workflow)
 
 **Flow**:
 
@@ -11203,7 +11240,7 @@ Stores wallet information for businesses.
 - Duplicate prevention
 - Multiple attachment support (3 max)
 
-### 7. Viewing RFQ Responses (Buyer Workflow)
+### 8. Viewing RFQ Responses (Buyer Workflow)
 
 **Flow**:
 
@@ -11239,7 +11276,7 @@ Stores wallet information for businesses.
 - Attachment download
 - Status management
 
-### 8. Viewing Submitted Quotes (Supplier Workflow)
+### 9. Viewing Submitted Quotes (Supplier Workflow)
 
 **Flow**:
 
@@ -11268,7 +11305,7 @@ Stores wallet information for businesses.
 - Complete quote details with attachments
 - Status tracking
 
-### 9. Suppliers Directory
+### 10. Suppliers Directory
 
 **Flow**:
 
