@@ -63,7 +63,9 @@ export interface OrderDetailsType {
     address?: string;
     image?: string;
     phone?: string;
+    description?: string | null;
     operating_hours?: any;
+    category?: { name?: string | null; description?: string | null } | null;
     latitude?: string | number | null;
     longitude?: string | number | null;
     business_account?: {

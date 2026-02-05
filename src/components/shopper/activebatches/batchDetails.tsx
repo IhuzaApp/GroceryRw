@@ -3393,8 +3393,15 @@ export default function BatchDetails({
                     apiOrder.shop.address ??
                     apiOrder.shop.business_account?.business_location ??
                     "",
+                  description: apiOrder.shop.description ?? null,
+                  operating_hours: apiOrder.shop.operating_hours ?? null,
+                  category: apiOrder.shop.category ?? null,
                   latitude: apiOrder.shop.latitude ?? null,
                   longitude: apiOrder.shop.longitude ?? null,
+                  phone:
+                    apiOrder.shop.phone ??
+                    apiOrder.shop.business_account?.business_phone ??
+                    null,
                   business_account: apiOrder.shop.business_account ?? null,
                 }
               : null;
@@ -3976,10 +3983,11 @@ export default function BatchDetails({
                 />
               )}
 
-              {/* Order Summary - hidden for reel/restaurant (no payment, pickup only) */}
+              {/* Order Summary - hidden for reel/restaurant/business (no payment, pickup only) */}
               {shouldShowOrderDetails() &&
                 order?.orderType !== "reel" &&
-                order?.orderType !== "restaurant" && (
+                order?.orderType !== "restaurant" &&
+                order?.orderType !== "business" && (
                   <OrderSummarySection
                     order={order}
                     isSummaryExpanded={isSummaryExpanded}

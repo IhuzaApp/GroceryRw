@@ -96,6 +96,11 @@ export default function ShopInfo({ order }: ShopInfoProps) {
                   <p className="text-sm text-slate-600 dark:text-slate-400">
                     {order.shop.address ?? ""}
                   </p>
+                  {(order.shop.phone ?? order.shop.business_account?.business_phone) && (
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                      📞 {order.shop.phone ?? order.shop.business_account?.business_phone}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

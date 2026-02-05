@@ -33,13 +33,24 @@ const GET_BUSINESS_ORDER = gql`
         id
         name
         image
+        address
+        description
         latitude
         longitude
+        operating_hours
         business_account {
           business_email
           business_location
           business_name
           business_phone
+          user_id
+          Users {
+            phone
+          }
+        }
+        Category {
+          name
+          description
         }
       }
       orderedBy {
@@ -85,13 +96,24 @@ const GET_BUSINESS_ORDER_FOR_SHOPPER = gql`
         id
         name
         image
+        address
+        description
         latitude
         longitude
+        operating_hours
         business_account {
           business_email
           business_location
           business_name
           business_phone
+          user_id
+          Users {
+            phone
+          }
+        }
+        Category {
+          name
+          description
         }
       }
       orderedBy {
@@ -327,12 +349,26 @@ export default async function handler(
             name: bs.name ?? bs.business_account?.business_name ?? "Business Store",
             image: bs.image,
             address:
+              (bs as any).address ??
               bs.business_account?.business_location ??
               (bs.latitude != null && bs.longitude != null
                 ? `${bs.latitude}, ${bs.longitude}`
                 : ""),
+            description: (bs as any).description ?? null,
+            operating_hours: (bs as any).operating_hours ?? null,
+            category: (bs as any).Category
+              ? {
+                  name: (bs as any).Category.name ?? null,
+                  description: (bs as any).Category.description ?? null,
+                }
+              : null,
             latitude: bs.latitude ?? null,
             longitude: bs.longitude ?? null,
+            phone:
+              (bs.business_account?.business_phone?.trim() &&
+                bs.business_account.business_phone) ||
+              (bs as any).business_account?.Users?.phone ||
+              null,
             business_account: bs.business_account
               ? {
                   business_email: bs.business_account.business_email ?? null,
