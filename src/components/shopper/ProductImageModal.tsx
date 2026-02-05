@@ -15,7 +15,11 @@ function safePrice(item: OrderItem | null): number {
   if (!item) return 0;
   const fromFinal = Number((item.product as any)?.final_price);
   const fromItem = Number(item.price);
-  const value = Number.isFinite(fromFinal) ? fromFinal : Number.isFinite(fromItem) ? fromItem : 0;
+  const value = Number.isFinite(fromFinal)
+    ? fromFinal
+    : Number.isFinite(fromItem)
+    ? fromItem
+    : 0;
   return Number.isFinite(value) ? value : 0;
 }
 
@@ -57,7 +61,11 @@ export default function ProductImageModal({
             strokeWidth="2"
             className="h-4 w-4"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
 

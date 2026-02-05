@@ -71,7 +71,11 @@ export interface Revenue {
   Order?: Order;
   Shop?: Shop;
   shopper?: Shopper;
-  businessProductOrders?: { total?: string | number; id?: string; [key: string]: any } | null;
+  businessProductOrders?: {
+    total?: string | number;
+    id?: string;
+    [key: string]: any;
+  } | null;
   reel_orders?: { total?: string; [key: string]: any } | null;
   restaurant_orders?: { total?: string; [key: string]: any } | null;
   Restaurants?: { [key: string]: any } | null;

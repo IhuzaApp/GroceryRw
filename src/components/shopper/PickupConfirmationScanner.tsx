@@ -118,7 +118,8 @@ const PickupConfirmationScanner: React.FC<PickupConfirmationScannerProps> = ({
     const startScanner = async () => {
       if (!videoRef.current) return;
       if (scannerStartedRef.current) {
-        if (SCAN_DEBUG) console.log("[PickupScan] ZXing skipped (already started)");
+        if (SCAN_DEBUG)
+          console.log("[PickupScan] ZXing skipped (already started)");
         return;
       }
 

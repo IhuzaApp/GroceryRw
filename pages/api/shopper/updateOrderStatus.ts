@@ -747,7 +747,9 @@ export default async function handler(
     ) {
       try {
         const totalNum = parseFloat(String(orderDetails.total));
-        const serviceFeeNum = parseFloat(String(orderDetails.service_fee || "0"));
+        const serviceFeeNum = parseFloat(
+          String(orderDetails.service_fee || "0")
+        );
         const transportFeeNum = parseFloat(
           String(orderDetails.transportation_fee || "0")
         );
@@ -777,16 +779,19 @@ export default async function handler(
           business_wallet: Array<{ id: string; amount: string }>;
         }>(GET_BUSINESS_WALLET, { business_id: businessId });
 
-        console.log("[updateOrderStatus] BUSINESS ORDER PICKUP – wallet lookup:", {
-          business_id: businessId,
-          walletCount: walletResult.business_wallet?.length ?? 0,
-          wallet: walletResult.business_wallet?.[0]
-            ? {
-                id: walletResult.business_wallet[0].id,
-                amount: walletResult.business_wallet[0].amount,
-              }
-            : null,
-        });
+        console.log(
+          "[updateOrderStatus] BUSINESS ORDER PICKUP – wallet lookup:",
+          {
+            business_id: businessId,
+            walletCount: walletResult.business_wallet?.length ?? 0,
+            wallet: walletResult.business_wallet?.[0]
+              ? {
+                  id: walletResult.business_wallet[0].id,
+                  amount: walletResult.business_wallet[0].amount,
+                }
+              : null,
+          }
+        );
 
         if (
           walletResult.business_wallet &&
@@ -797,13 +802,16 @@ export default async function handler(
           const newAmount = (currentAmount + itemAmount).toFixed(2);
           const updatedAt = new Date().toISOString();
 
-          console.log("[updateOrderStatus] BUSINESS ORDER PICKUP – updating wallet:", {
-            wallet_id: wallet.id,
-            currentAmount,
-            itemAmount,
-            newAmount,
-            business_id: businessId,
-          });
+          console.log(
+            "[updateOrderStatus] BUSINESS ORDER PICKUP – updating wallet:",
+            {
+              wallet_id: wallet.id,
+              currentAmount,
+              itemAmount,
+              newAmount,
+              business_id: businessId,
+            }
+          );
 
           const UPDATE_BUSINESS_WALLET = gql`
             mutation UpdateBusinessWallet(
@@ -827,9 +835,13 @@ export default async function handler(
             business_id: businessId,
           });
 
-          console.log("[updateOrderStatus] BUSINESS ORDER PICKUP – wallet updated in DB:", {
-            affected_rows: updateWalletResult.update_business_wallet?.affected_rows,
-          });
+          console.log(
+            "[updateOrderStatus] BUSINESS ORDER PICKUP – wallet updated in DB:",
+            {
+              affected_rows:
+                updateWalletResult.update_business_wallet?.affected_rows,
+            }
+          );
 
           const products: Array<{
             name?: string;
@@ -856,10 +868,10 @@ export default async function handler(
             }
           );
           const itemsDescription =
-            itemLines.length > 0
-              ? itemLines.join("; ")
-              : "Order items";
-          const description = `${itemsDescription} | Amount credited to wallet: ${Number(itemAmount).toLocaleString()}`;
+            itemLines.length > 0 ? itemLines.join("; ") : "Order items";
+          const description = `${itemsDescription} | Amount credited to wallet: ${Number(
+            itemAmount
+          ).toLocaleString()}`;
 
           const INSERT_BUSINESS_TRANSACTION = gql`
             mutation InsertBusinessTransaction(
@@ -895,14 +907,21 @@ export default async function handler(
             description,
           });
 
-          console.log("[updateOrderStatus] BUSINESS ORDER PICKUP – transaction inserted in DB:", {
-            affected_rows: insertTxResult.insert_businessTransactions?.affected_rows,
-          });
+          console.log(
+            "[updateOrderStatus] BUSINESS ORDER PICKUP – transaction inserted in DB:",
+            {
+              affected_rows:
+                insertTxResult.insert_businessTransactions?.affected_rows,
+            }
+          );
 
           businessOrderPickup = {
-            walletUpdated: (updateWalletResult.update_business_wallet?.affected_rows ?? 0) > 0,
+            walletUpdated:
+              (updateWalletResult.update_business_wallet?.affected_rows ?? 0) >
+              0,
             transactionInserted:
-              (insertTxResult.insert_businessTransactions?.affected_rows ?? 0) > 0,
+              (insertTxResult.insert_businessTransactions?.affected_rows ?? 0) >
+              0,
           };
         } else {
           console.log(

@@ -281,9 +281,15 @@ export default async function handler(
             const img = x.Image ?? x.image ?? null;
             imageMap.set(id, img && String(img).trim() ? String(img) : null);
             const desc = x.Description ?? null;
-            descriptionMap.set(id, desc && String(desc).trim() ? String(desc) : null);
+            descriptionMap.set(
+              id,
+              desc && String(desc).trim() ? String(desc) : null
+            );
             const qid = x.query_id ?? null;
-            queryIdMap.set(id, qid != null && String(qid).trim() ? String(qid) : null);
+            queryIdMap.set(
+              id,
+              qid != null && String(qid).trim() ? String(qid) : null
+            );
           }
         });
         products = products.map((p: any) => {
@@ -360,7 +366,8 @@ export default async function handler(
       shop: bs
         ? {
             id: bs.id,
-            name: bs.name ?? bs.business_account?.business_name ?? "Business Store",
+            name:
+              bs.name ?? bs.business_account?.business_name ?? "Business Store",
             image: bs.image,
             address:
               (bs as any).address ??
@@ -386,7 +393,8 @@ export default async function handler(
             business_account: bs.business_account
               ? {
                   business_email: bs.business_account.business_email ?? null,
-                  business_location: bs.business_account.business_location ?? null,
+                  business_location:
+                    bs.business_account.business_location ?? null,
                   business_name: bs.business_account.business_name ?? null,
                   business_phone: bs.business_account.business_phone ?? null,
                 }

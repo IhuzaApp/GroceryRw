@@ -93,18 +93,26 @@ const CustomerMessage: React.FC<MessageProps> = ({
   statusLabel,
 }) => {
   const messageContent =
-    "text" in message ? message.text : (message as Message).text || (message as Message).message || "";
+    "text" in message
+      ? message.text
+      : (message as Message).text || (message as Message).message || "";
 
   return (
     <div
-      className={`mb-3 flex gap-2 ${isCurrentUser ? "justify-end" : "justify-start"}`}
+      className={`mb-3 flex gap-2 ${
+        isCurrentUser ? "justify-end" : "justify-start"
+      }`}
     >
       {!isCurrentUser && (
         <div className="flex-shrink-0">
           <Avatar color="green" circle size="sm" />
         </div>
       )}
-      <div className={`flex max-w-[82%] flex-col ${isCurrentUser ? "items-end" : "items-start"}`}>
+      <div
+        className={`flex max-w-[82%] flex-col ${
+          isCurrentUser ? "items-end" : "items-start"
+        }`}
+      >
         <div
           className={`rounded-2xl px-4 py-2.5 shadow-sm ${
             isCurrentUser
@@ -117,7 +125,9 @@ const CustomerMessage: React.FC<MessageProps> = ({
               {shopperName}
             </div>
           )}
-          <div className="whitespace-pre-wrap text-sm leading-relaxed">{messageContent}</div>
+          <div className="whitespace-pre-wrap text-sm leading-relaxed">
+            {messageContent}
+          </div>
         </div>
         {isCurrentUser && statusLabel && (
           <span className="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -328,8 +338,14 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
     );
     const combined = [...messages, ...pendingAsDisplay];
     combined.sort((a, b) => {
-      const tA = a.timestamp instanceof Date ? a.timestamp.getTime() : (a.timestamp?.getTime?.() ?? 0);
-      const tB = b.timestamp instanceof Date ? b.timestamp.getTime() : (b.timestamp?.getTime?.() ?? 0);
+      const tA =
+        a.timestamp instanceof Date
+          ? a.timestamp.getTime()
+          : a.timestamp?.getTime?.() ?? 0;
+      const tB =
+        b.timestamp instanceof Date
+          ? b.timestamp.getTime()
+          : b.timestamp?.getTime?.() ?? 0;
       return tA - tB;
     });
     return combined;
@@ -431,13 +447,31 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
             className="flex-shrink-0 rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
             aria-label="Close chat"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
           </button>
           <div className="relative flex-shrink-0">
-            <Avatar src={shopper.avatar} alt={shopper.name} circle size="md" className="ring-2 ring-emerald-500/20 dark:ring-emerald-400/30" />
-            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500 dark:border-gray-800 dark:bg-emerald-400" title="Online" />
+            <Avatar
+              src={shopper.avatar}
+              alt={shopper.name}
+              circle
+              size="md"
+              className="ring-2 ring-emerald-500/20 dark:ring-emerald-400/30"
+            />
+            <span
+              className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500 dark:border-gray-800 dark:bg-emerald-400"
+              title="Online"
+            />
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="truncate font-semibold text-gray-900 dark:text-white">
@@ -454,7 +488,16 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
             className="flex-shrink-0 rounded-full bg-emerald-500 p-2.5 text-white transition-colors hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
             aria-label="Call shopper"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1 .45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
             </svg>
           </a>
@@ -468,8 +511,18 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
             <div className="flex h-full min-h-[200px] items-center justify-center">
               <div className="text-center">
                 <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 dark:bg-emerald-900/40">
-                  <svg className="h-7 w-7 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  <svg
+                    className="h-7 w-7 text-emerald-600 dark:text-emerald-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
                   </svg>
                 </div>
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -508,7 +561,10 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
 
         {/* Input area */}
         <div className="flex-shrink-0 border-t border-gray-200 bg-white px-4 py-4 dark:border-gray-700 dark:bg-gray-800">
-          <form onSubmit={handleSendMessage} className="flex items-center gap-3">
+          <form
+            onSubmit={handleSendMessage}
+            className="flex items-center gap-3"
+          >
             <input
               type="text"
               value={newMessage}
@@ -523,7 +579,15 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
               className="flex-shrink-0 rounded-full bg-emerald-500 p-2.5 text-white shadow-md transition-all duration-200 hover:bg-emerald-600 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none dark:focus:ring-offset-gray-800"
               aria-label="Send message"
             >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
             </button>

@@ -1259,10 +1259,7 @@ export default function BatchDetails({
           );
 
           // Show invoice proof modal for same-shop combined orders (not for business batches)
-          const sameShopBatchOrders = [
-            order,
-            ...(order?.combinedOrders || []),
-          ];
+          const sameShopBatchOrders = [order, ...(order?.combinedOrders || [])];
           const isBusinessBatch = sameShopBatchOrders.every(
             (o) => o?.orderType === "business"
           );
@@ -2610,9 +2607,7 @@ export default function BatchDetails({
 
     // Reel, restaurant, business: confirm pickup via OrderID scan, then on_the_way (no Start Shopping)
     const showConfirmPickup =
-      activeOrder.orderType === "reel" ||
-      isRestaurantOrder ||
-      isBusinessOrder;
+      activeOrder.orderType === "reel" || isRestaurantOrder || isBusinessOrder;
 
     switch (activeOrder.status) {
       case "accepted":
@@ -2887,8 +2882,7 @@ export default function BatchDetails({
     const customerId =
       typeof targetCustomerId === "string" && targetCustomerId
         ? targetCustomerId
-        : orderWithNewFields.customerId ||
-          orderWithNewFields.orderedBy?.id;
+        : orderWithNewFields.customerId || orderWithNewFields.orderedBy?.id;
 
     if (!customerId) {
       // Cannot start chat - missing customer data
@@ -3055,11 +3049,7 @@ export default function BatchDetails({
             const image =
               p.image ?? p.Image ?? "/images/groceryPlaceholder.png";
             const price = Number(
-              p.price_per_item ??
-                p.unit_price ??
-                p.price ??
-                p.amount ??
-                0
+              p.price_per_item ?? p.unit_price ?? p.price ?? p.amount ?? 0
             );
             const qty = Number(p.quantity ?? 1);
             const itemId = p.order_item_id ?? p.id ?? `item-${idx}`;
@@ -3360,345 +3350,370 @@ export default function BatchDetails({
           // If shopper API returns 404, try business order API (in case orderType wasn't set)
           return fetch(
             `/api/queries/business-order-details?id=${order.id}&forShopper=1`
-          ).then((r) => r.json().then((d) => ({ data: d, triedBusiness: true })));
+          ).then((r) =>
+            r.json().then((d) => ({ data: d, triedBusiness: true }))
+          );
         }
         return res.json().then((data) => ({ data, triedBusiness: false }));
       })
-      .then(({ data, triedBusiness }: { data: any; triedBusiness?: boolean }) => {
-        // Normalize: shopper API returns { success, order }; business API returns { order }
-        const apiOrder = data?.order ?? data;
-        if (apiOrder) {
-          // If we recovered from 404 with business API, transform business response
-          const isBusiness =
-            isBusinessOrder || triedBusiness || apiOrder.orderType === "business";
-          if (isBusiness) {
-            // --- BUSINESS ORDER: log everything so we can debug amount/price 0 ---
-            console.log("[BatchDetails] BUSINESS ORDER – raw API response (apiOrder):", {
-              orderId: apiOrder.id,
-              OrderID: apiOrder.OrderID,
-              total: apiOrder.total,
-              subtotal: apiOrder.subtotal,
-              transportation_fee: apiOrder.transportation_fee,
-              service_fee: apiOrder.service_fee,
-              shop: apiOrder.shop,
-              deliveryAddress: apiOrder.deliveryAddress,
-              orderedBy: apiOrder.orderedBy,
-              allProductsRaw: apiOrder.allProducts,
-              allProductsLength: Array.isArray(apiOrder.allProducts)
-                ? apiOrder.allProducts.length
-                : 0,
-            });
-            if (Array.isArray(apiOrder.allProducts)) {
-              apiOrder.allProducts.forEach((p: any, idx: number) => {
-                console.log(
-                  `[BatchDetails] BUSINESS ORDER – allProducts[${idx}] (every key/value):`,
-                  p,
-                  "keys:",
-                  Object.keys(p || {}),
-                  "price:",
-                  p?.price,
-                  "amount:",
-                  p?.amount,
-                  "quantity:",
-                  p?.quantity,
-                  "unit_price:",
-                  (p as any)?.unit_price,
-                  "total:",
-                  (p as any)?.total,
-                );
+      .then(
+        ({ data, triedBusiness }: { data: any; triedBusiness?: boolean }) => {
+          // Normalize: shopper API returns { success, order }; business API returns { order }
+          const apiOrder = data?.order ?? data;
+          if (apiOrder) {
+            // If we recovered from 404 with business API, transform business response
+            const isBusiness =
+              isBusinessOrder ||
+              triedBusiness ||
+              apiOrder.orderType === "business";
+            if (isBusiness) {
+              // --- BUSINESS ORDER: log everything so we can debug amount/price 0 ---
+              console.log(
+                "[BatchDetails] BUSINESS ORDER – raw API response (apiOrder):",
+                {
+                  orderId: apiOrder.id,
+                  OrderID: apiOrder.OrderID,
+                  total: apiOrder.total,
+                  subtotal: apiOrder.subtotal,
+                  transportation_fee: apiOrder.transportation_fee,
+                  service_fee: apiOrder.service_fee,
+                  shop: apiOrder.shop,
+                  deliveryAddress: apiOrder.deliveryAddress,
+                  orderedBy: apiOrder.orderedBy,
+                  allProductsRaw: apiOrder.allProducts,
+                  allProductsLength: Array.isArray(apiOrder.allProducts)
+                    ? apiOrder.allProducts.length
+                    : 0,
+                }
+              );
+              if (Array.isArray(apiOrder.allProducts)) {
+                apiOrder.allProducts.forEach((p: any, idx: number) => {
+                  console.log(
+                    `[BatchDetails] BUSINESS ORDER – allProducts[${idx}] (every key/value):`,
+                    p,
+                    "keys:",
+                    Object.keys(p || {}),
+                    "price:",
+                    p?.price,
+                    "amount:",
+                    p?.amount,
+                    "quantity:",
+                    p?.quantity,
+                    "unit_price:",
+                    (p as any)?.unit_price,
+                    "total:",
+                    (p as any)?.total
+                  );
+                });
+              }
+
+              // Transform business-order-details response to BatchDetails shape (include business_account, latitude, longitude for Shop Details card)
+              const shop = apiOrder.shop
+                ? {
+                    id: apiOrder.shop.id,
+                    name:
+                      apiOrder.shop.name ??
+                      apiOrder.shop.business_account?.business_name ??
+                      "Business Store",
+                    image: apiOrder.shop.image ?? null,
+                    address:
+                      apiOrder.shop.address ??
+                      apiOrder.shop.business_account?.business_location ??
+                      "",
+                    description: apiOrder.shop.description ?? null,
+                    operating_hours: apiOrder.shop.operating_hours ?? null,
+                    category: apiOrder.shop.category ?? null,
+                    latitude: apiOrder.shop.latitude ?? null,
+                    longitude: apiOrder.shop.longitude ?? null,
+                    phone:
+                      apiOrder.shop.phone ??
+                      apiOrder.shop.business_account?.business_phone ??
+                      null,
+                    business_account: apiOrder.shop.business_account ?? null,
+                  }
+                : null;
+              const deliveryAddress =
+                apiOrder.deliveryAddress ?? apiOrder.customerAddress ?? "";
+              const addressObj = deliveryAddress
+                ? { street: deliveryAddress, city: "", postal_code: "" }
+                : null;
+
+              const businessItems = (apiOrder.allProducts ?? []).map(
+                (p: any, idx: number) => {
+                  const productId =
+                    p.id ?? p.product_id ?? p.productId ?? `item-${idx}`;
+                  const name = p.name ?? p.productName ?? "Item";
+                  const image =
+                    p.image ?? p.Image ?? "/images/groceryPlaceholder.png";
+                  // API uses price_per_item (and sometimes unit_price); fallback to price/amount
+                  const price = Number(
+                    p.price_per_item ?? p.unit_price ?? p.price ?? p.amount ?? 0
+                  );
+                  const qty = Number(p.quantity ?? 1);
+                  const itemId = p.order_item_id ?? p.id ?? `item-${idx}`;
+                  const measurementType =
+                    p.measurement_type ?? p.unit ?? "item";
+                  const item = {
+                    id: itemId,
+                    quantity: qty,
+                    price,
+                    shopId: apiOrder.shop_id ?? shop?.id,
+                    orderId: apiOrder.id,
+                    description: p.description ?? null,
+                    query_id: p.query_id ?? null,
+                    product: {
+                      id: productId,
+                      name,
+                      image,
+                      final_price: String(price),
+                      measurement_unit: measurementType,
+                      measurement_type: measurementType,
+                      selectedDetails: p.selectedDetails ?? null,
+                      barcode: p.barcode ?? null,
+                      sku: p.sku ?? null,
+                      query_id: p.query_id ?? null,
+                      ProductName: {
+                        id: productId,
+                        name,
+                        description: p.description ?? "",
+                        barcode: p.barcode ?? "",
+                        sku: p.sku ?? "",
+                        image,
+                        create_at: p.create_at ?? new Date().toISOString(),
+                      },
+                    },
+                  };
+                  console.log(
+                    `[BatchDetails] BUSINESS ORDER – transformed item[${idx}]:`,
+                    {
+                      rawPrice: p.price,
+                      rawAmount: p.amount,
+                      price,
+                      qty,
+                      name,
+                      item,
+                    }
+                  );
+                  return item;
+                }
+              );
+
+              console.log(
+                "[BatchDetails] BUSINESS ORDER – final businessItems:",
+                businessItems
+              );
+              console.log("[BatchDetails] BUSINESS ORDER – order totals:", {
+                total: apiOrder.total,
+                subtotal: apiOrder.subtotal,
+                transportFee: apiOrder.transportation_fee,
+                serviceFee: apiOrder.service_fee,
+              });
+
+              const transformedOrder = {
+                ...apiOrder,
+                orderType: "business",
+                shop,
+                shop_id: apiOrder.shop_id ?? shop?.id,
+                address: addressObj,
+                customerAddress: deliveryAddress || "No address",
+                orderedBy: apiOrder.orderedBy ?? null,
+                Order_Items: businessItems,
+                items: businessItems,
+                allProducts: apiOrder.allProducts,
+              };
+              setOrder(transformedOrder);
+              if (!activeShopId && shop?.id) setActiveShopId(shop.id);
+              setOrderDetailsLoading(false);
+              setItemsLoading(false);
+              return;
+            }
+          }
+
+          if (data.order) {
+            // Transform the API response to match BatchDetails expected structure
+            const transformOrderItems = (
+              items: any[],
+              shopId?: string,
+              orderId?: string
+            ) => {
+              return (
+                items?.map((item: any) => {
+                  // Handle both data formats: flattened (from orderDetails API) and nested (from combined orders API)
+                  const isNestedFormat =
+                    item.product && item.product.ProductName;
+
+                  let productId,
+                    productName,
+                    productImage,
+                    finalPrice,
+                    measurementUnit,
+                    productNameData;
+
+                  if (isNestedFormat) {
+                    // Nested format from combined orders API
+                    productId = item.product?.id || item.id;
+                    productName =
+                      item.product?.ProductName?.name || "Unknown Product";
+                    productImage =
+                      item.product?.ProductName?.image ||
+                      item.product?.image ||
+                      "/images/groceryPlaceholder.png";
+                    finalPrice =
+                      item.product?.final_price ||
+                      item.price?.toString() ||
+                      "0";
+                    measurementUnit = item.product?.measurement_unit || "item";
+                    productNameData = {
+                      id: item.product?.ProductName?.id || item.id,
+                      name:
+                        item.product?.ProductName?.name || "Unknown Product",
+                      description: item.product?.ProductName?.description || "",
+                      barcode: item.product?.ProductName?.barcode || "",
+                      sku: item.product?.ProductName?.sku || "",
+                      image:
+                        item.product?.ProductName?.image ||
+                        item.product?.image ||
+                        "/images/groceryPlaceholder.png",
+                      create_at:
+                        item.product?.ProductName?.create_at ||
+                        new Date().toISOString(),
+                    };
+                  } else {
+                    // Flattened format from orderDetails API - use existing product data
+                    productId = item.product?.id || item.id;
+                    productName = item.product?.name || item.name;
+                    productImage =
+                      item.product?.image ||
+                      item.productImage ||
+                      "/images/groceryPlaceholder.png";
+                    finalPrice =
+                      item.product?.final_price ||
+                      item.price?.toString() ||
+                      "0";
+                    measurementUnit =
+                      item.product?.measurement_unit ||
+                      item.measurement_unit ||
+                      "item";
+
+                    // Use existing ProductName data from the flattened format
+                    productNameData = item.product?.ProductName
+                      ? {
+                          id: item.product.ProductName.id,
+                          name: item.product.ProductName.name,
+                          description:
+                            item.product.ProductName.description || "",
+                          barcode: item.product.ProductName.barcode || "",
+                          sku: item.product.ProductName.sku || "",
+                          image:
+                            item.product.ProductName.image ||
+                            item.productImage ||
+                            "/images/groceryPlaceholder.png",
+                          create_at:
+                            item.product.ProductName.create_at ||
+                            new Date().toISOString(),
+                        }
+                      : {
+                          id: item.id, // Fallback to item.id if no ProductName data
+                          name: item.name,
+                          description: "",
+                          barcode: item.barcode || "",
+                          sku: item.sku || "",
+                          image:
+                            item.productImage ||
+                            "/images/groceryPlaceholder.png",
+                          create_at: new Date().toISOString(),
+                        };
+                  }
+
+                  const transformedItem = {
+                    id: item.id,
+                    quantity: item.quantity,
+                    price: item.price,
+                    shopId: shopId, // Attach shopId for split view grouping
+                    orderId: orderId, // Attach orderId to maintain correct order context
+                    product: {
+                      id: productId,
+                      name: productName,
+                      image: productImage,
+                      final_price: finalPrice,
+                      measurement_unit: measurementUnit,
+                      barcode: productNameData.barcode,
+                      sku: productNameData.sku,
+                      ProductName: productNameData,
+                    },
+                  };
+
+                  return transformedItem;
+                }) || []
+              );
+            };
+
+            let allItems = transformOrderItems(
+              data.order.items || [],
+              data.order.shop?.id,
+              data.order.id
+            );
+
+            // If combined orders exist, handle them based on same shop vs different shops
+            if (
+              data.order.combinedOrders &&
+              data.order.combinedOrders.length > 0
+            ) {
+              // Check if all combined orders are from the same shop as the main order
+              const mainShopId = data.order.shop?.id;
+              const sameShopOrders = data.order.combinedOrders.filter(
+                (subOrder: any) => subOrder.shop?.id === mainShopId
+              );
+              const differentShopOrders = data.order.combinedOrders.filter(
+                (subOrder: any) => subOrder.shop?.id !== mainShopId
+              );
+
+              // For orders from the SAME shop: DON'T duplicate items, just keep them separate for combinedOrders array
+              sameShopOrders.forEach((subOrder: any) => {
+                if (subOrder.items && subOrder.id !== data.order.id) {
+                  const subItems = transformOrderItems(
+                    subOrder.items,
+                    subOrder.shop?.id,
+                    subOrder.id
+                  );
+                  subOrder.Order_Items = subItems; // Attach for split view
+                  // DON'T add to allItems for same shop orders to avoid duplication
+                }
+              });
+
+              // For orders from DIFFERENT shops: Add items to allItems for multi-shop logic
+              differentShopOrders.forEach((subOrder: any) => {
+                if (subOrder.items && subOrder.id !== data.order.id) {
+                  const subItems = transformOrderItems(
+                    subOrder.items,
+                    subOrder.shop?.id,
+                    subOrder.id
+                  );
+                  subOrder.Order_Items = subItems; // Attach for split view
+                  allItems = [...allItems, ...subItems]; // Add to main items for different shops
+                }
               });
             }
 
-            // Transform business-order-details response to BatchDetails shape (include business_account, latitude, longitude for Shop Details card)
-            const shop = apiOrder.shop
-              ? {
-                  id: apiOrder.shop.id,
-                  name:
-                    apiOrder.shop.name ??
-                    apiOrder.shop.business_account?.business_name ??
-                    "Business Store",
-                  image: apiOrder.shop.image ?? null,
-                  address:
-                    apiOrder.shop.address ??
-                    apiOrder.shop.business_account?.business_location ??
-                    "",
-                  description: apiOrder.shop.description ?? null,
-                  operating_hours: apiOrder.shop.operating_hours ?? null,
-                  category: apiOrder.shop.category ?? null,
-                  latitude: apiOrder.shop.latitude ?? null,
-                  longitude: apiOrder.shop.longitude ?? null,
-                  phone:
-                    apiOrder.shop.phone ??
-                    apiOrder.shop.business_account?.business_phone ??
-                    null,
-                  business_account: apiOrder.shop.business_account ?? null,
-                }
-              : null;
-            const deliveryAddress =
-              apiOrder.deliveryAddress ?? apiOrder.customerAddress ?? "";
-            const addressObj = deliveryAddress
-              ? { street: deliveryAddress, city: "", postal_code: "" }
-              : null;
-
-            const businessItems = (apiOrder.allProducts ?? []).map(
-              (p: any, idx: number) => {
-                const productId = p.id ?? p.product_id ?? p.productId ?? `item-${idx}`;
-                const name = p.name ?? p.productName ?? "Item";
-                const image =
-                  p.image ?? p.Image ?? "/images/groceryPlaceholder.png";
-                // API uses price_per_item (and sometimes unit_price); fallback to price/amount
-                const price = Number(
-                  p.price_per_item ??
-                    p.unit_price ??
-                    p.price ??
-                    p.amount ??
-                    0
-                );
-                const qty = Number(p.quantity ?? 1);
-                const itemId = p.order_item_id ?? p.id ?? `item-${idx}`;
-                const measurementType = p.measurement_type ?? p.unit ?? "item";
-                const item = {
-                  id: itemId,
-                  quantity: qty,
-                  price,
-                  shopId: apiOrder.shop_id ?? shop?.id,
-                  orderId: apiOrder.id,
-                  description: p.description ?? null,
-                  query_id: p.query_id ?? null,
-                  product: {
-                    id: productId,
-                    name,
-                    image,
-                    final_price: String(price),
-                    measurement_unit: measurementType,
-                    measurement_type: measurementType,
-                    selectedDetails: p.selectedDetails ?? null,
-                    barcode: p.barcode ?? null,
-                    sku: p.sku ?? null,
-                    query_id: p.query_id ?? null,
-                    ProductName: {
-                      id: productId,
-                      name,
-                      description: p.description ?? "",
-                      barcode: p.barcode ?? "",
-                      sku: p.sku ?? "",
-                      image,
-                      create_at: p.create_at ?? new Date().toISOString(),
-                    },
-                  },
-                };
-                console.log(
-                  `[BatchDetails] BUSINESS ORDER – transformed item[${idx}]:`,
-                  { rawPrice: p.price, rawAmount: p.amount, price, qty, name, item },
-                );
-                return item;
-              }
-            );
-
-            console.log("[BatchDetails] BUSINESS ORDER – final businessItems:", businessItems);
-            console.log("[BatchDetails] BUSINESS ORDER – order totals:", {
-              total: apiOrder.total,
-              subtotal: apiOrder.subtotal,
-              transportFee: apiOrder.transportation_fee,
-              serviceFee: apiOrder.service_fee,
-            });
-
             const transformedOrder = {
-              ...apiOrder,
-              orderType: "business",
-              shop,
-              shop_id: apiOrder.shop_id ?? shop?.id,
-              address: addressObj,
-              customerAddress: deliveryAddress || "No address",
-              orderedBy: apiOrder.orderedBy ?? null,
-              Order_Items: businessItems,
-              items: businessItems,
-              allProducts: apiOrder.allProducts,
+              ...data.order,
+              Order_Items: allItems,
+              combinedOrders: data.order.combinedOrders, // Ensure this is passed through
             };
+
+            // Console log the final transformed order with all combined data
+
             setOrder(transformedOrder);
-            if (!activeShopId && shop?.id) setActiveShopId(shop.id);
-            setOrderDetailsLoading(false);
-            setItemsLoading(false);
-            return;
+            if (!activeShopId && data.order.shop?.id) {
+              setActiveShopId(data.order.shop.id);
+            }
+          } else {
+            // No order data in response
           }
+          setOrderDetailsLoading(false);
+          setItemsLoading(false);
         }
-
-        if (data.order) {
-          // Transform the API response to match BatchDetails expected structure
-          const transformOrderItems = (
-            items: any[],
-            shopId?: string,
-            orderId?: string
-          ) => {
-            return (
-              items?.map((item: any) => {
-                // Handle both data formats: flattened (from orderDetails API) and nested (from combined orders API)
-                const isNestedFormat = item.product && item.product.ProductName;
-
-                let productId,
-                  productName,
-                  productImage,
-                  finalPrice,
-                  measurementUnit,
-                  productNameData;
-
-                if (isNestedFormat) {
-                  // Nested format from combined orders API
-                  productId = item.product?.id || item.id;
-                  productName =
-                    item.product?.ProductName?.name || "Unknown Product";
-                  productImage =
-                    item.product?.ProductName?.image ||
-                    item.product?.image ||
-                    "/images/groceryPlaceholder.png";
-                  finalPrice =
-                    item.product?.final_price || item.price?.toString() || "0";
-                  measurementUnit = item.product?.measurement_unit || "item";
-                  productNameData = {
-                    id: item.product?.ProductName?.id || item.id,
-                    name: item.product?.ProductName?.name || "Unknown Product",
-                    description: item.product?.ProductName?.description || "",
-                    barcode: item.product?.ProductName?.barcode || "",
-                    sku: item.product?.ProductName?.sku || "",
-                    image:
-                      item.product?.ProductName?.image ||
-                      item.product?.image ||
-                      "/images/groceryPlaceholder.png",
-                    create_at:
-                      item.product?.ProductName?.create_at ||
-                      new Date().toISOString(),
-                  };
-                } else {
-                  // Flattened format from orderDetails API - use existing product data
-                  productId = item.product?.id || item.id;
-                  productName = item.product?.name || item.name;
-                  productImage =
-                    item.product?.image ||
-                    item.productImage ||
-                    "/images/groceryPlaceholder.png";
-                  finalPrice =
-                    item.product?.final_price || item.price?.toString() || "0";
-                  measurementUnit =
-                    item.product?.measurement_unit ||
-                    item.measurement_unit ||
-                    "item";
-
-                  // Use existing ProductName data from the flattened format
-                  productNameData = item.product?.ProductName
-                    ? {
-                        id: item.product.ProductName.id,
-                        name: item.product.ProductName.name,
-                        description: item.product.ProductName.description || "",
-                        barcode: item.product.ProductName.barcode || "",
-                        sku: item.product.ProductName.sku || "",
-                        image:
-                          item.product.ProductName.image ||
-                          item.productImage ||
-                          "/images/groceryPlaceholder.png",
-                        create_at:
-                          item.product.ProductName.create_at ||
-                          new Date().toISOString(),
-                      }
-                    : {
-                        id: item.id, // Fallback to item.id if no ProductName data
-                        name: item.name,
-                        description: "",
-                        barcode: item.barcode || "",
-                        sku: item.sku || "",
-                        image:
-                          item.productImage || "/images/groceryPlaceholder.png",
-                        create_at: new Date().toISOString(),
-                      };
-                }
-
-                const transformedItem = {
-                  id: item.id,
-                  quantity: item.quantity,
-                  price: item.price,
-                  shopId: shopId, // Attach shopId for split view grouping
-                  orderId: orderId, // Attach orderId to maintain correct order context
-                  product: {
-                    id: productId,
-                    name: productName,
-                    image: productImage,
-                    final_price: finalPrice,
-                    measurement_unit: measurementUnit,
-                    barcode: productNameData.barcode,
-                    sku: productNameData.sku,
-                    ProductName: productNameData,
-                  },
-                };
-
-                return transformedItem;
-              }) || []
-            );
-          };
-
-          let allItems = transformOrderItems(
-            data.order.items || [],
-            data.order.shop?.id,
-            data.order.id
-          );
-
-          // If combined orders exist, handle them based on same shop vs different shops
-          if (
-            data.order.combinedOrders &&
-            data.order.combinedOrders.length > 0
-          ) {
-            // Check if all combined orders are from the same shop as the main order
-            const mainShopId = data.order.shop?.id;
-            const sameShopOrders = data.order.combinedOrders.filter(
-              (subOrder: any) => subOrder.shop?.id === mainShopId
-            );
-            const differentShopOrders = data.order.combinedOrders.filter(
-              (subOrder: any) => subOrder.shop?.id !== mainShopId
-            );
-
-            // For orders from the SAME shop: DON'T duplicate items, just keep them separate for combinedOrders array
-            sameShopOrders.forEach((subOrder: any) => {
-              if (subOrder.items && subOrder.id !== data.order.id) {
-                const subItems = transformOrderItems(
-                  subOrder.items,
-                  subOrder.shop?.id,
-                  subOrder.id
-                );
-                subOrder.Order_Items = subItems; // Attach for split view
-                // DON'T add to allItems for same shop orders to avoid duplication
-              }
-            });
-
-            // For orders from DIFFERENT shops: Add items to allItems for multi-shop logic
-            differentShopOrders.forEach((subOrder: any) => {
-              if (subOrder.items && subOrder.id !== data.order.id) {
-                const subItems = transformOrderItems(
-                  subOrder.items,
-                  subOrder.shop?.id,
-                  subOrder.id
-                );
-                subOrder.Order_Items = subItems; // Attach for split view
-                allItems = [...allItems, ...subItems]; // Add to main items for different shops
-              }
-            });
-          }
-
-          const transformedOrder = {
-            ...data.order,
-            Order_Items: allItems,
-            combinedOrders: data.order.combinedOrders, // Ensure this is passed through
-          };
-
-          // Console log the final transformed order with all combined data
-
-          setOrder(transformedOrder);
-          if (!activeShopId && data.order.shop?.id) {
-            setActiveShopId(data.order.shop.id);
-          }
-        } else {
-          // No order data in response
-        }
-        setOrderDetailsLoading(false);
-        setItemsLoading(false);
-      })
+      )
       .catch(() => {
         // Error fetching order details
         setOrderDetailsLoading(false);

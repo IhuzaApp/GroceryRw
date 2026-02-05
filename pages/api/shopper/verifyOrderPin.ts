@@ -177,8 +177,7 @@ export default async function handler(
     }
 
     // Verify the PIN (business orders may store pin as number)
-    const orderPin =
-      order.pin != null ? String(order.pin) : "";
+    const orderPin = order.pin != null ? String(order.pin) : "";
     const verified = orderPin !== "" && orderPin === pin;
 
     return res.status(200).json({

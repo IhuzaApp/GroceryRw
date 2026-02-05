@@ -240,7 +240,9 @@ export default function OrderItemsSection({
                 "/images/groceryPlaceholder.png";
               const isDataUrl =
                 typeof imgSrc === "string" && imgSrc.startsWith("data:");
-              const resolvedImg = isDataUrl ? imgSrc : resolveImageUrl(imgSrc) ?? imgSrc;
+              const resolvedImg = isDataUrl
+                ? imgSrc
+                : resolveImageUrl(imgSrc) ?? imgSrc;
               const syntheticItem = {
                 id: item.id,
                 quantity: qty,
@@ -249,7 +251,9 @@ export default function OrderItemsSection({
                   id: item.id,
                   name,
                   image: resolvedImg || imgSrc,
-                  final_price: String(item.price_per_item ?? item.price ?? price ?? 0),
+                  final_price: String(
+                    item.price_per_item ?? item.price ?? price ?? 0
+                  ),
                   description: item.description ?? undefined,
                   measurement_unit:
                     item.product?.measurement_unit ??
@@ -262,7 +266,9 @@ export default function OrderItemsSection({
                     item.unit ??
                     undefined,
                   selectedDetails:
-                    item.product?.selectedDetails ?? item.selectedDetails ?? undefined,
+                    item.product?.selectedDetails ??
+                    item.selectedDetails ??
+                    undefined,
                   category: item.category ?? item.Category?.name ?? undefined,
                   ProductName: { name },
                 },
@@ -275,7 +281,9 @@ export default function OrderItemsSection({
                   <button
                     type="button"
                     className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100 shadow-sm transition-all hover:ring-2 hover:ring-emerald-500 hover:ring-offset-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-700 sm:h-12 sm:w-12"
-                    onClick={() => onShowProductImage(syntheticItem as OrderItem)}
+                    onClick={() =>
+                      onShowProductImage(syntheticItem as OrderItem)
+                    }
                     aria-label={`View larger image of ${name}`}
                   >
                     {isDataUrl ? (
@@ -291,7 +299,10 @@ export default function OrderItemsSection({
                         width={48}
                         height={48}
                         className="h-full w-full object-cover"
-                        unoptimized={typeof resolvedImg === "string" && resolvedImg.startsWith("data:")}
+                        unoptimized={
+                          typeof resolvedImg === "string" &&
+                          resolvedImg.startsWith("data:")
+                        }
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
@@ -304,12 +315,20 @@ export default function OrderItemsSection({
                       {name}
                     </p>
                     {/* For business orders show Description and query_id from PlasBusinessProductsOrSerive; no item price */}
-                    {(item.product?.ProductName?.description ?? item.description ?? "")?.trim() ? (
-                      <p className="mt-1 text-sm text-slate-600 dark:text-slate-300 sm:text-base line-clamp-2">
-                        {(item.product?.ProductName?.description ?? item.description ?? "").trim()}
+                    {(
+                      item.product?.ProductName?.description ??
+                      item.description ??
+                      ""
+                    )?.trim() ? (
+                      <p className="mt-1 line-clamp-2 text-sm text-slate-600 dark:text-slate-300 sm:text-base">
+                        {(
+                          item.product?.ProductName?.description ??
+                          item.description ??
+                          ""
+                        ).trim()}
                       </p>
                     ) : null}
-                    {(item.query_id ?? item.product?.query_id) ? (
+                    {item.query_id ?? item.product?.query_id ? (
                       <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
                         Ref: {item.query_id ?? item.product?.query_id}
                       </p>

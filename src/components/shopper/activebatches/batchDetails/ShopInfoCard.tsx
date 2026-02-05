@@ -212,7 +212,7 @@ export default function ShopInfoCard({
               {/* Contact Information */}
               <div className="space-y-2 border-t border-slate-200 pt-3 text-sm dark:border-slate-600 sm:text-base">
                 {/* Phone Number - only show when we have a valid number (don't show N/A) */}
-                {(shop.phone && String(shop.phone).trim()) && (
+                {shop.phone && String(shop.phone).trim() && (
                   <div className="flex items-center justify-between">
                     <span className="flex items-center text-slate-600 dark:text-slate-400">
                       <svg

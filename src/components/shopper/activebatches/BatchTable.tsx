@@ -669,38 +669,38 @@ export function BatchTable({ orders }: BatchTableProps) {
                               order.orderType !== "reel" &&
                               order.orderType !== "restaurant" &&
                               order.orderType !== "business" && (
-                              <button
-                                className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors ${
-                                  theme === "dark"
-                                    ? "text-gray-200 hover:bg-gray-700"
-                                    : "text-gray-700 hover:bg-gray-50"
-                                }`}
-                                onClick={() => {
-                                  // TODO: Update status to shopping
-                                  alert(
-                                    `Start shopping for order ${formatOrderIdsForDisplay(
-                                      order
-                                    )}`
-                                  );
-                                  setOpenDropdownId(null);
-                                }}
-                              >
-                                <svg
-                                  className="h-5 w-5 text-green-500"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
+                                <button
+                                  className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors ${
+                                    theme === "dark"
+                                      ? "text-gray-200 hover:bg-gray-700"
+                                      : "text-gray-700 hover:bg-gray-50"
+                                  }`}
+                                  onClick={() => {
+                                    // TODO: Update status to shopping
+                                    alert(
+                                      `Start shopping for order ${formatOrderIdsForDisplay(
+                                        order
+                                      )}`
+                                    );
+                                    setOpenDropdownId(null);
+                                  }}
                                 >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                                  />
-                                </svg>
-                                <span>Start Shopping</span>
-                              </button>
-                            )}
+                                  <svg
+                                    className="h-5 w-5 text-green-500"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                                    />
+                                  </svg>
+                                  <span>Start Shopping</span>
+                                </button>
+                              )}
 
                             {/* Confirm Delivery */}
                             {(order.status === "shopping" ||

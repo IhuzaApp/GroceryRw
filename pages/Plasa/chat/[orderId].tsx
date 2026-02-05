@@ -112,16 +112,13 @@ function ChatPage() {
 
           // Customer: orderedBy (regular/restaurant/business), user (reel), or fallbacks
           const orderedBy = o.orderedBy || o.user;
-          const customerId =
-            orderedBy?.id || o.customerId || o.user?.id;
-          const customerName =
-            orderedBy?.name || o.customerName || "Customer";
+          const customerId = orderedBy?.id || o.customerId || o.user?.id;
+          const customerName = orderedBy?.name || o.customerName || "Customer";
 
           const customerDataToSet = {
             id: customerId,
             name: customerName,
-            avatar:
-              orderedBy?.profile_picture || "/images/userProfile.png",
+            avatar: orderedBy?.profile_picture || "/images/userProfile.png",
             lastSeen: "Online now",
           };
 
@@ -291,8 +288,14 @@ function ChatPage() {
     );
     const combined = [...messages, ...pendingAsDisplay];
     combined.sort((a, b) => {
-      const tA = a.timestamp instanceof Date ? a.timestamp.getTime() : (a.timestamp?.getTime?.() ?? 0);
-      const tB = b.timestamp instanceof Date ? b.timestamp.getTime() : (b.timestamp?.getTime?.() ?? 0);
+      const tA =
+        a.timestamp instanceof Date
+          ? a.timestamp.getTime()
+          : a.timestamp?.getTime?.() ?? 0;
+      const tB =
+        b.timestamp instanceof Date
+          ? b.timestamp.getTime()
+          : b.timestamp?.getTime?.() ?? 0;
       return tA - tB;
     });
     return combined;
@@ -376,7 +379,8 @@ function ChatPage() {
 
   // Group display messages by date for better display
   const groupMessagesByDate = (list: (Message | PendingMessage)[]) => {
-    const groups: { date: string; messages: (Message | PendingMessage)[] }[] = [];
+    const groups: { date: string; messages: (Message | PendingMessage)[] }[] =
+      [];
     let currentDate = "";
     let currentGroup: (Message | PendingMessage)[] = [];
 
@@ -565,7 +569,12 @@ function ChatPage() {
                 className="rounded-full p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                 onClick={() => {
                   closeChat();
-                  const id = typeof orderId === "string" ? orderId : Array.isArray(orderId) ? orderId[0] : "";
+                  const id =
+                    typeof orderId === "string"
+                      ? orderId
+                      : Array.isArray(orderId)
+                      ? orderId[0]
+                      : "";
                   if (id) router.replace(`/Plasa/active-batches/batch/${id}`);
                 }}
                 aria-label="Back to batch"
@@ -606,19 +615,19 @@ function ChatPage() {
                             order.orderType === "reel"
                               ? "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300"
                               : order.orderType === "restaurant"
-                                ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
-                                : order.orderType === "business"
-                                  ? "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300"
-                                  : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                              ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                              : order.orderType === "business"
+                              ? "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300"
+                              : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
                           }`}
                         >
                           {order.orderType === "reel"
                             ? "Reel order"
                             : order.orderType === "restaurant"
-                              ? "Restaurant order"
-                              : order.orderType === "business"
-                                ? "Business order"
-                                : order.orderType}
+                            ? "Restaurant order"
+                            : order.orderType === "business"
+                            ? "Business order"
+                            : order.orderType}
                         </span>
                       )}
                   </div>
@@ -626,10 +635,10 @@ function ChatPage() {
                     {order?.address?.street && order?.address?.city
                       ? `${order.address.street}, ${order.address.city}`
                       : order?.customerAddress
-                        ? order.customerAddress
-                        : order?.deliveryAddress
-                          ? order.deliveryAddress
-                          : "Address not available"}
+                      ? order.customerAddress
+                      : order?.deliveryAddress
+                      ? order.deliveryAddress
+                      : "Address not available"}
                   </p>
                 </div>
               </div>
@@ -686,7 +695,8 @@ function ChatPage() {
                 {displayMessages.map((msg) => {
                   const isShopper = msg.senderType === "shopper";
                   const isPending =
-                    "tempId" in msg && (msg as PendingMessage).tempId.startsWith("temp-");
+                    "tempId" in msg &&
+                    (msg as PendingMessage).tempId.startsWith("temp-");
                   const statusLabel: "Sending..." | "Sent" | null = isShopper
                     ? isPending
                       ? "Sending..."
@@ -718,7 +728,10 @@ function ChatPage() {
                           }`}
                         >
                           <p className="text-sm leading-relaxed">
-                            {"text" in msg ? msg.text : (msg as Message).text || (msg as Message).message}
+                            {"text" in msg
+                              ? msg.text
+                              : (msg as Message).text ||
+                                (msg as Message).message}
                           </p>
                           {isShopper && (
                             <div className="mt-1 flex items-center justify-end space-x-1">

@@ -386,7 +386,9 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
           if (!response.ok) {
             const errorData = await response.json();
             throw new Error(
-              errorData.message || errorData.error || "Failed to confirm delivery"
+              errorData.message ||
+                errorData.error ||
+                "Failed to confirm delivery"
             );
           }
         } else {

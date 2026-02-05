@@ -98,7 +98,10 @@ const CHECK_EXISTING_PLASA_FEE_REVENUE = gql`
 const CHECK_EXISTING_PLASA_FEE_BUSINESS = gql`
   query CheckExistingPlasaFeeBusiness($businessOrder_Id: uuid!) {
     Revenue(
-      where: { businessOrder_Id: { _eq: $businessOrder_Id }, type: { _eq: "plasa_fee" } }
+      where: {
+        businessOrder_Id: { _eq: $businessOrder_Id }
+        type: { _eq: "plasa_fee" }
+      }
     ) {
       id
       type
@@ -110,7 +113,10 @@ const CHECK_EXISTING_PLASA_FEE_BUSINESS = gql`
 const CHECK_EXISTING_PLASA_FEE_REEL = gql`
   query CheckExistingPlasaFeeReel($reel_order_id: uuid!) {
     Revenue(
-      where: { reel_order_id: { _eq: $reel_order_id }, type: { _eq: "plasa_fee" } }
+      where: {
+        reel_order_id: { _eq: $reel_order_id }
+        type: { _eq: "plasa_fee" }
+      }
     ) {
       id
       type
@@ -122,7 +128,10 @@ const CHECK_EXISTING_PLASA_FEE_REEL = gql`
 const CHECK_EXISTING_PLASA_FEE_RESTAURANT = gql`
   query CheckExistingPlasaFeeRestaurant($restaurant_order_id: uuid!) {
     Revenue(
-      where: { restaurant_order_id: { _eq: $restaurant_order_id }, type: { _eq: "plasa_fee" } }
+      where: {
+        restaurant_order_id: { _eq: $restaurant_order_id }
+        type: { _eq: "plasa_fee" }
+      }
     ) {
       id
       type
@@ -202,7 +211,8 @@ export default async function handler(
       if (existingRevenue.Revenue && existingRevenue.Revenue.length > 0) {
         return res.status(200).json({
           success: true,
-          message: "Plasa fee revenue already calculated for this business order",
+          message:
+            "Plasa fee revenue already calculated for this business order",
           data: { plasa_fee: "0.00" },
         });
       }
@@ -227,11 +237,14 @@ export default async function handler(
         System_configuratioins: Array<{ deliveryCommissionPercentage: string }>;
       }>(GET_SYSTEM_CONFIG);
       const deliveryCommissionPercentage = parseFloat(
-        systemConfigData.System_configuratioins[0]?.deliveryCommissionPercentage || "0"
+        systemConfigData.System_configuratioins[0]
+          ?.deliveryCommissionPercentage || "0"
       );
 
       const serviceFeeNum = parseFloat(String(order.service_fee || "0"));
-      const transportFeeNum = parseFloat(String(order.transportation_fee || "0"));
+      const transportFeeNum = parseFloat(
+        String(order.transportation_fee || "0")
+      );
       const plasaFee = RevenueCalculator.calculatePlasaFee(
         serviceFeeNum,
         transportFeeNum,
@@ -256,7 +269,8 @@ export default async function handler(
 
       return res.status(200).json({
         success: true,
-        message: "Plasa fee revenue calculated and recorded successfully (business order)",
+        message:
+          "Plasa fee revenue calculated and recorded successfully (business order)",
         data: {
           plasa_fee: plasaFee.toFixed(2),
           commission_percentage: deliveryCommissionPercentage,
@@ -299,7 +313,8 @@ export default async function handler(
         System_configuratioins: Array<{ deliveryCommissionPercentage: string }>;
       }>(GET_SYSTEM_CONFIG);
       const deliveryCommissionPercentage = parseFloat(
-        systemConfigData.System_configuratioins[0]?.deliveryCommissionPercentage || "0"
+        systemConfigData.System_configuratioins[0]
+          ?.deliveryCommissionPercentage || "0"
       );
 
       const serviceFeeNum = parseFloat(order.service_fee || "0");
@@ -338,7 +353,8 @@ export default async function handler(
 
       return res.status(200).json({
         success: true,
-        message: "Plasa fee revenue calculated and recorded successfully (reel order)",
+        message:
+          "Plasa fee revenue calculated and recorded successfully (reel order)",
         data: {
           plasa_fee: plasaFee.toFixed(2),
           commission_percentage: deliveryCommissionPercentage,
@@ -355,7 +371,8 @@ export default async function handler(
       if (existingRevenue.Revenue && existingRevenue.Revenue.length > 0) {
         return res.status(200).json({
           success: true,
-          message: "Plasa fee revenue already calculated for this restaurant order",
+          message:
+            "Plasa fee revenue already calculated for this restaurant order",
           data: { plasa_fee: "0.00" },
         });
       }
@@ -380,7 +397,8 @@ export default async function handler(
         System_configuratioins: Array<{ deliveryCommissionPercentage: string }>;
       }>(GET_SYSTEM_CONFIG);
       const deliveryCommissionPercentage = parseFloat(
-        systemConfigData.System_configuratioins[0]?.deliveryCommissionPercentage || "0"
+        systemConfigData.System_configuratioins[0]
+          ?.deliveryCommissionPercentage || "0"
       );
 
       // Restaurant: only delivery fee for plasa fee (no service fee)
@@ -419,7 +437,8 @@ export default async function handler(
 
       return res.status(200).json({
         success: true,
-        message: "Plasa fee revenue calculated and recorded successfully (restaurant order)",
+        message:
+          "Plasa fee revenue calculated and recorded successfully (restaurant order)",
         data: {
           plasa_fee: plasaFee.toFixed(2),
           commission_percentage: deliveryCommissionPercentage,
@@ -460,7 +479,8 @@ export default async function handler(
       System_configuratioins: Array<{ deliveryCommissionPercentage: string }>;
     }>(GET_SYSTEM_CONFIG);
     const deliveryCommissionPercentage = parseFloat(
-      systemConfigData.System_configuratioins[0]?.deliveryCommissionPercentage || "0"
+      systemConfigData.System_configuratioins[0]
+        ?.deliveryCommissionPercentage || "0"
     );
 
     const serviceFeeNum = parseFloat(order.service_fee || "0");
