@@ -390,6 +390,7 @@ export default async function handler(
             total
             service_fee
             transportation_fee
+            allProducts
             business_store {
               business_id
             }
@@ -830,6 +831,36 @@ export default async function handler(
             affected_rows: updateWalletResult.update_business_wallet?.affected_rows,
           });
 
+          const products: Array<{
+            name?: string;
+            quantity?: number;
+            unit?: string;
+          }> = Array.isArray(orderDetails.allProducts)
+            ? orderDetails.allProducts
+            : typeof orderDetails.allProducts === "string"
+            ? (() => {
+                try {
+                  const parsed = JSON.parse(orderDetails.allProducts);
+                  return Array.isArray(parsed) ? parsed : [];
+                } catch {
+                  return [];
+                }
+              })()
+            : [];
+          const itemLines = products.map(
+            (p: { name?: string; quantity?: number; unit?: string }) => {
+              const name = p.name ?? "Item";
+              const qty = p.quantity ?? 0;
+              const unit = p.unit ? ` ${p.unit}` : "";
+              return `${name} × ${qty}${unit}`;
+            }
+          );
+          const itemsDescription =
+            itemLines.length > 0
+              ? itemLines.join("; ")
+              : "Order items";
+          const description = `${itemsDescription} | Amount credited to wallet: ${Number(itemAmount).toLocaleString()}`;
+
           const INSERT_BUSINESS_TRANSACTION = gql`
             mutation InsertBusinessTransaction(
               $action: String!
@@ -837,14 +868,16 @@ export default async function handler(
               $related_order: uuid!
               $wallet_id: uuid!
               $status: String!
+              $description: String
             ) {
-              insert_business_transactions(
+              insert_businessTransactions(
                 objects: {
                   action: $action
                   type: $type
                   related_order: $related_order
                   wallet_id: $wallet_id
                   status: $status
+                  description: $description
                 }
               ) {
                 affected_rows
@@ -852,23 +885,24 @@ export default async function handler(
             }
           `;
           const insertTxResult = await hasuraClient.request<{
-            insert_business_transactions: { affected_rows: number };
+            insert_businessTransactions: { affected_rows: number };
           }>(INSERT_BUSINESS_TRANSACTION, {
             action: "credit",
             type: "order_item_amount",
             related_order: orderId,
             wallet_id: wallet.id,
             status: "completed",
+            description,
           });
 
           console.log("[updateOrderStatus] BUSINESS ORDER PICKUP – transaction inserted in DB:", {
-            affected_rows: insertTxResult.insert_business_transactions?.affected_rows,
+            affected_rows: insertTxResult.insert_businessTransactions?.affected_rows,
           });
 
           businessOrderPickup = {
             walletUpdated: (updateWalletResult.update_business_wallet?.affected_rows ?? 0) > 0,
             transactionInserted:
-              (insertTxResult.insert_business_transactions?.affected_rows ?? 0) > 0,
+              (insertTxResult.insert_businessTransactions?.affected_rows ?? 0) > 0,
           };
         } else {
           console.log(
