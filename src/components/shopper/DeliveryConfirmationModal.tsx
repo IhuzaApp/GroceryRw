@@ -445,6 +445,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       }
 
       // Delete all Firebase chat messages and conversations for each delivered order
+      // (regular, reel, restaurant, business, combined — same orderIdsToUpdate as above)
       for (const orderId of orderIdsToUpdate) {
         await deleteFirebaseChatForOrder(orderId);
       }
