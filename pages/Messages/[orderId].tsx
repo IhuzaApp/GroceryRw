@@ -36,6 +36,7 @@ import {
   getBlockedMessage,
   sanitizeMessageForDisplay,
 } from "../../src/lib/chatPiiBlock";
+import { useChatTypingIndicator } from "../../src/hooks/useChatTypingIndicator";
 
 // Helper to format date for messages
 function formatMessageDate(timestamp: any) {
@@ -226,6 +227,13 @@ function ChatPage() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+
+  const { otherTypingName, reportTyping, clearTyping } = useChatTypingIndicator({
+    conversationId,
+    currentUserId: session?.user?.id ?? "",
+    currentUserName: session?.user?.name ?? "Customer",
+    enabled: !!conversationId && !!session?.user?.id,
+  });
 
   // Scroll to bottom of messages
   const scrollToBottom = () => {
@@ -609,7 +617,22 @@ function ChatPage() {
                     </div>
                   </div>
                 ) : (
-                  groupMessagesByDate(messages).map((group, groupIndex) => (
+                  <>
+                    {otherTypingName && (
+                      <div className="mb-3 flex justify-start">
+                        <div className="rounded-[20px] bg-blue-100 px-4 py-2.5 dark:bg-blue-900/40">
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            {otherTypingName} is typing
+                          </span>
+                          <span className="typing-dots ml-1 inline-flex gap-0.5">
+                            <span className="h-1 w-1 animate-bounce rounded-full bg-gray-500 [animation-delay:0ms]" />
+                            <span className="h-1 w-1 animate-bounce rounded-full bg-gray-500 [animation-delay:150ms]" />
+                            <span className="h-1 w-1 animate-bounce rounded-full bg-gray-500 [animation-delay:300ms]" />
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {groupMessagesByDate(messages).map((group, groupIndex) => (
                     <div key={groupIndex}>
                       <DateSeparator date={group.date} />
                       {group.messages.map((message) => (
@@ -625,7 +648,8 @@ function ChatPage() {
                         />
                       ))}
                     </div>
-                  ))
+                  ))}
+                  </>
                 )}
                 <div ref={messagesEndRef} />
               </div>
@@ -645,7 +669,11 @@ function ChatPage() {
                     <input
                       type="text"
                       value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
+                      onChange={(e) => {
+                        setNewMessage(e.target.value);
+                        reportTyping();
+                      }}
+                      onBlur={clearTyping}
                       onKeyPress={handleKeyPress}
                       placeholder="Type your message..."
                       className="w-full rounded-full border border-gray-300 bg-gray-50 px-4 py-3 text-sm focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-400 dark:focus:bg-gray-600"

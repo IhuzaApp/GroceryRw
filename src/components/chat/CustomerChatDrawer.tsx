@@ -29,6 +29,7 @@ import {
   getBlockedMessage,
   sanitizeMessageForDisplay,
 } from "../../lib/chatPiiBlock";
+import { useChatTypingIndicator } from "../../hooks/useChatTypingIndicator";
 
 // Helper to format date for messages
 function formatMessageDate(timestamp: any) {
@@ -176,6 +177,18 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const { otherTypingName, reportTyping, clearTyping } = useChatTypingIndicator({
+    conversationId,
+    currentUserId: session?.user?.id ?? "",
+    currentUserName: session?.user?.name ?? "Customer",
+    enabled: !!conversationId && !!session?.user?.id && isOpen,
+  });
+
+  // Clear typing when drawer closes
+  useEffect(() => {
+    if (!isOpen) clearTyping();
+  }, [isOpen, clearTyping]);
 
   // Scroll to bottom of messages
   const scrollToBottom = () => {
@@ -548,6 +561,20 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
             </div>
           ) : (
             <>
+              {otherTypingName && (
+                <div className="mb-3 flex justify-start">
+                  <div className="rounded-2xl bg-white px-4 py-2.5 shadow-sm dark:bg-gray-700 dark:text-gray-100">
+                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                      {otherTypingName} is typing
+                    </span>
+                    <span className="typing-dots ml-1 inline-flex gap-0.5">
+                      <span className="h-1 w-1 animate-bounce rounded-full bg-gray-500 [animation-delay:0ms]" />
+                      <span className="h-1 w-1 animate-bounce rounded-full bg-gray-500 [animation-delay:150ms]" />
+                      <span className="h-1 w-1 animate-bounce rounded-full bg-gray-500 [animation-delay:300ms]" />
+                    </span>
+                  </div>
+                </div>
+              )}
               {displayMessages.map((message) => {
                 const isCurrentUser = message.senderId === session?.user?.id;
                 const isPending =
@@ -581,7 +608,11 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
             <input
               type="text"
               value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
+              onChange={(e) => {
+                setNewMessage(e.target.value);
+                reportTyping();
+              }}
+              onBlur={clearTyping}
               onKeyPress={handleKeyPress}
               placeholder="Type a message..."
               className="min-w-0 flex-1 rounded-2xl border border-gray-200 bg-gray-100 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-500 transition-colors focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-emerald-400 dark:focus:bg-gray-600 dark:focus:ring-emerald-500/30"

@@ -24,6 +24,7 @@ import {
   getBlockedMessage,
   sanitizeMessageForDisplay,
 } from "../../lib/chatPiiBlock";
+import { useChatTypingIndicator } from "../../hooks/useChatTypingIndicator";
 
 // Helper to format time (e.g., "01:09 am", "08:24PM")
 function formatTime(timestamp: any): string {
@@ -184,6 +185,13 @@ export default function DesktopMessagePage({
   const [piiError, setPiiError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  const { otherTypingName, reportTyping, clearTyping } = useChatTypingIndicator({
+    conversationId,
+    currentUserId: session?.user?.id ?? "",
+    currentUserName: session?.user?.name ?? "Customer",
+    enabled: !!conversationId && !!session?.user?.id && !!selectedConversation,
+  });
 
   // Filter conversations based on search
   const filteredConversations = conversations.filter((conversation) => {
@@ -721,6 +729,20 @@ export default function DesktopMessagePage({
                 </div>
               ) : (
                 <div className="space-y-4">
+                  {otherTypingName && (
+                    <div className="flex justify-start">
+                      <div className="rounded-2xl rounded-bl-md bg-white px-4 py-2.5 shadow-sm dark:bg-gray-700 dark:text-white">
+                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                          {otherTypingName} is typing
+                        </span>
+                        <span className="typing-dots ml-1 inline-flex gap-0.5">
+                          <span className="h-1 w-1 animate-bounce rounded-full bg-gray-500 [animation-delay:0ms]" />
+                          <span className="h-1 w-1 animate-bounce rounded-full bg-gray-500 [animation-delay:150ms]" />
+                          <span className="h-1 w-1 animate-bounce rounded-full bg-gray-500 [animation-delay:300ms]" />
+                        </span>
+                      </div>
+                    </div>
+                  )}
                   {groupMessagesByDate(messages).map((group, groupIndex) => (
                     <div key={groupIndex} className="space-y-4">
                       {/* Date Separator */}
@@ -935,7 +957,11 @@ export default function DesktopMessagePage({
                   <input
                     type="text"
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
+                    onChange={(e) => {
+                      setNewMessage(e.target.value);
+                      reportTyping();
+                    }}
+                    onBlur={clearTyping}
                     placeholder="Type a message..."
                     className="w-full rounded-full border border-gray-200 bg-white px-5 py-3 pr-12 text-sm text-gray-900 placeholder-gray-500 transition-all focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500"
                   />
