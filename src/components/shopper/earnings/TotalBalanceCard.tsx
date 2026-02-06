@@ -5,6 +5,7 @@ import {
   RequestPayoutModal,
   type RequestPayoutPayload,
 } from "./RequestPayoutModal";
+import { logErrorToSlack } from "../../../lib/slackErrorReporter";
 
 interface Wallet {
   id: string;
@@ -29,8 +30,15 @@ const TotalBalanceCard: React.FC<TotalBalanceCardProps> = ({
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
 
   const handleWithdraw = async (payload: RequestPayoutPayload) => {
-    if (onWithdraw) {
+    if (!onWithdraw) return;
+
+    try {
       await onWithdraw(payload);
+    } catch (error) {
+      void logErrorToSlack("TotalBalanceCard.handleWithdraw", error, {
+        walletId: wallet?.id,
+      });
+      throw error;
     }
   };
 

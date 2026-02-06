@@ -32,7 +32,7 @@ import PerformanceMetricsCard from "@components/shopper/earnings/PerformanceMetr
 import BusiestTimesCard from "@components/shopper/earnings/BusiestTimesCard";
 import EarningsTabs from "@components/shopper/earnings/EarningsTabs";
 import TransactionCardsMobile from "@components/shopper/earnings/TransactionCardsMobile";
-import { logger } from "../../../src/utils/logger";
+import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 import {
   formatCurrencySync,
   getCurrencySymbol,
@@ -176,7 +176,7 @@ const EarningsPage: React.FC = () => {
           setEarningsStats(data.stats);
         }
       } catch (error) {
-        logger.error("Error fetching earnings stats", "EarningsPage", error);
+        void logErrorToSlack("EarningsPage.fetchEarningsStats", error);
       } finally {
         setLoading(false);
       }
@@ -211,7 +211,7 @@ const EarningsPage: React.FC = () => {
           }
         }
       } catch (error) {
-        logger.error("Error fetching activity summary", "EarningsPage", error);
+        void logErrorToSlack("EarningsPage.fetchActivitySummary", error);
       }
     };
     const timeoutId = setTimeout(fetchActivitySummary, 250);
@@ -230,7 +230,7 @@ const EarningsPage: React.FC = () => {
           }
         }
       } catch (error) {
-        logger.error("Error fetching shopper schedule", "EarningsPage", error);
+        void logErrorToSlack("EarningsPage.fetchSchedule", error);
       }
     };
     const timeoutId = setTimeout(fetchSchedule, 300);
@@ -256,7 +256,7 @@ const EarningsPage: React.FC = () => {
         setTransactions([]);
       }
     } catch (error) {
-      logger.error("Error fetching wallet data", "EarningsPage", error);
+      void logErrorToSlack("EarningsPage.fetchWalletData", error);
       setWallet({ id: "", availableBalance: 0, reservedBalance: 0 });
       setTransactions([]);
     } finally {
@@ -281,7 +281,7 @@ const EarningsPage: React.FC = () => {
         setDailyEarnings([]);
       }
     } catch (error) {
-      logger.error("Error fetching daily earnings", "EarningsPage", error);
+      void logErrorToSlack("EarningsPage.fetchDailyEarnings", error);
       setDailyEarnings([]);
     } finally {
       setDailyEarningsLoading(false);
@@ -342,17 +342,6 @@ const EarningsPage: React.FC = () => {
     phoneNumber: string;
   }) => {
     try {
-      // Debug: see exactly what we send to the API
-      // This will show in the browser devtools console
-      // (search for "[Earnings] requestPayout payload")
-      // NOTE: verification_image can be large (base64)
-      // so we also log its length instead of full contents.
-      // eslint-disable-next-line no-console
-      console.log("[Earnings] requestPayout payload", {
-        ...payload,
-        verification_image_length: payload.verification_image?.length ?? 0,
-      });
-
       const response = await authenticatedFetch("/api/shopper/requestPayout", {
         method: "POST",
         headers: {
@@ -368,14 +357,6 @@ const EarningsPage: React.FC = () => {
 
       const data = await response.json();
 
-      // Debug: log raw API response to help understand 400/404
-      // eslint-disable-next-line no-console
-      console.log("[Earnings] requestPayout response", {
-        status: response.status,
-        ok: response.ok,
-        data,
-      });
-
       if (!response.ok) {
         const errorMessage =
           data.message || data.error || "Failed to request payout";
@@ -384,17 +365,13 @@ const EarningsPage: React.FC = () => {
 
       if (data.success) {
         await fetchWalletData();
-        logger.info("Payout requested successfully", "EarningsPage", {
-          amount: payload.amount,
-        });
       } else {
         throw new Error(data.message || "Failed to request payout");
       }
     } catch (error) {
-      logger.error("Error requesting payout", "EarningsPage", error);
-      // Debug: surface error to console as well
-      // eslint-disable-next-line no-console
-      console.error("[Earnings] requestPayout error", error);
+      void logErrorToSlack("EarningsPage.handleWithdrawal", error, {
+        amount: payload.amount,
+      });
       throw error;
     }
   };
