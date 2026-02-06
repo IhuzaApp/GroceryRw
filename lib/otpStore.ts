@@ -38,10 +38,23 @@ class OTPStore {
   }
 }
 
-// Export singleton instance
-export const otpStore = new OTPStore();
+// Use a process-wide global so the same store is shared across all API routes
+// (Next.js can load the module in different contexts, giving separate instances otherwise)
+const globalForOtp =
+  typeof globalThis !== "undefined"
+    ? globalThis
+    : typeof global !== "undefined"
+    ? global
+    : ({} as any);
+const STORE_KEY = "__otpStore__";
+const otpStore = ((globalForOtp as any)[STORE_KEY] ??=
+  new OTPStore()) as OTPStore;
+
+export { otpStore };
 
 // Cleanup expired OTPs every 5 minutes
-setInterval(() => {
-  otpStore.cleanup();
-}, 5 * 60 * 1000);
+if (typeof setInterval !== "undefined") {
+  setInterval(() => {
+    otpStore.cleanup();
+  }, 5 * 60 * 1000);
+}

@@ -3,7 +3,6 @@ import { useRouter } from "next/router";
 import { useAuth } from "../src/context/AuthContext";
 import RootLayout from "@components/ui/layout";
 import { GetServerSideProps } from "next";
-import { hasuraClient } from "../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import {
   Data,
@@ -164,6 +163,7 @@ export default function Home({ initialData }: { initialData: Data }) {
 
 export const getServerSideProps: GetServerSideProps = async () => {
   try {
+    const { hasuraClient } = await import("../src/lib/hasuraClient");
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }

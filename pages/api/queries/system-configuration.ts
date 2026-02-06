@@ -19,6 +19,12 @@ const GET_SYSTEM_CONFIGURATION = gql`
       deliveryCommissionPercentage
       productCommissionPercentage
       tax
+      allowScheduledDeliveries
+      rushHourSurcharge
+      rushHours
+      enableRush
+      suggestedMinimumTip
+      withDrawCharges
     }
   }
 `;
@@ -38,6 +44,12 @@ interface SystemConfigurationResponse {
     deliveryCommissionPercentage: string;
     productCommissionPercentage: string;
     tax: string;
+    allowScheduledDeliveries?: boolean;
+    rushHourSurcharge?: string;
+    rushHours?: string;
+    enableRush?: boolean;
+    suggestedMinimumTip?: string;
+    withDrawCharges?: string | number;
   }>;
 }
 

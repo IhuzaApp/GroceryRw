@@ -59,6 +59,7 @@ const GET_BUSINESS_PRODUCT_ORDERS = gql`
         profile_picture
         phone
         email
+        gender
       }
     }
   }
@@ -180,6 +181,7 @@ export default async function handler(
           profile_picture: string;
           phone: string;
           email: string;
+          gender?: string | null;
         } | null;
       }>;
     }>(GET_BUSINESS_PRODUCT_ORDERS, {
@@ -268,6 +270,7 @@ export default async function handler(
           ? new Date(order.delivered_time).toLocaleDateString()
           : new Date(order.created_at).toLocaleDateString(),
         deliveryTime: order.timeRange || "Pending",
+        delivered_time: order.delivered_time || null,
         tracking: order.id.substring(0, 12).toUpperCase(),
         transportation_fee: parseFloat(order.transportation_fee || "0"),
         service_fee: parseFloat(order.service_fee || "0"),

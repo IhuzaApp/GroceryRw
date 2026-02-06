@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import { useTheme } from "../../../context/ThemeContext";
 import { formatCurrencySync } from "../../../utils/formatCurrency";
-import { RequestPayoutModal } from "./RequestPayoutModal";
+import {
+  RequestPayoutModal,
+  type RequestPayoutPayload,
+} from "./RequestPayoutModal";
+import { logErrorToSlack } from "../../../lib/slackErrorReporter";
 
 interface Wallet {
   id: string;
@@ -12,20 +16,29 @@ interface Wallet {
 interface TotalBalanceCardProps {
   wallet: Wallet | null;
   isLoading?: boolean;
-  onWithdraw?: (amount: number) => Promise<void>;
+  defaultPhoneNumber?: string;
+  onWithdraw?: (payload: RequestPayoutPayload) => Promise<void>;
 }
 
 const TotalBalanceCard: React.FC<TotalBalanceCardProps> = ({
   wallet,
   isLoading = false,
+  defaultPhoneNumber = "",
   onWithdraw,
 }) => {
   const { theme } = useTheme();
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
 
-  const handleWithdraw = async (amount: number) => {
-    if (onWithdraw) {
-      await onWithdraw(amount);
+  const handleWithdraw = async (payload: RequestPayoutPayload) => {
+    if (!onWithdraw) return;
+
+    try {
+      await onWithdraw(payload);
+    } catch (error) {
+      void logErrorToSlack("TotalBalanceCard.handleWithdraw", error, {
+        walletId: wallet?.id,
+      });
+      throw error;
     }
   };
 
@@ -91,6 +104,7 @@ const TotalBalanceCard: React.FC<TotalBalanceCardProps> = ({
         isOpen={showWithdrawModal}
         onClose={() => setShowWithdrawModal(false)}
         wallet={wallet}
+        defaultPhoneNumber={defaultPhoneNumber}
         onSubmit={handleWithdraw}
       />
     </>

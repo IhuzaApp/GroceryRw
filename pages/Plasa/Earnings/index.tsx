@@ -32,7 +32,7 @@ import PerformanceMetricsCard from "@components/shopper/earnings/PerformanceMetr
 import BusiestTimesCard from "@components/shopper/earnings/BusiestTimesCard";
 import EarningsTabs from "@components/shopper/earnings/EarningsTabs";
 import TransactionCardsMobile from "@components/shopper/earnings/TransactionCardsMobile";
-import { logger } from "../../../src/utils/logger";
+import { logErrorToSlack } from "../../../src/lib/slackErrorReporter";
 import {
   formatCurrencySync,
   getCurrencySymbol,
@@ -176,7 +176,7 @@ const EarningsPage: React.FC = () => {
           setEarningsStats(data.stats);
         }
       } catch (error) {
-        logger.error("Error fetching earnings stats", "EarningsPage", error);
+        void logErrorToSlack("EarningsPage.fetchEarningsStats", error);
       } finally {
         setLoading(false);
       }
@@ -211,7 +211,7 @@ const EarningsPage: React.FC = () => {
           }
         }
       } catch (error) {
-        logger.error("Error fetching activity summary", "EarningsPage", error);
+        void logErrorToSlack("EarningsPage.fetchActivitySummary", error);
       }
     };
     const timeoutId = setTimeout(fetchActivitySummary, 250);
@@ -230,7 +230,7 @@ const EarningsPage: React.FC = () => {
           }
         }
       } catch (error) {
-        logger.error("Error fetching shopper schedule", "EarningsPage", error);
+        void logErrorToSlack("EarningsPage.fetchSchedule", error);
       }
     };
     const timeoutId = setTimeout(fetchSchedule, 300);
@@ -256,7 +256,7 @@ const EarningsPage: React.FC = () => {
         setTransactions([]);
       }
     } catch (error) {
-      logger.error("Error fetching wallet data", "EarningsPage", error);
+      void logErrorToSlack("EarningsPage.fetchWalletData", error);
       setWallet({ id: "", availableBalance: 0, reservedBalance: 0 });
       setTransactions([]);
     } finally {
@@ -281,7 +281,7 @@ const EarningsPage: React.FC = () => {
         setDailyEarnings([]);
       }
     } catch (error) {
-      logger.error("Error fetching daily earnings", "EarningsPage", error);
+      void logErrorToSlack("EarningsPage.fetchDailyEarnings", error);
       setDailyEarnings([]);
     } finally {
       setDailyEarningsLoading(false);
@@ -334,37 +334,44 @@ const EarningsPage: React.FC = () => {
     { name: "Marvin McKinney", points: 980 },
   ];
 
-  // Handle withdrawal/payout request
-  const handleWithdrawal = async (amount: number) => {
+  // Handle withdrawal/payout request (same flow as business: verification + OTP + phone)
+  const handleWithdrawal = async (payload: {
+    amount: number;
+    verification_image: string;
+    otp: string;
+    phoneNumber: string;
+  }) => {
     try {
       const response = await authenticatedFetch("/api/shopper/requestPayout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ amount }),
+        body: JSON.stringify({
+          amount: payload.amount,
+          verification_image: payload.verification_image,
+          otp: payload.otp,
+          phoneNumber: payload.phoneNumber,
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        // Extract the error message from the API response
         const errorMessage =
           data.message || data.error || "Failed to request payout";
         throw new Error(errorMessage);
       }
 
       if (data.success) {
-        // Refresh wallet data
         await fetchWalletData();
-        logger.info("Payout requested successfully", "EarningsPage", {
-          amount,
-        });
       } else {
         throw new Error(data.message || "Failed to request payout");
       }
     } catch (error) {
-      logger.error("Error requesting payout", "EarningsPage", error);
+      void logErrorToSlack("EarningsPage.handleWithdrawal", error, {
+        amount: payload.amount,
+      });
       throw error;
     }
   };

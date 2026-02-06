@@ -19,6 +19,12 @@ import {
 import { db } from "../../lib/firebase";
 import { Avatar } from "rsuite";
 import { formatCurrency } from "../../lib/formatCurrency";
+import {
+  containsBlockedPii,
+  getBlockedMessage,
+  sanitizeMessageForDisplay,
+} from "../../lib/chatPiiBlock";
+import { useChatTypingIndicator } from "../../hooks/useChatTypingIndicator";
 
 // Helper to format time (e.g., "01:09 am", "08:24PM")
 function formatTime(timestamp: any): string {
@@ -176,8 +182,19 @@ export default function DesktopMessagePage({
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [piiError, setPiiError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  const { otherTypingName, reportTyping, clearTyping } = useChatTypingIndicator(
+    {
+      conversationId,
+      currentUserId: session?.user?.id ?? "",
+      currentUserName: session?.user?.name ?? "Customer",
+      enabled:
+        !!conversationId && !!session?.user?.id && !!selectedConversation,
+    }
+  );
 
   // Filter conversations based on search
   const filteredConversations = conversations.filter((conversation) => {
@@ -355,6 +372,14 @@ export default function DesktopMessagePage({
       return;
     }
 
+    const text = newMessage.trim();
+    const piiCheck = containsBlockedPii(text);
+    if (piiCheck.blocked && piiCheck.reason) {
+      setPiiError(getBlockedMessage(piiCheck.reason));
+      return;
+    }
+    setPiiError(null);
+
     try {
       setIsSending(true);
 
@@ -383,6 +408,23 @@ export default function DesktopMessagePage({
         unreadCount: 1,
       });
 
+      // Trigger FCM so shopper gets device + in-app notification (bell)
+      try {
+        await fetch("/api/fcm/send-notification", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            recipientId: selectedConversation.shopperId,
+            senderName: session.user.name || "Customer",
+            message: newMessage.trim(),
+            orderId: selectedConversation.orderId,
+            conversationId,
+          }),
+        });
+      } catch (fcmErr) {
+        console.warn("FCM send (non-blocking):", fcmErr);
+      }
+
       setNewMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
@@ -410,7 +452,7 @@ export default function DesktopMessagePage({
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="group flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-md transition-all hover:scale-105 hover:shadow-lg active:scale-95"
+              className="group flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 !text-white shadow-md transition-all hover:scale-105 hover:shadow-lg active:scale-95 [&_svg]:!text-white"
             >
               <svg
                 className="h-5 w-5 text-white transition-transform group-hover:scale-110"
@@ -554,7 +596,7 @@ export default function DesktopMessagePage({
                           )}
                         </div>
                         {conversation.unreadCount > 0 && (
-                          <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-600 text-xs font-bold text-white shadow-lg">
+                          <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-600 text-xs font-bold !text-white shadow-lg">
                             {conversation.unreadCount}
                           </div>
                         )}
@@ -707,6 +749,20 @@ export default function DesktopMessagePage({
                 </div>
               ) : (
                 <div className="space-y-4">
+                  {otherTypingName && (
+                    <div className="flex justify-start">
+                      <div className="rounded-2xl rounded-bl-md bg-white px-4 py-2.5 shadow-sm dark:bg-gray-700 dark:text-white">
+                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                          {otherTypingName} is typing
+                        </span>
+                        <span className="typing-dots ml-1 inline-flex gap-0.5">
+                          <span className="h-1 w-1 animate-bounce rounded-full bg-gray-500 [animation-delay:0ms]" />
+                          <span className="h-1 w-1 animate-bounce rounded-full bg-gray-500 [animation-delay:150ms]" />
+                          <span className="h-1 w-1 animate-bounce rounded-full bg-gray-500 [animation-delay:300ms]" />
+                        </span>
+                      </div>
+                    </div>
+                  )}
                   {groupMessagesByDate(messages).map((group, groupIndex) => (
                     <div key={groupIndex} className="space-y-4">
                       {/* Date Separator */}
@@ -794,7 +850,7 @@ export default function DesktopMessagePage({
                                 <div
                                   className={`rounded-2xl px-4 py-3 shadow-sm ${
                                     isCurrentUser
-                                      ? "rounded-br-md bg-gradient-to-br from-green-600 to-green-700 text-white"
+                                      ? "rounded-br-md bg-gradient-to-br from-green-600 to-green-700 !text-white [&_*]:!text-white [&_svg]:!text-white"
                                       : "rounded-bl-md bg-white text-gray-900 dark:bg-gray-700 dark:text-white"
                                   }`}
                                 >
@@ -828,8 +884,10 @@ export default function DesktopMessagePage({
                                       </div>
                                     </div>
                                   ) : (
-                                    <p className="text-sm leading-relaxed">
-                                      {message.text || message.message || ""}
+                                    <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                                      {sanitizeMessageForDisplay(
+                                        message.text || message.message || ""
+                                      )}
                                     </p>
                                   )}
                                 </div>
@@ -871,6 +929,14 @@ export default function DesktopMessagePage({
               )}
             </div>
 
+            {/* PII block error */}
+            {piiError && (
+              <div className="flex-shrink-0 border-t border-red-200 bg-red-50 px-6 py-2 dark:border-red-800 dark:bg-red-900/30">
+                <p className="text-xs text-red-600 dark:text-red-400">
+                  {piiError}
+                </p>
+              </div>
+            )}
             {/* Message Input */}
             <div className="flex-shrink-0 px-6 py-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.03)] ">
               <form
@@ -913,7 +979,11 @@ export default function DesktopMessagePage({
                   <input
                     type="text"
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
+                    onChange={(e) => {
+                      setNewMessage(e.target.value);
+                      reportTyping();
+                    }}
+                    onBlur={clearTyping}
                     placeholder="Type a message..."
                     className="w-full rounded-full border border-gray-200 bg-white px-5 py-3 pr-12 text-sm text-gray-900 placeholder-gray-500 transition-all focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500"
                   />
@@ -937,12 +1007,12 @@ export default function DesktopMessagePage({
                 <button
                   type="submit"
                   disabled={isSending || !newMessage.trim()}
-                  className="flex-shrink-0 rounded-full bg-gradient-to-br from-green-600 to-green-700 p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:focus:ring-offset-gray-800"
+                  className="flex-shrink-0 rounded-full bg-gradient-to-br from-green-600 to-green-700 p-3 !text-white text-white shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:focus:ring-offset-gray-800 [&_*]:!text-white [&_svg]:!text-white"
                   aria-label="Send message"
                 >
                   {isSending ? (
                     <svg
-                      className="h-5 w-5 animate-spin"
+                      className="h-5 w-5 animate-spin text-white"
                       fill="none"
                       viewBox="0 0 24 24"
                     >
@@ -962,7 +1032,7 @@ export default function DesktopMessagePage({
                     </svg>
                   ) : (
                     <svg
-                      className="h-5 w-5"
+                      className="h-5 w-5 text-white"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"

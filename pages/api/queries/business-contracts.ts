@@ -311,6 +311,7 @@ export default async function handler(
     ];
 
     // Remove duplicates based on contract ID and sort by update_on (most recent first)
+    const supplierContractIds = new Set(supplierContracts.map((c) => c.id));
     const uniqueContracts = Array.from(
       new Map(allContracts.map((contract) => [contract.id, contract])).values()
     ).sort((a, b) => {
@@ -329,9 +330,11 @@ export default async function handler(
       const supplierQuote = rfqId ? supplierQuoteMap.get(rfqId) : null;
       const supplierAccount =
         supplierQuote?.business_account || contract.business_account;
+      const role = supplierContractIds.has(contract.id) ? "supplier" : "client";
 
       return {
         id: contract.id,
+        role,
         contractId: contract.id.slice(0, 8).toUpperCase(),
         title: rfq?.title || "Contract",
         supplierName: supplierAccount?.business_name || "Unknown Supplier",
@@ -369,6 +372,7 @@ export default async function handler(
         supplierSignature: contract.supplierSignature,
         updated_at: contract.update_on,
         created_at: contract.done_at || contract.update_on,
+        done_at: contract.done_at,
       };
     });
 

@@ -20,15 +20,15 @@ export default function SideBar() {
   const [marketplaceNotificationCount, setMarketplaceNotificationCount] =
     useState(0);
 
-  // Listen for unread messages
+  // Listen for unread messages (customer: where I'm customer; shopper: where I'm shopper)
   useEffect(() => {
     if (!session?.user?.id || !db) return;
 
+    const role = (session.user as any)?.role;
+    const isShopper = role === "shopper";
     const conversationsRef = collection(db, "chat_conversations");
-    const q = query(
-      conversationsRef,
-      where("customerId", "==", session.user.id)
-    );
+    const field = isShopper ? "shopperId" : "customerId";
+    const q = query(conversationsRef, where(field, "==", session.user.id));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const totalUnread = snapshot.docs.reduce(
@@ -39,7 +39,7 @@ export default function SideBar() {
     });
 
     return () => unsubscribe();
-  }, [session?.user?.id]);
+  }, [session?.user?.id, (session?.user as any)?.role]);
 
   // Fetch pending orders count
   useEffect(() => {
@@ -451,7 +451,7 @@ export default function SideBar() {
               </svg>
               {unreadCount > 0 && (
                 <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-xs font-bold text-white dark:bg-green-600">
-                  {unreadCount}
+                  {unreadCount > 99 ? "99+" : unreadCount}
                 </span>
               )}
             </Link>

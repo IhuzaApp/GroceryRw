@@ -32,6 +32,12 @@ import {
 import { db } from "../../../src/lib/firebase";
 import { formatCurrency } from "../../../src/lib/formatCurrency";
 import soundNotification from "../../../src/utils/soundNotification";
+import {
+  containsBlockedPii,
+  getBlockedMessage,
+  sanitizeMessageForDisplay,
+} from "../../../src/lib/chatPiiBlock";
+import { useChatTypingIndicator } from "../../../src/hooks/useChatTypingIndicator";
 
 // Define message interface
 interface Message {
@@ -83,6 +89,16 @@ function ChatPage() {
     lastSeen: string;
   } | null>(null);
   const [order, setOrder] = useState<any>(null);
+  const [piiError, setPiiError] = useState<string | null>(null);
+
+  const { otherTypingName, reportTyping, clearTyping } = useChatTypingIndicator(
+    {
+      conversationId,
+      currentUserId: user?.id ?? "",
+      currentUserName: user?.name ?? "Shopper",
+      enabled: !!conversationId && !!user?.id,
+    }
+  );
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -309,6 +325,13 @@ function ChatPage() {
     }
 
     const text = message.trim();
+    const piiCheck = containsBlockedPii(text);
+    if (piiCheck.blocked && piiCheck.reason) {
+      setPiiError(getBlockedMessage(piiCheck.reason));
+      return;
+    }
+    setPiiError(null);
+
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
     // Optimistic: add to UI immediately with "Sending..." status
@@ -692,6 +715,20 @@ function ChatPage() {
               </div>
             ) : (
               <div className="space-y-4">
+                {otherTypingName && (
+                  <div className="flex justify-start">
+                    <div className="rounded-2xl bg-white px-4 py-2.5 shadow-sm dark:bg-gray-800 dark:text-white">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {otherTypingName} is typing
+                      </span>
+                      <span className="typing-dots ml-1 inline-flex gap-0.5">
+                        <span className="h-1 w-1 animate-bounce rounded-full bg-gray-500 [animation-delay:0ms]" />
+                        <span className="h-1 w-1 animate-bounce rounded-full bg-gray-500 [animation-delay:150ms]" />
+                        <span className="h-1 w-1 animate-bounce rounded-full bg-gray-500 [animation-delay:300ms]" />
+                      </span>
+                    </div>
+                  </div>
+                )}
                 {displayMessages.map((msg) => {
                   const isShopper = msg.senderType === "shopper";
                   const isPending =
@@ -727,11 +764,13 @@ function ChatPage() {
                               : "bg-white text-gray-900 dark:bg-gray-800 dark:text-white"
                           }`}
                         >
-                          <p className="text-sm leading-relaxed">
-                            {"text" in msg
-                              ? msg.text
-                              : (msg as Message).text ||
-                                (msg as Message).message}
+                          <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                            {sanitizeMessageForDisplay(
+                              ("text" in msg
+                                ? msg.text
+                                : (msg as Message).text ||
+                                  (msg as Message).message) ?? ""
+                            )}
                           </p>
                           {isShopper && (
                             <div className="mt-1 flex items-center justify-end space-x-1">
@@ -768,6 +807,14 @@ function ChatPage() {
             )}
           </div>
 
+          {/* PII block error */}
+          {piiError && (
+            <div className="border-t border-red-200 bg-red-50 px-4 py-2 dark:border-red-800 dark:bg-red-900/30">
+              <p className="text-xs text-red-600 dark:text-red-400">
+                {piiError}
+              </p>
+            </div>
+          )}
           {/* Professional Message Input */}
           <div className="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
             <form
@@ -778,7 +825,11 @@ function ChatPage() {
                 <input
                   type="text"
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={(e) => {
+                    setMessage(e.target.value);
+                    reportTyping();
+                  }}
+                  onBlur={clearTyping}
                   onKeyPress={handleKeyPress}
                   placeholder="Type your message..."
                   className="w-full rounded-full border border-gray-300 bg-gray-50 px-4 py-3 text-sm focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-400 dark:focus:bg-gray-600"

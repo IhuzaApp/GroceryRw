@@ -220,12 +220,12 @@ export default function MobileMessagePage({
             onClick={() => setShowUnreadOnly(!showUnreadOnly)}
             className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
               showUnreadOnly
-                ? "bg-green-500 text-white"
+                ? "bg-green-500 !text-white [&_svg]:!text-white"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
             }`}
           >
             <svg
-              className="h-5 w-5"
+              className={`h-5 w-5 ${showUnreadOnly ? "text-white" : ""}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -340,7 +340,7 @@ export default function MobileMessagePage({
                           {formatMessageTime(conversation.lastMessageTime)}
                         </span>
                         {conversation.unreadCount > 0 && (
-                          <div className="mt-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-green-500 px-1.5 text-xs font-medium text-white">
+                          <div className="mt-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-green-500 px-1.5 text-xs font-medium !text-white">
                             {conversation.unreadCount > 9
                               ? "9+"
                               : conversation.unreadCount}

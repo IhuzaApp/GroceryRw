@@ -31,6 +31,12 @@ import { formatCurrency } from "../../src/lib/formatCurrency";
 import { AuthGuard } from "../../src/components/AuthGuard";
 import CustomerChatDrawer from "../../src/components/chat/CustomerChatDrawer";
 import soundNotification from "../../src/utils/soundNotification";
+import {
+  containsBlockedPii,
+  getBlockedMessage,
+  sanitizeMessageForDisplay,
+} from "../../src/lib/chatPiiBlock";
+import { useChatTypingIndicator } from "../../src/hooks/useChatTypingIndicator";
 
 // Helper to format date for messages
 function formatMessageDate(timestamp: any) {
@@ -170,7 +176,9 @@ const Message: React.FC<MessageProps> = ({
   isCurrentUser,
   senderName,
 }) => {
-  const messageContent = message.text || message.message || "";
+  const messageContent = sanitizeMessageForDisplay(
+    message.text || message.message || ""
+  );
 
   return (
     <div
@@ -219,6 +227,15 @@ function ChatPage() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+
+  const { otherTypingName, reportTyping, clearTyping } = useChatTypingIndicator(
+    {
+      conversationId,
+      currentUserId: session?.user?.id ?? "",
+      currentUserName: session?.user?.name ?? "Customer",
+      enabled: !!conversationId && !!session?.user?.id,
+    }
+  );
 
   // Scroll to bottom of messages
   const scrollToBottom = () => {
@@ -447,6 +464,14 @@ function ChatPage() {
       return;
     }
 
+    const text = newMessage.trim();
+    const piiCheck = containsBlockedPii(text);
+    if (piiCheck.blocked && piiCheck.reason) {
+      setError(getBlockedMessage(piiCheck.reason));
+      return;
+    }
+    setError(null);
+
     try {
       setIsSending(true);
 
@@ -566,7 +591,7 @@ function ChatPage() {
                 {shopper.phone && (
                   <button
                     onClick={() => window.open(`tel:${shopper.phone}`, "_self")}
-                    className="rounded-full bg-green-500 p-2 text-white hover:bg-green-600"
+                    className="rounded-full bg-green-500 p-2 text-white hover:bg-green-600 [&_svg]:text-white"
                   >
                     <svg
                       width="16"
@@ -575,6 +600,7 @@ function ChatPage() {
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
+                      className="text-white"
                     >
                       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1 .45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                     </svg>
@@ -594,27 +620,52 @@ function ChatPage() {
                     </div>
                   </div>
                 ) : (
-                  groupMessagesByDate(messages).map((group, groupIndex) => (
-                    <div key={groupIndex}>
-                      <DateSeparator date={group.date} />
-                      {group.messages.map((message) => (
-                        <Message
-                          key={message.id}
-                          message={message}
-                          isCurrentUser={message.senderId === session?.user?.id}
-                          senderName={
-                            message.senderType === "shopper"
-                              ? shopper.name
-                              : "You"
-                          }
-                        />
-                      ))}
-                    </div>
-                  ))
+                  <>
+                    {otherTypingName && (
+                      <div className="mb-3 flex justify-start">
+                        <div className="rounded-[20px] bg-blue-100 px-4 py-2.5 dark:bg-blue-900/40">
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            {otherTypingName} is typing
+                          </span>
+                          <span className="typing-dots ml-1 inline-flex gap-0.5">
+                            <span className="h-1 w-1 animate-bounce rounded-full bg-gray-500 [animation-delay:0ms]" />
+                            <span className="h-1 w-1 animate-bounce rounded-full bg-gray-500 [animation-delay:150ms]" />
+                            <span className="h-1 w-1 animate-bounce rounded-full bg-gray-500 [animation-delay:300ms]" />
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {groupMessagesByDate(messages).map((group, groupIndex) => (
+                      <div key={groupIndex}>
+                        <DateSeparator date={group.date} />
+                        {group.messages.map((message) => (
+                          <Message
+                            key={message.id}
+                            message={message}
+                            isCurrentUser={
+                              message.senderId === session?.user?.id
+                            }
+                            senderName={
+                              message.senderType === "shopper"
+                                ? shopper.name
+                                : "You"
+                            }
+                          />
+                        ))}
+                      </div>
+                    ))}
+                  </>
                 )}
                 <div ref={messagesEndRef} />
               </div>
 
+              {error && (
+                <div className="border-t border-red-200 bg-red-50 px-4 py-2 dark:border-red-800 dark:bg-red-900/30">
+                  <p className="text-xs text-red-600 dark:text-red-400">
+                    {error}
+                  </p>
+                </div>
+              )}
               {/* Mobile Input */}
               <div className="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
                 <form
@@ -625,7 +676,11 @@ function ChatPage() {
                     <input
                       type="text"
                       value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
+                      onChange={(e) => {
+                        setNewMessage(e.target.value);
+                        reportTyping();
+                      }}
+                      onBlur={clearTyping}
                       onKeyPress={handleKeyPress}
                       placeholder="Type your message..."
                       className="w-full rounded-full border border-gray-300 bg-gray-50 px-4 py-3 text-sm focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-400 dark:focus:bg-gray-600"
@@ -634,12 +689,12 @@ function ChatPage() {
                   <button
                     type="submit"
                     disabled={isSending || !newMessage.trim()}
-                    className="flex-shrink-0 rounded-full bg-green-500 p-3 text-white shadow-lg transition-all duration-200 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
+                    className="flex-shrink-0 rounded-full bg-green-500 p-3 text-white shadow-lg transition-all duration-200 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800 [&_*]:text-white [&_svg]:text-white"
                   >
                     {isSending ? (
-                      <div className="flex items-center">
+                      <div className="flex items-center text-white">
                         <svg
-                          className="h-4 w-4 animate-spin"
+                          className="h-4 w-4 animate-spin text-white"
                           fill="none"
                           viewBox="0 0 24 24"
                         >
@@ -660,7 +715,7 @@ function ChatPage() {
                       </div>
                     ) : (
                       <svg
-                        className="h-4 w-4"
+                        className="h-4 w-4 text-white"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
