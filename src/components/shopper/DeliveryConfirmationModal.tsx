@@ -332,7 +332,11 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
         );
         const messagesSnapshot = await getDocs(messagesRef);
         await Promise.all(
-          messagesSnapshot.docs.map((d) => deleteDoc(doc(db, "chat_conversations", conversationId, "messages", d.id)))
+          messagesSnapshot.docs.map((d) =>
+            deleteDoc(
+              doc(db, "chat_conversations", conversationId, "messages", d.id)
+            )
+          )
         );
         await deleteDoc(doc(db, "chat_conversations", conversationId));
       }

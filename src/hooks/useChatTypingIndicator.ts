@@ -34,13 +34,20 @@ export function useChatTypingIndicator({
 }: UseChatTypingIndicatorOptions) {
   const [otherTypingName, setOtherTypingName] = useState<string | null>(null);
   const stopTypingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const startTypingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const startTypingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
 
   // Listen for other users' typing in this conversation
   useEffect(() => {
     if (!enabled || !conversationId || !db) return;
 
-    const typingRef = collection(db, "chat_conversations", conversationId, "typing");
+    const typingRef = collection(
+      db,
+      "chat_conversations",
+      conversationId,
+      "typing"
+    );
 
     const unsubscribe = onSnapshot(typingRef, (snapshot) => {
       const now = Date.now();
@@ -54,8 +61,8 @@ export function useChatTypingIndicator({
           updatedAt instanceof Timestamp
             ? updatedAt.toMillis()
             : updatedAt?.seconds != null
-              ? updatedAt.seconds * 1000
-              : 0;
+            ? updatedAt.seconds * 1000
+            : 0;
         if (now - ts < TYPING_STALE_MS) {
           name = data?.userName ?? "Someone";
         }
@@ -88,7 +95,13 @@ export function useChatTypingIndicator({
     clearStopTimer();
 
     const doSetTyping = () => {
-      const ref = doc(db, "chat_conversations", conversationId, "typing", currentUserId);
+      const ref = doc(
+        db,
+        "chat_conversations",
+        conversationId,
+        "typing",
+        currentUserId
+      );
       setDoc(ref, {
         userId: currentUserId,
         userName: currentUserName,
@@ -108,7 +121,13 @@ export function useChatTypingIndicator({
     stopTypingTimerRef.current = setTimeout(() => {
       stopTypingTimerRef.current = null;
       clearStartTimer();
-      const ref = doc(db, "chat_conversations", conversationId, "typing", currentUserId);
+      const ref = doc(
+        db,
+        "chat_conversations",
+        conversationId,
+        "typing",
+        currentUserId
+      );
       deleteDoc(ref).catch(() => {});
     }, STOP_TYPING_DEBOUNCE_MS);
   }, [enabled, conversationId, currentUserId, currentUserName]);
@@ -124,7 +143,13 @@ export function useChatTypingIndicator({
       startTypingTimerRef.current = null;
     }
     if (enabled && conversationId && currentUserId && db) {
-      const ref = doc(db, "chat_conversations", conversationId, "typing", currentUserId);
+      const ref = doc(
+        db,
+        "chat_conversations",
+        conversationId,
+        "typing",
+        currentUserId
+      );
       deleteDoc(ref).catch(() => {});
     }
   }, [enabled, conversationId, currentUserId]);

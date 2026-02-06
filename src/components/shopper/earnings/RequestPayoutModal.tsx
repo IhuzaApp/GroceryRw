@@ -87,8 +87,8 @@ export function RequestPayoutModal({
           typeof raw === "number"
             ? raw
             : typeof raw === "string"
-              ? parseFloat(raw) || 0
-              : 0;
+            ? parseFloat(raw) || 0
+            : 0;
         setWithDrawChargesPct(pct);
         setConfigLoaded(true);
       })
@@ -114,7 +114,11 @@ export function RequestPayoutModal({
           throw new Error("Camera not supported");
         }
         stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
+          video: {
+            facingMode: "user",
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+          },
           audio: false,
         });
         streamRef.current = stream;
@@ -123,7 +127,9 @@ export function RequestPayoutModal({
           await videoRef.current.play();
         }
       } catch (e) {
-        setCameraError(e instanceof Error ? e.message : "Could not access camera");
+        setCameraError(
+          e instanceof Error ? e.message : "Could not access camera"
+        );
       }
     };
     start();
@@ -181,7 +187,9 @@ export function RequestPayoutModal({
   const handleSendOtp = async () => {
     setSendingOtp(true);
     try {
-      const res = await fetch("/api/auth/send-withdraw-otp", { method: "POST" });
+      const res = await fetch("/api/auth/send-withdraw-otp", {
+        method: "POST",
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to send OTP");
       setOtpSent(true);
@@ -257,12 +265,16 @@ export function RequestPayoutModal({
         >
           <div>
             <h2
-              className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}
+              className={`text-lg font-bold ${
+                isDark ? "text-white" : "text-gray-900"
+              }`}
             >
               Request Payout
             </h2>
             <p
-              className={`text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}
+              className={`text-xs ${
+                isDark ? "text-gray-400" : "text-gray-600"
+              }`}
             >
               Step {step} of 4: {STEPS[step - 1].label}
             </p>
@@ -271,7 +283,11 @@ export function RequestPayoutModal({
             type="button"
             onClick={resetAndClose}
             disabled={isProcessing}
-            className={`rounded-lg p-1 ${isDark ? "text-gray-400 hover:bg-gray-700 hover:text-gray-300" : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"} disabled:opacity-50`}
+            className={`rounded-lg p-1 ${
+              isDark
+                ? "text-gray-400 hover:bg-gray-700 hover:text-gray-300"
+                : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            } disabled:opacity-50`}
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -280,7 +296,9 @@ export function RequestPayoutModal({
 
         {/* Step indicator */}
         <div
-          className={`flex border-b px-4 py-2 ${isDark ? "border-gray-700" : "border-gray-200"}`}
+          className={`flex border-b px-4 py-2 ${
+            isDark ? "border-gray-700" : "border-gray-200"
+          }`}
         >
           {STEPS.map((s, i) => (
             <div
@@ -289,8 +307,8 @@ export function RequestPayoutModal({
                 step >= s.id
                   ? "text-green-600 dark:text-green-400"
                   : isDark
-                    ? "text-gray-500"
-                    : "text-gray-400"
+                  ? "text-gray-500"
+                  : "text-gray-400"
               }`}
             >
               <span
@@ -298,10 +316,10 @@ export function RequestPayoutModal({
                   step > s.id
                     ? "bg-green-500 text-white"
                     : step === s.id
-                      ? "border-2 border-green-500 bg-green-50 dark:bg-green-900/20"
-                      : isDark
-                        ? "bg-gray-700"
-                        : "bg-gray-100"
+                    ? "border-2 border-green-500 bg-green-50 dark:bg-green-900/20"
+                    : isDark
+                    ? "bg-gray-700"
+                    : "bg-gray-100"
                 }`}
               >
                 {step > s.id ? (
@@ -330,23 +348,31 @@ export function RequestPayoutModal({
               >
                 <div className="mb-1 flex items-center gap-2">
                   <Wallet
-                    className={`h-4 w-4 ${isDark ? "text-green-400" : "text-green-600"}`}
+                    className={`h-4 w-4 ${
+                      isDark ? "text-green-400" : "text-green-600"
+                    }`}
                   />
                   <span
-                    className={`text-sm font-medium ${isDark ? "text-green-200" : "text-green-900"}`}
+                    className={`text-sm font-medium ${
+                      isDark ? "text-green-200" : "text-green-900"
+                    }`}
                   >
                     Available Balance
                   </span>
                 </div>
                 <p
-                  className={`text-2xl font-bold ${isDark ? "text-green-400" : "text-green-700"}`}
+                  className={`text-2xl font-bold ${
+                    isDark ? "text-green-400" : "text-green-700"
+                  }`}
                 >
                   {formatCurrencySync(walletBalance)}
                 </p>
               </div>
               <div>
                 <label
-                  className={`mb-2 block text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}
+                  className={`mb-2 block text-sm font-medium ${
+                    isDark ? "text-gray-300" : "text-gray-700"
+                  }`}
                 >
                   Withdrawal Amount *
                 </label>
@@ -365,7 +391,9 @@ export function RequestPayoutModal({
                     disabled={isProcessing}
                   />
                   <span
-                    className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium ${
+                      isDark ? "text-gray-400" : "text-gray-500"
+                    }`}
                   >
                     RWF
                   </span>
@@ -373,7 +401,9 @@ export function RequestPayoutModal({
               </div>
               <div>
                 <label
-                  className={`mb-2 block text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}
+                  className={`mb-2 block text-sm font-medium ${
+                    isDark ? "text-gray-300" : "text-gray-700"
+                  }`}
                 >
                   Quick select
                 </label>
@@ -397,22 +427,34 @@ export function RequestPayoutModal({
               </div>
               {amount > 0 && (
                 <div
-                  className={`rounded-xl border p-4 ${isDark ? "border-gray-600 bg-gray-700/50" : "border-gray-200 bg-gray-50"}`}
+                  className={`rounded-xl border p-4 ${
+                    isDark
+                      ? "border-gray-600 bg-gray-700/50"
+                      : "border-gray-200 bg-gray-50"
+                  }`}
                 >
                   <div
-                    className={`flex justify-between text-sm ${isDark ? "text-gray-300" : "text-gray-600"}`}
+                    className={`flex justify-between text-sm ${
+                      isDark ? "text-gray-300" : "text-gray-600"
+                    }`}
                   >
                     <span>Withdrawal:</span>
                     <span
-                      className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}
+                      className={`font-semibold ${
+                        isDark ? "text-white" : "text-gray-900"
+                      }`}
                     >
                       {formatCurrencySync(amount)}
                     </span>
                   </div>
                   <div
-                    className={`mt-2 flex justify-between border-t pt-2 ${isDark ? "border-gray-600" : "border-gray-200"}`}
+                    className={`mt-2 flex justify-between border-t pt-2 ${
+                      isDark ? "border-gray-600" : "border-gray-200"
+                    }`}
                   >
-                    <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+                    <span
+                      className={isDark ? "text-gray-400" : "text-gray-600"}
+                    >
                       Remaining:
                     </span>
                     <span className="font-bold text-green-600 dark:text-green-400">
@@ -429,33 +471,47 @@ export function RequestPayoutModal({
             <div className="space-y-5">
               {!configLoaded ? (
                 <div
-                  className={`py-8 text-center ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                  className={`py-8 text-center ${
+                    isDark ? "text-gray-400" : "text-gray-500"
+                  }`}
                 >
                   Loading...
                 </div>
               ) : (
                 <>
                   <div
-                    className={`rounded-xl border p-4 ${isDark ? "border-gray-600 bg-gray-700/50" : "border-gray-200 bg-gray-50"}`}
+                    className={`rounded-xl border p-4 ${
+                      isDark
+                        ? "border-gray-600 bg-gray-700/50"
+                        : "border-gray-200 bg-gray-50"
+                    }`}
                   >
                     <h3
-                      className={`mb-3 text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}
+                      className={`mb-3 text-sm font-semibold ${
+                        isDark ? "text-white" : "text-gray-900"
+                      }`}
                     >
                       Payout summary
                     </h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+                        <span
+                          className={isDark ? "text-gray-400" : "text-gray-600"}
+                        >
                           Withdrawal amount
                         </span>
                         <span
-                          className={`font-medium ${isDark ? "text-white" : "text-gray-900"}`}
+                          className={`font-medium ${
+                            isDark ? "text-white" : "text-gray-900"
+                          }`}
                         >
                           {formatCurrencySync(amount)}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+                        <span
+                          className={isDark ? "text-gray-400" : "text-gray-600"}
+                        >
                           Withdraw charges ({withDrawChargesPct}%)
                         </span>
                         <span className="font-medium text-red-600 dark:text-red-400">
@@ -463,11 +519,15 @@ export function RequestPayoutModal({
                         </span>
                       </div>
                       <div
-                        className={`border-t pt-3 ${isDark ? "border-gray-600" : "border-gray-200"}`}
+                        className={`border-t pt-3 ${
+                          isDark ? "border-gray-600" : "border-gray-200"
+                        }`}
                       >
                         <div className="flex justify-between">
                           <span
-                            className={`font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}
+                            className={`font-medium ${
+                              isDark ? "text-gray-300" : "text-gray-700"
+                            }`}
                           >
                             You will receive
                           </span>
@@ -487,11 +547,13 @@ export function RequestPayoutModal({
                   >
                     <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500" />
                     <p
-                      className={`text-xs ${isDark ? "text-blue-200" : "text-blue-800"}`}
+                      className={`text-xs ${
+                        isDark ? "text-blue-200" : "text-blue-800"
+                      }`}
                     >
-                      Payout requests are processed within 24 hours. You
-                      will need to verify your identity and confirm with an OTP
-                      in the next steps.
+                      Payout requests are processed within 24 hours. You will
+                      need to verify your identity and confirm with an OTP in
+                      the next steps.
                     </p>
                   </div>
                 </>
@@ -503,7 +565,9 @@ export function RequestPayoutModal({
           {step === 3 && (
             <div className="space-y-4">
               <p
-                className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}
+                className={`text-sm ${
+                  isDark ? "text-gray-400" : "text-gray-600"
+                }`}
               >
                 Position your face in the circle and take a photo for
                 verification.
@@ -540,7 +604,7 @@ export function RequestPayoutModal({
                     playsInline
                     muted
                   />
-                  <div className="absolute inset-0 flex pointer-events-none items-center justify-center">
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                     <div className="h-40 w-40 rounded-full border-4 border-dashed border-green-400/80 bg-transparent" />
                   </div>
                   <div className="absolute bottom-2 left-0 right-0 flex justify-center">
@@ -563,7 +627,9 @@ export function RequestPayoutModal({
           {step === 4 && (
             <div className="space-y-4">
               <p
-                className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}
+                className={`text-sm ${
+                  isDark ? "text-gray-400" : "text-gray-600"
+                }`}
               >
                 A verification code was shown in the popup. Enter it below and
                 the phone number where you want to receive the funds.
@@ -571,7 +637,9 @@ export function RequestPayoutModal({
 
               <div>
                 <label
-                  className={`mb-2 block text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}
+                  className={`mb-2 block text-sm font-medium ${
+                    isDark ? "text-gray-300" : "text-gray-700"
+                  }`}
                 >
                   Phone number to receive funds *
                 </label>
@@ -580,7 +648,7 @@ export function RequestPayoutModal({
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   placeholder="e.g. 0781234567"
-                  className={`w-full rounded-xl border py-3 px-4 focus:ring-2 focus:ring-green-500 ${
+                  className={`w-full rounded-xl border px-4 py-3 focus:ring-2 focus:ring-green-500 ${
                     isDark
                       ? "border-gray-600 bg-gray-700 text-white focus:border-green-500"
                       : "border-gray-300 text-gray-900 focus:border-green-500"
@@ -602,7 +670,9 @@ export function RequestPayoutModal({
                 <>
                   <div>
                     <label
-                      className={`mb-2 block text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}
+                      className={`mb-2 block text-sm font-medium ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
                     >
                       OTP Code
                     </label>
@@ -616,7 +686,7 @@ export function RequestPayoutModal({
                         setOtp(v);
                       }}
                       placeholder="000000"
-                      className={`w-full rounded-xl border py-3 px-4 text-center text-2xl font-mono tracking-[0.5em] focus:ring-2 focus:ring-green-500 ${
+                      className={`w-full rounded-xl border px-4 py-3 text-center font-mono text-2xl tracking-[0.5em] focus:ring-2 focus:ring-green-500 ${
                         isDark
                           ? "border-gray-600 bg-gray-700 text-white focus:border-green-500"
                           : "border-gray-300 text-gray-900 focus:border-green-500"
@@ -641,7 +711,9 @@ export function RequestPayoutModal({
         {/* Footer */}
         <div
           className={`flex justify-between gap-3 border-t p-4 ${
-            isDark ? "border-gray-700 bg-gray-700/50" : "border-gray-200 bg-gray-50"
+            isDark
+              ? "border-gray-700 bg-gray-700/50"
+              : "border-gray-200 bg-gray-50"
           }`}
         >
           {step > 1 && step < 4 && (

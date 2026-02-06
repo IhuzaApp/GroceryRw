@@ -91,12 +91,14 @@ function ChatPage() {
   const [order, setOrder] = useState<any>(null);
   const [piiError, setPiiError] = useState<string | null>(null);
 
-  const { otherTypingName, reportTyping, clearTyping } = useChatTypingIndicator({
-    conversationId,
-    currentUserId: user?.id ?? "",
-    currentUserName: user?.name ?? "Shopper",
-    enabled: !!conversationId && !!user?.id,
-  });
+  const { otherTypingName, reportTyping, clearTyping } = useChatTypingIndicator(
+    {
+      conversationId,
+      currentUserId: user?.id ?? "",
+      currentUserName: user?.name ?? "Shopper",
+      enabled: !!conversationId && !!user?.id,
+    }
+  );
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -808,7 +810,9 @@ function ChatPage() {
           {/* PII block error */}
           {piiError && (
             <div className="border-t border-red-200 bg-red-50 px-4 py-2 dark:border-red-800 dark:bg-red-900/30">
-              <p className="text-xs text-red-600 dark:text-red-400">{piiError}</p>
+              <p className="text-xs text-red-600 dark:text-red-400">
+                {piiError}
+              </p>
             </div>
           )}
           {/* Professional Message Input */}

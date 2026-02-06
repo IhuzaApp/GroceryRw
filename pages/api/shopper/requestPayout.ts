@@ -145,7 +145,8 @@ export default async function handler(
       });
       return res.status(400).json({
         error: "Invalid amount",
-        message: "Amount must be a positive number. If the request failed after confirming, try again.",
+        message:
+          "Amount must be a positive number. If the request failed after confirming, try again.",
       });
     }
 
@@ -280,7 +281,9 @@ export default async function handler(
       });
       return res.status(400).json({
         error: "Insufficient balance",
-        message: `Requested amount (${amount.toFixed(2)}) exceeds available balance (${currentAvailableBalance.toFixed(2)}).`,
+        message: `Requested amount (${amount.toFixed(
+          2
+        )}) exceeds available balance (${currentAvailableBalance.toFixed(2)}).`,
       });
     }
 

@@ -186,12 +186,15 @@ export default function DesktopMessagePage({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  const { otherTypingName, reportTyping, clearTyping } = useChatTypingIndicator({
-    conversationId,
-    currentUserId: session?.user?.id ?? "",
-    currentUserName: session?.user?.name ?? "Customer",
-    enabled: !!conversationId && !!session?.user?.id && !!selectedConversation,
-  });
+  const { otherTypingName, reportTyping, clearTyping } = useChatTypingIndicator(
+    {
+      conversationId,
+      currentUserId: session?.user?.id ?? "",
+      currentUserName: session?.user?.name ?? "Customer",
+      enabled:
+        !!conversationId && !!session?.user?.id && !!selectedConversation,
+    }
+  );
 
   // Filter conversations based on search
   const filteredConversations = conversations.filter((conversation) => {
@@ -449,7 +452,7 @@ export default function DesktopMessagePage({
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="group flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-md transition-all hover:scale-105 hover:shadow-lg active:scale-95 !text-white [&_svg]:!text-white"
+              className="group flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 !text-white shadow-md transition-all hover:scale-105 hover:shadow-lg active:scale-95 [&_svg]:!text-white"
             >
               <svg
                 className="h-5 w-5 text-white transition-transform group-hover:scale-110"
@@ -929,7 +932,9 @@ export default function DesktopMessagePage({
             {/* PII block error */}
             {piiError && (
               <div className="flex-shrink-0 border-t border-red-200 bg-red-50 px-6 py-2 dark:border-red-800 dark:bg-red-900/30">
-                <p className="text-xs text-red-600 dark:text-red-400">{piiError}</p>
+                <p className="text-xs text-red-600 dark:text-red-400">
+                  {piiError}
+                </p>
               </div>
             )}
             {/* Message Input */}
@@ -1002,7 +1007,7 @@ export default function DesktopMessagePage({
                 <button
                   type="submit"
                   disabled={isSending || !newMessage.trim()}
-                  className="flex-shrink-0 rounded-full bg-gradient-to-br from-green-600 to-green-700 p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:focus:ring-offset-gray-800 !text-white [&_svg]:!text-white [&_*]:!text-white"
+                  className="flex-shrink-0 rounded-full bg-gradient-to-br from-green-600 to-green-700 p-3 !text-white text-white shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:focus:ring-offset-gray-800 [&_*]:!text-white [&_svg]:!text-white"
                   aria-label="Send message"
                 >
                   {isSending ? (

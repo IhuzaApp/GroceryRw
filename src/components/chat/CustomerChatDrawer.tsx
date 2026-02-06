@@ -178,12 +178,14 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { otherTypingName, reportTyping, clearTyping } = useChatTypingIndicator({
-    conversationId,
-    currentUserId: session?.user?.id ?? "",
-    currentUserName: session?.user?.name ?? "Customer",
-    enabled: !!conversationId && !!session?.user?.id && isOpen,
-  });
+  const { otherTypingName, reportTyping, clearTyping } = useChatTypingIndicator(
+    {
+      conversationId,
+      currentUserId: session?.user?.id ?? "",
+      currentUserName: session?.user?.name ?? "Customer",
+      enabled: !!conversationId && !!session?.user?.id && isOpen,
+    }
+  );
 
   // Clear typing when drawer closes
   useEffect(() => {
@@ -511,7 +513,7 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
         {shopper.phone && (
           <a
             href={`tel:${shopper.phone}`}
-            className="flex-shrink-0 rounded-full bg-emerald-500 p-2.5 text-white transition-colors hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 !text-white [&_svg]:!text-white"
+            className="flex-shrink-0 rounded-full bg-emerald-500 p-2.5 !text-white text-white transition-colors hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 [&_svg]:!text-white"
             aria-label="Call shopper"
           >
             <svg
@@ -620,7 +622,7 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
             <button
               type="submit"
               disabled={!newMessage.trim()}
-              className="flex-shrink-0 rounded-full bg-emerald-500 p-2.5 text-white shadow-md transition-all duration-200 hover:bg-emerald-600 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none dark:focus:ring-offset-gray-800 !text-white [&_svg]:!text-white [&_*]:!text-white"
+              className="flex-shrink-0 rounded-full bg-emerald-500 p-2.5 !text-white text-white shadow-md transition-all duration-200 hover:bg-emerald-600 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none dark:focus:ring-offset-gray-800 [&_*]:!text-white [&_svg]:!text-white"
               aria-label="Send message"
             >
               <svg

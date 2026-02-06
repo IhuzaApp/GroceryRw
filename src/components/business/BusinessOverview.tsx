@@ -96,8 +96,8 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
   const [monthlyOrderCounts, setMonthlyOrderCounts] = useState<
     Record<string, number>
   >({});
-  const [selectedOrdersYear, setSelectedOrdersYear] = useState<number>(
-    () => new Date().getFullYear()
+  const [selectedOrdersYear, setSelectedOrdersYear] = useState<number>(() =>
+    new Date().getFullYear()
   );
   const [rfqResponsesByYearTrend, setRfqResponsesByYearTrend] = useState<
     { year: string; count: number }[]
@@ -691,11 +691,23 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       };
       const now = new Date();
       allOrders.forEach((order: any) => {
-        const s = (order.status || "").toLowerCase().trim().replace(/\s+/g, "_");
+        const s = (order.status || "")
+          .toLowerCase()
+          .trim()
+          .replace(/\s+/g, "_");
         if (s === "delivered") statusCounts.delivered += 1;
-        else if (s === "on_the_way" || s === "on the way") statusCounts.on_the_way += 1;
+        else if (s === "on_the_way" || s === "on the way")
+          statusCounts.on_the_way += 1;
         else if (s === "accepted") statusCounts.accepted += 1;
-        else if (s === "pending" || s === "ready_for_pickup" || s === "in_progress" || s === "processing" || s === "shopping" || !s) statusCounts.pending += 1;
+        else if (
+          s === "pending" ||
+          s === "ready_for_pickup" ||
+          s === "in_progress" ||
+          s === "processing" ||
+          s === "shopping" ||
+          !s
+        )
+          statusCounts.pending += 1;
         else statusCounts[s] = (statusCounts[s] || 0) + 1;
       });
       setOrderStatusCounts(statusCounts as typeof orderStatusCounts);
@@ -733,7 +745,10 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       const byMonth: Record<string, number> = {};
       allOrders.forEach((order: any) => {
         const d = new Date(order.created_at);
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+          2,
+          "0"
+        )}`;
         byMonth[key] = (byMonth[key] || 0) + 1;
       });
       setMonthlyOrderCounts(byMonth);
@@ -744,7 +759,14 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
         const store = order.store || "Unknown store";
         storeCounts[store] = (storeCounts[store] || 0) + 1;
       });
-      const storeBarColors = ["#10b981", "#3b82f6", "#f59e0b", "#8b5cf6", "#ec4899", "#06b6d4"];
+      const storeBarColors = [
+        "#10b981",
+        "#3b82f6",
+        "#f59e0b",
+        "#8b5cf6",
+        "#ec4899",
+        "#06b6d4",
+      ];
       setOrdersByStore(
         Object.entries(storeCounts)
           .map(([store, count], i) => ({
@@ -766,7 +788,9 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
     if (!businessAccount?.id) return;
     setLoadingRfqTrend(true);
     try {
-      const rfqsRes = await fetch("/api/queries/business-rfqs").catch(() => null);
+      const rfqsRes = await fetch("/api/queries/business-rfqs").catch(
+        () => null
+      );
       if (!rfqsRes?.ok) {
         setRfqResponsesByYearTrend([]);
         return;
@@ -778,8 +802,8 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
         return;
       }
       const responsePromises = rfqs.map((rfq: any) =>
-        fetch(`/api/queries/rfq-details-and-responses?rfq_id=${rfq.id}`).then((r) =>
-          r.ok ? r.json() : { responses: [] }
+        fetch(`/api/queries/rfq-details-and-responses?rfq_id=${rfq.id}`).then(
+          (r) => (r.ok ? r.json() : { responses: [] })
         )
       );
       const results = await Promise.all(responsePromises);
@@ -1196,7 +1220,8 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
                 Monthly Revenue
               </h4>
               <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                Carts (delivered orders) + completed RFQ contracts · Excluding fees
+                Carts (delivered orders) + completed RFQ contracts · Excluding
+                fees
               </p>
             </div>
             <TrendingUp className="h-8 w-8 text-green-600" />
@@ -1260,49 +1285,79 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
               <div className="flex h-[220px] items-center justify-center">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent" />
               </div>
-            ) : (() => {
-              const statusChartData = [
-                { name: "Pending", value: orderStatusCounts.pending ?? 0, fill: "#f59e0b" },
-                { name: "Delivered", value: orderStatusCounts.delivered ?? 0, fill: "#10b981" },
-                { name: "On the way", value: orderStatusCounts.on_the_way ?? 0, fill: "#3b82f6" },
-                { name: "Accepted", value: orderStatusCounts.accepted ?? 0, fill: "#059669" },
-                ...Object.entries(orderStatusCounts)
-                  .filter(([k]) => !["pending", "delivered", "on_the_way", "accepted"].includes(k) && (orderStatusCounts[k] ?? 0) > 0)
-                  .map(([key, value]) => ({ name: key.replace(/_/g, " "), value: value as number, fill: "#6b7280" })),
-              ].filter((d) => d.value > 0);
-              return statusChartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={220}>
-                  <PieChart>
-                    <Pie
-                      data={statusChartData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={70}
-                      label={({ name, value }) => `${name}: ${value}`}
-                    >
-                      {statusChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value: number) => [value, "Orders"]}
-                      contentStyle={{
-                        backgroundColor: "#fff",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                      }}
-                    />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex h-[220px] items-center justify-center text-gray-500 dark:text-gray-400">
-                  No orders yet
-                </div>
-              );
-            })()}
+            ) : (
+              (() => {
+                const statusChartData = [
+                  {
+                    name: "Pending",
+                    value: orderStatusCounts.pending ?? 0,
+                    fill: "#f59e0b",
+                  },
+                  {
+                    name: "Delivered",
+                    value: orderStatusCounts.delivered ?? 0,
+                    fill: "#10b981",
+                  },
+                  {
+                    name: "On the way",
+                    value: orderStatusCounts.on_the_way ?? 0,
+                    fill: "#3b82f6",
+                  },
+                  {
+                    name: "Accepted",
+                    value: orderStatusCounts.accepted ?? 0,
+                    fill: "#059669",
+                  },
+                  ...Object.entries(orderStatusCounts)
+                    .filter(
+                      ([k]) =>
+                        ![
+                          "pending",
+                          "delivered",
+                          "on_the_way",
+                          "accepted",
+                        ].includes(k) && (orderStatusCounts[k] ?? 0) > 0
+                    )
+                    .map(([key, value]) => ({
+                      name: key.replace(/_/g, " "),
+                      value: value as number,
+                      fill: "#6b7280",
+                    })),
+                ].filter((d) => d.value > 0);
+                return statusChartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <PieChart>
+                      <Pie
+                        data={statusChartData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={70}
+                        label={({ name, value }) => `${name}: ${value}`}
+                      >
+                        {statusChartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value: number) => [value, "Orders"]}
+                        contentStyle={{
+                          backgroundColor: "#fff",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "8px",
+                        }}
+                      />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex h-[220px] items-center justify-center text-gray-500 dark:text-gray-400">
+                    No orders yet
+                  </div>
+                );
+              })()
+            )}
           </div>
 
           {/* Delivery timing – chart */}
@@ -1319,46 +1374,64 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
               <div className="flex h-[220px] items-center justify-center">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent" />
               </div>
-            ) : (() => {
-              const timingChartData = [
-                { name: "Delivered on time", value: deliveryTimingCounts.deliveredOnTime, fill: "#10b981" },
-                { name: "Delivered late", value: deliveryTimingCounts.deliveredLate, fill: "#ef4444" },
-                { name: "Pending delayed", value: deliveryTimingCounts.pendingDelayed, fill: "#f59e0b" },
-                { name: "Pending on time", value: deliveryTimingCounts.pendingOnTime, fill: "#0ea5e9" },
-              ].filter((d) => d.value > 0);
-              return timingChartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={220}>
-                  <PieChart>
-                    <Pie
-                      data={timingChartData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={70}
-                      label={({ name, value }) => `${name}: ${value}`}
-                    >
-                      {timingChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value: number) => [value, "Orders"]}
-                      contentStyle={{
-                        backgroundColor: "#fff",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                      }}
-                    />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex h-[220px] items-center justify-center text-gray-500 dark:text-gray-400">
-                  No orders yet
-                </div>
-              );
-            })()}
+            ) : (
+              (() => {
+                const timingChartData = [
+                  {
+                    name: "Delivered on time",
+                    value: deliveryTimingCounts.deliveredOnTime,
+                    fill: "#10b981",
+                  },
+                  {
+                    name: "Delivered late",
+                    value: deliveryTimingCounts.deliveredLate,
+                    fill: "#ef4444",
+                  },
+                  {
+                    name: "Pending delayed",
+                    value: deliveryTimingCounts.pendingDelayed,
+                    fill: "#f59e0b",
+                  },
+                  {
+                    name: "Pending on time",
+                    value: deliveryTimingCounts.pendingOnTime,
+                    fill: "#0ea5e9",
+                  },
+                ].filter((d) => d.value > 0);
+                return timingChartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <PieChart>
+                      <Pie
+                        data={timingChartData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={70}
+                        label={({ name, value }) => `${name}: ${value}`}
+                      >
+                        {timingChartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value: number) => [value, "Orders"]}
+                        contentStyle={{
+                          backgroundColor: "#fff",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "8px",
+                        }}
+                      />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex h-[220px] items-center justify-center text-gray-500 dark:text-gray-400">
+                    No orders yet
+                  </div>
+                );
+              })()
+            )}
           </div>
         </div>
 
@@ -1570,7 +1643,20 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
             <ResponsiveContainer width="100%" height={220}>
               <LineChart
                 data={(() => {
-                  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                  const monthNames = [
+                    "Jan",
+                    "Feb",
+                    "Mar",
+                    "Apr",
+                    "May",
+                    "Jun",
+                    "Jul",
+                    "Aug",
+                    "Sep",
+                    "Oct",
+                    "Nov",
+                    "Dec",
+                  ];
                   return monthNames.map((name, i) => {
                     const mm = String(i + 1).padStart(2, "0");
                     const key = `${selectedOrdersYear}-${mm}`;
@@ -1582,7 +1668,11 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
                 })()}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="month" stroke="#6b7280" style={{ fontSize: "12px" }} />
+                <XAxis
+                  dataKey="month"
+                  stroke="#6b7280"
+                  style={{ fontSize: "12px" }}
+                />
                 <YAxis stroke="#6b7280" style={{ fontSize: "12px" }} />
                 <Tooltip
                   contentStyle={{
@@ -1622,7 +1712,11 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={rfqResponsesByYearTrend}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="year" stroke="#6b7280" style={{ fontSize: "12px" }} />
+                <XAxis
+                  dataKey="year"
+                  stroke="#6b7280"
+                  style={{ fontSize: "12px" }}
+                />
                 <YAxis stroke="#6b7280" style={{ fontSize: "12px" }} />
                 <Tooltip
                   contentStyle={{

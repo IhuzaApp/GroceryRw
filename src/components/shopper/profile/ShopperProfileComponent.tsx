@@ -423,14 +423,14 @@ export default function ShopperProfileComponent() {
                   className="h-full w-full object-cover"
                 />
               </div>
-              <h1 className="truncate text-lg font-semibold text-gray-900 sm:text-xl lg:text-2xl dark:text-white">
+              <h1 className="truncate text-lg font-semibold text-gray-900 dark:text-white sm:text-xl lg:text-2xl">
                 {displayName}
               </h1>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3 sm:gap-4">
             {formattedAddedDate && (
-              <span className="text-xs text-gray-500 sm:text-sm dark:text-gray-400">
+              <span className="text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
                 Joined on {formattedAddedDate}
               </span>
             )}
@@ -867,7 +867,9 @@ export default function ShopperProfileComponent() {
                     </div>
                     <div className="ml-8 space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Email:</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          Email:
+                        </span>
                         <span className="text-xs text-gray-700 dark:text-gray-300">
                           rwandaSupport@plas.rw
                         </span>
@@ -893,7 +895,9 @@ export default function ShopperProfileComponent() {
                         </button>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Phone:</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          Phone:
+                        </span>
                         <span className="text-xs text-gray-700 dark:text-gray-300">
                           +250 788 123 456
                         </span>

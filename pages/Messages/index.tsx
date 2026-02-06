@@ -239,10 +239,7 @@ function MessagesPage() {
           .slice(0, 30); // Firestore "in" limit
         if (orderIds.length === 0 || cancelled) return;
 
-        const q = query(
-          conversationsRef,
-          where("orderId", "in", orderIds)
-        );
+        const q = query(conversationsRef, where("orderId", "in", orderIds));
         const snapshot = await getDocs(q);
         if (cancelled) return;
         const list = snapshot.docs.map((doc) => ({
@@ -255,7 +252,8 @@ function MessagesPage() {
         })) as Conversation[];
         setConversationsFromOrders(list);
       } catch (err) {
-        if (!cancelled) console.error("Error fetching conversations by orders:", err);
+        if (!cancelled)
+          console.error("Error fetching conversations by orders:", err);
       }
     };
 
@@ -269,9 +267,7 @@ function MessagesPage() {
   useEffect(() => {
     const orderIds = conversations
       .map((c) => c.orderId)
-      .filter(
-        (id) => id && typeof id === "string" && id.trim() !== ""
-      );
+      .filter((id) => id && typeof id === "string" && id.trim() !== "");
     if (orderIds.length === 0) return;
 
     let cancelled = false;
@@ -281,14 +277,15 @@ function MessagesPage() {
 
     const fetchOrders = async () => {
       // Only fetch orders we don't already have (avoid refetch on every merge)
-      const toFetch = validIds.filter((id) => !orders[id] || (orders[id] as any)?.error);
+      const toFetch = validIds.filter(
+        (id) => !orders[id] || (orders[id] as any)?.error
+      );
       if (toFetch.length === 0) return;
       const promises = toFetch.map(async (orderId) => {
         try {
-          const res = await fetch(
-            `/api/queries/orderDetails?id=${orderId}`
-          );
-          if (!res.ok) return { orderId, order: { error: true, status: res.status } };
+          const res = await fetch(`/api/queries/orderDetails?id=${orderId}`);
+          if (!res.ok)
+            return { orderId, order: { error: true, status: res.status } };
           const data = await res.json();
           return { orderId, order: data.order };
         } catch (error) {
@@ -301,7 +298,11 @@ function MessagesPage() {
         const next = { ...prev };
         let changed = false;
         results.forEach(({ orderId, order }) => {
-          if (order && !order.error && (!prev[orderId] || (prev[orderId] as any).error)) {
+          if (
+            order &&
+            !order.error &&
+            (!prev[orderId] || (prev[orderId] as any).error)
+          ) {
             next[orderId] = order;
             changed = true;
           } else if (!prev[orderId]) {

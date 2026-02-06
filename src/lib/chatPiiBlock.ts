@@ -5,8 +5,7 @@
 
 const PHONE_PATTERN =
   /(?:\+?\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{2,4}[-.\s]?\d{2,4}(?:[-.\s]?\d{2,4})?|\b\d{7,15}\b/g;
-const EMAIL_PATTERN =
-  /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+const EMAIL_PATTERN = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 
 const MASK_PHONE = "[phone not allowed]";
 const MASK_EMAIL = "[email not allowed]";

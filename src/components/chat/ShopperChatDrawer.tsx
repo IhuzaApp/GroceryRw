@@ -178,12 +178,14 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { otherTypingName, reportTyping, clearTyping } = useChatTypingIndicator({
-    conversationId,
-    currentUserId: session?.user?.id ?? "",
-    currentUserName: session?.user?.name ?? "Shopper",
-    enabled: !!conversationId && !!session?.user?.id && isOpen,
-  });
+  const { otherTypingName, reportTyping, clearTyping } = useChatTypingIndicator(
+    {
+      conversationId,
+      currentUserId: session?.user?.id ?? "",
+      currentUserName: session?.user?.name ?? "Shopper",
+      enabled: !!conversationId && !!session?.user?.id && isOpen,
+    }
+  );
 
   useEffect(() => {
     if (!isOpen) clearTyping();

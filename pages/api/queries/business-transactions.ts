@@ -71,10 +71,7 @@ export default async function handler(
     const CHECK_BUSINESS = gql`
       query CheckBusiness($business_id: uuid!, $user_id: uuid!) {
         business_accounts(
-          where: {
-            id: { _eq: $business_id }
-            user_id: { _eq: $user_id }
-          }
+          where: { id: { _eq: $business_id }, user_id: { _eq: $user_id } }
           limit: 1
         ) {
           id
@@ -87,10 +84,7 @@ export default async function handler(
       business_id,
       user_id: session.user.id,
     });
-    if (
-      !check.business_accounts ||
-      check.business_accounts.length === 0
-    ) {
+    if (!check.business_accounts || check.business_accounts.length === 0) {
       return res.status(403).json({ error: "Forbidden" });
     }
 

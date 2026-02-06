@@ -28,10 +28,7 @@ export default function SideBar() {
     const isShopper = role === "shopper";
     const conversationsRef = collection(db, "chat_conversations");
     const field = isShopper ? "shopperId" : "customerId";
-    const q = query(
-      conversationsRef,
-      where(field, "==", session.user.id)
-    );
+    const q = query(conversationsRef, where(field, "==", session.user.id));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const totalUnread = snapshot.docs.reduce(

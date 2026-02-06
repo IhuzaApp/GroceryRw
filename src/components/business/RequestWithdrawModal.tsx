@@ -66,8 +66,8 @@ export function RequestWithdrawModal({
           typeof raw === "number"
             ? raw
             : typeof raw === "string"
-              ? parseFloat(raw) || 0
-              : 0;
+            ? parseFloat(raw) || 0
+            : 0;
         setWithDrawChargesPct(pct);
         setConfigLoaded(true);
       })
@@ -93,7 +93,11 @@ export function RequestWithdrawModal({
           throw new Error("Camera not supported");
         }
         stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
+          video: {
+            facingMode: "user",
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+          },
           audio: false,
         });
         streamRef.current = stream;
@@ -102,7 +106,9 @@ export function RequestWithdrawModal({
           await videoRef.current.play();
         }
       } catch (e) {
-        setCameraError(e instanceof Error ? e.message : "Could not access camera");
+        setCameraError(
+          e instanceof Error ? e.message : "Could not access camera"
+        );
       }
     };
     start();
@@ -131,8 +137,7 @@ export function RequestWithdrawModal({
     amount > 0 && amount <= walletBalance && !isProcessing;
   const canProceedStep2 = configLoaded && !isProcessing;
   const canProceedStep3 = !!verificationImage && !isProcessing;
-  const canProceedStep4 =
-    otp.length === 6 && otpSent && !isProcessing;
+  const canProceedStep4 = otp.length === 6 && otpSent && !isProcessing;
 
   const handleNextStep1 = () => {
     if (!canProceedStep1) return;
@@ -160,7 +165,9 @@ export function RequestWithdrawModal({
   const handleSendOtp = async () => {
     setSendingOtp(true);
     try {
-      const res = await fetch("/api/auth/send-withdraw-otp", { method: "POST" });
+      const res = await fetch("/api/auth/send-withdraw-otp", {
+        method: "POST",
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to send OTP");
       setOtpSent(true);
@@ -256,8 +263,8 @@ export function RequestWithdrawModal({
                   step > s.id
                     ? "bg-yellow-500 text-black"
                     : step === s.id
-                      ? "border-2 border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20"
-                      : "bg-gray-100 dark:bg-gray-700"
+                    ? "border-2 border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20"
+                    : "bg-gray-100 dark:bg-gray-700"
                 }`}
               >
                 {step > s.id ? <CheckCircle className="h-3.5 w-3.5" /> : s.id}
@@ -324,13 +331,17 @@ export function RequestWithdrawModal({
               {amount > 0 && (
                 <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-700/50">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Withdrawal:</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Withdrawal:
+                    </span>
                     <span className="font-semibold text-gray-900 dark:text-white">
                       {formatCurrencySync(amount)}
                     </span>
                   </div>
                   <div className="mt-2 flex justify-between border-t border-gray-200 pt-2 dark:border-gray-600">
-                    <span className="text-gray-600 dark:text-gray-400">Remaining:</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Remaining:
+                    </span>
                     <span className="font-bold text-yellow-600 dark:text-yellow-400">
                       {formatCurrencySync(remainingBalance)}
                     </span>
@@ -353,7 +364,9 @@ export function RequestWithdrawModal({
                     </h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Withdrawal amount</span>
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Withdrawal amount
+                        </span>
                         <span className="font-medium text-gray-900 dark:text-white">
                           {formatCurrencySync(amount)}
                         </span>
@@ -381,8 +394,9 @@ export function RequestWithdrawModal({
                   <div className="flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/20">
                     <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500" />
                     <p className="text-xs text-blue-800 dark:text-blue-200">
-                      Withdrawal requests are processed within 1–3 business days. You will need to
-                      verify your identity and confirm with an OTP in the next steps.
+                      Withdrawal requests are processed within 1–3 business
+                      days. You will need to verify your identity and confirm
+                      with an OTP in the next steps.
                     </p>
                   </div>
                 </>
@@ -394,7 +408,8 @@ export function RequestWithdrawModal({
           {step === 3 && (
             <div className="space-y-4">
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Position your face in the circle and take a photo for verification.
+                Position your face in the circle and take a photo for
+                verification.
               </p>
               {cameraError ? (
                 <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
@@ -428,7 +443,7 @@ export function RequestWithdrawModal({
                     playsInline
                     muted
                   />
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                     <div className="h-40 w-40 rounded-full border-4 border-dashed border-yellow-400/80 bg-transparent" />
                   </div>
                   <div className="absolute bottom-2 left-0 right-0 flex justify-center">
@@ -451,7 +466,8 @@ export function RequestWithdrawModal({
           {step === 4 && (
             <div className="space-y-4">
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                A verification code was shown in the popup. Enter it below to confirm your withdrawal.
+                A verification code was shown in the popup. Enter it below to
+                confirm your withdrawal.
               </p>
               {!otpSent ? (
                 <button
@@ -478,7 +494,7 @@ export function RequestWithdrawModal({
                         setOtp(v);
                       }}
                       placeholder="000000"
-                      className="w-full rounded-xl border border-gray-300 py-3 px-4 text-center text-2xl font-mono tracking-[0.5em] focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      className="w-full rounded-xl border border-gray-300 px-4 py-3 text-center font-mono text-2xl tracking-[0.5em] focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                       disabled={isProcessing}
                     />
                   </div>

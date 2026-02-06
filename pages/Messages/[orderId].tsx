@@ -228,12 +228,14 @@ function ChatPage() {
   const [error, setError] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  const { otherTypingName, reportTyping, clearTyping } = useChatTypingIndicator({
-    conversationId,
-    currentUserId: session?.user?.id ?? "",
-    currentUserName: session?.user?.name ?? "Customer",
-    enabled: !!conversationId && !!session?.user?.id,
-  });
+  const { otherTypingName, reportTyping, clearTyping } = useChatTypingIndicator(
+    {
+      conversationId,
+      currentUserId: session?.user?.id ?? "",
+      currentUserName: session?.user?.name ?? "Customer",
+      enabled: !!conversationId && !!session?.user?.id,
+    }
+  );
 
   // Scroll to bottom of messages
   const scrollToBottom = () => {
@@ -634,22 +636,24 @@ function ChatPage() {
                       </div>
                     )}
                     {groupMessagesByDate(messages).map((group, groupIndex) => (
-                    <div key={groupIndex}>
-                      <DateSeparator date={group.date} />
-                      {group.messages.map((message) => (
-                        <Message
-                          key={message.id}
-                          message={message}
-                          isCurrentUser={message.senderId === session?.user?.id}
-                          senderName={
-                            message.senderType === "shopper"
-                              ? shopper.name
-                              : "You"
-                          }
-                        />
-                      ))}
-                    </div>
-                  ))}
+                      <div key={groupIndex}>
+                        <DateSeparator date={group.date} />
+                        {group.messages.map((message) => (
+                          <Message
+                            key={message.id}
+                            message={message}
+                            isCurrentUser={
+                              message.senderId === session?.user?.id
+                            }
+                            senderName={
+                              message.senderType === "shopper"
+                                ? shopper.name
+                                : "You"
+                            }
+                          />
+                        ))}
+                      </div>
+                    ))}
                   </>
                 )}
                 <div ref={messagesEndRef} />
@@ -657,7 +661,9 @@ function ChatPage() {
 
               {error && (
                 <div className="border-t border-red-200 bg-red-50 px-4 py-2 dark:border-red-800 dark:bg-red-900/30">
-                  <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
+                  <p className="text-xs text-red-600 dark:text-red-400">
+                    {error}
+                  </p>
                 </div>
               )}
               {/* Mobile Input */}
@@ -683,7 +689,7 @@ function ChatPage() {
                   <button
                     type="submit"
                     disabled={isSending || !newMessage.trim()}
-                    className="flex-shrink-0 rounded-full bg-green-500 p-3 text-white shadow-lg transition-all duration-200 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800 [&_svg]:text-white [&_*]:text-white"
+                    className="flex-shrink-0 rounded-full bg-green-500 p-3 text-white shadow-lg transition-all duration-200 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800 [&_*]:text-white [&_svg]:text-white"
                   >
                     {isSending ? (
                       <div className="flex items-center text-white">

@@ -44,10 +44,11 @@ const globalForOtp =
   typeof globalThis !== "undefined"
     ? globalThis
     : typeof global !== "undefined"
-      ? global
-      : ({} as any);
+    ? global
+    : ({} as any);
 const STORE_KEY = "__otpStore__";
-const otpStore = ((globalForOtp as any)[STORE_KEY] ??= new OTPStore()) as OTPStore;
+const otpStore = ((globalForOtp as any)[STORE_KEY] ??=
+  new OTPStore()) as OTPStore;
 
 export { otpStore };
 
