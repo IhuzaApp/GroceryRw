@@ -4,23 +4,29 @@ import { gql } from "graphql-request";
 
 // GraphQL query to fetch system configuration
 const GET_SYSTEM_CONFIGURATION = gql`
-  query getSystemConfiguration {
-    System_configuratioins {
-      baseDeliveryFee
-      currency
-      discounts
-      id
-      serviceFee
-      shoppingTime
-      unitsSurcharge
-      extraUnits
-      cappedDistanceFee
-      distanceSurcharge
-      deliveryCommissionPercentage
-      productCommissionPercentage
-      tax
-    }
+query getSystemConfiguration {
+  System_configuratioins {
+    baseDeliveryFee
+    currency
+    discounts
+    id
+    serviceFee
+    shoppingTime
+    unitsSurcharge
+    extraUnits
+    cappedDistanceFee
+    distanceSurcharge
+    deliveryCommissionPercentage
+    productCommissionPercentage
+    tax
+    allowScheduledDeliveries
+    rushHourSurcharge
+    rushHours
+    enableRush
+    suggestedMinimumTip
+    withDrawCharges
   }
+}
 `;
 
 interface SystemConfigurationResponse {
@@ -38,6 +44,12 @@ interface SystemConfigurationResponse {
     deliveryCommissionPercentage: string;
     productCommissionPercentage: string;
     tax: string;
+    allowScheduledDeliveries?: boolean;
+    rushHourSurcharge?: string;
+    rushHours?: string;
+    enableRush?: boolean;
+    suggestedMinimumTip?: string;
+    withDrawCharges?: string | number;
   }>;
 }
 

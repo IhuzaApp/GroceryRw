@@ -29,6 +29,7 @@ import {
 } from "recharts";
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../utils/formatCurrency";
+import { RequestWithdrawModal } from "./RequestWithdrawModal";
 
 // Helper function to format currency with abbreviations
 const formatCurrencyAbbreviated = (
@@ -63,6 +64,8 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [monthlyRevenue, setMonthlyRevenue] = useState<any[]>([]);
   const [loadingWallet, setLoadingWallet] = useState(false);
+  const [businessWalletId, setBusinessWalletId] = useState<string | null>(null);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
   const [loadingStats, setLoadingStats] = useState(true);
   const [clientsByGender, setClientsByGender] = useState<
@@ -525,6 +528,9 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
         const data = await response.json();
         if (data.wallet) {
           setWalletBalance(parseFloat(data.wallet.amount || "0"));
+          setBusinessWalletId(data.wallet.id || null);
+        } else {
+          setBusinessWalletId(null);
         }
       }
     } catch (error) {
@@ -872,19 +878,47 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
     }
   };
 
-  const handleRequestWithdraw = async () => {
+  const handleRequestWithdraw = () => {
     if (!businessAccount?.id) {
       toast.error("Business account not found");
       return;
     }
-
+    if (!businessWalletId) {
+      toast.error("Wallet not found");
+      return;
+    }
     if (walletBalance <= 0) {
       toast.error("No funds available to withdraw");
       return;
     }
+    setShowWithdrawModal(true);
+  };
 
-    // TODO: Implement withdraw API call
-    toast.success("Withdrawal request submitted successfully");
+  const handleSubmitWithdraw = async (payload: {
+    amount: number;
+    verificationImage: string;
+    otp: string;
+  }) => {
+    if (!businessAccount?.id || !businessWalletId) {
+      throw new Error("Business or wallet not found");
+    }
+    const response = await fetch("/api/mutations/request-withdraw", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        amount: String(payload.amount),
+        business_id: businessAccount.id,
+        businessWallet_id: businessWalletId,
+        phoneNumber: businessAccount.businessPhone || "",
+        verification_image: payload.verificationImage,
+        otp: payload.otp,
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || data.error || "Failed to submit request");
+    }
+    fetchWalletData();
   };
 
   const [stats, setStats] = useState([
@@ -1146,6 +1180,13 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
             </div>
           </div>
         </div>
+
+        <RequestWithdrawModal
+          isOpen={showWithdrawModal}
+          onClose={() => setShowWithdrawModal(false)}
+          walletBalance={walletBalance}
+          onSubmit={handleSubmitWithdraw}
+        />
 
         {/* Monthly Revenue Chart */}
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
