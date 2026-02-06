@@ -59,6 +59,7 @@ const GET_BUSINESS_PRODUCT_ORDERS = gql`
         profile_picture
         phone
         email
+        gender
       }
     }
   }
@@ -180,6 +181,7 @@ export default async function handler(
           profile_picture: string;
           phone: string;
           email: string;
+          gender?: string | null;
         } | null;
       }>;
     }>(GET_BUSINESS_PRODUCT_ORDERS, {

@@ -20,6 +20,12 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
 } from "recharts";
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../utils/formatCurrency";
@@ -59,6 +65,13 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
   const [loadingWallet, setLoadingWallet] = useState(false);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [clientsByGender, setClientsByGender] = useState<
+    { name: string; value: number; fill?: string }[]
+  >([]);
+  const [topItemsSold, setTopItemsSold] = useState<
+    { name: string; quantity: number; fill?: string }[]
+  >([]);
+  const [loadingCharts, setLoadingCharts] = useState(true);
 
   useEffect(() => {
     if (businessAccount?.id) {
@@ -77,14 +90,11 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       const twoMonthsAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
       const thisYearStart = new Date(now.getFullYear(), 0, 1);
 
-      // Fetch all data in parallel
-      const [ordersRes, rfqsRes] = await Promise.all([
-        fetch("/api/queries/business-product-orders").catch(() => {
-          return null;
-        }),
-        fetch("/api/queries/business-rfqs").catch(() => {
-          return null;
-        }),
+      // Fetch all data in parallel (orders, RFQs, contracts for revenue)
+      const [ordersRes, rfqsRes, contractsRes] = await Promise.all([
+        fetch("/api/queries/business-product-orders").catch(() => null),
+        fetch("/api/queries/business-rfqs").catch(() => null),
+        fetch("/api/queries/business-contracts").catch(() => null),
       ]);
 
       // Process Total Revenue and Active Orders
@@ -170,6 +180,33 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
               const transportationFee = order.transportation_fee || 0;
               return sum + (total - serviceFee - transportationFee);
             }, 0);
+
+          // Add revenue from completed RFQ contracts (business as supplier)
+          if (contractsRes?.ok) {
+            try {
+              const contractsData = await contractsRes.json();
+              const contractsList = contractsData.contracts || [];
+              const completedSupplierContracts = contractsList.filter(
+                (c: any) =>
+                  (c.status || "").toLowerCase() === "completed" &&
+                  c.role === "supplier"
+              );
+              completedSupplierContracts.forEach((c: any) => {
+                const val = Number(c.totalValue) || 0;
+                totalRevenue += val;
+                const doneAt = c.done_at || c.updated_at || c.created_at;
+                if (doneAt) {
+                  const d = new Date(doneAt);
+                  if (d >= thisYearStart && d <= now) thisYearRevenue += val;
+                  if (d >= lastMonth && d <= now) thisMonthRevenue += val;
+                  if (d >= twoMonthsAgo && d < lastMonth)
+                    lastMonthRevenue += val;
+                }
+              });
+            } catch (_) {
+              // ignore contract parse errors
+            }
+          }
 
           // Calculate percentage change
           if (lastMonthRevenue > 0) {
@@ -469,21 +506,66 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
     if (!businessAccount?.id) return;
 
     setLoadingTransactions(true);
+    setLoadingCharts(true);
     try {
-      // Fetch orders to show as transactions
-      const ordersRes = await fetch("/api/queries/business-product-orders");
-      if (ordersRes.ok) {
-        const ordersData = await ordersRes.json();
-        const allOrders = ordersData.orders || [];
+      const [txRes, ordersRes] = await Promise.all([
+        fetch(
+          `/api/queries/business-transactions?business_id=${businessAccount.id}`
+        ).catch(() => null),
+        fetch("/api/queries/business-product-orders").catch(() => null),
+      ]);
 
-        // Transform orders into transactions
-        // Calculate net amount: total minus service fee and transportation fee
+      let allOrders: any[] = [];
+      if (ordersRes?.ok) {
+        const ordersData = await ordersRes.json();
+        allOrders = ordersData.orders || [];
+      }
+
+      let usedTxApi = false;
+      // Prefer businessTransactions API when available (aligns with wallet)
+      if (txRes?.ok) {
+        const txData = await txRes.json();
+        const txList = txData.transactions || [];
+        if (txList.length > 0) {
+          usedTxApi = true;
+          const mapped = txList.map((t: any) => {
+            const createdAt = t.created_at
+              ? new Date(t.created_at)
+              : new Date();
+            const desc = t.description || "Credit";
+            const amountMatch = desc.match(
+              /Amount credited to wallet:\s*([\d,.\s]+)/i
+            );
+            const amount = amountMatch
+              ? parseFloat(amountMatch[1].replace(/\s|,/g, "")) || 0
+              : 0;
+            return {
+              id: t.id,
+              type: t.action || "credit",
+              amount,
+              description: desc.split(" | ")[0] || desc,
+              date: createdAt.toLocaleDateString(),
+              time: createdAt.toLocaleTimeString(),
+              status: t.status || "completed",
+              orderId: t.related_order,
+            };
+          });
+          setTransactions(
+            mapped.sort(
+              (a: any, b: any) =>
+                new Date(b.date + " " + b.time).getTime() -
+                new Date(a.date + " " + a.time).getTime()
+            )
+          );
+        }
+      }
+
+      if (!usedTxApi) {
         const transactionList = allOrders.map((order: any) => {
           const total = order.value || 0;
           const serviceFee = order.service_fee || 0;
           const transportationFee = order.transportation_fee || 0;
           const netAmount = total - serviceFee - transportationFee;
-
           return {
             id: order.id,
             type: "payment_received",
@@ -497,7 +579,6 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
             orderId: order.id,
           };
         });
-
         setTransactions(
           transactionList.sort(
             (a: any, b: any) =>
@@ -506,10 +587,67 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
           )
         );
       }
+
+      // Clients by gender (unique orderers from delivered/any orders)
+      const genderCount: Record<string, number> = {};
+      const seenUsers = new Set<string>();
+      allOrders.forEach((order: any) => {
+        const user = order.orderedBy;
+        if (!user?.id) return;
+        if (seenUsers.has(user.id)) return;
+        seenUsers.add(user.id);
+        const g = (user.gender || "unknown").toLowerCase() || "unknown";
+        genderCount[g] = (genderCount[g] || 0) + 1;
+      });
+      const genderColors: Record<string, string> = {
+        male: "#3b82f6",
+        female: "#ec4899",
+        other: "#8b5cf6",
+        unknown: "#6b7280",
+      };
+      setClientsByGender(
+        Object.entries(genderCount).map(([name, value]) => ({
+          name: name.charAt(0).toUpperCase() + name.slice(1),
+          value,
+          fill: genderColors[name] || "#6b7280",
+        }))
+      );
+
+      // Top items/services sold (from allProducts across orders)
+      const itemCount: Record<string, number> = {};
+      allOrders.forEach((order: any) => {
+        const products = Array.isArray(order.allProducts)
+          ? order.allProducts
+          : [];
+        products.forEach((p: any) => {
+          const name = p.name || "Unknown item";
+          const qty = Number(p.quantity) || 1;
+          itemCount[name] = (itemCount[name] || 0) + qty;
+        });
+      });
+      const barColors = [
+        "#10b981",
+        "#3b82f6",
+        "#f59e0b",
+        "#8b5cf6",
+        "#ec4899",
+        "#06b6d4",
+      ];
+      setTopItemsSold(
+        Object.entries(itemCount)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 10)
+          .map(([name, quantity], i) => ({
+            name: name.length > 20 ? name.slice(0, 20) + "…" : name,
+            quantity,
+            fill: barColors[i % barColors.length],
+          }))
+      );
     } catch (error) {
       // Error fetching transactions
     } finally {
       setLoadingTransactions(false);
+      setLoadingCharts(false);
     }
   };
 
@@ -517,53 +655,70 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
     if (!businessAccount?.id) return;
 
     try {
-      const ordersRes = await fetch("/api/queries/business-product-orders");
+      const [ordersRes, contractsRes] = await Promise.all([
+        fetch("/api/queries/business-product-orders"),
+        fetch("/api/queries/business-contracts").catch(() => null),
+      ]);
+
+      const monthlyData: { [key: string]: number } = {};
+
       if (ordersRes.ok) {
         const ordersData = await ordersRes.json();
         const allOrders = ordersData.orders || [];
-
-        // Filter only "delivered" orders (excluding fees)
         const deliveredOrders = allOrders.filter((order: any) => {
           const status = (order.status || "").toLowerCase().trim();
           return status === "delivered";
         });
-
-        // Group by month and calculate revenue (excluding transportation and service fees)
-        const monthlyData: { [key: string]: number } = {};
 
         deliveredOrders.forEach((order: any) => {
           const date = new Date(order.created_at);
           const monthKey = `${date.getFullYear()}-${String(
             date.getMonth() + 1
           ).padStart(2, "0")}`;
-
-          // Calculate net revenue: total minus transportation and service fees
           const total = parseFloat(order.value || 0);
           const serviceFee = parseFloat(order.service_fee || 0);
           const transportationFee = parseFloat(order.transportation_fee || 0);
           const netRevenue = total - serviceFee - transportationFee;
-
-          if (!monthlyData[monthKey]) {
-            monthlyData[monthKey] = 0;
-          }
-          monthlyData[monthKey] += netRevenue;
+          monthlyData[monthKey] = (monthlyData[monthKey] || 0) + netRevenue;
         });
-
-        // Convert to array format for chart
-        const chartData = Object.entries(monthlyData)
-          .map(([key, value]) => ({
-            month: new Date(key + "-01").toLocaleDateString("en-US", {
-              month: "short",
-              year: "numeric",
-            }),
-            revenue: value,
-          }))
-          .sort(
-            (a, b) => new Date(a.month).getTime() - new Date(b.month).getTime()
-          );
-
-        setMonthlyRevenue(chartData);
       }
+
+      // Add RFQ completed contracts revenue (business as supplier) by month
+      if (contractsRes?.ok) {
+        try {
+          const contractsData = await contractsRes.json();
+          const contractsList = contractsData.contracts || [];
+          contractsList
+            .filter(
+              (c: any) =>
+                (c.status || "").toLowerCase() === "completed" &&
+                c.role === "supplier"
+            )
+            .forEach((c: any) => {
+              const doneAt = c.done_at || c.updated_at || c.created_at;
+              if (!doneAt) return;
+              const d = new Date(doneAt);
+              const monthKey = `${d.getFullYear()}-${String(
+                d.getMonth() + 1
+              ).padStart(2, "0")}`;
+              const val = Number(c.totalValue) || 0;
+              monthlyData[monthKey] = (monthlyData[monthKey] || 0) + val;
+            });
+        } catch (_) {}
+      }
+
+      const chartData = Object.entries(monthlyData)
+        .map(([key, value]) => ({
+          month: new Date(key + "-01").toLocaleDateString("en-US", {
+            month: "short",
+            year: "numeric",
+          }),
+          revenue: value,
+        }))
+        .sort(
+          (a, b) => new Date(a.month).getTime() - new Date(b.month).getTime()
+        );
+      setMonthlyRevenue(chartData);
     } catch (error) {
       // Error fetching monthly revenue
     }
@@ -852,7 +1007,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
                 Monthly Revenue
               </h4>
               <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                Revenue by month (excluding fees)
+                Carts (delivered orders) + completed RFQ contracts · Excluding fees
               </p>
             </div>
             <TrendingUp className="h-8 w-8 text-green-600" />
@@ -959,6 +1114,107 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
             </p>
           </div>
         )}
+      </div>
+
+      {/* Clients by gender & Top items/services sold */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+          <div className="mb-4">
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Clients by gender
+            </h4>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              Unique customers who placed orders
+            </p>
+          </div>
+          {loadingCharts ? (
+            <div className="flex h-[240px] items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent" />
+            </div>
+          ) : clientsByGender.length > 0 ? (
+            <ResponsiveContainer width="100%" height={240}>
+              <PieChart>
+                <Pie
+                  data={clientsByGender}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  label={({ name, percent }) =>
+                    `${name} ${(percent * 100).toFixed(0)}%`
+                  }
+                >
+                  {clientsByGender.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value: number) => [`${value} clients`, "Count"]}
+                  contentStyle={{
+                    backgroundColor: "#fff",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "8px",
+                  }}
+                />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-[240px] items-center justify-center text-gray-500 dark:text-gray-400">
+              No client data yet
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+          <div className="mb-4">
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Items & services most sold
+            </h4>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              Top 10 by quantity ordered
+            </p>
+          </div>
+          {loadingCharts ? (
+            <div className="flex h-[240px] items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent" />
+            </div>
+          ) : topItemsSold.length > 0 ? (
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart
+                data={topItemsSold}
+                layout="vertical"
+                margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis type="number" style={{ fontSize: "12px" }} />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  width={100}
+                  tick={{ fontSize: 11 }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#fff",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "8px",
+                  }}
+                />
+                <Bar dataKey="quantity" name="Quantity" radius={[0, 4, 4, 0]}>
+                  {topItemsSold.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-[240px] items-center justify-center text-gray-500 dark:text-gray-400">
+              No items sold yet
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
