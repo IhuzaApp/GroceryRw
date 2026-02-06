@@ -1201,10 +1201,10 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
         </div>
       </div>
 
-      {/* Two cols: left = Orders by status + Delivery timing; right = Transaction History */}
+      {/* Two cols: left = Orders by status + Delivery timing; right = Transaction History (charts hidden on mobile) */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Left column: Orders by status + Delivery timing */}
-        <div className="space-y-6">
+        {/* Left column: Orders by status + Delivery timing – desktop only */}
+        <div className="hidden space-y-6 lg:block">
           {/* Orders by status (Plasa business orders) – chart */}
           <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
             <div className="mb-4">
@@ -1385,8 +1385,8 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
         </div>
       </div>
 
-      {/* Clients by gender & Top items/services sold */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      {/* Clients by gender & Top items/services sold – desktop only */}
+      <div className="hidden grid-cols-1 gap-6 lg:grid lg:grid-cols-2">
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
           <div className="mb-4">
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -1486,8 +1486,8 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
         </div>
       </div>
 
-      {/* Annual trend: incoming orders + RFQ responses; Orders per store */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      {/* Annual trend: incoming orders + RFQ responses; Orders per store – desktop only */}
+      <div className="hidden grid-cols-1 gap-6 lg:grid lg:grid-cols-3">
         {/* Incoming orders monthly (Jan–Dec) with year switch */}
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
