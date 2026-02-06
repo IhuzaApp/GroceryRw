@@ -5,6 +5,15 @@ import { useTheme } from "../../context/ThemeContext";
 import Image from "next/image";
 import CameraCapture from "../ui/CameraCapture";
 import { reportErrorToSlackClient } from "../../lib/reportErrorClient";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
+import { db } from "../../lib/firebase";
 
 interface InvoiceItem {
   name: string;
@@ -305,6 +314,33 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
     }
   };
 
+  // Delete all Firebase chat messages and conversations for a delivered order
+  const deleteFirebaseChatForOrder = async (orderId: string) => {
+    if (!db) return;
+    try {
+      const conversationsRef = collection(db, "chat_conversations");
+      const q = query(conversationsRef, where("orderId", "==", orderId));
+      const snapshot = await getDocs(q);
+
+      for (const conversationDoc of snapshot.docs) {
+        const conversationId = conversationDoc.id;
+        const messagesRef = collection(
+          db,
+          "chat_conversations",
+          conversationId,
+          "messages"
+        );
+        const messagesSnapshot = await getDocs(messagesRef);
+        await Promise.all(
+          messagesSnapshot.docs.map((d) => deleteDoc(doc(db, "chat_conversations", conversationId, "messages", d.id)))
+        );
+        await deleteDoc(doc(db, "chat_conversations", conversationId));
+      }
+    } catch (error) {
+      console.error("Error deleting Firebase chat for order:", orderId, error);
+    }
+  };
+
   // Handle delivery confirmation
   const handleConfirmDelivery = async () => {
     if (!invoiceData?.orderId) {
@@ -406,6 +442,11 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
             throw new Error(errorData.message || "Failed to confirm delivery");
           }
         }
+      }
+
+      // Delete all Firebase chat messages and conversations for each delivered order
+      for (const orderId of orderIdsToUpdate) {
+        await deleteFirebaseChatForOrder(orderId);
       }
 
       setDeliveryConfirmed(true);
