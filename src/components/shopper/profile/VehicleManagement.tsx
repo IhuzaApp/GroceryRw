@@ -542,7 +542,9 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({
               <Form.HelpText>Take a clear photo of your vehicle</Form.HelpText>
 
               <div className="mb-4 mt-2">
-                <div className="relative mx-auto h-64 w-64 overflow-hidden rounded-lg border border-gray-300">
+                <div className={`relative mx-auto h-64 w-64 overflow-hidden rounded-lg border ${
+                  theme === "dark" ? "border-gray-600" : "border-gray-300"
+                }`}>
                   {capturedPhoto ? (
                     <img
                       src={capturedPhoto}
@@ -550,8 +552,12 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="flex h-full items-center justify-center bg-gray-100">
-                      <span className="text-gray-400">No vehicle photo</span>
+                    <div className={`flex h-full items-center justify-center ${
+                      theme === "dark" ? "bg-gray-700" : "bg-gray-100"
+                    }`}>
+                      <span className={theme === "dark" ? "text-gray-400" : "text-gray-400"}>
+                        No vehicle photo
+                      </span>
                     </div>
                   )}
                 </div>
