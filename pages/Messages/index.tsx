@@ -26,6 +26,10 @@ import { isMobileDevice } from "../../src/lib/formatters";
 import { AuthGuard } from "../../src/components/AuthGuard";
 import DesktopMessagePage from "../../src/components/messages/DesktopMessagePage";
 import MobileMessagePage from "../../src/components/messages/MobileMessagePage";
+import {
+  containsBlockedPii,
+  getBlockedMessage,
+} from "../../src/lib/chatPiiBlock";
 
 // Helper to display timestamps as relative time ago
 function timeAgo(timestamp: any) {
@@ -122,6 +126,7 @@ function MessagesPage() {
   const [selectedOrderId, setSelectedOrderId] = useState<string | undefined>(
     undefined
   );
+  const [sendError, setSendError] = useState<string | null>(null);
 
   // Check if mobile device
   useEffect(() => {
@@ -492,6 +497,14 @@ function MessagesPage() {
     ) {
       return;
     }
+
+    const text = newMessage.trim();
+    const piiCheck = containsBlockedPii(text);
+    if (piiCheck.blocked && piiCheck.reason) {
+      setSendError(getBlockedMessage(piiCheck.reason));
+      return;
+    }
+    setSendError(null);
 
     try {
       setIsSending(true);

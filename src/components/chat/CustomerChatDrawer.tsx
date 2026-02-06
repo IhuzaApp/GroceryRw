@@ -24,6 +24,11 @@ import {
 } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import soundNotification from "../../utils/soundNotification";
+import {
+  containsBlockedPii,
+  getBlockedMessage,
+  sanitizeMessageForDisplay,
+} from "../../lib/chatPiiBlock";
 
 // Helper to format date for messages
 function formatMessageDate(timestamp: any) {
@@ -92,10 +97,11 @@ const CustomerMessage: React.FC<MessageProps> = ({
   shopperName,
   statusLabel,
 }) => {
-  const messageContent =
+  const rawContent =
     "text" in message
       ? message.text
       : (message as Message).text || (message as Message).message || "";
+  const messageContent = sanitizeMessageForDisplay(rawContent ?? "");
 
   return (
     <div
@@ -365,6 +371,13 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
     }
 
     const text = newMessage.trim();
+    const piiCheck = containsBlockedPii(text);
+    if (piiCheck.blocked && piiCheck.reason) {
+      setError(getBlockedMessage(piiCheck.reason));
+      return;
+    }
+    setError(null);
+
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
     // Optimistic: add to UI immediately with "Sending..." status

@@ -19,6 +19,11 @@ import {
 import { db } from "../../lib/firebase";
 import { Avatar } from "rsuite";
 import { formatCurrency } from "../../lib/formatCurrency";
+import {
+  containsBlockedPii,
+  getBlockedMessage,
+  sanitizeMessageForDisplay,
+} from "../../lib/chatPiiBlock";
 
 // Helper to format time (e.g., "01:09 am", "08:24PM")
 function formatTime(timestamp: any): string {
@@ -176,6 +181,7 @@ export default function DesktopMessagePage({
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [piiError, setPiiError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -354,6 +360,14 @@ export default function DesktopMessagePage({
     ) {
       return;
     }
+
+    const text = newMessage.trim();
+    const piiCheck = containsBlockedPii(text);
+    if (piiCheck.blocked && piiCheck.reason) {
+      setPiiError(getBlockedMessage(piiCheck.reason));
+      return;
+    }
+    setPiiError(null);
 
     try {
       setIsSending(true);
@@ -828,8 +842,10 @@ export default function DesktopMessagePage({
                                       </div>
                                     </div>
                                   ) : (
-                                    <p className="text-sm leading-relaxed">
-                                      {message.text || message.message || ""}
+                                    <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                                      {sanitizeMessageForDisplay(
+                                        message.text || message.message || ""
+                                      )}
                                     </p>
                                   )}
                                 </div>
@@ -871,6 +887,12 @@ export default function DesktopMessagePage({
               )}
             </div>
 
+            {/* PII block error */}
+            {piiError && (
+              <div className="flex-shrink-0 border-t border-red-200 bg-red-50 px-6 py-2 dark:border-red-800 dark:bg-red-900/30">
+                <p className="text-xs text-red-600 dark:text-red-400">{piiError}</p>
+              </div>
+            )}
             {/* Message Input */}
             <div className="flex-shrink-0 px-6 py-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.03)] ">
               <form

@@ -32,6 +32,11 @@ import {
 import { db } from "../../../src/lib/firebase";
 import { formatCurrency } from "../../../src/lib/formatCurrency";
 import soundNotification from "../../../src/utils/soundNotification";
+import {
+  containsBlockedPii,
+  getBlockedMessage,
+  sanitizeMessageForDisplay,
+} from "../../../src/lib/chatPiiBlock";
 
 // Define message interface
 interface Message {
@@ -83,6 +88,7 @@ function ChatPage() {
     lastSeen: string;
   } | null>(null);
   const [order, setOrder] = useState<any>(null);
+  const [piiError, setPiiError] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -309,6 +315,13 @@ function ChatPage() {
     }
 
     const text = message.trim();
+    const piiCheck = containsBlockedPii(text);
+    if (piiCheck.blocked && piiCheck.reason) {
+      setPiiError(getBlockedMessage(piiCheck.reason));
+      return;
+    }
+    setPiiError(null);
+
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
     // Optimistic: add to UI immediately with "Sending..." status
@@ -727,11 +740,13 @@ function ChatPage() {
                               : "bg-white text-gray-900 dark:bg-gray-800 dark:text-white"
                           }`}
                         >
-                          <p className="text-sm leading-relaxed">
-                            {"text" in msg
-                              ? msg.text
-                              : (msg as Message).text ||
-                                (msg as Message).message}
+                          <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                            {sanitizeMessageForDisplay(
+                              ("text" in msg
+                                ? msg.text
+                                : (msg as Message).text ||
+                                  (msg as Message).message) ?? ""
+                            )}
                           </p>
                           {isShopper && (
                             <div className="mt-1 flex items-center justify-end space-x-1">
@@ -768,6 +783,12 @@ function ChatPage() {
             )}
           </div>
 
+          {/* PII block error */}
+          {piiError && (
+            <div className="border-t border-red-200 bg-red-50 px-4 py-2 dark:border-red-800 dark:bg-red-900/30">
+              <p className="text-xs text-red-600 dark:text-red-400">{piiError}</p>
+            </div>
+          )}
           {/* Professional Message Input */}
           <div className="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
             <form

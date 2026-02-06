@@ -31,6 +31,11 @@ import { formatCurrency } from "../../src/lib/formatCurrency";
 import { AuthGuard } from "../../src/components/AuthGuard";
 import CustomerChatDrawer from "../../src/components/chat/CustomerChatDrawer";
 import soundNotification from "../../src/utils/soundNotification";
+import {
+  containsBlockedPii,
+  getBlockedMessage,
+  sanitizeMessageForDisplay,
+} from "../../src/lib/chatPiiBlock";
 
 // Helper to format date for messages
 function formatMessageDate(timestamp: any) {
@@ -170,7 +175,9 @@ const Message: React.FC<MessageProps> = ({
   isCurrentUser,
   senderName,
 }) => {
-  const messageContent = message.text || message.message || "";
+  const messageContent = sanitizeMessageForDisplay(
+    message.text || message.message || ""
+  );
 
   return (
     <div
@@ -447,6 +454,14 @@ function ChatPage() {
       return;
     }
 
+    const text = newMessage.trim();
+    const piiCheck = containsBlockedPii(text);
+    if (piiCheck.blocked && piiCheck.reason) {
+      setError(getBlockedMessage(piiCheck.reason));
+      return;
+    }
+    setError(null);
+
     try {
       setIsSending(true);
 
@@ -615,6 +630,11 @@ function ChatPage() {
                 <div ref={messagesEndRef} />
               </div>
 
+              {error && (
+                <div className="border-t border-red-200 bg-red-50 px-4 py-2 dark:border-red-800 dark:bg-red-900/30">
+                  <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
+                </div>
+              )}
               {/* Mobile Input */}
               <div className="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
                 <form
