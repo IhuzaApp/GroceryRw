@@ -334,37 +334,67 @@ const EarningsPage: React.FC = () => {
     { name: "Marvin McKinney", points: 980 },
   ];
 
-  // Handle withdrawal/payout request
-  const handleWithdrawal = async (amount: number) => {
+  // Handle withdrawal/payout request (same flow as business: verification + OTP + phone)
+  const handleWithdrawal = async (payload: {
+    amount: number;
+    verification_image: string;
+    otp: string;
+    phoneNumber: string;
+  }) => {
     try {
+      // Debug: see exactly what we send to the API
+      // This will show in the browser devtools console
+      // (search for "[Earnings] requestPayout payload")
+      // NOTE: verification_image can be large (base64)
+      // so we also log its length instead of full contents.
+      // eslint-disable-next-line no-console
+      console.log("[Earnings] requestPayout payload", {
+        ...payload,
+        verification_image_length: payload.verification_image?.length ?? 0,
+      });
+
       const response = await authenticatedFetch("/api/shopper/requestPayout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ amount }),
+        body: JSON.stringify({
+          amount: payload.amount,
+          verification_image: payload.verification_image,
+          otp: payload.otp,
+          phoneNumber: payload.phoneNumber,
+        }),
       });
 
       const data = await response.json();
 
+      // Debug: log raw API response to help understand 400/404
+      // eslint-disable-next-line no-console
+      console.log("[Earnings] requestPayout response", {
+        status: response.status,
+        ok: response.ok,
+        data,
+      });
+
       if (!response.ok) {
-        // Extract the error message from the API response
         const errorMessage =
           data.message || data.error || "Failed to request payout";
         throw new Error(errorMessage);
       }
 
       if (data.success) {
-        // Refresh wallet data
         await fetchWalletData();
         logger.info("Payout requested successfully", "EarningsPage", {
-          amount,
+          amount: payload.amount,
         });
       } else {
         throw new Error(data.message || "Failed to request payout");
       }
     } catch (error) {
       logger.error("Error requesting payout", "EarningsPage", error);
+      // Debug: surface error to console as well
+      // eslint-disable-next-line no-console
+      console.error("[Earnings] requestPayout error", error);
       throw error;
     }
   };
