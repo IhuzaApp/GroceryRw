@@ -11,6 +11,8 @@ import { useAuth as useAuthHook } from "../../../hooks/useAuth";
 import { authenticatedFetch } from "../../../lib/authenticatedFetch";
 import { Briefcase } from "lucide-react";
 import GuestUpgradeModal from "../GuestUpgradeModal";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { db } from "../../../lib/firebase";
 
 interface NavItemProps {
   icon: React.ReactNode;
@@ -40,9 +42,16 @@ interface MoreMenuItemProps {
   label: string;
   href: string;
   onClick: () => void;
+  badgeCount?: number;
 }
 
-function MoreMenuItem({ icon, label, href, onClick }: MoreMenuItemProps) {
+function MoreMenuItem({
+  icon,
+  label,
+  href,
+  onClick,
+  badgeCount = 0,
+}: MoreMenuItemProps) {
   const router = useRouter();
 
   const handleClick = (e: React.MouseEvent) => {
@@ -53,9 +62,14 @@ function MoreMenuItem({ icon, label, href, onClick }: MoreMenuItemProps) {
 
   return (
     <Link href={href} passHref onClick={handleClick}>
-      <div className="mx-2 flex items-center space-x-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-gray-100 hover:shadow-sm dark:text-gray-200 dark:hover:bg-gray-700">
-        <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center text-lg">
+      <div className="relative mx-2 flex items-center space-x-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-gray-100 hover:shadow-sm dark:text-gray-200 dark:hover:bg-gray-700">
+        <span className="relative flex h-8 w-8 flex-shrink-0 items-center justify-center text-lg">
           {icon}
+          {badgeCount > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-green-500 px-1 text-[10px] font-bold text-white">
+              {badgeCount > 99 ? "99+" : badgeCount}
+            </span>
+          )}
         </span>
         <span className="flex-1">{label}</span>
       </div>
@@ -142,6 +156,7 @@ export default function BottomBar() {
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
   const [marketplaceNotificationCount, setMarketplaceNotificationCount] =
     useState(0);
+  const [messageUnreadCount, setMessageUnreadCount] = useState(0);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const handleThemeToggle = () => {
@@ -252,6 +267,33 @@ export default function BottomBar() {
       window.removeEventListener("fcm-marketplace-update", onMarketplaceUpdate);
     };
   }, [session?.user?.id]);
+
+  // Listen for unread message count (customer: customerId; shopper: shopperId)
+  useEffect(() => {
+    if (!session?.user?.id || !db) {
+      setMessageUnreadCount(0);
+      return;
+    }
+
+    const role = (session.user as any)?.role;
+    const isShopper = role === "shopper";
+    const conversationsRef = collection(db, "chat_conversations");
+    const field = isShopper ? "shopperId" : "customerId";
+    const q = query(
+      conversationsRef,
+      where(field, "==", session.user.id)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const total = snapshot.docs.reduce(
+        (sum, doc) => sum + (doc.data().unreadCount || 0),
+        0
+      );
+      setMessageUnreadCount(total);
+    });
+
+    return () => unsubscribe();
+  }, [session?.user?.id, (session?.user as any)?.role]);
 
   return (
     <>
@@ -1020,6 +1062,7 @@ export default function BottomBar() {
                     label="Messages"
                     href="/Messages"
                     onClick={() => setMoreOpen(false)}
+                    badgeCount={messageUnreadCount}
                   />
                 )}
 

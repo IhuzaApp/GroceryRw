@@ -405,6 +405,23 @@ export default function DesktopMessagePage({
         unreadCount: 1,
       });
 
+      // Trigger FCM so shopper gets device + in-app notification (bell)
+      try {
+        await fetch("/api/fcm/send-notification", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            recipientId: selectedConversation.shopperId,
+            senderName: session.user.name || "Customer",
+            message: newMessage.trim(),
+            orderId: selectedConversation.orderId,
+            conversationId,
+          }),
+        });
+      } catch (fcmErr) {
+        console.warn("FCM send (non-blocking):", fcmErr);
+      }
+
       setNewMessage("");
     } catch (error) {
       console.error("Error sending message:", error);

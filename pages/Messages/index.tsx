@@ -535,6 +535,23 @@ function MessagesPage() {
         unreadCount: 1, // Increment unread count for shopper
       });
 
+      // Trigger FCM so shopper gets device + in-app notification (bell)
+      try {
+        await fetch("/api/fcm/send-notification", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            recipientId: selectedOrder.shopper.id,
+            senderName: session.user.name || "Customer",
+            message: newMessage.trim(),
+            orderId: selectedOrder.id,
+            conversationId,
+          }),
+        });
+      } catch (fcmErr) {
+        console.warn("FCM send (non-blocking):", fcmErr);
+      }
+
       // Clear input
       setNewMessage("");
     } catch (error) {
