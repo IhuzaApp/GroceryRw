@@ -85,7 +85,28 @@ interface Conversation {
 function MessagesPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [conversationsFromCustomer, setConversationsFromCustomer] = useState<
+    Conversation[]
+  >([]);
+  const [conversationsFromOrders, setConversationsFromOrders] = useState<
+    Conversation[]
+  >([]);
+  // Merged and deduped: customerId match + conversations for user's orders (fallback for ID mismatch e.g. guest upgrade)
+  const conversations = React.useMemo(() => {
+    const byId = new Map<string, Conversation>();
+    [...conversationsFromCustomer, ...conversationsFromOrders].forEach((c) => {
+      if (c.id && !byId.has(c.id)) byId.set(c.id, c);
+    });
+    return Array.from(byId.values()).sort((a, b) => {
+      const timeA = a.lastMessageTime
+        ? new Date(a.lastMessageTime).getTime()
+        : 0;
+      const timeB = b.lastMessageTime
+        ? new Date(b.lastMessageTime).getTime()
+        : 0;
+      return timeB - timeA;
+    });
+  }, [conversationsFromCustomer, conversationsFromOrders]);
   const [orders, setOrders] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -144,102 +165,20 @@ function MessagesPage() {
             // Note: We might need to also query for shopperId, but for now let's focus on customerId
           );
 
-          // Set up real-time listener for conversations
+          // Set up real-time listener for conversations (customerId match)
           const unsubscribe = onSnapshot(
             q,
             async (snapshot) => {
-              // Check if any conversations have the current user as customerId
-              const userConversations = snapshot.docs.filter(
-                (doc) => doc.data().customerId === userId
-              );
-
-              // Get conversations and sort them in memory instead
-              let conversationList = snapshot.docs.map((doc) => ({
+              const conversationList = snapshot.docs.map((doc) => ({
                 id: doc.id,
                 ...doc.data(),
-                // Convert Firestore timestamp to regular Date if needed
                 lastMessageTime:
                   doc.data().lastMessageTime instanceof Timestamp
                     ? doc.data().lastMessageTime.toDate()
                     : doc.data().lastMessageTime,
               })) as Conversation[];
 
-              // Sort conversations by lastMessageTime in memory
-              conversationList.sort((a, b) => {
-                const timeA = a.lastMessageTime
-                  ? new Date(a.lastMessageTime).getTime()
-                  : 0;
-                const timeB = b.lastMessageTime
-                  ? new Date(b.lastMessageTime).getTime()
-                  : 0;
-                return timeB - timeA; // descending order (newest first)
-              });
-
-              setConversations(conversationList);
-
-              // Fetch order details for each conversation
-              const orderIds = conversationList
-                .map((conv) => conv.orderId)
-                .filter(
-                  (id) => id && typeof id === "string" && id.trim() !== ""
-                );
-
-              // Only fetch orders that we don't already have
-              const ordersToFetch = orderIds.filter((id) => !orders[id]);
-
-              if (ordersToFetch.length > 0) {
-                const orderDetailsPromises = ordersToFetch.map(
-                  async (orderId) => {
-                    try {
-                      // Validate UUID format before fetching
-                      const uuidRegex =
-                        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-                      if (!uuidRegex.test(orderId)) {
-                        return {
-                          orderId,
-                          order: { error: true, message: "Invalid ID format" },
-                        };
-                      }
-
-                      const res = await fetch(
-                        `/api/queries/orderDetails?id=${orderId}`
-                      );
-
-                      // Check if response is ok before trying to parse JSON
-                      if (!res.ok) {
-                        return {
-                          orderId,
-                          order: { error: true, status: res.status },
-                        };
-                      }
-
-                      const data = await res.json();
-                      return { orderId, order: data.order };
-                    } catch (error) {
-                      return { orderId, order: { error: true } };
-                    }
-                  }
-                );
-
-                const orderResults = await Promise.all(orderDetailsPromises);
-
-                // Create a new orders object to avoid mutation
-                const newOrders = { ...orders };
-                let hasValidOrders = false;
-
-                orderResults.forEach(({ orderId, order }) => {
-                  // Store the order data or error placeholder
-                  newOrders[orderId] = order || { error: true };
-                  if (order && !order.error) {
-                    hasValidOrders = true;
-                  }
-                });
-
-                // Only update state if we have valid orders to prevent unnecessary re-renders
-                if (hasValidOrders || Object.keys(orders).length === 0) {
-                  setOrders(newOrders);
-                }
-              }
+              setConversationsFromCustomer(conversationList);
 
               setLoading(false);
             },
@@ -264,7 +203,116 @@ function MessagesPage() {
         });
       };
     }
-  }, [status, session?.user?.id, orders]);
+  }, [status, session?.user?.id]);
+
+  // Fallback: fetch conversations by user's order IDs (catches guest-upgrade or customerId mismatch)
+  useEffect(() => {
+    if (status !== "authenticated" || !session?.user?.id) return;
+
+    let cancelled = false;
+    const conversationsRef = collection(db, "chat_conversations");
+
+    const run = async () => {
+      try {
+        const res = await fetch(
+          "/api/queries/user-orders?page=1&limit=30&minimal=1"
+        );
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        const ordersList = data.orders || [];
+        const orderIds = ordersList
+          .map((o: any) => o.id)
+          .filter(
+            (id: string) =>
+              id &&
+              typeof id === "string" &&
+              id.trim() !== "" &&
+              /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+                id
+              )
+          )
+          .slice(0, 30); // Firestore "in" limit
+        if (orderIds.length === 0 || cancelled) return;
+
+        const q = query(
+          conversationsRef,
+          where("orderId", "in", orderIds)
+        );
+        const snapshot = await getDocs(q);
+        if (cancelled) return;
+        const list = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          lastMessageTime:
+            doc.data().lastMessageTime instanceof Timestamp
+              ? doc.data().lastMessageTime.toDate()
+              : doc.data().lastMessageTime,
+        })) as Conversation[];
+        setConversationsFromOrders(list);
+      } catch (err) {
+        if (!cancelled) console.error("Error fetching conversations by orders:", err);
+      }
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [status, session?.user?.id]);
+
+  // Fetch order details for all conversations (merged list)
+  useEffect(() => {
+    const orderIds = conversations
+      .map((c) => c.orderId)
+      .filter(
+        (id) => id && typeof id === "string" && id.trim() !== ""
+      );
+    if (orderIds.length === 0) return;
+
+    let cancelled = false;
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const validIds = orderIds.filter((id) => uuidRegex.test(id));
+
+    const fetchOrders = async () => {
+      // Only fetch orders we don't already have (avoid refetch on every merge)
+      const toFetch = validIds.filter((id) => !orders[id] || (orders[id] as any)?.error);
+      if (toFetch.length === 0) return;
+      const promises = toFetch.map(async (orderId) => {
+        try {
+          const res = await fetch(
+            `/api/queries/orderDetails?id=${orderId}`
+          );
+          if (!res.ok) return { orderId, order: { error: true, status: res.status } };
+          const data = await res.json();
+          return { orderId, order: data.order };
+        } catch (error) {
+          return { orderId, order: { error: true } };
+        }
+      });
+      const results = await Promise.all(promises);
+      if (cancelled) return;
+      setOrders((prev) => {
+        const next = { ...prev };
+        let changed = false;
+        results.forEach(({ orderId, order }) => {
+          if (order && !order.error && (!prev[orderId] || (prev[orderId] as any).error)) {
+            next[orderId] = order;
+            changed = true;
+          } else if (!prev[orderId]) {
+            next[orderId] = order || { error: true };
+            changed = true;
+          }
+        });
+        return changed ? next : prev;
+      });
+    };
+
+    fetchOrders();
+    return () => {
+      cancelled = true;
+    };
+  }, [conversations, orders]);
 
   // Filter and sort conversations
   const filteredConversations = conversations
