@@ -72,6 +72,37 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
     { name: string; quantity: number; fill?: string }[]
   >([]);
   const [loadingCharts, setLoadingCharts] = useState(true);
+  const [orderStatusCounts, setOrderStatusCounts] = useState<{
+    pending: number;
+    delivered: number;
+    on_the_way: number;
+    accepted: number;
+    [key: string]: number;
+  }>({ pending: 0, delivered: 0, on_the_way: 0, accepted: 0 });
+  const [deliveryTimingCounts, setDeliveryTimingCounts] = useState<{
+    deliveredOnTime: number;
+    deliveredLate: number;
+    pendingDelayed: number;
+    pendingOnTime: number;
+  }>({
+    deliveredOnTime: 0,
+    deliveredLate: 0,
+    pendingDelayed: 0,
+    pendingOnTime: 0,
+  });
+  const [monthlyOrderCounts, setMonthlyOrderCounts] = useState<
+    Record<string, number>
+  >({});
+  const [selectedOrdersYear, setSelectedOrdersYear] = useState<number>(
+    () => new Date().getFullYear()
+  );
+  const [rfqResponsesByYearTrend, setRfqResponsesByYearTrend] = useState<
+    { year: string; count: number }[]
+  >([]);
+  const [ordersByStore, setOrdersByStore] = useState<
+    { store: string; count: number; fill?: string }[]
+  >([]);
+  const [loadingRfqTrend, setLoadingRfqTrend] = useState(true);
 
   useEffect(() => {
     if (businessAccount?.id) {
@@ -79,6 +110,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       fetchWalletData();
       fetchTransactions();
       fetchMonthlyRevenue();
+      fetchRfqResponsesTrend();
     }
   }, [businessAccount]);
 
@@ -643,11 +675,127 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
             fill: barColors[i % barColors.length],
           }))
       );
+
+      // Plasa business orders: by status (pending, delivered, on_the_way, accepted, etc.)
+      const statusCounts: Record<string, number> = {
+        pending: 0,
+        delivered: 0,
+        on_the_way: 0,
+        accepted: 0,
+      };
+      const now = new Date();
+      allOrders.forEach((order: any) => {
+        const s = (order.status || "").toLowerCase().trim().replace(/\s+/g, "_");
+        if (s === "delivered") statusCounts.delivered += 1;
+        else if (s === "on_the_way" || s === "on the way") statusCounts.on_the_way += 1;
+        else if (s === "accepted") statusCounts.accepted += 1;
+        else if (s === "pending" || s === "ready_for_pickup" || s === "in_progress" || s === "processing" || s === "shopping" || !s) statusCounts.pending += 1;
+        else statusCounts[s] = (statusCounts[s] || 0) + 1;
+      });
+      setOrderStatusCounts(statusCounts as typeof orderStatusCounts);
+
+      // Delivery timing: delivered on time, delivered late, pending delayed, pending on time
+      let deliveredOnTime = 0;
+      let deliveredLate = 0;
+      let pendingDelayed = 0;
+      let pendingOnTime = 0;
+      allOrders.forEach((order: any) => {
+        const status = (order.status || "").toLowerCase().trim();
+        const isDelivered = status === "delivered";
+        const expectedAt = order.delivered_time
+          ? new Date(order.delivered_time)
+          : (() => {
+              const d = new Date(order.created_at);
+              d.setDate(d.getDate() + 1);
+              return d;
+            })();
+        if (isDelivered) {
+          deliveredOnTime += 1;
+        } else {
+          if (expectedAt < now) pendingDelayed += 1;
+          else pendingOnTime += 1;
+        }
+      });
+      setDeliveryTimingCounts({
+        deliveredOnTime,
+        deliveredLate,
+        pendingDelayed,
+        pendingOnTime,
+      });
+
+      // Incoming orders by month (YYYY-MM) for monthly trend + year switch
+      const byMonth: Record<string, number> = {};
+      allOrders.forEach((order: any) => {
+        const d = new Date(order.created_at);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        byMonth[key] = (byMonth[key] || 0) + 1;
+      });
+      setMonthlyOrderCounts(byMonth);
+
+      // Orders per store (for bar chart)
+      const storeCounts: Record<string, number> = {};
+      allOrders.forEach((order: any) => {
+        const store = order.store || "Unknown store";
+        storeCounts[store] = (storeCounts[store] || 0) + 1;
+      });
+      const storeBarColors = ["#10b981", "#3b82f6", "#f59e0b", "#8b5cf6", "#ec4899", "#06b6d4"];
+      setOrdersByStore(
+        Object.entries(storeCounts)
+          .map(([store, count], i) => ({
+            store: store.length > 18 ? store.slice(0, 18) + "…" : store,
+            count,
+            fill: storeBarColors[i % storeBarColors.length],
+          }))
+          .sort((a, b) => b.count - a.count)
+      );
     } catch (error) {
       // Error fetching transactions
     } finally {
       setLoadingTransactions(false);
       setLoadingCharts(false);
+    }
+  };
+
+  const fetchRfqResponsesTrend = async () => {
+    if (!businessAccount?.id) return;
+    setLoadingRfqTrend(true);
+    try {
+      const rfqsRes = await fetch("/api/queries/business-rfqs").catch(() => null);
+      if (!rfqsRes?.ok) {
+        setRfqResponsesByYearTrend([]);
+        return;
+      }
+      const rfqsData = await rfqsRes.json();
+      const rfqs = rfqsData.rfqs || [];
+      if (rfqs.length === 0) {
+        setRfqResponsesByYearTrend([]);
+        return;
+      }
+      const responsePromises = rfqs.map((rfq: any) =>
+        fetch(`/api/queries/rfq-details-and-responses?rfq_id=${rfq.id}`).then((r) =>
+          r.ok ? r.json() : { responses: [] }
+        )
+      );
+      const results = await Promise.all(responsePromises);
+      const yearCounts: Record<string, number> = {};
+      results.forEach((data: any) => {
+        const responses = data.responses || [];
+        responses.forEach((r: any) => {
+          if (r.created_at) {
+            const y = new Date(r.created_at).getFullYear().toString();
+            yearCounts[y] = (yearCounts[y] || 0) + 1;
+          }
+        });
+      });
+      setRfqResponsesByYearTrend(
+        Object.entries(yearCounts)
+          .map(([year, count]) => ({ year, count }))
+          .sort((a, b) => a.year.localeCompare(b.year))
+      );
+    } catch (_) {
+      setRfqResponsesByYearTrend([]);
+    } finally {
+      setLoadingRfqTrend(false);
     }
   };
 
@@ -1053,67 +1201,188 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
         </div>
       </div>
 
-      {/* Transaction History */}
-      <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-        <div className="mb-4">
-          <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Transaction History
-          </h4>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            Payments received and products bought from your stores
-          </p>
+      {/* Two cols: left = Orders by status + Delivery timing; right = Transaction History */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Left column: Orders by status + Delivery timing */}
+        <div className="space-y-6">
+          {/* Orders by status (Plasa business orders) – chart */}
+          <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+            <div className="mb-4">
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Orders by status
+              </h4>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                Plasa business orders
+              </p>
+            </div>
+            {loadingTransactions ? (
+              <div className="flex h-[220px] items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent" />
+              </div>
+            ) : (() => {
+              const statusChartData = [
+                { name: "Pending", value: orderStatusCounts.pending ?? 0, fill: "#f59e0b" },
+                { name: "Delivered", value: orderStatusCounts.delivered ?? 0, fill: "#10b981" },
+                { name: "On the way", value: orderStatusCounts.on_the_way ?? 0, fill: "#3b82f6" },
+                { name: "Accepted", value: orderStatusCounts.accepted ?? 0, fill: "#059669" },
+                ...Object.entries(orderStatusCounts)
+                  .filter(([k]) => !["pending", "delivered", "on_the_way", "accepted"].includes(k) && (orderStatusCounts[k] ?? 0) > 0)
+                  .map(([key, value]) => ({ name: key.replace(/_/g, " "), value: value as number, fill: "#6b7280" })),
+              ].filter((d) => d.value > 0);
+              return statusChartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={220}>
+                  <PieChart>
+                    <Pie
+                      data={statusChartData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={70}
+                      label={({ name, value }) => `${name}: ${value}`}
+                    >
+                      {statusChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value: number) => [value, "Orders"]}
+                      contentStyle={{
+                        backgroundColor: "#fff",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "8px",
+                      }}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex h-[220px] items-center justify-center text-gray-500 dark:text-gray-400">
+                  No orders yet
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Delivery timing – chart */}
+          <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+            <div className="mb-4">
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Delivery timing
+              </h4>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                Plasa business orders · on time vs late vs delayed
+              </p>
+            </div>
+            {loadingTransactions ? (
+              <div className="flex h-[220px] items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent" />
+              </div>
+            ) : (() => {
+              const timingChartData = [
+                { name: "Delivered on time", value: deliveryTimingCounts.deliveredOnTime, fill: "#10b981" },
+                { name: "Delivered late", value: deliveryTimingCounts.deliveredLate, fill: "#ef4444" },
+                { name: "Pending delayed", value: deliveryTimingCounts.pendingDelayed, fill: "#f59e0b" },
+                { name: "Pending on time", value: deliveryTimingCounts.pendingOnTime, fill: "#0ea5e9" },
+              ].filter((d) => d.value > 0);
+              return timingChartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={220}>
+                  <PieChart>
+                    <Pie
+                      data={timingChartData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={70}
+                      label={({ name, value }) => `${name}: ${value}`}
+                    >
+                      {timingChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value: number) => [value, "Orders"]}
+                      contentStyle={{
+                        backgroundColor: "#fff",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "8px",
+                      }}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex h-[220px] items-center justify-center text-gray-500 dark:text-gray-400">
+                  No orders yet
+                </div>
+              );
+            })()}
+          </div>
         </div>
-        {loadingTransactions ? (
-          <div className="animate-pulse space-y-3">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
-                  <div className="space-y-2">
-                    <div className="h-4 w-32 rounded bg-gray-200 dark:bg-gray-700"></div>
-                    <div className="h-3 w-24 rounded bg-gray-200 dark:bg-gray-700"></div>
-                  </div>
-                </div>
-                <div className="h-5 w-20 rounded bg-gray-200 dark:bg-gray-700"></div>
-              </div>
-            ))}
-          </div>
-        ) : transactions.length > 0 ? (
-          <div className="space-y-3">
-            {transactions.slice(0, 10).map((transaction) => (
-              <div
-                key={transaction.id}
-                className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900"
-              >
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900 dark:text-white">
-                    {transaction.description}
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {transaction.date} at {transaction.time}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-green-600 dark:text-green-400">
-                    +{formatCurrencySync(transaction.amount)}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {transaction.status}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="py-8 text-center">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              No transactions yet
+
+        {/* Right column: Transaction History */}
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+          <div className="mb-4">
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Transaction History
+            </h4>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              Payments received and products bought from your stores
             </p>
           </div>
-        )}
+          {loadingTransactions ? (
+            <div className="animate-pulse space-y-3">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700" />
+                    <div className="space-y-2">
+                      <div className="h-4 w-32 rounded bg-gray-200 dark:bg-gray-700" />
+                      <div className="h-3 w-24 rounded bg-gray-200 dark:bg-gray-700" />
+                    </div>
+                  </div>
+                  <div className="h-5 w-20 rounded bg-gray-200 dark:bg-gray-700" />
+                </div>
+              ))}
+            </div>
+          ) : transactions.length > 0 ? (
+            <div className="space-y-3">
+              {transactions.slice(0, 10).map((transaction) => (
+                <div
+                  key={transaction.id}
+                  className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900"
+                >
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {transaction.description}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {transaction.date} at {transaction.time}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold text-green-600 dark:text-green-400">
+                      +{formatCurrencySync(transaction.amount)}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {transaction.status}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-8 text-center">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                No transactions yet
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Clients by gender & Top items/services sold */}
@@ -1212,6 +1481,182 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
           ) : (
             <div className="flex h-[240px] items-center justify-center text-gray-500 dark:text-gray-400">
               No items sold yet
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Annual trend: incoming orders + RFQ responses; Orders per store */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Incoming orders monthly (Jan–Dec) with year switch */}
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Incoming orders (monthly)
+              </h4>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                Jan–Dec for selected year
+              </p>
+            </div>
+            <select
+              value={selectedOrdersYear}
+              onChange={(e) => setSelectedOrdersYear(Number(e.target.value))}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+            >
+              {(() => {
+                const years = Object.keys(monthlyOrderCounts)
+                  .map((k) => parseInt(k.split("-")[0], 10))
+                  .filter((y, i, a) => a.indexOf(y) === i)
+                  .sort((a, b) => b - a);
+                const currentYear = new Date().getFullYear();
+                const yearSet = new Set(years);
+                if (!yearSet.has(currentYear)) years.unshift(currentYear);
+                if (years.length === 0) years.push(currentYear);
+                return years.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ));
+              })()}
+            </select>
+          </div>
+          {loadingCharts ? (
+            <div className="flex h-[220px] items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent" />
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart
+                data={(() => {
+                  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                  return monthNames.map((name, i) => {
+                    const mm = String(i + 1).padStart(2, "0");
+                    const key = `${selectedOrdersYear}-${mm}`;
+                    return {
+                      month: name,
+                      count: monthlyOrderCounts[key] ?? 0,
+                    };
+                  });
+                })()}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="month" stroke="#6b7280" style={{ fontSize: "12px" }} />
+                <YAxis stroke="#6b7280" style={{ fontSize: "12px" }} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#fff",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "8px",
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="count"
+                  name="Orders"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  dot={{ fill: "#10b981", r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        {/* Quotations (responses to my RFQs) annually – line trend */}
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+          <div className="mb-4">
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+              RFQ quotations (annual)
+            </h4>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              Responses to my RFQs by year
+            </p>
+          </div>
+          {loadingRfqTrend ? (
+            <div className="flex h-[220px] items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent" />
+            </div>
+          ) : rfqResponsesByYearTrend.length > 0 ? (
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={rfqResponsesByYearTrend}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="year" stroke="#6b7280" style={{ fontSize: "12px" }} />
+                <YAxis stroke="#6b7280" style={{ fontSize: "12px" }} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#fff",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "8px",
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="count"
+                  name="Quotations"
+                  stroke="#8b5cf6"
+                  strokeWidth={2}
+                  dot={{ fill: "#8b5cf6", r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-[220px] items-center justify-center text-gray-500 dark:text-gray-400">
+              No quotations yet
+            </div>
+          )}
+        </div>
+
+        {/* Orders per store – line chart */}
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+          <div className="mb-4">
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Orders per store
+            </h4>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              Business orders by store
+            </p>
+          </div>
+          {loadingCharts ? (
+            <div className="flex h-[220px] items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent" />
+            </div>
+          ) : ordersByStore.length > 0 ? (
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart
+                data={ordersByStore}
+                margin={{ top: 5, right: 10, left: 0, bottom: 40 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="store"
+                  angle={-35}
+                  textAnchor="end"
+                  height={50}
+                  tick={{ fontSize: 10 }}
+                  stroke="#6b7280"
+                />
+                <YAxis stroke="#6b7280" style={{ fontSize: "12px" }} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#fff",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "8px",
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="count"
+                  name="Orders"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  dot={{ fill: "#10b981", r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-[220px] items-center justify-center text-gray-500 dark:text-gray-400">
+              No orders yet
             </div>
           )}
         </div>
