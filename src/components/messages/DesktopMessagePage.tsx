@@ -432,7 +432,7 @@ export default function DesktopMessagePage({
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="group flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-md transition-all hover:scale-105 hover:shadow-lg active:scale-95"
+              className="group flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-md transition-all hover:scale-105 hover:shadow-lg active:scale-95 !text-white [&_svg]:!text-white"
             >
               <svg
                 className="h-5 w-5 text-white transition-transform group-hover:scale-110"
@@ -576,7 +576,7 @@ export default function DesktopMessagePage({
                           )}
                         </div>
                         {conversation.unreadCount > 0 && (
-                          <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-600 text-xs font-bold text-white shadow-lg">
+                          <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-600 text-xs font-bold !text-white shadow-lg">
                             {conversation.unreadCount}
                           </div>
                         )}
@@ -830,7 +830,7 @@ export default function DesktopMessagePage({
                                 <div
                                   className={`rounded-2xl px-4 py-3 shadow-sm ${
                                     isCurrentUser
-                                      ? "rounded-br-md bg-gradient-to-br from-green-600 to-green-700 text-white"
+                                      ? "rounded-br-md bg-gradient-to-br from-green-600 to-green-700 !text-white [&_*]:!text-white [&_svg]:!text-white"
                                       : "rounded-bl-md bg-white text-gray-900 dark:bg-gray-700 dark:text-white"
                                   }`}
                                 >
@@ -985,12 +985,12 @@ export default function DesktopMessagePage({
                 <button
                   type="submit"
                   disabled={isSending || !newMessage.trim()}
-                  className="flex-shrink-0 rounded-full bg-gradient-to-br from-green-600 to-green-700 p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:focus:ring-offset-gray-800"
+                  className="flex-shrink-0 rounded-full bg-gradient-to-br from-green-600 to-green-700 p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:focus:ring-offset-gray-800 !text-white [&_svg]:!text-white [&_*]:!text-white"
                   aria-label="Send message"
                 >
                   {isSending ? (
                     <svg
-                      className="h-5 w-5 animate-spin"
+                      className="h-5 w-5 animate-spin text-white"
                       fill="none"
                       viewBox="0 0 24 24"
                     >
@@ -1010,7 +1010,7 @@ export default function DesktopMessagePage({
                     </svg>
                   ) : (
                     <svg
-                      className="h-5 w-5"
+                      className="h-5 w-5 text-white"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"

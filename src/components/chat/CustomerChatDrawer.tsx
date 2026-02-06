@@ -123,7 +123,7 @@ const CustomerMessage: React.FC<MessageProps> = ({
         <div
           className={`rounded-2xl px-4 py-2.5 shadow-sm ${
             isCurrentUser
-              ? "bg-emerald-500 text-white dark:bg-emerald-600"
+              ? "bg-emerald-500 !text-white dark:bg-emerald-600 [&_*]:!text-white [&_svg]:!text-white"
               : "bg-white text-gray-900 shadow-gray-200/50 dark:bg-gray-700 dark:text-gray-100 dark:shadow-none"
           }`}
         >
@@ -511,7 +511,7 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
         {shopper.phone && (
           <a
             href={`tel:${shopper.phone}`}
-            className="flex-shrink-0 rounded-full bg-emerald-500 p-2.5 text-white transition-colors hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+            className="flex-shrink-0 rounded-full bg-emerald-500 p-2.5 text-white transition-colors hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 !text-white [&_svg]:!text-white"
             aria-label="Call shopper"
           >
             <svg
@@ -620,7 +620,7 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
             <button
               type="submit"
               disabled={!newMessage.trim()}
-              className="flex-shrink-0 rounded-full bg-emerald-500 p-2.5 text-white shadow-md transition-all duration-200 hover:bg-emerald-600 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none dark:focus:ring-offset-gray-800"
+              className="flex-shrink-0 rounded-full bg-emerald-500 p-2.5 text-white shadow-md transition-all duration-200 hover:bg-emerald-600 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none dark:focus:ring-offset-gray-800 !text-white [&_svg]:!text-white [&_*]:!text-white"
               aria-label="Send message"
             >
               <svg

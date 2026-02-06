@@ -632,7 +632,11 @@ function MessagesPage() {
               </p>
               <div className="mt-4">
                 <Link href="/CurrentPendingOrders" passHref>
-                  <Button appearance="primary" color="green">
+                  <Button
+                    appearance="primary"
+                    color="green"
+                    className="!text-white [&_svg]:!text-white"
+                  >
                     View Your Orders
                   </Button>
                 </Link>
