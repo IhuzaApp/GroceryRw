@@ -224,9 +224,10 @@ export default function LandingPage() {
     // Load Google Maps API if not already loaded
     if (typeof window !== "undefined" && !window.google) {
       const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ||
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${
+        process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ||
         process.env.NEXT_PUBLIC_GOOGLE_MAP_API
-        }&libraries=places`;
+      }&libraries=places`;
       script.async = true;
       script.defer = true;
       script.onload = initializeAutocomplete;

@@ -8,8 +8,7 @@ const isClient = typeof window !== "undefined";
 // env is missing; callers use `if (!hasuraClient)`. Production runtime has
 // env vars set, so the client is created there.
 const hasEnv =
-  !!process.env.HASURA_GRAPHQL_URL &&
-  !!process.env.HASURA_GRAPHQL_ADMIN_SECRET;
+  !!process.env.HASURA_GRAPHQL_URL && !!process.env.HASURA_GRAPHQL_ADMIN_SECRET;
 
 export const hasuraClient =
   !isClient && hasEnv

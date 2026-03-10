@@ -440,8 +440,9 @@ export async function sendNewStoreProductForReviewToSlack(
         },
         {
           type: "mrkdwn",
-          text: `*Business account ID*\n\`${payload.businessAccountId ?? "—"
-            }\``,
+          text: `*Business account ID*\n\`${
+            payload.businessAccountId ?? "—"
+          }\``,
         },
       ],
     },
@@ -450,8 +451,9 @@ export async function sendNewStoreProductForReviewToSlack(
       elements: [
         {
           type: "mrkdwn",
-          text: `User ID: \`${payload.userId ?? "—"
-            }\` · 🕒 ${new Date().toISOString()} · _Review and enable this product for the store._`,
+          text: `User ID: \`${
+            payload.userId ?? "—"
+          }\` · 🕒 ${new Date().toISOString()} · _Review and enable this product for the store._`,
         },
       ],
     },
@@ -535,8 +537,9 @@ export async function sendRequestEnableStoreToSlack(
       fields: [
         {
           type: "mrkdwn",
-          text: `*Business account ID*\n\`${payload.businessAccountId ?? "—"
-            }\``,
+          text: `*Business account ID*\n\`${
+            payload.businessAccountId ?? "—"
+          }\``,
         },
       ],
     },
@@ -545,8 +548,9 @@ export async function sendRequestEnableStoreToSlack(
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `*Message*\n${payload.message?.trim() || "_No additional message._"
-          }`,
+        text: `*Message*\n${
+          payload.message?.trim() || "_No additional message._"
+        }`,
       },
     },
     {
@@ -554,8 +558,9 @@ export async function sendRequestEnableStoreToSlack(
       elements: [
         {
           type: "mrkdwn",
-          text: `User ID: \`${payload.userId ?? "—"
-            }\` · 🕒 ${new Date().toISOString()}`,
+          text: `User ID: \`${
+            payload.userId ?? "—"
+          }\` · 🕒 ${new Date().toISOString()}`,
         },
       ],
     },
@@ -658,8 +663,9 @@ export async function sendRejectedAccountSupportRequestToSlack(
       elements: [
         {
           type: "mrkdwn",
-          text: `User ID: \`${payload.userId ?? "—"
-            }\` · 🕒 ${new Date().toISOString()}`,
+          text: `User ID: \`${
+            payload.userId ?? "—"
+          }\` · 🕒 ${new Date().toISOString()}`,
         },
       ],
     },
@@ -718,9 +724,7 @@ export async function sendPOSContactRequestToSlack(
     },
     {
       type: "section",
-      fields: [
-        { type: "mrkdwn", text: `*Phone Number*\n${payload.phone}` },
-      ],
+      fields: [{ type: "mrkdwn", text: `*Phone Number*\n${payload.phone}` }],
     },
     { type: "divider" },
     {

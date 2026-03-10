@@ -9,21 +9,21 @@ import PosPricingSection from "./pos/PosPricingSection";
 import PosCtaSection from "./pos/PosCtaSection";
 
 export default function PosPage() {
-    return (
-        <>
-            <link rel="preconnect" href="https://fonts.googleapis.com" />
-            <link
-                rel="preconnect"
-                href="https://fonts.gstatic.com"
-                crossOrigin="anonymous"
-            />
-            <link
-                href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap"
-                rel="stylesheet"
-            />
-            <style
-                dangerouslySetInnerHTML={{
-                    __html: `
+  return (
+    <>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossOrigin="anonymous"
+      />
+      <link
+        href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet"
+      />
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         * {
           font-family: 'Nunito', sans-serif;
         }
@@ -32,30 +32,29 @@ export default function PosPage() {
           font-weight: 600;
         }
       `,
-                }}
-            />
-            <div className="min-h-screen bg-white">
-                {/* Top Bar with Social Icons */}
-                <AboutTopBar />
+        }}
+      />
+      <div className="min-h-screen bg-white">
+        {/* Top Bar with Social Icons */}
+        <AboutTopBar />
 
-                {/* Main Navigation Bar */}
-                <AboutHeader activePage="pos" />
+        {/* Main Navigation Bar */}
+        <AboutHeader activePage="pos" />
 
-                {/* Hero Section */}
-                <PosHeroSection />
+        {/* Hero Section */}
+        <PosHeroSection />
 
-                {/* Features Section (AI Tax, Payroll, Reels, Plas Integration) */}
-                <PosFeaturesSection />
+        {/* Features Section (AI Tax, Payroll, Reels, Plas Integration) */}
+        <PosFeaturesSection />
 
-                {/* Subscription Plans Section */}
-                <PosPricingSection />
+        {/* Subscription Plans Section */}
+        <PosPricingSection />
 
-                <PosCtaSection />
+        <PosCtaSection />
 
-                {/* Footer */}
-                <AboutFooter />
-            </div>
-        </>
-    );
+        {/* Footer */}
+        <AboutFooter />
+      </div>
+    </>
+  );
 }
-
