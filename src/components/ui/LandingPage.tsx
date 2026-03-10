@@ -13,6 +13,7 @@ import HeroSectionSkeleton from "./landing/HeroSectionSkeleton";
 import CategoriesSection from "./landing/CategoriesSection";
 import CategoriesSectionSkeleton from "./landing/CategoriesSectionSkeleton";
 import AboutFooter from "./landing/AboutFooter";
+import { Handshake } from "lucide-react";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -1249,13 +1250,7 @@ export default function LandingPage() {
             <div className="mb-12 text-center">
               <div className="mb-4 flex justify-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#00A67E]">
-                  <svg
-                    className="h-8 w-8 text-white"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M20.5 2.5c-1.5 0-2.8.6-3.8 1.6l-1.2 1.2c-.4.4-.4 1 0 1.4.4.4 1 .4 1.4 0l1.2-1.2c.6-.6 1.4-.9 2.2-.9.8 0 1.6.3 2.2.9.6.6.9 1.4.9 2.2 0 .8-.3 1.6-.9 2.2l-1.2 1.2c-.4.4-.4 1 0 1.4.2.2.5.3.7.3s.5-.1.7-.3l1.2-1.2c1-1 1.6-2.3 1.6-3.8 0-1.5-.6-2.8-1.6-3.8-1-1-2.3-1.6-3.8-1.6zm-17 0c-1.5 0-2.8.6-3.8 1.6-1 1-1.6 2.3-1.6 3.8 0 1.5.6 2.8 1.6 3.8l1.2 1.2c.2.2.5.3.7.3s.5-.1.7-.3c.4-.4.4-1 0-1.4l-1.2-1.2c-.6-.6-1.4-.9-2.2-.9-.8 0-1.6.3-2.2.9-.6.6-.9 1.4-.9 2.2 0 .8.3 1.6.9 2.2l1.2 1.2c.4.4 1 .4 1.4 0 .4-.4.4-1 0-1.4l-1.2-1.2c-1-1-1.6-2.3-1.6-3.8 0-1.5.6-2.8 1.6-3.8 1-1 2.3-1.6 3.8-1.6zm16.5 5.5c-.6 0-1 .4-1 1v2h-2v-2c0-.6-.4-1-1-1s-1 .4-1 1v2h-2v-2c0-.6-.4-1-1-1s-1 .4-1 1v6c0 .6.4 1 1 1h8c.6 0 1-.4 1-1v-6c0-.6-.4-1-1-1z" />
-                  </svg>
+                  <Handshake className="h-8 w-8 text-white" />
                 </div>
               </div>
               <h2 className="text-3xl font-bold text-[#1A1A1A] md:text-4xl">
@@ -1336,22 +1331,13 @@ export default function LandingPage() {
 
               {/* Get POS System */}
               <div className="flex flex-col items-center text-center">
-                <div className="mb-6 flex h-48 w-48 items-center justify-center overflow-hidden rounded-full bg-white shadow-lg">
-                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-green-50 to-emerald-50">
-                    <svg
-                      className="h-24 w-24 text-green-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                      />
-                    </svg>
-                  </div>
+                <div className="relative mb-6 flex h-48 w-48 items-center justify-center overflow-hidden rounded-full bg-white shadow-lg">
+                  <Image
+                    src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+                    alt="POS System"
+                    fill
+                    className="object-cover"
+                  />
                 </div>
                 <h3 className="mb-3 text-2xl font-bold text-[#1A1A1A]">
                   Get POS System
