@@ -1,6 +1,46 @@
-import { HeadphonesIcon } from "lucide-react";
+import { HeadphonesIcon, Loader2 } from "lucide-react";
+import { useState } from "react";
 
 export default function PosCtaSection() {
+    const [shopName, setShopName] = useState("");
+    const [ownerName, setOwnerName] = useState("");
+    const [phone, setPhone] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!shopName || !ownerName || !phone) {
+            setError("Please fill in all fields.");
+            return;
+        }
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const response = await fetch("/api/support/pos-contact", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ shopName, ownerName, phone }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to send request.");
+            }
+
+            setIsSuccess(true);
+            setShopName("");
+            setOwnerName("");
+            setPhone("");
+        } catch (err: any) {
+            setError(err.message || "An error occurred.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
         <section id="pos-register" className="relative overflow-hidden bg-white py-24 text-[#1A1A1A]">
             {/* Background Decor */}
@@ -21,49 +61,84 @@ export default function PosCtaSection() {
                     <span className="font-bold text-[#00A67E]">Our dedicated agents will contact you directly</span>.
                 </p>
 
-                <form className="mx-auto max-w-lg space-y-4 rounded-3xl bg-gray-50 p-8 md:p-10 border border-gray-100 shadow-sm">
-                    <div className="grid gap-4 md:grid-cols-2">
+                {isSuccess ? (
+                    <div className="mx-auto max-w-lg rounded-3xl bg-emerald-50 p-12 border border-emerald-100 shadow-sm">
+                        <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                            <HeadphonesIcon className="h-8 w-8" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-[#1A1A1A] mb-2">Request Received!</h3>
+                        <p className="text-gray-600">
+                            Thank you for your interest. A Plas agent will contact you shortly to schedule your personalized demo.
+                        </p>
+                        <button
+                            onClick={() => setIsSuccess(false)}
+                            className="mt-8 text-sm font-bold text-[#00A67E] hover:underline"
+                        >
+                            Send another request
+                        </button>
+                    </div>
+                ) : (
+                    <form onSubmit={handleSubmit} className="mx-auto max-w-lg space-y-4 rounded-3xl bg-gray-50 p-8 md:p-10 border border-gray-100 shadow-sm">
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-1 text-left">
+                                <label htmlFor="shopName" className="text-sm font-bold text-gray-500">Shop/Business Name</label>
+                                <input
+                                    type="text"
+                                    id="shopName"
+                                    required
+                                    value={shopName}
+                                    onChange={(e) => setShopName(e.target.value)}
+                                    className="w-full rounded-xl border-none bg-white px-4 py-4 text-[#1A1A1A] placeholder-gray-400 outline-none ring-1 ring-gray-200 transition-all focus:ring-2 focus:ring-[#00D9A5]"
+                                    placeholder="e.g. Ndoli's Joint"
+                                />
+                            </div>
+                            <div className="space-y-1 text-left">
+                                <label htmlFor="ownerName" className="text-sm font-bold text-gray-500">Your Full Name</label>
+                                <input
+                                    type="text"
+                                    id="ownerName"
+                                    required
+                                    value={ownerName}
+                                    onChange={(e) => setOwnerName(e.target.value)}
+                                    className="w-full rounded-xl border-none bg-white px-4 py-4 text-[#1A1A1A] placeholder-gray-400 outline-none ring-1 ring-gray-200 transition-all focus:ring-2 focus:ring-[#00D9A5]"
+                                    placeholder="John Doe"
+                                />
+                            </div>
+                        </div>
+
                         <div className="space-y-1 text-left">
-                            <label htmlFor="shopName" className="text-sm font-bold text-gray-500">Shop/Business Name</label>
+                            <label htmlFor="phone" className="text-sm font-bold text-gray-500">Phone Number</label>
                             <input
-                                type="text"
-                                id="shopName"
+                                type="tel"
+                                id="phone"
+                                required
+                                value={phone}
+                                onChange={(e) => setPhone(e.target.value)}
                                 className="w-full rounded-xl border-none bg-white px-4 py-4 text-[#1A1A1A] placeholder-gray-400 outline-none ring-1 ring-gray-200 transition-all focus:ring-2 focus:ring-[#00D9A5]"
-                                placeholder="e.g. Ndoli's Joint"
+                                placeholder="+250 788 123 456"
                             />
                         </div>
-                        <div className="space-y-1 text-left">
-                            <label htmlFor="ownerName" className="text-sm font-bold text-gray-500">Your Full Name</label>
-                            <input
-                                type="text"
-                                id="ownerName"
-                                className="w-full rounded-xl border-none bg-white px-4 py-4 text-[#1A1A1A] placeholder-gray-400 outline-none ring-1 ring-gray-200 transition-all focus:ring-2 focus:ring-[#00D9A5]"
-                                placeholder="John Doe"
-                            />
-                        </div>
-                    </div>
 
-                    <div className="space-y-1 text-left">
-                        <label htmlFor="phone" className="text-sm font-bold text-gray-500">Phone Number</label>
-                        <input
-                            type="tel"
-                            id="phone"
-                            className="w-full rounded-xl border-none bg-white px-4 py-4 text-[#1A1A1A] placeholder-gray-400 outline-none ring-1 ring-gray-200 transition-all focus:ring-2 focus:ring-[#00D9A5]"
-                            placeholder="+250 788 123 456"
-                        />
-                    </div>
+                        {error && (
+                            <p className="text-sm font-medium text-red-500 text-left">{error}</p>
+                        )}
 
-                    <button
-                        type="button"
-                        className="mt-4 w-full rounded-xl bg-[#00D9A5] px-8 py-5 text-lg font-bold text-[#1A1A1A] transition-all hover:bg-[#00c596] shadow-lg shadow-[#00D9A5]/20 active:scale-[0.98]"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            alert("Thank you! A Plas agent will contact you shortly.");
-                        }}
-                    >
-                        Request Agent Contact
-                    </button>
-                </form>
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="mt-4 w-full flex items-center justify-center gap-2 rounded-xl bg-[#00D9A5] px-8 py-5 text-lg font-bold text-[#1A1A1A] transition-all hover:bg-[#00c596] shadow-lg shadow-[#00D9A5]/20 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+                        >
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="h-5 w-5 animate-spin" />
+                                    Sending...
+                                </>
+                            ) : (
+                                "Request Agent Contact"
+                            )}
+                        </button>
+                    </form>
+                )}
             </div>
         </section>
     );
