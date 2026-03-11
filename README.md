@@ -3328,10 +3328,12 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 
 1. [Reels Feature](#reels-feature-documentation)
 2. [Reel Orders System](#reel-orders-system)
-3. [Delivery Photo Upload Feature](#delivery-photo-upload-feature)
-4. [Nearby Dasher Notification Logic](#nearby-dasher-notification-logic)
-5. [Telegram Bot Integration](#telegram-bot-integration)
-6. [Barcode Scanner System](#barcode-scanner-system)
+3. [SEO & Search Visibility](#seo--search-visibility)
+4. [Project Structure](#project-structure)
+5. [Delivery Photo Upload Feature](#delivery-photo-upload-feature)
+6. [Nearby Dasher Notification Logic](#nearby-dasher-notification-logic)
+7. [Telegram Bot Integration](#telegram-bot-integration)
+8. [Barcode Scanner System](#barcode-scanner-system)
 
 # Reels Feature Documentation
 
@@ -6094,8 +6096,8 @@ ADD COLUMN delivery_photo TEXT;
 
 For technical issues or questions, please contact:
 
-- Technical Support: support@example.com
-- Bug Reports: bugs@example.com
+- **Technical Support**: support@example.com
+- **Bug Reports**: bugs@example.com
 
 ## Nearby Dasher Notification Logic
 
@@ -6849,8 +6851,25 @@ describe("System Configuration", () => {
 3. **Performance Issues**:
    - Monitor cache hit rates
    - Check API response times
-   - Optimize component rendering
+   - Optimized components for smooth interactions and rapid loading.
 
+## SEO & Search Visibility
+
+The website is optimized for search engines to ensure high visibility and detailed search results:
+
+- **Structured Data (JSON-LD)**: Implemented in `_app.tsx` to provide search engines with rich information about the organization and website structure, enabling "Sitelinks" in results.
+- **Page-Specific Meta Tags**: Custom titles and descriptions for key pages:
+  - Landing Page (Marketplace & Delivery)
+  - POS System (Features & Pricing)
+  - Team & Life at Plas
+  - Plas Business (Seller Registration)
+  - Contact & Support
+- **Discovery Tools**:
+  - `sitemap.xml`: Comprehensive map of all public routes for complete indexing.
+  - `robots.txt`: Defined crawling rules for search engine bots.
+- **Social Media (Open Graph & Twitter Blocks)**: Optimized preview cards for sharing on platforms like Facebook, Twitter, and LinkedIn.
+
+## Project Structure
 ### Debug Tools
 
 ```typescript
