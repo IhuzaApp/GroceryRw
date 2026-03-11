@@ -1168,7 +1168,7 @@ export default function LandingPage() {
             {/* Call to Action Button */}
             <div className="mt-12 flex justify-center">
               <button
-                onClick={() => router.push("/")}
+                onClick={handleUseCurrentLocation}
                 className="rounded-lg bg-[#022C22] px-8 py-4 text-lg font-medium text-white transition-colors hover:bg-[#011a14]"
               >
                 Explore stores around you

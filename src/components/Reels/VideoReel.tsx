@@ -3,7 +3,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { useTheme } from "../../context/ThemeContext";
-import { Button, Avatar, Badge, toaster } from "rsuite";
+import { Button, Avatar, Badge, toaster, Message } from "rsuite";
 import Image from "next/image";
 import OrderModal from "./OrderModal";
 import { formatCurrencySync } from "../../utils/formatCurrency";
@@ -236,6 +236,11 @@ interface BasePost {
   };
   isLiked: boolean;
   commentsList: Comment[];
+  shop_id?: string | null;
+  restaurant_id?: string | null;
+  shopLat?: number;
+  shopLng?: number;
+  shopAlt?: number;
 }
 
 interface RestaurantPost extends BasePost {
@@ -272,6 +277,23 @@ interface ChefPost extends BasePost {
 }
 
 type FoodPost = RestaurantPost | SupermarketPost | ChefPost;
+// Helper to extract YouTube video ID
+const getYouTubeVideoId = (url: string) => {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return match && match[2].length === 11 ? match[2] : null;
+};
+
+const isYouTubeUrl = (url: string) => {
+  return url.includes("youtube.com") || url.includes("youtu.be");
+};
+
+const isImageUrl = (url: string) => {
+  if (!url) return false;
+  const imageExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg", ".bmp"];
+  const baseUrl = url.split("?")[0].toLowerCase();
+  return imageExtensions.some((ext) => baseUrl.endsWith(ext));
+};
 
 interface VideoReelProps {
   post: FoodPost;
@@ -299,6 +321,8 @@ export default function VideoReel({
   const [isMobile, setIsMobile] = useState(false);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const mountedRef = useRef(true);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [audioSource, setAudioSource] = useState("/assets/sounds/reel-background.mp3");
 
   // Track component mount state
   useEffect(() => {
@@ -333,7 +357,7 @@ export default function VideoReel({
   useEffect(() => {
     if (!mountedRef.current) return;
 
-    if (videoRef.current) {
+    if (videoRef.current && !isYouTubeUrl(post.content.video) && !isImageUrl(post.content.video)) {
       if (isVisible) {
         // Add a small delay to ensure the video is ready
         const playVideo = async () => {
@@ -366,6 +390,29 @@ export default function VideoReel({
     }
   }, [isVisible, post.id, isMobile]);
 
+  // Handle background audio for images
+  useEffect(() => {
+    if (!mountedRef.current || !isImageUrl(post.content.video)) return;
+
+    if (audioRef.current) {
+      if (isVisible) {
+        // Ensure the source is loaded before playing
+        audioRef.current.load();
+        audioRef.current.play().catch((err) => {
+          if (err.name !== "AbortError") {
+            console.log(`Audio playback failed for ${audioSource}:`, err);
+            // If it failed and we haven't tried the fallback yet, try it
+            if (!audioSource.includes("newMessage.mp3")) {
+              setAudioSource("/assets/sounds/newMessage.mp3");
+            }
+          }
+        });
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [isVisible, post.content.video, audioSource]);
+
   const handleVideoLoad = () => {
     if (!mountedRef.current) return;
     setVideoLoading(false);
@@ -375,7 +422,9 @@ export default function VideoReel({
   const handleVideoError = (error: any) => {
     if (!mountedRef.current) return;
     toaster.push(
-      `Video error: ${(error as Error).message || "Unknown error occurred"}`,
+      <Message type="error" closable>
+        {`Video error: ${(error as Error).message || "Unknown error occurred"}`}
+      </Message>,
       { placement: "topEnd" }
     );
     setVideoError(true);
@@ -392,9 +441,9 @@ export default function VideoReel({
         } catch (error) {
           if (mountedRef.current && (error as Error).name !== "AbortError") {
             toaster.push(
-              `Failed to play video: ${
-                (error as Error).message || "Unknown error occurred"
-              }`,
+              <Message type="error" closable>
+                {`Failed to play video: ${(error as Error).message || "Unknown error occurred"}`}
+              </Message>,
               { placement: "topEnd" }
             );
           }
@@ -783,34 +832,91 @@ export default function VideoReel({
         }}
       >
         {/* Background Video - Direct fill */}
-        <video
-          ref={videoRef}
-          src={post.content.video}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            minHeight: "100%",
-            objectFit: "cover",
-            objectPosition: "center",
-            backgroundColor: "#000",
-            margin: 0,
-            padding: 0,
-            display: "block",
-            zIndex: 1,
-          }}
-          loop
-          muted
-          playsInline
-          preload="metadata"
-          poster={post.creator.avatar || "/placeholder.svg"}
-          onLoadedData={handleVideoLoad}
-          onError={handleVideoError}
-          onLoadStart={() => setVideoLoading(true)}
-          onCanPlay={handleVideoCanPlay}
-        />
+        {isYouTubeUrl(post.content.video) ? (
+          <iframe
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              minHeight: "100%",
+              border: "none",
+              zIndex: 1,
+            }}
+            src={`https://www.youtube.com/embed/${getYouTubeVideoId(post.content.video)}?autoplay=${isVisible ? 1 : 0}&mute=${isVisible ? 0 : 1}&loop=1&playlist=${getYouTubeVideoId(post.content.video)}&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1`}
+            allow="autoplay; encrypted-media"
+            allowFullScreen
+            onLoad={handleVideoLoad}
+          />
+        ) : isImageUrl(post.content.video) ? (
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              zIndex: 1,
+            }}
+          >
+            <img
+              src={post.content.video}
+              alt={post.content.title}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: "center",
+              }}
+              onLoad={handleVideoLoad}
+              onError={() => {
+                setVideoError(true);
+                setVideoLoading(false);
+              }}
+            />
+          </div>
+        ) : (
+          <video
+            ref={videoRef}
+            src={post.content.video}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              minHeight: "100%",
+              objectFit: "cover",
+              objectPosition: "center",
+              backgroundColor: "#000",
+              margin: 0,
+              padding: 0,
+              display: "block",
+              zIndex: 1,
+            }}
+            loop
+            muted={!isVisible}
+            playsInline
+            preload="metadata"
+            poster={post.creator.avatar || "/placeholder.svg"}
+            onLoadedData={handleVideoLoad}
+            onError={handleVideoError}
+            onLoadStart={() => setVideoLoading(true)}
+            onCanPlay={handleVideoCanPlay}
+          />
+        )}
+
+        {/* Background Audio for Images */}
+        {isImageUrl(post.content.video) && (
+          <audio
+            ref={audioRef}
+            src={audioSource}
+            loop
+            muted={!isVisible}
+            preload="auto"
+          />
+        )}
 
         {/* Loading overlay */}
         {videoLoading && (

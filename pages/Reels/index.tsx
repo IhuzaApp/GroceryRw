@@ -329,6 +329,7 @@ interface DatabaseReel {
   type: string;
   user_id: string;
   video_url: string;
+  shop_id?: string;
   delivery_time: string | null;
   Price: string | null;
   Product: any;
@@ -521,6 +522,13 @@ export default function FoodReelsApp() {
     startY: 0,
     currentY: 0,
   });
+  const mountedRef = useRef(true); // To track if component is mounted
+
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   // Cache utility functions
   const getCachedReels = (): CachedReels | null => {
@@ -539,7 +547,7 @@ export default function FoodReelsApp() {
 
       return parsedCache;
     } catch (error) {
-      console.error("Error reading cache:", error);
+      // console.error("Error reading cache:", error);
       localStorage.removeItem(CACHE_KEY);
       return null;
     }
@@ -801,7 +809,7 @@ export default function FoodReelsApp() {
             const trimmed = str.trim();
             return trimmed.length > 0 ? trimmed : null;
           }
-        } catch (e) {}
+        } catch (e) { }
         const keys = Object.keys(value);
         for (const key of keys) {
           if (typeof value[key] === "string") {
@@ -980,13 +988,15 @@ export default function FoodReelsApp() {
         const cached = getCachedReels();
 
         if (cached && !forceRefresh) {
-          console.log("Loading reels from cache");
-          setPosts(cached.data);
-          setLoading(false);
+          // console.log("Loading reels from cache");
+          if (mountedRef.current) {
+            setPosts(cached.data);
+            setLoading(false);
+          }
 
           // Check if we need to refresh in background
           if (shouldRefreshCache(cached)) {
-            console.log("Cache is stale, refreshing in background");
+            // console.log("Cache is stale, refreshing in background");
             fetchReelsFromAPI(true); // Background refresh
           }
           return;
@@ -996,18 +1006,24 @@ export default function FoodReelsApp() {
         await fetchReelsFromAPI(false);
       } catch (err) {
         console.error("Error in fetchReels:", err);
-        setError(err instanceof Error ? err.message : "Failed to fetch reels");
-        setLoading(false);
+        if (mountedRef.current) {
+          setError(err instanceof Error ? err.message : "Failed to fetch reels");
+          setLoading(false);
+        }
       }
     };
 
     const fetchReelsFromAPI = async (isBackgroundRefresh: boolean = false) => {
       try {
         if (!isBackgroundRefresh) {
-          setLoading(true);
-          setError(null);
+          if (mountedRef.current) {
+            setLoading(true);
+            setError(null);
+          }
         } else {
-          setIsRefreshing(true);
+          if (mountedRef.current) {
+            setIsRefreshing(true);
+          }
         }
 
         const response = await fetch("/api/queries/reels");
@@ -1040,7 +1056,9 @@ export default function FoodReelsApp() {
         );
 
         // Update state first
-        setPosts(randomizedPosts);
+        if (mountedRef.current) {
+          setPosts(randomizedPosts);
+        }
 
         // Try to update cache, but don't fail if it doesn't work
         try {
@@ -1052,19 +1070,21 @@ export default function FoodReelsApp() {
           );
         }
 
-        if (isBackgroundRefresh) {
-          console.log("Background refresh completed");
-        }
+        // if (isBackgroundRefresh) {
+        //   console.log("Background refresh completed");
+        // }
       } catch (err) {
         console.error("Error fetching reels from API:", err);
-        if (!isBackgroundRefresh) {
+        if (!isBackgroundRefresh && mountedRef.current) {
           setError(
             err instanceof Error ? err.message : "Failed to fetch reels"
           );
         }
       } finally {
-        setLoading(false);
-        setIsRefreshing(false);
+        if (mountedRef.current) {
+          setLoading(false);
+          setIsRefreshing(false);
+        }
       }
     };
 
@@ -1074,8 +1094,10 @@ export default function FoodReelsApp() {
   // Manual refresh function
   const refreshReels = async () => {
     try {
-      setIsRefreshing(true);
-      setError(null);
+      if (mountedRef.current) {
+        setIsRefreshing(true);
+        setError(null);
+      }
 
       const response = await fetch("/api/queries/reels");
       if (!response.ok) {
@@ -1107,7 +1129,9 @@ export default function FoodReelsApp() {
       );
 
       // Update state first for immediate UI update
-      setPosts(randomizedPosts);
+      if (mountedRef.current) {
+        setPosts(randomizedPosts);
+      }
 
       // Try to update cache, but don't fail if it doesn't work
       try {
@@ -1120,9 +1144,13 @@ export default function FoodReelsApp() {
       }
     } catch (err) {
       console.error("Error refreshing reels:", err);
-      setError(err instanceof Error ? err.message : "Failed to refresh reels");
+      if (mountedRef.current) {
+        setError(err instanceof Error ? err.message : "Failed to refresh reels");
+      }
     } finally {
-      setIsRefreshing(false);
+      if (mountedRef.current) {
+        setIsRefreshing(false);
+      }
     }
   };
 
@@ -1151,7 +1179,9 @@ export default function FoodReelsApp() {
             container.style.scrollBehavior = "smooth";
           }, 100);
         }
-        setVisiblePostIndex(index);
+        if (mountedRef.current) {
+          setVisiblePostIndex(index);
+        }
       }
     };
 
@@ -1287,7 +1317,9 @@ export default function FoodReelsApp() {
       if (deltaY < -80 && visiblePostIndex === 0 && touchDuration > 200) {
         // Pull to refresh triggered
         refreshReels();
-        setPullToRefresh({ isPulling: false, startY: 0, currentY: 0 });
+        if (mountedRef.current) {
+          setPullToRefresh({ isPulling: false, startY: 0, currentY: 0 });
+        }
         return;
       }
 
@@ -1337,12 +1369,14 @@ export default function FoodReelsApp() {
     const checkIfMobile = () => {
       const newIsMobile = window.innerWidth < 768;
       if (newIsMobile !== isMobile) {
-        console.log(
-          `Screen size changed: ${newIsMobile ? "mobile" : "desktop"}`
-        );
-        setIsMobile(newIsMobile);
-        // Reset visible post index when switching layouts
-        setVisiblePostIndex(0);
+        // console.log(
+        //   `Screen size changed: ${newIsMobile ? "mobile" : "desktop"}`
+        // );
+        if (mountedRef.current) {
+          setIsMobile(newIsMobile);
+          // Reset visible post index when switching layouts
+          setVisiblePostIndex(0);
+        }
       }
     };
 
@@ -1379,7 +1413,9 @@ export default function FoodReelsApp() {
             const index = parseInt(
               entry.target.getAttribute("data-index") || "0"
             );
-            setVisiblePostIndex(index);
+            if (mountedRef.current) {
+              setVisiblePostIndex(index);
+            }
           }
         });
       },
@@ -1422,10 +1458,11 @@ export default function FoodReelsApp() {
       if (currentPost.isProcessingLike) return;
 
       // Immediately update UI for instant feedback
-      setPosts(
-        posts.map((post: FoodPost) =>
-          post.id === postId
-            ? {
+      if (mountedRef.current) {
+        setPosts(
+          posts.map((post: FoodPost) =>
+            post.id === postId
+              ? {
                 ...post,
                 isLiked: !isCurrentlyLiked,
                 isProcessingLike: true, // Mark as processing
@@ -1436,9 +1473,10 @@ export default function FoodReelsApp() {
                     : post.stats.likes + 1,
                 },
               }
-            : post
-        )
-      );
+              : post
+          )
+        );
+      }
 
       // Process backend request in background
       const method = isCurrentlyLiked ? "DELETE" : "POST";
@@ -1462,10 +1500,11 @@ export default function FoodReelsApp() {
               response.status === 400 &&
               errorData.error?.includes("already liked")
             ) {
-              setPosts(
-                posts.map((post: FoodPost) =>
-                  post.id === postId
-                    ? {
+              if (mountedRef.current) {
+                setPosts(
+                  posts.map((post: FoodPost) =>
+                    post.id === postId
+                      ? {
                         ...post,
                         isLiked: isCurrentlyLiked, // Revert to original state
                         isProcessingLike: false,
@@ -1476,15 +1515,17 @@ export default function FoodReelsApp() {
                             : Math.max(0, post.stats.likes - 1),
                         },
                       }
-                    : post
-                )
-              );
+                      : post
+                  )
+                );
+              }
             } else {
               // For other errors, revert the optimistic update
-              setPosts(
-                posts.map((post: FoodPost) =>
-                  post.id === postId
-                    ? {
+              if (mountedRef.current) {
+                setPosts(
+                  posts.map((post: FoodPost) =>
+                    post.id === postId
+                      ? {
                         ...post,
                         isLiked: isCurrentlyLiked, // Revert to original state
                         isProcessingLike: false,
@@ -1495,31 +1536,35 @@ export default function FoodReelsApp() {
                             : Math.max(0, post.stats.likes - 1),
                         },
                       }
+                      : post
+                  )
+                );
+              }
+            }
+          } else {
+            // Success - clear processing flag
+            if (mountedRef.current) {
+              setPosts(
+                posts.map((post: FoodPost) =>
+                  post.id === postId
+                    ? {
+                      ...post,
+                      isProcessingLike: false,
+                    }
                     : post
                 )
               );
             }
-          } else {
-            // Success - clear processing flag
-            setPosts(
-              posts.map((post: FoodPost) =>
-                post.id === postId
-                  ? {
-                      ...post,
-                      isProcessingLike: false,
-                    }
-                  : post
-              )
-            );
           }
         })
         .catch((error) => {
           console.error("Error toggling like:", error);
           // Revert UI on error
-          setPosts(
-            posts.map((post: FoodPost) =>
-              post.id === postId
-                ? {
+          if (mountedRef.current) {
+            setPosts(
+              posts.map((post: FoodPost) =>
+                post.id === postId
+                  ? {
                     ...post,
                     isLiked: isCurrentlyLiked, // Revert to original state
                     isProcessingLike: false,
@@ -1530,9 +1575,10 @@ export default function FoodReelsApp() {
                         : Math.max(0, post.stats.likes - 1),
                     },
                   }
-                : post
-            )
-          );
+                  : post
+              )
+            );
+          }
         });
     } catch (error) {
       console.error("Error toggling like:", error);
@@ -1560,24 +1606,26 @@ export default function FoodReelsApp() {
 
       if (response.ok) {
         const result = await response.json();
-        setPosts(
-          posts.map((post: FoodPost) =>
-            post.id === postId
-              ? {
+        if (mountedRef.current) {
+          setPosts(
+            posts.map((post: FoodPost) =>
+              post.id === postId
+                ? {
                   ...post,
                   commentsList: post.commentsList.map((comment: Comment) =>
                     comment.id === commentId
                       ? {
-                          ...comment,
-                          isLiked: result.isLiked,
-                          likes: parseInt(result.likes),
-                        }
+                        ...comment,
+                        isLiked: result.isLiked,
+                        likes: parseInt(result.likes),
+                      }
                       : comment
                   ),
                 }
-              : post
-          )
-        );
+                : post
+            )
+          );
+        }
       }
     } catch (error) {
       console.error("Error toggling comment like:", error);
@@ -1607,25 +1655,29 @@ export default function FoodReelsApp() {
       };
 
       // Add to optimisticComments state
-      setOptimisticComments((prev) => ({
-        ...prev,
-        [postId]: [optimisticComment, ...(prev[postId] || [])],
-      }));
+      if (mountedRef.current) {
+        setOptimisticComments((prev) => ({
+          ...prev,
+          [postId]: [optimisticComment, ...(prev[postId] || [])],
+        }));
+      }
 
       // Optimistic update - add comment immediately to UI
-      setPosts(
-        posts.map((post: FoodPost) =>
-          post.id === postId
-            ? {
+      if (mountedRef.current) {
+        setPosts(
+          posts.map((post: FoodPost) =>
+            post.id === postId
+              ? {
                 ...post,
                 stats: {
                   ...post.stats,
                   comments: post.stats.comments + 1,
                 },
               }
-            : post
-        )
-      );
+              : post
+          )
+        );
+      }
 
       // Make API call to add comment
       const response = await fetch("/api/queries/reel-comments", {
@@ -1647,12 +1699,14 @@ export default function FoodReelsApp() {
 
       if (result.success && result.comment) {
         // Remove optimistic comment
-        setOptimisticComments((prev) => ({
-          ...prev,
-          [postId]: (prev[postId] || []).filter(
-            (c) => c.id !== optimisticComment.id
-          ),
-        }));
+        if (mountedRef.current) {
+          setOptimisticComments((prev) => ({
+            ...prev,
+            [postId]: (prev[postId] || []).filter(
+              (c) => c.id !== optimisticComment.id
+            ),
+          }));
+        }
         // Optionally, you can trigger a refetch here for extra safety
         await refetchComments(postId);
       } else {
@@ -1661,23 +1715,25 @@ export default function FoodReelsApp() {
     } catch (error) {
       console.error("Error adding comment:", error);
       // Remove optimistic comment on error
-      setOptimisticComments((prev) => ({
-        ...prev,
-        [postId]: (prev[postId] || []).filter((c) => !c.id.startsWith("temp-")),
-      }));
-      setPosts(
-        posts.map((post: FoodPost) =>
-          post.id === postId
-            ? {
+      if (mountedRef.current) {
+        setOptimisticComments((prev) => ({
+          ...prev,
+          [postId]: (prev[postId] || []).filter((c) => !c.id.startsWith("temp-")),
+        }));
+        setPosts(
+          posts.map((post: FoodPost) =>
+            post.id === postId
+              ? {
                 ...post,
                 stats: {
                   ...post.stats,
                   comments: Math.max(0, post.stats.comments - 1),
                 },
               }
-            : post
-        )
-      );
+              : post
+          )
+        );
+      }
       alert("Failed to add comment. Please try again.");
     }
   };
@@ -1685,7 +1741,9 @@ export default function FoodReelsApp() {
   // Function to refetch comments for a specific post
   const refetchComments = async (postId: string) => {
     try {
-      setIsRefreshingComments(true);
+      if (mountedRef.current) {
+        setIsRefreshingComments(true);
+      }
       const response = await fetch(
         `/api/queries/reel-comments?reel_id=${postId}`
       );
@@ -1725,10 +1783,11 @@ export default function FoodReelsApp() {
       ];
 
       // Update posts with fresh comment data
-      setPosts(
-        posts.map((post: FoodPost) =>
-          post.id === postId
-            ? {
+      if (mountedRef.current) {
+        setPosts(
+          posts.map((post: FoodPost) =>
+            post.id === postId
+              ? {
                 ...post,
                 commentsList: mergedComments,
                 stats: {
@@ -1736,13 +1795,16 @@ export default function FoodReelsApp() {
                   comments: mergedComments.length,
                 },
               }
-            : post
-        )
-      );
+              : post
+          )
+        );
+      }
     } catch (error) {
       console.error("Error refetching comments:", error);
     } finally {
-      setIsRefreshingComments(false);
+      if (mountedRef.current) {
+        setIsRefreshingComments(false);
+      }
     }
   };
 
@@ -1754,17 +1816,19 @@ export default function FoodReelsApp() {
       return;
     }
 
-    console.log("Opening comments for post:", postId);
-    setActivePostId(postId);
-    setShowComments(true);
+    // console.log("Opening comments for post:", postId);
+    if (mountedRef.current) {
+      setActivePostId(postId);
+      setShowComments(true);
+    }
 
     // Refetch comments when opening to ensure we have the latest data
     await refetchComments(postId);
 
-    console.log("Comments state after opening:", {
-      postId,
-      showComments: true,
-    });
+    // console.log("Comments state after opening:", {
+    //   postId,
+    //   showComments: true,
+    // });
   };
 
   // Set up periodic comment refresh when comments are open
@@ -1790,7 +1854,9 @@ export default function FoodReelsApp() {
       const currentPost = posts[visiblePostIndex];
       if (currentPost && currentPost.id) {
         // Always update activePostId for desktop to show comments sidebar
-        setActivePostId(currentPost.id);
+        if (mountedRef.current) {
+          setActivePostId(currentPost.id);
+        }
         // Auto-fetch comments for the visible post on desktop if user is logged in
         if (session?.user) {
           refetchComments(currentPost.id);
@@ -1801,9 +1867,11 @@ export default function FoodReelsApp() {
   }, [visiblePostIndex, posts.length, isMobile, session?.user?.id]);
 
   const closeComments = () => {
-    console.log("Closing comments");
-    setShowComments(false);
-    setActivePostId(null);
+    // console.log("Closing comments");
+    if (mountedRef.current) {
+      setShowComments(false);
+      setActivePostId(null);
+    }
   };
 
   const handleShare = async (post: FoodPost) => {
@@ -1871,20 +1939,20 @@ export default function FoodReelsApp() {
     : posts.length > 0 &&
       visiblePostIndex >= 0 &&
       visiblePostIndex < posts.length
-    ? posts[visiblePostIndex]
-    : null;
+      ? posts[visiblePostIndex]
+      : null;
 
   const activePost = activePostForComments;
   const mergedActiveComments = activePost
     ? [
-        ...(optimisticComments[activePost.id] || []),
-        ...(activePost.commentsList || []).filter(
-          (c) =>
-            !(optimisticComments[activePost.id] || []).some(
-              (o) => o.text === c.text && o.user.name === c.user.name
-            )
-        ),
-      ]
+      ...(optimisticComments[activePost.id] || []),
+      ...(activePost.commentsList || []).filter(
+        (c) =>
+          !(optimisticComments[activePost.id] || []).some(
+            (o) => o.text === c.text && o.user.name === c.user.name
+          )
+      ),
+    ]
     : [];
 
   if (loading) {
@@ -1905,9 +1973,8 @@ export default function FoodReelsApp() {
   if (error) {
     return (
       <div
-        className={`flex min-h-screen items-center justify-center ${
-          theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
-        }`}
+        className={`flex min-h-screen items-center justify-center ${theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
+          }`}
       >
         <div className="text-center">
           <p className="mb-4 text-red-500">Error: {error}</p>
@@ -1926,9 +1993,8 @@ export default function FoodReelsApp() {
   if (posts.length === 0) {
     return (
       <div
-        className={`flex min-h-screen items-center justify-center ${
-          theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
-        }`}
+        className={`flex min-h-screen items-center justify-center ${theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
+          }`}
       >
         <div className="text-center">
           <p className="mb-4 text-gray-500">No reels available</p>
@@ -1954,8 +2020,8 @@ export default function FoodReelsApp() {
         openComments={openComments}
         closeComments={closeComments}
         mergedActiveComments={mergedActiveComments}
-        toggleCommentLike={toggleCommentLike}
-        addComment={addComment}
+        toggleCommentLike={(commentId) => activePost && toggleCommentLike(activePost.id, commentId)}
+        addComment={(text) => activePost && addComment(activePost.id, text)}
         isRefreshingComments={isRefreshingComments}
         toggleLike={toggleLike}
         handleShare={(post) => handleShare(post)}
@@ -1972,8 +2038,8 @@ export default function FoodReelsApp() {
       containerRef={containerRef}
       isAuthenticated={!!session?.user}
       mergedActiveComments={mergedActiveComments}
-      toggleCommentLike={toggleCommentLike}
-      addComment={addComment}
+      toggleCommentLike={(commentId) => activePost && toggleCommentLike(activePost.id, commentId)}
+      addComment={(text) => activePost && addComment(activePost.id, text)}
       isRefreshingComments={isRefreshingComments}
       toggleLike={toggleLike}
       handleShare={(post) => handleShare(post)}

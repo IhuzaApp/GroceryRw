@@ -689,9 +689,8 @@ export const MobileCategoryDropdown = ({
             : "Select Category"}
         </span>
         <svg
-          className={`h-5 w-5 transform transition-transform ${
-            isOpen ? "rotate-180" : ""
-          }`}
+          className={`h-5 w-5 transform transition-transform ${isOpen ? "rotate-180" : ""
+            }`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -725,11 +724,10 @@ export const MobileCategoryDropdown = ({
                 onSelect(category.id);
                 setIsOpen(false);
               }}
-              className={`flex w-full items-center space-x-3 px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 ${
-                selectedCategory === category.id
+              className={`flex w-full items-center space-x-3 px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 ${selectedCategory === category.id
                   ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
                   : "text-gray-700 dark:text-gray-200"
-              }`}
+                }`}
             >
               <CategoryIcon category={category.name} />
               <span>{category.name}</span>
