@@ -28,12 +28,7 @@ export default function VideoReel({
   onShare,
   onAuthRequired,
 }: VideoReelProps) {
-  // Debug individual reel data
-  useEffect(() => {
-    if (isVisible) {
-      console.log(`DEBUG: VideoReel visible for post ${post.id}:`, post);
-    }
-  }, [isVisible, post]);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const mountedRef = useRef(true);

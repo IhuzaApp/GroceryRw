@@ -1145,6 +1145,16 @@ export default function FoodReelsApp() {
 
   // Manual refresh function
   const refreshReels = async () => {
+    // Prevent overlapping refreshes
+    if (isRefreshing) return;
+
+    // Safety timeout to ensure state clears even if promise hangs
+    const fallbackTimeout = setTimeout(() => {
+      if (mountedRef.current) {
+        setIsRefreshing(false);
+      }
+    }, 10000);
+
     try {
       if (mountedRef.current) {
         setIsRefreshing(true);
@@ -1200,6 +1210,7 @@ export default function FoodReelsApp() {
         setError(err instanceof Error ? err.message : "Failed to refresh reels");
       }
     } finally {
+      clearTimeout(fallbackTimeout);
       if (mountedRef.current) {
         setIsRefreshing(false);
       }

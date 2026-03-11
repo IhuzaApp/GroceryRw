@@ -107,6 +107,13 @@ export const isImageUrl = (url: string) => {
     return imageExtensions.some((ext) => baseUrl.endsWith(ext));
 };
 
+export const isValidMediaUrl = (url: string) => {
+    if (!url) return false;
+    const validStarts = ['http://', 'https://', '/', 'blob:', 'data:'];
+    return validStarts.some((start) => url.startsWith(start));
+};
+
+
 export const getPostTypeColor = (type: PostType) => {
     switch (type) {
         case "restaurant":

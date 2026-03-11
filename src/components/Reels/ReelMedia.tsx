@@ -1,5 +1,5 @@
-import React, { RefObject } from "react";
-import { FoodPost, getYouTubeVideoId, isYouTubeUrl, isImageUrl } from "./ReelTypes";
+import React, { RefObject, useEffect } from "react";
+import { FoodPost, getYouTubeVideoId, isYouTubeUrl, isImageUrl, isValidMediaUrl } from "./ReelTypes";
 
 interface ReelMediaProps {
     post: FoodPost;
@@ -31,6 +31,13 @@ const ReelMedia: React.FC<ReelMediaProps> = ({
     setVideoError,
 }) => {
     const videoUrl = post.content.video;
+
+    useEffect(() => {
+        if (!isYouTubeUrl(videoUrl) && !isImageUrl(videoUrl) && !isValidMediaUrl(videoUrl)) {
+            setVideoError(true);
+            setVideoLoading(false);
+        }
+    }, [videoUrl, setVideoError, setVideoLoading]);
 
     return (
         <>
@@ -83,7 +90,7 @@ const ReelMedia: React.FC<ReelMediaProps> = ({
                         }}
                     />
                 </div>
-            ) : (
+            ) : isValidMediaUrl(videoUrl) ? (
                 <video
                     ref={videoRef}
                     src={videoUrl}
@@ -112,7 +119,7 @@ const ReelMedia: React.FC<ReelMediaProps> = ({
                     onLoadStart={() => setVideoLoading(true)}
                     onCanPlay={handleVideoCanPlay}
                 />
-            )}
+            ) : null}
 
             {/* Background Audio for Images */}
             {isImageUrl(videoUrl) && (

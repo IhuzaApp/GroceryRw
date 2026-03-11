@@ -121,7 +121,7 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                         >
                             <UtensilsIcon />
                             <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>
-                                {isAuthenticated ? "Order Now" : "Login to Order"}
+                                Order Now
                             </span>
                         </button>
                     </div>
@@ -218,7 +218,7 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                             >
                                 <StoreIcon />
                                 <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>
-                                    {isAuthenticated ? "Visit Store" : "Login to Visit"}
+                                    Visit Store
                                 </span>
                             </button>
                             <button
@@ -244,7 +244,7 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                             >
                                 <ShoppingCartIcon />
                                 <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>
-                                    {isAuthenticated ? "Order Now" : "Login to Order"}
+                                    Order Now
                                 </span>
                             </button>
                         </div>
@@ -318,7 +318,7 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                             >
                                 <YoutubeIcon />
                                 <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>
-                                    {isAuthenticated ? "YouTube" : "Login to Watch"}
+                                    YouTube
                                 </span>
                             </button>
                             <button
@@ -342,7 +342,7 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                             >
                                 <BookOpenIcon />
                                 <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>
-                                    {isAuthenticated ? "Get Recipe" : "Login to View"}
+                                    Get Recipe
                                 </span>
                             </button>
                         </div>
@@ -395,7 +395,7 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                                 disabled={false}
                             >
                                 <span style={{ whiteSpace: "nowrap" }}>
-                                    {isAuthenticated ? "Contact Business" : "Login to Contact"}
+                                    Contact Business
                                 </span>
                             </button>
                         </div>
