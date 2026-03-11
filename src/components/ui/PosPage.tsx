@@ -20,8 +20,14 @@ export default function PosPage() {
           name="description"
           content="Streamline your business with Plas POS. AI-powered tax management, automated payroll, inventory tracking, and integrated marketing with Plas Reels."
         />
-        <meta property="og:title" content="Plas POS - Smart Point of Sale System" />
-        <meta property="og:description" content="The ultimate POS system for Rwanda businesses. Take care of payroll, tax, and sales in one place." />
+        <meta
+          property="og:title"
+          content="Plas POS - Smart Point of Sale System"
+        />
+        <meta
+          property="og:description"
+          content="The ultimate POS system for Rwanda businesses. Take care of payroll, tax, and sales in one place."
+        />
       </Head>
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link

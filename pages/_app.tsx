@@ -92,8 +92,9 @@ const getPageTitle = (
     if (names.restaurantName) {
       return `${baseTitle} - ${names.restaurantName}`;
     }
-    return `${baseTitle} - Restaurant ${restaurantId ? `#${restaurantId}` : ""
-      }`;
+    return `${baseTitle} - Restaurant ${
+      restaurantId ? `#${restaurantId}` : ""
+    }`;
   }
 
   if (pathname.startsWith("/Recipes/")) {
@@ -291,7 +292,10 @@ export default function App({ Component, pageProps }: AppProps) {
             name="description"
             content="Plas - Africa's most trusted digital marketplace. Grocery delivery, supermarkets, pharmacies, stores, and POS systems all in one place. Fast and reliable delivery in Rwanda."
           />
-          <meta name="keywords" content="Plas, delivery, grocery, Rwanda, supermarket, pharmacy, POS system, marketplace, online shopping, Kigali" />
+          <meta
+            name="keywords"
+            content="Plas, delivery, grocery, Rwanda, supermarket, pharmacy, POS system, marketplace, online shopping, Kigali"
+          />
           <meta name="format-detection" content="telephone=no" />
           <meta name="mobile-web-app-capable" content="yes" />
           <meta
@@ -330,7 +334,10 @@ export default function App({ Component, pageProps }: AppProps) {
             name="twitter:description"
             content="Plas - Africa's most trusted digital marketplace. Grocery delivery, supermarkets, pharmacies, and POS systems."
           />
-          <meta name="twitter:image" content="https://plas.rw/assets/logos/PlasIcon.png" />
+          <meta
+            name="twitter:image"
+            content="https://plas.rw/assets/logos/PlasIcon.png"
+          />
           <meta name="twitter:creator" content="@Plas_rw" />
           <meta property="og:type" content="website" />
           <meta property="og:title" content={pageTitle} />
@@ -340,25 +347,34 @@ export default function App({ Component, pageProps }: AppProps) {
           />
           <meta property="og:site_name" content="Plas" />
           <meta property="og:url" content="https://plas.rw" />
-          <meta property="og:image" content="https://plas.rw/assets/logos/PlasIcon.png" />
-          <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml" />
+          <meta
+            property="og:image"
+            content="https://plas.rw/assets/logos/PlasIcon.png"
+          />
+          <link
+            rel="sitemap"
+            type="application/xml"
+            title="Sitemap"
+            href="/sitemap.xml"
+          />
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{
               __html: JSON.stringify({
                 "@context": "https://schema.org",
                 "@type": "Organization",
-                "name": "Plas",
-                "url": "https://plas.rw",
-                "logo": "https://plas.rw/assets/logos/PlasIcon.png",
-                "sameAs": [
+                name: "Plas",
+                url: "https://plas.rw",
+                logo: "https://plas.rw/assets/logos/PlasIcon.png",
+                sameAs: [
                   "https://www.facebook.com/plas",
                   "https://twitter.com/plas_rw",
                   "https://www.instagram.com/plas_rw",
-                  "https://www.linkedin.com/company/plas"
+                  "https://www.linkedin.com/company/plas",
                 ],
-                "description": "Africa's most trusted digital marketplace for grocery delivery, POS systems, and business growth."
-              })
+                description:
+                  "Africa's most trusted digital marketplace for grocery delivery, POS systems, and business growth.",
+              }),
             }}
           />
           <script
@@ -367,14 +383,14 @@ export default function App({ Component, pageProps }: AppProps) {
               __html: JSON.stringify({
                 "@context": "https://schema.org",
                 "@type": "WebSite",
-                "name": "Plas",
-                "url": "https://plas.rw",
-                "potentialAction": {
+                name: "Plas",
+                url: "https://plas.rw",
+                potentialAction: {
                   "@type": "SearchAction",
-                  "target": "https://plas.rw/?search={search_term_string}",
-                  "query-input": "required name=search_term_string"
-                }
-              })
+                  target: "https://plas.rw/?search={search_term_string}",
+                  "query-input": "required name=search_term_string",
+                },
+              }),
             }}
           />
         </Head>

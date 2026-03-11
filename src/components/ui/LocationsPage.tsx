@@ -8,21 +8,21 @@ import AboutFooter from "@components/ui/landing/AboutFooter";
 import "leaflet/dist/leaflet.css";
 
 export default function LocationsPage() {
-    return (
-        <>
-            <link rel="preconnect" href="https://fonts.googleapis.com" />
-            <link
-                rel="preconnect"
-                href="https://fonts.gstatic.com"
-                crossOrigin="anonymous"
-            />
-            <link
-                href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap"
-                rel="stylesheet"
-            />
-            <style
-                dangerouslySetInnerHTML={{
-                    __html: `
+  return (
+    <>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossOrigin="anonymous"
+      />
+      <link
+        href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet"
+      />
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         * {
           font-family: 'Nunito', sans-serif;
         }
@@ -31,24 +31,24 @@ export default function LocationsPage() {
           font-weight: 600;
         }
       `,
-                }}
-            />
-            <div className="min-h-screen bg-white">
-                {/* Top Bar with Social Icons */}
-                <AboutTopBar />
+        }}
+      />
+      <div className="min-h-screen bg-white">
+        {/* Top Bar with Social Icons */}
+        <AboutTopBar />
 
-                {/* Main Navigation Bar */}
-                <AboutHeader activePage="locations" />
+        {/* Main Navigation Bar */}
+        <AboutHeader activePage="locations" />
 
-                {/* Hero Section */}
-                <LocationsHeroSection />
+        {/* Hero Section */}
+        <LocationsHeroSection />
 
-                {/* Map Section */}
-                <LocationsMapSection />
+        {/* Map Section */}
+        <LocationsMapSection />
 
-                {/* Footer */}
-                <AboutFooter />
-            </div>
-        </>
-    );
+        {/* Footer */}
+        <AboutFooter />
+      </div>
+    </>
+  );
 }

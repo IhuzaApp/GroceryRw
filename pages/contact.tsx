@@ -301,8 +301,9 @@ export default function ContactPage() {
                     key={`pattern-${index}`}
                     className="text-gray-700"
                     style={{
-                      transform: `rotate(${(index * 12) % 360}deg) translate(${Math.sin(index) * 20
-                        }px, ${Math.cos(index) * 20}px)`,
+                      transform: `rotate(${(index * 12) % 360}deg) translate(${
+                        Math.sin(index) * 20
+                      }px, ${Math.cos(index) * 20}px)`,
                     }}
                   >
                     {iconComponents[iconIndex]}
@@ -620,16 +621,18 @@ export default function ContactPage() {
                       <button
                         key={category}
                         onClick={() => setActiveCategory(category)}
-                        className={`w-full text-left font-bold transition-colors ${activeCategory === category
+                        className={`w-full text-left font-bold transition-colors ${
+                          activeCategory === category
                             ? "text-gray-800"
                             : "text-gray-500 hover:text-gray-700"
-                          }`}
+                        }`}
                       >
                         <div
-                          className={`py-2 ${activeCategory === category
+                          className={`py-2 ${
+                            activeCategory === category
                               ? "border-b-3 border-[#00D9A5]"
                               : ""
-                            }`}
+                          }`}
                         >
                           {category}
                         </div>

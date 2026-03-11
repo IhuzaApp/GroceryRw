@@ -102,10 +102,11 @@ export default function PosFeaturesSection() {
           {featureCategories.map((category, index) => (
             <div
               key={index}
-              className={`rounded-2xl border border-gray-100 bg-white p-8 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg ${index === 4
+              className={`rounded-2xl border border-gray-100 bg-white p-8 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg ${
+                index === 4
                   ? "w-full lg:col-span-2 lg:max-w-3xl lg:justify-self-center"
                   : ""
-                }`}
+              }`}
             >
               <div className="mb-6 flex items-center gap-4">
                 <div

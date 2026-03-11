@@ -225,9 +225,10 @@ export default function LandingPage() {
     // Load Google Maps API if not already loaded
     if (typeof window !== "undefined" && !window.google) {
       const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ||
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${
+        process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ||
         process.env.NEXT_PUBLIC_GOOGLE_MAP_API
-        }&libraries=places`;
+      }&libraries=places`;
       script.async = true;
       script.defer = true;
       script.onload = initializeAutocomplete;
@@ -507,9 +508,18 @@ export default function LandingPage() {
           name="description"
           content="Order from top restaurants, supermarkets, and stores in Rwanda. Fast grocery delivery, medicine, and more delivered in minutes. Let's do it together."
         />
-        <meta property="og:title" content="Plas - Africa's Most Trusted Digital Marketplace" />
-        <meta property="og:description" content="Shop from your favorite local stores and get everything delivered fast in Rwanda. Reliable, quick, and convenient." />
-        <meta name="twitter:title" content="Plas - Africa's Most Trusted Digital Marketplace" />
+        <meta
+          property="og:title"
+          content="Plas - Africa's Most Trusted Digital Marketplace"
+        />
+        <meta
+          property="og:description"
+          content="Shop from your favorite local stores and get everything delivered fast in Rwanda. Reliable, quick, and convenient."
+        />
+        <meta
+          name="twitter:title"
+          content="Plas - Africa's Most Trusted Digital Marketplace"
+        />
       </Head>
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link

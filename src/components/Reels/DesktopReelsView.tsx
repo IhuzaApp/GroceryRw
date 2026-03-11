@@ -260,7 +260,7 @@ export default function DesktopReelsView({
                 isAuthenticated={isAuthenticated}
                 onAuthRequired={onAuthRequired}
                 onLike={toggleLike}
-                onComment={() => { }}
+                onComment={() => {}}
                 onShare={handleShare}
               />
             </div>

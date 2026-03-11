@@ -28,7 +28,6 @@ export default function VideoReel({
   onShare,
   onAuthRequired,
 }: VideoReelProps) {
-
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const mountedRef = useRef(true);
@@ -38,7 +37,9 @@ export default function VideoReel({
   const [videoLoading, setVideoLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [showOrderModal, setShowOrderModal] = useState(false);
-  const [audioSource, setAudioSource] = useState("/assets/sounds/reel-background.mp3");
+  const [audioSource, setAudioSource] = useState(
+    "/assets/sounds/reel-background.mp3"
+  );
   const [lastTap, setLastTap] = useState(0);
   const [showLikeAnimation, setShowLikeAnimation] = useState(false);
   const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -75,7 +76,11 @@ export default function VideoReel({
   useEffect(() => {
     if (!mountedRef.current) return;
 
-    if (videoRef.current && !isYouTubeUrl(post.content.video) && !isImageUrl(post.content.video)) {
+    if (
+      videoRef.current &&
+      !isYouTubeUrl(post.content.video) &&
+      !isImageUrl(post.content.video)
+    ) {
       if (isVisible) {
         const playVideo = async () => {
           try {
@@ -148,7 +153,9 @@ export default function VideoReel({
           if (mountedRef.current && (error as Error).name !== "AbortError") {
             toaster.push(
               <Message type="error" closable>
-                {`Failed to play video: ${(error as Error).message || "Unknown error occurred"}`}
+                {`Failed to play video: ${
+                  (error as Error).message || "Unknown error occurred"
+                }`}
               </Message>,
               { placement: "topEnd" }
             );
@@ -160,7 +167,10 @@ export default function VideoReel({
   };
   const handleInteraction = (e: React.MouseEvent | React.TouchEvent) => {
     // Prevent interaction if clicking on buttons/actions
-    if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('a')) {
+    if (
+      (e.target as HTMLElement).closest("button") ||
+      (e.target as HTMLElement).closest("a")
+    ) {
       return;
     }
 
@@ -253,7 +263,8 @@ export default function VideoReel({
             width: "100%",
             height: "100%",
             minHeight: "100%",
-            background: "linear-gradient(to top, rgba(0,0,0,0.9), transparent, rgba(0,0,0,0.3))",
+            background:
+              "linear-gradient(to top, rgba(0,0,0,0.9), transparent, rgba(0,0,0,0.3))",
             zIndex: 2,
             pointerEvents: "none", // Let clicks pass through to the main container
           }}
@@ -298,12 +309,7 @@ export default function VideoReel({
               opacity: 0.6,
             }}
           >
-            <svg
-              width="64"
-              height="64"
-              viewBox="0 0 24 24"
-              fill="white"
-            >
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="white">
               <path d="M8 5v14l11-7z" />
             </svg>
           </div>
@@ -330,13 +336,26 @@ export default function VideoReel({
         {/* CSS for loading animation */}
         <style jsx>{`
           @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+              transform: rotate(0deg);
+            }
+            100% {
+              transform: rotate(360deg);
+            }
           }
           @keyframes heartPop {
-            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+            0% {
+              transform: translate(-50%, -50%) scale(0);
+              opacity: 0;
+            }
+            50% {
+              transform: translate(-50%, -50%) scale(1.2);
+              opacity: 1;
+            }
+            100% {
+              transform: translate(-50%, -50%) scale(1);
+              opacity: 0;
+            }
           }
         `}</style>
       </div>

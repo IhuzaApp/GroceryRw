@@ -440,8 +440,9 @@ export async function sendNewStoreProductForReviewToSlack(
         },
         {
           type: "mrkdwn",
-          text: `*Business account ID*\n\`${payload.businessAccountId ?? "—"
-            }\``,
+          text: `*Business account ID*\n\`${
+            payload.businessAccountId ?? "—"
+          }\``,
         },
       ],
     },
@@ -450,8 +451,9 @@ export async function sendNewStoreProductForReviewToSlack(
       elements: [
         {
           type: "mrkdwn",
-          text: `User ID: \`${payload.userId ?? "—"
-            }\` · 🕒 ${new Date().toISOString()} · _Review and enable this product for the store._`,
+          text: `User ID: \`${
+            payload.userId ?? "—"
+          }\` · 🕒 ${new Date().toISOString()} · _Review and enable this product for the store._`,
         },
       ],
     },
@@ -535,8 +537,9 @@ export async function sendRequestEnableStoreToSlack(
       fields: [
         {
           type: "mrkdwn",
-          text: `*Business account ID*\n\`${payload.businessAccountId ?? "—"
-            }\``,
+          text: `*Business account ID*\n\`${
+            payload.businessAccountId ?? "—"
+          }\``,
         },
       ],
     },
@@ -545,8 +548,9 @@ export async function sendRequestEnableStoreToSlack(
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `*Message*\n${payload.message?.trim() || "_No additional message._"
-          }`,
+        text: `*Message*\n${
+          payload.message?.trim() || "_No additional message._"
+        }`,
       },
     },
     {
@@ -554,8 +558,9 @@ export async function sendRequestEnableStoreToSlack(
       elements: [
         {
           type: "mrkdwn",
-          text: `User ID: \`${payload.userId ?? "—"
-            }\` · 🕒 ${new Date().toISOString()}`,
+          text: `User ID: \`${
+            payload.userId ?? "—"
+          }\` · 🕒 ${new Date().toISOString()}`,
         },
       ],
     },
@@ -658,8 +663,9 @@ export async function sendRejectedAccountSupportRequestToSlack(
       elements: [
         {
           type: "mrkdwn",
-          text: `User ID: \`${payload.userId ?? "—"
-            }\` · 🕒 ${new Date().toISOString()}`,
+          text: `User ID: \`${
+            payload.userId ?? "—"
+          }\` · 🕒 ${new Date().toISOString()}`,
         },
       ],
     },
@@ -740,7 +746,7 @@ export async function sendPOSContactRequestToSlack(
     console.error("Failed to send POS contact request to Slack", error);
     throw error;
   }
-}// --- Landing page business registration notice ---
+} // --- Landing page business registration notice ---
 
 export interface BusinessRegistrationNoticePayload {
   fullName: string;
@@ -788,7 +794,9 @@ export async function sendBusinessRegistrationNoticeToSlack(
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `*Description*\n${payload.description || "_No description provided._"}`,
+        text: `*Description*\n${
+          payload.description || "_No description provided._"
+        }`,
       },
     },
     {
@@ -807,7 +815,10 @@ export async function sendBusinessRegistrationNoticeToSlack(
       }),
     });
   } catch (error) {
-    console.error("Failed to send business registration notice to Slack", error);
+    console.error(
+      "Failed to send business registration notice to Slack",
+      error
+    );
     throw error;
   }
 }

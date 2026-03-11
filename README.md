@@ -6870,6 +6870,7 @@ The website is optimized for search engines to ensure high visibility and detail
 - **Social Media (Open Graph & Twitter Blocks)**: Optimized preview cards for sharing on platforms like Facebook, Twitter, and LinkedIn.
 
 ## Project Structure
+
 ### Debug Tools
 
 ```typescript

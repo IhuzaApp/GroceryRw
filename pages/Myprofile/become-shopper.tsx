@@ -54,8 +54,9 @@ const MobileCustomInput = memo(
     return (
       <div className="space-y-2">
         <label
-          className={`block text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"
-            }`}
+          className={`block text-sm font-medium ${
+            theme === "dark" ? "text-gray-300" : "text-gray-700"
+          }`}
         >
           {label} {required && <span className="text-red-500">*</span>}
         </label>
@@ -64,12 +65,13 @@ const MobileCustomInput = memo(
           <select
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className={`w-full rounded-xl border px-4 py-3 transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500 ${error
+            className={`w-full rounded-xl border px-4 py-3 transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500 ${
+              error
                 ? "border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/20"
                 : theme === "dark"
-                  ? "border-gray-600 bg-gray-700 text-gray-100"
-                  : "border-gray-300 bg-white text-gray-900"
-              }`}
+                ? "border-gray-600 bg-gray-700 text-gray-100"
+                : "border-gray-300 bg-white text-gray-900"
+            }`}
           >
             <option value="">Select {label.toLowerCase()}</option>
             {options.map((option) => (
@@ -84,12 +86,13 @@ const MobileCustomInput = memo(
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
             rows={rows}
-            className={`w-full rounded-xl border px-4 py-3 transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500 ${error
+            className={`w-full rounded-xl border px-4 py-3 transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500 ${
+              error
                 ? "border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/20"
                 : theme === "dark"
-                  ? "border-gray-600 bg-gray-700 text-gray-100"
-                  : "border-gray-300 bg-white text-gray-900"
-              }`}
+                ? "border-gray-600 bg-gray-700 text-gray-100"
+                : "border-gray-300 bg-white text-gray-900"
+            }`}
           />
         ) : (
           <input
@@ -97,12 +100,13 @@ const MobileCustomInput = memo(
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
-            className={`w-full rounded-xl border px-4 py-3 transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500 ${error
+            className={`w-full rounded-xl border px-4 py-3 transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500 ${
+              error
                 ? "border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/20"
                 : theme === "dark"
-                  ? "border-gray-600 bg-gray-700 text-gray-100"
-                  : "border-gray-300 bg-white text-gray-900"
-              }`}
+                ? "border-gray-600 bg-gray-700 text-gray-100"
+                : "border-gray-300 bg-white text-gray-900"
+            }`}
           />
         )}
 
@@ -140,25 +144,28 @@ const MobileFileUploadInput = memo(
     return (
       <div className="space-y-2">
         <label
-          className={`block text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"
-            }`}
+          className={`block text-sm font-medium ${
+            theme === "dark" ? "text-gray-300" : "text-gray-700"
+          }`}
         >
           {label}
         </label>
 
         <p
-          className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"
-            }`}
+          className={`text-xs ${
+            theme === "dark" ? "text-gray-400" : "text-gray-500"
+          }`}
         >
           {description}
         </p>
 
         {file ? (
           <div
-            className={`rounded-lg border p-4 ${theme === "dark"
+            className={`rounded-lg border p-4 ${
+              theme === "dark"
                 ? "border-gray-600 bg-gray-700"
                 : "border-gray-300 bg-gray-50"
-              }`}
+            }`}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center">
@@ -176,14 +183,16 @@ const MobileFileUploadInput = memo(
                   />
                 </svg>
                 <span
-                  className={`text-sm ${theme === "dark" ? "text-gray-200" : "text-gray-700"
-                    }`}
+                  className={`text-sm ${
+                    theme === "dark" ? "text-gray-200" : "text-gray-700"
+                  }`}
                 >
                   {file.name}
                 </span>
                 <span
-                  className={`ml-2 text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"
-                    }`}
+                  className={`ml-2 text-xs ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
                 >
                   ({(file.size / 1024 / 1024).toFixed(1)} MB)
                 </span>
@@ -220,12 +229,13 @@ const MobileFileUploadInput = memo(
             />
             <label
               htmlFor={name}
-              className={`flex h-32 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors ${error
+              className={`flex h-32 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors ${
+                error
                   ? "border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/20"
                   : theme === "dark"
-                    ? "border-gray-600 bg-gray-700 hover:bg-gray-600"
-                    : "border-gray-300 bg-gray-50 hover:bg-gray-100"
-                }`}
+                  ? "border-gray-600 bg-gray-700 hover:bg-gray-600"
+                  : "border-gray-300 bg-gray-50 hover:bg-gray-100"
+              }`}
             >
               <div className="flex flex-col items-center justify-center pb-6 pt-5">
                 <svg
@@ -242,15 +252,17 @@ const MobileFileUploadInput = memo(
                   />
                 </svg>
                 <p
-                  className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"
-                    }`}
+                  className={`text-sm ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
                 >
                   <span className="font-semibold">Click to upload</span> or drag
                   and drop
                 </p>
                 <p
-                  className={`text-xs ${theme === "dark" ? "text-gray-500" : "text-gray-400"
-                    }`}
+                  className={`text-xs ${
+                    theme === "dark" ? "text-gray-500" : "text-gray-400"
+                  }`}
                 >
                   PDF, PNG, JPG (MAX. 5MB)
                 </p>
@@ -769,8 +781,9 @@ const MobileShopperRegistrationForm = () => {
       <div className="space-y-6">
         <div>
           <h3
-            className={`mb-6 text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
-              }`}
+            className={`mb-6 text-lg font-semibold ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}
           >
             Personal Information
           </h3>
@@ -828,8 +841,9 @@ const MobileShopperRegistrationForm = () => {
       <div className="space-y-6">
         <div>
           <h3
-            className={`mb-6 text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
-              }`}
+            className={`mb-6 text-lg font-semibold ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}
           >
             Contact Details
           </h3>
@@ -856,8 +870,9 @@ const MobileShopperRegistrationForm = () => {
       <div className="space-y-6">
         <div>
           <h3
-            className={`mb-6 text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
-              }`}
+            className={`mb-6 text-lg font-semibold ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}
           >
             Address & Location
           </h3>
@@ -876,8 +891,9 @@ const MobileShopperRegistrationForm = () => {
 
             <div>
               <label
-                className={`mb-2 block text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"
-                  }`}
+                className={`mb-2 block text-sm font-medium ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-700"
+                }`}
               >
                 Location (for coordinates)
               </label>
@@ -885,12 +901,13 @@ const MobileShopperRegistrationForm = () => {
                 id="location-autocomplete"
                 type="text"
                 placeholder="Search for your location..."
-                className={`w-full rounded-xl border px-4 py-3 transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500 ${errors.latitude || errors.longitude
+                className={`w-full rounded-xl border px-4 py-3 transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  errors.latitude || errors.longitude
                     ? "border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/20"
                     : theme === "dark"
-                      ? "border-gray-600 bg-gray-700 text-gray-100"
-                      : "border-gray-300 bg-white text-gray-900"
-                  }`}
+                    ? "border-gray-600 bg-gray-700 text-gray-100"
+                    : "border-gray-300 bg-white text-gray-900"
+                }`}
                 ref={locationInputRef}
               />
               {(errors.latitude || errors.longitude) && (
@@ -927,14 +944,16 @@ const MobileShopperRegistrationForm = () => {
       <div className="space-y-6">
         <div>
           <h3
-            className={`mb-6 text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
-              }`}
+            className={`mb-6 text-lg font-semibold ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}
           >
             Guarantor Information
           </h3>
           <p
-            className={`mb-6 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
+            className={`mb-6 text-sm ${
+              theme === "dark" ? "text-gray-400" : "text-gray-600"
+            }`}
           >
             Provide contact information for someone who can vouch for you
             (optional)
@@ -982,8 +1001,9 @@ const MobileShopperRegistrationForm = () => {
       <div className="space-y-6">
         <div>
           <h3
-            className={`mb-6 text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
-              }`}
+            className={`mb-6 text-lg font-semibold ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}
           >
             Required Documents
           </h3>
@@ -991,14 +1011,16 @@ const MobileShopperRegistrationForm = () => {
           {/* Profile Photo */}
           <div className="mb-8">
             <label
-              className={`mb-2 block text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"
-                }`}
+              className={`mb-2 block text-sm font-medium ${
+                theme === "dark" ? "text-gray-300" : "text-gray-700"
+              }`}
             >
               Profile Photo <span className="text-red-500">*</span>
             </label>
             <p
-              className={`mb-4 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
+              className={`mb-4 text-sm ${
+                theme === "dark" ? "text-gray-400" : "text-gray-600"
+              }`}
             >
               Take a clear photo of yourself
             </p>
@@ -1079,8 +1101,9 @@ const MobileShopperRegistrationForm = () => {
           {/* Photo Documents */}
           <div className="mb-8">
             <h4
-              className={`text-md mb-4 font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
+              className={`text-md mb-4 font-semibold ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
             >
               Photo Documents (Take with Camera)
             </h4>
@@ -1088,8 +1111,9 @@ const MobileShopperRegistrationForm = () => {
               {/* National ID Front */}
               <div>
                 <label
-                  className={`mb-2 block text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"
-                    }`}
+                  className={`mb-2 block text-sm font-medium ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-700"
+                  }`}
                 >
                   National ID Front <span className="text-red-500">*</span>
                 </label>
@@ -1154,8 +1178,9 @@ const MobileShopperRegistrationForm = () => {
               {/* National ID Back */}
               <div>
                 <label
-                  className={`mb-2 block text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"
-                    }`}
+                  className={`mb-2 block text-sm font-medium ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-700"
+                  }`}
                 >
                   National ID Back <span className="text-red-500">*</span>
                 </label>
@@ -1220,8 +1245,9 @@ const MobileShopperRegistrationForm = () => {
               {/* Driving License */}
               <div>
                 <label
-                  className={`mb-2 block text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"
-                    }`}
+                  className={`mb-2 block text-sm font-medium ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-700"
+                  }`}
                 >
                   Driving License Photo
                 </label>
@@ -1258,10 +1284,11 @@ const MobileShopperRegistrationForm = () => {
                 ) : (
                   <button
                     onClick={() => startCamera("license")}
-                    className={`mt-2 inline-flex w-full items-center justify-center rounded-lg px-4 py-2 transition-colors ${theme === "dark"
+                    className={`mt-2 inline-flex w-full items-center justify-center rounded-lg px-4 py-2 transition-colors ${
+                      theme === "dark"
                         ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
+                    }`}
                   >
                     <svg
                       className="mr-2 h-4 w-4"
@@ -1286,8 +1313,9 @@ const MobileShopperRegistrationForm = () => {
           {/* File Uploads */}
           <div className="mb-8">
             <h4
-              className={`text-md mb-4 font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
+              className={`text-md mb-4 font-semibold ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
             >
               Official Documents (Upload from Irembo)
             </h4>
@@ -1327,14 +1355,16 @@ const MobileShopperRegistrationForm = () => {
           {/* Digital Signature */}
           <div className="mt-6">
             <label
-              className={`mb-2 block text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"
-                }`}
+              className={`mb-2 block text-sm font-medium ${
+                theme === "dark" ? "text-gray-300" : "text-gray-700"
+              }`}
             >
               Digital Signature
             </label>
             <p
-              className={`mb-3 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
+              className={`mb-3 text-sm ${
+                theme === "dark" ? "text-gray-400" : "text-gray-600"
+              }`}
             >
               Sign in the box below using your finger or stylus
             </p>
@@ -1393,10 +1423,11 @@ const MobileShopperRegistrationForm = () => {
             ) : (
               <button
                 onClick={startSignaturePad}
-                className={`mt-2 inline-flex items-center rounded-lg px-4 py-2 transition-colors ${theme === "dark"
+                className={`mt-2 inline-flex items-center rounded-lg px-4 py-2 transition-colors ${
+                  theme === "dark"
                     ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
+                }`}
               >
                 <svg
                   className="mr-2 h-4 w-4"
@@ -1498,28 +1529,28 @@ const MobileShopperRegistrationForm = () => {
             {(formValue.guarantor ||
               formValue.guarantorPhone ||
               formValue.guarantorRelationship) && (
-                <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
-                  <h4 className="mb-2 font-medium text-gray-700 dark:text-gray-300">
-                    Guarantor Information
-                  </h4>
-                  <div className="space-y-1 text-sm">
-                    <p>
-                      <strong>Name:</strong> {formValue.guarantor}
-                    </p>
-                    <p>
-                      <strong>Phone:</strong> {formValue.guarantorPhone}
-                    </p>
-                    <p>
-                      <strong>Relationship:</strong>{" "}
-                      {
-                        guarantorRelationshipOptions.find(
-                          (g) => g.value === formValue.guarantorRelationship
-                        )?.label
-                      }
-                    </p>
-                  </div>
+              <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+                <h4 className="mb-2 font-medium text-gray-700 dark:text-gray-300">
+                  Guarantor Information
+                </h4>
+                <div className="space-y-1 text-sm">
+                  <p>
+                    <strong>Name:</strong> {formValue.guarantor}
+                  </p>
+                  <p>
+                    <strong>Phone:</strong> {formValue.guarantorPhone}
+                  </p>
+                  <p>
+                    <strong>Relationship:</strong>{" "}
+                    {
+                      guarantorRelationshipOptions.find(
+                        (g) => g.value === formValue.guarantorRelationship
+                      )?.label
+                    }
+                  </p>
                 </div>
-              )}
+              </div>
+            )}
 
             <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
               <h4 className="mb-2 font-medium text-gray-700 dark:text-gray-300">
@@ -1575,10 +1606,11 @@ const MobileShopperRegistrationForm = () => {
           <button
             onClick={prevStep}
             disabled={currentStep === 0}
-            className={`rounded-lg p-2 transition-colors ${currentStep === 0
+            className={`rounded-lg p-2 transition-colors ${
+              currentStep === 0
                 ? "cursor-not-allowed text-gray-400"
                 : "text-gray-600 hover:bg-gray-100 active:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-800 dark:active:bg-gray-700"
-              }`}
+            }`}
           >
             <svg
               className="h-5 w-5"
@@ -1618,10 +1650,11 @@ const MobileShopperRegistrationForm = () => {
           <button
             onClick={nextStep}
             disabled={Object.keys(errors).length > 0}
-            className={`w-full rounded-lg px-4 py-3 font-medium transition-colors ${Object.keys(errors).length > 0
+            className={`w-full rounded-lg px-4 py-3 font-medium transition-colors ${
+              Object.keys(errors).length > 0
                 ? "cursor-not-allowed bg-gray-300 text-gray-500"
                 : "bg-green-600 !text-white hover:bg-green-700"
-              }`}
+            }`}
           >
             Next
           </button>
@@ -1629,10 +1662,11 @@ const MobileShopperRegistrationForm = () => {
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className={`w-full rounded-lg px-4 py-3 font-medium transition-colors ${loading
+            className={`w-full rounded-lg px-4 py-3 font-medium transition-colors ${
+              loading
                 ? "cursor-not-allowed bg-gray-300 text-gray-500"
                 : "bg-green-600 !text-white hover:bg-green-700"
-              }`}
+            }`}
           >
             {loading ? "Submitting..." : "Submit Application"}
           </button>
@@ -1809,10 +1843,11 @@ const DesktopBecomeShopper = () => {
           {/* Desktop Header */}
           <div className="mb-8 text-center">
             <div
-              className={`mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full ${theme === "dark"
+              className={`mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full ${
+                theme === "dark"
                   ? "bg-green-600/20 text-white"
                   : "bg-green-100 text-white"
-                }`}
+              }`}
             >
               <svg
                 className="h-10 w-10"
@@ -1829,14 +1864,16 @@ const DesktopBecomeShopper = () => {
               </svg>
             </div>
             <h1
-              className={`mb-4 text-4xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
+              className={`mb-4 text-4xl font-bold ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
             >
               Become a Plasa
             </h1>
             <p
-              className={`mx-auto max-w-2xl text-lg ${theme === "dark" ? "text-gray-300" : "text-gray-600"
-                }`}
+              className={`mx-auto max-w-2xl text-lg ${
+                theme === "dark" ? "text-gray-300" : "text-gray-600"
+              }`}
             >
               Join our community of delivery partners and start earning money by
               delivering orders to customers in your area.
@@ -1846,14 +1883,16 @@ const DesktopBecomeShopper = () => {
           {/* Desktop Benefits Section */}
           <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
             <div
-              className={`rounded-xl border p-6 ${theme === "dark"
+              className={`rounded-xl border p-6 ${
+                theme === "dark"
                   ? "border-gray-700 bg-gray-800/50"
                   : "border-gray-200 bg-white shadow-sm"
-                }`}
+              }`}
             >
               <div
-                className={`mb-4 flex h-12 w-12 items-center justify-center rounded-lg ${theme === "dark" ? "bg-green-600/20" : "bg-green-100"
-                  }`}
+                className={`mb-4 flex h-12 w-12 items-center justify-center rounded-lg ${
+                  theme === "dark" ? "bg-green-600/20" : "bg-green-100"
+                }`}
               >
                 <svg
                   className="h-6 w-6 text-green-600 dark:text-green-400"
@@ -1870,14 +1909,16 @@ const DesktopBecomeShopper = () => {
                 </svg>
               </div>
               <h3
-                className={`mb-2 font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
+                className={`mb-2 font-semibold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
               >
                 Earn Money
               </h3>
               <p
-                className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
               >
                 Get paid for each delivery you complete. The more you deliver,
                 the more you earn.
@@ -1885,14 +1926,16 @@ const DesktopBecomeShopper = () => {
             </div>
 
             <div
-              className={`rounded-xl border p-6 ${theme === "dark"
+              className={`rounded-xl border p-6 ${
+                theme === "dark"
                   ? "border-gray-700 bg-gray-800/50"
                   : "border-gray-200 bg-white shadow-sm"
-                }`}
+              }`}
             >
               <div
-                className={`mb-4 flex h-12 w-12 items-center justify-center rounded-lg ${theme === "dark" ? "bg-green-600/20" : "bg-green-100"
-                  }`}
+                className={`mb-4 flex h-12 w-12 items-center justify-center rounded-lg ${
+                  theme === "dark" ? "bg-green-600/20" : "bg-green-100"
+                }`}
               >
                 <svg
                   className="h-6 w-6 text-green-600 dark:text-green-400"
@@ -1909,14 +1952,16 @@ const DesktopBecomeShopper = () => {
                 </svg>
               </div>
               <h3
-                className={`mb-2 font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
+                className={`mb-2 font-semibold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
               >
                 Flexible Schedule
               </h3>
               <p
-                className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
               >
                 Work when you want. Choose your own hours and accept deliveries
                 that fit your schedule.
@@ -1924,14 +1969,16 @@ const DesktopBecomeShopper = () => {
             </div>
 
             <div
-              className={`rounded-xl border p-6 ${theme === "dark"
+              className={`rounded-xl border p-6 ${
+                theme === "dark"
                   ? "border-gray-700 bg-gray-800/50"
                   : "border-gray-200 bg-white shadow-sm"
-                }`}
+              }`}
             >
               <div
-                className={`mb-4 flex h-12 w-12 items-center justify-center rounded-lg ${theme === "dark" ? "bg-purple-600/20" : "bg-purple-100"
-                  }`}
+                className={`mb-4 flex h-12 w-12 items-center justify-center rounded-lg ${
+                  theme === "dark" ? "bg-purple-600/20" : "bg-purple-100"
+                }`}
               >
                 <svg
                   className="h-6 w-6 text-purple-600 dark:text-purple-400"
@@ -1948,14 +1995,16 @@ const DesktopBecomeShopper = () => {
                 </svg>
               </div>
               <h3
-                className={`mb-2 font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
+                className={`mb-2 font-semibold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
               >
                 Easy Application
               </h3>
               <p
-                className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
               >
                 Simple step-by-step application process. Get approved quickly
                 and start delivering.
@@ -1965,10 +2014,11 @@ const DesktopBecomeShopper = () => {
 
           {/* Desktop Registration Form */}
           <div
-            className={`rounded-2xl border ${theme === "dark"
+            className={`rounded-2xl border ${
+              theme === "dark"
                 ? "border-gray-700 bg-gray-800/50"
                 : "border-gray-200 bg-white shadow-lg"
-              }`}
+            }`}
           >
             <ShopperRegistrationForm />
           </div>

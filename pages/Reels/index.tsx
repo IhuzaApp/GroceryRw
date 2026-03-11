@@ -237,7 +237,7 @@ const SendIcon = () => (
   </svg>
 );
 
-type PostType = "restaurant" | "supermarket" | "chef";
+type PostType = "restaurant" | "supermarket" | "chef" | "business";
 
 interface Comment {
   id: string;
@@ -315,8 +315,17 @@ interface ChefPost extends BasePost {
     subscribers: string;
   };
 }
+interface BusinessPost extends BasePost {
+  type: "business";
+  business: {
+    name: string;
+    location: string;
+    email: string;
+    phone: string;
+  };
+}
 
-type FoodPost = RestaurantPost | SupermarketPost | ChefPost;
+type FoodPost = RestaurantPost | SupermarketPost | ChefPost | BusinessPost;
 
 // Database interface for API response
 interface DatabaseReel {
@@ -774,7 +783,8 @@ export default function FoodReelsApp() {
     }
 
     // Determine creator name with fallback
-    const creatorName = dbReel.User?.name ||
+    const creatorName =
+      dbReel.User?.name ||
       dbReel.business_account?.business_name ||
       dbReel.Restaurant?.name ||
       dbReel.Shops?.name ||
@@ -964,7 +974,9 @@ export default function FoodReelsApp() {
           type: "business",
           business: {
             name: dbReel.business_account?.business_name || "Business",
-            location: dbReel.business_account?.business_location || "Location unavailable",
+            location:
+              dbReel.business_account?.business_location ||
+              "Location unavailable",
             email: dbReel.business_account?.business_email || "",
             phone: dbReel.business_account?.business_phone || "",
           },
@@ -1056,7 +1068,9 @@ export default function FoodReelsApp() {
       } catch (err) {
         console.error("Error in fetchReels:", err);
         if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : "Failed to fetch reels");
+          setError(
+            err instanceof Error ? err.message : "Failed to fetch reels"
+          );
           setLoading(false);
         }
       }
@@ -1081,11 +1095,9 @@ export default function FoodReelsApp() {
         }
 
         const data = await response.json();
-        console.log("DEBUG: Raw reels from API:", data.reels);
         const convertedPosts = data.reels.map((reel: DatabaseReel) =>
           convertDatabaseReelToFoodPost(reel)
         );
-        console.log("DEBUG: Converted reels:", convertedPosts);
 
         // Get user preferences from API or calculate from current batch
         let userPreferences: Map<string, number> | undefined;
@@ -1108,7 +1120,10 @@ export default function FoodReelsApp() {
 
         // Update state first
         if (mountedRef.current) {
-          console.log("DEBUG: Setting randomized posts to state:", randomizedPosts);
+          console.log(
+            "DEBUG: Setting randomized posts to state:",
+            randomizedPosts
+          );
           setPosts(randomizedPosts);
         }
 
@@ -1207,7 +1222,9 @@ export default function FoodReelsApp() {
     } catch (err) {
       console.error("Error refreshing reels:", err);
       if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : "Failed to refresh reels");
+        setError(
+          err instanceof Error ? err.message : "Failed to refresh reels"
+        );
       }
     } finally {
       clearTimeout(fallbackTimeout);
@@ -1513,7 +1530,9 @@ export default function FoodReelsApp() {
 
     // Check if user is a guest (this is an assumption based on common patterns in this app)
     // If the user wants to upgrade their guest account
-    const isGuest = session?.user?.email?.toLowerCase().includes("@guest.local");
+    const isGuest = session?.user?.email
+      ?.toLowerCase()
+      .includes("@guest.local");
     if (isGuest) {
       // Optional: you might want to show upgrade modal for guests on some actions
       // For now, let's just allow guests to perform actions unless explicitly asked otherwise
@@ -1791,7 +1810,9 @@ export default function FoodReelsApp() {
       if (mountedRef.current) {
         setOptimisticComments((prev) => ({
           ...prev,
-          [postId]: (prev[postId] || []).filter((c) => !c.id.startsWith("temp-")),
+          [postId]: (prev[postId] || []).filter(
+            (c) => !c.id.startsWith("temp-")
+          ),
         }));
         setPosts(
           posts.map((post: FoodPost) =>
