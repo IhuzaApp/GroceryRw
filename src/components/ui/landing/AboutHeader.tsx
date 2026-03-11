@@ -8,10 +8,9 @@ interface AboutHeaderProps {
   activePage?:
   | "about"
   | "life-at-plas"
-  | "diversity"
   | "teams"
   | "careers"
-  | "stories"
+  | "locations"
   | "locations"
   | "contact"
   | "pos"
@@ -87,15 +86,6 @@ export default function AboutHeader({
             >
               Life at Plas
             </Link>
-            <a
-              href="#"
-              className={`font-medium transition-colors ${isScrolled
-                ? "text-gray-700 hover:text-[#00D9A5]"
-                : "text-white/90 hover:text-white"
-                }`}
-            >
-              Diversity & Inclusion
-            </a>
             <Link
               href="/ourTeams"
               className={`${activePage === "teams" ? "border-b-2 pb-1" : ""
@@ -124,15 +114,6 @@ export default function AboutHeader({
             >
               Careers at Plas
             </Link>
-            <a
-              href="#"
-              className={`font-medium transition-colors ${isScrolled
-                ? "text-gray-700 hover:text-[#00D9A5]"
-                : "text-white/90 hover:text-white"
-                }`}
-            >
-              Stories
-            </a>
             <Link
               href="/locations"
               className={`${activePage === "locations" ? "border-b-2 pb-1" : ""

@@ -224,10 +224,9 @@ export default function LandingPage() {
     // Load Google Maps API if not already loaded
     if (typeof window !== "undefined" && !window.google) {
       const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${
-        process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ||
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ||
         process.env.NEXT_PUBLIC_GOOGLE_MAP_API
-      }&libraries=places`;
+        }&libraries=places`;
       script.async = true;
       script.defer = true;
       script.onload = initializeAutocomplete;
@@ -556,7 +555,7 @@ export default function LandingPage() {
           background-color: white !important;
           border-radius: 16px !important;
           box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1) !important;
-          border: 2px solid #00D9A5 !important;
+          border: 2px solid #022C22 !important;
           margin-top: 8px !important;
           padding: 8px 0 !important;
           font-family: 'Nunito', sans-serif !important;
@@ -579,12 +578,12 @@ export default function LandingPage() {
           padding-left: 20px !important;
         }
         .pac-item-selected {
-          background-color: #A8E6CF !important;
-          color: #00A67E !important;
+          background-color: #022C22 !important;
+          color: white !important;
           font-weight: 600 !important;
         }
         .pac-item-selected:hover {
-          background-color: #90D9B8 !important;
+          background-color: #011a14 !important;
         }
         .pac-icon {
           margin-right: 12px !important;
@@ -593,14 +592,14 @@ export default function LandingPage() {
         }
         .pac-matched {
           font-weight: 600 !important;
-          color: #00D9A5 !important;
+          color: #022C22 !important;
         }
         .pac-item-query {
           color: #333 !important;
           font-size: 14px !important;
         }
         .pac-item-query .pac-matched {
-          color: #00D9A5 !important;
+          color: #022C22 !important;
           font-weight: 700 !important;
         }
       `,
@@ -621,7 +620,7 @@ export default function LandingPage() {
         />
 
         {/* Top Green Section */}
-        <div className="relative bg-[#00D9A5] pb-20 pt-20 md:pb-32 md:pt-24">
+        <div className="relative bg-[#022C22] pb-20 pt-20 md:pb-32 md:pt-24">
           {/* Wave separator */}
           <div
             className="absolute bottom-0 left-0 right-0"
@@ -696,7 +695,7 @@ export default function LandingPage() {
                     style={{
                       clipPath:
                         "polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)",
-                      backgroundColor: "#00D9A5",
+                      backgroundColor: "#022C22",
                       padding: "4px 12px 4px 8px",
                     }}
                   >
@@ -727,7 +726,7 @@ export default function LandingPage() {
                     style={{
                       clipPath:
                         "polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)",
-                      backgroundColor: "#00D9A5",
+                      backgroundColor: "#022C22",
                       padding: "4px 12px 4px 8px",
                     }}
                   >
@@ -758,7 +757,7 @@ export default function LandingPage() {
                     style={{
                       clipPath:
                         "polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)",
-                      backgroundColor: "#00D9A5",
+                      backgroundColor: "#022C22",
                       padding: "4px 12px 4px 8px",
                     }}
                   >
@@ -789,7 +788,7 @@ export default function LandingPage() {
                     style={{
                       clipPath:
                         "polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%)",
-                      backgroundColor: "#00D9A5",
+                      backgroundColor: "#022C22",
                       padding: "4px 12px 4px 8px",
                     }}
                   >
@@ -993,14 +992,14 @@ export default function LandingPage() {
                   more you can order your favourite food or{" "}
                   <span className="relative inline-block font-bold">
                     <span
-                      className="absolute inset-0 -rotate-1 rounded-sm bg-[#00D9A5] opacity-60"
+                      className="absolute inset-0 -rotate-1 rounded-sm bg-[#022C22] opacity-60"
                       style={{
                         transform: "skew(-2deg, 1deg)",
                         filter: "blur(2px)",
                       }}
                     ></span>
                     <span
-                      className="absolute inset-0 rotate-1 rounded-sm bg-[#A8E6CF] opacity-40"
+                      className="absolute inset-0 rotate-1 rounded-sm bg-[#059669] opacity-40"
                       style={{
                         transform: "skew(1deg, -1deg)",
                         filter: "blur(1px)",
@@ -1063,14 +1062,14 @@ export default function LandingPage() {
                   Like a flash! Order or send anything in your city and{" "}
                   <span className="relative inline-block font-bold">
                     <span
-                      className="absolute inset-0 -rotate-1 rounded-sm bg-[#00D9A5] opacity-60"
+                      className="absolute inset-0 -rotate-1 rounded-sm bg-[#022C22] opacity-60"
                       style={{
                         transform: "skew(-2deg, 1deg)",
                         filter: "blur(2px)",
                       }}
                     ></span>
                     <span
-                      className="absolute inset-0 rotate-1 rounded-sm bg-[#A8E6CF] opacity-40"
+                      className="absolute inset-0 rotate-1 rounded-sm bg-[#059669] opacity-40"
                       style={{
                         transform: "skew(1deg, -1deg)",
                         filter: "blur(1px)",
@@ -1133,14 +1132,14 @@ export default function LandingPage() {
                   Find anything you need! From{" "}
                   <span className="relative inline-block font-bold">
                     <span
-                      className="absolute inset-0 -rotate-1 rounded-sm bg-[#00D9A5] opacity-60"
+                      className="absolute inset-0 -rotate-1 rounded-sm bg-[#022C22] opacity-60"
                       style={{
                         transform: "skew(-2deg, 1deg)",
                         filter: "blur(2px)",
                       }}
                     ></span>
                     <span
-                      className="absolute inset-0 rotate-1 rounded-sm bg-[#A8E6CF] opacity-40"
+                      className="absolute inset-0 rotate-1 rounded-sm bg-[#059669] opacity-40"
                       style={{
                         transform: "skew(1deg, -1deg)",
                         filter: "blur(1px)",
@@ -1159,7 +1158,7 @@ export default function LandingPage() {
             <div className="mt-12 flex justify-center">
               <button
                 onClick={() => router.push("/")}
-                className="rounded-lg bg-[#00D9A5] px-8 py-4 text-lg font-medium text-white transition-colors hover:bg-[#00C896]"
+                className="rounded-lg bg-[#022C22] px-8 py-4 text-lg font-medium text-white transition-colors hover:bg-[#011a14]"
               >
                 Explore stores around you
               </button>
@@ -1168,7 +1167,7 @@ export default function LandingPage() {
         </div>
 
         {/* Cities we deliver in Section */}
-        <div className="relative bg-[#00D9A5] py-28 md:py-32">
+        <div className="relative bg-[#022C22] py-28 md:py-32">
           {/* Wave separator at top */}
           <div className="absolute left-0 right-0 top-0 -translate-y-px">
             <svg
@@ -1250,7 +1249,7 @@ export default function LandingPage() {
             {/* Header with Icon */}
             <div className="mb-12 text-center">
               <div className="mb-4 flex justify-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#00A67E]">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#022C22]">
                   <Handshake className="h-8 w-8 text-white" />
                 </div>
               </div>
@@ -1289,7 +1288,7 @@ export default function LandingPage() {
                 </p>
                 <button
                   onClick={() => router.push("/plasBusiness")}
-                  className="rounded-lg bg-[#00A67E] px-6 py-3 font-medium text-white transition-colors hover:bg-[#008B6B]"
+                  className="rounded-lg bg-[#022C22] px-6 py-3 font-medium text-white transition-colors hover:bg-[#011a14]"
                 >
                   Register here
                 </button>

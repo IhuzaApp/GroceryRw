@@ -33,7 +33,7 @@ export default function AboutFooter() {
                 height={32}
                 className="h-8 w-8"
               />
-              <span className="text-2xl font-bold text-[#00D9A5]">Plas</span>
+              <span className="text-2xl font-bold text-[#022C22]">Plas</span>
             </div>
             {/* Slogan */}
             <p className="font-bold text-white">Let&apos;s do it together</p>
@@ -228,7 +228,7 @@ export default function AboutFooter() {
         {/* Bottom Section - Language Selector & Socials */}
         <div className="mt-12 flex flex-col items-center justify-between gap-6 border-t border-gray-800 pt-8 md:flex-row">
           <div className="relative order-2 md:order-1">
-            <select className="cursor-pointer appearance-none rounded-lg bg-[#282828] px-4 py-2.5 pr-10 text-sm font-medium text-white outline-none transition-colors hover:bg-gray-700 focus:ring-2 focus:ring-[#00D9A5]">
+            <select className="cursor-pointer appearance-none rounded-lg bg-[#282828] px-4 py-2.5 pr-10 text-sm font-medium text-white outline-none transition-colors hover:bg-gray-700 focus:ring-2 focus:ring-[#022C22]">
               <option value="en">English</option>
               <option value="rw">Kinyarwanda</option>
               <option value="fr">Français</option>
