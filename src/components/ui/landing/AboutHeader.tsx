@@ -112,9 +112,14 @@ export default function AboutHeader({
             </Link>
             <Link
               href="/careers"
-              className={`font-medium transition-colors ${isScrolled
-                ? "text-gray-700 hover:text-[#00D9A5]"
-                : "text-white/90 hover:text-white"
+              className={`${activePage === "careers" ? "border-b-2 pb-1" : ""
+                } font-medium transition-colors ${activePage === "careers"
+                  ? isScrolled
+                    ? "border-[#00D9A5] text-[#00D9A5]"
+                    : "border-[#00D9A5] text-white"
+                  : isScrolled
+                    ? "text-gray-700 hover:text-[#00D9A5]"
+                    : "text-white/90 hover:text-white"
                 }`}
             >
               Careers at Plas
