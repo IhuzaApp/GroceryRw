@@ -41,9 +41,8 @@ const CustomInput = memo(
     return (
       <div className="space-y-2">
         <label
-          className={`block text-sm font-medium ${
-            theme === "dark" ? "text-gray-300" : "text-gray-700"
-          }`}
+          className={`block text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"
+            }`}
         >
           {label} {required && <span className="text-red-500">*</span>}
         </label>
@@ -52,13 +51,12 @@ const CustomInput = memo(
           <select
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className={`w-full rounded-xl border px-4 py-3 transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500 ${
-              error
+            className={`w-full rounded-xl border px-4 py-3 transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500 ${error
                 ? "border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/20"
                 : theme === "dark"
-                ? "border-gray-600 bg-gray-700 text-gray-100"
-                : "border-gray-300 bg-white text-gray-900"
-            }`}
+                  ? "border-gray-600 bg-gray-700 text-gray-100"
+                  : "border-gray-300 bg-white text-gray-900"
+              }`}
           >
             <option value="">Select {label.toLowerCase()}</option>
             {options.map((option) => (
@@ -73,13 +71,12 @@ const CustomInput = memo(
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
             rows={rows}
-            className={`w-full rounded-xl border px-4 py-3 transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500 ${
-              error
+            className={`w-full rounded-xl border px-4 py-3 transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500 ${error
                 ? "border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/20"
                 : theme === "dark"
-                ? "border-gray-600 bg-gray-700 text-gray-100"
-                : "border-gray-300 bg-white text-gray-900"
-            }`}
+                  ? "border-gray-600 bg-gray-700 text-gray-100"
+                  : "border-gray-300 bg-white text-gray-900"
+              }`}
           />
         ) : (
           <input
@@ -87,13 +84,12 @@ const CustomInput = memo(
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
-            className={`w-full rounded-xl border px-4 py-3 transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500 ${
-              error
+            className={`w-full rounded-xl border px-4 py-3 transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500 ${error
                 ? "border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/20"
                 : theme === "dark"
-                ? "border-gray-600 bg-gray-700 text-gray-100"
-                : "border-gray-300 bg-white text-gray-900"
-            }`}
+                  ? "border-gray-600 bg-gray-700 text-gray-100"
+                  : "border-gray-300 bg-white text-gray-900"
+              }`}
           />
         )}
 
@@ -143,28 +139,25 @@ const FileUploadInput = memo(
     return (
       <div className="space-y-2">
         <label
-          className={`block text-sm font-medium ${
-            theme === "dark" ? "text-gray-300" : "text-gray-700"
-          }`}
+          className={`block text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"
+            }`}
         >
           {label}
         </label>
 
         <p
-          className={`text-xs ${
-            theme === "dark" ? "text-gray-400" : "text-gray-500"
-          }`}
+          className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"
+            }`}
         >
           {description}
         </p>
 
         {file ? (
           <div
-            className={`rounded-lg border p-4 ${
-              theme === "dark"
+            className={`rounded-lg border p-4 ${theme === "dark"
                 ? "border-gray-600 bg-gray-700"
                 : "border-gray-300 bg-gray-50"
-            }`}
+              }`}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center">
@@ -182,16 +175,14 @@ const FileUploadInput = memo(
                   />
                 </svg>
                 <span
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-200" : "text-gray-700"
-                  }`}
+                  className={`text-sm ${theme === "dark" ? "text-gray-200" : "text-gray-700"
+                    }`}
                 >
                   {file.name}
                 </span>
                 <span
-                  className={`ml-2 text-xs ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-500"
-                  }`}
+                  className={`ml-2 text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
                 >
                   ({(file.size / 1024 / 1024).toFixed(1)} MB)
                 </span>
@@ -228,13 +219,12 @@ const FileUploadInput = memo(
             />
             <label
               htmlFor={name}
-              className={`flex h-32 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors ${
-                error
+              className={`flex h-32 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors ${error
                   ? "border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/20"
                   : theme === "dark"
-                  ? "border-gray-600 bg-gray-700 hover:bg-gray-600"
-                  : "border-gray-300 bg-gray-50 hover:bg-gray-100"
-              }`}
+                    ? "border-gray-600 bg-gray-700 hover:bg-gray-600"
+                    : "border-gray-300 bg-gray-50 hover:bg-gray-100"
+                }`}
             >
               <div className="flex flex-col items-center justify-center pb-6 pt-5">
                 <svg
@@ -251,17 +241,15 @@ const FileUploadInput = memo(
                   />
                 </svg>
                 <p
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-500"
-                  }`}
+                  className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
                 >
                   <span className="font-semibold">Click to upload</span> or drag
                   and drop
                 </p>
                 <p
-                  className={`text-xs ${
-                    theme === "dark" ? "text-gray-500" : "text-gray-400"
-                  }`}
+                  className={`text-xs ${theme === "dark" ? "text-gray-500" : "text-gray-400"
+                    }`}
                 >
                   PDF, PNG, JPG (MAX. 5MB)
                 </p>
@@ -801,8 +789,8 @@ export default function ShopperRegistrationForm() {
         video: {
           facingMode:
             mode === "license" ||
-            mode === "national_id_front" ||
-            mode === "national_id_back"
+              mode === "national_id_front" ||
+              mode === "national_id_back"
               ? "environment"
               : "user",
         },
@@ -921,8 +909,8 @@ export default function ShopperRegistrationForm() {
           video: {
             facingMode:
               captureMode === "license" ||
-              captureMode === "national_id_front" ||
-              captureMode === "national_id_back"
+                captureMode === "national_id_front" ||
+                captureMode === "national_id_back"
                 ? "environment"
                 : "user",
           },
@@ -1496,9 +1484,8 @@ export default function ShopperRegistrationForm() {
     return (
       <div className="p-8 text-center">
         <div
-          className={`mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full ${
-            theme === "dark" ? "bg-green-600/20" : "bg-green-100"
-          }`}
+          className={`mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full ${theme === "dark" ? "bg-green-600/20" : "bg-green-100"
+            }`}
         >
           <svg
             className="h-8 w-8 animate-spin text-green-600"
@@ -1521,9 +1508,8 @@ export default function ShopperRegistrationForm() {
           </svg>
         </div>
         <h3
-          className={`mb-2 text-lg font-semibold ${
-            theme === "dark" ? "text-white" : "text-gray-900"
-          }`}
+          className={`mb-2 text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
+            }`}
         >
           Loading your profile...
         </h3>
@@ -1542,9 +1528,8 @@ export default function ShopperRegistrationForm() {
       <div className="p-8 text-center">
         <div className="flex flex-col items-center justify-center">
           <div
-            className={`mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full ${
-              theme === "dark" ? "bg-red-600/20" : "bg-red-100"
-            }`}
+            className={`mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full ${theme === "dark" ? "bg-red-600/20" : "bg-red-100"
+              }`}
           >
             <svg
               className="h-8 w-8 text-red-600"
@@ -1559,16 +1544,14 @@ export default function ShopperRegistrationForm() {
             </svg>
           </div>
           <h2
-            className={`mb-2 text-2xl font-bold ${
-              theme === "dark" ? "text-white" : "text-gray-900"
-            }`}
+            className={`mb-2 text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
           >
             Authentication Required
           </h2>
           <p
-            className={`mb-6 ${
-              theme === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}
+            className={`mb-6 ${theme === "dark" ? "text-gray-400" : "text-gray-600"
+              }`}
           >
             You need to be logged in to apply as a shopper.
           </p>
@@ -1591,9 +1574,8 @@ export default function ShopperRegistrationForm() {
       <div className="p-8 text-center">
         <div className="flex flex-col items-center justify-center">
           <div
-            className={`mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full ${
-              theme === "dark" ? "bg-yellow-600/20" : "bg-yellow-100"
-            }`}
+            className={`mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full ${theme === "dark" ? "bg-yellow-600/20" : "bg-yellow-100"
+              }`}
           >
             <svg
               className="h-8 w-8 text-yellow-600"
@@ -1608,16 +1590,14 @@ export default function ShopperRegistrationForm() {
             </svg>
           </div>
           <h2
-            className={`mb-2 text-2xl font-bold ${
-              theme === "dark" ? "text-white" : "text-gray-900"
-            }`}
+            className={`mb-2 text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
           >
             Already Registered
           </h2>
           <p
-            className={`mb-6 ${
-              theme === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}
+            className={`mb-6 ${theme === "dark" ? "text-gray-400" : "text-gray-600"
+              }`}
           >
             {apiError.message}
           </p>
@@ -1630,11 +1610,10 @@ export default function ShopperRegistrationForm() {
             </button>
             <button
               onClick={() => clearApiErrorAndUpdate()}
-              className={`inline-flex items-center rounded-lg px-6 py-3 font-medium transition-colors ${
-                theme === "dark"
+              className={`inline-flex items-center rounded-lg px-6 py-3 font-medium transition-colors ${theme === "dark"
                   ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+                }`}
             >
               Update Application
             </button>
@@ -1650,9 +1629,8 @@ export default function ShopperRegistrationForm() {
       <div className="p-8 text-center">
         <div className="flex flex-col items-center justify-center">
           <div
-            className={`mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full ${
-              theme === "dark" ? "bg-blue-600/20" : "bg-blue-100"
-            }`}
+            className={`mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full ${theme === "dark" ? "bg-blue-600/20" : "bg-blue-100"
+              }`}
           >
             <svg
               className="h-8 w-8 animate-spin text-blue-600"
@@ -1675,16 +1653,14 @@ export default function ShopperRegistrationForm() {
             </svg>
           </div>
           <h2
-            className={`mb-2 text-2xl font-bold ${
-              theme === "dark" ? "text-white" : "text-gray-900"
-            }`}
+            className={`mb-2 text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
           >
             Loading Application...
           </h2>
           <p
-            className={`${
-              theme === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}
+            className={`${theme === "dark" ? "text-gray-400" : "text-gray-600"
+              }`}
           >
             Please wait while we load your existing application data.
           </p>
@@ -1698,9 +1674,8 @@ export default function ShopperRegistrationForm() {
       <div className="p-8 text-center">
         <div className="flex flex-col items-center justify-center">
           <div
-            className={`mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full ${
-              theme === "dark" ? "bg-green-600/20" : "bg-green-100"
-            }`}
+            className={`mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full ${theme === "dark" ? "bg-green-600/20" : "bg-green-100"
+              }`}
           >
             <svg
               className="h-8 w-8 text-green-600"
@@ -1715,16 +1690,14 @@ export default function ShopperRegistrationForm() {
             </svg>
           </div>
           <h2
-            className={`mb-2 text-2xl font-bold ${
-              theme === "dark" ? "text-white" : "text-gray-900"
-            }`}
+            className={`mb-2 text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
           >
             Application Submitted!
           </h2>
           <p
-            className={`mb-6 ${
-              theme === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}
+            className={`mb-6 ${theme === "dark" ? "text-gray-400" : "text-gray-600"
+              }`}
           >
             Your application to become a shopper is being reviewed. You&apos;ll
             be redirected to your profile page shortly.
@@ -1765,9 +1738,8 @@ export default function ShopperRegistrationForm() {
       <div className="space-y-6">
         <div>
           <h3
-            className={`mb-6 text-lg font-semibold ${
-              theme === "dark" ? "text-white" : "text-gray-900"
-            }`}
+            className={`mb-6 text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
           >
             Personal Information
           </h3>
@@ -1824,9 +1796,8 @@ export default function ShopperRegistrationForm() {
       <div className="space-y-6">
         <div>
           <h3
-            className={`mb-6 text-lg font-semibold ${
-              theme === "dark" ? "text-white" : "text-gray-900"
-            }`}
+            className={`mb-6 text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
           >
             Contact Details
           </h3>
@@ -1838,7 +1809,7 @@ export default function ShopperRegistrationForm() {
               value={formValue.phone_number}
               onChange={(value) => handleInputChange("phone_number", value)}
               error={errors.phone_number}
-              placeholder="+250 123 456 789"
+              placeholder="0788829084"
               required
             />
           </div>
@@ -1852,9 +1823,8 @@ export default function ShopperRegistrationForm() {
       <div className="space-y-6">
         <div>
           <h3
-            className={`mb-6 text-lg font-semibold ${
-              theme === "dark" ? "text-white" : "text-gray-900"
-            }`}
+            className={`mb-6 text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
           >
             Address & Location
           </h3>
@@ -1873,9 +1843,8 @@ export default function ShopperRegistrationForm() {
 
             <div>
               <label
-                className={`mb-2 block text-sm font-medium ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-700"
-                }`}
+                className={`mb-2 block text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"
+                  }`}
               >
                 Location (for coordinates)
               </label>
@@ -1883,13 +1852,12 @@ export default function ShopperRegistrationForm() {
                 id="location-autocomplete"
                 type="text"
                 placeholder="Search for your location..."
-                className={`w-full rounded-xl border px-4 py-3 transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                  errors.latitude || errors.longitude
+                className={`w-full rounded-xl border px-4 py-3 transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500 ${errors.latitude || errors.longitude
                     ? "border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/20"
                     : theme === "dark"
-                    ? "border-gray-600 bg-gray-700 text-gray-100"
-                    : "border-gray-300 bg-white text-gray-900"
-                }`}
+                      ? "border-gray-600 bg-gray-700 text-gray-100"
+                      : "border-gray-300 bg-white text-gray-900"
+                  }`}
                 ref={locationInputRef}
               />
               {(errors.latitude || errors.longitude) && (
@@ -1924,16 +1892,14 @@ export default function ShopperRegistrationForm() {
       <div className="space-y-6">
         <div>
           <h3
-            className={`mb-6 text-lg font-semibold ${
-              theme === "dark" ? "text-white" : "text-gray-900"
-            }`}
+            className={`mb-6 text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
           >
             Guarantor Information
           </h3>
           <p
-            className={`mb-6 text-sm ${
-              theme === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}
+            className={`mb-6 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"
+              }`}
           >
             Provide contact information for someone who can vouch for you
             (optional)
@@ -1955,7 +1921,7 @@ export default function ShopperRegistrationForm() {
               value={formValue.guarantorPhone}
               onChange={(value) => handleInputChange("guarantorPhone", value)}
               error={errors.guarantorPhone}
-              placeholder="+250 123 456 789"
+              placeholder="0788829084"
             />
 
             <CustomInput
@@ -1980,9 +1946,8 @@ export default function ShopperRegistrationForm() {
       <div className="space-y-6">
         <div>
           <h3
-            className={`mb-6 text-lg font-semibold ${
-              theme === "dark" ? "text-white" : "text-gray-900"
-            }`}
+            className={`mb-6 text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
           >
             Required Documents
           </h3>
@@ -1990,16 +1955,14 @@ export default function ShopperRegistrationForm() {
           {/* Profile Photo */}
           <div className="mb-8">
             <label
-              className={`mb-2 block text-sm font-medium ${
-                theme === "dark" ? "text-gray-300" : "text-gray-700"
-              }`}
+              className={`mb-2 block text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"
+                }`}
             >
               Profile Photo <span className="text-red-500">*</span>
             </label>
             <p
-              className={`mb-4 text-sm ${
-                theme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
+              className={`mb-4 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
             >
               Take a clear photo of yourself
             </p>
@@ -2080,18 +2043,16 @@ export default function ShopperRegistrationForm() {
           {/* Row 1: Camera Photos - Front ID, Back ID, Driving License */}
           <div className="mb-8">
             <h4
-              className={`text-md mb-4 font-semibold ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}
+              className={`text-md mb-4 font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
             >
               Photo Documents (Take with Camera)
             </h4>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               <div>
                 <label
-                  className={`mb-2 block text-sm font-medium ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-700"
-                  }`}
+                  className={`mb-2 block text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"
+                    }`}
                 >
                   National ID Front <span className="text-red-500">*</span>
                 </label>
@@ -2155,9 +2116,8 @@ export default function ShopperRegistrationForm() {
 
               <div>
                 <label
-                  className={`mb-2 block text-sm font-medium ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-700"
-                  }`}
+                  className={`mb-2 block text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"
+                    }`}
                 >
                   National ID Back <span className="text-red-500">*</span>
                 </label>
@@ -2222,9 +2182,8 @@ export default function ShopperRegistrationForm() {
               {/* Driving License - Third column */}
               <div>
                 <label
-                  className={`mb-2 block text-sm font-medium ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-700"
-                  }`}
+                  className={`mb-2 block text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"
+                    }`}
                 >
                   Driving License Photo
                 </label>
@@ -2261,11 +2220,10 @@ export default function ShopperRegistrationForm() {
                 ) : (
                   <button
                     onClick={() => startCamera("license")}
-                    className={`mt-2 inline-flex w-full items-center justify-center rounded-lg px-4 py-2 transition-colors ${
-                      theme === "dark"
+                    className={`mt-2 inline-flex w-full items-center justify-center rounded-lg px-4 py-2 transition-colors ${theme === "dark"
                         ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
+                      }`}
                   >
                     <svg
                       className="mr-2 h-4 w-4"
@@ -2289,9 +2247,8 @@ export default function ShopperRegistrationForm() {
             {/* Row 2: File Uploads - Police Clearance, Proof of Residency, Marital Status Certificate */}
             <div className="mb-8">
               <h4
-                className={`text-md mb-4 font-semibold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
+                className={`text-md mb-4 font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
               >
                 Official Documents (Upload from Irembo)
               </h4>
@@ -2331,16 +2288,14 @@ export default function ShopperRegistrationForm() {
             {/* Digital Signature */}
             <div className="mt-6">
               <label
-                className={`mb-2 block text-sm font-medium ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-700"
-                }`}
+                className={`mb-2 block text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"
+                  }`}
               >
                 Digital Signature
               </label>
               <p
-                className={`mb-3 text-sm ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
+                className={`mb-3 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"
+                  }`}
               >
                 Sign in the box below using your mouse or touch
               </p>
@@ -2399,11 +2354,10 @@ export default function ShopperRegistrationForm() {
               ) : (
                 <button
                   onClick={startSignaturePad}
-                  className={`mt-2 inline-flex items-center rounded-lg px-4 py-2 transition-colors ${
-                    theme === "dark"
+                  className={`mt-2 inline-flex items-center rounded-lg px-4 py-2 transition-colors ${theme === "dark"
                       ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
+                    }`}
                 >
                   <svg
                     className="mr-2 h-4 w-4"
@@ -2544,16 +2498,14 @@ export default function ShopperRegistrationForm() {
       <div className="p-8">
         <div className="mb-8">
           <h2
-            className={`mb-2 text-2xl font-bold ${
-              theme === "dark" ? "text-white" : "text-gray-900"
-            }`}
+            className={`mb-2 text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
           >
             Shopper Application
           </h2>
           <p
-            className={`${
-              theme === "dark" ? "text-gray-300" : "text-gray-600"
-            }`}
+            className={`${theme === "dark" ? "text-gray-300" : "text-gray-600"
+              }`}
           >
             Complete all steps to apply as a shopper. Your information will be
             reviewed by our team.
@@ -2563,9 +2515,8 @@ export default function ShopperRegistrationForm() {
         {/* Progress Bar */}
         <div className="mb-6">
           <div
-            className={`mb-2 flex justify-between text-sm font-medium ${
-              theme === "dark" ? "text-gray-300" : "text-gray-600"
-            }`}
+            className={`mb-2 flex justify-between text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-600"
+              }`}
           >
             <span>
               Step {currentStep + 1} of {steps.length}
@@ -2573,9 +2524,8 @@ export default function ShopperRegistrationForm() {
             <div className="flex items-center space-x-4">
               {autoSaved && (
                 <span
-                  className={`flex items-center text-xs ${
-                    theme === "dark" ? "text-green-400" : "text-green-600"
-                  }`}
+                  className={`flex items-center text-xs ${theme === "dark" ? "text-green-400" : "text-green-600"
+                    }`}
                 >
                   <svg
                     className="mr-1 h-3 w-3"
@@ -2609,11 +2559,10 @@ export default function ShopperRegistrationForm() {
                   />
                 </svg>
                 <div
-                  className={`absolute bottom-full right-0 z-10 mb-2 whitespace-nowrap rounded-lg px-3 py-2 text-xs opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 ${
-                    theme === "dark"
+                  className={`absolute bottom-full right-0 z-10 mb-2 whitespace-nowrap rounded-lg px-3 py-2 text-xs opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 ${theme === "dark"
                       ? "border border-gray-700 bg-gray-800 text-gray-200"
                       : "bg-gray-900 text-white"
-                  }`}
+                    }`}
                 >
                   <div className="mb-1 font-semibold">Keyboard Shortcuts:</div>
                   <div>← Previous step</div>
@@ -2624,9 +2573,8 @@ export default function ShopperRegistrationForm() {
             </div>
           </div>
           <div
-            className={`h-2 w-full rounded-full bg-gray-200 ${
-              theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-            }`}
+            className={`h-2 w-full rounded-full bg-gray-200 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+              }`}
           >
             <div
               className="h-2 rounded-full bg-green-600 transition-all duration-300 ease-out"
@@ -2641,13 +2589,12 @@ export default function ShopperRegistrationForm() {
             {steps.map((step, index) => (
               <div key={index} className="flex items-center">
                 <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${
-                    index <= currentStep
+                  className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${index <= currentStep
                       ? "border-green-600 bg-green-600 text-white"
                       : theme === "dark"
-                      ? "border-gray-600 text-gray-400"
-                      : "border-gray-300 text-gray-500"
-                  }`}
+                        ? "border-gray-600 text-gray-400"
+                        : "border-gray-300 text-gray-500"
+                    }`}
                 >
                   {index < currentStep ? (
                     <svg
@@ -2667,35 +2614,32 @@ export default function ShopperRegistrationForm() {
                 </div>
                 <div className="ml-3 hidden sm:block">
                   <p
-                    className={`text-sm font-medium ${
-                      index <= currentStep
+                    className={`text-sm font-medium ${index <= currentStep
                         ? theme === "dark"
                           ? "text-white"
                           : "text-gray-900"
                         : theme === "dark"
-                        ? "text-gray-400"
-                        : "text-gray-500"
-                    }`}
+                          ? "text-gray-400"
+                          : "text-gray-500"
+                      }`}
                   >
                     {step.title}
                   </p>
                   <p
-                    className={`text-xs ${
-                      theme === "dark" ? "text-gray-500" : "text-gray-600"
-                    }`}
+                    className={`text-xs ${theme === "dark" ? "text-gray-500" : "text-gray-600"
+                      }`}
                   >
                     {step.description}
                   </p>
                 </div>
                 {index < steps.length - 1 && (
                   <div
-                    className={`mx-4 hidden h-0.5 w-16 sm:block ${
-                      index < currentStep
+                    className={`mx-4 hidden h-0.5 w-16 sm:block ${index < currentStep
                         ? "bg-green-600"
                         : theme === "dark"
-                        ? "bg-gray-600"
-                        : "bg-gray-300"
-                    }`}
+                          ? "bg-gray-600"
+                          : "bg-gray-300"
+                      }`}
                   />
                 )}
               </div>
@@ -2739,11 +2683,10 @@ export default function ShopperRegistrationForm() {
             {currentStep > 0 && (
               <button
                 onClick={prevStep}
-                className={`inline-flex items-center rounded-lg px-6 py-3 font-medium transition-colors ${
-                  theme === "dark"
+                className={`inline-flex items-center rounded-lg px-6 py-3 font-medium transition-colors ${theme === "dark"
                     ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
+                  }`}
               >
                 <svg
                   className="mr-2 h-4 w-4"
@@ -2768,11 +2711,10 @@ export default function ShopperRegistrationForm() {
               <button
                 onClick={nextStep}
                 disabled={Object.keys(errors).length > 0}
-                className={`inline-flex items-center rounded-lg px-6 py-3 font-medium transition-colors ${
-                  Object.keys(errors).length > 0
+                className={`inline-flex items-center rounded-lg px-6 py-3 font-medium transition-colors ${Object.keys(errors).length > 0
                     ? "cursor-not-allowed bg-gray-400 text-gray-200"
                     : "bg-green-600 text-white hover:bg-green-700"
-                }`}
+                  }`}
               >
                 Next
                 <svg
@@ -2793,11 +2735,10 @@ export default function ShopperRegistrationForm() {
               <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className={`inline-flex items-center rounded-lg px-6 py-3 font-medium transition-colors ${
-                  loading
+                className={`inline-flex items-center rounded-lg px-6 py-3 font-medium transition-colors ${loading
                     ? "cursor-not-allowed bg-gray-400 text-gray-200"
                     : "bg-green-600 text-white hover:bg-green-700"
-                }`}
+                  }`}
               >
                 {loading ? (
                   <>
@@ -2845,11 +2786,10 @@ export default function ShopperRegistrationForm() {
 
             <button
               onClick={clearDraft}
-              className={`inline-flex items-center rounded-lg px-4 py-3 font-medium transition-colors ${
-                theme === "dark"
+              className={`inline-flex items-center rounded-lg px-4 py-3 font-medium transition-colors ${theme === "dark"
                   ? "bg-red-600/20 text-red-400 hover:bg-red-600/30"
                   : "bg-red-50 text-red-600 hover:bg-red-100"
-              }`}
+                }`}
               title="Clear all form data and start over"
             >
               <svg
@@ -2870,11 +2810,10 @@ export default function ShopperRegistrationForm() {
 
             <button
               onClick={() => router.push("/Myprofile")}
-              className={`inline-flex items-center rounded-lg px-6 py-3 font-medium transition-colors ${
-                theme === "dark"
+              className={`inline-flex items-center rounded-lg px-6 py-3 font-medium transition-colors ${theme === "dark"
                   ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+                }`}
             >
               Cancel
             </button>
@@ -2883,21 +2822,18 @@ export default function ShopperRegistrationForm() {
 
         {currentStep === steps.length - 1 && (
           <div
-            className={`mt-8 border-t pt-6 ${
-              theme === "dark" ? "border-gray-700" : "border-gray-200"
-            }`}
+            className={`mt-8 border-t pt-6 ${theme === "dark" ? "border-gray-700" : "border-gray-200"
+              }`}
           >
             <h3
-              className={`mb-4 text-lg font-semibold ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}
+              className={`mb-4 text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
             >
               What Happens Next?
             </h3>
             <ol
-              className={`ml-5 space-y-2 ${
-                theme === "dark" ? "text-gray-300" : "text-gray-600"
-              }`}
+              className={`ml-5 space-y-2 ${theme === "dark" ? "text-gray-300" : "text-gray-600"
+                }`}
             >
               <li className="flex items-start">
                 <span className="mr-3 mt-2 inline-block h-2 w-2 flex-shrink-0 rounded-full bg-green-600"></span>
@@ -2929,38 +2865,34 @@ export default function ShopperRegistrationForm() {
               onClick={stopCamera}
             ></div>
             <div
-              className={`relative w-full max-w-md rounded-2xl ${
-                theme === "dark" ? "bg-gray-800" : "bg-white"
-              } shadow-xl`}
+              className={`relative w-full max-w-md rounded-2xl ${theme === "dark" ? "bg-gray-800" : "bg-white"
+                } shadow-xl`}
             >
               {/* Header */}
               <div
-                className={`flex items-center justify-between border-b p-6 ${
-                  theme === "dark" ? "border-gray-700" : "border-gray-200"
-                }`}
+                className={`flex items-center justify-between border-b p-6 ${theme === "dark" ? "border-gray-700" : "border-gray-200"
+                  }`}
               >
                 <h3
-                  className={`text-lg font-semibold ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
+                  className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
                 >
                   {captureMode === "profile"
                     ? "Take Profile Photo"
                     : captureMode === "license"
-                    ? "Take License Photo"
-                    : captureMode === "national_id_front"
-                    ? "Take National ID Front Photo"
-                    : captureMode === "national_id_back"
-                    ? "Take National ID Back Photo"
-                    : "Take Photo"}
+                      ? "Take License Photo"
+                      : captureMode === "national_id_front"
+                        ? "Take National ID Front Photo"
+                        : captureMode === "national_id_back"
+                          ? "Take National ID Back Photo"
+                          : "Take Photo"}
                 </h3>
                 <button
                   onClick={stopCamera}
-                  className={`rounded-lg p-2 ${
-                    theme === "dark"
+                  className={`rounded-lg p-2 ${theme === "dark"
                       ? "text-gray-400 hover:bg-gray-700"
                       : "text-gray-500 hover:bg-gray-100"
-                  }`}
+                    }`}
                 >
                   <svg
                     className="h-5 w-5"
@@ -3018,9 +2950,8 @@ export default function ShopperRegistrationForm() {
                       </button>
                       {captureMode === "license" && (
                         <p
-                          className={`mt-3 text-center text-sm ${
-                            theme === "dark" ? "text-gray-400" : "text-gray-600"
-                          }`}
+                          className={`mt-3 text-center text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"
+                            }`}
                         >
                           Make sure all details on the license are clearly
                           visible
@@ -3028,14 +2959,13 @@ export default function ShopperRegistrationForm() {
                       )}
                       {(captureMode === "national_id_front" ||
                         captureMode === "national_id_back") && (
-                        <p
-                          className={`mt-3 text-center text-sm ${
-                            theme === "dark" ? "text-gray-400" : "text-gray-600"
-                          }`}
-                        >
-                          Ensure all text and details are clearly readable
-                        </p>
-                      )}
+                          <p
+                            className={`mt-3 text-center text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"
+                              }`}
+                          >
+                            Ensure all text and details are clearly readable
+                          </p>
+                        )}
                     </>
                   ) : (
                     <>
@@ -3050,11 +2980,10 @@ export default function ShopperRegistrationForm() {
                       <div className="mt-4 flex space-x-4">
                         <button
                           onClick={retakePhoto}
-                          className={`inline-flex items-center rounded-lg px-4 py-2 font-medium transition-colors ${
-                            theme === "dark"
+                          className={`inline-flex items-center rounded-lg px-4 py-2 font-medium transition-colors ${theme === "dark"
                               ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
                               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                          }`}
+                            }`}
                         >
                           <svg
                             className="mr-2 h-4 w-4"
@@ -3098,17 +3027,15 @@ export default function ShopperRegistrationForm() {
 
               {/* Footer */}
               <div
-                className={`flex justify-end border-t p-6 ${
-                  theme === "dark" ? "border-gray-700" : "border-gray-200"
-                }`}
+                className={`flex justify-end border-t p-6 ${theme === "dark" ? "border-gray-700" : "border-gray-200"
+                  }`}
               >
                 <button
                   onClick={stopCamera}
-                  className={`rounded-lg px-4 py-2 font-medium transition-colors ${
-                    theme === "dark"
+                  className={`rounded-lg px-4 py-2 font-medium transition-colors ${theme === "dark"
                       ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
+                    }`}
                 >
                   Cancel
                 </button>
@@ -3122,30 +3049,26 @@ export default function ShopperRegistrationForm() {
       {showSignaturePad && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
           <div
-            className={`max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl ${
-              theme === "dark" ? "bg-gray-800" : "bg-white"
-            }`}
+            className={`max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl ${theme === "dark" ? "bg-gray-800" : "bg-white"
+              }`}
           >
             {/* Header */}
             <div
-              className={`flex items-center justify-between border-b p-6 ${
-                theme === "dark" ? "border-gray-700" : "border-gray-200"
-              }`}
+              className={`flex items-center justify-between border-b p-6 ${theme === "dark" ? "border-gray-700" : "border-gray-200"
+                }`}
             >
               <h3
-                className={`text-lg font-semibold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
+                className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
               >
                 Digital Signature
               </h3>
               <button
                 onClick={closeSignaturePad}
-                className={`rounded-lg p-2 transition-colors ${
-                  theme === "dark"
+                className={`rounded-lg p-2 transition-colors ${theme === "dark"
                     ? "text-gray-400 hover:bg-gray-700 hover:text-gray-200"
                     : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-                }`}
+                  }`}
               >
                 <svg
                   className="h-5 w-5"
@@ -3166,20 +3089,18 @@ export default function ShopperRegistrationForm() {
             {/* Content */}
             <div className="p-6">
               <p
-                className={`mb-4 text-sm ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
+                className={`mb-4 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"
+                  }`}
               >
                 Please sign in the box below using your mouse or touch device.
               </p>
 
               {/* Signature Canvas */}
               <div
-                className={`mb-4 rounded-lg border-2 border-dashed p-4 ${
-                  theme === "dark"
+                className={`mb-4 rounded-lg border-2 border-dashed p-4 ${theme === "dark"
                     ? "border-gray-600 bg-gray-700"
                     : "border-gray-300 bg-gray-50"
-                }`}
+                  }`}
               >
                 <canvas
                   ref={signatureCanvasRef}
@@ -3199,11 +3120,10 @@ export default function ShopperRegistrationForm() {
               <div className="flex gap-2">
                 <button
                   onClick={clearSignature}
-                  className={`inline-flex flex-1 items-center justify-center rounded-lg px-4 py-2 transition-colors ${
-                    theme === "dark"
+                  className={`inline-flex flex-1 items-center justify-center rounded-lg px-4 py-2 transition-colors ${theme === "dark"
                       ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
+                    }`}
                 >
                   <svg
                     className="mr-2 h-4 w-4"

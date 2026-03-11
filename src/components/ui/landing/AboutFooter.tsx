@@ -48,12 +48,12 @@ export default function AboutFooter() {
                 </a>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  href="/plasBusiness"
                   className="text-gray-300 transition-colors hover:text-white"
                 >
                   Plas for Partners
-                </a>
+                </Link>
               </li>
               <li>
                 <a
@@ -64,12 +64,12 @@ export default function AboutFooter() {
                 </a>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  href="/plasBusiness"
                   className="text-gray-300 transition-colors hover:text-white"
                 >
                   Plas Business
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

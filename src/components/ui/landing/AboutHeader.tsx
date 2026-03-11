@@ -14,7 +14,8 @@ interface AboutHeaderProps {
   | "stories"
   | "locations"
   | "contact"
-  | "pos";
+  | "pos"
+  | "plasBusiness";
 }
 
 export default function AboutHeader({
@@ -89,8 +90,8 @@ export default function AboutHeader({
             <a
               href="#"
               className={`font-medium transition-colors ${isScrolled
-                  ? "text-gray-700 hover:text-[#00D9A5]"
-                  : "text-white/90 hover:text-white"
+                ? "text-gray-700 hover:text-[#00D9A5]"
+                : "text-white/90 hover:text-white"
                 }`}
             >
               Diversity & Inclusion
@@ -98,8 +99,8 @@ export default function AboutHeader({
             <a
               href="#"
               className={`font-medium transition-colors ${isScrolled
-                  ? "text-gray-700 hover:text-[#00D9A5]"
-                  : "text-white/90 hover:text-white"
+                ? "text-gray-700 hover:text-[#00D9A5]"
+                : "text-white/90 hover:text-white"
                 }`}
             >
               Our teams
@@ -107,8 +108,8 @@ export default function AboutHeader({
             <Link
               href="/careers"
               className={`font-medium transition-colors ${isScrolled
-                  ? "text-gray-700 hover:text-[#00D9A5]"
-                  : "text-white/90 hover:text-white"
+                ? "text-gray-700 hover:text-[#00D9A5]"
+                : "text-white/90 hover:text-white"
                 }`}
             >
               Careers at Plas
@@ -116,8 +117,8 @@ export default function AboutHeader({
             <a
               href="#"
               className={`font-medium transition-colors ${isScrolled
-                  ? "text-gray-700 hover:text-[#00D9A5]"
-                  : "text-white/90 hover:text-white"
+                ? "text-gray-700 hover:text-[#00D9A5]"
+                : "text-white/90 hover:text-white"
                 }`}
             >
               Stories
@@ -156,8 +157,8 @@ export default function AboutHeader({
           <div className="flex items-center gap-3">
             <button
               className={`hidden items-center gap-2 rounded-lg border-2 px-4 py-2 font-medium transition-colors md:flex ${isScrolled
-                  ? "border-gray-300 bg-white text-gray-900 hover:border-[#00D9A5]"
-                  : "border-white bg-transparent text-white hover:bg-white/10"
+                ? "border-gray-300 bg-white text-gray-900 hover:border-[#00D9A5]"
+                : "border-white bg-transparent text-white hover:bg-white/10"
                 }`}
               onClick={() => router.push("/Auth/Login")}
             >
@@ -165,8 +166,8 @@ export default function AboutHeader({
             </button>
             <button
               className={`rounded-lg p-2 transition-colors ${isScrolled
-                  ? "text-gray-700 hover:bg-gray-100"
-                  : "text-white hover:bg-white/10"
+                ? "text-gray-700 hover:bg-gray-100"
+                : "text-white hover:bg-white/10"
                 }`}
               aria-label="Search"
             >
