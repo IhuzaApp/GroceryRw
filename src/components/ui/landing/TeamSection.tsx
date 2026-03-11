@@ -3,10 +3,10 @@ import Image from "next/image";
 export default function TeamSection() {
     const team = [
         {
-            name: "Xavier Jones",
-            role: "CTO",
-            image: "/assets/images/team/director-2.png",
-            bio: "Xavier's passion for user-centric design and technical innovation drives the product strategy and feature development at Plas."
+            name: "Arthur Vance",
+            role: "Board Director",
+            image: "/assets/images/team/supply-chain-new.png",
+            bio: "Arthur brings decades of global executive experience to the board, steering Plas toward international excellence."
         },
         {
             name: "Mei Lin",
@@ -15,22 +15,22 @@ export default function TeamSection() {
             bio: "Mei Lin leads our global operations with a focus on sustainable growth and strategic partnerships across the continent."
         },
         {
+            name: "Xavier Jones",
+            role: "Head of Finance",
+            image: "/assets/images/team/director-2.png",
+            bio: "Xavier leads our financial strategy, ensuring the long-term sustainability and fiscal health of the Plas ecosystem."
+        },
+        {
             name: "Amina Okoro",
             role: "Director of Operations",
             image: "/assets/images/team/amina-casual.png",
             bio: "Amina oversees our pan-African delivery network and operations, ensuring that every aspect of Plas runs with scale and efficiency."
         },
         {
-            name: "Li Wei",
-            role: "Senior Developer",
-            image: "/assets/images/team/senior-dev-new.png",
-            bio: "Li Wei is a full-stack expert with a passion for building scalable architectures and mentoring the next generation of engineers."
-        },
-        {
-            name: "Jean-Luc Nkurunziza",
-            role: "Full Stack Developer",
-            image: "/assets/images/team/african-dev-1.png",
-            bio: "Jean-Luc is a mobile specialist dedicated to bringing high-performance commerce experiences to users across Africa."
+            name: "Fatima Diallo",
+            role: "Legal Professional",
+            image: "/assets/images/team/legal-pro.png",
+            bio: "Fatima ensures our operations are globally compliant, protecting the interests of Plas and its partners with a focus on Rwanda."
         },
         {
             name: "Zola Ndlovu",
@@ -39,16 +39,22 @@ export default function TeamSection() {
             bio: "Zola's expertise in technical systems ensures that Plas's marketing remains data-driven and responsive as we scale."
         },
         {
-            name: "Kwame Boateng",
-            role: "Head of Support",
-            image: "/assets/images/team/support-head.png",
-            bio: "Kwame leads our customer experience team with a focus on empathy, ensuring every user feels supported."
+            name: "Priya Singh",
+            role: "Region Manager",
+            image: "/assets/images/team/tax-pro.png",
+            bio: "Priya manages our regional growth strategies, navigating complex local markets to expand the Plas footprint."
         },
         {
-            name: "Fatima Diallo",
-            role: "Legal Professional",
-            image: "/assets/images/team/legal-pro.png",
-            bio: "Fatima ensures our operations are globally compliant, protecting the interests of Plas and its partners."
+            name: "Kenji Sato",
+            role: "Senior Developer",
+            image: "/assets/images/team/senior-dev-new.png",
+            bio: "Kenji is a full-stack expert with a passion for building scalable architectures and mentoring the next generation of engineers."
+        },
+        {
+            name: "Jean-Luc Nkurunziza",
+            role: "Full Stack Developer",
+            image: "/assets/images/team/african-dev-1.png",
+            bio: "Jean-Luc is a mobile and web specialist dedicated to bringing high-performance full-stack commerce experiences to users across Africa."
         },
         {
             name: "Koffi Mensah",
@@ -57,22 +63,16 @@ export default function TeamSection() {
             bio: "Koffi develops the intelligent recommendation engines that connect African consumers with the products they love."
         },
         {
+            name: "Kwame Boateng",
+            role: "Head of Support",
+            image: "/assets/images/team/support-head.png",
+            bio: "Kwame leads our customer experience team with a focus on empathy, ensuring every user feels supported."
+        },
+        {
             name: "Esther Uwase",
             role: "Communication Officer",
             image: "/assets/images/team/comm-officer.png",
             bio: "Esther leads our corporate storytelling and partner communications, ensuring the Plas message resonates across the continent."
-        },
-        {
-            name: "Rajesh Varma",
-            role: "Board Director",
-            image: "/assets/images/team/supply-chain-new.png",
-            bio: "Rajesh optimizes our cross-border supply chains, bringing global logistics best practices to the emerging African market."
-        },
-        {
-            name: "Priya Singh",
-            role: "Tax Professional",
-            image: "/assets/images/team/tax-pro.png",
-            bio: "Priya ensures global compliance and strategic financial planning, navigating complex tax landscapes across multiple jurisdictions."
         }
     ];
 
