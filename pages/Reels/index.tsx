@@ -382,6 +382,19 @@ interface DatabaseReel {
       profile_picture?: string;
     } | null;
   }>;
+  business_id?: string | null;
+  business_account?: {
+    account_type: string;
+    business_email: string;
+    business_location: string;
+    business_name: string;
+    business_phone: string;
+    created_at: string;
+    face_image: string;
+    id: string;
+    id_image: string;
+    rdb_certificate?: string;
+  } | null;
 }
 
 // Format timestamp to relative time
@@ -603,6 +616,14 @@ export default function FoodReelsApp() {
             subscribers: post.recipe.subscribers,
           },
         }),
+        ...(post.type === "business" && {
+          business: {
+            name: post.business.name,
+            location: post.business.location,
+            email: post.business.email,
+            phone: post.business.phone,
+          },
+        }),
       }));
 
       const cacheData: CachedReels = {
@@ -748,17 +769,29 @@ export default function FoodReelsApp() {
       shopAlt = 0; // Shops doesn't have altitude in the schema
     }
 
+    // Determine creator name with fallback
+    const creatorName = dbReel.User?.name ||
+      dbReel.business_account?.business_name ||
+      dbReel.Restaurant?.name ||
+      dbReel.Shops?.name ||
+      "Plas Reel Agent";
+
     // Base post structure
     const basePost: BasePost = {
       id: dbReel.id,
       type: dbReel.type as PostType,
       creator: {
-        name: dbReel.User?.name || "Plas Reel Agent",
+        name: creatorName,
         avatar:
-          dbReel.User?.profile_picture || "/placeholder.svg?height=40&width=40",
+          dbReel.User?.profile_picture ||
+          dbReel.business_account?.face_image ||
+          dbReel.Restaurant?.profile ||
+          dbReel.Shops?.image ||
+          "/placeholder.svg?height=40&width=40",
         verified:
           dbReel.User?.role === "admin" ||
           dbReel.User?.role === "verified" ||
+          dbReel.Restaurant?.verified ||
           false,
       },
       content: {
@@ -921,6 +954,18 @@ export default function FoodReelsApp() {
           },
         } as ChefPost;
 
+      case "business":
+        return {
+          ...basePost,
+          type: "business",
+          business: {
+            name: dbReel.business_account?.business_name || "Business",
+            location: dbReel.business_account?.business_location || "Location unavailable",
+            email: dbReel.business_account?.business_email || "",
+            phone: dbReel.business_account?.business_phone || "",
+          },
+        } as BusinessPost;
+
       case "shop":
       case "store":
         // Handle shop/store type reels - similar to supermarket
@@ -1032,9 +1077,11 @@ export default function FoodReelsApp() {
         }
 
         const data = await response.json();
+        console.log("DEBUG: Raw reels from API:", data.reels);
         const convertedPosts = data.reels.map((reel: DatabaseReel) =>
           convertDatabaseReelToFoodPost(reel)
         );
+        console.log("DEBUG: Converted reels:", convertedPosts);
 
         // Get user preferences from API or calculate from current batch
         let userPreferences: Map<string, number> | undefined;
@@ -1057,6 +1104,7 @@ export default function FoodReelsApp() {
 
         // Update state first
         if (mountedRef.current) {
+          console.log("DEBUG: Setting randomized posts to state:", randomizedPosts);
           setPosts(randomizedPosts);
         }
 

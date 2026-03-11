@@ -26,6 +26,12 @@ export default function VideoReel({
   onComment,
   onShare,
 }: VideoReelProps) {
+  // Debug individual reel data
+  useEffect(() => {
+    if (isVisible) {
+      console.log(`DEBUG: VideoReel visible for post ${post.id}:`, post);
+    }
+  }, [isVisible, post]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const mountedRef = useRef(true);
@@ -36,6 +42,9 @@ export default function VideoReel({
   const [isMobile, setIsMobile] = useState(false);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [audioSource, setAudioSource] = useState("/assets/sounds/reel-background.mp3");
+  const [lastTap, setLastTap] = useState(0);
+  const [showLikeAnimation, setShowLikeAnimation] = useState(false);
+  const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Track component mount state
   useEffect(() => {
@@ -152,6 +161,52 @@ export default function VideoReel({
       playVideo();
     }
   };
+  const handleInteraction = (e: React.MouseEvent | React.TouchEvent) => {
+    // Prevent interaction if clicking on buttons/actions
+    if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('a')) {
+      return;
+    }
+
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300;
+
+    if (now - lastTap < DOUBLE_TAP_DELAY) {
+      // Double Tap detected
+      if (tapTimeoutRef.current) {
+        clearTimeout(tapTimeoutRef.current);
+        tapTimeoutRef.current = null;
+      }
+      handleDoubleTap();
+      setLastTap(0);
+    } else {
+      // Potential Single Tap
+      setLastTap(now);
+      tapTimeoutRef.current = setTimeout(() => {
+        handleSingleTap();
+        tapTimeoutRef.current = null;
+      }, DOUBLE_TAP_DELAY);
+    }
+  };
+
+  const handleSingleTap = () => {
+    if (isPlaying) {
+      if (videoRef.current) videoRef.current.pause();
+      if (audioRef.current) audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      if (videoRef.current) videoRef.current.play().catch(console.error);
+      if (audioRef.current) audioRef.current.play().catch(console.error);
+      setIsPlaying(true);
+    }
+  };
+
+  const handleDoubleTap = () => {
+    if (!post.isLiked) {
+      onLike(post.id);
+    }
+    setShowLikeAnimation(true);
+    setTimeout(() => setShowLikeAnimation(false), 1000);
+  };
 
   return (
     <>
@@ -165,7 +220,11 @@ export default function VideoReel({
           padding: 0,
           overflow: "hidden",
           backgroundColor: "#000",
+          userSelect: "none",
+          WebkitUserSelect: "none",
+          touchAction: "manipulation",
         }}
+        onClick={handleInteraction}
       >
         <ReelMedia
           post={post}
@@ -195,8 +254,59 @@ export default function VideoReel({
             minHeight: "100%",
             background: "linear-gradient(to top, rgba(0,0,0,0.9), transparent, rgba(0,0,0,0.3))",
             zIndex: 2,
+            pointerEvents: "none", // Let clicks pass through to the main container
           }}
         />
+
+        {/* Large Heart Animation Overlay */}
+        {showLikeAnimation && (
+          <div
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              zIndex: 30,
+              pointerEvents: "none",
+              animation: "heartPop 0.8s ease-out forwards",
+            }}
+          >
+            <svg
+              width="100"
+              height="100"
+              viewBox="0 0 24 24"
+              fill="#ef4444"
+              stroke="#ef4444"
+              strokeWidth="1"
+            >
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+          </div>
+        )}
+
+        {/* Play/Pause Indicator Overlay */}
+        {!isPlaying && isVisible && (
+          <div
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              zIndex: 3,
+              pointerEvents: "none",
+              opacity: 0.6,
+            }}
+          >
+            <svg
+              width="64"
+              height="64"
+              viewBox="0 0 24 24"
+              fill="white"
+            >
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </div>
+        )}
 
         <ReelHeader post={post} />
 
@@ -220,10 +330,23 @@ export default function VideoReel({
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
           }
+          @keyframes heartPop {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+          }
         `}</style>
       </div>
 
-      <OrderModal open={showOrderModal} onClose={() => setShowOrderModal(false)} />
+      <OrderModal
+        open={showOrderModal}
+        onClose={() => setShowOrderModal(false)}
+        post={post}
+        shopLat={post.shopLat || 0}
+        shopLng={post.shopLng || 0}
+        shopAlt={post.shopAlt || 0}
+        shopId={post.shop_id || post.restaurant_id || ""}
+      />
     </>
   );
 }

@@ -6,6 +6,7 @@ import {
     RestaurantPost,
     SupermarketPost,
     ChefPost,
+    BusinessPost,
 } from "./ReelTypes";
 import {
     UtensilsIcon,
@@ -32,6 +33,12 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
     setShowOrderModal,
 }) => {
     const router = useRouter();
+    const [isExpanded, setIsExpanded] = React.useState(false);
+
+    const toggleExpand = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsExpanded(!isExpanded);
+    };
 
     const renderSpecificActions = () => {
         switch (post.type) {
@@ -345,6 +352,59 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                         </div>
                     </div>
                 );
+
+            case "business":
+                const businessPost = post as BusinessPost;
+                return (
+                    <div style={{ marginTop: 16 }}>
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 16,
+                                marginBottom: 12,
+                                color: "#fff",
+                                opacity: 0.8,
+                                fontSize: "14px",
+                            }}
+                        >
+                            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                                <MapPinIcon />
+                                <span>{businessPost.business?.location || "Location unavailable"}</span>
+                            </div>
+                        </div>
+                        <div style={{ display: "flex", gap: 8 }}>
+                            <button
+                                style={{
+                                    flex: 1,
+                                    padding: "12px",
+                                    borderRadius: "25px",
+                                    fontWeight: "bold",
+                                    backgroundColor: "#2563eb",
+                                    borderColor: "#2563eb",
+                                    color: "white",
+                                    border: "none",
+                                    cursor: isAuthenticated ? "pointer" : "not-allowed",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    opacity: isAuthenticated ? 1 : 0.5,
+                                }}
+                                onClick={() => {
+                                    if (isAuthenticated && businessPost.business?.phone) {
+                                        window.location.href = `tel:${businessPost.business.phone}`;
+                                    }
+                                }}
+                                disabled={!isAuthenticated}
+                            >
+                                <span style={{ whiteSpace: "nowrap" }}>
+                                    {isAuthenticated ? "Contact Business" : "Login to Contact"}
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                );
+
             default:
                 return null;
         }
@@ -376,19 +436,43 @@ const ReelBottomContent: React.FC<ReelBottomContentProps> = ({
                 >
                     {post.content.title}
                 </h2>
-                <p
-                    style={{
-                        color: "rgba(255,255,255,0.9)",
-                        fontSize: "14px",
-                        marginBottom: 16,
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                    }}
-                >
-                    {post.content.description}
-                </p>
+                <div style={{ position: "relative" }}>
+                    <p
+                        style={{
+                            color: "rgba(255,255,255,0.9)",
+                            fontSize: "14px",
+                            marginBottom: 16,
+                            display: isExpanded ? "block" : "-webkit-box",
+                            WebkitLineClamp: isExpanded ? "unset" : 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                            transition: "all 0.3s ease",
+                            maxHeight: isExpanded ? "200px" : "40px",
+                            overflowY: isExpanded ? "auto" : "hidden",
+                        }}
+                    >
+                        {post.content.description}
+                    </p>
+                    {post.content.description && post.content.description.length > 60 && (
+                        <button
+                            onClick={toggleExpand}
+                            style={{
+                                background: "none",
+                                border: "none",
+                                color: "#3b82f6",
+                                padding: 0,
+                                marginTop: -12,
+                                marginBottom: 12,
+                                fontSize: "13px",
+                                fontWeight: "bold",
+                                cursor: "pointer",
+                                display: "block",
+                            }}
+                        >
+                            {isExpanded ? "Show less" : "See more"}
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Specific Actions */}

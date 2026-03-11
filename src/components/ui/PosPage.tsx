@@ -3,10 +3,12 @@
 import AboutTopBar from "./landing/AboutTopBar";
 import AboutHeader from "./landing/AboutHeader";
 import AboutFooter from "./landing/AboutFooter";
-import PosHeroSection from "./pos/PosHeroSection";
-import PosFeaturesSection from "./pos/PosFeaturesSection";
-import PosPricingSection from "./pos/PosPricingSection";
-import PosCtaSection from "./pos/PosCtaSection";
+import {
+  PosHeroSection,
+  PosFeaturesSection,
+  PosPricingSection,
+  PosCtaSection,
+} from "./pos";
 import Head from "next/head";
 
 export default function PosPage() {

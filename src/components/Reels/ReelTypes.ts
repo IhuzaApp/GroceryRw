@@ -1,6 +1,6 @@
 "use client";
 
-export type PostType = "restaurant" | "supermarket" | "chef";
+export type PostType = "restaurant" | "supermarket" | "chef" | "business";
 
 export interface Comment {
     id: string;
@@ -77,7 +77,17 @@ export interface ChefPost extends BasePost {
     };
 }
 
-export type FoodPost = RestaurantPost | SupermarketPost | ChefPost;
+export interface BusinessPost extends BasePost {
+    type: "business";
+    business: {
+        name: string;
+        location: string;
+        email: string;
+        phone: string;
+    };
+}
+
+export type FoodPost = RestaurantPost | SupermarketPost | ChefPost | BusinessPost;
 
 // Helper to extract YouTube video ID
 export const getYouTubeVideoId = (url: string) => {
