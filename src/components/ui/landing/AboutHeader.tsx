@@ -96,15 +96,20 @@ export default function AboutHeader({
             >
               Diversity & Inclusion
             </a>
-            <a
-              href="#"
-              className={`font-medium transition-colors ${isScrolled
-                ? "text-gray-700 hover:text-[#00D9A5]"
-                : "text-white/90 hover:text-white"
+            <Link
+              href="/ourTeams"
+              className={`${activePage === "teams" ? "border-b-2 pb-1" : ""
+                } font-medium transition-colors ${activePage === "teams"
+                  ? isScrolled
+                    ? "border-[#00D9A5] text-[#00D9A5]"
+                    : "border-[#00D9A5] text-white"
+                  : isScrolled
+                    ? "text-gray-700 hover:text-[#00D9A5]"
+                    : "text-white/90 hover:text-white"
                 }`}
             >
               Our teams
-            </a>
+            </Link>
             <Link
               href="/careers"
               className={`font-medium transition-colors ${isScrolled

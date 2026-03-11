@@ -1,7 +1,20 @@
 import { Rocket, Sparkles, TrendingUp, Users } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/router";
+import { useAuth } from "../../../context/AuthContext";
 
 export default function IndividualSellersSection() {
+    const router = useRouter();
+    const { isLoggedIn } = useAuth();
+
+    const handleStartSelling = () => {
+        if (isLoggedIn) {
+            router.push("/plasBusiness");
+        } else {
+            router.push("/Auth/Login?redirect=/plasBusiness");
+        }
+    };
+
     const benefits = [
         {
             icon: <Rocket className="h-6 w-6" />,
@@ -76,7 +89,10 @@ export default function IndividualSellersSection() {
                             ))}
                         </div>
 
-                        <button className="mt-12 w-fit px-8 py-4 bg-white rounded-2xl text-emerald-950 font-black hover:bg-[#00D9A5] hover:text-white transition-all transform hover:scale-105">
+                        <button
+                            onClick={handleStartSelling}
+                            className="mt-12 w-fit px-8 py-4 bg-white rounded-2xl text-emerald-950 font-black hover:bg-[#00D9A5] hover:text-white transition-all transform hover:scale-105"
+                        >
                             Start Selling Individual Items
                         </button>
                     </div>

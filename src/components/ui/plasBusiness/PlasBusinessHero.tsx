@@ -1,6 +1,19 @@
 import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { useRouter } from "next/router";
+import { useAuth } from "../../../context/AuthContext";
 
 export default function PlasBusinessHero() {
+    const router = useRouter();
+    const { isLoggedIn } = useAuth();
+
+    const handleGetStarted = () => {
+        if (isLoggedIn) {
+            router.push("/plasBusiness");
+        } else {
+            router.push("/Auth/Login?redirect=/plasBusiness");
+        }
+    };
+
     return (
         <div className="relative bg-[#1A1A1A] py-32 md:py-48 overflow-hidden">
             {/* Background Accents */}
@@ -26,7 +39,10 @@ export default function PlasBusinessHero() {
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                        <button className="group relative px-10 py-5 bg-[#00D9A5] rounded-2xl text-[#1A1A1A] font-bold text-lg transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(0,217,165,0.3)]">
+                        <button
+                            onClick={handleGetStarted}
+                            className="group relative px-10 py-5 bg-[#00D9A5] rounded-2xl text-[#1A1A1A] font-bold text-lg transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(0,217,165,0.3)]"
+                        >
                             <span className="relative z-10 flex items-center gap-2">
                                 Get Started for Free
                                 <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
